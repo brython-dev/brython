@@ -750,6 +750,10 @@ PathFinder.$factory = function(){
 var PathFinder_funcs = PathFinder.tp_funcs = {}
 
 PathFinder_funcs.find_spec = function(cls, fullname, path){
+    var test = fullname === 'from_import_test.relimport'
+    if(test){
+        console.log('find_spec', fullname, 'path', path)
+    }
     if($B.VFS && $B.VFS[fullname]){
         // If current module is in VFS (ie standard library) it's
         // pointless to search in other locations
@@ -758,6 +762,9 @@ PathFinder_funcs.find_spec = function(cls, fullname, path){
     if($B.is_none(path)){
         // [Import spec] Top-level import , use sys.path
         path = get_info('path')
+        if(test){
+            console.log('use path', path)
+        }
     }
 
     for(var i = 0, li = path.length; i < li; ++i){
@@ -767,6 +774,9 @@ PathFinder_funcs.find_spec = function(cls, fullname, path){
         }
         // Try path hooks cache first
         var finder = $B.path_importer_cache[path_entry]
+        if(test){
+            console.log('finder in cache', finder)
+        }
         if(finder === undefined){
             // Use path hooks, a list of callables that return finders.
             // By default, the only path hook is function url_hook below,
@@ -832,12 +842,21 @@ PathEntryFinder_funcs.find_spec = function(self, fullname){
     // modules should be searched.
     // The finder executes Ajax calls at urls <path_entry>/<fullname>.py
     // and <path_entry>/<fullname>/__init__.py
+    var test = fullname === 'from_import_test.relimport'
+    if(test){
+        console.log('PathEntryFinder.find_spec', self, fullname)
+        console.log('self.path_entry', self.path_entry)
+        console.log(fullname.match(/[^.]+$/g)[0])
+    }
     var loader_data = {},
         notfound = true,
         hint = self.hint,
         base_path = self.path_entry + fullname.match(/[^.]+$/g)[0],
         modpaths = [],
         py_ext = $B.get_option('python_extension') // defaults to .py (issue #1748)
+    if(test){
+        console.log('basepath', base_path)
+    }
     var tryall = hint === undefined
     if(tryall || hint == 'py'){
         // either py or undefined , try py or js code
@@ -974,6 +993,10 @@ function import_engine(mod_name, _path, from_stdlib){
     If no spec was found, raise ModuleNotFoundError.
     If one of the methods raise an exception, raise it.
     */
+    var test = mod_name === 'from_import_test.relimport'
+    if(test){
+        console.log('import engine', mod_name)
+    }
     var meta_path = get_info('meta_path').slice(),
         _sys_modules = $B.imported,
         _loader,
@@ -1006,7 +1029,13 @@ function import_engine(mod_name, _path, from_stdlib){
                 }
             }
         }else{
+            if(test){
+                console.log('call find_spec of finder', _finder)
+            }
             spec = $B.$call(find_spec, mod_name, _path)
+            if(test){
+                console.log('spec', spec)
+            }
             if(!$B.is_none(spec)){
                 module = $B.imported[spec.name]
                 if(module !== undefined){
@@ -1017,6 +1046,9 @@ function import_engine(mod_name, _path, from_stdlib){
                 break
             }
         }
+    }
+    if(test){
+        console.log('loader', _loader)
     }
 
     if(_loader === undefined){
@@ -1110,7 +1142,7 @@ function import_error(mod_name){
 
 // Default __import__ function
 $B.$__import__ = function(mod_name, globals, locals, fromlist){
-    var $test = false // mod_name == "bisect"
+    var $test = false // mod_name == "from_import_test.relimport"
     if($test){console.log("__import__", mod_name, 'fromlist', fromlist)}
     // Main entry point for __import__
     //
@@ -1290,7 +1322,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum){
     locals: local namespace import bindings will be applied upon
     inum: instruction number
     */
-    var test = false // mod_name == 'python_re' // && fromlist.length == 1 && fromlist[0] == "timer"
+    var test = mod_name.startsWith( 'from_import_test') // && fromlist.length == 1 && fromlist[0] == "timer"
     if(test){
         console.log('import', mod_name, fromlist, aliases)
     }
@@ -1570,9 +1602,13 @@ $B.$import_from = function(module, names, aliases, level, locals, inum){
         }
         if(module){
             // form "from .foo import bar"
-            var submodule = current_module.__name__ + '.' + module
+            console.log('import from, module', module, 'current', current_module)
+            var submodule = $B.module_getattr(current_module, '__name__') +
+                '.' + module
+            console.log('submodule', submodule)
             $B.$import(submodule, [], {}, {}, inum)
             current_module = $B.imported[submodule]
+            console.log('new current module', current_module)
         }
         // get names from a package
         if(names.length > 0 && names[0] == '*'){
