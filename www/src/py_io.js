@@ -56,16 +56,16 @@ function _io_unsupported(value){
 
 var _IOBase = $B.make_builtin_class("_IOBase")
 
-_IOBase.tp_iter = function(_self){
-    if(_self.closed){
+_IOBase.tp_iter = function(self){
+    if(self.closed){
         $B.RAISE(_b_.ValueError, 'closed')
     }
-    self.readline = $B.search_in_mro($B.get_class(_self), 'readline')
-    return _self
+    self.readline = $B.search_in_mro($B.get_class(self), 'readline')
+    return self
 }
 
-_IOBase.tp_iternext = function*(_self){
-    var line = $B.$call(self.readline, _self)
+_IOBase.tp_iternext = function*(self){
+    var line = $B.$call(self.readline, self)
 
     if(line == undefined || _b_.len(line) === 0){
         return
@@ -73,11 +73,11 @@ _IOBase.tp_iternext = function*(_self){
     yield line
 }
 
-_IOBase.tp_finalize = function(_self){
+_IOBase.tp_finalize = function(self){
     // Destructor.  Calls close()
-    console.log('del', _self)
+    console.log('del', self)
     try{
-        var closed = $B.$getattr(_self, 'closed')
+        var closed = $B.$getattr(self, 'closed')
     }catch(err){
         if($B.is_exc(err, _b_.AttributeError)){
             // If getting closed fails, then the object is probably
@@ -89,7 +89,7 @@ _IOBase.tp_finalize = function(_self){
         return
     }
 
-    $B$call($B.$getattr(_self, 'close'))
+    $B$call($B.$getattr(self, 'close'))
 }
 
 var _IOBase_funcs = _IOBase.tp_funcs = {}
@@ -102,8 +102,8 @@ _IOBase_funcs.__exit__ = function(self){
     _IOBase_funcs.close(self)
 }
 
-_IOBase_funcs.close = function(_self){
-    _self._closed = true
+_IOBase_funcs.close = function(self){
+    self._closed = true
 }
 
 _IOBase_funcs.closed_get = function(self){
@@ -116,8 +116,8 @@ _IOBase_funcs.fileno = function(_self){
     _io_unsupported('fileno')
 }
 
-_IOBase_funcs.flush = function(_self){
-    if(_self._closed){
+_IOBase_funcs.flush = function(self){
+    if(self._closed){
         $B.RAISE(_b_.ValueError, "I/O operation on closed file.")
     }
     return _b_.None
@@ -720,7 +720,7 @@ _FileIO_funcs.readable = function(_self){
 
 _FileIO_funcs.readall = function(_self){
     var buffer = _b_.bytearray.$factory()
-    $B._FileIO.readinto(_self, buffer)
+    _FileIO_funcs.readinto(_self, buffer)
     buffer.ob_type = _b_.bytes
     return buffer
 }
@@ -732,7 +732,7 @@ _FileIO_funcs.readinto = function(_self, buffer){
     if(! _self.readable) {
         return err_mode(state, "reading")
     }
-    _b_.bytearray.extend(buffer, $B.fast_bytes(_self.$bytes))
+    _b_.bytearray.tp_funcs.extend(buffer, $B.fast_bytes(_self.$bytes))
     var n = _b_.len(buffer)
 
     return n
@@ -807,7 +807,7 @@ var $BufferedReader_funcs = $BufferedReader.tp_funcs = {}
 
 $BufferedReader_funcs.read = function(self, size){
     if(self.$read_func === undefined){
-        return _IOBase.read(self, size === undefined ? -1 : size)
+        return _IOBase.tp_funcs.read(self, size === undefined ? -1 : size)
     }
     return self.$read_func(size || -1)
 }

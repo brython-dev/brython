@@ -8,6 +8,21 @@ function $UnsupportedOpType(op, class1, class2){
         op + ": '" + class1 + "' and '" + class2 + "'")
 }
 
+function conv_complex(obj){
+    if($B.$isinstance(obj, _b_.float)){
+        return $B.make_complex(obj)
+    }else if($B.$isinstance(obj, _b_.int)){
+        return $B.make_complex(obj)
+    }else{
+        var complex_method = $B.$getattr($B.get_class(obj), '__complex__',
+            $B.NULL)
+        if(complex_method !== $B.NULL){
+            return $B.$call(complex_method, obj)
+        }
+    }
+    return $B.NULL
+}
+
 var complex = _b_.complex
 
 function complex_eq(self, other){
@@ -132,7 +147,7 @@ function _convert(obj){
         var missing = {},
             method = $B.$getattr(klass, method_name, missing)
         if(method !== missing){
-            var res = method(obj)
+            var res = $B.$call(method, obj)
             if(!$B.$isinstance(res, expected_class[method_name])){
                 $B.RAISE(_b_.TypeError, method_name + "returned non-" +
                     expected_class[method_name].__name__ +
@@ -193,12 +208,16 @@ _b_.complex.nb_absolute = function(self){
 }
 
 _b_.complex.nb_add = function(self, other){
+    self = conv_complex(self)
+    if(self === $B.NULL){
+        return _b_.NotImplemented
+    }
     if($B.$isinstance(other, complex)){
         return make_complex(self.real.value + other.real.value,
                             self.imag.value + other.imag.value)
     }
     if($B.$isinstance(other, _b_.int)){
-        other = _b_.int.numerator(other)
+        other = $B.$getattr(other, 'numerator')
         return make_complex(
             $B.rich_op('__add__', self.real, other).value,
             self.imag.value)
@@ -215,12 +234,16 @@ _b_.complex.nb_bool = function(self){
 }
 
 _b_.complex.nb_subtract = function(self, other){
+    self = conv_complex(self)
+    if(self === $B.NULL){
+        return _b_.NotImplemented
+    }
     if($B.$isinstance(other, complex)){
         return make_complex(self.real.value - other.real.value,
                             self.imag.value - other.imag.value)
     }
     if($B.$isinstance(other, _b_.int)){
-        other = _b_.int.numerator(other)
+        other = $B.$getattr(other, 'numerator')
         return make_complex(self.real.value - other.valueOf(),
                             self.imag.value)
     }
@@ -231,6 +254,10 @@ _b_.complex.nb_subtract = function(self, other){
 }
 
 _b_.complex.nb_multiply = function(self, other){
+    self = conv_complex(self)
+    if(self === $B.NULL){
+        return _b_.NotImplemented
+    }
     if($B.$isinstance(other, complex)){
         return make_complex(self.real.value * other.real.value -
                             self.imag.value * other.imag.value,
@@ -329,6 +356,10 @@ _b_.complex.nb_power = function(self, other, mod){
 }
 
 _b_.complex.nb_true_divide = function(self, other){
+    self = conv_complex(self)
+    if(self === $B.NULL){
+        return _b_.NotImplemented
+    }
     if($B.$isinstance(other, complex)){
         if(other.real.value == 0 && other.imag.value == 0){
            $B.RAISE(_b_.ZeroDivisionError, "division by zero")
@@ -347,14 +378,14 @@ _b_.complex.nb_true_divide = function(self, other){
         if(! other.valueOf()){
             $B.RAISE(_b_.ZeroDivisionError, 'division by zero')
         }
-        return complex.__truediv__(self, complex.$factory(other.valueOf()))
+        return complex.nb_true_divide(self, complex.$factory(other.valueOf()))
     }
     if($B.$isinstance(other, _b_.float)){
         if(! other.value){
             $B.RAISE(_b_.ZeroDivisionError, "division by zero")
         }
         return complex.$factory(_b_.float.__truediv__(self.real, other),
-            _b_.float.__truediv__(self.imag, other))
+            _b_.float.nb_true_divide(self.imag, other))
     }
     return _b_.NotImplemented
 }
@@ -371,9 +402,9 @@ _b_.complex.tp_new = function(){
         $ = $B.args("complex", 3, {cls: null, real: null, imag: null},
             ["cls", "real", "imag"], arguments, {real: 0, imag: missing},
             null, null)
-        cls = $.cls
-        var first = $.real,
-            second = $.imag
+    var cls = $.cls
+    var first = $.real,
+        second = $.imag
 
     if(typeof first == "string"){
         if(second !== missing){
@@ -519,16 +550,16 @@ _b_.complex.tp_repr = function(self){
 }
 
 _b_.complex.tp_richcompare = function(self, other, op){
-    try{
-        other = complex_funcs.__complex__(other)
-    }catch(err){
-        return _b_.NotImplemented
+    var complex_func = $B.$getattr($B.get_class(other), '__complex__', $B.NULL)
+    if(complex_func !== $B.NULL){
+        other = $B.$call(complex_func, other)
     }
     switch(op){
         case '__eq__':
             return complex_eq(self, other)
         case '__ne__':
-            return ! complex_eq(self, other)
+            var res = complex_eq(self, other)
+            return res === _b_.NotImplemented ? res : ! res
         default:
             return _b_.NotImplemented
     }

@@ -1558,10 +1558,14 @@ function normalise(encoding){
 function load_decoder(enc){
     // load table from Lib/encodings/<enc>.py
     if(to_unicode[enc] === undefined){
+        console.log('try to import encodings.' + enc)
         var mod = _b_.__import__("encodings." + enc)
-        if(mod[enc].getregentry){
-            to_unicode[enc] = $B.$getattr(mod[enc].getregentry(),
-                "decode")
+        var enc_mod = $B.module_getattr(mod, enc)
+        if(enc_mod !== $B.NULL){
+            var getregentry = $B.module_getattr(enc_mod, 'getregentry')
+            if(getregentry !== $B.NULL){
+                to_unicode[enc] = $B.$getattr($B.$call(getregentry), "decode")
+            }
         }
     }
 }
@@ -1778,9 +1782,10 @@ var decode = $B.decode = function(obj, encoding, errors){
           try{
               load_decoder(enc)
           }catch(err){
+              console.log('error in load decoder', enc, err)
               $B.RAISE(_b_.LookupError, "unknown encoding: " + enc)
           }
-          var decoded = to_unicode[enc](obj)[0]
+          var decoded = $B.$call(to_unicode[enc], obj)[0]
           for(let i = 0, len = decoded.length; i < len; i++){
               if(decoded.codePointAt(i) == 0xfffe){
                   $B.RAISE(_b_.UnicodeDecodeError, "'charmap' codec " +

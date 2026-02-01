@@ -3784,7 +3784,7 @@ $B.ast.Try.prototype.to_js = function(scopes){
         dedent()
         js += prefix + '}\n' // close "finally"
     }else{
-        js += '}\n' // close catch
+        js += prefix + '}\n' // close catch
     }
     scopes.pop()
     return js

@@ -578,6 +578,14 @@ BaseException_funcs.__context___set = function(self){
 
 }
 
+BaseException_funcs.__dict___get = function(self){
+    return self.dict
+}
+
+BaseException_funcs.__dict___set = function(self){
+
+}
+
 BaseException_funcs.__reduce__ = function(self){
 
 }
@@ -628,36 +636,27 @@ _b_.BaseException.tp_members = [
     ["__suppress_context__", $B.TYPES.BOOL, "suppress_context", 0]
 ]
 
-_b_.BaseException.tp_getset = ["args", "__traceback__", "__context__", "__cause__"]
+_b_.BaseException.tp_getset = [
+    "__dict__", "args", "__traceback__", "__context__", "__cause__"
+]
 
 /* BaseException end */
 
 $B.set_func_names(_b_.BaseException, 'builtins')
 
-/*
-make_builtin_exception(["SystemExit", "KeyboardInterrupt", "GeneratorExit",
-    "Exception"], _b_.BaseException)
-*/
-
 // Brython-specific
 make_builtin_exception("JavascriptError", _b_.Exception)
 
-/*
-make_builtin_exception(["ArithmeticError", "AssertionError", "BufferError",
-    "EOFError", "LookupError", "MemoryError", "OSError", "ReferenceError",
-    "RuntimeError", "SystemError", "TypeError", "ValueError", "Warning"],
-    _b_.Exception)
-
-make_builtin_exception("StopIteration", _b_.Exception)
-*/
-
 _b_.StopIteration.tp_init = function(self){
-    var $ = $B.args("StopIteration", 1, {self: null},
-                ['self'], arguments, {}, 'args', 'kw')
-    check_no_keywords($.self, $.kw)
-    _b_.BaseException.tp_init($.self, ...$.args)
-    if($.args.length > 0){
-        $.self.value = $.args[0]
+    var $ = $B.args("StopIteration", 1, {self: null}, ['self'], arguments, {},
+                'args', 'kw')
+    var self = $.self,
+        args = $.args,
+        kw = $.kw
+    check_no_keywords(self, kw)
+    _b_.BaseException.tp_init(self, ...args)
+    if(args.length > 0){
+        self.value = args[0]
     }
 }
 
@@ -669,11 +668,6 @@ _b_.StopIteration.tp_members = [
 
 $B.set_func_names(_b_.StopIteration, 'builtins')
 
-/*
-make_builtin_exception("StopAsyncIteration", _b_.Exception)
-make_builtin_exception("ImportError", _b_.Exception)
-*/
-
 _b_.ImportError.tp_init = function(){
     var $ = $B.args("ImportError", 1, {self: null},
                 ['self'], arguments, {}, 'args', 'kw')
@@ -682,8 +676,6 @@ _b_.ImportError.tp_init = function(){
 }
 
 $B.set_func_names(_b_.ImportError, 'builtins')
-
-/* make_builtin_exception("SyntaxError", _b_.Exception) */
 
 _b_.SyntaxError.tp_init = function(){
     var $ = $B.args('SyntaxError', 1, {self: null},
@@ -730,41 +722,6 @@ _b_.SyntaxError.tp_init = function(){
 }
 
 $B.set_func_names(_b_.SyntaxError, 'builtins')
-
-/*
-make_builtin_exception(["FloatingPointError", "OverflowError",
-    "ZeroDivisionError"], _b_.ArithmeticError)
-
-make_builtin_exception("ModuleNotFoundError", _b_.ImportError)
-
-make_builtin_exception(["IndexError","KeyError"], _b_.LookupError)
-
-make_builtin_exception(["BlockingIOError", "ChildProcessError",
-    "ConnectionError", "FileExistsError", "FileNotFoundError",
-    "InterruptedError", "IsADirectoryError", "NotADirectoryError",
-    "PermissionError", "ProcessLookupError", "TimeoutError"],
-    _b_.OSError)
-
-make_builtin_exception(["BrokenPipeError", "ConnectionAbortedError",
-    "ConnectionRefusedError", "ConnectionResetError"],
-    _b_.ConnectionError)
-
-make_builtin_exception(["NotImplementedError", "RecursionError",
-    "PythonFinalizationError"],
-    _b_.RuntimeError)
-
-make_builtin_exception(["IndentationError", "_IncompleteInputError"],
-    _b_.SyntaxError, "msg")
-make_builtin_exception("TabError", _b_.IndentationError)
-make_builtin_exception("UnicodeError", _b_.ValueError)
-make_builtin_exception(["UnicodeDecodeError", "UnicodeEncodeError",
-    "UnicodeTranslateError"], _b_.UnicodeError)
-
-make_builtin_exception(["DeprecationWarning", "PendingDeprecationWarning",
-    "RuntimeWarning", "SyntaxWarning", "UserWarning", "FutureWarning",
-    "ImportWarning", "UnicodeWarning", "BytesWarning", "ResourceWarning",
-    "EncodingWarning"], _b_.Warning)
-*/
 
 _b_.EnvironmentError = _b_.OSError
 _b_.WindowsError = _b_.OSError

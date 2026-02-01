@@ -501,43 +501,6 @@ function float_round(x, ndigits){
     return fast_float(z);
 }
 
-/*
-float.tp_setattro = function(self, attr, value){
-    if($B.exact_type(self, float)){
-        if(float[attr] === undefined){
-            $B.RAISE_ATTRIBUTE_ERROR("'float' object has no attribute '" +
-                attr + "'", self, attr)
-        }else{
-            $B.RAISE_ATTRIBUTE_ERROR("'float' object attribute '" +
-                attr + "' is read-only", self, attr)
-        }
-    }
-    // subclasses of float can have attributes set
-    self[attr] = value
-    return _b_.None
-}
-*/
-
-// add "reflected" methods
-var r_opnames = ["add", "sub", "mul", "truediv", "floordiv", "mod", "pow",
-    "lshift", "rshift", "and", "xor", "or", "divmod"]
-
-for(var r_opname of r_opnames){
-    if(float["__r" + r_opname + "__"] === undefined &&
-            float['__' + r_opname + '__']){
-        float["__r" + r_opname + "__"] = (function(name){
-            return function(self, other){
-                var other_as_num = _b_.int.$to_js_number(other)
-                if(other_as_num !== null){
-                    var other_as_float = $B.fast_float(other_as_num)
-                    return float["__" + name + "__"](other_as_float, self)
-                }
-                return _b_.NotImplemented
-            }
-        })(r_opname)
-    }
-}
-
 function to_digits(s){
     // Transform a string to another string where all arabic-indic digits
     // are converted to latin digits
@@ -561,6 +524,19 @@ const fast_float = $B.fast_float  = function(value){
     }
 }
 
+function conv_float(obj){
+    if($B.$isinstance(obj, _b_.float)){
+        return obj
+    }else if($B.$isinstance(obj, _b_.int)){
+        return _b_.int.nb_float(obj)
+    }else{
+        var float_method = $B.$getattr($B.get_class(obj), '__float__', $B.NULL)
+        if(float_method !== $B.NULL){
+            return $B.$call(float_method, obj)
+        }
+    }
+    return $B.NULL
+}
 
 // constructor for built-in class 'float'
 float.$factory = function(value){
@@ -732,34 +708,13 @@ _b_.float.tp_richcompare = function(self, other, op){
             break
     }
     return res
-    /*
-    if($B.$isinstance(other, _b_.int)){
-        if($B.is_long_int(other)){
-            other_value = parseInt(other.value)
-        }else
-        return rich_comp(self.value, other_value)
-    }else if($B.$isinstance(other, _b_.float)){
-        other_value = other.value
-    }else if($B.$isinstance(other, _b_.bool)) {
-        other_value = other ? 1 : 0
-    }else{
-        var int_method = $B.$getattr(other, "__int__", $B.NULL)
-        if(int_method !== $B.NULL){
-            other_value = $B.$call(int_method)
-        }else{
-            var index_method = $B.$getattr(other, "__index__", $B.NULL)
-            if(index_method !== $B.NULL){
-                other_value = $B.$call(index_method)
-            }
-            $B.RAISE(_b_.TypeError,
-                "unorderable types: float() > " + $B.class_name(other) + "()")
-        }
-    }
-    return rich_comp(self.value, other_value)
-    */
 }
 
 _b_.float.nb_add = function(self, other){
+    self = conv_float(self)
+    if(self === $B.NULL){
+        return _b_.NotImplemented
+    }
     if($B.$isinstance(other, _b_.int)){
         if(typeof other == "boolean"){
             return other ? $B.fast_float(self.value + 1) : self
@@ -776,6 +731,10 @@ _b_.float.nb_add = function(self, other){
 }
 
 _b_.float.nb_subtract = function(self, other){
+    self = conv_float(self)
+    if(self === $B.NULL){
+        return _b_.NotImplemented
+    }
     if($B.$isinstance(other, _b_.int)){
         if(typeof other == "boolean"){
             return other ? $B.fast_float(self.value - 1) : self
@@ -792,6 +751,10 @@ _b_.float.nb_subtract = function(self, other){
 }
 
 _b_.float.nb_multiply = function(self, other){
+    self = conv_float(self)
+    if(self === $B.NULL){
+        return _b_.NotImplemented
+    }
     if($B.$isinstance(other, _b_.int)){
         if($B.is_long_int(other)){
             return fast_float(self.value * parseFloat(other.value))
@@ -807,7 +770,10 @@ _b_.float.nb_multiply = function(self, other){
 
 _b_.float.nb_remainder = function(self, other) {
     // can't use Javascript % because it works differently for negative numbers
-    check_self_is_float(self, '__mod__')
+    self = conv_float(self)
+    if(self === $B.NULL){
+        return _b_.NotImplemented
+    }
     if(other == 0){
         $B.RAISE(_b_.ZeroDivisionError, "float modulo")
     }
@@ -830,7 +796,10 @@ _b_.float.nb_remainder = function(self, other) {
 }
 
 _b_.float.nb_divmod = function(self, other){
-    check_self_is_float(self, '__divmod__')
+    self = conv_float(self)
+    if(self === $B.NULL){
+        return _b_.NotImplemented
+    }
     if(! $B.$isinstance(other, [_b_.int, float])){
         return _b_.NotImplemented
     }
@@ -1047,7 +1016,11 @@ _b_.float.nb_float = function(self){
 }
 
 _b_.float.nb_floor_divide = function(self, other){
-    check_self_is_float(self, '__floordiv__')
+    console.log('floor divide', self, other)
+    self = conv_float(self)
+    if(self === $B.NULL){
+        return _b_.NotImplemented
+    }
     if(! $B.$isinstance(other, [_b_.int, float])){
         return _b_.NotImplemented
     }
@@ -1058,6 +1031,10 @@ _b_.float.nb_floor_divide = function(self, other){
 }
 
 _b_.float.nb_true_divide = function(self, other){
+    self = conv_float(self)
+    if(self === $B.NULL){
+        return _b_.NotImplemented
+    }
     if($B.$isinstance(other, _b_.int)){
         if(other.valueOf() == 0){
             $B.RAISE(_b_.ZeroDivisionError, "division by zero")

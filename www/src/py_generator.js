@@ -51,12 +51,7 @@ $B.generator.tp_iter = function(self){
 
 $B.generator.tp_iternext = function*(self){
     while(true){
-        try{
-            yield $B.generator.tp_funcs.send(self, _b_.None)
-        }catch(err){
-            $B.RAISE_IF_NOT(err, _b_.StopIteration)
-            break
-        }
+        yield $B.generator.tp_funcs.send(self, _b_.None)
     }
 }
 
@@ -66,24 +61,24 @@ $B.generator.tp_finalize = function(self){
 
 var generator_funcs = $B.generator.tp_funcs = {}
 
-generator_funcs.__class_getitem__ = function(self){
-
+generator_funcs.__class_getitem__ = function(){
+    return $B.$class_getitem.apply(null, arguments)
 }
 
 generator_funcs.__name___get = function(self){
-
+    return self.js_gen.$name
 }
 
-generator_funcs.__name___set = function(self){
-
+generator_funcs.__name___set = function(self, value){
+    self.js_gen.$name = value
 }
 
 generator_funcs.__qualname___get = function(self){
-
+    return self.js_gen.$name
 }
 
-generator_funcs.__qualname___set = function(self){
-
+generator_funcs.__qualname___set = function(self, value){
+    self.js_jen.$name = value
 }
 
 generator_funcs.__sizeof__ = function(self){
@@ -96,7 +91,7 @@ generator_funcs.close = function(self){
         $B.frame_obj = $B.push_frame(self.$frame)
     }
     try{
-        $B.generator.throw(self, $B.EXC(_b_.GeneratorExit))
+        $B.generator.tp_funcs.throw(self, $B.EXC(_b_.GeneratorExit))
     }catch(err){
         if(! $B.is_exc(err, [_b_.GeneratorExit, _b_.StopIteration])){
             $B.frame_obj = save_frame_obj
@@ -239,7 +234,10 @@ $B.generator.tp_methods = ["send", "throw", "close", "__sizeof__"]
 
 $B.generator.classmethods = ["__class_getitem__"]
 
-$B.generator.tp_getset = ["__name__", "__qualname__", "gi_yieldfrom", "gi_running", "gi_frame", "gi_suspended", "gi_code"]
+$B.generator.tp_getset = [
+    "__name__", "__qualname__", "gi_yieldfrom", "gi_running", "gi_frame",
+    "gi_suspended", "gi_code"
+]
 
 /* generator end */
 

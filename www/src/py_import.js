@@ -30,7 +30,7 @@ Module.$factory = function(name, doc, $package){
 }
 
 $B.module_getattr = function(module, attr){
-    return _b_.dict.$getitem_string(module.dict, attr, $B.NULL)
+    return $B.str_dict_get(module.dict, attr, $B.NULL)
 }
 
 $B.module_setattr = function(module, attr, value){
@@ -1090,6 +1090,7 @@ function import_engine(mod_name, _path, from_stdlib){
                 exec_module(module)
             }catch(e){
                 console.log('error for module', module)
+                console.log(e)
                 console.log('frame obj', $B.frame_obj)
                 delete _sys_modules[_spec_name]
                 throw e

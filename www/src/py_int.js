@@ -483,8 +483,8 @@ _b_.int.nb_divmod = function(self, other){
     if(! $B.$isinstance(other, int)){
         return _b_.NotImplemented
     }
-    return $B.fast_tuple([int.__floordiv__(self, other),
-        int.__mod__(self, other)])
+    return $B.fast_tuple([int.nb_floor_divide(self, other),
+        int.nb_remainder(self, other)])
 }
 
 _b_.int.nb_power = function(self, other, z){
@@ -517,7 +517,7 @@ _b_.int.nb_power = function(self, other, z){
                     $B.RAISE(_b_.ValueError, "not relative primes: " +
                         self + ' and ' + z)
                 }
-                return int.__pow__(int_or_long(inv),
+                return int.nb_power(int_or_long(inv),
                                    int_or_long(-exponent),
                                    int_or_long(z))
             }
@@ -543,7 +543,7 @@ _b_.int.nb_power = function(self, other, z){
                     return $B.fast_float(Math.pow(self, other))
                 }
             }else if($B.$isinstance(other, _b_.int)){
-                return int_or_long(int.__pow__(self, other.$brython_value))
+                return int_or_long(int.nb_power(self, other.$brython_value))
             }
             return _b_.NotImplemented
         }
@@ -671,8 +671,6 @@ _b_.int.tp_hash = function(self){
     return self.valueOf()
 }
 
-
-
 _b_.int.nb_negative = function(self){
     var self_as_int = int_value(self)
     if($B.is_long_int(self_as_int)){
@@ -722,7 +720,7 @@ _b_.int.nb_floor_divide = function(self, other){
     }else if(other !== null && $B.is_long_int(other)){
         return Math.floor(self / Number(other.value))
     }else if($B.$isinstance(other, _b_.int)){
-        return int.__floordiv__(self, other.$brython_value)
+        return int.nb_floor_divide(self, other.$brython_value)
     }
     return _b_.NotImplemented
 }
@@ -1037,7 +1035,7 @@ _b_.bool.nb_and = function(self, other){
     if($B.$isinstance(other, bool)){
         return self && other
     }else if($B.$isinstance(other, int)){
-        return int.__and__(bool.__index__(self), int.__index__(other))
+        return int.nb_and(int_value(self), other)
     }
     return _b_.NotImplemented
 }
@@ -1046,7 +1044,7 @@ _b_.bool.nb_xor = function(self, other) {
     if($B.$isinstance(other, bool)){
         return self ^ other ? true : false
     }else if($B.$isinstance(other, int)){
-        return int.__xor__(bool.__index__(self), int.__index__(other))
+        return int.nb_xor(int_value(self), other)
     }
     return _b_.NotImplemented
 }
@@ -1055,7 +1053,7 @@ _b_.bool.nb_or = function(self, other){
     if($B.$isinstance(other, bool)){
         return self || other
     }else if($B.$isinstance(other, int)){
-        return int.__or__(bool.__index__(self), int.__index__(other))
+        return int.nb_or(int_value(self), other)
     }
     return _b_.NotImplemented
 }

@@ -969,10 +969,10 @@
                     trace += '\n    ' + line.trim()
                 }
                 var stderr = $B.get_stderr()
-                $B.$getattr(stderr, 'write')(trace + '\n')
+                $B.$call($B.$getattr(stderr, 'write'), trace + '\n')
                 var flush = $B.$getattr(stderr, 'flush', _b_.None)
                 if(flush !== _b_.None){
-                    flush()
+                    $B.$call(flush)
                 }
             }
             return _b_.None
