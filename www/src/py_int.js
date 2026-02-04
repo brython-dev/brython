@@ -12,32 +12,48 @@ function $err(op, other){
     $B.RAISE(_b_.TypeError, msg)
 }
 
-function int_value(obj){
-    // Instances of int subclasses that call int.__new__(cls, value)
-    // have an attribute $brython_value set
-    if(typeof obj == "boolean"){
-        return obj ? 1 : 0
+function toBigInt(x){
+    if(typeof x == 'number'){
+        return BigInt(x)
+    }else if(typeof x == 'bigint'){
+        return x
+    }else if($B.$isinstance(x, _b_.int)){
+        return toBigInt(x.value)
+    }else{
+        return $B.NULL
     }
-    return obj.$brython_value !== undefined ? obj.$brython_value : obj
 }
 
-function bigint_value(obj){
+var int_value = $B.int_value = function(obj){
     // Instances of int subclasses that call int.__new__(cls, value)
-    // have an attribute $brython_value set
-    if(typeof obj == "boolean"){
-        return obj ? 1n : 0n
-    }else if(typeof obj == "number"){
-        return BigInt(obj)
-    }else if($B.is_long_int(obj)){
-        return obj.value
-    }else if($B.$isinstance(obj, _b_.int)){
-        return bigint_value(obj.$brython_value)
+    // have an attribute value set
+    var res = obj.value ?? obj
+    if(typeof res == "boolean"){
+        return res ? 1 : 0
+    }
+    return res
+}
+
+var bigint_value = $B.to_bigint = function(obj){
+    // Instances of int subclasses that call int.__new__(cls, value)
+    // have an attribute value set
+    var res = obj = obj.value ?? obj
+    switch(typeof res){
+        case "boolean":
+            return res ? 1n : 0n
+        case "number":
+            return BigInt(res)
+        case "bigint":
+            return res
+        default:
+            $B.RAISE(_b_.TypeError,
+                `cannot convert ${$B.class_name(obj)} to BigInt`)
     }
 }
 
 var int_or_long = int.$int_or_long = function(bigint){
     var res = Number(bigint)
-    return Number.isSafeInteger(res) ? res : $B.fast_long_int(bigint)
+    return Number.isSafeInteger(res) ? res : bigint
 }
 
 int.$to_js_number = function(obj){
@@ -47,16 +63,17 @@ int.$to_js_number = function(obj){
     }else if($B.is_long_int(obj)){
         return Number(obj.value)
     }else if($B.$isinstance(obj, _b_.int)){
-        return int.$to_js_value(obj.$brython_value)
+        return int.$to_js_value(obj.value)
     }
     return null
 }
 
 int.$to_bigint = bigint_value
-int.$int_value = int_value
 
 function preformat(self, fmt){
-    if(fmt.empty){return _b_.str.$factory(self)}
+    if(fmt.empty){
+        return _b_.str.$factory(self)
+    }
     if(fmt.type && 'bcdoxXn'.indexOf(fmt.type) == -1){
         $B.RAISE(_b_.ValueError, "Unknown format code '" + fmt.type +
             "' for object of type 'int'")
@@ -96,16 +113,6 @@ function preformat(self, fmt){
 
 
 
-
-
-int.$getnewargs = function(self){
-    return $B.fast_tuple([int_value(self)])
-}
-
-int.__getnewargs__ = function(){
-    return int.$getnewargs($B.single_arg('__getnewargs__', 'self', arguments))
-}
-
 function extended_euclidean(a, b){
     // arguments are big ints
     var d, u, v
@@ -116,24 +123,6 @@ function extended_euclidean(a, b){
       return [d, v, u - (a / b) * v]
     }
 }
-
-/*
-int.__setattr__ = function(self, attr, value){
-    if(typeof self == "number" || typeof self == "boolean"){
-        var cl_name = $B.class_name(self)
-        if(_b_.dir(self).indexOf(attr) > -1){
-            $B.RAISE_ATTRIBUTE_ERROR("attribute '" + attr +
-                `' of '${cl_name}' objects is not writable`, self, attr)
-        }else{
-            $B.RAISE_ATTRIBUTE_ERROR(`'${cl_name}' object` +
-                ` has no attribute '${attr}'`, self, attr)
-        }
-    }
-    // subclasses of int can have attributes set
-    _b_.dict.$setitem(self.__dict__, attr, value)
-    return _b_.None
-}
-*/
 
 var $valid_digits = function(base) {
     var digits = ""
@@ -202,8 +191,7 @@ int.$factory = function(){
                         res = $B.$call(index_method, res)
                     }
                     if($B.$isinstance(res, _b_.int)){
-                        if(typeof res !== "number" &&
-                                ! $B.is_long_int(res)){
+                        if(typeof res !== "number" && typeof res != 'bigint'){
                             $B.warn(_b_.DeprecationWarning, special_method +
                             ' returned non-int (type ' + $B.class_name(res) +
                             ').  The ability to return an instance of a ' +
@@ -375,6 +363,7 @@ int.$factory = function(){
     }
     return int_or_long(res)
 }
+
 $B.set_func_names(int, "builtins")
 
 /* int start */
@@ -416,42 +405,30 @@ _b_.int.tp_richcompare = function(a, b, op){
 }
 
 _b_.int.nb_add = function(self, other){
-    if(typeof other == "number"){
-        return _b_.int.$int_or_long(BigInt(self) + BigInt(other))
-    }else if($B.is_long_int(other)){
-        return _b_.int.$int_or_long(BigInt(self) + other.value)
-    }else if(typeof other == "boolean"){
-        return _b_.int.$int_or_long(BigInt(self) + (other ? 1n : 0n))
-    }else if($B.$isinstance(other, _b_.int)){
-        return _b_.int.nb_add(self, other.$brython_value)
+    var y = toBigInt(other)
+    if(y === $B.NULL){
+        return _b_.NotImplemented
     }
-    return _b_.NotImplemented
+    var x = toBigInt(self)
+    return int_or_long(x + y)
 }
 
 _b_.int.nb_subtract = function(self, other){
-    if(typeof other == "number"){
-        return _b_.int.$int_or_long(BigInt(self) - BigInt(other))
-    }else if($B.is_long_int(other)){
-        return _b_.int.$int_or_long(BigInt(self) - other.value)
-    }else if(typeof other == "boolean"){
-        return _b_.int.$int_or_long(BigInt(self) - (other ? 1n : 0n))
-    }else if($B.$isinstance(other, _b_.int)){
-        return _b_.int.nb_substract(self, other.$brython_value)
+    var y = toBigInt(other)
+    if(y === $B.NULL){
+        return _b_.NotImplemented
     }
-    return _b_.NotImplemented
+    var x = toBigInt(self)
+    return int_or_long(x - y)
 }
 
 _b_.int.nb_multiply = function(self, other){
-    if(typeof other == "number"){
-        return _b_.int.$int_or_long(BigInt(self) * BigInt(other))
-    }else if($B.is_long_int(other)){
-        return _b_.int.$int_or_long(BigInt(self) * other.value)
-    }else if(typeof other == "boolean"){
-        return _b_.int.$int_or_long(BigInt(self) * (other ? 1n : 0n))
-    }else if($B.$isinstance(other, _b_.int)){
-        return _b_.int.nb_multiply(self, other.$brython_value)
+    var y = toBigInt(other)
+    if(y === $B.NULL){
+        return _b_.NotImplemented
     }
-    return _b_.NotImplemented
+    var x = toBigInt(self)
+    return int_or_long(x * y)
 }
 
 _b_.int.nb_remainder = function(self, other){
@@ -459,28 +436,21 @@ _b_.int.nb_remainder = function(self, other){
     if($B.$isinstance(other,_b_.tuple) && other.length == 1){
         other = other[0]
     }
-    if($B.is_long_int(other)){
-        self = BigInt(self)
-        other = other.value
-        if(other == 0){
-            $B.RAISE(_b_.ZeroDivisionError,
-                "integer division or modulo by zero")
-        }
-        return int_or_long((self % other + other) % other)
+    var y = toBigInt(other)
+    if(y === $B.NULL){
+        return _b_.NotImplemented
     }
-    if($B.$isinstance(other, int)){
-        other = int_value(other)
-        if(other === false){other = 0}
-        else if(other === true){other = 1}
-        if(other == 0){$B.RAISE(_b_.ZeroDivisionError,
-            "integer division or modulo by zero")}
-        return (self % other + other) % other
+    if(y == 0n){
+        $B.RAISE(_b_.ZeroDivisionError,
+            "integer division or modulo by zero")
     }
-    return _b_.NotImplemented
+    var x = toBigInt(self)
+    return int_or_long((x % y + y) % y)
 }
 
 _b_.int.nb_divmod = function(self, other){
-    if(! $B.$isinstance(other, int)){
+    y = toBigInt(other)
+    if(y === $B.NULL){
         return _b_.NotImplemented
     }
     return $B.fast_tuple([int.nb_floor_divide(self, other),
@@ -488,32 +458,29 @@ _b_.int.nb_divmod = function(self, other){
 }
 
 _b_.int.nb_power = function(self, other, z){
-    if(! $B.$isinstance(other, int)){
+    var y = toBigInt(other)
+    if(y === $B.NULL){
         return _b_.NotImplemented
     }
-    if(typeof other == "boolean"){
-        other = other ? 1 : 0
-    }
+    var x = toBigInt(self)
     if(typeof other == "number"  || $B.$isinstance(other, int)){
         if(z !== undefined && z !== _b_.None){
             // If z is provided, the algorithm is faster than computing
             // self ** other then applying the modulo z
-            self = bigint_value(self)
-            other = bigint_value(other)
-            z = bigint_value(z)
-            if(z == 1){
+            z = toBigInt(z)
+            if(z == 1n){
                 return 0
             }
             var result = 1n,
-                exponent = other,
-                base = self % z
-            if(base < 0){
+                exponent = y,
+                base = x % z
+            if(base < 0n){
                 base += z
             }
-            if(exponent < 0){
+            if(exponent < n0){
                 var gcd, inv, _
                 [gcd, inv, _] = extended_euclidean(self, z)
-                if(gcd != 1){
+                if(gcd != 1n){
                     $B.RAISE(_b_.ValueError, "not relative primes: " +
                         self + ' and ' + z)
                 }
@@ -521,7 +488,7 @@ _b_.int.nb_power = function(self, other, z){
                                    int_or_long(-exponent),
                                    int_or_long(z))
             }
-            while(exponent > 0){
+            while(exponent > 0n){
                 if(exponent % 2n == 1n){
                     result = (result * base) % z
                 }
@@ -530,42 +497,13 @@ _b_.int.nb_power = function(self, other, z){
             }
             return int_or_long(result)
         }else{
-            if(typeof other == "number"){
-                if(other >= 0){
-                    return int_or_long(BigInt(self) ** BigInt(other))
-                }else{
-                    return $B.fast_float(Math.pow(self, other))
-                }
-            }else if($B.is_long_int(other)){
-                if(other.value >= 0){
-                    return int_or_long(BigInt(self) ** other.value)
-                }else{
-                    return $B.fast_float(Math.pow(self, other))
-                }
-            }else if($B.$isinstance(other, _b_.int)){
-                return int_or_long(int.nb_power(self, other.$brython_value))
+            if(y < 0n){
+                // raising a BigInt to a negative values raises a JS error
+                return int_or_long(Number(x) ** Number(y))
             }
-            return _b_.NotImplemented
+            return int_or_long(x ** y)
         }
     }
-    if($B.$isinstance(other, _b_.float)) {
-        other = _b_.float.numerator(other)
-        if(self >= 0){
-            return $B.fast_float(Math.pow(self, other))
-        }else{
-            // use complex power
-            return _b_.complex.__pow__($B.make_complex(self, 0), other)
-        }
-    }else if($B.$isinstance(other, _b_.complex)){
-        var preal = Math.pow(self, other.real),
-            ln = Math.log(self)
-        return $B.make_complex(preal * Math.cos(ln), preal * Math.sin(ln))
-    }
-    var rpow = $B.$getattr(other, "__rpow__", _b_.None)
-    if(rpow !== _b_.None){
-        return rpow(self)
-    }
-    $err("**", other)
 }
 
 _b_.int.nb_lshift = function(self, other){
@@ -578,7 +516,7 @@ _b_.int.nb_lshift = function(self, other){
         return _b_.int.$int_or_long(BigInt(self) << other.value)
     }else if($B.$isinstance(other, _b_.int)){
         // int subclass
-        return _b_.int.nb_lshift(self, other.$brython_value)
+        return _b_.int.nb_lshift(self, other.value)
     }
     return _b_.NotImplemented
 }
@@ -593,61 +531,42 @@ _b_.int.nb_rshift = function(self, other){
         return _b_.int.$int_or_long(BigInt(self) >> other.value)
     }else if($B.$isinstance(other, _b_.int)){
         // int subclass
-        return _b_.int.nb_rshift(self, other.$brython_value)
+        return _b_.int.nb_rshift(self, other.value)
     }
     return _b_.NotImplemented
 }
 
 _b_.int.nb_and = function(self, other){
-    if(typeof other == "number"){
-        // transform into BigInt: JS converts numbers to 32 bits
-        return _b_.int.$int_or_long(BigInt(self) & BigInt(other))
-    }else if(typeof other == "boolean"){
-        return self & (other ? 1 : 0)
-    }else if($B.is_long_int(other)){
-        return _b_.int.$int_or_long(BigInt(self) & other.value)
-    }else if($B.$isinstance(other, _b_.int)){
-        // int subclass
-        return _b_.int.nb_and(self, other.$brython_value)
+    var y = toBigInt(other)
+    if(y === $B.NULL){
+        return _b_.NotImplemented
     }
-    return _b_.NotImplemented
+    var x = toBigInt(self)
+    return int_or_long(x & y)
 }
 
 _b_.int.nb_xor = function(self, other){
-    if(typeof other == "number"){
-        // transform into BigInt: JS converts numbers to 32 bits
-        return _b_.int.$int_or_long(BigInt(self) ^ BigInt(other))
-    }else if(typeof other == "boolean"){
-        return self ^ (other ? 1 : 0)
-    }else if($B.is_long_int(other)){
-        return _b_.int.$int_or_long(BigInt(self) ^ other.value)
-    }else if($B.$isinstance(other, _b_.int)){
-        // int subclass
-        return _b_.int.nb_xor(self, other.$brython_value)
+    var y = toBigInt(other)
+    if(y === $B.NULL){
+        return _b_.NotImplemented
     }
-    return _b_.NotImplemented
+    var x = toBigInt(self)
+    return int_or_long(x ^ y)
 }
 
 _b_.int.nb_or = function(self, other){
-    if(typeof other == "number"){
-        // transform into BigInt: JS converts numbers to 32 bits
-        return _b_.int.$int_or_long(BigInt(self) | BigInt(other))
-    }else if(typeof other == "boolean"){
-        return self | (other ? 1 : 0)
-    }else if($B.is_long_int(other)){
-        return _b_.int.$int_or_long(BigInt(self) | other.value)
-    }else if($B.$isinstance(other, _b_.int)){
-        // int subclass
-        return _b_.int.nb_or(self, other.$brython_value)
+    var y = toBigInt(other)
+    if(y === $B.NULL){
+        return _b_.NotImplemented
     }
-    return _b_.NotImplemented
+    var x = toBigInt(self)
+    return int_or_long(x | y)
 }
 
 _b_.int.tp_repr = function(self){
     $B.builtins_repr_check(int, arguments) // in brython_builtins.js
     var value = int_value(self),
         x = $B.is_long_int(value) ? value.value : value
-
     if($B.int_max_str_digits != 0 &&
             x >= 10n ** BigInt($B.int_max_str_digits)){
         $B.RAISE(_b_.ValueError, `Exceeds the limit ` +
@@ -657,86 +576,75 @@ _b_.int.tp_repr = function(self){
 }
 
 _b_.int.tp_hash = function(self){
-    if(self.$brython_value !== undefined){
+    if(self.value !== undefined){
         // int subclass
         if(self.__hashvalue__ !== undefined){
             return self.__hashvalue__
         }
-        if(typeof self.$brython_value == "number"){
-            return self.__hashvalue__ = self.$brython_value
+        if(typeof self.value == "number"){
+            return self.__hashvalue__ = self.value
         }else{ // long int
-            return self.__hashvalue__ = $B.long_int.__hash__(self.$brython_value)
+            return self.__hashvalue__ = $B.long_int.__hash__(self.value)
         }
     }
     return self.valueOf()
 }
 
 _b_.int.nb_negative = function(self){
-    var self_as_int = int_value(self)
-    if($B.is_long_int(self_as_int)){
-        return $B.long_int.__neg__(self_as_int)
-    }
-    return -self
+    return - int_value(self)
 }
 
 _b_.int.nb_positive = function(self){
-    return self
+    return int_value(self)
 }
 
 _b_.int.nb_absolute = function(self){
-    return Math.abs(int_value(self))
+    var res = int_value(self)
+    return res >= 0 ? res : -res
 }
 
 _b_.int.nb_bool = function(self){
-    return int_value(self).valueOf() == 0 ? false : true
+    return int_value(self) == 0 ? false : true
 }
 
 _b_.int.nb_invert = function(self){
-    if(Math.abs(self) < 2 ** 31){
-        return ~self
-    }
-    return $B.rich_op('__sub__', $B.rich_op('__mul__', self, -1), 1)
+    return ~int_value(self)
 }
 
 _b_.int.nb_int = function(self){
-    return self
+    return int_value(self)
 }
 
 _b_.int.nb_float = function(self){
-    return $B.fast_float(int_value(self))
+    return $B.fast_float(Number(int_value(self)))
 }
 
 _b_.int.nb_floor_divide = function(self, other){
-    if(typeof other == "number"){
-        if(other == 0){
-            $B.RAISE(_b_.ZeroDivisionError, "division by zero")
-        }
-        return Math.floor(self / other)
-    }else if(typeof other == "boolean"){
-        if(other === false){
-            $B.RAISE(_b_.ZeroDivisionError, "division by zero")
-        }
-        return self
-    }else if(other !== null && $B.is_long_int(other)){
-        return Math.floor(self / Number(other.value))
-    }else if($B.$isinstance(other, _b_.int)){
-        return int.nb_floor_divide(self, other.$brython_value)
+    var y = toBigInt(other)
+    if(y === $B.NULL){
+        return _b_.NotImplemented
     }
-    return _b_.NotImplemented
+    if(y === 0n){
+        $B.RAISE(_b_.ZeroDivisionError, 'division by zero')
+    }
+    var x = toBigInt(self)
+    var res = x / y // bigint
+    if(x == res * y || res >= 0){
+        return int_or_long(res)
+    }else if(typeof res == 'bigint'){
+        return int_or_long(res - 1n)
+    }else{
+        return int_or_long(res - 1)
+    }
 }
 
 _b_.int.nb_true_divide = function(self, other){
-    if($B.$isinstance(other, int)){
-        other = int_value(other)
-        if(other == 0){
-            $B.RAISE(_b_.ZeroDivisionError, "division by zero")
-        }
-        if($B.is_long_int(other)){
-            return $B.fast_float(self / parseInt(other.value))
-        }
-        return $B.fast_float(self / other)
+    var y = toBigInt(other)
+    if(y === $B.NULL){
+        return _b_.NotImplemented
     }
-    return _b_.NotImplemented
+    var x = toBigInt(self)
+    return $B.fast_float(Number(x) / Number(y))
 }
 
 _b_.int.nb_index = function(self){
@@ -744,9 +652,7 @@ _b_.int.nb_index = function(self){
 }
 
 _b_.int.tp_new = function(cls, value, base){
-    if(cls === undefined){
-        $B.RAISE(_b_.TypeError, "int.__new__(): not enough arguments")
-    }else if(! $B.$isinstance(cls, _b_.type)){
+    if(! $B.$isinstance(cls, _b_.type)){
         $B.RAISE(_b_.TypeError, "int.__new__(X): X is not a type object")
     }
     if(cls === int){
@@ -759,7 +665,7 @@ _b_.int.tp_new = function(cls, value, base){
     return {
         ob_type: cls,
         dict: $B.empty_dict(),
-        $brython_value: int.$factory(value, base),
+        value: int.$factory(value, base),
         toString: function(){
             return value
         }
@@ -769,7 +675,7 @@ _b_.int.tp_new = function(cls, value, base){
 var int_funcs = _b_.int.tp_funcs = {}
 
 int_funcs.__ceil__ = function(self){
-    return Math.ceil(int_value(self))
+    return int_value(self)
 }
 
 int_funcs.__floor__ = function(self){
@@ -800,7 +706,8 @@ int_funcs.__format__ = function(self, format_spec){
 }
 
 int_funcs.__getnewargs__ = function(self){
-
+    var self = $B.single_arg('__getnewargs__', 'self', arguments)
+    return $B.fast_tuple([int_value(self)])
 }
 
 int_funcs.__round__ = function(self){
@@ -816,9 +723,8 @@ int_funcs.__trunc__ = function(self){
 }
 
 int_funcs.as_integer_ratio = function(self){
-    var $ = $B.args("as_integer_ratio", 1, {self:null}, ["self"],
-          arguments, {}, null, null)
-    return $B.fast_tuple([$.self, 1])
+    var self = $B.single_arg('as_integer_ratio', 'self', arguments)
+    return $B.fast_tuple([self, 1])
 }
 
 int_funcs.bit_count = function(self){
