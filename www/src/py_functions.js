@@ -220,7 +220,7 @@ $B.function.tp_new = function(cls, infos, globals){
 var function_funcs = $B.function.tp_funcs = {}
 
 function_funcs.__annotate___get = function(self){
-    return self.__annotate__
+    return self.__annotate__ ?? _b_.None
 }
 
 function_funcs.__annotate___set = function(self, value){

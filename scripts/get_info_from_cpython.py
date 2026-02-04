@@ -80,41 +80,42 @@ am_await __await__
 am_aiter __aiter__
 am_anext __anext__
 
-nb_add __add__ __radd__
-nb_inplace_add __iadd__
-nb_subtract __sub__ __rsub__
-nb_inplace_subtract __isub__
-nb_multiply __mul__ __rmul__
-nb_inplace_multiply __imul__
-nb_remainder __mod__ __rmod__
-nb_inplace_remainder __imod__
-nb_divmod __divmod__ __rdivmod__
-nb_power __pow__ __rpow__
-nb_inplace_power __ipow__
-nb_negative __neg__
-nb_positive __pos__
 nb_absolute __abs__
-nb_bool __bool__
-nb_invert __invert__
-nb_lshift __lshift__ __rlshift__
-nb_inplace_lshift __ilshift__
-nb_rshift __rshift__ __rrshift__
-nb_inplace_rshift __irshift__
+nb_add __add__ __radd__
 nb_and __and__ __rand__
-nb_inplace_and __iand__
-nb_xor __xor__ __rxor__
-nb_inplace_xor __ixor__
-nb_or __or__ __ror__
-nb_inplace_or __ior__
-nb_int __int__
+nb_bool __bool__
+nb_divmod __divmod__ __rdivmod__
 nb_float __float__
 nb_floor_divide __floordiv__
-nb_inplace_floor_divide __ifloordiv__
-nb_true_divide __truediv__
-nb_inplace_true_divide __itruediv__
 nb_index __index__
-nb_matrix_multiply __matmul__ __rmatmul__
+nb_inplace_add __iadd__
+nb_inplace_and __iand__
+nb_inplace_floor_divide __ifloordiv__
+nb_inplace_lshift __ilshift__
 nb_inplace_matrix_multiply __imatmul__
+nb_inplace_multiply __imul__
+nb_inplace_or __ior__
+nb_inplace_remainder __imod__
+nb_inplace_power __ipow__
+nb_inplace_subtract __isub__
+nb_inplace_true_divide __itruediv__
+nb_inplace_rshift __irshift__
+nb_inplace_xor __ixor__
+nb_int __int__
+nb_invert __invert__
+nb_lshift __lshift__ __rlshift__
+nb_matrix_multiply __matmul__ __rmatmul__
+nb_multiply __mul__ __rmul__
+nb_negative __neg__
+nb_or __or__ __ror__
+nb_positive __pos__
+nb_power __pow__ __rpow__
+nb_remainder __mod__ __rmod__
+nb_rshift __rshift__ __rrshift__
+nb_subtract __sub__ __rsub__
+nb_true_divide __truediv__
+nb_xor __xor__ __rxor__
+
 mp_length __len__
 mp_subscript __getitem__
 mp_ass_subscript __setitem__, __delitem__
@@ -314,7 +315,7 @@ if __name__ == '__main__':
         out.write(set_additional_data)
         out.write(set_builtin_funcs_type)
         out.write('})(__BRYTHON__)\n')
-    
+
     path = os.path.join(src_dir, 'builtin_types_infos.js')
     with open(path, 'w', encoding='utf-8') as out:
         sets = make_sets()

@@ -759,6 +759,8 @@ $B.get_class = function(obj){
                     return _b_.int
                 }
                 break
+            case "bigint":
+                return _b_.int
             case "string":
                 return _b_.str
             case "boolean":
@@ -1509,7 +1511,7 @@ $B.$call_with_position = function(callable, inum, ...args){
 }
 
 $B.$call = function(callable, ...args){
-    var test = callable.$function_infos && callable.$function_infos[1] == 'test_gen1'
+    var test = false // callable.$function_infos && callable.$function_infos[1] == 'test_gen1'
     var klass = $B.get_class(callable)
     if(test){
         console.log('call', callable, 'klass', klass, 'args', args)
@@ -1519,8 +1521,6 @@ $B.$call = function(callable, ...args){
         console.log('call_method', call_method)
     }
     if(call_method === $B.NULL){
-        console.log('no slot tp_call in class', klass)
-        console.log(Error().stack)
         $B.RAISE(_b_.TypeError, "'" + $B.class_name(callable) +
             "' object is not callable")
     }
@@ -1594,6 +1594,7 @@ $B.PyNumber_Index = function(item){
         case "boolean":
             return item ? 1 : 0
         case "number":
+        case "bigint":
             return item
         case "object":
             if($B.get_class(item) === $B.long_int){
@@ -2034,7 +2035,7 @@ $B.rich_op1 = function(op, x, y){
             reflected_right = $B.$getattr(y_type, rop, false)
         if(reflected_right && reflected_left &&
                 reflected_right !== reflected_left){
-            return reflected_right(y, x)
+            return $B.$call(reflected_right, y, x)
         }
     }
     if(op == '__mul__'){

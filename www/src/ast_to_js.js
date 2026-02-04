@@ -2068,8 +2068,8 @@ $B.ast.Constant.prototype.to_js = function(){
         }else{
             return `({ob_type: _b_.float, value: ${this.value}})`
         }
-    }else if(klass === $B.long_int){
-        return `$B.fast_long_int(${this.value.value}n)`
+    }else if(typeof this.value == "bigint"){
+        return `${this.value}n`
     }else if(klass === _b_.float){
         return `({ob_type: _b_.float, value: ${this.value.value}})`
     }else if(klass === _b_.complex){

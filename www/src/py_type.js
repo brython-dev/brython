@@ -941,7 +941,7 @@ function set_tp_slots(cls){
 
 /* type start */
 _b_.type.tp_setattro = function(kls, attr, value){
-    var $test = false // kls.tp_name == 'A'
+    var $test = false // attr == '__doc__' // kls.tp_name == 'A'
     if($test){
         console.log('set attr', attr, 'of class', kls, 'to', value)
         console.log('kls.dict', Object.entries(kls.dict.$strings))
@@ -949,11 +949,14 @@ _b_.type.tp_setattro = function(kls, attr, value){
     var in_mro = $B.search_in_mro($B.get_class(kls), attr, $B.NULL)
     if(in_mro !== $B.NULL){
         if($test){
-            console.log('use type.dict', type.dict[attr])
+            console.log('attr', attr, 'found in mro', in_mro)
         }
         var in_mro_type = $B.get_class(in_mro)
         var setter = $B.search_slot(in_mro_type, 'tp_descr_set', $B.NULL)
         if(setter !== $B.NULL){
+            if($test){
+                console.log('use setter', setter)
+            }
             return setter(in_mro, kls, value)
         }
     }
@@ -1059,7 +1062,7 @@ _b_.type.tp_call = function(){
 }
 
 _b_.type.tp_getattro = function(obj, name){
-    var test = name == '__suppress_context__' // && obj.tp_name == 'Mapping'
+    var test = false // name == 'url' // && obj.tp_name == 'Mapping'
     if(test){
         console.log('class_getattr', obj, name)
         console.log('frame obj', $B.frame_obj)
@@ -1392,7 +1395,7 @@ type_funcs.__doc___get = function(cls){
 }
 
 type_funcs.__doc___set = function(cls, value){
-    cls.__doc__ = value
+    $B.str_dict_set(cls.dict, '__doc__', value)
 }
 
 type_funcs.__instancecheck__ = function(cls, instance){
@@ -1536,7 +1539,7 @@ _b_.property.tp_descr_set = function(self, obj, value){
 }
 
 _b_.property.tp_descr_get = function(self, obj, type){
-    if(obj === _b_.None){
+    if(obj === $B.NULL){
         return self
     }
     if(self.prop_get === _b_.None){

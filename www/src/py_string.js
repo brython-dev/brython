@@ -2095,7 +2095,7 @@ str_funcs.maketrans = function(){
             $B.RAISE(_b_.TypeError,
                 "maketrans only argument must be a dict")
         }
-        var items = _b_.list.$factory(_b_.dict.items($.x))
+        var items = _b_.list.$factory(_b_.dict.tp_funcs.items($.x))
         for(let i = 0, len = items.length; i < len; i++){
             let k = items[i][0],
                 v = items[i][1]

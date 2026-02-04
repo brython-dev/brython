@@ -638,10 +638,8 @@ float.$factory = function(value){
             index_klass = $B.get_class(index)
 
         if(index_klass === _b_.int){
-            return fast_float(index)
-        }else if(index_klass === $B.long_int){
-            return $B.long_int.__float__(index)
-        }else if(index_klass.__mro__.indexOf(_b_.int) > -1){
+            return fast_float(Number(index))
+        }else if($B.get_mro(index_klass).indexOf(_b_.int) > -1){
             let msg =  `${$B.class_name(value)}.__index__ returned ` +
                 `non-int (type ${$B.class_name(index)}).  The ` +
                 'ability to return an instance of a strict subclass' +
@@ -681,7 +679,7 @@ _b_.float.tp_richcompare = function(self, other, op){
         return _b_.NotImplemented
     }
     var other_value = other_nb_float(other).value
-
+    
     var res
 
     switch(op){

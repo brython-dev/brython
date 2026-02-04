@@ -1264,7 +1264,7 @@ function bytes_split_with_whitespace(self, maxsplit){
         source = self.source,
         len = source.length
 
-    maxsplit = _b_.int.$int_value(maxsplit)
+    maxsplit = $B.int_value(maxsplit)
     var ws = [9, 10, 11, 12, 13, 32]
     // strip leading and trailing whitespaces
     while(pos < len && ws.includes(source[pos])){
@@ -1558,7 +1558,6 @@ function normalise(encoding){
 function load_decoder(enc){
     // load table from Lib/encodings/<enc>.py
     if(to_unicode[enc] === undefined){
-        console.log('try to import encodings.' + enc)
         var mod = _b_.__import__("encodings." + enc)
         var enc_mod = $B.module_getattr(mod, enc)
         if(enc_mod !== $B.NULL){
@@ -2093,7 +2092,7 @@ _b_.bytes.mp_length = function(self){
 
 _b_.bytes.mp_subscript = function(self, arg){
     if($B.$isinstance(arg, _b_.int)){
-        arg = _b_.int.$int_value(arg)
+        arg = $B.int_value(arg)
         let pos = arg
         if(arg < 0){
             pos = self.source.length + pos

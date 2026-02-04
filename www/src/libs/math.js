@@ -671,8 +671,8 @@ function comb(n, k){
     n = $B.PyNumber_Index(n)
     k = $B.PyNumber_Index(k)
 
-    n = _b_.int.$to_bigint(n);
-    k = _b_.int.$to_bigint(k);
+    n = $B.to_bigint(n);
+    k = $B.to_bigint(k);
 
     if(n < 0){
         $B.RAISE(_b_.ValueError,
@@ -1149,7 +1149,7 @@ function factorial(arg){
         odd_part;
     // Check that arg can be converted to an integer, and transform it to
     // a bigint
-    x = _b_.int.$to_bigint($B.PyNumber_Index(arg))
+    x = $B.to_bigint($B.PyNumber_Index(arg))
     overflow = x > LONG_MAX || x < LONG_MIN
     if(x > LONG_MAX) {
         $B.RAISE(_b_.OverflowError,
@@ -1633,12 +1633,12 @@ function gcd(x, y){
     }else if(args.length == 1){
         return _b_.abs(args[0])
     }
-    x = _b_.int.$to_bigint(args[0])
-    y = _b_.int.$to_bigint(args[1])
+    x = $B.to_bigint(args[0])
+    y = $B.to_bigint(args[1])
     var res = lxgcd(x, y)[0],
         i = 2
     while(i < args.length){
-        res = lxgcd(res, _b_.int.$to_bigint(args[i]))[0]
+        res = lxgcd(res, $B.to_bigint(args[i]))[0]
         i++
     }
     return _b_.int.$int_or_long(res)
@@ -2108,8 +2108,8 @@ function perm(n, k){
     k = $B.PyNumber_Index(k)
 
     // transform to Javascript BigInt
-    var n1 = _b_.int.$to_bigint(n),
-        k1 = _b_.int.$to_bigint(k);
+    var n1 = $B.to_bigint(n),
+        k1 = $B.to_bigint(k);
 
     if(k1 < 0){
         $B.RAISE(_b_.ValueError, "k must be a non-negative integer")
@@ -2522,13 +2522,13 @@ function sumprod(p, q){
                 var overflow;
                 var int_p, int_q, int_prod;
 
-                int_p = _b_.int.$to_bigint($B.PyNumber_Index(p_i))
+                int_p = $B.to_bigint($B.PyNumber_Index(p_i))
                 overflow = int_p > LONG_MAX || int_p < LONG_MIN
 
                 if (overflow) {
                     finalize_int_path()
                 }
-                int_q = _b_.int.$to_bigint($B.PyNumber_Index(q_i));
+                int_q = $B.to_bigint($B.PyNumber_Index(q_i));
                 overflow = int_q > LONG_MAX || int_q < LONG_MIN
                 if (overflow) {
                     finalize_int_path()
@@ -2688,7 +2688,7 @@ function ulp(){
         return x >= 0 ? $B.fast_float(nextUp(x) - x) :
                        $B.fast_float(x - (-nextUp(-x)))
     }else if($B.$isinstance(x, $B.long_int)){
-        x = Number(_b_.int.$to_bigint(x))
+        x = Number($B.to_bigint(x))
         return x > 0 ? $B.fast_float(nextUp(x) - x) :
                        $B.fast_float(x - (-nextUp(-x)))
     }else{
