@@ -386,15 +386,13 @@ set_iterator.__length_hint__ = function(self){
     return self.so.$used
 }
 
-set_iterator.tp_iternext = function(self){
-    var res = self.it.next()
-    if(res.done){
-        $B.RAISE(_b_.StopIteration)
+set_iterator.tp_iternext = function*(self){
+    for(var item of self.it){
+        if(self.so.$version != self.version){
+            $B.RAISE(_b_.RuntimeError, "Set changed size during iteration")
+        }
+        yield item
     }
-    if(self.so.$version != self.version){
-        $B.RAISE(_b_.RuntimeError, "Set changed size during iteration")
-    }
-    return res.value
 }
 
 set_iterator.__reduce_ex__ = function(self){

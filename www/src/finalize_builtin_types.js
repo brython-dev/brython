@@ -129,7 +129,7 @@ function make_new(cls){
 }
 
 function make_next(cls){
-    var next = function(obj){
+    var next_func = function(obj){
         var itn = cls.tp_iternext(obj)
         var res = itn.next()
         if(res.done){
@@ -137,8 +137,14 @@ function make_next(cls){
         }
         return res.value
     }
-    next.ml = {ml_name: '__next__'}
-    $B.str_dict_set(cls.dict, '__next__', next)
+    next_func.ob_type = $B.function
+    var descr = $B.wrapper_descriptor.$factory(
+        cls,
+        '__next__',
+        next_func
+    )
+
+    $B.str_dict_set(cls.dict, '__next__', next_func)
 }
 
 function make_setitem_delitem(cls){

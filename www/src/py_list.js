@@ -310,17 +310,36 @@ list.$getitem_slice = function(self, key){
 
 list.__hash__ = _b_.None
 
-var list_iterator = $B.make_builtin_class("list_iterator")
+var list_iterator = $B.list_iterator
 
-list_iterator.tp_iternext = function*(self){
+/* list_iterator start */
+$B.list_iterator.tp_iter = function(self){
+    return self
+}
+
+$B.list_iterator.tp_iternext = function*(self){
     for(var value of self.it){
         yield value
     }
 }
 
-list_iterator.__reduce__ = list_iterator.__reduce_ex__ = function(self){
+var list_iterator_funcs = $B.list_iterator.tp_funcs = {}
+
+list_iterator_funcs.__length_hint__ = function(self){
+    return self.len
+}
+
+list_iterator_funcs.__reduce__ = function(self){
     return $B.fast_tuple([_b_.iter, $B.fast_tuple([list.$factory(self)]), 0])
 }
+
+list_iterator_funcs.__setstate__ = function(self){
+
+}
+
+$B.list_iterator.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]
+
+/* list_iterator end */
 
 var eq = $B.list_eq = function(self, other){
     if(other[$B.PYOBJ]){
@@ -645,10 +664,12 @@ _b_.list.tp_repr = function(self){
 _b_.list.tp_hash = _b_.None
 
 _b_.list.tp_iter = function(self){
-    return {
+    var res = {
         ob_type: list_iterator,
-        it: self[Symbol.iterator]()
+        it: self[Symbol.iterator](),
+        len: self.length
     }
+    return res
 }
 
 _b_.list.tp_init = function(self){

@@ -48,25 +48,29 @@ $B.range_iterator.tp_iternext = function*(self){
     if(self.safe){
         if(self.stop > self.start){
             while(self.it < self.stop){
-                yield self.it
+                var res = self.it
                 self.it += self.step
+                yield res
             }
         }else{
             while(self.it > self.stop){
-                yield self.it
+                var res = self.it
                 self.it += self.step
+                yield res
             }
         }
     }else{
         if(self.stop > self.start){
             while(self.it < self.stop){
-                yield _b_.int.$int_or_long(self.it)
+                var res = _b_.int.$int_or_long(self.it)
                 self.it += self.step
+                yield res
             }
         }else{
             while(self.it > self.stop){
-                yield _b_.int.$int_or_long(self.it)
+                var res = _b_.int.$int_or_long(self.it)
                 self.it += self.step
+                yield res
             }
         }
     }
@@ -141,9 +145,9 @@ _b_.range.tp_iter = function(self){
         stop = self.stop
         step = self.step
     }else{
-        start = _b_.int.$to_bigint(self.start)
-        stop = _b_.int.$to_bigint(self.stop)
-        step = _b_.int.$to_bigint(self.step)
+        start = $B.to_bigint(self.start)
+        stop = $B.to_bigint(self.stop)
+        step = $B.to_bigint(self.step)
     }
 
     return {
@@ -151,7 +155,8 @@ _b_.range.tp_iter = function(self){
         start,
         stop,
         step,
-        safe: self.$safe
+        safe: self.$safe,
+        it: start
     }
 }
 
@@ -206,9 +211,9 @@ _b_.range.nb_bool = function(self){
 
 _b_.range.mp_length = function(self){
     var len,
-        start = _b_.int.$to_bigint(self.start),
-        stop = _b_.int.$to_bigint(self.stop),
-        step = _b_.int.$to_bigint(self.step)
+        start = $B.to_bigint(self.start),
+        stop = $B.to_bigint(self.stop),
+        step = $B.to_bigint(self.step)
     if(self.step > 0){
         if(self.start >= self.stop){
             return 0
@@ -269,10 +274,10 @@ _b_.range.sq_contains = function(self, other){
             return false
         }
     }
-    var start = _b_.int.$to_bigint(self.start),
-        stop = _b_.int.$to_bigint(self.stop),
-        step = _b_.int.$to_bigint(self.step)
-    other = _b_.int.$to_bigint(other)
+    var start = $B.to_bigint(self.start),
+        stop = $B.to_bigint(self.stop),
+        step = $B.to_bigint(self.step)
+    other = $B.to_bigint(other)
 
     var sub = other - start,
         fl = sub / step,
