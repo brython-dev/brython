@@ -18,8 +18,7 @@ stat_result.$factory = function(filename){
     filename = _b_.str.$factory(filename)
     if($B.file_cache && $B.file_cache.hasOwnProperty(filename)){
         var f = $B.file_cache[filename],
-            res = {
-                ob_type: stat_result,
+            infos = {
                 st_atime: __BRYTHON__.timestamp,
                 st_ctime: f.ctime,
                 st_mtime: f.mtime,
@@ -31,13 +30,17 @@ stat_result.$factory = function(filename){
             };
             ["mtime", "ctime", "atime_ns", "mtime_ns", "ctime_ns"].
                 forEach(function(item){
-                    res["st_" + item] = res.st_atime
+                    infos["st_" + item] = infos.st_atime
                 });
+        var res = {
+            ob_type: stat_result,
+            dict: $B.empty_dict()
+        }
+        $B.assign_dict(res, infos)
         return res
     }else if($B.files && $B.files.hasOwnProperty(filename)){
         var f = $B.files[filename],
-            res = {
-                ob_type: stat_result,
+            infos = {
                 st_atime: __BRYTHON__.timestamp,
                 st_ctime: f.ctime,
                 st_mtime: f.mtime,
@@ -48,8 +51,13 @@ stat_result.$factory = function(filename){
                 st_size: f.content.length
             };
         for(var item of ["mtime", "ctime", "atime_ns", "mtime_ns", "ctime_ns"]){
-            res["st_" + item] = res.st_atime
+            infos["st_" + item] = infos.st_atime
         }
+        var res = {
+            ob_type: stat_result,
+            dict: $B.empty_dict()
+        }
+        $B.assign_dict(res, infos)
         return res
 
     }else{

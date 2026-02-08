@@ -705,20 +705,27 @@ $B.check_no_kw = function(name, x, y){
         $B.RAISE(_b_.TypeError, name + "() takes no keyword arguments")}
 }
 
+$B.keyword_is_empty = function(kw){
+    var first = kw[0]
+    for(var key in first){
+        return false
+    }
+    for(var i = 1; i < kw.length; i++){
+        for(var item of _b_.dict.$iter_items(kw[i])){
+            return false
+        }
+    }
+    return true
+}
+
 $B.check_nb_args_no_kw = function(name, expected, args){
     // Check the number of arguments and absence of keyword args
     var len = args.length,
         last = args[len - 1]
     if(last && last.$kw){
         len--
-        var first = last.$kw[0]
-        for(var key in last.$kw[0]){
+        if(! $B.keyword_is_empty(last.$kw)){
             $B.RAISE(_b_.TypeError, name + "() takes no keyword arguments")
-        }
-        for(var i = 1; i < last.$kw.length; i++){
-            for(var item of _b_.dict.$iter_items(last.$kw[i])){
-                $B.RAISE(_b_.TypeError, name + "() takes no keyword arguments")
-            }
         }
     }
     if(len != expected){
@@ -732,7 +739,6 @@ $B.check_nb_args_no_kw = function(name, expected, args){
         }
     }
 }
-
 
 $B.get_class = function(obj){
     // generally we get the attribute __class__ of an object by obj.__class__
@@ -910,7 +916,7 @@ $B.make_js_iterator = function(iterator, frame, lineno){
             }
         }
     }
-
+    /*
     if(iterator[Symbol.iterator] && ! iterator.$is_js_array){
         var it = iterator[Symbol.iterator]()
         return {
@@ -923,9 +929,10 @@ $B.make_js_iterator = function(iterator, frame, lineno){
             }
         }
     }
+    */
 
     var it = _b_.iter(iterator)
-    var test = false // iterator.tp_name == 'FlagBoundary'
+    var test = false // $B.get_class(iterator) === $B.js_array //.tp_name == 'FlagBoundary'
     if(test){
         console.log('make js iterator', it)
     }
@@ -939,7 +946,6 @@ $B.make_js_iterator = function(iterator, frame, lineno){
     }
 
     if(next_func !== null){
-        //next_func = $B.$call(next_func)
         return {
             [Symbol.iterator](){
                 return this
@@ -1050,13 +1056,17 @@ $B.get_method_class = function(method, ns, qualname, refs){
 // warning
 $B.warn = function(klass, message, filename, token){
     var warning = $B.EXC(klass, message)
-    warning.filename = filename
+    $B.str_dict_set(warning.dict, 'filename', filename)
     if(klass === _b_.SyntaxWarning){
-        warning.lineno = token.lineno
-        warning.offset = token.col_offset
-        warning.end_lineno = token.end_lineno
-        warning.end_offset = token.end_coloffset
-        warning.text = token.line
+        $B.assign_dict(warning,
+            {
+                lineno: token.lineno,
+                offset: token.col_offset,
+                end_lineno: token.end_lineno,
+                end_offset: token.end_coloffset,
+                text: token.line
+            }
+        )
         warning.args[1] = $B.fast_tuple([filename,
                                          warning.lineno, warning.offset,
                                          warning.text,
@@ -1201,13 +1211,13 @@ $B.$setitem = function(obj, item, value, inum){
             throw err
         }
     }
-    var setitem = $B.$getattr(obj, "__setitem__", $B.NULL)
+    var setitem = $B.$getattr($B.get_class(obj), "__setitem__", $B.NULL)
     if(setitem === $B.NULL){
         $B.set_inum(inum)
         $B.RAISE(_b_.TypeError, "'" + $B.class_name(obj) +
             "' object does not support item assignment")
     }
-    return $B.$call(setitem, item, value)
+    return $B.$call(setitem, obj, item, value)
 }
 
 $B.set_inum = function(inum){

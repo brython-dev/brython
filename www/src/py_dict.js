@@ -54,6 +54,16 @@ $B.dict_proxy = function(dict){
     )
 }
 
+$B.assign_dict = function(pyobj, jsobj){
+    // assign the keys / values in jsonj to the pyobj dict
+    if(! Object.hasOwn(pyobj, 'dict')){
+        pyobj.dict = $B.empty_dict()
+        pyobj.dict.$strings = jsobj
+    }else{
+        Object.assign(pyobj.dict.$strings, jsobj)
+    }
+}
+
 function PyDictViewSet_Check(op){
     return $B.$isinstance(op, [$B.dict_keys, $B.dict_items])
 }

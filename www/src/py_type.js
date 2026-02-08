@@ -37,7 +37,7 @@ const TPFLAGS = {
 // generic code for class constructor
 $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
         bases, extra_kwargs){
-    var test = false // class_name == 'Generator'
+    var test = false // class_name == 'Square'
     if(test){
         console.log('class constructor', class_name, 'dict', dict)
         console.log('metaclass', metaclass)
@@ -172,21 +172,6 @@ $B.get_metaclass = function(class_name, bases, kw_meta){
         metaclass = kw_meta
     }
     if(bases && bases.length > 0){
-        if($B.get_class(bases[0]) === $B.JSObj){ //undefined && bases[0].ob_type === undefined){
-            // Might inherit a Javascript constructor
-            if(typeof bases[0] == "function"){
-                if(bases.length != 1){
-                    $B.RAISE(_b_.TypeError, "A Brython class " +
-                        "can inherit at most 1 Javascript constructor")
-                }
-                $B.set_func_names(bases[0], current_module())
-                return $B.JSMeta
-            }else{
-                $B.RAISE(_b_.TypeError, "Argument of " + class_name +
-                    " is not a class (type '" + $B.class_name(bases[0]) +
-                    "')")
-            }
-        }
         for(var base of bases){
             var mc = $B.get_class(base)
             if(metaclass === undefined){
@@ -808,6 +793,7 @@ $B.slot2dunder = {
     tp_call: '__call__',
     tp_descr_get: '__get__',
     tp_descr_set: '__set__',
+    tp_getattro: '__getattribute__',
     tp_hash: '__hash__',
     tp_init: '__init__',
     tp_iter: '__iter__',
@@ -1009,7 +995,7 @@ _b_.type.tp_call = function(){
         kw = $.kw,
         kw_len = _b_.dict.mp_length(kw)
 
-    var test = false // cls === _b_.tuple
+    var test = false // cls.tp_name === 'Square2'
     if(test){
         console.log('type.tp_call', cls, args)
         console.log(Error('trace').stack)
@@ -1062,7 +1048,7 @@ _b_.type.tp_call = function(){
 }
 
 _b_.type.tp_getattro = function(obj, name){
-    var test = false // name == 'url' // && obj.tp_name == 'Mapping'
+    var test = false // name == '__new__' // && obj.tp_name == 'Mapping'
     if(test){
         console.log('class_getattr', obj, name)
         console.log('frame obj', $B.frame_obj)
@@ -1545,7 +1531,12 @@ _b_.property.tp_descr_get = function(self, obj, type){
     if(self.prop_get === _b_.None){
         $B.RAISE_ATTRIBUTE_ERROR("unreadable attribute", self, '__get__')
     }
-    return $B.$call(self.prop_get, obj)
+    try{
+        return $B.$call(self.prop_get, obj)
+    }catch(err){
+        console.log('error', err)
+        throw err
+    }
 }
 
 _b_.property.tp_init = function(){
@@ -1575,17 +1566,20 @@ _b_.property.tp_init = function(){
         }
     }
 
-    self.__delete__ = fdel;
-
+    self.__delete__ = fdel
+    /*
     self.getter = function(fget){
         return property.$factory(fget, self.prop_set, self.prop_del, self.prop_doc)
     }
     self.setter = function(fset){
+        self.prop_set = fset
+        return self
         return property.$factory(self.prop_get, fset, self.prop_del, self.prop_doc)
     }
     self.deleter = function(fdel){
         return property.$factory(self.prop_get, self.prop_set, fdel, self.prop_doc)
     }
+    */
 }
 
 _b_.property.tp_new = function(cls){
@@ -1605,7 +1599,6 @@ property_funcs.__isabstractmethod___set = function(self){
 }
 
 property_funcs.__name___get = function(self){
-    console.log('property name', self)
     return $B.$getattr(self.prop_get, '__name__')
 }
 
@@ -1617,16 +1610,19 @@ property_funcs.__set_name__ = function(self){
 
 }
 
-property_funcs.deleter = function(self){
-    return self.deleter
+property_funcs.deleter = function(self, fdel){
+    self.prop_del = fdel
+    return self
 }
 
-property_funcs.getter = function(self){
-    return self.getter
+property_funcs.getter = function(self, fget){
+    self.prop_get = fget
+    return self
 }
 
-property_funcs.setter = function(self){
-    return self.setter
+property_funcs.setter = function(self, fset){
+    self.prop_set = fset
+    return self
 }
 
 _b_.property.tp_methods = ["getter", "setter", "deleter", "__set_name__"]

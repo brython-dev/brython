@@ -1000,30 +1000,6 @@ $B.search_in_mro = function(klass, attr, _default){
         console.log(Error('trace').stack)
         console.log('default', _default)
     }
-    /*
-    if(klass.dict){
-        if(! klass.dict.hasOwnProperty){
-            console.log('no hasOwnProperty', klass)
-        }
-        var v = $B.str_dict_get(klass.dict, attr, $B.NULL)
-        if(v !== $B.NULL){
-            if(test){
-                console.log('found in klass dict', klass.dict, v)
-            }
-            return v
-        }
-    }
-    if(klass.hasOwnProperty && klass.hasOwnProperty(attr)){
-        if(test){
-            console.log('found in klass', klass, klass[attr])
-        }
-        if(attr == '__class__' && klass.ob_type){
-            // ignore for the moment
-        }else{
-            return klass[attr]
-        }
-    }
-    */
     var mro = $B.get_mro(klass)
     if(mro === undefined){
         console.log('no mro in class', klass, klass.tp_mro, klass.__mro__)
@@ -1084,12 +1060,6 @@ $B.search_in_dict = function(obj, attr, _default){
             return v
         }
     }
-
-    if(obj.hasOwnProperty){
-        if(obj.hasOwnProperty(attr)){
-            return obj[attr]
-        }
-    }
     return _default
 }
 
@@ -1117,7 +1087,7 @@ $B.object_getattribute = function(obj, attr){
         var getattr = $B.search_in_mro(klass, '__getattr__')
         if(getattr){
             try{
-                res = getattr(obj, attr)
+                res = $B.$call(getattr, obj, attr)
             }catch(err){
                 $B.RAISE_IF_NOT(err, _b_.AttributeError)
                 return $B.NULL
@@ -1131,7 +1101,7 @@ $B.object_getattribute = function(obj, attr){
 
 $B.$getattr = function(obj, attr, _default){
     // Used internally to avoid having to parse the arguments
-    var test = false // attr == '__dict__'
+    var test = false // attr == 'to_dict'
     if(test){
         console.log('$getattr', obj, attr)
     }
@@ -2725,7 +2695,7 @@ _b_.super.tp_repr = function(self){
 _b_.super.tp_getattro = function(self, attr){
     /* We want __class__ to return the class of the super object
        (i.e. super, or a subclass), not the class of su->obj. */
-    var $test = false // attr == "__init_subclass__" // && self.obj.tp_name == 'Plugin'// && self.__self_class__.$infos.__name__ == 'EnumCheck'
+    var $test = false // attr == "__init__"
     if(attr == "__class__"){
         return _b_.object.tp_getattro(self, attr)
     }
@@ -2753,7 +2723,6 @@ _b_.super.tp_getattro = function(self, attr){
         console.log('frame obj', $B.frame_obj)
     }
 
-    var $test = false // attr == "__init_subclass__" && self.obj.tp_name == 'Plugin'// && self.__self_class__.$infos.__name__ == 'EnumCheck'
     if($test){
         console.log('super.__ga__, self', self, 'search classes', search_classes)
         console.log('frame obj', $B.frame_obj)
@@ -2839,13 +2808,13 @@ _b_.super.tp_init = function(self, _type, object_or_type){
             var frame = $B.frame_obj.frame,
                 pyframe = $B.imported["_sys"]._getframe(),
                 code = $B.$getattr(pyframe, 'f_code'),
-                co_varnames = code.co_varnames
+                co_varnames = $B.$getattr(code, 'co_varnames')
             if(co_varnames.length > 0){
                 type = $B.get_class(frame[1])
                 if(type === undefined){
                     $B.RAISE(_b_.RuntimeError, "super(): no arguments")
                 }
-                object_or_type = frame[1][code.co_varnames[0]]
+                object_or_type = frame[1][co_varnames[0]]
             }else{
                 $B.RAISE(_b_.RuntimeError, "super(): no arguments")
             }

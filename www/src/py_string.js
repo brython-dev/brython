@@ -203,7 +203,6 @@ str_iterator.tp_iter = function(self){
 
 str_iterator.tp_iternext = function*(self){
     for(var char of self.it){
-        console.log('yield', char)
         yield char
     }
 }

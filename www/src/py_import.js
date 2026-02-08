@@ -420,7 +420,7 @@ function run_py(module_contents, path, module, compiled) {
             is_package: module.$is_package,
             path,
             timestamp: $B.timestamp,
-            source_ts: spec.loader_state.timestamp
+            source_ts: $B.$getattr(spec, 'loader_state').timestamp
         }
     }catch(err){
         console.log("" + err + " " + " for module " + module.__name__)
@@ -440,10 +440,15 @@ $B.run_js = run_js
 
 var ModuleSpec = $B.make_builtin_class("ModuleSpec")
 
-ModuleSpec.$factory = function(fields) {
-    fields.ob_type = ModuleSpec
-    fields.dict = $B.empty_dict()
-    return fields
+ModuleSpec.$factory = function(fields){
+    var spec = {
+        ob_type: ModuleSpec,
+        dict: $B.empty_dict()
+    }
+    for(var field in fields){
+        $B.str_dict_set(spec.dict, field, fields[field])
+    }
+    return spec
 }
 
 ModuleSpec.tp_repr = function(self){
@@ -544,8 +549,9 @@ VFSLoader_funcs.exec_module = function(self, modobj){
         console.log(Error('trace').stack)
     }
     var spec = $B.$getattr(modobj, '__spec__'),
-        stored = spec.loader_state.stored,
-        timestamp = spec.loader_state.timestamp
+        loader_state = $B.$getattr(spec, 'loader_state'),
+        stored = loader_state.stored,
+        timestamp = loader_state.timestamp
     var ext = stored[0],
         module_contents = stored[1],
         imports = stored[2]

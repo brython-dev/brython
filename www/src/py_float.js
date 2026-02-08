@@ -716,8 +716,8 @@ _b_.float.nb_add = function(self, other){
     if($B.$isinstance(other, _b_.int)){
         if(typeof other == "boolean"){
             return other ? $B.fast_float(self.value + 1) : self
-        }else if($B.is_long_int(other)){
-            return _b_.float.$factory(self.value + parseInt(other.value))
+        }else if(typeof other == 'bigint'){
+            return _b_.NotImplemented //return _b_.float.$factory(self.value + parseInt(other.value))
         }else{
             return $B.fast_float(self.value + other)
         }

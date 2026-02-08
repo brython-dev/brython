@@ -63,19 +63,21 @@ $B.ast_js_to_py = function(obj){
         var class_name = obj.constructor.$name,
             py_class = $B.python_ast_classes[class_name],
             py_ast_obj = {
-                ob_type: py_class
+                ob_type: py_class,
+                dict: $B.empty_dict()
             }
         if(py_class === undefined){
             return obj
         }
         for(var field of py_class._fields){
-            py_ast_obj[field] = $B.ast_js_to_py(obj[field])
+            $B.str_dict_set(py_ast_obj.dict, field, 
+                $B.ast_js_to_py(obj[field]))
         }
         py_ast_obj._attributes = $B.fast_tuple([])
         for(var loc of ['lineno', 'col_offset',
                         'end_lineno', 'end_col_offset']){
             if(obj[loc] !== undefined){
-                py_ast_obj[loc] = obj[loc]
+                $B.str_dict_set(py_ast_obj.dict, loc, obj[loc])
                 py_ast_obj._attributes.push(loc)
             }
         }
@@ -154,6 +156,9 @@ $B.create_python_ast_classes = function(){
                 $B.fast_tuple(Object.keys(slots)))
 
             cls.$factory = function(){
+                if(klass == 'Module'){
+                    console.log('create Module object')
+                }
                 var $ = $B.args(klass, nb_args, $B.clone(slots), Object.keys(slots),
                         arguments, $B.clone($defaults), null, 'kw')
                 var res = {

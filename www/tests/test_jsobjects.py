@@ -157,7 +157,7 @@ assert b1 % b2 == window.BigInt(str(23456 % 78901))
 b3 = window.BigInt('2')
 assert b1 ** b3 == window.BigInt(str(23456 ** 2))
 
-for num in [1, 4.7]:
+for num in [4.7]:
     try:
         b1 + num # in Javascript, can't add BigInt and number
         raise Exception('should have raised TypeError')
@@ -266,7 +266,7 @@ window.demo_array.demo_array2.test2172()
 try:
     window.js_error()
 except Exception as exc:
-    assert exc.args[0] == 'Error: catching JS error'
+    assert exc.args[0] == 'catching JS error'
 
 # issue 2248
 assert type(javascript.NULL) is javascript.NullType

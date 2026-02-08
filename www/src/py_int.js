@@ -380,7 +380,7 @@ _b_.int.tp_richcompare = function(a, b, op){
 
     switch(op){
         case '__eq__':
-            res = a === b
+            res = a == b
             break
         case '__ne__':
             res = a != b

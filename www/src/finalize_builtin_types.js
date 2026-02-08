@@ -206,64 +206,64 @@ function make_richcompare(cls){
 $B.finalize_type = function(cls){
     cls.tp_mro = $B.make_mro(cls)
     cls.dict = $B.empty_dict()
-    if(cls.tp_funcs){
-        if(cls.tp_getset){
-            for(var descr of cls.tp_getset){
-                var getset = [
-                    cls.tp_funcs[descr + '_get'], // getter
-                    cls.tp_funcs[descr + '_set'] // setter
-                ]
-                $B.str_dict_set(cls.dict, descr,
-                    $B.getset_descriptor.$factory(cls, descr, getset))
-            }
-        }
-        if(cls.tp_methods){
-            for(var descr of cls.tp_methods){
-                var method = cls.tp_funcs[descr]
-                if(method === undefined){
-                    console.log('no method', cls, cls.tp_funcs, descr)
-                    alert()
-                }
-                method.ob_type = $B.builtin_method
-                $B.str_dict_set(cls.dict, descr, {
-                    ob_type: $B.method_descriptor,
-                    method,
-                    d_name: descr,
-                    d_type: cls
-                })
-                method.self = $B.str_dict_get(cls.dict, descr)
-            }
-        }
-        if(cls.tp_members){ // temporary
-            for(var descr of cls.tp_members){
-                var [name, type, attr, flags] = descr
-                $B.str_dict_set(cls.dict, name,
-                    {
-                        ob_type: $B.member_descriptor,
-                        d_member: {name, type, attr, flags},
-                        d_name: name,
-                        d_type: cls
-                    }
-                )
-            }
-        }
-        if(cls.classmethods){
-            for(var descr of cls.classmethods){
-                $B.str_dict_set(cls.dict, descr, {
-                    ob_type: $B.classmethod_descriptor,
-                    d_name: descr,
-                    d_type: cls,
-                    d_method: cls.tp_funcs[descr]
-                })
-            }
-        }
-        if(cls.staticmethods){
-            for(var descr of cls.staticmethods){
-                $B.str_dict_set(cls.dict, descr,
-                    _b_.staticmethod.$factory(cls.tp_funcs[descr]))
-            }
+
+    if(cls.tp_getset){
+        for(var descr of cls.tp_getset){
+            var getset = [
+                cls.tp_funcs[descr + '_get'], // getter
+                cls.tp_funcs[descr + '_set'] // setter
+            ]
+            $B.str_dict_set(cls.dict, descr,
+                $B.getset_descriptor.$factory(cls, descr, getset))
         }
     }
+    if(cls.tp_methods){
+        for(var descr of cls.tp_methods){
+            var method = cls.tp_funcs[descr]
+            if(method === undefined){
+                console.log('no method', cls, cls.tp_funcs, descr)
+                alert()
+            }
+            method.ob_type = $B.builtin_method
+            $B.str_dict_set(cls.dict, descr, {
+                ob_type: $B.method_descriptor,
+                method,
+                d_name: descr,
+                d_type: cls
+            })
+            method.self = $B.str_dict_get(cls.dict, descr)
+        }
+    }
+    if(cls.tp_members){
+        for(var descr of cls.tp_members){
+            var [name, type, attr, flags] = descr
+            $B.str_dict_set(cls.dict, name,
+                {
+                    ob_type: $B.member_descriptor,
+                    d_member: {name, type, attr, flags},
+                    d_name: name,
+                    d_type: cls
+                }
+            )
+        }
+    }
+    if(cls.classmethods){
+        for(var descr of cls.classmethods){
+            $B.str_dict_set(cls.dict, descr, {
+                ob_type: $B.classmethod_descriptor,
+                d_name: descr,
+                d_type: cls,
+                d_method: cls.tp_funcs[descr]
+            })
+        }
+    }
+    if(cls.staticmethods){
+        for(var descr of cls.staticmethods){
+            $B.str_dict_set(cls.dict, descr,
+                _b_.staticmethod.$factory(cls.tp_funcs[descr]))
+        }
+    }
+
     for(var slot in $B.wrapper_methods){
         if(cls[slot]){
             $B.wrapper_methods[slot](cls, slot)

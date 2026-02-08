@@ -138,7 +138,7 @@ _b_.object.tp_richcompare = function(self, other, op){
 }
 
 _b_.object.tp_setattro = function(self, attr, value){
-    var test = false // attr == 'text'
+    var test = false // attr == 'x'
     var klass = $B.get_class(self)
     var in_mro = $B.search_in_mro(klass, attr, $B.NULL)
     if(test){
@@ -179,9 +179,12 @@ _b_.object.tp_setattro = function(self, attr, value){
     }
     if(in_mro !== $B.NULL){
         if(test){
-            console.log(attr, 'in class mro', in_mro)
+            console.log(attr, 'in class mro', in_mro, $B.get_class(in_mro))
         }
         var setter = $B.search_slot($B.get_class(in_mro), 'tp_descr_set', $B.NULL)
+        if(test){
+            console.log('setter', setter)
+        }
         if(setter !== $B.NULL){
             if(test){
                 console.log('setter', setter)
@@ -239,10 +242,16 @@ _b_.object.tp_str = function(self){
 }
 
 _b_.object.tp_getattro = function(self, attr){
-    var test = false // attr == '__dict__'
+    var test = false // attr == 'filename'
     var klass = $B.get_class(self)
     if(test){
         console.log('getattr', attr, 'of self', self, klass)
+        if(self.jsobj){
+            console.log('in jsobj', self.jsobj[attr])
+        }
+        if(klass.js_class){
+            console.log('in js_class', klass.js_class.prototype[attr])
+        }
     }
     var in_mro = $B.search_in_mro(klass, attr, $B.NULL)
     if(test){
@@ -265,7 +274,11 @@ _b_.object.tp_getattro = function(self, attr){
                     console.log('data descriptor')
                     console.log('call getter with', in_mro, self, klass)
                 }
-                return getter(in_mro, self, klass)
+                var res = getter(in_mro, self, klass)
+                if(test){
+                    console.log('res', res)
+                }
+                return res
             }
         }
     }

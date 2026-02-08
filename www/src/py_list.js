@@ -813,14 +813,10 @@ list_funcs.count = function(){
 list_funcs.extend = function(self){
     var $ = $B.args("extend", 2, {self: null, t: null}, ["self", "t"],
         arguments, {}, null, null)
-    if(self.$is_js_array){
-        for(var item of $B.make_js_iterator($.t)){
-            $.self[$.self.length] = $B.pyobj2jsobj(item)
-        }
-    }else{
-        for(var item of $B.make_js_iterator($.t)){
-            $.self[$.self.length] = item
-        }
+    var self = $.self,
+        t = $.t
+    for(var item of $B.make_js_iterator(t)){
+        self[self.length] = item
     }
     return _b_.None
 }

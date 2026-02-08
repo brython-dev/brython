@@ -564,15 +564,7 @@
 
         JSObject: $B.JSObj,
         JSON: {
-            ob_type: $B.make_builtin_class("JSON"),
-            parse: function(){
-                return $B.structuredclone2pyobj(
-                    JSON.parse.apply(this, arguments))
-            },
-            stringify: function(obj, replacer, space){
-                return JSON.stringify($B.pyobj2structuredclone(obj, false),
-                    $B.jsobj2pyobj(replacer), space)
-            }
+            ob_type: $B.make_builtin_class("JSON")
         },
         jsobj2pyobj:function(obj){
             return $B.jsobj2pyobj(obj)
@@ -607,6 +599,19 @@
         UNDEFINED: $B.Undefined,
         UndefinedType: $B.UndefinedType
     }
+
+    $B.assign_dict(modules.javascript.JSON,
+        {
+            parse: function(){
+                return $B.structuredclone2pyobj(
+                    JSON.parse.apply(this, arguments))
+            },
+            stringify: function(obj, replacer, space){
+                return JSON.stringify($B.pyobj2structuredclone(obj, false),
+                    $B.jsobj2pyobj(replacer), space)
+            }
+        }
+    )
 
     modules.javascript.NullType.__module__ = 'javascript'
 
@@ -853,18 +858,22 @@
               'line', 'source'],
              arguments, {file: _b_.None, line: _b_.None, source: _b_.None},
              null, null)
-        return {
-            ob_type: WarningMessage,
-            message: $.message,
-            category: $.category,
-            filename: $.filename,
-            lineno: $.lineno,
-            file: $.file,
-            line: $.line,
-            source: $.source,
-            _category_name: _b_.bool.$factory($.category) ?
-                $B.$getattr($.category, "__name__") : _b_.None
+        var res = {
+            ob_type: WarningMessage
         }
+        $B.assign_dict(res,
+            {
+                message: $.message,
+                category: $.category,
+                filename: $.filename,
+                lineno: $.lineno,
+                file: $.file,
+                line: $.line,
+                source: $.source,
+                _category_name: _b_.bool.$factory($.category) ?
+                    $B.$getattr($.category, "__name__") : _b_.None
+            }
+        )
     }
 
     // _warnings provides basic warning filtering support.
@@ -927,38 +936,47 @@
                         line = lines[lineno - 1]
                 }
                 warning_message = {
-                    ob_type: WarningMessage,
-                    message: message,
-                    category,
-                    filename,
-                    lineno,
-                    file: _b_.None,
-                    line,
-                    source: _b_.None,
-                    _category_name: category.__name__
+                    ob_type: WarningMessage
                 }
+                $B.assign_dict(warning_message,
+                    {
+                        message: message,
+                        category,
+                        filename,
+                        lineno,
+                        file: _b_.None,
+                        line,
+                        source: _b_.None,
+                        _category_name: category.__name__
+                    }
+                )
             }else{
                 let frame_rank = Math.max(0, $B.count_frames() - stacklevel)
                 var frame = $B.get_frame_at(frame_rank)
                 file = frame.__file__
                 let f_code = $B.$getattr(frame, 'f_code'),
                     src = $B.file_cache[file]
+                var co_filename = $B.$getattr(f_code, 'co_filename')
                 lineno = message.lineno || frame.$lineno
                 line = src ? src.split('\n')[lineno - 1] : null
                 warning_message = {
-                    ob_type: WarningMessage,
-                    message: message,
-                    category,
-                    filename: message.filename || f_code.co_filename,
-                    lineno,
-                    file: _b_.None,
-                    line: line || _b_.None,
-                    source: _b_.None,
-                    _category_name: category.__name__
+                    ob_type: WarningMessage
                 }
+                $B.assign_dict(warning_message,
+                    {
+                        message: message,
+                        category,
+                        filename: message.filename || co_filename,
+                        lineno,
+                        file: _b_.None,
+                        line: line || _b_.None,
+                        source: _b_.None,
+                        _category_name: category.__name__
+                    }
+                )
             }
             if($B.imported.warnings){
-                var showwarn = $B.module_getattr($B.imported.warnings, 
+                var showwarn = $B.module_getattr($B.imported.warnings,
                     '_showwarnmsg_impl')
                 $B.$call(showwarn, warning_message)
             }else{

@@ -4,20 +4,6 @@ var _b_ = $B.builtins
 
 var method_wrapper = $B.method_wrapper
 
-/*
-method_wrapper.$factory = function(attr, klass, method){
-    var f = function(){
-        return method.apply(null, arguments)
-    }
-    f.$infos = {
-        __name__: attr,
-        __module__: klass.__module__
-    }
-    return f
-}
-*/
-
-
 /* method_wrapper start */
 $B.method_wrapper.tp_richcompare = function(self){
 
@@ -187,7 +173,7 @@ $B.method.tp_richcompare = function(self, other, op){
 }
 
 $B.method.tp_repr = function(self){
-    var name = $B.$getattr(self.im_func, '__qualname__') //.$function_infos[$B.func_attrs.__qualname__]
+    var name = $B.$getattr(self.im_func, '__qualname__')
     return "<bound method " + name +
        " of " + _b_.str.$factory(self.im_self) + ">"
 }
@@ -257,7 +243,7 @@ $B.method_descriptor.tp_call = function(self, ...args){
         var name = self.d_name
         var class_name = self.d_type.tp_name
         $B.RAISE(_b_.TypeError,
-            `"unbound method ${class_name}.${name} needs an argument`
+            `unbound method ${class_name}.${name} needs an argument`
         )
     }
     try{

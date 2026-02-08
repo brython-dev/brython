@@ -279,19 +279,27 @@ frame_funcs.f_code_get = function(self){
         // set in comprehensions
         res = self.f_code
     }else{
-        res = {
+        var infos = {
             co_name: (self[0] == self[2] ? '<module>' : self[0]),
             co_filename: self.__file__,
             co_varnames: $B.fast_tuple([]),
             co_firstlineno: 1
         }
-        res.co_qualname = res.co_name // XXX
+        infos.co_qualname = infos.co_name // XXX
+        res = {
+            ob_type: $B.code,
+            dict: $B.empty_dict()
+        }
+        for(var attr in infos){
+            $B.str_dict_set(res.dict, attr, infos[attr])
+        }
         positions = self.positions ?? positions
     }
     res.ob_type = $B.code
     positions = positions.map($B.decode_position)
-    res.co_positions = () => $B.$list(positions)
-    res.co_positions.ob_type = $B.function
+    var co_positions = () => $B.$list(positions)
+    co_positions.ob_type = $B.function
+    $B.str_dict_set(res.dict, 'co_positions', co_positions)
     return res
 }
 
@@ -608,10 +616,11 @@ BaseException_funcs.add_note = function(self, note){
         $B.RAISE(_b_.TypeError, 'note must be a str, not ' +
             `'${$B.class_name(note)}'`)
     }
-    if(self.__notes__ !== undefined){
-        self.__notes__.push(note)
+    var notes = $B.str_dict_get(self.dict, '__notes__', $B.NULL)
+    if(notes !== $B.NULL){
+        notes.push(note)
     }else{
-        self.__notes__ = $B.$list([note])
+        $B.str_dict_set(self.dict, '__notes__', $B.$list([note]))
     }
 }
 
@@ -645,7 +654,7 @@ _b_.BaseException.tp_getset = [
 $B.set_func_names(_b_.BaseException, 'builtins')
 
 // Brython-specific
-make_builtin_exception("JavascriptError", _b_.Exception)
+//make_builtin_exception("JavascriptError", _b_.Exception)
 
 _b_.StopIteration.tp_init = function(self){
     var $ = $B.args("StopIteration", 1, {self: null}, ['self'], arguments, {},
@@ -721,6 +730,18 @@ _b_.SyntaxError.tp_init = function(){
     }
 }
 
+_b_.SyntaxError.tp_members = [
+    ["msg", $B.TYPES.OBJECT, 'msg', 0],
+    ["filename", $B.TYPES.OBJECT, "filename", 0],
+    ["lineno", $B.TYPES.OBJECT, "lineno", 0],
+    ["offset", $B.TYPES.OBJECT, "offset", 0],
+    ["text", $B.TYPES.OBJECT, "text", 0],
+    ["end_lineno", $B.TYPES.OBJECT, "end_lineno", 0],
+    ["end_offset", $B.TYPES.OBJECT, "end_offset", 0],
+    ["print_file_and_line", $B.TYPES.OBJECT, "print_file_and_line", 0],
+    ["_metadata", $B.TYPES.OBJECT, "metadata", 0]
+]
+
 $B.set_func_names(_b_.SyntaxError, 'builtins')
 
 _b_.EnvironmentError = _b_.OSError
@@ -766,6 +787,11 @@ _b_.AttributeError.tp_init = function(){
 _b_.AttributeError.tp_repr = function(self){
     return self.args[0]
 }
+
+_b_.AttributeError.tp_members = [
+    ["name", $B.TYPES.OBJECT, "name", 0],
+    ["obj", $B.TYPES.OBJECT, "obj", 0]
+]
 
 $B.set_func_names(_b_.AttributeError, 'builtins')
 
@@ -837,7 +863,6 @@ function calculate_suggestions(list, name){
 }
 
 $B.offer_suggestions_for_attribute_error = function(exc){
-    console.log('offer suggestions', exc)
     var name = exc.name,
         obj = exc.obj
     if(name === _b_.None || name === undefined ||
@@ -1115,7 +1140,7 @@ $B.set_func_names(_b_.ExceptionGroup, "builtins")
 
 // Brython-specific
 _b_.JavascriptError = $B.make_builtin_class('JavascriptError',
-    [_b_.BaseException])
+    [_b_.Exception])
 
 function make_report(lines, positions){
     // positions is [lineno, end_lineno, col_offset, end_col_offset]
@@ -1625,7 +1650,6 @@ $B.error_trace = function(err){
                 trace += `. Did you forget to import '${err.name}'?`
             }
         }else if($B.is_exc(err, _b_.AttributeError)){
-            console.log('attriute error stack', err.__traceback__)
             let suggestion = $B.offer_suggestions_for_attribute_error(err)
             if(suggestion !== _b_.None){
                 trace += `. Did you mean: '${suggestion}'?`

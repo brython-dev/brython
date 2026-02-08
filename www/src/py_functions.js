@@ -276,9 +276,12 @@ function_funcs.__closure___set = _b_.None
 
 function_funcs.__code___get = function(self){
     $B.check_infos(self)
-    var res = {ob_type: _b_.code}
-    for(var _attr in self.$infos.__code__){
-        res[_attr] = self.$infos.__code__[_attr]
+    var res = {
+        ob_type: _b_.code,
+        dict: $B.empty_dict()
+    }
+    for(var attr in self.$infos.__code__){
+        $B.str_dict_set(res.dict, attr, self.$infos.__code__[attr])
     }
     res.name = self.$infos.__name__
     res.filename = self.$infos.__code__.co_filename
