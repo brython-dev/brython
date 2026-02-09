@@ -903,7 +903,7 @@ $B.JSObj.tp_repr = function(_self){
 var JSObj_funcs = $B.JSObj.tp_funcs = {}
 
 JSObj_funcs.__getattr__ = function(self, attr){
-    var test = attr == 'name'
+    var test = false // attr == 'test'
     var js_attr = self[attr]
     if(js_attr == undefined && typeof self == "function"){
         js_attr = self.$js_func[attr]
@@ -926,7 +926,7 @@ JSObj_funcs.__getattr__ = function(self, attr){
             }
         }
     }
-    if(js_attr !== null &&
+    if(js_attr !== null && js_attr !== undefined &&
             js_attr.toString &&
             typeof js_attr == 'function' &&
             js_attr.toString().startsWith('class ')){
@@ -943,6 +943,9 @@ JSObj_funcs.__getattr__ = function(self, attr){
     }else{
         if(test){
             console.log('jsobj2pyobj on', js_attr)
+        }
+        if(js_attr === undefined && ! Object.hasOwn(attr)){
+            return $B.NULL
         }
         var res = jsobj2pyobj(js_attr)
         if(test){
@@ -1103,7 +1106,7 @@ $B.set_func_names(js_array_iterator, 'builtins')
 
 
 function make_conv(array){
-    if($B.$isinstance(array, _b_.list)){
+    if($B.$isinstance(array, [_b_.list, _b_.tuple])){
         return x => x
     }else{
         return x => jsobj2pyobj(x)
@@ -1175,7 +1178,7 @@ var js_array = $B.js_array = $B.make_builtin_class('JavascriptArray',
 // js_array.ob_type = js_list_meta
 
 js_array.tp_richcompare = function(self, other, op){
-    if(! $B.$isinstance(other, [_b_.list, js_array])){
+    if(! $B.$isinstance(other, [_b_.list, _b_.tuple, js_array])){
         return _b_.NotImplemented
     }
     switch(op){
