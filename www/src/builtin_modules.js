@@ -479,9 +479,10 @@
                         if(typeof $module !== 'undefined'){
                             result = $B.module.$factory(alias)
                             for(var key in $module){
-                                result[key] = $B.jsobj2pyobj($module[key])
+                                $B.module_setattr(result, key, 
+                                    $B.jsobj2pyobj($module[key]))
                             }
-                            result.__file__ = url
+                            $B.module_setattr(result, '__file__', url)
                         }else{
                             console.log(this.responseText)
                             result = $B.EXC(_b_.ImportError, 'Javascript ' +
