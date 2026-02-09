@@ -514,4 +514,8 @@ assert b.decode('utf_16') == "a🐑 :"
 assert_raises(TypeError, str, b'a', 5)
 assert_raises(TypeError, str, b'a', 'utf-8', 5)
 
+# issue 2659
+s = 'abc'
+s.__doc__
+
 print("passed all tests...")

@@ -244,6 +244,11 @@ int.$factory = function(){
     if(_value.startsWith('+') || _value.startsWith('-')){
         sign = _value[0]
         _value = _value.substr(1)
+        if(_value.length == 0 || '+-'.includes(_value[0])){
+            $B.RAISE(_b_.ValueError,
+                ` invalid literal for int() with base 10: '${value}'`
+            )
+        }
     }
 
     if(_value.length == 2 && base == 0 &&

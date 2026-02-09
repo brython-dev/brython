@@ -868,4 +868,7 @@ assert_raises(TypeError, eval, "2 + 3j / 'a'",
 # issue 2658
 assert 2 ** 53 == float(2 ** 53)
 
+# issue 2661
+assert_raises(ValueError, int, '+')
+
 print('passed all tests...')

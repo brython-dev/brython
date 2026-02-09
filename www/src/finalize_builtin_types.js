@@ -89,6 +89,7 @@ Object.assign($B.wrapper_methods,
         tp_call: wrap('__call__'),
         tp_descr_get: wrap('__get__'),
         tp_descr_set: wrap('__set__'),
+        tp_doc: make_doc,
         tp_getattro: make_getattribute,
         tp_finalize: wrap('__del__'),
         tp_hash: wrap('__hash__'),
@@ -102,6 +103,10 @@ Object.assign($B.wrapper_methods,
         tp_richcompare: make_richcompare
     }
 )
+
+function make_doc(cls){
+    $B.str_dict_set(cls.dict, '__doc__', cls.tp_doc)
+}
 
 function make_getattribute(cls){
     var getattribute = cls.tp_getattro
