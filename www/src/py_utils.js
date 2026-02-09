@@ -1381,9 +1381,10 @@ $B.augm_assign = function(left, op, right){
     // augmented assignment
     var op1 = op.substr(0, op.length - 1),
         method = $B.op2method.augmented_assigns[op],
-        augm_func = $B.$getattr(left, '__' + method + '__', null)
-    if(augm_func !== null){
-        var res = $B.$call(augm_func, right)
+        augm_func = $B.$getattr($B.get_class(left), '__' + method + '__',
+            $B.NULL)
+    if(augm_func !== $B.NULL){
+        var res = $B.$call(augm_func, left, right)
         if(res === _b_.NotImplemented){
             $B.RAISE(_b_.TypeError, `unsupported operand type(s)` +
                 ` for ${op}: '${$B.class_name(left)}' ` +

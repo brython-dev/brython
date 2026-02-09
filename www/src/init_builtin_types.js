@@ -741,7 +741,7 @@ init_type($B, "cell", [
 
   contents
     the contents of the cell. If not specified, the cell will be empty,
-    and 
+    and
  further attempts to access its cell_contents attribute will
     raise a ValueError.`,
     [_b_.object],

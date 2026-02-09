@@ -381,7 +381,7 @@ async def call_js_async():
         input('should have raised error')
     except JavascriptError as exc:
         async_tester.assertEqual(str(exc),
-            'ReferenceError: blabla is not defined')
+            'blabla is not defined')
 
 aio.run(call_js_async())
 
@@ -431,6 +431,7 @@ window.testDeletedAttr2420(True)
 
 # issue 2445
 def is_bomb(point):
+    print('point', point)
     bombs = [(1, 2), (3, 4)]
     assert point in bombs
 

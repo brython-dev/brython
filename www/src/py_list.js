@@ -942,9 +942,12 @@ list_funcs.sort = function(self){
             self.sort(cmp)
         }else{
             var temp = [],
-                saved = self.slice()
-            for(let i = 0, len = self.length; i < len; i++){
-                temp.push([$B.$call(func(self[i], i))])
+                saved = self.slice(),
+                i = 0
+            for(let item of self){
+                var x = $B.$call(func, item)
+                temp.push([x, i])
+                i++
             }
             temp.sort(cmp)
             for(let i = 0, len = temp.length; i < len; i++){
@@ -959,7 +962,10 @@ list_funcs.sort = function(self){
     return self.$is_js_array ? self : _b_.None
 }
 
-_b_.list.tp_methods = ["__reversed__", "__sizeof__", "clear", "copy", "append", "insert", "extend", "pop", "remove", "index", "count", "reverse", "sort"]
+_b_.list.tp_methods = [
+    "__reversed__", "__sizeof__", "clear", "copy", "append", "insert", 
+    "extend", "pop", "remove", "index", "count", "reverse", "sort"
+]
 
 _b_.list.classmethods = ["__class_getitem__"]
 

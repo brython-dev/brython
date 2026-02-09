@@ -259,7 +259,6 @@ $B.make_mro = function(cls){
     return mro
 }
 
-
 $B.is_type = function(obj){
     return $B.$isinstance(obj, _b_.type)
 }

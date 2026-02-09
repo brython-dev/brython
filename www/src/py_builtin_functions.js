@@ -2595,7 +2595,7 @@ _b_.sorted = function(){
     var $ = $B.args('sorted', 1, {iterable: null}, ['iterable'],
         arguments, {}, null, 'kw')
     var _list = _b_.list.$factory($.iterable)
-    _b_.list.tp_funcs.sort(_list)
+    _b_.list.tp_funcs.sort(_list, {$kw:[$.kw.$strings]})
     return _list
 }
 
