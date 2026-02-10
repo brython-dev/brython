@@ -9,7 +9,6 @@ core_scripts = [
     'py_tokens',
     'python_tokenizer',
     'py_ast',
-    'py2js',
     'loaders',
     'py_utils',
     'py_object',
@@ -40,6 +39,7 @@ core_scripts = [
     'py_flags',
     'builtin_modules',
     'finalize_builtin_types',
+    'py2js',
     'ast_to_js',
     'symtable',
 
