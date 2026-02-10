@@ -22,6 +22,7 @@ core_scripts = [
     'py_exceptions',
     'py_range_slice',
     'py_bytes',
+    'memoryobject',
     'py_set',
     'py_import',
     'py_string',
