@@ -488,9 +488,12 @@ _b_.dir = function(obj){
         return $B.$call(dir_func, obj)
     }
     try{
-        let res = $B.$call($B.$getattr(klass, '__dir__'), obj)
-        res = _b_.list.$factory(res)
-        return res
+        var dir_func = $B.$getattr(klass, '__dir__', $B.NULL)
+        if(dir_func !== $B.NULL){
+            let res = $B.$call($B.$getattr(klass, '__dir__'), obj)
+            res = _b_.list.$factory(res)
+            return res
+        }
     }catch (err){
         // ignore, default
         if($B.get_option('debug') > 2){

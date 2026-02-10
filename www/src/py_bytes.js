@@ -2040,8 +2040,10 @@ _b_.bytes.tp_new = function(){
         source = $.source.source
     }else if($B.$isinstance($.source, _b_.memoryview)){
         source = $.source.obj.source
-    }else if($B.imported.array && $B.$isinstance($.source, $B.imported.array.array)){
-        source = $B.imported.array.array.tobytes($.source).source
+    }else if($B.imported.array &&
+            $B.$isinstance($.source, $B.module_getattr($B.imported.array, 'array'))){
+        var array = $B.module_getattr($B.imported.array, 'array')
+        source = array.tp_funcs.tobytes($.source).source
     }else{
         var int_list
         if(Array.isArray($.source)){

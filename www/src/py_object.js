@@ -242,7 +242,7 @@ _b_.object.tp_str = function(self){
 }
 
 _b_.object.tp_getattro = function(self, attr){
-    var test = false // attr == '__name__'
+    var test = false // attr == 'test_patma_000'
     var klass = $B.get_class(self)
     if(test){
         console.log('getattr', attr, 'of self', self, klass)
@@ -414,25 +414,26 @@ object_funcs.__dir__ = function(self){
 
     /* Get __dict__ (which may or may not be a real dict...) */
     dict = self.dict
+    var temp
     if(dict == undefined){
-        dict = $B.empty_dict()
+        temp = $B.empty_dict()
     }else if(! $B.$isinstance(dict, _b_.dict)){
-        dict = $B.empty_dict()
+        temp = $B.empty_dict()
     }else{
         /* Copy __dict__ to avoid mutating it. */
         var temp = _b_.dict.tp_funcs.copy(dict)
     }
 
-    if(dict == undefined){
+    if(temp == undefined){
         $B.RAISE(_b_.ValueError, 'no __dir__')
     }
 
     /* Merge in attrs reachable from its class. */
     itsclass = $B.get_class(self)
     if(itsclass != NULL){
-        $B.merge_class_dict(dict, itsclass)
+        $B.merge_class_dict(temp, itsclass)
     }
-    result = $B.$list(Array.from($B.make_js_iterator(dict)))
+    result = $B.$list(Array.from($B.make_js_iterator(temp)))
     return result
 }
 

@@ -1127,7 +1127,7 @@ function _build_concatenated_str(p, strings){
                    u"abc" "def" -> u"abcdef"
                    "abc" u"abc" ->  "abcabc" */
                 var kind = $B.get_class(elem.value)
-                
+
                 var concat_str = ''
                 var last_elem = elem;
                 var j
@@ -1344,7 +1344,7 @@ $B._PyPegen.register_stmts = function(p, stmts){
 $B._PyPegen.ensure_imaginary = function(p, exp){
     if (! (exp instanceof $B.ast.Constant) ||
             ! $B.exact_type(exp.value, _b_.complex)){
-        $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(exp,
+        $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, exp,
             "imaginary number required in complex literal");
         return NULL
     }
@@ -1354,6 +1354,7 @@ $B._PyPegen.ensure_imaginary = function(p, exp){
 $B._PyPegen.ensure_real = function(p, exp){
     if (! (exp instanceof $B.ast.Constant) || exp.value.type == 'imaginary') {
        $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(
+            p,
             exp,
             "real number required in complex literal");
         return NULL

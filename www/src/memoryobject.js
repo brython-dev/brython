@@ -178,7 +178,7 @@ _b_.memoryview.tp_new = function(){
 }
 
 _b_.memoryview.mp_length = function(self){
-    return len(self.obj) / self.itemsize
+    return _b_.len(self.obj) / self.itemsize
 }
 
 _b_.memoryview.mp_subscript = function(self, key){
