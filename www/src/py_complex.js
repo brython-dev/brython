@@ -8,19 +8,24 @@ function $UnsupportedOpType(op, class1, class2){
         op + ": '" + class1 + "' and '" + class2 + "'")
 }
 
-function conv_complex(obj){
-    if($B.$isinstance(obj, _b_.float)){
-        return $B.make_complex(obj)
-    }else if($B.$isinstance(obj, _b_.int)){
-        return $B.make_complex(obj)
-    }else{
-        var complex_method = $B.$getattr($B.get_class(obj), '__complex__',
-            $B.NULL)
-        if(complex_method !== $B.NULL){
-            return $B.$call(complex_method, obj)
+function conv_complex(...objs){
+    var res = []
+    for(var obj of objs){
+        if($B.$isinstance(obj, _b_.float)){
+            res.push($B.make_complex(obj))
+        }else if($B.$isinstance(obj, _b_.int)){
+            res.push($B.make_complex(obj))
+        }else{
+            var complex_method = $B.$getattr($B.get_class(obj), '__complex__',
+                $B.NULL)
+            if(complex_method !== $B.NULL){
+                res.push($B.$call(complex_method, obj))
+            }else{
+                res.push($B.NULL)
+            }
         }
     }
-    return $B.NULL
+    return res
 }
 
 var complex = _b_.complex
@@ -208,24 +213,12 @@ _b_.complex.nb_absolute = function(self){
 }
 
 _b_.complex.nb_add = function(self, other){
-    self = conv_complex(self)
-    if(self === $B.NULL){
+    var [x, y] = conv_complex(self, other)
+    if(x === $B.NULL || y === $B.NULL){
         return _b_.NotImplemented
     }
-    if($B.$isinstance(other, complex)){
-        return make_complex(self.real.value + other.real.value,
-                            self.imag.value + other.imag.value)
-    }
-    if($B.$isinstance(other, _b_.int)){
-        other = $B.$getattr(other, 'numerator')
-        return make_complex(
-            $B.rich_op('__add__', self.real, other).value,
-            self.imag.value)
-    }
-    if($B.$isinstance(other, _b_.float)){
-        return make_complex(self.real.value + other.value, self.imag.value)
-    }
-    return _b_.NotImplemented
+    return make_complex(x.real.value + y.real.value,
+                            x.imag.value + y.imag.value)
 }
 
 _b_.complex.nb_bool = function(self){
@@ -234,46 +227,23 @@ _b_.complex.nb_bool = function(self){
 }
 
 _b_.complex.nb_subtract = function(self, other){
-    self = conv_complex(self)
-    if(self === $B.NULL){
+    var [x, y] = conv_complex(self, other)
+    if(x === $B.NULL || y === $B.NULL){
         return _b_.NotImplemented
     }
-    if($B.$isinstance(other, complex)){
-        return make_complex(self.real.value - other.real.value,
-                            self.imag.value - other.imag.value)
-    }
-    if($B.$isinstance(other, _b_.int)){
-        other = $B.$getattr(other, 'numerator')
-        return make_complex(self.real.value - other.valueOf(),
-                            self.imag.value)
-    }
-    if($B.$isinstance(other, _b_.float)){
-        return make_complex(self.real.value - other.value, self.imag.value)
-    }
-    return _b_.NotImplemented
+    return make_complex(x.real.value - y.real.value,
+                        x.imag.value - y.imag.value)
 }
 
 _b_.complex.nb_multiply = function(self, other){
-    self = conv_complex(self)
-    if(self === $B.NULL){
+    var [x, y] = conv_complex(self, other)
+    if(x === $B.NULL || y === $B.NULL){
         return _b_.NotImplemented
     }
-    if($B.$isinstance(other, complex)){
-        return make_complex(self.real.value * other.real.value -
-                            self.imag.value * other.imag.value,
-                            self.imag.value * other.real.value +
-                            self.real.value * other.imag.value)
-    }else if($B.$isinstance(other, _b_.int)){
-        return make_complex(self.real.value * other.valueOf(),
-                            self.imag.value * other.valueOf())
-    }else if($B.$isinstance(other, _b_.float)){
-        return make_complex(self.real.value * other.value,
-                            self.imag.value * other.value)
-    }else if($B.$isinstance(other, _b_.bool)){
-        if(other.valueOf()){return self}
-        return make_complex(0, 0)
-    }
-   return _b_.NotImplemented
+    return make_complex(x.real.value * y.real.value -
+                        x.imag.value * y.imag.value,
+                        x.imag.value * y.real.value +
+                        x.real.value * y.imag.value)
 }
 
 
@@ -288,7 +258,6 @@ _b_.complex.nb_positive = function(self){
 _b_.complex.nb_power = function(self, other, mod){
     // complex power : use Moivre formula
     // (cos(x) + i sin(x))**y = cos(xy)+ i sin(xy)
-
     if(mod !== undefined && mod !== _b_.None){
         $B.RAISE(_b_.ValueError, 'complex modulo')
     }
@@ -356,38 +325,31 @@ _b_.complex.nb_power = function(self, other, mod){
 }
 
 _b_.complex.nb_true_divide = function(self, other){
-    self = conv_complex(self)
-    if(self === $B.NULL){
+    var [x, y] = conv_complex(self, other)
+    if(x === $B.NULL || y === $B.NULL){
         return _b_.NotImplemented
     }
-    if($B.$isinstance(other, complex)){
-        if(other.real.value == 0 && other.imag.value == 0){
-           $B.RAISE(_b_.ZeroDivisionError, "division by zero")
-        }
-        var _num = self.real.value * other.real.value +
-                       self.imag.value * other.imag.value,
-            _div = other.real.value * other.real.value +
-                       other.imag.value * other.imag.value
+    if(y.real.value == 0 && y.imag.value == 0){
+       $B.RAISE(_b_.ZeroDivisionError, "division by zero")
+    }
+    if(y.imag.value == 0){
+        // divide by real only
+        return make_complex($B.fast_float(x.real.value / y.real.value),
+            $B.fast_float(x.imag.value / y.real.value))
+    }else if(y.real.value == 0){
+        // divide by imag only
+        return make_complex($B.fast_float(x.imag.value / y.imag.value),
+            $B.fast_float(- x.real.value / y.imag.value))
+    }
+    var _num = x.real.value * y.real.value +
+                   x.imag.value * y.imag.value,
+        _div = y.real.value * y.real.value +
+                   y.imag.value * y.imag.value
 
-        var _num2 = self.imag.value * other.real.value -
-                        self.real.value * other.imag.value
-        return make_complex($B.fast_float(_num / _div),
-            $B.fast_float(_num2 / _div))
-    }
-    if($B.$isinstance(other, _b_.int)){
-        if(! other.valueOf()){
-            $B.RAISE(_b_.ZeroDivisionError, 'division by zero')
-        }
-        return complex.nb_true_divide(self, complex.$factory(other.valueOf()))
-    }
-    if($B.$isinstance(other, _b_.float)){
-        if(! other.value){
-            $B.RAISE(_b_.ZeroDivisionError, "division by zero")
-        }
-        return complex.$factory(_b_.float.__truediv__(self.real, other),
-            _b_.float.nb_true_divide(self.imag, other))
-    }
-    return _b_.NotImplemented
+    var _num2 = x.imag.value * y.real.value -
+                    x.real.value * y.imag.value
+    return make_complex($B.fast_float(_num / _div),
+        $B.fast_float(_num2 / _div))
 }
 
 _b_.complex.tp_hash = function(self){

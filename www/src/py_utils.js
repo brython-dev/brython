@@ -1619,7 +1619,7 @@ $B.PyNumber_Index = function(item){
             if(method !== _b_.None){
                 method = typeof method == "function" ?
                             method : $B.$getattr(method, "__call__")
-                return $B.int_or_bool(method())
+                return $B.int_or_bool($B.$call(method))
             }else{
                 $B.RAISE(_b_.TypeError, "'" + $B.class_name(item) +
                     "' object cannot be interpreted as an integer")

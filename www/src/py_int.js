@@ -17,6 +17,8 @@ function toBigInt(x){
         return BigInt(x)
     }else if(typeof x == 'bigint'){
         return x
+    }else if(typeof x == 'boolean'){
+        return x ? 1n : 0n
     }else if($B.$isinstance(x, _b_.int)){
         return toBigInt(x.value)
     }else{
@@ -140,6 +142,14 @@ var $valid_digits = function(base) {
         digits += String.fromCharCode(i + 55)
     }
     return digits
+}
+
+function int_hash(x){
+    var modulus = 2305843009213693951n,
+        sign = x >= 0 ? 1n : -1n,
+        self_pos = x * sign
+    var _hash = sign * (self_pos % modulus)
+    return int_or_long(_hash)
 }
 
 int.$factory = function(){
@@ -419,20 +429,18 @@ _b_.int.nb_add = function(self, other){
 }
 
 _b_.int.nb_subtract = function(self, other){
-    var y = toBigInt(other)
-    if(y === $B.NULL){
+    var [x, y] = [self, other].map(toBigInt)
+    if(x === $B.NULL || y === $B.NULL){
         return _b_.NotImplemented
     }
-    var x = toBigInt(self)
     return int_or_long(x - y)
 }
 
 _b_.int.nb_multiply = function(self, other){
-    var y = toBigInt(other)
-    if(y === $B.NULL){
+    var [x, y] = [self, other].map(toBigInt)
+    if(x === $B.NULL || y === $B.NULL){
         return _b_.NotImplemented
     }
-    var x = toBigInt(self)
     return int_or_long(x * y)
 }
 
@@ -454,8 +462,7 @@ _b_.int.nb_remainder = function(self, other){
 }
 
 _b_.int.nb_divmod = function(self, other){
-    y = toBigInt(other)
-    if(y === $B.NULL){
+    if(toBigInt(other) === $B.NULL){
         return _b_.NotImplemented
     }
     return $B.fast_tuple([int.nb_floor_divide(self, other),
@@ -482,9 +489,9 @@ _b_.int.nb_power = function(self, other, z){
             if(base < 0n){
                 base += z
             }
-            if(exponent < n0){
+            if(exponent < 0n){
                 var gcd, inv, _
-                [gcd, inv, _] = extended_euclidean(self, z)
+                [gcd, inv, _] = extended_euclidean(x, z)
                 if(gcd != 1n){
                     $B.RAISE(_b_.ValueError, "not relative primes: " +
                         self + ' and ' + z)
@@ -504,7 +511,7 @@ _b_.int.nb_power = function(self, other, z){
         }else{
             if(y < 0n){
                 // raising a BigInt to a negative values raises a JS error
-                return int_or_long(Number(x) ** Number(y))
+                return $B.fast_float(Number(x) ** Number(y))
             }
             return int_or_long(x ** y)
         }
@@ -512,59 +519,42 @@ _b_.int.nb_power = function(self, other, z){
 }
 
 _b_.int.nb_lshift = function(self, other){
-    if(typeof other == "number"){
-        // transform into BigInt: JS converts numbers to 32 bits
-        return _b_.int.$int_or_long(BigInt(self) << BigInt(other))
-    }else if(typeof other == "boolean"){
-        return self << (other ? 1 : 0)
-    }else if($B.is_long_int(other)){
-        return _b_.int.$int_or_long(BigInt(self) << other.value)
-    }else if($B.$isinstance(other, _b_.int)){
-        // int subclass
-        return _b_.int.nb_lshift(self, other.value)
+    var [x, y] = [self, other].map(toBigInt)
+    if(x === $B.NULL || y === $B.NULL){
+        return _b_.NotImplemented
     }
-    return _b_.NotImplemented
+    return int_or_long(x << y)
 }
 
 _b_.int.nb_rshift = function(self, other){
-    if(typeof other == "number"){
-        // transform into BigInt: JS converts numbers to 32 bits
-        return _b_.int.$int_or_long(BigInt(self) >> BigInt(other))
-    }else if(typeof other == "boolean"){
-        return self >> (other ? 1 : 0)
-    }else if($B.is_long_int(other)){
-        return _b_.int.$int_or_long(BigInt(self) >> other.value)
-    }else if($B.$isinstance(other, _b_.int)){
-        // int subclass
-        return _b_.int.nb_rshift(self, other.value)
+    var [x, y] = [self, other].map(toBigInt)
+    if(x === $B.NULL || y === $B.NULL){
+        return _b_.NotImplemented
     }
-    return _b_.NotImplemented
+    return int_or_long(x >> y)
 }
 
 _b_.int.nb_and = function(self, other){
-    var y = toBigInt(other)
-    if(y === $B.NULL){
+    var [x, y] = [self, other].map(toBigInt)
+    if(x === $B.NULL || y === $B.NULL){
         return _b_.NotImplemented
     }
-    var x = toBigInt(self)
     return int_or_long(x & y)
 }
 
 _b_.int.nb_xor = function(self, other){
-    var y = toBigInt(other)
-    if(y === $B.NULL){
+    var [x, y] = [self, other].map(toBigInt)
+    if(x === $B.NULL || y === $B.NULL){
         return _b_.NotImplemented
     }
-    var x = toBigInt(self)
     return int_or_long(x ^ y)
 }
 
 _b_.int.nb_or = function(self, other){
-    var y = toBigInt(other)
-    if(y === $B.NULL){
+    var [x, y] = [self, other].map(toBigInt)
+    if(x === $B.NULL || y === $B.NULL){
         return _b_.NotImplemented
     }
-    var x = toBigInt(self)
     return int_or_long(x | y)
 }
 
@@ -581,18 +571,11 @@ _b_.int.tp_repr = function(self){
 }
 
 _b_.int.tp_hash = function(self){
-    if(self.value !== undefined){
-        // int subclass
-        if(self.__hashvalue__ !== undefined){
-            return self.__hashvalue__
-        }
-        if(typeof self.value == "number"){
-            return self.__hashvalue__ = self.value
-        }else{ // long int
-            return self.__hashvalue__ = $B.long_int.__hash__(self.value)
-        }
+    // int subclass
+    if(self.__hashvalue__ !== undefined){
+        return self.__hashvalue__
     }
-    return self.valueOf()
+    return int_or_long(int_hash(toBigInt(self)))
 }
 
 _b_.int.nb_negative = function(self){
@@ -613,7 +596,8 @@ _b_.int.nb_bool = function(self){
 }
 
 _b_.int.nb_invert = function(self){
-    return ~int_value(self)
+    var x = toBigInt(self)
+    return int_or_long(~x)
 }
 
 _b_.int.nb_int = function(self){
@@ -625,14 +609,13 @@ _b_.int.nb_float = function(self){
 }
 
 _b_.int.nb_floor_divide = function(self, other){
-    var y = toBigInt(other)
-    if(y === $B.NULL){
+    var [x, y] = [self, other].map(toBigInt)
+    if(x === $B.NULL || y === $B.NULL){
         return _b_.NotImplemented
     }
     if(y === 0n){
         $B.RAISE(_b_.ZeroDivisionError, 'division by zero')
     }
-    var x = toBigInt(self)
     var res = x / y // bigint
     if(x == res * y || res >= 0){
         return int_or_long(res)
@@ -644,11 +627,13 @@ _b_.int.nb_floor_divide = function(self, other){
 }
 
 _b_.int.nb_true_divide = function(self, other){
-    var y = toBigInt(other)
-    if(y === $B.NULL){
+    var [x, y] = [self, other].map(toBigInt)
+    if(x === $B.NULL || y === $B.NULL){
         return _b_.NotImplemented
     }
-    var x = toBigInt(self)
+    if(y === 0n){
+        $B.RAISE(_b_.ZeroDivisionError, 'division by zero')
+    }
     return $B.fast_float(Number(x) / Number(y))
 }
 
@@ -757,7 +742,7 @@ int_funcs.denominator_get = function(self){
     return 1
 }
 
-int_funcs.denominator_set = $B.NULL
+int_funcs.denominator_set = _b_.None
 
 int_funcs.from_bytes = function(self){
     var $ = $B.args("from_bytes", 4,
@@ -809,7 +794,7 @@ int_funcs.imag_get = function(self){
     return 0
 }
 
-int_funcs.imag_set = $B.NULL
+int_funcs.imag_set = _b_.None
 
 int_funcs.is_integer = function(self){
     return true
@@ -819,13 +804,13 @@ int_funcs.numerator_get = function(self){
     return int_value(self)
 }
 
-int_funcs.numerator_set = $B.NULL
+int_funcs.numerator_set = _b_.None
 
 int_funcs.real_get = function(self){
     return int_value(self)
 }
 
-int_funcs.real_set = $B.NULL
+int_funcs.real_set = _b_.None
 
 int_funcs.to_bytes = function(self){
     var $ = $B.args("to_bytes", 3,
@@ -844,33 +829,29 @@ int_funcs.to_bytes = function(self){
         $B.RAISE(_b_.ValueError,
             "byteorder must be either 'little' or 'big'")
     }
-
-    if($B.$isinstance(self, $B.long_int)){
-        return $B.long_int.to_bytes(self, len, byteorder, signed)
-    }
-
-    if(self < 0){
+    var x = toBigInt(self)
+    if(x < 0n){
         if(! signed){
             $B.RAISE(_b_.OverflowError,
                 "can't convert negative int to unsigned")
         }
-        self = Math.pow(256, len) + self
+        x = BigInt(Math.pow(256, len)) + x
     }
 
     var res = [],
-        value = self
+        value = x
 
-    while(value > 0){
-        var quotient = Math.floor(value / 256),
-            rest = value - 256 * quotient
-        res.push(rest)
+    while(value > 0n){
+        var quotient = value / 256n,
+            rest = value - 256n * quotient
+        res.push(int_or_long(rest))
         if(res.length > len){
             $B.RAISE(_b_.OverflowError, "int too big to convert")
         }
         value = quotient
     }
     while(res.length < len){
-        res.push(0)
+        res.push(0n)
     }
     if(byteorder == "big"){
         res.reverse()
@@ -883,7 +864,10 @@ int_funcs.to_bytes = function(self){
 
 _b_.int.functions_or_methods = ["__new__"]
 
-_b_.int.tp_methods = ["conjugate", "bit_length", "bit_count", "to_bytes", "as_integer_ratio", "__trunc__", "__floor__", "__ceil__", "__round__", "__getnewargs__", "__format__", "__sizeof__", "is_integer"]
+_b_.int.tp_methods = [
+    "conjugate", "bit_length", "bit_count", "to_bytes", "as_integer_ratio",
+    "__trunc__", "__floor__", "__ceil__", "__round__", "__getnewargs__",
+    "__format__", "__sizeof__", "is_integer"]
 
 _b_.int.classmethods = ["from_bytes"]
 

@@ -47,10 +47,14 @@ $B.module.tp_getset = ["__annotations__", "__annotate__"]
 
 /* module start */
 $B.module.tp_repr = function(self){
-    var res = "<module " + self.__name__
-    res += self.__module__ === undefined ? " (built-in)" :
-        ' at ' + self.__module__
-    return res + ">"
+    var name = $B.module_getattr(self, '__name__')
+    var file = $B.module_getattr(self, '__file__')
+    if(file === $B.NULL){
+        file = '(built_in)'
+    }else{
+        file = 'from ' + file
+    }
+    return `<module '${name}' ${file}>`
 }
 
 $B.module.tp_getattro = function(self, attr){

@@ -77,22 +77,26 @@ function jspos2pypos(s, jspos){
     return jspos - nb
 }
 
-function to_string(args){
-    if(typeof args == 'string'){
-        return args
+function to_string(...args){
+    if(args.length == 1){
+        return conv_str(args[0])
     }
-    if(Array.isArray(args)){
-        for(var i = 0, len = args.length; i < len; i++){
-            args[i] = to_string(args[i])
-        }
-        return args
-    }else{
-        if(args.ob_type && ! (args instanceof String)){
-            return args.$brython_value
-        }else{
-            return args
-        }
+    var res = []
+    for(var arg of args){
+        res.push(conv_str(arg))
     }
+    return res
+}
+
+function conv_str(obj){
+    if(typeof obj == 'string'){
+        return obj
+    }else if(obj.ob_type == str){
+        return obj
+    }else if($B.$isinstance(obj, str)){
+        return obj.$brython_value
+    }
+    return $B.NULL
 }
 
 var str = _b_.str
@@ -1212,7 +1216,7 @@ _b_.str.tp_richcompare = function(self, other, op){
     if(! $B.$isinstance(other, str)){
         return _b_.NotImplemented
     }
-    [self, other] = to_string([self, other])
+    [self, other] = to_string(self, other)
     self += ''
     other += ''
     switch(op){
@@ -1233,7 +1237,7 @@ _b_.str.tp_richcompare = function(self, other, op){
     }
 }
 
-_b_.str.nb_multiply = function(self, other){
+_b_.str.sq_repeat = function(self, other){
     $B.check_nb_args_no_kw('str.__mul__', 2, arguments)
     var _self = to_string(self)
     if(! $B.$isinstance(other, _b_.int)){
@@ -1246,6 +1250,9 @@ _b_.str.nb_multiply = function(self, other){
 
 _b_.str.nb_remainder = function(self, args){
     self = to_string(self)
+    if(self === $B.NULL){
+        return _b_.NotImplemented
+    }
     var res = $B.printf_format(self, 'str', args)
     return $B.String(res)
 }
@@ -1349,7 +1356,11 @@ _b_.str.tp_new = function(cls, value){
 }
 
 _b_.str.mp_length = function(self){
+    var s = self
     self = to_string(self)
+    if(self === undefined){
+        console.log('error', s)
+    }
     if(self.surrogates === undefined){
         return self.length
     }
@@ -1395,7 +1406,7 @@ _b_.str.sq_concat = function(self, other){
             $B.RAISE(_b_.TypeError, "Can't convert " +
                 $B.class_name(other) + " to str implicitly")}
     }
-    [self, other] = to_string([self, other])
+    [self, other] = to_string(self, other)
     if(typeof self == 'string' && typeof other == 'string'){
         return self + other
     }
@@ -1407,14 +1418,14 @@ _b_.str.sq_contains = function(self, item){
         $B.RAISE(_b_.TypeError, "'in <string>' requires " +
             "string as left operand, not " + $B.class_name(item))
     }
-    [self, item] = to_string([self, item])
+    [self, item] = to_string(self, item)
     return self.includes(item)
 }
 
 var str_funcs = _b_.str.tp_funcs = {}
 
 str_funcs.__format__ = function(self, format_spec) {
-    [self, format_spec] = to_string([self, format_spec])
+    [self, format_spec] = to_string(self, format_spec)
     var fmt = new $B.parse_format_spec(format_spec, self)
 
     if(fmt.sign !== undefined){
@@ -1498,7 +1509,7 @@ str_funcs.count = function(){
         $B.RAISE(_b_.TypeError, "Can't convert '" + $B.class_name($.sub) +
             "' object to str implicitly")
     }
-    [_self, sub] = to_string([$.self, $.sub])
+    [_self, sub] = to_string($.self, $.sub)
     var substr = _self
     if($.start !== null){
         var _slice
@@ -1644,7 +1655,7 @@ str_funcs.find = function(self){
     check_str($.sub)
     normalize_start_end($);
 
-    [_self, sub] = to_string([$.self, $.sub]);
+    [_self, sub] = to_string($.self, $.sub);
 
     var len = str.mp_length(_self),
         sub_len = str.mp_length(sub)
@@ -2017,7 +2028,7 @@ str_funcs.join = function(self, iterable){
             var obj2 = _b_.next(iterable)
             if(! $B.$isinstance(obj2, str)){
                 console.log('str join', arguments)
-    
+
                 $B.RAISE(_b_.TypeError, "sequence item " + count +
                     ": expected str instance, " + $B.class_name(obj2) +
                     " found")
@@ -2062,7 +2073,7 @@ str_funcs.lstrip = function(self){
     if(chars === _b_.None){
         return _self.trimStart()
     }
-    [_self, chars] = to_string([_self, chars])
+    [_self, chars] = to_string(_self, chars)
     while(_self.length > 0){
         var flag = false
         for(var char of chars){
@@ -2153,7 +2164,7 @@ str_funcs.partition = function(self, sep) {
         $B.RAISE(_b_.ValueError, "empty separator")
     }
     check_str(sep);
-    [_self, sep] = to_string([self, sep])
+    [_self, sep] = to_string(self, sep)
     var chars = to_chars(_self),
         i = _self.indexOf(sep)
     if(i == -1){
@@ -2170,7 +2181,7 @@ str_funcs.removeprefix = function(self, prefix){
         $B.RAISE(_b_.ValueError, "prefix should be str, not " +
             `'${$B.class_name(prefix)}'`)
     }
-    [_self, prefix] = to_string([self, prefix])
+    [_self, prefix] = to_string(self, prefix)
     if(str.startswith(_self, prefix)){
         return _self.substr(prefix.length)
     }
@@ -2184,7 +2195,7 @@ str_funcs.removesuffix = function(self, suffix){
         $B.RAISE(_b_.ValueError, "suffix should be str, not " +
             `'${$B.class_name(suffix)}'`)
     }
-    [_self, suffix] = to_string([self, suffix])
+    [_self, suffix] = to_string(self, suffix)
     if(suffix.length > 0 && str.endswith(_self, suffix)){
         return _self.substr(0, _self.length - suffix.length)
     }
@@ -2219,7 +2230,7 @@ str_funcs.replace = function(){
     if($B.exact_type(count, $B.long_int)){
         count = parseInt(count.value)
     };
-    [old, _new] = to_string([old, _new])
+    [old, _new] = to_string(old, _new)
     var elts
     if(old == ""){
         if(_new == ""){
@@ -2278,7 +2289,7 @@ str_funcs.rfind = function(){
     normalize_start_end($)
     check_str($.sub);
 
-    [_self, sub] = to_string([$.self, $.sub])
+    [_self, sub] = to_string($.self, $.sub)
 
     var len = str.mp_length(_self),
         sub_len = str.mp_length(sub)
@@ -2342,7 +2353,7 @@ str_funcs.rsplit = function(){
         sep = $.sep,
         _self;
 
-    [_self, sep] = to_string([$.self, $.sep])
+    [_self, sep] = to_string($.self, $.sep)
 
     // Use split on the reverse of the string and of separator
     var rev_str = reverse(_self),
@@ -2509,16 +2520,18 @@ str_funcs.startswith = function(self){
         _self
 
     normalize_start_end($)
+    _self = to_string($.self)
 
     var prefixes = $.prefix
     if(! $B.$isinstance(prefixes, _b_.tuple)){
         prefixes = [prefixes]
     }
-    _self = to_string($.self)
-    prefixes = to_string(prefixes)
+    prefixes = to_string(...prefixes)
+    prefixes = Array.isArray(prefixes) ? prefixes : [prefixes]
     var s = _self.substring($.start, $.end)
     for(var prefix of prefixes){
         if(! $B.$isinstance(prefix, str)){
+            console.log($.prefix, 'prefix', prefix)
             $B.RAISE(_b_.TypeError, "endswith first arg must be str " +
                 "or a tuple of str, not int")
         }

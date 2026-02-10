@@ -178,7 +178,7 @@ traceback_funcs.tb_lineno_get = function(self){
     return self.tb_lineno
 }
 
-traceback_funcs.tb_lineno_set = $B.NULL
+traceback_funcs.tb_lineno_set = _b_.None
 
 traceback_funcs.tb_next_get = function(self){
     return self.tb_next ?? _b_.None
@@ -258,7 +258,7 @@ frame_funcs.f_back_get = function(self){
     return _b_.None
 }
 
-frame_funcs.f_back_set = $B.NULL
+frame_funcs.f_back_set = _b_.None
 
 frame_funcs.f_builtins_get = function(self){
     if(self[3].hasOwnProperty('__builtins__')){
@@ -267,7 +267,7 @@ frame_funcs.f_builtins_get = function(self){
     return $B.obj_dict(_b_)
 }
 
-frame_funcs.f_builtins_set = $B.NULL
+frame_funcs.f_builtins_set = _b_.None
 
 frame_funcs.f_code_get = function(self){
     var res
@@ -303,13 +303,13 @@ frame_funcs.f_code_get = function(self){
     return res
 }
 
-frame_funcs.f_code_set = $B.NULL
+frame_funcs.f_code_set = _b_.None
 
 frame_funcs.f_generator_get = function(self){
 
 }
 
-frame_funcs.f_generator_set = $B.NULL
+frame_funcs.f_generator_set = _b_.None
 
 frame_funcs.f_globals_get = function(self){
     if(self.f_globals){
@@ -321,13 +321,13 @@ frame_funcs.f_globals_get = function(self){
     }
 }
 
-frame_funcs.f_globals_set = $B.NULL
+frame_funcs.f_globals_set = _b_.None
 
 frame_funcs.f_lasti_get = function(self){
     return 0
 }
 
-frame_funcs.f_lasti_set = $B.NULL
+frame_funcs.f_lasti_set = _b_.None
 
 frame_funcs.f_lineno_get = function(self){
     return self.$lineno
@@ -349,7 +349,7 @@ frame_funcs.f_locals_get = function(self){
     }
 }
 
-frame_funcs.f_locals_set = $B.NULL
+frame_funcs.f_locals_set = _b_.None
 
 frame_funcs.f_trace_get = function(self){
     return self.$f_trace
@@ -359,9 +359,7 @@ frame_funcs.f_trace_opcodes_get = function(self){
 
 }
 
-frame_funcs.f_trace_opcodes_set = function(self){
-
-}
+frame_funcs.f_trace_opcodes_set = _b_.None
 
 frame_funcs.f_trace_set = function(self, value){
     self.$f_trace = value

@@ -3,6 +3,30 @@
 
 var _b_ = $B.builtins
 
+function conv_num(x){
+    if(typeof x == 'number'){
+        return x
+    }else if(typeof x == 'bigint'){
+        return Number(x)
+    }else if($B.$isinstance(x, _b_.int)){
+        // int subclass
+        return conv_num(x.value)
+    }else if(x.ob_type === _b_.float){
+        return x.value
+    }else if($B.$isinstance(x, _b_.float)){
+        return x.value
+    }
+    return $B.NULL
+}
+
+function conv_number(...objs){
+    var res = []
+    for(var obj of objs){
+        res.push(conv_num(obj))
+    }
+    return res
+}
+
 function float_value(obj){
     return obj.ob_type === float ? obj : fast_float(obj.value)
 }
@@ -299,7 +323,7 @@ float.$hash_func = function(self){
     }
     // for integers, return the value
     if(Number.isInteger(_v)){
-        return _b_.int.__hash__(_v)
+        return _b_.int.tp_hash(_v)
     }
 
     var r = frexp(self)
@@ -679,7 +703,7 @@ _b_.float.tp_richcompare = function(self, other, op){
         return _b_.NotImplemented
     }
     var other_value = other_nb_float(other).value
-    
+
     var res
 
     switch(op){
@@ -810,78 +834,78 @@ _b_.float.nb_divmod = function(self, other){
 }
 
 _b_.float.nb_power = function(self, other){
-    var other_int = $B.$isinstance(other, _b_.int)
-    if(other_int || $B.$isinstance(other, float)){
-        if(! other_int){
-            other = other.value
-        }
-        if(self.value == 1){
-            return fast_float(1) // even for Infinity or NaN
-        }else if(other == 0){
-            return fast_float(1)
-        }
-
-        if(isNaN(other)){
-            return fast_float(Number.NaN)
-        }
-        if(isNaN(self.value)){
-            return fast_float(Number.NaN)
-        }
-
-        if(self.value == -1 && ! isFinite(other)){
-            // (-1)**+-inf is 1
-            return fast_float(1)
-        }else if(self.value == 0 && isFinite(other) && other < 0){
-            $B.RAISE(_b_.ZeroDivisionError, "0.0 cannot be raised " +
-                "to a negative power")
-        }else if(self.value == 0 && isFinite(other) && other >= 0){
-            /* # (+-0)**y is +-0 for y a positive odd integer */
-            if(Number.isInteger(other) && other % 2 == 1){
-                return self
-            }
-            /* (+-0)**y is 0 for y finite and positive but not an odd integer */
-            return fast_float(0)
-        }else if(self.value == Number.NEGATIVE_INFINITY && ! isNaN(other)){
-            /*
-            (-INF)**y is
-                -0.0 for y a negative odd integer
-                0.0 for y negative but not an odd integer
-                -INF for y a positive odd integer
-                INF for y positive but not an odd integer
-            */
-            if(other % 2 == -1){
-                return fast_float(-0.0)
-            }else if(other < 0){
-                return fast_float(0)
-            }else if(other % 2 == 1){
-                return fast_float(Number.NEGATIVE_INFINITY)
-            }else{
-                return fast_float(Number.POSITIVE_INFINITY)
-            }
-        }else if(self.value == Number.POSITIVE_INFINITY && ! isNaN(other)){
-            return other > 0 ? self : fast_float(0)
-        }
-        if(other == Number.NEGATIVE_INFINITY && ! isNaN(self.value)){
-            // x**-INF is INF for abs(x) < 1 and 0 for abs(x) > 1
-            return Math.abs(self.value) < 1 ?
-                       fast_float(Number.POSITIVE_INFINITY) :
-                       fast_float(0)
-        }else if(other == Number.POSITIVE_INFINITY  && ! isNaN(self.value)){
-            // x**INF is 0 for abs(x) < 1 and INF for abs(x) > 1
-            return Math.abs(self.value) < 1 ?
-                       fast_float(0) :
-                       fast_float(Number.POSITIVE_INFINITY)
-        }
-        /*
-        x**y defers to complex pow for finite negative x and
-        non-integral y.
-        */
-        if(self.value < 0 && ! Number.isInteger(other)){
-            return _b_.complex.__pow__($B.make_complex(self.value, 0),
-                                       fast_float(other))
-        }
-        return fast_float(Math.pow(self.value, other))
+    var [x, y] = conv_number(self, other)
+    if(x === $B.NULL || y === $B.NULL){
+        return _b_.NotImplemented
     }
+
+    if(x == 1){
+        return fast_float(1) // even for Infinity or NaN
+    }else if(y == 0){
+        return fast_float(1)
+    }
+
+    if(isNaN(y)){
+        return fast_float(Number.NaN)
+    }
+    if(isNaN(x)){
+        return fast_float(Number.NaN)
+    }
+
+    if(x == -1 && ! isFinite(other)){
+        // (-1)**+-inf is 1
+        return fast_float(1)
+    }else if(x == 0 && isFinite(other) && other < 0){
+        $B.RAISE(_b_.ZeroDivisionError, "0.0 cannot be raised " +
+            "to a negative power")
+    }else if(x == 0 && isFinite(other) && other >= 0){
+        /* # (+-0)**y is +-0 for y a positive odd integer */
+        if(Number.isInteger(y) && y % 2 == 1){
+            return self
+        }
+        /* (+-0)**y is 0 for y finite and positive but not an odd integer */
+        return fast_float(0)
+    }else if(x == Number.NEGATIVE_INFINITY && ! isNaN(y)){
+        /*
+        (-INF)**y is
+            -0.0 for y a negative odd integer
+            0.0 for y negative but not an odd integer
+            -INF for y a positive odd integer
+            INF for y positive but not an odd integer
+        */
+        if(y % 2 == -1){
+            return fast_float(-0.0)
+        }else if(y < 0){
+            return fast_float(0)
+        }else if(y % 2 == 1){
+            return fast_float(Number.NEGATIVE_INFINITY)
+        }else{
+            return fast_float(Number.POSITIVE_INFINITY)
+        }
+    }else if(x == Number.POSITIVE_INFINITY && ! isNaN(y)){
+        return y > 0 ? self : fast_float(0)
+    }
+    if(y == Number.NEGATIVE_INFINITY && ! isNaN(x)){
+        // x**-INF is INF for abs(x) < 1 and 0 for abs(x) > 1
+        return Math.abs(x) < 1 ?
+                   fast_float(Number.POSITIVE_INFINITY) :
+                   fast_float(0)
+    }else if(y == Number.POSITIVE_INFINITY  && ! isNaN(x)){
+        // x**INF is 0 for abs(x) < 1 and INF for abs(x) > 1
+        return Math.abs(x) < 1 ?
+                   fast_float(0) :
+                   fast_float(Number.POSITIVE_INFINITY)
+    }
+    /*
+    x**y defers to complex pow for finite negative x and
+    non-integral y.
+    */
+    if(x < 0 && ! Number.isInteger(y)){
+        return _b_.complex.nb_power($B.make_complex(x, 0),
+                                   fast_float(y))
+    }
+    return fast_float(Math.pow(x, y))
+
     return _b_.NotImplemented
 }
 
@@ -973,10 +997,14 @@ _b_.float.tp_new = function(cls, value){
     }else if(! $B.$isinstance(cls, _b_.type)){
         $B.RAISE(_b_.TypeError, "float.__new__(X): X is not a type object")
     }
-    return {
+    var res = {
         ob_type: cls,
         value: float.$factory(value).value
     }
+    if(cls !== _b_.float){
+        res.dict = $B.empty_dict()
+    }
+    return res
 }
 
 _b_.float.nb_negative = function(self){
@@ -1014,7 +1042,6 @@ _b_.float.nb_float = function(self){
 }
 
 _b_.float.nb_floor_divide = function(self, other){
-    console.log('floor divide', self, other)
     self = conv_float(self)
     if(self === $B.NULL){
         return _b_.NotImplemented
@@ -1023,7 +1050,7 @@ _b_.float.nb_floor_divide = function(self, other){
         return _b_.NotImplemented
     }
     var vx = self.value,
-        wx = float.$factory(other).value
+        wx = float_value(other).value
     var divmod = _float_div_mod(vx, wx)
     return $B.fast_float(divmod.floordiv)
 }
@@ -1427,7 +1454,7 @@ float_funcs.imag_get = function(self){
     return 0
 }
 
-float_funcs.imag_set = $B.NULL
+float_funcs.imag_set = _b_.None
 
 float_funcs.is_integer = function(self){
     return Number.isInteger(self.value)
@@ -1437,7 +1464,7 @@ float_funcs.real_get = function(self){
     return self
 }
 
-float_funcs.real_set = $B.NULL
+float_funcs.real_set = _b_.None
 
 _b_.float.classmethods = ["from_number", "fromhex", "__getformat__"]
 

@@ -1031,13 +1031,13 @@ DOMNode_funcs.abs_left_get = function(self){
     return $getPosition(self).left
 }
 
-DOMNode_funcs.abs_left_set = $B.NULL
+DOMNode_funcs.abs_left_set = _b_.None
 
 DOMNode_funcs.abs_top_get = function(self){
     return $getPosition(self).top
 }
 
-DOMNode_funcs.abs_top_set = $B.NULL
+DOMNode_funcs.abs_top_set = _b_.None
 
 DOMNode_funcs.bind = function(){
     // bind functions to the event (event = "click", "mouseover" etc.)
@@ -1348,14 +1348,14 @@ DOMNode_funcs.scrolled_left_get = function(self){
         document.scrollingElement.scrollLeft
 }
 
-DOMNode_funcs.scrolled_left_set = $B.NULL
+DOMNode_funcs.scrolled_left_set = _b_.None
 
 DOMNode_funcs.scrolled_top_get = function(self){
     return $getPosition(self).top -
         document.scrollingElement.scrollTop
 }
 
-DOMNode_funcs.scrolled_top_set = $B.NULL
+DOMNode_funcs.scrolled_top_set = _b_.None
 
 DOMNode_funcs.select = function(self, selector){
     // alias for get(selector=...)

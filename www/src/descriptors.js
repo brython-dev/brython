@@ -403,7 +403,7 @@ $B.getset_descriptor.$factory = function(klass, attr, getset){
 
 /* getset_descriptor start */
 $B.getset_descriptor.tp_descr_set = function(self, obj, value){
-    if(self.setter === undefined){
+    if(self.setter === _b_.None){
         $B.RAISE_ATTRIBUTE_ERROR(
             `attribute '${self.d_name}' of '${self.d_type.tp_name}' objects is not writable`,
             self,
@@ -482,11 +482,22 @@ $B.wrapper_descriptor.tp_repr = function(self){
     return `<slot wrapper '${name}' of '${class_name}' objects>`
 }
 
-$B.wrapper_descriptor.tp_call = function(self, ...args){
-    if(typeof self.wrapped !== 'function'){
-        console.log('self.wrapped not a function', self)
+$B.wrapper_descriptor.tp_call = function(descr, ...args){
+    if(args.length < 1){
+        $B.RAISE(_b_.TypeError,
+            `descriptor '${descr.d_name}' of '${descr.d_type.tp_name}' ` +
+            `object needs an argument`
+        )
     }
-    return self.wrapped(...args)
+    var self = args[0]
+    if(! _b_.issubclass($B.get_class(self), descr.d_type)){
+        $B.RAISE(_b_.TypeError,
+            `descriptor '${descr.d_name}' requires a ` +
+            `'${descr.d_type.tp_name}' object ` +
+            `but received a '${$B.class_name(self)}'`
+        )
+    }
+    return descr.wrapped(...args)
 }
 
 $B.wrapper_descriptor.tp_descr_get = function(self, obj, type){

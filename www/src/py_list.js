@@ -22,7 +22,7 @@ function count(self){
     return res
 }
 
-function nb_multiply(self, other){
+function sq_repeat(self, other){
     var cls = $B.$isinstance(self, _b_.list) ? _b_.list : _b_.tuple
     if($B.$isinstance(other, [_b_.float, _b_.complex])){
         $B.RAISE(_b_.TypeError, "'" + $B.class_name(other) +
@@ -103,6 +103,12 @@ function mp_subscript(self, key){
         return list_res
     }
 
+    if(! $B.$isinstance(key, [_b_.int, _b_.slice])){
+        $B.RAISE(_b_.TypeError,
+            `list indices must be integers or slices, ` +
+            `not ${$B.class_name(key)}`
+        )
+    }
     var int_key
     try{
         int_key = $B.$call(_b_.int, key)
@@ -640,7 +646,7 @@ _b_.list.tp_richcompare = function(){
 }
 
 _b_.list.sq_repeat = function(){
-    return nb_multiply.apply(null, arguments)
+    return sq_repeat.apply(null, arguments)
 }
 
 _b_.list.mp_ass_subscript = function(){
@@ -963,7 +969,7 @@ list_funcs.sort = function(self){
 }
 
 _b_.list.tp_methods = [
-    "__reversed__", "__sizeof__", "clear", "copy", "append", "insert", 
+    "__reversed__", "__sizeof__", "clear", "copy", "append", "insert",
     "extend", "pop", "remove", "index", "count", "reverse", "sort"
 ]
 
@@ -1065,8 +1071,8 @@ _b_.tuple.tp_richcompare = function(){
 }
 
 
-_b_.tuple.nb_multiply = function(){
-    return nb_multiply.apply(null, arguments)
+_b_.tuple.sq_repeat = function(){
+    return sq_repeat.apply(null, arguments)
 }
 
 _b_.tuple.tp_repr = function(self){

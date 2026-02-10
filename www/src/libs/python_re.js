@@ -237,7 +237,7 @@ function validate_named_char(description, pos){
 
 function validate_group_name(sname, pos, is_bytes){
     // sname is an instance of StringObj
-    if(! _b_.str.isidentifier(sname.string)){
+    if(! _b_.str.tp_funcs.isidentifier(sname.string)){
         fail(`bad character in group name '${sname.string}'`, pos + 4)
     }
     if(is_bytes && ! is_ascii(sname.string)){

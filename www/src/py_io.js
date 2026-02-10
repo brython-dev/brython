@@ -110,7 +110,7 @@ _IOBase_funcs.closed_get = function(self){
     return self._closed
 }
 
-_IOBase_funcs.closed_set = $B.NULL
+_IOBase_funcs.closed_set = _b_.None
 
 _IOBase_funcs.fileno = function(_self){
     _io_unsupported('fileno')

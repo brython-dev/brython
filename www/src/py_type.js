@@ -925,12 +925,23 @@ function set_tp_slots(cls){
     }
 }
 
+var special_attrs = [
+    "__name__", "__qualname__", "__module__", "__bases__", "__doc__",
+    "__type_params__", "__annotate__", "__annotations__"
+]
+
 /* type start */
 _b_.type.tp_setattro = function(kls, attr, value){
     var $test = false // attr == '__doc__' // kls.tp_name == 'A'
     if($test){
         console.log('set attr', attr, 'of class', kls, 'to', value)
         console.log('kls.dict', Object.entries(kls.dict.$strings))
+    }
+    if(kls.tp_flags & TPFLAGS.IMMUTABLETYPE){
+        $B.RAISE(_b_.TypeError,
+            `cannot set '${attr}' attribute ` +
+            `of immutable type '${$B.get_name(kls)}'`
+        )
     }
     var in_mro = $B.search_in_mro($B.get_class(kls), attr, $B.NULL)
     if(in_mro !== $B.NULL){
@@ -1377,6 +1388,9 @@ type_funcs.__dir__ = function(klass){
 }
 
 type_funcs.__doc___get = function(cls){
+    if(! (cls.tp_flags & TPFLAGS.HEAPTYPE) && cls.tp_doc){
+        return cls.tp_doc
+    }
     return $B.str_dict_get(cls.dict, '__doc__', _b_.None)
 }
 

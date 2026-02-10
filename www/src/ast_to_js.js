@@ -1657,9 +1657,9 @@ $B.ast.BinOp.prototype.to_js = function(scopes){
             // error will be handled at runtime
         }
     }
-    return `$B.rich_op('${op}', ` +
-        `${$B.js_from_ast(this.left, scopes)}, ` +
-        `${$B.js_from_ast(this.right, scopes)}, ${inum})`
+    var left = $B.js_from_ast(this.left, scopes),
+        right = $B.js_from_ast(this.right, scopes)
+    return `$B.rich_op('${op}', ${left}, ${right}, ${inum})`
 }
 
 $B.ast.BoolOp.prototype.to_js = function(scopes){

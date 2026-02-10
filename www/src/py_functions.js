@@ -40,32 +40,27 @@ $B.builtin_function_or_method.tp_call = function(self, ...args){
 var builtin_function_or_method_funcs = $B.builtin_function_or_method.tp_funcs = {}
 
 builtin_function_or_method_funcs.__name___get = function(self){
-
+    return self.$function_infos[$B.func_attrs.__name__]
 }
 
-builtin_function_or_method_funcs.__name___set = function(self){
-
-}
+builtin_function_or_method_funcs.__name___set = _b_.None
 
 builtin_function_or_method_funcs.__qualname___get = function(self){
+    return self.$function_infos[$B.func_attrs.__qualname__]
 
 }
 
-builtin_function_or_method_funcs.__qualname___set = function(self){
-
-}
+builtin_function_or_method_funcs.__qualname___set = _b_.None
 
 builtin_function_or_method_funcs.__reduce__ = function(self){
 
 }
 
 builtin_function_or_method_funcs.__self___get = function(self){
-
+    return $B.imported.builtins
 }
 
-builtin_function_or_method_funcs.__self___set = function(self){
-
-}
+builtin_function_or_method_funcs.__self___set = _b_.None
 
 builtin_function_or_method_funcs.__text_signature___get = function(self){
 

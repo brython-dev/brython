@@ -507,14 +507,16 @@ _b_.set.tp_richcompare = function(self, other, op){
 
 _b_.set.nb_subtract = function(self, other){
     // Return a new set with elements in the set that are not in the others
-    if(! $B.$isinstance(other, [set, frozenset])){
+    if(! $B.$isinstance(self, _b_.set) ||
+            ! $B.$isinstance(other, [set, frozenset])){
         return _b_.NotImplemented
     }
     return set_difference(self, other)
 }
 
 _b_.set.nb_and = function(self, other){
-    if(! $B.$isinstance(other, [set, frozenset])){
+    if(! $B.$isinstance(self, _b_.set) ||
+            ! $B.$isinstance(other, [set, frozenset])){
         return _b_.NotImplemented
     }
     return set_intersection(self, other)
@@ -522,7 +524,8 @@ _b_.set.nb_and = function(self, other){
 
 _b_.set.nb_xor = function(self, other){
     // Return a new set with elements in either the set or other but not both
-    if(! $B.$isinstance(other, [set, frozenset])){
+    if(! $B.$isinstance(self, _b_.set) ||
+            ! $B.$isinstance(other, [set, frozenset])){
         return _b_.NotImplemented
     }
     var res = make_new_set()
@@ -541,10 +544,11 @@ _b_.set.nb_xor = function(self, other){
 }
 
 _b_.set.nb_or = function(self, other){
-    if($B.$isinstance(other, [set, frozenset])){
-        return set_funcs.union(self, other)
+    if(! $B.$isinstance(self, _b_.set) ||
+            ! $B.$isinstance(other, [set, frozenset])){
+        return _b_.NotImplemented
     }
-    return _b_.NotImplemented
+    return set_funcs.union(self, other)
 }
 
 _b_.set.tp_repr = function(self){
@@ -582,7 +586,8 @@ _b_.set.tp_new = function(cls, iterable){
 }
 
 _b_.set.nb_inplace_subtract = function(self, other){
-    if(! $B.$isinstance(other, [set, frozenset])){
+    if(! $B.$isinstance(self, _b_.set) ||
+            ! $B.$isinstance(other, [set, frozenset])){
         return _b_.NotImplemented
     }
     set_difference_update(self, other)
@@ -590,7 +595,8 @@ _b_.set.nb_inplace_subtract = function(self, other){
 }
 
 _b_.set.nb_inplace_and = function(self, other){
-    if(! $B.$isinstance(other, [set, frozenset])){
+    if(! $B.$isinstance(self, _b_.set) ||
+            ! $B.$isinstance(other, [set, frozenset])){
         return _b_.NotImplemented
     }
     set_funcs.intersection_update(self, other)
@@ -598,7 +604,8 @@ _b_.set.nb_inplace_and = function(self, other){
 }
 
 _b_.set.nb_inplace_xor = function(self, other){
-    if(! $B.$isinstance(other, [set, frozenset])){
+    if(! $B.$isinstance(self, _b_.set) ||
+            ! $B.$isinstance(other, [set, frozenset])){
         return _b_.NotImplemented
     }
     set_funcs.symmetric_difference_update(self, other)
@@ -606,7 +613,8 @@ _b_.set.nb_inplace_xor = function(self, other){
 }
 
 _b_.set.nb_inplace_or = function(self, other){
-    if(! $B.$isinstance(other, [set, frozenset])){
+    if(! $B.$isinstance(self, _b_.set) ||
+            ! $B.$isinstance(other, [set, frozenset])){
         return _b_.NotImplemented
     }
     set_funcs.update(self, other)

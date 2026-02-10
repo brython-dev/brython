@@ -1311,12 +1311,6 @@ _b_.isinstance = function(obj, cls){
 }
 
 $B.$isinstance = function(obj, cls){
-    if(obj === null){
-        return cls === $B.imported.javascript.NullType
-    }
-    if(obj === undefined){
-        return false
-    }
     var kls
     if(Array.isArray(cls)){
         for(kls of cls){
@@ -1341,40 +1335,10 @@ $B.$isinstance = function(obj, cls){
         $B.RAISE(_b_.TypeError,
             'isinstance() arg 2 cannot be a parameterized generic')
     }
-    if((!klass) && (! $B.is_type(cls))){
-        if(! $B.$getattr(cls, '__instancecheck__', false)){
-            $B.RAISE(_b_.TypeError, "isinstance() arg 2 must be a type " +
-                "or tuple of types")
-        }
-    }
-
-    if(cls === _b_.int && (obj === True || obj === False)){
-        return true
-    }
-
-    if(cls === _b_.bool){
-        switch(typeof obj){
-            case "string":
-                return false
-            case "number":
-                return false
-            case "boolean":
-                return true
-        }
-    }
-
-    if(klass == undefined){
-        if(typeof obj == 'string'){
-            if(cls == _b_.str){
-                return true
-            }else if($B.builtin_classes.includes(cls)){
-                return false
-            }
-        }else if(typeof obj == 'number' && Number.isFinite(obj)){
-            if(Number.isFinite(obj) && cls == _b_.int){
-                return true
-            }
-        }
+    if(! cls.tp_bases){
+        $B.RAISE(_b_.TypeError, "isinstance() arg 2 must be a type, " +
+            "a tuple of types, or a union"
+        )
     }
 
     var obj_class = $B.get_class(obj)
@@ -1886,7 +1850,7 @@ _b_.pow = function() {
                     throw all_ints()
                 }
             }
-            return _b_.int.__pow__(x, y, z)
+            return _b_.int.nb_power(x, y, z)
         }else if($B.$isinstance(x, _b_.float)){
             throw all_ints()
         }else if($B.$isinstance(x, _b_.complex)){
@@ -2058,7 +2022,7 @@ _b_.round = function(){
     klass = $B.get_class(arg)
 
     if($B.$isinstance(arg, _b_.float)){
-        return _b_.float.__round__(arg, $.ndigits)
+        return _b_.float.tp_funcs.__round__(arg, $.ndigits)
     }
 
     var mult = Math.pow(10, n),
@@ -2070,9 +2034,9 @@ _b_.round = function(){
         if(floor % 2){
             floor += 1
         }
-        res = _b_.int.__truediv__(floor, mult)
+        res = _b_.int.nb_true_divide(floor, mult)
     }else{
-        res = _b_.int.__truediv__(Math.round(x), mult)
+        res = _b_.int.nb_true_divide(Math.round(x), mult)
     }
     if(res.value === Infinity || res.value === -Infinity){
         $B.RAISE(_b_.OverflowError,

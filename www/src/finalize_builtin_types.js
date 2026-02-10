@@ -30,7 +30,7 @@ function wrap_with_reflected(dunder, rdunder){
         $B.str_dict_set(cls.dict, rdunder, $B.wrapper_descriptor.$factory(
             cls,
             rdunder,
-            func
+            (self, other) => func(other, self)
         ))
     }
 }
@@ -105,7 +105,10 @@ Object.assign($B.wrapper_methods,
 )
 
 function make_doc(cls){
-    $B.str_dict_set(cls.dict, '__doc__', cls.tp_doc)
+    var in_dict = $B.str_dict_get(cls.dict, '__doc__', $B.NULL)
+    if(in_dict === $B.NULL){
+        $B.str_dict_set(cls.dict, '__doc__', cls.tp_doc)
+    }
 }
 
 function make_getattribute(cls){
@@ -289,6 +292,7 @@ for(var ns of [$B.builtin_types, $B.created_types]){
 for(var builtin_func of $B.builtin_funcs){
     if(_b_[builtin_func]){
         _b_[builtin_func].ob_type = $B.builtin_function_or_method
+        _b_[builtin_func].$function_infos = ['builtins', builtin_func, builtin_func]
     }else{
         console.log('missing builtin function', builtin_func)
     }

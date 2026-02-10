@@ -479,7 +479,7 @@
                         if(typeof $module !== 'undefined'){
                             result = $B.module.$factory(alias)
                             for(var key in $module){
-                                $B.module_setattr(result, key, 
+                                $B.module_setattr(result, key,
                                     $B.jsobj2pyobj($module[key]))
                             }
                             $B.module_setattr(result, '__file__', url)

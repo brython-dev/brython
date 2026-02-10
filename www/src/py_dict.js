@@ -1075,7 +1075,7 @@ _b_.dict.tp_richcompare = function(self, other, op){
 
 _b_.dict.nb_or = function(self, other){
     // PEP 584
-    if(! $B.$isinstance(other, dict)){
+    if(! $B.$isinstance(self, dict) || ! $B.$isinstance(other, dict)){
         return _b_.NotImplemented
     }
     var res = dict.tp_funcs.copy(self)
