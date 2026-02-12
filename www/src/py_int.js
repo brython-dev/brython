@@ -420,11 +420,10 @@ _b_.int.tp_richcompare = function(a, b, op){
 }
 
 _b_.int.nb_add = function(self, other){
-    var y = toBigInt(other)
-    if(y === $B.NULL){
+    var [x, y] = [self, other].map(toBigInt)
+    if(x === $B.NULL || y === $B.NULL){
         return _b_.NotImplemented
     }
-    var x = toBigInt(self)
     return int_or_long(x + y)
 }
 

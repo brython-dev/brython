@@ -356,7 +356,7 @@ var ascii_format = function(val, flags, type) {
     return format_padding(ascii, flags)
 }
 
-// converts val to float and sets precision if missing
+// converts val to Javascript number and sets precision if missing
 var _float_helper = function(val, flags){
     number_check(val, flags)
     if(flags.precision === undefined){
@@ -392,9 +392,8 @@ function handle_special_values(value, upper){
 }
 
 // gG
-var floating_point_format = function(val, upper, flags){
-    val = _float_helper(val, flags)
-
+var floating_point_format = function(value, upper, flags){
+    var val = _float_helper(value, flags)
     var special = handle_special_values(val, upper)
     if(special){
         return format_padding(format_sign(val, flags) + special, flags)
@@ -429,7 +428,7 @@ var floating_point_format = function(val, upper, flags){
         number is formatted with presentation type 'f' and precision p-1-exp
         */
         flags.precision = Math.max(0, p - 1 - exp)
-        res = floating_point_decimal_format(val, upper, flags)
+        res = floating_point_decimal_format(value, upper, flags)
         res = remove_zeros(res)
     }else{
         /*
@@ -438,7 +437,7 @@ var floating_point_format = function(val, upper, flags){
         */
         flags.precision = Math.max(0, p - 1)
         var delim = upper ? 'E' : 'e',
-            exp_fmt = floating_point_exponential_format(val, upper, flags),
+            exp_fmt = floating_point_exponential_format(value, upper, flags),
             parts = exp_fmt.split(delim)
         parts[0] = remove_zeros(parts[0])
         res = parts.join(delim)
@@ -554,8 +553,8 @@ var _floating_exp_helper = function(val, precision, flags, upper){
 }
 
 // eE
-var floating_point_exponential_format = function(val, upper, flags){
-    val = _float_helper(val, flags)
+var floating_point_exponential_format = function(value, upper, flags){
+    var val = _float_helper(value, flags)
     return format_padding(format_sign(val, flags) +
         format_float_precision(val, upper, flags, _floating_exp_helper), flags)
 }
@@ -565,6 +564,7 @@ $B.formatters = {
     floating_point_decimal_format,
     floating_point_exponential_format
     }
+
 var signed_hex_format = function(val, upper, flags){
     var ret
     if(! $B.$isinstance(val, _b_.int)){
@@ -745,7 +745,9 @@ var char_mapping = {
     "g": function(val, flags){
         return floating_point_format(val, false, flags)
     },
-    "G": function(val, flags){return floating_point_format(val, true, flags)},
+    "G": function(val, flags){
+        return floating_point_format(val, true, flags)
+    },
     "f": function(val, flags){
         return floating_point_decimal_format(val, false, flags)
     },
@@ -1139,29 +1141,34 @@ const numeric_re = /\p{Nd}|\p{Nl}|\p{No}/u
 var unprintable_re = /\p{Cc}|\p{Cf}|\p{Co}|\p{Cs}|\p{Zl}|\p{Zp}|\p{Zs}/u
 
 str.$factory = function(arg, encoding){
-    if(arg === undefined){
-        console.log('arg undef')
-        console.log(Error().stack)
-    }
-    if(arguments.length == 0){
-        return ""
-    }
-    if(arg === undefined){
-        return $B.UndefinedType.__str__()
-    }else if(arg === null){
-        return '<Javascript null>'
-    }
-    var test = false // arg.__class__ && arg.__class__.__name__ == 'MagicMock'
-    if(test){
-        console.log('call str of', arg)
-    }
-    if(encoding !== undefined){
-        // Arguments may be passed as keywords (cf. issue #1060)
-        var $ = $B.args("str", 3, {arg: null, encoding: null, errors: null},
+    var $ = $B.args("str", 3, {arg: null, encoding: null, errors: null},
                 ["arg", "encoding", "errors"], arguments,
-                {encoding: "utf-8", errors: "strict"}, null, null),
+                {arg: '', encoding: $B.NULL, errors: $B.NULL}, null, null)
+    var arg = $.arg,
         encoding = $.encoding,
         errors = $.errors
+    var res
+    if(arg === ''){
+        return arg
+    }
+    if(encoding === $B.NULL && errors === $B.NULL){
+        var klass = $B.get_class(arg)
+        var method = $B.search_slot(klass, 'tp_str', $B.NULL)
+        if(method !== $B.NULL){
+            res = method(arg)
+        }else{
+            res = _b_.repr(arg)
+        }
+    }else{
+        if(! $B.is_bytes_like(arg)){
+            $B.RAISE(_b_.TypeError,
+                `decoding to str: need a bytes-like object, ` +
+                `${$B.class_name(arg)} found`
+            )
+        }
+        // default values
+        encoding = encoding === $B.NULL ? 'utf-8' : encoding
+        errors = errors === $B.NULL ? 'strict' : errors
         if(! $B.$isinstance(encoding, str)){
             $B.RAISE(_b_.TypeError,
                 `str() argument 'encoding' must be str, not ${$B.class_name(encoding)}`)
@@ -1170,6 +1177,32 @@ str.$factory = function(arg, encoding){
             $B.RAISE(_b_.TypeError,
                 `str() argument 'errors' must be str, not ${$B.class_name(errors)}`)
         }
+        res = $B.bytes_decode(arg, encoding, errors)
+    }
+    if(typeof res == "string" || $B.$isinstance(res, str)){
+        return res
+    }
+    $B.RAISE(_b_.TypeError, "__str__ returned non-string " +
+        `(type ${$B.class_name(res)})`)
+    /*
+
+    if(arg === undefined){
+        return $B.UndefinedType.tp_str()
+    }else if(arg === null){
+        return '<Javascript null>'
+    }
+    var test = false // arg.__class__ && arg.__class__.__name__ == 'MagicMock'
+    if(test){
+        console.log('call str of', arg)
+    }
+    // Arguments may be passed as keywords (cf. issue #1060)
+    if(! $B.$isinstance(encoding, str)){
+        $B.RAISE(_b_.TypeError,
+            `str() argument 'encoding' must be str, not ${$B.class_name(encoding)}`)
+    }
+    if(! $B.$isinstance(errors, str)){
+        $B.RAISE(_b_.TypeError,
+            `str() argument 'errors' must be str, not ${$B.class_name(errors)}`)
     }
     if(typeof arg == "string" || arg instanceof String){
         return arg.toString()
@@ -1177,38 +1210,21 @@ str.$factory = function(arg, encoding){
         return arg.toString()
     }
 
-    try{
-        if($B.exact_type(arg, _b_.bytes) && encoding !== undefined){
-            // str(bytes, encoding, errors) is equal to
-            // bytes.decode(encoding, errors)
-            return $B.bytes_decode(arg, encoding, errors)
-        }
-        // Implicit invocation of __str__ uses method __str__ on the class,
-        // even if arg has an attribute __str__
-        var klass = $B.get_class(arg)
-        if(klass === undefined){
-            return $B.JSObj.__str__($B.jsobj2pyobj(arg))
-        }
-        var method = $B.search_slot(klass, 'tp_str', $B.NULL)
-        if(method === $B.NULL){
-            $B.RAISE_ATTRIBUTE_ERROR('no __str__ or __repr__', klass, '__str__')
-        }
-    }catch(err){
-        console.log("no __str__ for", arg)
-        console.log("err ", err)
-        if($B.get_option('debug') > 1){
-            console.log(err)
-        }
-        console.log("Warning - no method __str__ or __repr__, " +
-            "default to toString", arg)
-        throw err
+    // Implicit invocation of __str__ uses method __str__ on the class,
+    // even if arg has an attribute __str__
+    var klass = $B.get_class(arg)
+    var method = $B.search_slot(klass, 'tp_str', $B.NULL)
+    if(method === $B.NULL){
+        $B.RAISE_ATTRIBUTE_ERROR('no __str__ or __repr__', klass, '__str__')
     }
+    console.log('arg', arg, 'method', method)
     var res = method(arg)
     if(typeof res == "string" || $B.$isinstance(res, str)){
         return res
     }
     $B.RAISE(_b_.TypeError, "__str__ returned non-string " +
         `(type ${$B.class_name(res)})`)
+    */
 }
 
 /* str start */
@@ -1341,15 +1357,15 @@ _b_.str.tp_iter = function(self){
     }
 }
 
-_b_.str.tp_new = function(cls, value){
+_b_.str.tp_new = function(cls, ...args){
     if(cls === undefined){
         $B.RAISE(_b_.TypeError, "str.__new__(): not enough arguments")
     }else if(cls === _b_.str){
-        return str.$factory(value)
+        return str.$factory(...args)
     }else{
         return {
             ob_type: cls,
-            $brython_value: str.$factory(value),
+            $brython_value: str.$factory(...args),
             dict: $B.empty_dict()
         }
     }
@@ -1729,11 +1745,11 @@ str_funcs.format = function(){
                 if(/\d+/.exec(key)){
                     // If key is numeric, search in positional
                     // arguments
-                    return _b_.tuple.__getitem__($.$args,
+                    return _b_.tuple.mp_subscript($.$args,
                         parseInt(key))
                 }else{
                     // Else try in keyword arguments
-                    return _b_.dict.__getitem__($.$kw, key)
+                    return _b_.dict.mp_subscript($.$kw, key)
                 }
             }
             fmt.spec = fmt.spec.replace(/\{(.*?)\}/g,
@@ -1758,8 +1774,10 @@ str_funcs.format = function(){
                 // Subscription
                 var key = ext.substr(1, ext.length - 2)
                 // An index made of digits is transformed into an integer
-                if(key.charAt(0).search(/\d/) > -1){key = parseInt(key)}
-                value = $B.$getattr(value, "__getitem__")(key)
+                if(key.charAt(0).search(/\d/) > -1){
+                    key = parseInt(key)
+                }
+                value = $B.$call($B.$getattr(value, "__getitem__"), key)
             }
         }
 
@@ -1778,7 +1796,7 @@ str_funcs.format = function(){
             // For classes, don't use the class __format__ method
             res += $B.get_class(value).__format__(value, fmt.spec)
         }else{
-            res += $B.$getattr(value, "__format__")(fmt.spec)
+            res += $B.$call($B.$getattr(value, "__format__"), fmt.spec)
         }
     }
     return res
@@ -1792,7 +1810,7 @@ str_funcs.format_map = function(self, mapping){
 
 str_funcs.index = function(){
     // Like find(), but raise ValueError when the substring is not found.
-    var res = str.find.apply(null, arguments)
+    var res = str.tp_funcs.find.apply(null, arguments)
     if(res === -1){
         $B.RAISE(_b_.ValueError, "substring not found")
     }
@@ -2182,7 +2200,7 @@ str_funcs.removeprefix = function(self, prefix){
             `'${$B.class_name(prefix)}'`)
     }
     [_self, prefix] = to_string(self, prefix)
-    if(str.startswith(_self, prefix)){
+    if(str.tp_funcs.startswith(_self, prefix)){
         return _self.substr(prefix.length)
     }
     return _self.substr(0)
@@ -2196,7 +2214,7 @@ str_funcs.removesuffix = function(self, suffix){
             `'${$B.class_name(suffix)}'`)
     }
     [_self, suffix] = to_string(self, suffix)
-    if(suffix.length > 0 && str.endswith(_self, suffix)){
+    if(suffix.length > 0 && str.tp_funcs.endswith(_self, suffix)){
         return _self.substr(0, _self.length - suffix.length)
     }
     return _self.substr(0)
@@ -2606,7 +2624,7 @@ str_funcs.translate = function(self, table){
     for(var char of _self){
         cp = _b_.ord(char)
         try{
-            var repl = getitem(cp)
+            var repl = $B.$call(getitem, cp)
             if(repl !== _b_.None){
                 if(typeof repl == "string"){
                     res.push(repl)

@@ -75,9 +75,9 @@ function set_difference(so, other){
         other_is_dict
 
     if($B.$isinstance(other, [set, frozenset])){
-        other_size = set.__len__(other)
+        other_size = set.mp_length(other)
     }else if($B.$isinstance(other, _b_.dict)){
-        other_size = _b_.dict.__len__(other)
+        other_size = _b_.dict.mp_length(other)
         other_is_dict = true
     }else{
         return set_copy_and_difference(so, other)
@@ -85,7 +85,7 @@ function set_difference(so, other){
 
     /* If len(so) much more than len(other), it's more efficient to simply copy
      * so and then iterate other looking for common elements. */
-    if (set.__len__(so) >> 2 > other_size) {
+    if (set.mp_length(so) >> 2 > other_size) {
         return set_copy_and_difference(so, other);
     }
 
@@ -113,7 +113,7 @@ function set_difference(so, other){
 
 function set_difference_update(so, other){
     if(so === other){
-        return set.clear(so);
+        return set.tp_funcs.clear(so);
     }
     if($B.$isinstance(other, [set, frozenset])){
         for(let entry of set_iter_with_hash(other)){
@@ -260,7 +260,7 @@ function set_lookkey(so, key, hash){
 
 function set_swap_bodies(a, b){
     var temp = set_copy(a)
-    set.clear(a)
+    set.tp_funcs.clear(a)
     a.$used = b.$used
     a.$store = b.$store
     b.$used = temp.$used
@@ -269,7 +269,7 @@ function set_swap_bodies(a, b){
 
 function set_symmetric_difference_update(so, other){
     if(so == other){
-        return set.clear(so)
+        return set.tp_funcs.clear(so)
     }
     if($B.$isinstance(other, _b_.dict)){
         for(let entry of _b_.dict.$iter_items(other)){
@@ -342,7 +342,7 @@ function set_eq(self, other){
 function set_le(self, other){
     // Test whether every element in the set is in other.
     if($B.$isinstance(other, [set, frozenset])){
-        return set.issubset(self, other)
+        return set.tp_funcs.issubset(self, other)
     }
     return _b_.NotImplemented
 }
@@ -350,8 +350,8 @@ function set_le(self, other){
 
 function set_lt(self, other){
     if($B.$isinstance(other, [set, frozenset])){
-        return set.__le__(self, other) &&
-            set.__len__(self) < set.__len__(other)
+        return set_le(self, other) &&
+            set.mp_length(self) < set.mp_length(other)
     }else{
         return _b_.NotImplemented
     }
@@ -359,20 +359,20 @@ function set_lt(self, other){
 
 function set_ge(self, other){
     if($B.$isinstance(other, [set, frozenset])){
-        return set.__le__(other, self)
+        return set_le(other, self)
     }
     return _b_.NotImplemented
 }
 
 function set_gt(self, other){
     if($B.$isinstance(other, [set, frozenset])){
-        return set.__lt__(other, self)
+        return set_lt(other, self)
     }
     return _b_.NotImplemented
 }
 
 set.__format__ = function(self){
-    return set.__repr__(self)
+    return set.tp_repr(self)
 }
 
 
@@ -410,21 +410,6 @@ function set_make_items(so){
         items = items.concat(so.$store[hash])
     }
     return $B.$list(items)
-}
-
-set.__rand__ = function(self, other){
-    // Used when other.__and__(self) is NotImplemented
-    return set.__and__(self, other)
-}
-
-set.__reduce__ = function(self){
-    return $B.fast_tuple([$B.get_class(self),
-                         $B.fast_tuple([set_make_items(self)]),
-                         _b_.None])
-}
-
-set.__reduce_ex__ = function(self){
-    return set.__reduce__(self)
 }
 
 function set_repr(self){
@@ -634,7 +619,9 @@ var set_funcs = _b_.set.tp_funcs = {}
 set_funcs.__class_getitem__ = $B.$class_getitem
 
 set_funcs.__reduce__ = function(self){
-
+    return $B.fast_tuple([$B.get_class(self),
+                         $B.fast_tuple([set_make_items(self)]),
+                         _b_.None])
 }
 
 set_funcs.__sizeof__ = function(self){
@@ -664,7 +651,7 @@ set_funcs.difference = function(self){
     var $ = $B.args("difference", 1, {self: null},
         ["self"], arguments, {}, "args", null)
     if($.args.length == 0){
-        return set.copy($.self)
+        return set_copy($.self)
     }
 
     var res = set_copy($.self)
@@ -704,7 +691,7 @@ set_funcs.intersection = function(self){
     var $ = $B.args("difference", 1, {self: null},
         ["self"], arguments, {}, "args", null)
     if($.args.length == 0){
-        return set.copy($.self)
+        return set_copy($.self)
     }
     return set_intersection_multi($.self, $.args)
 }
@@ -837,7 +824,7 @@ set_funcs.union = function(self){
             }
         }else{
             let other = set.$factory(arg)
-            res = set.union(res, other)
+            res = set.tp_funcs.union(res, other)
         }
     }
     return res
@@ -871,7 +858,12 @@ set_funcs.update = function(self){
     return _b_.None
 }
 
-_b_.set.tp_methods = ["add", "clear", "copy", "discard", "difference", "difference_update", "intersection", "intersection_update", "isdisjoint", "issubset", "issuperset", "pop", "__reduce__", "remove", "__sizeof__", "symmetric_difference", "symmetric_difference_update", "union", "update"]
+_b_.set.tp_methods = [
+    "add", "clear", "copy", "discard", "difference", "difference_update",
+    "intersection", "intersection_update", "isdisjoint", "issubset",
+    "issuperset", "pop", "__reduce__", "remove", "__sizeof__",
+    "symmetric_difference", "symmetric_difference_update", "union", "update"
+]
 
 _b_.set.classmethods = ["__class_getitem__"]
 
@@ -881,6 +873,13 @@ $B.set_func_names(set, "builtins")
 
 var frozenset = _b_.frozenset
 
+frozenset.$factory = function(){
+    var args = [frozenset].concat(Array.from(arguments)),
+        self = frozenset.tp_new.apply(null, args)
+    frozenset.tp_init(self, ...arguments)
+    return self
+}
+
 for(var attr in set){
     switch(attr) {
       case "add":
@@ -889,6 +888,8 @@ for(var attr in set){
       case "pop":
       case "remove":
       case "update":
+      case "tp_methods":
+      case "classmethods":
           break
       default:
           if(frozenset[attr] == undefined){
@@ -906,7 +907,7 @@ for(var attr in set){
 }
 
 // hash is allowed on frozensets
-frozenset.__hash__ = function(self) {
+frozenset.tp_hash = function(self) {
    if(self === undefined){
       return frozenset.__hashvalue__ || $B.$py_next_hash--  // for hash of string type (not instance of string)
    }
@@ -966,19 +967,12 @@ frozenset.tp_repr = function(self){
     return set_repr(self)
 }
 
-frozenset.copy = function(self){
-    if($B.get_class(self) === frozenset){
-        return self
-    }
-    return set_copy(self)
-}
+_b_.frozenset.tp_methods = [
+    "copy", "difference", "intersection", "isdisjoint", "issubset",
+    "issuperset", "__reduce__", "__sizeof__", "symmetric_difference", "union"
+]
 
-frozenset.$factory = function(){
-    var args = [frozenset].concat(Array.from(arguments)),
-        self = frozenset.tp_new.apply(null, args)
-    frozenset.tp_init(self, ...arguments)
-    return self
-}
+_b_.frozenset.classmethods = ["__class_getitem__"]
 
 $B.set_func_names(frozenset, "builtins")
 

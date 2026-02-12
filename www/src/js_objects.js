@@ -1448,6 +1448,13 @@ $B.JSConstructor.tp_call = function(self, ...args){
 
 $B.JSFunction = $B.make_builtin_class('JavascriptFunction')
 
+$B.JSFunction.tp_getattro = function(self, attr){
+    if(self[JSOBJ] && self[JSOBJ][attr] !== undefined){
+        return jsobj2pyobj(self[JSOBJ][attr], self[JSOBJ])
+    }
+    return _b_.object.tp_getattro(self, attr)
+}
+
 $B.JSFunction.tp_descr_get = function(self, obj){
     if(obj === $B.NULL){
         return self

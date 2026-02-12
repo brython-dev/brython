@@ -60,7 +60,7 @@ function invalid(other){
     return ! $B.$isinstance(other, [bytes, bytearray])
 }
 
-function is_bytes_like(obj){
+var is_bytes_like = $B.is_bytes_like = function(obj){
     return $B.$getattr(obj, '__buffer__', $B.NULL) !== $B.NULL
 }
 
@@ -1573,9 +1573,12 @@ function load_encoder(enc){
     // load table from encodings/<enc>.py
     if(from_unicode[enc] === undefined){
         var mod = _b_.__import__("encodings." + enc)
-        if(mod[enc].getregentry){
-            from_unicode[enc] = $B.$getattr(mod[enc].getregentry(),
-                "encode")
+        var enc_mod = $B.module_getattr(mod, enc)
+        if(enc_mod !== $B.NULL){
+            var getregentry = $B.module_getattr(enc_mod, 'getregentry')
+            if(getregentry !== $B.NULL){
+                from_unicode[enc] = $B.$getattr($B.$call(getregentry), "encode")
+            }
         }
     }
 }
@@ -1903,7 +1906,7 @@ var encode = $B.encode = function(){
             }catch(err){
                 $B.RAISE(_b_.LookupError, "unknown encoding: " + encoding)
             }
-            return from_unicode[enc](s)[0]
+            return $B.$call(from_unicode[enc], s)[0]
     }
     return fast_bytes(t)
 }

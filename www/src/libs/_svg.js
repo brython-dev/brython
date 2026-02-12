@@ -129,5 +129,6 @@ for(var i = 0, len = $svg_tags.length; i < len; i++){
     obj[tag] = makeTagDict(tag)
 }
 
-$B.imported._svg = obj
+$B.addToImported('_svg', obj)
+
 })(__BRYTHON__)

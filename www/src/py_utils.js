@@ -2061,15 +2061,15 @@ $B.rich_op1 = function(op, x, y){
     }
     var res
     var fail
-    var op_method = $B.search_in_mro(x_type, op, null)
-    if(op_method !== null){
+    var op_method = $B.search_in_mro(x_type, op, $B.NULL)
+    if(op_method !== $B.NULL){
         res = $B.$call(op_method, x, y)
         if(res !== _b_.NotImplemented){
             return res
         }
     }
-    var rop_method = $B.search_in_mro(y_type, rop, null)
-    if(rop_method !== null){
+    var rop_method = $B.search_in_mro(y_type, rop, $B.NULL)
+    if(rop_method !== $B.NULL){
         res = $B.$call(rop_method, y, x)
         if(res !== _b_.NotImplemented){
             return res

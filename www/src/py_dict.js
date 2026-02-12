@@ -1210,7 +1210,7 @@ _b_.dict.tp_init = function(self, first, second){
     return _b_.None
 }
 
-_b_.dict.nb_inplace_or = function(self){
+_b_.dict.nb_inplace_or = function(self, other){
     // PEP 584
     dict.tp_funcs.update(self, other)
     return self

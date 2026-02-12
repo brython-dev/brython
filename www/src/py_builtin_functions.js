@@ -1956,9 +1956,9 @@ _b_.reversed.tp_iternext = function*(self){
 _b_.reversed.tp_new = function(cls, seq){
     check_nb_args_no_kw('reversed', 2, arguments)
 
-    var rev_method = $B.$getattr(seq, '__reversed__', $B.NULL)
+    var rev_method = $B.$getattr($B.get_class(seq), '__reversed__', $B.NULL)
     if(rev_method !== $B.NULL){
-        return $B.$call(rev_method)
+        return $B.$call(rev_method, seq)
     }
     try{
         var method = $B.$getattr($B.get_class(seq), '__getitem__')

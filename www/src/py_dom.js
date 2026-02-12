@@ -172,6 +172,7 @@ var $NodeTypes = {1:  "ELEMENT",
 
 // Class for DOM attributes
 var Attributes = $B.make_builtin_class("Attributes")
+
 Attributes.$factory = function(elt){
     return{
         ob_type: Attributes,
@@ -179,7 +180,7 @@ Attributes.$factory = function(elt){
     }
 }
 
-Attributes.__contains__ = function(){
+Attributes.sq_contains = function(){
     var $ = $B.args("__getitem__", 2, {self: null, key:null},
         ["self", "key"], arguments, {}, null, null)
     if($.self.elt instanceof SVGElement){
@@ -190,22 +191,8 @@ Attributes.__contains__ = function(){
     return false
 }
 
-Attributes.__delitem__ = function(){
-    var $ = $B.args("__getitem__", 2, {self: null, key:null},
-        ["self", "key"], arguments, {}, null, null)
-    if(!Attributes.__contains__($.self, $.key)){
-        $B.RAISE(_b_.KeyError, $.key)
-    }
-    if($.self.elt instanceof SVGElement){
-        $.self.elt.removeAttributeNS(null, $.key)
-        return _b_.None
-    }else if(typeof $.self.elt.hasAttribute == "function"){
-        $.self.elt.removeAttribute($.key)
-        return _b_.None
-    }
-}
 
-Attributes.__getitem__ = function(){
+Attributes.mp_subscript = function(){
     var $ = $B.args("__getitem__", 2, {self: null, key:null},
         ["self", "key"], arguments, {}, null, null)
     if($.self.elt instanceof SVGElement &&
@@ -219,38 +206,40 @@ Attributes.__getitem__ = function(){
 }
 
 Attributes.tp_iter = function(self){
-    self.$counter = 0
-    // Initialize list of key-value attribute pairs
-    var attrs = self.elt.attributes,
-        items = []
-    for(var i = 0; i < attrs.length; i++){
-        items.push(attrs[i].name)
-    }
-    self.$items = items
+    self.it = self.elt.attributes[Symbol.iterator]()
     return self
 }
 
-Attributes.tp_iternext = function(){
-    var $ = $B.args("__next__", 1, {self: null},
-        ["self"], arguments, {}, null, null)
-    if($.self.$counter < $.self.$items.length){
-        var res = $.self.$items[$.self.$counter]
-        $.self.$counter++
-        return res
-    }else{
-        $B.RAISE(_b_.StopIteration, "")
+Attributes.tp_iternext = function*(self){
+    for(var attr of self.it){
+        yield attr.name
     }
 }
 
-Attributes.__setitem__ = function(){
+Attributes.mp_ass_subscript = function(){
     var $ = $B.args("__setitem__", 3, {self: null, key:null, value: null},
         ["self", "key", "value"], arguments, {}, null, null)
-    if($.self.elt instanceof SVGElement &&
-            typeof $.self.elt.setAttributeNS == "function"){
-        $.self.elt.setAttributeNS(null, $.key, _b_.str.$factory($.value))
+    var self = $.self,
+        key = $.key,
+        value = $.value
+    if(value === $B.NULL){ // delete
+        if(! Attributes.sq_contains(self, key)){
+            $B.RAISE(_b_.KeyError, key)
+        }
+        if(self.elt instanceof SVGElement){
+            self.elt.removeAttributeNS(null, key)
+            return _b_.None
+        }else if(typeof self.elt.hasAttribute == "function"){
+            self.elt.removeAttribute(key)
+            return _b_.None
+        }
+    }
+    if(self.elt instanceof SVGElement &&
+            typeof self.elt.setAttributeNS == "function"){
+        self.elt.setAttributeNS(null, key, _b_.str.$factory(value))
         return _b_.None
-    }else if(typeof $.self.elt.setAttribute == "function"){
-        $.self.elt.setAttribute($.key, _b_.str.$factory($.value))
+    }else if(typeof self.elt.setAttribute == "function"){
+        self.elt.setAttribute(key, _b_.str.$factory(value))
         return _b_.None
     }
     $B.RAISE(_b_.TypeError, "Can't set attributes on element")
@@ -266,11 +255,13 @@ Attributes.tp_repr = function(self){
     return '{' + items.join(", ") + '}'
 }
 
-Attributes.get = function(){
+var Attributes_funcs = Attributes.tp_funcs = {}
+
+Attributes_funcs.get = function(){
     var $ = $B.args("get", 3, {self: null, key:null, deflt: null},
-        ["self", "key", "deflt"], arguments, {deflt:_b_.None}, null, null)
+        ["self", "key", "deflt"], arguments, {deflt: _b_.None}, null, null)
     try{
-        return Attributes.__getitem__($.self, $.key)
+        return Attributes.mp_subscript($.self, $.key)
     }catch(err){
         if($B.is_exc(err, _b_.KeyError)){
             return $.deflt
@@ -280,11 +271,11 @@ Attributes.get = function(){
     }
 }
 
-Attributes.keys = function(){
+Attributes_funcs.keys = function(){
     return Attributes.tp_iter.apply(null, arguments)
 }
 
-Attributes.items = function(){
+Attributes_funcs.items = function(){
     var $ = $B.args("values", 1, {self: null},
         ["self"], arguments, {}, null, null),
         attrs = $.self.elt.attributes,
@@ -295,7 +286,7 @@ Attributes.items = function(){
     return _b_.list.tp_iter($B.$list(values))
 }
 
-Attributes.values = function(){
+Attributes_funcs.values = function(){
     var $ = $B.args("values", 1, {self: null},
         ["self"], arguments, {}, null, null),
         attrs = $.self.elt.attributes,
@@ -305,6 +296,10 @@ Attributes.values = function(){
     }
     return _b_.list.tp_iter($B.$list(values))
 }
+
+Attributes.tp_methods = [
+    "get", "keys", "items", "values"
+]
 
 $B.set_func_names(Attributes, "<dom>")
 
@@ -529,11 +524,6 @@ DOMNode.tp_finalize = function(self){
     }
 }
 
-
-DOMNode.__eq__ = function(self, other){
-    return self == other
-}
-
 DOMNode.tp_getattro = function(self, attr){
     switch(attr) {
         case "attrs":
@@ -665,7 +655,7 @@ DOMNode.tp_getattro = function(self, attr){
                 return res
             }
         }else{
-            return object.tp_getattro(self, attr)
+            return _b_.object.tp_getattro(self, attr)
         }
     }
 
@@ -814,54 +804,21 @@ DOMNode.tp_iter = function(self){
     return $B.$iter(items)
 }
 
-DOMNode.attach = function(self, other){
-    // for document, append child to document.body
-    if(self.nodeType == Node.DOCUMENT_NODE){
-        self = self.body
-    }
-    if($B.$isinstance(other, TagSum)){
-        for(var i = 0; i < other.children.length; i++){
-            self.appendChild(other.children[i])
-        }
-    }else if(typeof other == "string" || typeof other == "number"){
-        var txt = document.createTextNode(other.toString())
-        self.appendChild(txt)
-    }else if(other instanceof Node){
-        self.appendChild(other)
-    }else{
-        try{
-            // If other is an iterable, add the items
-            var items = _b_.list.$factory(other)
-            items.forEach(function(item){
-                DOMNode.__le__(self, item)
-            })
-        }catch(err){
-            $B.RAISE(_b_.TypeError, "can't add '" +
-                $B.class_name(other) + "' object to DOMNode instance")
-        }
-    }
-    return self // to allow chained appends
-}
-
 DOMNode.sq_length = function(self){
     return self.childNodes.length
 }
 
-DOMNode.tp_multiply = function(self,other){
+DOMNode.nb_multiply = function(self,other){
     if($B.$isinstance(other, _b_.int) && other.valueOf() > 0){
         var res = TagSum.$factory()
         var pos = res.children.length
         for(var i = 0; i < other.valueOf(); i++){
-            res.children[pos++] = DOMNode.clone(self)
+            res.children[pos++] = DOMNode.tp_funcs.clone(self)
         }
         return res
     }
     $B.RAISE(_b_.ValueError, "can't multiply " + $B.class_name(self) +
         "by " + $B.class_name(other))
-}
-
-DOMNode.__ne__ = function(self, other){
-    return ! DOMNode.__eq__(self, other)
 }
 
 DOMNode.tp_iternext = function(self){
@@ -907,8 +864,12 @@ DOMNode.tp_repr = function(self){
 
 DOMNode.tp_richcompare = function(self, other, op){
     switch(op){
+        case '__eq__':
+            return self === other
+        case '__ne__':
+            return self !== other
         case '__le__':
-            return DOMNode.attach(self, other)
+            return DOMNode.tp_funcs.attach(self, other)
         default:
             return _b_.NotImplemented
     }
@@ -926,8 +887,8 @@ DOMNode.tp_setattro = function(self, attr, value){
         return _b_.None
     }
 
-    if(DOMNode["set_" + attr] !== undefined) {
-      return DOMNode["set_" + attr](self, value)
+    if(DOMNode.tp_funcs[attr + "_set"] !== undefined) {
+      return DOMNode.tp_funcs[attr + "_set"](self, value)
     }
 
     function warn(msg){
@@ -1012,6 +973,35 @@ DOMNode.mp_ass_subscript = function(self, key, value){
 
 var DOMNode_funcs = DOMNode.tp_funcs = {}
 
+DOMNode_funcs.attach = function(self, other){
+    // for document, append child to document.body
+    if(self.nodeType == Node.DOCUMENT_NODE){
+        self = self.body
+    }
+    if($B.$isinstance(other, TagSum)){
+        for(var i = 0; i < other.children.length; i++){
+            self.appendChild(other.children[i])
+        }
+    }else if(typeof other == "string" || typeof other == "number"){
+        var txt = document.createTextNode(other.toString())
+        self.appendChild(txt)
+    }else if(other instanceof Node){
+        self.appendChild(other)
+    }else{
+        try{
+            // If other is an iterable, add the items
+            var items = _b_.list.$factory(other)
+            items.forEach(function(item){
+                DOMNode.tp_funcs.attach(self, item)
+            })
+        }catch(err){
+            $B.RAISE(_b_.TypeError, "can't add '" +
+                $B.class_name(other) + "' object to DOMNode instance")
+        }
+    }
+    return self // to allow chained appends
+}
+
 DOMNode_funcs.__dir__ = function(self){
     var res = []
     // generic DOM attributes
@@ -1053,7 +1043,7 @@ DOMNode_funcs.bind = function(){
     if(func === _b_.None){
         // Returns a function to decorate the callback
         return function(f){
-            return DOMNode.bind(self, event, f)
+            return DOMNode.tp_funcs.bind(self, event, f)
         }
     }
     var callback = (function(f){
@@ -1149,22 +1139,29 @@ DOMNode_funcs.clone = function(self){
         var evt_list = events[event]
         evt_list.forEach(function(evt){
             var func = evt[0]
-            DOMNode.bind(res, event, func)
+            DOMNode.tp_funcs.bind(res, event, func)
         })
     }
     return res
 }
 
-DOMNode_funcs.closest = function(){
+DOMNode_funcs.closest_get = function(){
     // Returns the first parent of self with specified CSS selector
     // Raises KeyError if not found
     var $ = $B.args("closest", 2, {self: null, selector: null},
-                ["self", "selector"], arguments, {}, null, null),
+                ["self", "selector"], arguments, {selector: $B.NULL}, null,
+                null),
         self = $.self,
         selector = $.selector
     if(self.closest === undefined){
         $B.RAISE_ATTRIBUTE_ERROR(_b_.str.$factory(self) +
             " has no attribute 'closest'", self, 'closest')
+    }
+    if(self.selector === $B.NULL){
+        $B.RAISE(_b_.TypeError,
+            `${$B.class_name(self)}.closest() missing 1 required ` +
+            `positional argument: 'selector'`
+        )
     }
     var res = self.closest(selector)
     if(res === null){
@@ -1411,10 +1408,9 @@ DOMNode_funcs.style_set = function(self, style){ // style is a dict
         $B.RAISE(_b_.TypeError, "style must be str or dict, not " +
             $B.class_name(style))
     }
-    var items = _b_.list.$factory(_b_.dict.items(style))
-    for(var i = 0; i < items.length; i++){
-        var key = items[i][0],
-            value = items[i][1]
+    for(var item of _b_.dict.$iter_items(style)){
+        var key = item.key,
+            value = item.value
         if(key.toLowerCase() == "float"){
             self.style.cssFloat = value
             self.style.styleFloat = value
@@ -1432,21 +1428,12 @@ DOMNode_funcs.style_set = function(self, style){ // style is a dict
     }
 }
 
-DOMNode.set_value = function(self, value){
-    self.value = _b_.str.$factory(value)
-}
-
-
 DOMNode_funcs.top_get = function(self){
     return dimension_get(self, 'top')
 }
 
 DOMNode_funcs.top_set = function(self, value){
     return dimension_set(self, 'top', value)
-}
-
-DOMNode.submit = function(self){ // for FORM
-    return function(){self.submit()}
 }
 
 DOMNode_funcs.text_get = function(self){
@@ -1467,13 +1454,6 @@ DOMNode_funcs.text_set = function(self,value){
     self.innerText = _b_.str.$factory(value)
     self.textContent = _b_.str.$factory(value)
 }
-
-/*
-DOMNode.toString = function(self){
-    if(self === undefined){return 'DOMNode'}
-    return self.nodeName
-}
-*/
 
 DOMNode_funcs.trigger = function (self, etype){
     // Artificially triggers the event type provided for this DOMNode
@@ -1545,14 +1525,14 @@ DOMNode_funcs.width_set = function(self, value){
 }
 
 DOMNode.tp_getset = [
-    "abs_left", "abs_top", "class_name", "html", "scrolled_left",
+    "abs_left", "abs_top", "class_name", "closest", "html", "scrolled_left",
     "scrolled_top", "style", "text", "height", "left", "top", "width",
     "events", "parent"
 ]
 
 DOMNode.tp_methods = [
     "__dir__", "bind", "bindings", "children", "child_nodes", "clear",
-    "clone", "closest", "get", "index", "inside", "reset", "select",
+    "clone", "get", "index", "inside", "reset", "select",
     "select_one", "setSelectionRange", "trigger", "unbind"
 ]
 

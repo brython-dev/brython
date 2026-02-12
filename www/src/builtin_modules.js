@@ -249,9 +249,9 @@
                             value = item.value
                         if(arg.toLowerCase().substr(0,2) == "on"){
                             // Event binding passed as argument "onclick", "onfocus"...
-                            $B.DOMNode.__setattr__(self, arg, value)
+                            $B.DOMNode.tp_setattro(self, arg, value)
                         }else if(arg.toLowerCase() == "style"){
-                            $B.DOMNode.set_style(self, value)
+                            $B.DOMNode.tp_setattro(self, "style", value)
                         }else{
                             if(value !== false){
                                 // option.selected = false sets it to true :-)
@@ -291,7 +291,7 @@
                 }
 
                 cls_funcs.__rmul__ = function(self, num){
-                    return $B.DOMNode.__mul__(self, num)
+                    return $B.DOMNode.nb_multiply(self, num)
                 }
 
                 $B.set_func_names(cls, "browser.html")
@@ -396,10 +396,11 @@
 
     // Class for Javascript "undefined"
     $B.UndefinedType = $B.make_builtin_class("UndefinedType")
+
     $B.UndefinedType.$factory = function(){
         return $B.Undefined
     }
-    $B.UndefinedType.__bool__ = function(){
+    $B.UndefinedType.nb_bool = function(){
         return false
     }
     $B.UndefinedType.tp_repr = function(){
@@ -411,6 +412,28 @@
     }
 
     $B.set_func_names($B.UndefinedType, "javascript")
+
+    // class for Javascript "null"
+    var NullType = $B.make_builtin_class('NullType')
+
+    NullType.tp_richcompare = function(self, other, op){
+        switch(op){
+            case '__eq__':
+                // in Javascript, null == undefined is true...
+                return other === null || other === $B.Undefined
+            case '__ne__':
+                return other !== null && other !== $B.Undefined
+            default:
+                return _b_.NotImplemented
+        }
+    }
+
+    NullType.tp_repr = function(_self){
+        // in Javascript, null == undefined is true...
+        return '<Javascript null>'
+    }
+
+    $B.set_func_names(NullType, 'javascript')
 
     // Class used by javascript.super()
     var super_class = $B.make_builtin_class("JavascriptSuper")
@@ -581,7 +604,7 @@
         },
         Math: self.Math && $B.jsobj2pyobj(self.Math),
         NULL: null,
-        NullType: $B.make_builtin_class('NullType'),
+        NullType,
         Number: self.Number && $B.jsobj2pyobj(self.Number),
         py2js: function(src, module_name){
             if(module_name === undefined){
@@ -614,19 +637,6 @@
         }
     )
 
-    modules.javascript.NullType.__module__ = 'javascript'
-
-    modules.javascript.NullType.__eq__ = function(_self, other){
-        // in Javascript, null == undefined is true...
-        return other === null || other === $B.Undefined
-    }
-
-    modules.javascript.NullType.tp_repr = function(_self){
-        // in Javascript, null == undefined is true...
-        return '<Javascript null>'
-    }
-
-    $B.set_func_names(modules.javascript.NullType, 'javascript')
 
     modules.javascript.UndefinedType.__module__ = 'javascript'
 

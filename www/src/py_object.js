@@ -443,7 +443,7 @@ object_funcs.__format__ = function(){
     if($.spec !== ""){
         $B.RAISE(_b_.TypeError,
             "non-empty format string passed to object.__format__")}
-    return _b_.getattr($.self, "__str__")()
+    return $B.$call($B.$getattr($.self, "__str__"))
 }
 
 object_funcs.__getstate__ = function(self){
