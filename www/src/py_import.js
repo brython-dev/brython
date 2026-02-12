@@ -271,10 +271,8 @@ function $download_module(mod, url){
 $B.$download_module = $download_module
 
 $B.addToImported = function(name, modobj){
-    var module = Module.$factory(name)
-    $B.imported[name] = module
+    var module = $B.imported[name]
     if(modobj === undefined){
-        console.log('error, name', name)
         $B.RAISE(_b_.ImportError, 'imported not set by module')
     }
     for(var attr in modobj){
@@ -301,6 +299,7 @@ $B.addToImported = function(name, modobj){
 }
 
 function run_js(module_contents, path, _module){
+    var mod_name = $B.module_getattr(_module, '__name__')
     var keys_before = new Set(Object.keys(globalThis))
     try{
         new Function(module_contents)()
@@ -308,10 +307,9 @@ function run_js(module_contents, path, _module){
         throw $B.exception(err)
     }
     var new_keys = (new Set(Object.keys(globalThis))).difference(keys_before)
-    var mod_name = $B.module_getattr(_module, '__name__')
     var modobj = $B.imported[mod_name]
     if(modobj === undefined){
-        console.log('_module', _module)
+        console.log('_module', _module, mod_name)
         $B.RAISE(_b_.ImportError, 'imported not set by module')
     }
     modobj.ob_type = Module
@@ -1142,6 +1140,7 @@ function import_engine(mod_name, _path, from_stdlib){
                 console.log('error for module', module)
                 console.log(e)
                 console.log('frame obj', $B.frame_obj)
+                console.log('delete', _spec_name)
                 delete _sys_modules[_spec_name]
                 throw e
            }

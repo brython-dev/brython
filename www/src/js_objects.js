@@ -1064,23 +1064,19 @@ $B.IterableJSObj.sq_contains = function(self, key){
     }
 }
 
-$B.IterableJSObj.tp_iter = function(_self){
-    return {
-        ob_type: $B.IterableJSObj,
-        it: _self[Symbol.iterator]()
-    }
+$B.IterableJSObj.tp_iter = function(self){
+    self.it = self[Symbol.iterator]()
+    return self
 }
 
-$B.IterableJSObj.sq_length = function(_self){
-    return _self.length
+$B.IterableJSObj.sq_length = function(self){
+    return self.length
 }
 
-$B.IterableJSObj.tp_iternext = function(_self){
-    var value = _self.it.next()
-    if(! value.done){
-        return jsobj2pyobj(value.value)
+$B.IterableJSObj.tp_iternext = function*(self){
+    for(var value of self.it){
+        yield value
     }
-    $B.RAISE(_b_.StopIteration, '')
 }
 
 $B.set_func_names($B.IterableJSObj, 'builtins')

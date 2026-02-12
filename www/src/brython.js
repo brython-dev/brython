@@ -669,8 +669,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-02-12 16:29:34.187912"
-__BRYTHON__.timestamp=1770910174187
+__BRYTHON__.compiled_date="2026-02-12 17:58:28.809217"
+__BRYTHON__.timestamp=1770915508809
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -2184,6 +2184,7 @@ return _b_.None}
 throw $B.attr_error(attr,self)}
 if(value===undefined){
 console.log('value is undefined',self,attr)
+console.log(Error('trace').stack)
 $B.RAISE(_b_.TypeError,"can't set attributes of built-in/extension type 'object'")}else if($B.get_class(self)===object){
 if(object[attr]===undefined){throw $B.attr_error(attr,self)}else{$B.RAISE_ATTRIBUTE_ERROR(
 "'object' object attribute '"+attr+"' is read-only",self,attr)}}
@@ -7807,27 +7808,24 @@ mod_name+"' (res is null)")}
 if($B.$isinstance(res,_b_.BaseException)){throw res}
 return res}
 $B.$download_module=$download_module
-$B.addToImported=function(name,modobj){var module=Module.$factory(name)
-$B.imported[name]=module
-if(modobj===undefined){console.log('error, name',name)
-$B.RAISE(_b_.ImportError,'imported not set by module')}
+$B.addToImported=function(name,modobj){var module=$B.imported[name]
+if(modobj===undefined){$B.RAISE(_b_.ImportError,'imported not set by module')}
 for(var attr in modobj){if(typeof modobj[attr]=="function" && ! modobj[attr].$infos){modobj[attr].$infos={__module__:name,__name__:attr,__qualname__:attr,__code__:{co_filename:modobj.__file__,co_code:modobj[attr]+'',co_flags:$B.COMPILER_FLAGS.OPTIMIZED |$B.COMPILER_FLAGS.NEWLOCALS}}
 modobj[attr].$in_js_module=true
 modobj[attr].ob_type=$B.function
 modobj[attr].dict=$B.empty_dict()}else if($B.$isinstance(modobj[attr],_b_.type)&&
 modobj[attr].__module__===undefined){modobj[attr].__module__=name}
 $B.module_setattr(module,attr,modobj[attr])}}
-function run_js(module_contents,path,_module){var keys_before=new Set(Object.keys(globalThis))
+function run_js(module_contents,path,_module){var mod_name=$B.module_getattr(_module,'__name__')
+var keys_before=new Set(Object.keys(globalThis))
 try{new Function(module_contents)()}catch(err){throw $B.exception(err)}
 var new_keys=(new Set(Object.keys(globalThis))).difference(keys_before)
-var mod_name=$B.module_getattr(_module,'__name__')
 var modobj=$B.imported[mod_name]
-if(modobj===undefined){console.log('_module',_module)
+if(modobj===undefined){console.log('_module',_module,mod_name)
 $B.RAISE(_b_.ImportError,'imported not set by module')}
 modobj.ob_type=Module
 $B.module_setattr(modobj,'__name__',mod_name)
-for(var new_key of new_keys){modobj[new_key]=globalThis[new_key]
-delete globalThis[new_key]}
+for(var new_key of new_keys){modobj[new_key]=globalThis[new_key]}
 for(var attr in modobj){if(typeof modobj[attr]=="function" && ! modobj[attr].$infos){modobj[attr].$infos={__module__:_module.__name__,__name__:attr,__qualname__:attr}
 modobj[attr].$in_js_module=true}else if($B.$isinstance(modobj[attr],_b_.type)&&
 modobj[attr].__module__===undefined){modobj[attr].__module__=_module.__name__}}
@@ -8134,6 +8132,7 @@ if(module===undefined){console.log('no module !!!')}
 try{exec_module(module)}catch(e){console.log('error for module',module)
 console.log(e)
 console.log('frame obj',$B.frame_obj)
+console.log('delete',_spec_name)
 delete _sys_modules[_spec_name]
 throw e}}}
 return _sys_modules[_spec_name]}
@@ -12292,12 +12291,10 @@ $B.set_func_names($B.SizedJSObj,'builtins')
 $B.IterableJSObj=$B.make_builtin_class('IterableJavascriptObject',[$B.JSObj])
 $B.IterableJSObj.sq_contains=function(self,key){if(self.contains !==undefined && typeof self.contains=='function'){return self.contains(key)}else{for(var item of $B.IterableJSObj.tp_iter(self).it){if($B.is_or_equals(item,key)){return true}}
 return false}}
-$B.IterableJSObj.tp_iter=function(_self){return{
-ob_type:$B.IterableJSObj,it:_self[Symbol.iterator]()}}
-$B.IterableJSObj.sq_length=function(_self){return _self.length}
-$B.IterableJSObj.tp_iternext=function(_self){var value=_self.it.next()
-if(! value.done){return jsobj2pyobj(value.value)}
-$B.RAISE(_b_.StopIteration,'')}
+$B.IterableJSObj.tp_iter=function(self){self.it=self[Symbol.iterator]()
+return self}
+$B.IterableJSObj.sq_length=function(self){return self.length}
+$B.IterableJSObj.tp_iternext=function*(self){for(var value of self.it){yield value}}
 $B.set_func_names($B.IterableJSObj,'builtins')
 var js_array_iterator=$B.make_builtin_class('JSArray_iterator')
 js_array_iterator.$factory=function(obj){return{

@@ -1,5 +1,5 @@
 // ajax
-__BRYTHON__.imported._ajax = (function($B){
+(function($B){
 
 
 var $N = $B.builtins.None,
@@ -204,6 +204,12 @@ ajax.bind = function(self, evt, func){
     return _b_.None
 }
 
+ajax.tp_new = function(cls, ...args){
+    var obj = ajax.$factory(...args)
+    obj.cls = cls
+    return obj
+}
+
 ajax.open = function(){
     var $ = $B.args('open', 4,
             {self: null, method: null, url: null, async: null},
@@ -264,9 +270,8 @@ ajax.send = function(self, params){
             // content-type so we may as well override that header if it was set
             // by the user.
             res = new FormData()
-            var items = _b_.list.$factory(_b_.dict.items(params))
-            for(var i = 0, len = items.length; i < len; i++){
-                add_to_res(res, _b_.str.$factory(items[i][0]), items[i][1])
+            for(var item of _b_.dict.$iter_items(params)){
+                add_to_res(res, _b_.str.$factory(item.key), item.value)
             }
         }else{
             if(self.$method && self.$method.toUpperCase() == "POST" &&
@@ -275,17 +280,16 @@ ajax.send = function(self, params){
                 self.js.setRequestHeader("Content-Type",
                     "application/x-www-form-urlencoded")
             }
-            var items = _b_.list.$factory(_b_.dict.items(params))
-            for(var i = 0, len = items.length; i < len; i++){
-                var key = encodeURIComponent(_b_.str.$factory(items[i][0]));
-                if($B.$isinstance(items[i][1], _b_.list)){
-                    for (j = 0; j < items[i][1].length; j++) {
+            for(var item of _b_.dict.$iter_items(params)){ //i = 0, len = items.length; i < len; i++){
+                var key = encodeURIComponent(_b_.str.$factory(item.key));
+                if($B.$isinstance(item.value, _b_.list)){
+                    for(var elt of item.value){
                         res += key +'=' +
-                            encodeURIComponent(_b_.str.$factory(items[i][1][j])) + '&'
+                            encodeURIComponent(_b_.str.$factory(elt)) + '&'
                     }
                 }else{
                     res += key + '=' +
-                        encodeURIComponent(_b_.str.$factory(items[i][1])) + '&'
+                        encodeURIComponent(_b_.str.$factory(item.value)) + '&'
                 }
             }
             res = res.substr(0, res.length - 1)
@@ -379,13 +383,15 @@ function _request_without_body(method){
 
     var self = ajax.$factory()
     self.blocking = $.blocking
-    var items = handle_kwargs(self, kw, method),
-        mode = items.mode,
+    var items = handle_kwargs(self, kw, method)
+    var mode = items.mode,
         encoding = items.encoding,
         qs = items.data
     $B.$setattr(self, 'mode', mode)
-    $B.$setattr(self, 'encoding', encoding)
     $B.$setattr(self, 'url', url)
+    if(encoding){
+        $B.$setattr(self, 'encoding', encoding)
+    }
     if(qs){
         url += "?" + qs
     }
@@ -561,7 +567,7 @@ function file_upload(){
 $B.set_func_names(ajax)
 $B.finalize_type(ajax)
 
-return {
+var mod = {
     ajax: ajax,
     Ajax: ajax,
     delete: _delete,
@@ -576,5 +582,7 @@ return {
     put,
     trace
 }
+
+$B.addToImported('_ajax', mod)
 
 })(__BRYTHON__)
