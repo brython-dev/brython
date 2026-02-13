@@ -469,11 +469,10 @@ _b_.int.nb_divmod = function(self, other){
 }
 
 _b_.int.nb_power = function(self, other, z){
-    var y = toBigInt(other)
-    if(y === $B.NULL){
+    var [x, y] = [self, other].map(toBigInt)
+    if(x === $B.NULL || y === $B.NULL){
         return _b_.NotImplemented
     }
-    var x = toBigInt(self)
     if(typeof other == "number"  || $B.$isinstance(other, int)){
         if(z !== undefined && z !== _b_.None){
             // If z is provided, the algorithm is faster than computing

@@ -76,14 +76,16 @@ wclass.$factory = function(worker){
     }
 }
 
-wclass.send = function(){
+var wclass_funcs = wclass.tp_funcs = {}
+
+wclass_funcs.send = function(){
     var $ = $B.args('send', 2, {self: null, message: null}, ['self', 'message'],
             arguments, {}, 'args', null)
     var message = $B.pyobj2structuredclone($.message)
     return $.self.worker.postMessage(message, ...$.args)
 }
 
-wclass.__mro__ = [$B.JSObj, _b_.object]
+wclass.tp_methods = ["send"]
 
 $B.set_func_names(wclass, "browser.worker")
 $B.finalize_type(wclass)

@@ -48,16 +48,16 @@ $B.pyobj2structuredclone = function(obj, strict){
         return res
     }else if($B.$isinstance(obj, _b_.dict)){
         if(strict){
-            for(var key of $B.make_js_iterator(_b_.dict.keys(obj))){
-                if(typeof key !== 'string'){
+            for(var entry of _b_.dict.$iter_items(obj)){
+                if(typeof entry.key !== 'string'){
                     $B.RAISE(_b_.TypeError, "a dictionary with non-string " +
                         "keys does not support structured clone")
                 }
             }
         }
         let res = {}
-        for(var entry of $B.make_js_iterator(_b_.dict.items(obj))){
-            res[to_simple(entry[0])] = $B.pyobj2structuredclone(entry[1])
+        for(var entry of _b_.dict.$iter_items(obj)){
+            res[to_simple(entry.key)] = $B.pyobj2structuredclone(entry.value)
         }
         return res
     }else if($B.exact_type(obj, $B.long_int)){

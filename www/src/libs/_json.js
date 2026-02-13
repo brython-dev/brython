@@ -151,7 +151,7 @@ function to_json(obj, level){
         return "null"
     }else if($B.$isinstance(obj, _b_.dict)){
         var res = [],
-            items = Array.from($B.make_js_iterator(_b_.dict.items(obj)))
+            items = Array.from($B.make_js_iterator(_b_.dict.tp_funcs.items(obj)))
         if(sort_keys){
             // Sort keys by alphabetical order
             items.sort()
@@ -602,12 +602,14 @@ JSONDecoder.decode = function(self, s){
 $B.set_func_names(JSONDecoder, '_json')
 $B.finalize_type(JSONDecoder)
 
-$B.imported._json = {
-    dumps: function(){
-        return _b_.str.$factory(to_json.apply(null, arguments))
-    },
-    loads,
-    JSONDecoder
-}
+$B.addToImported('_json',
+    {
+        dumps: function(){
+            return _b_.str.$factory(to_json.apply(null, arguments))
+        },
+        loads,
+        JSONDecoder
+    }
+)
 
 })(__BRYTHON__)

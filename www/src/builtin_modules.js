@@ -228,7 +228,7 @@
                                     // str, add the items
                                     var items = _b_.list.$factory(first)
                                     for(var item of items){
-                                        $B.DOMNode.__le__(self, item)
+                                        $B.DOMNode.tp_funcs.attach(self, item)
                                     }
                                 }catch(err){
                                     if($B.get_option('debug', err) > 1){

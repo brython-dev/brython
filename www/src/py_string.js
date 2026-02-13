@@ -1416,11 +1416,7 @@ _b_.str.mp_subscript = function(self, arg){
 
 _b_.str.sq_concat = function(self, other){
     if(! $B.$isinstance(other, str)){
-        try{
-            return $B.$getattr(other, "__radd__")(self)
-        }catch(err){
-            $B.RAISE(_b_.TypeError, "Can't convert " +
-                $B.class_name(other) + " to str implicitly")}
+        return _b_.NotImplemented
     }
     [self, other] = to_string(self, other)
     if(typeof self == 'string' && typeof other == 'string'){

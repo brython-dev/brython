@@ -31,7 +31,6 @@ function makeTagDict(tagName){
         }
 
         // attributes
-        var items = _b_.list.$factory(_b_.dict.items($ns['kw']))
         for(var item of _b_.dict.$iter_items($ns.kw)){
             // keyword arguments
             var arg = item.key,

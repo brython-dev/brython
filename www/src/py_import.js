@@ -86,11 +86,6 @@ $B.module.tp_new = function(self){
     return {
         ob_type: $B.module,
         dict: $B.empty_dict(),
-        md_def: $B.NULL,
-        md_state: $B.NULL,
-        md_weaklist: $B.NULL,
-        md_name: $B.NULL,
-        dict: $B.empty_dict() // for module namespace
     }
 }
 

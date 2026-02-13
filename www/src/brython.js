@@ -669,8 +669,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-02-12 17:58:28.809217"
-__BRYTHON__.timestamp=1770915508809
+__BRYTHON__.compiled_date="2026-02-13 17:15:45.150211"
+__BRYTHON__.timestamp=1770999345149
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -7751,7 +7751,7 @@ var self=$.self
 $B.module_setattr(self,'__name__',$.name)
 $B.module_setattr(self,'__doc__',$.doc)}
 $B.module.tp_new=function(self){return{
-ob_type:$B.module,dict:$B.empty_dict(),md_def:$B.NULL,md_state:$B.NULL,md_weaklist:$B.NULL,md_name:$B.NULL,dict:$B.empty_dict()}}
+ob_type:$B.module,dict:$B.empty_dict(),}}
 var module_funcs=$B.module.tp_funcs={}
 module_funcs.__annotate___get=function(self){}
 module_funcs.__annotate___set=function(self){}
@@ -7825,7 +7825,8 @@ if(modobj===undefined){console.log('_module',_module,mod_name)
 $B.RAISE(_b_.ImportError,'imported not set by module')}
 modobj.ob_type=Module
 $B.module_setattr(modobj,'__name__',mod_name)
-for(var new_key of new_keys){modobj[new_key]=globalThis[new_key]}
+for(var new_key of new_keys){modobj[new_key]=globalThis[new_key]
+delete globalThis[new_key]}
 for(var attr in modobj){if(typeof modobj[attr]=="function" && ! modobj[attr].$infos){modobj[attr].$infos={__module__:_module.__name__,__name__:attr,__qualname__:attr}
 modobj[attr].$in_js_module=true}else if($B.$isinstance(modobj[attr],_b_.type)&&
 modobj[attr].__module__===undefined){modobj[attr].__module__=_module.__name__}}
@@ -8797,8 +8798,7 @@ $B.RAISE(_b_.IndexError,"string index out of range")}
 if($B.$isinstance(arg,_b_.slice)){return _b_.str.$getitem_slice(self,arg)}
 if($B.$isinstance(arg,_b_.bool)){return self.__getitem__(_b_.int.$factory(arg))}
 $B.RAISE(_b_.TypeError,"string indices must be integers")}
-_b_.str.sq_concat=function(self,other){if(! $B.$isinstance(other,str)){try{return $B.$getattr(other,"__radd__")(self)}catch(err){$B.RAISE(_b_.TypeError,"Can't convert "+
-$B.class_name(other)+" to str implicitly")}}
+_b_.str.sq_concat=function(self,other){if(! $B.$isinstance(other,str)){return _b_.NotImplemented}
 [self,other]=to_string(self,other)
 if(typeof self=='string' && typeof other=='string'){return self+other}
 return $B.String(self+other)}
@@ -9655,9 +9655,8 @@ var x=toBigInt(self)
 return int_or_long((x % y+y)% y)}
 _b_.int.nb_divmod=function(self,other){if(toBigInt(other)===$B.NULL){return _b_.NotImplemented}
 return $B.fast_tuple([int.nb_floor_divide(self,other),int.nb_remainder(self,other)])}
-_b_.int.nb_power=function(self,other,z){var y=toBigInt(other)
-if(y===$B.NULL){return _b_.NotImplemented}
-var x=toBigInt(self)
+_b_.int.nb_power=function(self,other,z){var[x,y]=[self,other].map(toBigInt)
+if(x===$B.NULL ||y===$B.NULL){return _b_.NotImplemented}
 if(typeof other=="number" ||$B.$isinstance(other,int)){if(z !==undefined && z !==_b_.None){
 z=toBigInt(z)
 if(z==1n){return 0}
@@ -11953,10 +11952,10 @@ typeof obj=="string" ||obj instanceof String){return obj}else if($B.exact_type(o
 $B.exact_type(obj,_b_.tuple)||
 $B.exact_type(obj,js_array)){let res=new Array(obj.length);
 for(var i=0,len=obj.length;i < len;++i){res[i]=$B.pyobj2structuredclone(obj[i]);}
-return res}else if($B.$isinstance(obj,_b_.dict)){if(strict){for(var key of $B.make_js_iterator(_b_.dict.keys(obj))){if(typeof key !=='string'){$B.RAISE(_b_.TypeError,"a dictionary with non-string "+
+return res}else if($B.$isinstance(obj,_b_.dict)){if(strict){for(var entry of _b_.dict.$iter_items(obj)){if(typeof entry.key !=='string'){$B.RAISE(_b_.TypeError,"a dictionary with non-string "+
 "keys does not support structured clone")}}}
 let res={}
-for(var entry of $B.make_js_iterator(_b_.dict.items(obj))){res[to_simple(entry[0])]=$B.pyobj2structuredclone(entry[1])}
+for(var entry of _b_.dict.$iter_items(obj)){res[to_simple(entry.key)]=$B.pyobj2structuredclone(entry.value)}
 return res}else if($B.exact_type(obj,$B.long_int)){return obj.value}else if(Object.getPrototypeOf(obj).constructor===Object){var res={}
 for(var key in obj){res[key]=$B.pyobj2structuredclone(obj[key])}
 return res}else{return obj}
@@ -12769,7 +12768,8 @@ var res=TagSum.$factory()
 res.children=[self]
 var pos=1
 if($B.$isinstance(other,TagSum)){res.children=res.children.concat(other.children)}else if($B.$isinstance(other,[_b_.str,_b_.int,_b_.float,_b_.list,_b_.dict,_b_.set,_b_.tuple])){res.children[pos++]=DOMNode.$factory(
-document.createTextNode(_b_.str.$factory(other)))}else if($B.$isinstance(other,DOMNode)){res.children[pos++]=other}else{
+document.createTextNode(_b_.str.$factory(other)))}else if($B.$isinstance(other,DOMNode)){console.log('add domnode',other)
+res.children[pos++]=other}else{
 try{res.children=res.children.concat(_b_.list.$factory(other))}catch(err){$B.RAISE(_b_.TypeError,"can't add '"+
 $B.class_name(other)+"' object to DOMNode instance")}}
 return res}
@@ -12838,7 +12838,8 @@ var save_class=$B.get_class(self)
 self.ob_type=ce.$cls
 let res=_b_.object.tp_getattro(self,attr)
 self.ob_type=save_class
-return res}}else{return _b_.object.tp_getattro(self,attr)}}
+if(res !==$B.NULL){return res}}}
+return _b_.object.tp_getattro(self,attr)}
 var res=property
 if(res !==undefined){if(res===null){return res}
 if(typeof res==="function"){if(self.ob_type && self.ob_type.$webcomponent){var method=$B.$getattr($B.get_class(self),attr,null)
@@ -13464,7 +13465,7 @@ if(args.length==1){var first=args[0]
 if($B.$isinstance(first,[_b_.str,_b_.int,_b_.float])){
 self.innerHTML=_b_.str.$factory(first)}else if($B.get_class(first)===TagSum){for(var i=0,len=first.children.length;i < len;i++){self.appendChild(first.children[i])}}else{if($B.$isinstance(first,$B.DOMNode)){self.appendChild(first)}else{try{
 var items=_b_.list.$factory(first)
-for(var item of items){$B.DOMNode.__le__(self,item)}}catch(err){if($B.get_option('debug',err)> 1){console.log(err,$B.get_class(err),err.args)
+for(var item of items){$B.DOMNode.tp_funcs.attach(self,item)}}catch(err){if($B.get_option('debug',err)> 1){console.log(err,$B.get_class(err),err.args)
 console.log("first",first)
 console.log(arguments)}
 throw err}}}}

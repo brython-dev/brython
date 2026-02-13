@@ -495,8 +495,9 @@ DOMNode.nb_add = function(self, other){
         // If other is iterable, add all items
         try{
             res.children = res.children.concat(_b_.list.$factory(other))
-        }catch(err){$B.RAISE(_b_.TypeError, "can't add '" +
-            $B.class_name(other) + "' object to DOMNode instance")
+        }catch(err){
+            $B.RAISE(_b_.TypeError, "can't add '" +
+                $B.class_name(other) + "' object to DOMNode instance")
         }
     }
     return res
@@ -652,11 +653,12 @@ DOMNode.tp_getattro = function(self, attr){
                 self.ob_type = ce.$cls
                 let res = _b_.object.tp_getattro(self, attr)
                 self.ob_type = save_class
-                return res
+                if(res !== $B.NULL){
+                    return res
+                }
             }
-        }else{
-            return _b_.object.tp_getattro(self, attr)
         }
+        return _b_.object.tp_getattro(self, attr)
     }
 
     var res = property
