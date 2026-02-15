@@ -537,13 +537,19 @@ function check_no_keywords(obj, kw){
 
 /* BaseException start */
 _b_.BaseException.tp_repr = function(self){
+    var args = ''
+    if(self.args.length > 0 && self.args[0] !== _b_.None){
+        args = _b_.repr(self.args[0])
+    }
+    return `${$B.class_name(self)}(${args})`
+}
+
+_b_.BaseException.tp_str = function(self){
     if(self.args.length > 0 && self.args[0] !== _b_.None){
         return _b_.str.$factory(self.args[0])
     }
     return ''
 }
-
-_b_.BaseException.tp_str = _b_.BaseException.tp_repr
 
 _b_.BaseException.tp_init = function(self, ...args){
     var $ = $B.args('__init__', 1, {self: null}, ['self'], arguments, {}, 'args', 'kw')
