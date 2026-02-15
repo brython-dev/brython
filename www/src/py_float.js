@@ -27,7 +27,7 @@ function conv_number(...objs){
     return res
 }
 
-function float_value(obj){
+var float_value = $B.float_value = function(obj){
     return obj.ob_type === float ? obj : fast_float(obj.value)
 }
 
@@ -41,8 +41,6 @@ function copysign(x, y){
 
 // dictionary for built-in class 'float'
 var float = _b_.float
-
-float.$float_value = float_value
 
 float.$to_js_number = function(self){
     if($B.exact_type(self, float)){

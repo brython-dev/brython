@@ -249,11 +249,6 @@ $B.method_descriptor.tp_call = function(self, ...args){
         var res = self.method(...args)
         return res
     }catch(err){
-        console.log('error in method_descriptor call')
-        console.log('self.method', self.method)
-        console.log('args', args)
-        console.log('frame obj', $B.frame_obj)
-        console.log(err)
         throw err
     }
 }
@@ -267,6 +262,7 @@ $B.method_descriptor.tp_descr_get = function(self, obj, klass){
     f.$infos = self.$infos
     f.ml = {ml_name: self.d_name}
     f.m_self = self
+    f.obj = obj
     return f
 }
 

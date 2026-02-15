@@ -287,7 +287,7 @@ $B.addToImported = function(name, modobj){
             modobj[attr].dict = $B.empty_dict()
             $B.add_function_infos(modobj, attr, name)
         }else if($B.$isinstance(modobj[attr], _b_.type) &&
-                $B.str_dict_get(modobj[attr].dict, '__module__', $B.NULL) === 
+                $B.str_dict_get(modobj[attr].dict, '__module__', $B.NULL) ===
                 $B.NULL){
             $B.str_dict_set(modobj[attr].dict, '__module__', name)
         }
@@ -437,7 +437,7 @@ $B.run_py = run_py // used in importlib.basehook
 $B.run_js = run_js
 
 
-var ModuleSpec = $B.make_builtin_class("ModuleSpec")
+var ModuleSpec = $B.ModuleSpec = $B.make_builtin_class("ModuleSpec")
 
 ModuleSpec.$factory = function(fields){
     var spec = {
@@ -446,6 +446,10 @@ ModuleSpec.$factory = function(fields){
     }
     for(var field in fields){
         $B.str_dict_set(spec.dict, field, fields[field])
+    }
+    if(! fields.hasOwnProperty('loader')){
+        console.log('no loader', fields)
+        console.log(Error('trace').stack)
     }
     return spec
 }

@@ -1538,6 +1538,9 @@ $B.$call = function(callable, ...args){
     if(test){
         console.log('result of call1', res)
     }
+    if(callable.$in_js_module && res === undefined){
+        return _b_.None
+    }
     return res
 }
 

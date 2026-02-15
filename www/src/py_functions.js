@@ -22,8 +22,9 @@ $B.builtin_function_or_method.tp_richcompare = function(self, other, op){
 
 $B.builtin_function_or_method.tp_repr = function(self){
     if(self.m_self){
+        console.log('self', self, self.ml, self.m_self)
         return `<built-in method ${self.ml.ml_name} ` +
-            `of ${$B.class_name(self.m_self)} object>`
+            `of ${$B.class_name(self.obj)} object>`
     }else{
         var name = self.$function_infos[$B.func_attrs.__name__]
         return `<built-in function ${name}>`

@@ -80,7 +80,7 @@ function getNewArguments(self, klass){
         newargs = $B.$getattr(klass, '__getnewargs__', null)
     }
     if(newargs){
-        args = newargs(self)
+        args = $B.$call(newargs, self)
         if((! args) || $B.get_class(args) !== _b_.tuple){
             $B.RAISE(_b_.TypeError, "__getnewargs__ should " +
                 `return a tuple, not '${$B.class_name(args)}'`)
@@ -237,7 +237,6 @@ _b_.object.tp_hash = function(self){
 
 _b_.object.tp_str = function(self){
     if(self === undefined || self.$kw){
-        console.log('aïe', self)
         $B.RAISE(_b_.TypeError, "descriptor '__str__' of 'object' " +
             "object needs an argument")
     }
@@ -248,7 +247,7 @@ _b_.object.tp_str = function(self){
 }
 
 _b_.object.tp_getattro = function(self, attr){
-    var test = false // attr == 'y'
+    var test = false // attr == '__dict__'
     var klass = $B.get_class(self)
     if(test){
         console.log('getattr', attr, 'of self', self, klass)
@@ -457,7 +456,10 @@ object_funcs.__format__ = function(){
 }
 
 object_funcs.__getstate__ = function(self){
-
+    if(self.dict === undefined){
+        return _b_.None
+    }
+    return self.dict
 }
 
 object_funcs.__init_subclass__ = function(self){
@@ -488,7 +490,7 @@ object_funcs.__reduce__ = function(cls){
     if($B.imported.copyreg === undefined){
         $B.$import('copyreg')
     }
-    var res = [$B.imported.copyreg._reconstructor]
+    var res = [$B.module_getattr($B.imported.copyreg, '_reconstructor')]
     var D = $B.get_class(cls),
         B = object
     for(var klass of $B.get_mro(D)){
@@ -514,35 +516,38 @@ object_funcs.__reduce__ = function(cls){
     return _b_.tuple.$factory(res)
 }
 
-object_funcs.__reduce_ex__ = function(cls){
-    var klass = $B.get_class(cls)
+object_funcs.__reduce_ex__ = function(self, protocol){
+    var klass = $B.get_class(self)
     if($B.imported.copyreg === undefined){
         $B.$import('copyreg')
     }
     if(protocol < 2){
-        return $B.$call($B.imported.copyreg._reduce_ex, cls, protocol)
+        var _reduce_ex = $B.module_getattr($B.imported.copyreg, '_reduce_ex')
+        return $B.$call(_reduce_ex, self, protocol)
     }
 
     var reduce = $B.$getattr(klass, '__reduce__')
 
-    if(reduce !== object.__reduce__){
-        return $B.$call(reduce, cls)
+    if(reduce !== object.tp_funcs.__reduce__ &&
+            ((reduce.ob_type === $B.method_descriptor) &&
+             (reduce.method !== object.tp_funcs.__reduce__))){
+        return $B.$call(reduce, self)
     }
-    var res = [$B.imported.copyreg.__newobj__]
+    var res = [$B.module_getattr($B.imported.copyreg, '__newobj__')]
     var arg2 = [klass]
-    var newargs = getNewArguments(cls, klass)
+    var newargs = getNewArguments(self, klass)
     if(newargs){
         arg2 = arg2.concat(newargs.args)
     }
     res.push($B.fast_tuple(arg2))
     var getstate = $B.search_in_mro(klass, '__getstate__')
     if(getstate){
-        var d = $B.$call(getstate, cls)
+        var d = $B.$call(getstate, self)
     }else{
         var d = $B.empty_dict(),
             nb = 0
-        if(cls.dict){
-            for(var item of _b_.dict.$iter_items(cls.dict)){
+        if(self.dict){
+            for(var item of _b_.dict.$iter_items(self.dict)){
                 if(item.key == "__class__" || item.key.startsWith("$")){
                     continue
                 }
@@ -558,15 +563,15 @@ object_funcs.__reduce_ex__ = function(cls){
     var list_like_iterator = _b_.None
     if($B.$getattr(klass, 'append', null) !== null &&
             $B.$getattr(klass, 'extend', null) !== null){
-        list_like_iterator = _b_.iter(cls)
+        list_like_iterator = _b_.iter(self)
     }
     res.push(list_like_iterator)
     var key_value_iterator = _b_.None
-    if($B.$isinstance(cls, _b_.dict)){
-        key_value_iterator = _b_.dict.items(cls)
+    if($B.$isinstance(self, _b_.dict)){
+        key_value_iterator = _b_.dict.tp_funcs.items(self)
     }
     res.push(key_value_iterator)
-    return _b_.tuple.$factory(res)
+    return $B.fast_tuple(res)
 }
 
 object_funcs.__sizeof__ = function(self){

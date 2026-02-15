@@ -382,7 +382,7 @@ function _request_without_body(method){
     kw = $.kw
 
     var self = ajax.$factory()
-    self.blocking = $.blocking
+    $B.$setattr(self, 'blocking', $.blocking)
     var items = handle_kwargs(self, kw, method)
     var mode = items.mode,
         encoding = items.encoding,

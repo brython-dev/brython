@@ -669,8 +669,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-02-15 11:16:22.045770"
-__BRYTHON__.timestamp=1771150582045
+__BRYTHON__.compiled_date="2026-02-15 21:04:52.156483"
+__BRYTHON__.timestamp=1771185892156
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1894,6 +1894,7 @@ if(call_method===$B.NULL){$B.RAISE(_b_.TypeError,"'"+$B.class_name(callable)+
 if(test && typeof call_method !=='function'){console.log('cannot apply call method',call_method)}
 var res=call_method.apply(null,arguments)
 if(test){console.log('result of call1',res)}
+if(callable.$in_js_module && res===undefined){return _b_.None}
 return res}
 var r_opnames=["add","sub","mul","truediv","floordiv","mod","pow","lshift","rshift","and","xor","or"]
 var ropsigns=["+","-","*","/","//","%","**","<<",">>","&","^","|"]
@@ -2149,7 +2150,7 @@ if((! kwargs)||$B.get_class(kwargs)!==_b_.dict){$B.RAISE(_b_.TypeError,"second i
 return{args,kwargs}}
 let newargs=klass.$getnewargs,args
 if(! newargs){newargs=$B.$getattr(klass,'__getnewargs__',null)}
-if(newargs){args=newargs(self)
+if(newargs){args=$B.$call(newargs,self)
 if((! args)||$B.get_class(args)!==_b_.tuple){$B.RAISE(_b_.TypeError,"__getnewargs__ should "+
 `return a tuple, not '${$B.class_name(args)}'`)}
 return{args}}}
@@ -2214,8 +2215,7 @@ module !=="builtins"){return `<${module}.${$B.class_name(self)} object>`}else{re
 _b_.object.tp_hash=function(self){var hash=self.__hashvalue__
 if(hash !==undefined){return hash}
 return self.__hashvalue__=$B.$py_next_hash--}
-_b_.object.tp_str=function(self){if(self===undefined ||self.$kw){console.log('aïe',self)
-$B.RAISE(_b_.TypeError,"descriptor '__str__' of 'object' "+
+_b_.object.tp_str=function(self){if(self===undefined ||self.$kw){$B.RAISE(_b_.TypeError,"descriptor '__str__' of 'object' "+
 "object needs an argument")}
 var klass=$B.get_class(self)
 var repr_func=$B.$getattr(klass,"__repr__",$B.NULL)
@@ -2309,7 +2309,8 @@ var self=$.self,spec=$.spec
 if(spec !==""){$B.RAISE(_b_.TypeError,"non-empty format string passed to object.__format__"
 )}
 return _b_.str.$factory(self)}
-object_funcs.__getstate__=function(self){}
+object_funcs.__getstate__=function(self){if(self.dict===undefined){return _b_.None}
+return self.dict}
 object_funcs.__init_subclass__=function(self){
 var $=$B.args("__init_subclass__",1,{cls:null},['cls'],arguments,{},"args","kwargs")
 if($.args.length > 0){console.log('init subclass, args',$.args)
@@ -2322,7 +2323,7 @@ $B.RAISE(_b_.TypeError,`${qualname}.__init_subclass__() `+
 return _b_.None}
 object_funcs.__reduce__=function(cls){if(! cls.dict){$B.RAISE(_b_.TypeError,`cannot pickle '${$B.class_name(cls)}' object`)}
 if($B.imported.copyreg===undefined){$B.$import('copyreg')}
-var res=[$B.imported.copyreg._reconstructor]
+var res=[$B.module_getattr($B.imported.copyreg,'_reconstructor')]
 var D=$B.get_class(cls),B=object
 for(var klass of $B.get_mro(D)){if(klass.__module__=='builtins'){B=klass
 break}}
@@ -2333,31 +2334,34 @@ var d=$B.empty_dict()
 for(var attr of _b_.dict.$keys_string(cls.dict)){_b_.dict.$setitem(d,attr,_b_.dict.$getitem_string(cls.dict,attr))}
 res.push(d)
 return _b_.tuple.$factory(res)}
-object_funcs.__reduce_ex__=function(cls){var klass=$B.get_class(cls)
+object_funcs.__reduce_ex__=function(self,protocol){var klass=$B.get_class(self)
 if($B.imported.copyreg===undefined){$B.$import('copyreg')}
-if(protocol < 2){return $B.$call($B.imported.copyreg._reduce_ex,cls,protocol)}
+if(protocol < 2){var _reduce_ex=$B.module_getattr($B.imported.copyreg,'_reduce_ex')
+return $B.$call(_reduce_ex,self,protocol)}
 var reduce=$B.$getattr(klass,'__reduce__')
-if(reduce !==object.__reduce__){return $B.$call(reduce,cls)}
-var res=[$B.imported.copyreg.__newobj__]
+if(reduce !==object.tp_funcs.__reduce__ &&
+((reduce.ob_type===$B.method_descriptor)&&
+(reduce.method !==object.tp_funcs.__reduce__))){return $B.$call(reduce,self)}
+var res=[$B.module_getattr($B.imported.copyreg,'__newobj__')]
 var arg2=[klass]
-var newargs=getNewArguments(cls,klass)
+var newargs=getNewArguments(self,klass)
 if(newargs){arg2=arg2.concat(newargs.args)}
 res.push($B.fast_tuple(arg2))
 var getstate=$B.search_in_mro(klass,'__getstate__')
-if(getstate){var d=$B.$call(getstate,cls)}else{var d=$B.empty_dict(),nb=0
-if(cls.dict){for(var item of _b_.dict.$iter_items(cls.dict)){if(item.key=="__class__" ||item.key.startsWith("$")){continue}
+if(getstate){var d=$B.$call(getstate,self)}else{var d=$B.empty_dict(),nb=0
+if(self.dict){for(var item of _b_.dict.$iter_items(self.dict)){if(item.key=="__class__" ||item.key.startsWith("$")){continue}
 _b_.dict.$setitem(d,item.key,item.value)
 nb++}}
 if(nb==0){d=_b_.None}}
 res.push(d)
 var list_like_iterator=_b_.None
 if($B.$getattr(klass,'append',null)!==null &&
-$B.$getattr(klass,'extend',null)!==null){list_like_iterator=_b_.iter(cls)}
+$B.$getattr(klass,'extend',null)!==null){list_like_iterator=_b_.iter(self)}
 res.push(list_like_iterator)
 var key_value_iterator=_b_.None
-if($B.$isinstance(cls,_b_.dict)){key_value_iterator=_b_.dict.items(cls)}
+if($B.$isinstance(self,_b_.dict)){key_value_iterator=_b_.dict.tp_funcs.items(self)}
 res.push(key_value_iterator)
-return _b_.tuple.$factory(res)}
+return $B.fast_tuple(res)}
 object_funcs.__sizeof__=function(self){}
 object_funcs.__subclasshook__=function(self){return _b_.NotImplemented}
 _b_.object.functions_or_methods=["__new__"]
@@ -2719,8 +2723,9 @@ var attribute=$B.search_in_mro(obj,name,NULL)
 if(attribute !==NULL){if(test){console.log('attribute',attribute)
 console.log('class',$B.get_class(attribute))}
 var local_get=$B.search_slot($B.get_class(attribute),'tp_descr_get',NULL)
-if(test){console.log('local_get',local_get)}
-if(local_get !==NULL){var res=local_get(attribute,$B.NULL,obj)
+if(test){console.log('local_get',$B.get_class(local_get))}
+if(local_get !==NULL){
+if($B.get_class(local_get)===$B.JSFunction){var res=local_get(attribute,$B.NULL,obj)}else{var res=local_get(attribute,_b_.None,obj)}
 if(test){console.log('result of local_get',res)}
 return res}
 return attribute}else if(test){console.log('no attribute')}
@@ -3221,18 +3226,14 @@ var class_name=self.d_type.tp_name
 $B.RAISE(_b_.TypeError,`unbound method ${class_name}.${name} needs an argument`
 )}
 try{var res=self.method(...args)
-return res}catch(err){console.log('error in method_descriptor call')
-console.log('self.method',self.method)
-console.log('args',args)
-console.log('frame obj',$B.frame_obj)
-console.log(err)
-throw err}}
+return res}catch(err){throw err}}
 $B.method_descriptor.tp_descr_get=function(self,obj,klass){if(obj===$B.NULL){return self}
 var f=self.method.bind(null,obj)
 f.ob_type=$B.builtin_method
 f.$infos=self.$infos
 f.ml={ml_name:self.d_name}
 f.m_self=self
+f.obj=obj
 return f}
 var method_descriptor_funcs=$B.method_descriptor.tp_funcs={}
 method_descriptor_funcs.__qualname___get=function(self){return self.d_name}
@@ -3328,8 +3329,9 @@ var res
 var eq=self===other
 if(op=='__eq__'){res=eq}else{res=! eq}
 return res}
-$B.builtin_function_or_method.tp_repr=function(self){if(self.m_self){return `<built-in method ${self.ml.ml_name} `+
-`of ${$B.class_name(self.m_self)} object>`}else{var name=self.$function_infos[$B.func_attrs.__name__]
+$B.builtin_function_or_method.tp_repr=function(self){if(self.m_self){console.log('self',self,self.ml,self.m_self)
+return `<built-in method ${self.ml.ml_name} `+
+`of ${$B.class_name(self.obj)} object>`}else{var name=self.$function_infos[$B.func_attrs.__name__]
 return `<built-in function ${name}>`}}
 $B.builtin_function_or_method.tp_hash=function(self){return _b_.object.tp_hash(self)}
 $B.builtin_function_or_method.tp_call=function(self,...args){return self(...args)}
@@ -4414,9 +4416,10 @@ $B.set_func_names(code,"builtins")
 _b_.compile=function(){var $=$B.args('compile',7,{source:null,filename:null,mode:null,flags:null,dont_inherit:null,optimize:null,_feature_version:null},['source','filename','mode','flags','dont_inherit','optimize','_feature_version'],arguments,{flags:0,dont_inherit:false,optimize:-1,_feature_version:0},null,null)
 var module_name='$exec_'+$B.UUID()
 $.ob_type=code
-$.co_flags=$.flags
-$.co_name="<module>"
-var filename=$.co_filename=$.filename
+$.dict=$B.empty_dict()
+var infos={co_flags:$.flags,co_name:"<module>",co_filename:$.filename}
+for(var key in infos){$B.str_dict_set($.dict,key,infos[key])}
+var filename=$.filename
 var interactive=$.mode=="single" &&($.flags & 0x200)
 $B.file_cache[filename]=$.source
 $B.url2name[filename]=module_name
@@ -7896,9 +7899,11 @@ if($B.get_option('debug')> 0){console.log("line info "+__BRYTHON__.line_info)}
 throw err}}
 $B.run_py=run_py 
 $B.run_js=run_js
-var ModuleSpec=$B.make_builtin_class("ModuleSpec")
+var ModuleSpec=$B.ModuleSpec=$B.make_builtin_class("ModuleSpec")
 ModuleSpec.$factory=function(fields){var spec={ob_type:ModuleSpec,dict:$B.empty_dict()}
 for(var field in fields){$B.str_dict_set(spec.dict,field,fields[field])}
+if(! fields.hasOwnProperty('loader')){console.log('no loader',fields)
+console.log(Error('trace').stack)}
 return spec}
 ModuleSpec.tp_repr=function(self){var res=`ModuleSpec(name='${self.name}', `+
 `loader=${_b_.str.$factory(self.loader)}, `+
@@ -10117,14 +10122,13 @@ return $B.NULL}
 function conv_number(...objs){var res=[]
 for(var obj of objs){res.push(conv_num(obj))}
 return res}
-function float_value(obj){return obj.ob_type===float ? obj :fast_float(obj.value)}
+var float_value=$B.float_value=function(obj){return obj.ob_type===float ? obj :fast_float(obj.value)}
 function copysign(x,y){var x1=Math.abs(x)
 var y1=y
 var sign=Math.sign(y1)
 sign=(sign==1 ||Object.is(sign,+0))? 1 :-1
 return x1*sign}
 var float=_b_.float
-float.$float_value=float_value
 float.$to_js_number=function(self){if($B.exact_type(self,float)){return self.value}else{return float.$to_js_number(self.value)}}
 $B.shift1_cache={}
 function check_self_is_float(x,method){if($B.$isinstance(x,_b_.float)){return true}
@@ -10700,15 +10704,16 @@ return $B.make_complex('nan','nan')}}
 var _real=1,_real_mantissa=2,_sign=3,_imag=4,_imag_mantissa=5,_j=6
 var expected_class={"__complex__":complex,"__float__":_b_.float,"__index__":_b_.int}
 function _convert(obj){
+if($B.$isinstance(obj,_b_.float)){return{method:'__float__',result:$B.float_value(obj)}}
 var klass=$B.get_class(obj)
-for(var method_name in expected_class){var missing={},method=$B.$getattr(klass,method_name,missing)
-if(method !==missing){var res=$B.$call(method,obj)
+for(var method_name in expected_class){var method=$B.$getattr(klass,method_name,$B.NULL)
+if(method !==$B.NULL){var res=$B.$call(method,obj)
 if(!$B.$isinstance(res,expected_class[method_name])){$B.RAISE(_b_.TypeError,method_name+"returned non-"+
 expected_class[method_name].__name__+
 "(type "+$B.get_class(res)+")")}
 if(method_name=='__index__' &&
 $B.rich_comp('__gt__',res,__BRYTHON__.MAX_VALUE)){$B.RAISE(_b_.OverflowError,'int too large to convert to float')}
-if(method_name=='__complex__' && ! $B.exact_tye(res,complex)){$B.warn(_b_.DeprecationWarning,"__complex__ returned "+
+if(method_name=='__complex__' && ! $B.exact_type(res,complex)){$B.warn(_b_.DeprecationWarning,"__complex__ returned "+
 `non-complex (type ${$B.class_name(res)}). `+
 "The ability to return an instance of a strict subclass "+
 "of complex is deprecated, and may be removed in a future "+
@@ -13940,7 +13945,27 @@ var builtins_doc="Built-in functions, types, exceptions, and other "+
 "but in\nwhich the built-in of that name is also needed."
 $B.imported.builtins=$B.module.tp_new($B.module)
 $B.module.tp_init($B.imported.builtins,'builtins',builtins_doc)
-for(var attr in _b_){$B.module_setattr($B.imported.builtins,attr,_b_[attr])}})(__BRYTHON__);
+for(var attr in _b_){$B.module_setattr($B.imported.builtins,attr,_b_[attr])}
+$B.module_setattr($B.imported.builtins,'__package__','')
+$B.module_setattr($B.imported.builtins,'__loader__',_b_.None)
+$B.module_setattr($B.imported.builtins,'__spec__',$B.ModuleSpec.$factory({name:'builtins',origin:'built-in',has_location:false,loader:_b_.None,submodule_search_locations:_b_.None})
+)
+var copyright=`Copyright (c) 2001 Python Software Foundation.
+All Rights Reserved.
+Copyright (c) 2000 BeOpen.com.
+All Rights Reserved.
+Copyright (c) 1995-2001 Corporation for National Research Initiatives.
+All Rights Reserved.
+Copyright (c) 1991-1995 Stichting Mathematisch Centrum, Amsterdam.
+All Rights Reserved.
+`
+$B.module_setattr($B.imported.builtins,'copyright','')
+$B.module_setattr($B.imported.builtins,'license','BSD 3')
+$B.module_setattr($B.imported.builtins,'help','type help()')
+$B.module_setattr($B.imported.builtins,'credits',`    Thanks to CWI, CNRI, BeOpen, Zope Corporation, the Python Software
+    Foundation, and a cast of thousands for supporting Python
+    development.  See www.python.org for more information.`
+)})(__BRYTHON__);
 ;
 (function($B){var _b_=$B.builtins
 function wrap(dunder,nb_args){return function(cls,attr){if(nb_args !==undefined){var func=function(){var $=$B.args(dunder,nb_args,{obj:null},['obj'],arguments,{},'args','kw')
@@ -14029,6 +14054,10 @@ cls,op,func
 )}}
 $B.finalize_type=function(cls){cls.tp_mro=$B.make_mro(cls)
 cls.dict=$B.empty_dict()
+var parts=cls.tp_name.split('.')
+var module=parts.length==1 ? 'builtins' :
+parts.slice(0,parts.length-1).join('.')
+$B.str_dict_set(cls.dict,'__module__',module)
 if(cls.tp_getset){for(var descr of cls.tp_getset){var getset=[cls.tp_funcs[descr+'_get'],
 cls.tp_funcs[descr+'_set']
 ]
@@ -14048,7 +14077,8 @@ for(var slot in $B.wrapper_methods){if(cls[slot]){$B.wrapper_methods[slot](cls,s
 for(var ns of[$B.builtin_types,$B.created_types]){for(var name in ns){var cls=ns[name]
 $B.finalize_type(cls)}}
 for(var builtin_func of $B.builtin_funcs){if(_b_[builtin_func]){_b_[builtin_func].ob_type=$B.builtin_function_or_method
-_b_[builtin_func].$function_infos=['builtins',builtin_func,builtin_func]}else{console.log('missing builtin function',builtin_func)}}})(__BRYTHON__)
+_b_[builtin_func].$function_infos=['builtins',builtin_func,builtin_func]}else{console.log('missing builtin function',builtin_func)}}
+console.log('OSError module',_b_.OSError.dict.$strings.__module__)})(__BRYTHON__)
 ;
 
 (function($B){var _b_=$B.builtins

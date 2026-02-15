@@ -262,6 +262,10 @@ function make_richcompare(cls){
 $B.finalize_type = function(cls){
     cls.tp_mro = $B.make_mro(cls)
     cls.dict = $B.empty_dict()
+    var parts = cls.tp_name.split('.')
+    var module = parts.length == 1 ? 'builtins' :
+        parts.slice(0, parts.length - 1).join('.')
+    $B.str_dict_set(cls.dict, '__module__', module)
 
     if(cls.tp_getset){
         for(var descr of cls.tp_getset){
@@ -346,4 +350,5 @@ for(var builtin_func of $B.builtin_funcs){
     }
 }
 
+console.log('OSError module', _b_.OSError.dict.$strings.__module__)
 })(__BRYTHON__)

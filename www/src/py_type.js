@@ -1059,7 +1059,7 @@ _b_.type.tp_call = function(){
 }
 
 _b_.type.tp_getattro = function(obj, name){
-    var test = false // name == '__new__' // && obj.tp_name == 'Mapping'
+    var test = false // name == 'name' // && obj.tp_name == 'Mapping'
     if(test){
         console.log('class_getattr', obj, name)
         console.log('frame obj', $B.frame_obj)
@@ -1114,10 +1114,17 @@ _b_.type.tp_getattro = function(obj, name){
         }
         var local_get = $B.search_slot($B.get_class(attribute), 'tp_descr_get', NULL)
         if(test){
-            console.log('local_get', local_get)
+            console.log('local_get', $B.get_class(local_get))
         }
         if(local_get !== NULL){
-            var res = local_get(attribute, $B.NULL, obj)
+            // Something special here. For built-in types, passing _b_.None
+            // results in an error when the object itself is None, for
+            // instance for resolving None.__bool__
+            if($B.get_class(local_get) === $B.JSFunction){
+                var res = local_get(attribute, $B.NULL, obj)
+            }else{
+                var res = local_get(attribute, _b_.None, obj)
+            }
             if(test){
                 console.log('result of local_get', res)
             }

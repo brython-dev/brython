@@ -256,9 +256,16 @@ _b_.compile = function() {
 
     var module_name = '$exec_' + $B.UUID()
     $.ob_type = code
-    $.co_flags = $.flags
-    $.co_name = "<module>"
-    var filename = $.co_filename = $.filename
+    $.dict = $B.empty_dict()
+    var infos = {
+        co_flags: $.flags,
+        co_name: "<module>",
+        co_filename: $.filename
+    }
+    for(var key in infos){
+        $B.str_dict_set($.dict, key, infos[key])
+    }
+    var filename = $.filename
     var interactive = $.mode == "single" && ($.flags & 0x200)
     $B.file_cache[filename] = $.source
     $B.url2name[filename] = module_name

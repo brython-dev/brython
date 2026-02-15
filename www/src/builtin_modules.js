@@ -1626,5 +1626,34 @@ $B.module.tp_init($B.imported.builtins, 'builtins', builtins_doc)
 for(var attr in _b_){
     $B.module_setattr($B.imported.builtins, attr, _b_[attr])
 }
+$B.module_setattr($B.imported.builtins, '__package__', '')
+$B.module_setattr($B.imported.builtins, '__loader__', _b_.None)
+$B.module_setattr($B.imported.builtins, '__spec__',
+    $B.ModuleSpec.$factory({name: 'builtins', origin: 'built-in',
+        has_location: false,
+        loader: _b_.None,
+        submodule_search_locations: _b_.None})
+)
+
+var copyright = `Copyright (c) 2001 Python Software Foundation.
+All Rights Reserved.
+
+Copyright (c) 2000 BeOpen.com.
+All Rights Reserved.
+
+Copyright (c) 1995-2001 Corporation for National Research Initiatives.
+All Rights Reserved.
+
+Copyright (c) 1991-1995 Stichting Mathematisch Centrum, Amsterdam.
+All Rights Reserved.
+`
+$B.module_setattr($B.imported.builtins, 'copyright', '')
+$B.module_setattr($B.imported.builtins, 'license', 'BSD 3')
+$B.module_setattr($B.imported.builtins, 'help', 'type help()')
+$B.module_setattr($B.imported.builtins, 'credits',
+`    Thanks to CWI, CNRI, BeOpen, Zope Corporation, the Python Software
+    Foundation, and a cast of thousands for supporting Python
+    development.  See www.python.org for more information.`
+)
 
 })(__BRYTHON__);

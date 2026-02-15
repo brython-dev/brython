@@ -147,11 +147,13 @@ var expected_class = {
 function _convert(obj){
     // If object's class defines one of the methods, return the result
     // of method(obj), else return null
+    if($B.$isinstance(obj, _b_.float)){
+        return {method: '__float__', result: $B.float_value(obj)}
+    }
     var klass = $B.get_class(obj)
     for(var method_name in expected_class) {
-        var missing = {},
-            method = $B.$getattr(klass, method_name, missing)
-        if(method !== missing){
+        var method = $B.$getattr(klass, method_name, $B.NULL)
+        if(method !== $B.NULL){
             var res = $B.$call(method, obj)
             if(!$B.$isinstance(res, expected_class[method_name])){
                 $B.RAISE(_b_.TypeError, method_name + "returned non-" +
@@ -162,7 +164,7 @@ function _convert(obj){
                     $B.rich_comp('__gt__', res, __BRYTHON__.MAX_VALUE)){
                 $B.RAISE(_b_.OverflowError, 'int too large to convert to float')
             }
-            if(method_name == '__complex__' && ! $B.exact_tye(res, complex)){
+            if(method_name == '__complex__' && ! $B.exact_type(res, complex)){
                 $B.warn(_b_.DeprecationWarning, "__complex__ returned " +
                 `non-complex (type ${$B.class_name(res)}). ` +
                 "The ability to return an instance of a strict subclass " +
@@ -469,7 +471,7 @@ _b_.complex.tp_new = function(){
             i = arg2.result
         }
     }
-
+    
     res = make_complex(r, i)
     res.ob_type = cls
     res.dict = $B.empty_dict()
