@@ -287,8 +287,9 @@ $B.addToImported = function(name, modobj){
             modobj[attr].dict = $B.empty_dict()
             $B.add_function_infos(modobj, attr, name)
         }else if($B.$isinstance(modobj[attr], _b_.type) &&
-                modobj[attr].__module__ === undefined){
-            modobj[attr].__module__ = name
+                $B.str_dict_get(modobj[attr].dict, '__module__', $B.NULL) === 
+                $B.NULL){
+            $B.str_dict_set(modobj[attr].dict, '__module__', name)
         }
         $B.module_setattr(module, attr, modobj[attr])
     }

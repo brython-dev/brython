@@ -69,18 +69,21 @@ $B.ast_js_to_py = function(obj){
         if(py_class === undefined){
             return obj
         }
+
         for(var field of py_class._fields){
-            $B.str_dict_set(py_ast_obj.dict, field, 
+            $B.str_dict_set(py_ast_obj.dict, field,
                 $B.ast_js_to_py(obj[field]))
         }
-        py_ast_obj._attributes = $B.fast_tuple([])
+        var _attributes = $B.fast_tuple([])
         for(var loc of ['lineno', 'col_offset',
                         'end_lineno', 'end_col_offset']){
             if(obj[loc] !== undefined){
                 $B.str_dict_set(py_ast_obj.dict, loc, obj[loc])
-                py_ast_obj._attributes.push(loc)
+                _attributes.push(loc)
             }
         }
+        $B.str_dict_set(py_ast_obj.dict, '_attributes', _attributes)
+        $B.str_dict_set(py_ast_obj.dict, '__module__', 'ast')
         return py_ast_obj
     }
 }
@@ -154,37 +157,42 @@ $B.create_python_ast_classes = function(){
             }
             $B.str_dict_set(cls.dict, '__match_args__',
                 $B.fast_tuple(Object.keys(slots)))
+            $B.str_dict_set(cls.dict, '__module__', 'ast')
 
             cls.$factory = function(){
-                if(klass == 'Module'){
-                    console.log('create Module object')
-                }
                 var $ = $B.args(klass, nb_args, $B.clone(slots), Object.keys(slots),
                         arguments, $B.clone($defaults), null, 'kw')
                 var res = {
                     ob_type: cls,
-                    _attributes: $B.fast_tuple([])
+                    dict: $B.empty_dict()
                 }
+                var _attributes = $B.fast_tuple()
                 for(let key in $){
                     if(key == 'kw'){
                         for(let item of _b_.dict.$iter_items($.kw)){
-                            res[item.key] = item.value
+                            $B.str_dict_set(res.dict, item.key, item.value)
                         }
                     }else{
-                        res[key] = $[key]
+                        $B.str_dict_set(res.dict, key, $[key])
                     }
                 }
                 if(klass == "Constant"){
-                    res.value = $B.AST.$convert($.value)
+                    $B.str_dict_set(res.dict, 'value',
+                        $B.AST.$convert($.value))
                 }
                 return res
             }
+
             if(_fields){
                 cls._fields = _fields
             }
-            //cls.tp_mro = [$B.AST, _b_.object]
-            cls.__module__ = 'ast'
-            //cls.dict = Object.create(null)
+
+            cls.tp_new = function(){
+                var [cls, ...args] = arguments
+                var obj = cls.$factory(...args)
+                obj.ob_type = cls
+                return obj
+            }
 
             // For fields that end with "?", set class attribute to None
             // Used in ast.dump to skip printing the field

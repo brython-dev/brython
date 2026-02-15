@@ -98,11 +98,11 @@ function validate_arguments(args){
         validate_expr(args.kwarg.annotation, Load)
     }
     if(args.defaults.length > args.posonlyargs.length + args.args.length){
-        $B.RAISE(_b_.ValueError, 
+        $B.RAISE(_b_.ValueError,
             "more positional defaults than args on arguments")
     }
     if(args.kw_defaults.length != args.kwonlyargs.length){
-        $B.RAISE(_b_.ValueError, 
+        $B.RAISE(_b_.ValueError,
             "length of kwonlyargs is not the same as " +
             "kw_defaults on arguments")
     }
@@ -127,7 +127,7 @@ function validate_pattern(p, star_ok){
             break;
         case mod.MatchMapping:
             if(p.keys.length != p.patterns.length){
-                $B.RAISE(_b_.ValueError, 
+                $B.RAISE(_b_.ValueError,
                     "MatchMapping doesn't have the same number of keys as patterns");
             }
             if(p.rest){
@@ -152,7 +152,7 @@ function validate_pattern(p, star_ok){
             break;
         case mod.MatchClass:
             if(p.kwd_attrs.length != p.kwd_patterns.length){
-                $B.RAISE(_b_.ValueError, 
+                $B.RAISE(_b_.ValueError,
                     "MatchClass doesn't have the same number of " +
                     "keyword attributes as patterns")
             }
@@ -165,7 +165,7 @@ function validate_pattern(p, star_ok){
                     cls = cls.value;
                     continue;
                 }else {
-                    $B.RAISE(_b_.ValueError, 
+                    $B.RAISE(_b_.ValueError,
                         "MatchClass cls field can only contain Name " +
                         "or Attribute nodes.")
                 }
@@ -193,7 +193,7 @@ function validate_pattern(p, star_ok){
             if(p.pattern == undefined){
                 ret = 1;
             }else if(p.name == undefined){
-                $B.RAISE(_b_.ValueError, 
+                $B.RAISE(_b_.ValueError,
                     "MatchAs must specify a target name if a pattern is given")
             }else{
                 validate_pattern(p.pattern, 0);
@@ -201,7 +201,7 @@ function validate_pattern(p, star_ok){
             break;
         case mod.MatchOr:
             if(p.patterns.length < 2){
-                $B.RAISE(_b_.ValueError, 
+                $B.RAISE(_b_.ValueError,
                     "MatchOr requires at least 2 patterns")
             }
             validate_patterns(p.patterns, 0)
@@ -235,7 +235,7 @@ function validate_pattern_match_value(exp){
                     _b_.complex, _b_.str])){
                 return true
             }
-            $B.RAISE(_b_.ValueError, 
+            $B.RAISE(_b_.ValueError,
                 "unexpected constant inside of a literal pattern")
         case mod.Attribute:
             // Constants and attribute lookups are always permitted
@@ -260,7 +260,7 @@ function validate_pattern_match_value(exp){
         default:
             break;
     }
-    $B.RAISE(_b_.ValueError, 
+    $B.RAISE(_b_.ValueError,
         "patterns may only match literals and attribute lookups")
 }
 
@@ -330,7 +330,7 @@ function validate_exprs(exprs, ctx, null_ok){
         if(expr !== _b_.None){
             validate_expr(expr, ctx)
         }else if(!null_ok){
-            $B.RAISE(_b_.ValueError, 
+            $B.RAISE(_b_.ValueError,
                             "None disallowed in expression list")
         }
 
@@ -397,7 +397,7 @@ function validate_expr(exp, ctx){
         break;
     case mod.Dict:
         if(exp.keys.length != exp.values.length){
-            $B.RAISE(_b_.ValueError, 
+            $B.RAISE(_b_.ValueError,
                 "Dict doesn't have the same number of keys as values");
         }
         /* null_ok=1 for keys expressions to allow dict unpacking to work in
@@ -567,7 +567,7 @@ function validate_stmt(stmt){
         break;
     case mod.AnnAssign:
         if(! $B.exact_type(stmt.target, mod.Name) && stmt.simple){
-            $B.RAISE(_b_.TypeError, 
+            $B.RAISE(_b_.TypeError,
                 "AnnAssign with simple non-Name target")
         }
         validate_expr(stmt.target, Store)
@@ -646,7 +646,7 @@ function validate_stmt(stmt){
                 "Try has neither except handlers nor finalbody");
         }
         if(stmt.handlers.length == 0 && stmt.orelse.length > 0){
-            $B.RAISE(_b_.ValueError, 
+            $B.RAISE(_b_.ValueError,
                 "Try has orelse but no except handlers");
         }
         for(var handler of stmt.handlers){
@@ -665,11 +665,11 @@ function validate_stmt(stmt){
     case mod.TryStar:
         validate_body(stmt.body, "TryStar")
         if(stmt.handlers.length + stmt.finalbody.length == 0){
-            $B.RAISE(_b_.ValueError, 
+            $B.RAISE(_b_.ValueError,
                 "TryStar has neither except handlers nor finalbody");
         }
         if(stmt.handlers.length == 0 && stmt.orelse.length > 0){
-            $B.RAISE(_b_.ValueError, 
+            $B.RAISE(_b_.ValueError,
                 "TryStar has orelse but no except handlers");
         }
         for(var handler of stm.handlers){
@@ -727,20 +727,23 @@ function validate_stmt(stmt){
 
 
 mod._validate = function(ast_obj){
+    var js_ast = ast_obj.$js_ast
     switch (ast_obj.ob_type) {
         case mod.Module:
-            validate_stmts(ast_obj.body);
-            break;
+            validate_stmts(js_ast.body)
+            break
         case mod.Interactive:
-            validate_stmts(ast_obj.body);
-            break;
+            validate_stmts(js_ast.body)
+            break
         case mod.Expression:
-            validate_expr(ast_obj.body, Load);
-            break;
+            validate_expr(js_ast.body, Load)
+            break
         case mod.FunctionType:
-            validate_exprs(ast_obj.argtypes, Load, 0) &&
-                  validate_expr(ast_obj.returns, Load);
-            break;
+            var argtypes = $B.$getattr(ast_obj, 'argtypes')
+            var returns = $B.$getattr(ast_obj, 'returns')
+            validate_exprs(argtypes, Load, 0) &&
+                  validate_expr(returns, Load)
+            break
         // No default case so compiler emits warning for unhandled cases
     }
 }

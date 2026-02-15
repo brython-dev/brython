@@ -328,9 +328,10 @@ _b_.compile = function() {
         }
     }
 
-    if($B.get_class($.source).__module__ == 'ast'){
+    if($B.$getattr($B.get_class($.source), '__module__') == 'ast'){
         // compile an ast instance
-        $B.imported._ast._validate($.source)
+        var _validate = $B.module_getattr($B.imported._ast, '_validate')
+        $B.$call(_validate, $.source)
         $._ast = $.source
         delete $.source
         return $

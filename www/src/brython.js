@@ -669,8 +669,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-02-15 09:04:13.255838"
-__BRYTHON__.timestamp=1771142653255
+__BRYTHON__.compiled_date="2026-02-15 11:16:22.045770"
+__BRYTHON__.timestamp=1771150582045
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1177,9 +1177,11 @@ $B.ast_js_to_py=function(obj){$B.create_python_ast_classes()
 if(obj===undefined){return _b_.None}else if(Array.isArray(obj)){return $B.$list(obj.map($B.ast_js_to_py))}else{var class_name=obj.constructor.$name,py_class=$B.python_ast_classes[class_name],py_ast_obj={ob_type:py_class,dict:$B.empty_dict()}
 if(py_class===undefined){return obj}
 for(var field of py_class._fields){$B.str_dict_set(py_ast_obj.dict,field,$B.ast_js_to_py(obj[field]))}
-py_ast_obj._attributes=$B.fast_tuple([])
+var _attributes=$B.fast_tuple([])
 for(var loc of['lineno','col_offset','end_lineno','end_col_offset']){if(obj[loc]!==undefined){$B.str_dict_set(py_ast_obj.dict,loc,obj[loc])
-py_ast_obj._attributes.push(loc)}}
+_attributes.push(loc)}}
+$B.str_dict_set(py_ast_obj.dict,'_attributes',_attributes)
+$B.str_dict_set(py_ast_obj.dict,'__module__','ast')
 return py_ast_obj}}
 $B.ast_py_to_js=function(obj){if(obj===undefined ||obj===_b_.None){return undefined}else if(Array.isArray(obj)){return obj.map($B.ast_py_to_js)}else if(typeof obj=="string"){return obj}else{var class_name=$B.class_name(obj),js_class=$B.ast[class_name]
 if(js_class===undefined){return obj}
@@ -1202,14 +1204,18 @@ nb_args++
 slots[f]=null
 if(rf.endsWith('*')){$defaults[f]=[]}else if(rf.endsWith('?')){$defaults[f]=_b_.None}}}
 $B.str_dict_set(cls.dict,'__match_args__',$B.fast_tuple(Object.keys(slots)))
-cls.$factory=function(){if(klass=='Module'){console.log('create Module object')}
-var $=$B.args(klass,nb_args,$B.clone(slots),Object.keys(slots),arguments,$B.clone($defaults),null,'kw')
-var res={ob_type:cls,_attributes:$B.fast_tuple([])}
-for(let key in $){if(key=='kw'){for(let item of _b_.dict.$iter_items($.kw)){res[item.key]=item.value}}else{res[key]=$[key]}}
-if(klass=="Constant"){res.value=$B.AST.$convert($.value)}
+$B.str_dict_set(cls.dict,'__module__','ast')
+cls.$factory=function(){var $=$B.args(klass,nb_args,$B.clone(slots),Object.keys(slots),arguments,$B.clone($defaults),null,'kw')
+var res={ob_type:cls,dict:$B.empty_dict()}
+var _attributes=$B.fast_tuple()
+for(let key in $){if(key=='kw'){for(let item of _b_.dict.$iter_items($.kw)){$B.str_dict_set(res.dict,item.key,item.value)}}else{$B.str_dict_set(res.dict,key,$[key])}}
+if(klass=="Constant"){$B.str_dict_set(res.dict,'value',$B.AST.$convert($.value))}
 return res}
 if(_fields){cls._fields=_fields}
-cls.__module__='ast'
+cls.tp_new=function(){var[cls,...args]=arguments
+var obj=cls.$factory(...args)
+obj.ob_type=cls
+return obj}
 if(raw_fields){for(let i=0,len=raw_fields.length;i < len;i++){var raw_field=raw_fields[i]
 if(raw_field.endsWith('?')){$B.str_dict_set(cls.dict,_fields[i],_b_.None)}}}
 return cls})(klass)}}
@@ -4441,8 +4447,9 @@ exc.end_offset=last_line.length-1
 exc.text=last_line
 exc.args=[msg,$B.fast_tuple([filename,exc.lineno,exc.offset,exc.text,exc.end_lineno,exc.end_offset])]
 throw exc}}
-if($B.get_class($.source).__module__=='ast'){
-$B.imported._ast._validate($.source)
+if($B.$getattr($B.get_class($.source),'__module__')=='ast'){
+var _validate=$B.module_getattr($B.imported._ast,'_validate')
+$B.$call(_validate,$.source)
 $._ast=$.source
 delete $.source
 return $}
@@ -7823,7 +7830,8 @@ modobj[attr].$in_js_module=true
 modobj[attr].ob_type=$B.function
 modobj[attr].dict=$B.empty_dict()
 $B.add_function_infos(modobj,attr,name)}else if($B.$isinstance(modobj[attr],_b_.type)&&
-modobj[attr].__module__===undefined){modobj[attr].__module__=name}
+$B.str_dict_get(modobj[attr].dict,'__module__',$B.NULL)===
+$B.NULL){$B.str_dict_set(modobj[attr].dict,'__module__',name)}
 $B.module_setattr(module,attr,modobj[attr])}}
 function run_js(module_contents,path,_module){var mod_name=$B.module_getattr(_module,'__name__')
 var keys_before=new Set(Object.keys(globalThis))
@@ -13673,7 +13681,6 @@ function(){if($B.hasOwnProperty("VFS")){return $B.obj_dict($B.VFS)}else{return _
 )}
 var WarningMessage=$B.make_builtin_class("WarningMessage")
 WarningMessage.$factory=function(){var $=$B.make_args("WarningMessage",8,{message:null,category:null,filename:null,lineno:null,file:null,line:null,source:null},['message','category','filename','lineno','file','line','source'],arguments,{filename:_b_.None,file:_b_.None,line:_b_.None,source:_b_.None},null,null)
-console.log('create warning message',$)
 var res={ob_type:WarningMessage}
 $B.assign_dict(res,{message:$.message,category:$.category,filename:$.filename,lineno:$.lineno,file:$.file,line:$.line,source:$.source,_category_name:_b_.bool.$factory($.category)?
 $B.$getattr($.category,"__name__"):_b_.None}
@@ -16096,7 +16103,6 @@ prefix+`$B.$setattr(res, '__module__', $B.frame_obj.frame[2])\n`+
 prefix+`$B.$setattr(res, '__type_params__', type_params)\n`+
 prefix+`return res\n`
 dedent()
-if(this.name.id=='SupportsAbs'){console.log(js)}
 js+=prefix+`}\n`+
 prefix+`locals.${this.name.id} = TYPE_PARAMS_OF_${this.name.id}()`
 return js}
