@@ -2,9 +2,31 @@
 
 var _b_ = $B.builtins
 
-function wrap(dunder){
+function wrap(dunder, nb_args){
     return function(cls, attr){
-        var func = cls[attr]
+        if(nb_args !== undefined){
+            var func = function(){
+                var $ = $B.args(dunder, nb_args, {obj: null}, ['obj'],
+                            arguments, {}, 'args', 'kw')
+                var obj = $.obj,
+                    args = $.args,
+                    kw = $.kw
+                if(_b_.len(kw) > 0){
+                    $B.RAISE(_b_.TypeError,
+                        `wrapper '${dunder}' takes no keyword argument`
+                    )
+                }
+                if(args.length > nb_args - 1){
+                    var plural = nb_args == 1 ? '' : 's'
+                    $B.RAISE(_b_.TypeError,
+                        `expected ${nb_args - 1} argument${plural}, got ${args.length}`
+                    )
+                }
+                return cls[attr](obj)
+            }
+        }else{
+            var func = cls[attr]
+        }
         if(func === undefined){
             console.log('no attr', attr, 'for cls', cls)
         }
@@ -100,7 +122,7 @@ Object.assign($B.wrapper_methods,
         sq_repeat: wrap_with_same_reflected('__mul__', '__rmul__'),
         tp_call: wrap('__call__'),
         tp_descr_get: wrap('__get__'),
-        tp_descr_set: wrap('__set__'),
+        tp_descr_set: make_set_del,
         tp_doc: make_doc,
         tp_getattro: make_getattribute,
         tp_finalize: wrap('__del__'),
@@ -109,8 +131,8 @@ Object.assign($B.wrapper_methods,
         tp_iter: wrap('__iter__'),
         tp_iternext: make_next,
         tp_new: make_new,
-        tp_repr: wrap('__repr__'),
-        tp_str : wrap('__str__'),
+        tp_repr: wrap('__repr__', 1),
+        tp_str : wrap('__str__', 1),
         tp_setattro: make_setattr_delattr,
         tp_richcompare: make_richcompare
     }
@@ -165,6 +187,20 @@ function make_next(cls){
     )
 
     $B.str_dict_set(cls.dict, '__next__', next_func)
+}
+
+function make_set_del(cls){
+    var set_func = cls.tp_descr_set
+    $B.str_dict_set(cls.dict, '__set__', $B.wrapper_descriptor.$factory(
+        cls,
+        '__set__',
+        set_func
+    ))
+    $B.str_dict_set(cls.dict, '__delete__', $B.wrapper_descriptor.$factory(
+        cls,
+        '__set__',
+        (self, attr) => set_func(self, attr, $B.NULL)
+    ))
 }
 
 function make_setitem_delitem(cls){

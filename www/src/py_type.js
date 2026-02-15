@@ -350,7 +350,7 @@ $B.make_class_namespace = function(metaclass, class_name, qualname,
             `not ${$B.class_name(class_dict)}`)
     }
     if(orig_bases !== bases){
-        class_dict.__orig_bases__ = orig_bases
+        $B.str_dict_set(class_dict, '__orig_bases__', orig_bases)
     }
     if(! class_dict.$all_str){
         $B.warn(_b_.RuntimeWarning,
@@ -370,7 +370,7 @@ $B.resolve_mro_entries = function(bases){
                 _b_.None)
             if(mro_entries !== _b_.None){
                 has_mro_entries = true
-                var entries = _b_.list.$factory(mro_entries(bases))
+                var entries = _b_.list.$factory($B.$call(mro_entries, bases))
                 new_bases = new_bases.concat(entries)
             }else{
                 new_bases.push(base)
@@ -957,7 +957,7 @@ _b_.type.tp_setattro = function(kls, attr, value){
             return setter(in_mro, kls, value)
         }
     }
-    if(kls.__flags__ && TPFLAGS.IMMUTABLETYPE){
+    if(kls.tp_flags & TPFLAGS.IMMUTABLETYPE){
         $B.RAISE(_b_.TypeError,
             `cannot set '${attr}' attribute of immutable type '` +
                 kls.tp_name + "'")
@@ -989,7 +989,7 @@ _b_.type.nb_or = function(){
 _b_.type.tp_repr = function(kls){
     var name = $B.get_name(kls)
     var qualname
-    if(kls.hasOwnProperty('tp_flags' && (kls.tp_flags & TPFLAGS.HEAPTYPE))){
+    if(kls.hasOwnProperty('tp_flags') && (kls.tp_flags & TPFLAGS.HEAPTYPE)){
         var module = $B.$getattr(kls, '__module__', $B.NULL)
         qualname = (module === $B.NULL || module == 'builtins') ? name :
             module + "." + name
@@ -1255,11 +1255,12 @@ _b_.type.tp_new = function(metatype, name, bases, cl_dict, extra_kwargs){
         if(['__module__', '__class__', '__name__', '__qualname__'].includes(key)){
             continue
         }
-        if(key.startsWith('$')){
-            continue
-        }
-        if(v === undefined){
-            continue
+        if(key == '__class_getitem__'){
+            // always a classmethod
+            if($B.get_class(v) !== _b_.classmethod){
+                var v1 = $B.$call(_b_.classmethod, v)
+                $B.str_dict_set(cl_dict, key, v1)
+            }
         }
 
         // cf PEP 487 and issue #1178
@@ -1535,7 +1536,17 @@ _b_.property.tp_descr_set = function(self, obj, value){
                   'has no setter'
         $B.RAISE_ATTRIBUTE_ERROR(msg, self, '__set__')
     }
-    $B.$call(self.prop_set, obj, value)
+    if(value === $B.NULL){
+        if(self.prop_del === _b_.None){
+            $B.RAISE(_b_.AttributeError,
+                `property '${self.prop_name}' of '${$B.class_name(obj)}' ` +
+                `object has no deleter`
+            )
+        }
+        $B.$call(self.prop_del, obj)
+    }else{
+        $B.$call(self.prop_set, obj, value)
+    }
 }
 
 _b_.property.tp_descr_get = function(self, obj, type){
@@ -1568,7 +1579,6 @@ _b_.property.tp_init = function(){
     if($B.$getattr && doc === _b_.None){
         self.prop_doc = $B.$getattr(fget, '__doc__', doc)
     }
-    self.$type = fget.$type
     self.prop_get = fget
     self.prop_set = fset
     self.prop_del = fdel
@@ -1579,21 +1589,6 @@ _b_.property.tp_init = function(){
             self[key] = fget.$attrs[key]
         }
     }
-
-    self.__delete__ = fdel
-    /*
-    self.getter = function(fget){
-        return property.$factory(fget, self.prop_set, self.prop_del, self.prop_doc)
-    }
-    self.setter = function(fset){
-        self.prop_set = fset
-        return self
-        return property.$factory(self.prop_get, fset, self.prop_del, self.prop_doc)
-    }
-    self.deleter = function(fdel){
-        return property.$factory(self.prop_get, self.prop_set, fdel, self.prop_doc)
-    }
-    */
 }
 
 _b_.property.tp_new = function(cls){
@@ -1620,8 +1615,8 @@ property_funcs.__name___set = function(self){
 
 }
 
-property_funcs.__set_name__ = function(self){
-
+property_funcs.__set_name__ = function(self, cls, name){
+    self.prop_name = name
 }
 
 property_funcs.deleter = function(self, fdel){

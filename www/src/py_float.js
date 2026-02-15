@@ -1050,7 +1050,7 @@ _b_.float.nb_floor_divide = function(self, other){
         return _b_.NotImplemented
     }
     var vx = self.value,
-        wx = float_value(other).value
+        wx = conv_num(other)
     var divmod = _float_div_mod(vx, wx)
     return $B.fast_float(divmod.floordiv)
 }

@@ -34,7 +34,6 @@ method_wrapper_funcs.__name___set = function(self){
 }
 
 method_wrapper_funcs.__objclass___get = function(self){
-    console.log('method wrapper __objclass__')
     return self.self.__objclass__
 }
 
@@ -483,7 +482,9 @@ $B.wrapper_descriptor.tp_repr = function(self){
 }
 
 $B.wrapper_descriptor.tp_call = function(descr, ...args){
-    if(args.length < 1){
+    var no_args = args.length == 0 || (args.length == 1 && args[0].$kw)
+
+    if(no_args){
         $B.RAISE(_b_.TypeError,
             `descriptor '${descr.d_name}' of '${descr.d_type.tp_name}' ` +
             `object needs an argument`

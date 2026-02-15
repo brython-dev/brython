@@ -1124,18 +1124,14 @@ $B.$getitem1 = function(obj, item){
         if(obj === _b_.type){
             return $B.$class_getitem(obj, item)
         }
-        var class_gi = $B.type_getattribute(obj, "__class_getitem__", _b_.None)
-        if(class_gi !== _b_.None){
+        var class_gi = $B.type_getattribute(obj, "__class_getitem__", $B.NULL)
+        if(class_gi !== $B.NULL){
             return $B.$call(class_gi, item)
-        }else if($B.get_class(obj) !== $B.JSObj){
-            class_gi = $B.$getattr($B.get_class(obj), "__getitem__", _b_.None)
-            if(class_gi !== _b_.None){
-                return class_gi(obj, item)
-            }else{
-                $B.RAISE(_b_.TypeError, "type '" +
-                    $B.$getattr(obj, '__qualname__') +
-                    "' is not subscriptable")
-            }
+        }else{
+            var qualname = $B.$getattr(obj, '__qualname__')
+            $B.RAISE(_b_.TypeError,
+                `type '${qualname}' is not subscriptable`
+            )
         }
     }
 
@@ -1522,7 +1518,7 @@ $B.$call_with_position = function(callable, inum, ...args){
 }
 
 $B.$call = function(callable, ...args){
-    var test = false // callable.$function_infos && callable.$function_infos[1] == 'test_gen1'
+    var test = false // callable.d_name == '__str__' // && callable.$function_infos[1] == 'test_gen1'
     var klass = $B.get_class(callable)
     if(test){
         console.log('call', callable, 'klass', klass, 'args', args)
@@ -2021,21 +2017,20 @@ $B.rich_op1 = function(op, x, y){
         method
     if(x_type === y_type){
         // For objects of the same type, don't try the reversed operator
+        /*
         if(x_type === _b_.int){
             return $B.$call($B.str_dict_get(_b_.int.dict, op), x, y)
         }else if(x_type === _b_.bool){
-            return $B.$call($B.str_dict_get(_b_.bool.dict, op) || _b_.int.dict[op], x, y)
+            var method = $B.search_in_mro(_b_.bool, op)
+            return $B.$call(method, x, y)
         }
-        try{
-            method = $B.$getattr(x_type, op)
-        }catch(err){
-            if($B.is_exc(err, [_b_.AttributeError])){
-                var kl_name = $B.class_name(x)
-                $B.RAISE(_b_.TypeError, "unsupported operand type(s) " +
-                    "for " + opname2opsign[op] + ": '" + kl_name + "' and '" +
-                    kl_name + "'")
-            }
-            throw err
+        */
+        method = $B.$getattr(x_type, op, $B.NULL)
+        if(method === $B.NULL){
+            var kl_name = $B.class_name(x)
+            $B.RAISE(_b_.TypeError, "unsupported operand type(s) " +
+                "for " + opname2opsign[op] + ": '" + kl_name + "' and '" +
+                kl_name + "'")
         }
         return $B.$call(method, x, y)
     }

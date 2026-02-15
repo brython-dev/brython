@@ -860,7 +860,7 @@ $B.JSObj.mp_subscript = function(_self, key){
         if(typeof _self.length == 'number'){
             if((typeof key == "number" || typeof key == "boolean") &&
                     typeof _self.item == 'function'){
-                var rank = _b_.int.$factory(key)
+                var rank = $B.int_value(key)
                 if(rank < 0){
                     rank += _self.length
                 }

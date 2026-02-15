@@ -2518,7 +2518,7 @@ bytes_funcs.splitlines = function(self){
         throw _b_.TypeError('integer argument expected, got '+
             $B.get_class($.keepends).__name)
     }
-    var keepends = _b_.int.$factory($.keepends),
+    var keepends = $B.int_value($.keepends),
         res = $B.$list([]),
         source = $.self.source,
         start = 0,

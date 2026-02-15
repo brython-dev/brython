@@ -5,8 +5,9 @@ disguised Unix interface).  Refer to the library manual and
 corresponding Unix manual entries for more information on calls.
 */
 "use strict";
-var $B = __BRYTHON__,
-    _b_ = $B.builtins
+(function($B){
+
+var _b_ = $B.builtins
 
 function _randint(a, b){
     return parseInt(Math.random() * (b - a + 1) + a)
@@ -185,3 +186,5 @@ module.isatty = function(){
 }
 
 $B.addToImported('posix', module)
+
+})(__BRYTHON__)

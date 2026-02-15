@@ -18,6 +18,15 @@ TokenizerIter.$factory = function(it){
     }
 }
 
+TokenizerIter.tp_new = function(){
+    var $ = $B.args('TokenizerIter', 1, {cls: null}, ['cls'],
+                arguments, {}, 'args', 'kw')
+    var [cls, ...args] = arguments
+    var obj = TokenizerIter.$factory(...args)
+    obj.cls = cls
+    return obj
+}
+
 TokenizerIter.tp_iter = function(self){
     var js_iter = function*(){
         var line_num = 0

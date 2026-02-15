@@ -569,7 +569,7 @@ list.$setitem = function(self, arg, value){
     }
 
     if(_b_.hasattr(arg, "__int__") || _b_.hasattr(arg, "__index__")){
-       list.__setitem__(self, _b_.int.$factory(arg), value)
+       list.mp_ass_subscript(self, _b_.int.$factory(arg), value)
        return _b_.None
     }
 

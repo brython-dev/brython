@@ -1285,7 +1285,7 @@ Pattern_funcs.findall = function(self){
         }
         var bmo = next.value,
             mo = bmo.mo,
-            groups = MatchObject.groups(bmo)
+            groups = MatchObject.tp_funcs.groups(bmo)
 
         // replace None by the empty string
         for(var i = 0, len = groups.length; i < len; i++){
@@ -3408,7 +3408,7 @@ MatchObject_funcs.__deepcopy__ = function(self){
 MatchObject_funcs.end = function(self){
     var $ = $B.args('end', 2, {self: null, group: null}, ['self', 'group'],
                 arguments, {group: 0}, null, null)
-    var group = MatchObject.group(self, $.group)
+    var group = MatchObject.tp_funcs.group(self, $.group)
     if(group === _b_.None){
         return -1
     }else if($.group == 0){
@@ -3519,7 +3519,7 @@ MatchObject_funcs.lastgroup = _b_.property.$factory(
         /* The name of the last matched capturing group, or None if the group
            didn't have a name, or if no group was matched at all.
         */
-        var lastindex = MatchObject.lastindex.fget(self)
+        var lastindex = MatchObject.tp_funcs.lastindex.fget(self)
         if(lastindex === _b_.None){
             return _b_.None
         }
@@ -3570,7 +3570,7 @@ MatchObject_funcs.span = function(){
 MatchObject_funcs.start = function(self){
     var $ = $B.args('end', 2, {self: null, group: null}, ['self', 'group'],
                 arguments, {group: 0}, null, null)
-    var group = MatchObject.group(self, $.group)
+    var group = MatchObject.tp_funcs.group(self, $.group)
     if(group === _b_.None){
         return -1
     }else if($.group == 0){
@@ -3938,7 +3938,7 @@ var module = {
             }
             var bmo = next.value,
                 mo = bmo.mo,
-                groups = MatchObject.groups(bmo)
+                groups = MatchObject.tp_funcs.groups(bmo)
 
             // replace None by the empty string
             for(var i = 0, len = groups.length; i < len; i++){

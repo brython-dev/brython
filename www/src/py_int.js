@@ -152,35 +152,38 @@ function int_hash(x){
     return int_or_long(_hash)
 }
 
-int.$factory = function(){
+int.$factory = function(value, base){
+    /*
     var missing = {},
         $ = $B.args("int", 2, {x: null, base: null}, ["x", "base"],
-            arguments, {x: missing, base: missing}, null, null, 1),
+            arguments, {x: missing, base: _b_.None}, null, null, 1),
             value = $.x,
             base = $.base === undefined ? missing : $.base,
             initial_value = value,
-            explicit_base = base !== missing
-
+            explicit_base = base !== _b_.None
+    */
     // int() with no argument returns 0
+    /*
     if(value === missing || value === undefined){
         if(base !== missing){
             $B.RAISE(_b_.TypeError, "int() missing string argument")
         }
         return 0
     }
+    */
+    var initial_value = value
 
     if($B.$isinstance(value, [_b_.bytes, _b_.bytearray])){
         // transform to string
         value = $B.$getattr(value, 'decode')('latin-1')
-    }else if(explicit_base && ! $B.$isinstance(value, _b_.str)){
-        $B.RAISE(_b_.TypeError,
-            "int() can't convert non-string with explicit base")
     }else if($B.$isinstance(value, _b_.memoryview)){
         value = $B.$getattr(_b_.memoryview.tobytes(value), 'decode')('latin-1')
     }
 
     if(! $B.$isinstance(value, _b_.str)){
-        if(base !== missing){
+        if(base !== _b_.None){
+            console.log('value', value)
+            console.log(Error('trace').stack)
             $B.RAISE(_b_.TypeError,
                 "int() can't convert non-string with explicit base")
         }else{
@@ -230,7 +233,7 @@ int.$factory = function(){
         $B.RAISE(_b_.ValueError,
             `invalid literal for int() with base 10: ${_b_.repr(value)}`)
     }
-    base = base === missing ? 10: $B.PyNumber_Index(base)
+    base = base === _b_.None ? 10: $B.PyNumber_Index(base)
 
     if(! (base >=2 && base <= 36)){
         // throw error (base must be 0, or 2-36)
@@ -639,24 +642,26 @@ _b_.int.nb_index = function(self){
     return int_value(self)
 }
 
-_b_.int.tp_new = function(cls, value, base){
+_b_.int.tp_new = function(){
+    var $ = $B.args('int', 3, {cls: null, value: null, base: null},
+                ['cls', 'value', 'base'], arguments, {value: 0, base: _b_.None},
+                null, null)
+    var cls = $.cls,
+        value = $.value,
+        base = $.base
     if(! $B.$isinstance(cls, _b_.type)){
         $B.RAISE(_b_.TypeError, "int.__new__(X): X is not a type object")
-    }
-    if(cls === int){
-        return int.$factory(value, base)
     }
     if(cls === bool) {
         $B.RAISE(_b_.TypeError, "int.__new__(bool) is not safe, use bool.__new__()")
     }
-    // set method .toString so that BigInt(instance) returns a bingint
+    if(cls === int){
+        return int.$factory(value, base)
+    }
     return {
         ob_type: cls,
         dict: $B.empty_dict(),
-        value: int.$factory(value, base),
-        toString: function(){
-            return value
-        }
+        value
     }
 }
 

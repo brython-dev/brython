@@ -563,7 +563,9 @@ slice_funcs.indices = function(){
     // are handled in a manner consistent with regular slices.
     var $ = $B.args("indices", 2, {self: null, length: null},
             ["self", "length"], arguments, {}, null, null)
-    var len = $B.PyNumber_Index($.length)
+    var self = $.self,
+        length = $.length
+    var len = $B.PyNumber_Index(length)
     if(len < 0){
         $B.RAISE(_b_.ValueError, "length should not be negative")
     }

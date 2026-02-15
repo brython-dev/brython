@@ -119,14 +119,15 @@ _b_.object.tp_richcompare = function(self, other, op){
         case '__ne__':
             /* By default, __ne__() delegates to __eq__() and inverts the result,
                unless the latter returns NotImplemented. */
-            var self_richcomp = $B.search_slot($B.get_class(self), 'tp_richcompare', $B.NULL)
+            var self_richcomp = $B.$getattr($B.get_class(self), '__eq__', $B.NULL)
             if(self_richcomp === $B.NULL){
                 res = _b_.NotImplemented
             }else{
-                res = $B.$call(self_richcomp, self, other, '__eq__')
+                res = $B.$call(self_richcomp, self, other)
                 if(res !== _b_.NotImplemented){
                     return ! $B.$bool(res)
                 }
+                return res
             }
             break
         default:
@@ -138,7 +139,7 @@ _b_.object.tp_richcompare = function(self, other, op){
 }
 
 _b_.object.tp_setattro = function(self, attr, value){
-    var test = false // attr == 'x'
+    var test = false //attr == 'x' && value === $B.NULL
     var klass = $B.get_class(self)
     var in_mro = $B.search_in_mro(klass, attr, $B.NULL)
     if(test){
@@ -146,8 +147,11 @@ _b_.object.tp_setattro = function(self, attr, value){
     }
     if(value === $B.NULL){
         // First check for data descriptor with __delete__ in class
+        if(test){
+            console.log('in mro', in_mro, 'has delete', _b_.hasattr(in_mro, '__delete__'))
+        }
         if(in_mro !== $B.NULL && _b_.hasattr(in_mro, '__delete__')){
-            return $B.$getattr(in_mro, '__delete__')(self)
+            return $B.$call($B.$getattr(in_mro, '__delete__'), self)
         }
         // No data descriptor, delete from instance __dict__
         if(self.dict && $B.$isinstance(self.dict, _b_.dict) &&
@@ -195,7 +199,7 @@ _b_.object.tp_setattro = function(self, attr, value){
     }
     var slots = $B.str_dict_get(klass.dict, '__slots__', $B.NULL)
     if(slots !== $B.NULL){
-        if($B.set_has(slots, attr)){
+        if(_b_.tuple.sq_contains(slots, attr)){
             self.slot_values[attr] = value
         }
     }
@@ -233,6 +237,7 @@ _b_.object.tp_hash = function(self){
 
 _b_.object.tp_str = function(self){
     if(self === undefined || self.$kw){
+        console.log('aïe', self)
         $B.RAISE(_b_.TypeError, "descriptor '__str__' of 'object' " +
             "object needs an argument")
     }
@@ -243,7 +248,7 @@ _b_.object.tp_str = function(self){
 }
 
 _b_.object.tp_getattro = function(self, attr){
-    var test = false // attr == 'text'
+    var test = false // attr == 'y'
     var klass = $B.get_class(self)
     if(test){
         console.log('getattr', attr, 'of self', self, klass)
@@ -441,10 +446,14 @@ object_funcs.__dir__ = function(self){
 object_funcs.__format__ = function(){
     var $ = $B.args("__format__", 2, {self: null, spec: null},
         ["self", "spec"], arguments, {}, null, null)
-    if($.spec !== ""){
+    var self = $.self,
+        spec = $.spec
+    if(spec !== ""){
         $B.RAISE(_b_.TypeError,
-            "non-empty format string passed to object.__format__")}
-    return $B.$call($B.$getattr($.self, "__str__"))
+            "non-empty format string passed to object.__format__"
+        )
+    }
+    return _b_.str.$factory(self)
 }
 
 object_funcs.__getstate__ = function(self){

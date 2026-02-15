@@ -798,7 +798,7 @@ var $$eval = _b_.eval = function(){
     if(mode == 'eval'){
         // must set locals, might be used if expression is like
         // "True and True"
-        if($B.get_class(src) === _b_.code){
+        if($B.get_class(src) === $B.code){
             js += `\nreturn locals.${expr_name}`
         }else{
             js = `var __file__ = '${filename}'\n` +
@@ -806,7 +806,7 @@ var $$eval = _b_.eval = function(){
                  'return ' + js
         }
     }else if(src.single_expression){
-        if($B.get_class(src) === _b_.code){
+        if($B.get_class(src) === $B.code){
             js += `var result = locals.${expr_name}\n` +
                  `if(result !== _b_.None){\n` +
                      `_b_.print(result)\n` +
@@ -1428,7 +1428,7 @@ $B.iterator.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]
 
 /* iterator end */
 
-const callable_iterator = $B.make_builtin_class("callable_iterator")
+const callable_iterator = $B.callable_iterator
 
 callable_iterator.$factory = function(func, sentinel){
     return {
@@ -1438,14 +1438,14 @@ callable_iterator.$factory = function(func, sentinel){
     }
 }
 
-callable_iterator.tp_iter_ = function(self){
+callable_iterator.tp_iter = function(self){
     return self
 }
 
 callable_iterator.tp_iternext = function(self){
-    var res = self.func()
+    var res = $B.$call(self.func)
     if($B.rich_comp("__eq__", res, self.sentinel)){
-        $B.RAISE(_b_.StopIteration, )
+        $B.RAISE(_b_.StopIteration)
     }
     return res
 }

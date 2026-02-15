@@ -500,7 +500,7 @@ _b_.set.nb_subtract = function(self, other){
 }
 
 _b_.set.nb_and = function(self, other){
-    if(! $B.$isinstance(self, _b_.set) ||
+    if(! $B.$isinstance(self, [set, frozenset]) ||
             ! $B.$isinstance(other, [set, frozenset])){
         return _b_.NotImplemented
     }
@@ -509,7 +509,7 @@ _b_.set.nb_and = function(self, other){
 
 _b_.set.nb_xor = function(self, other){
     // Return a new set with elements in either the set or other but not both
-    if(! $B.$isinstance(self, _b_.set) ||
+    if(! $B.$isinstance(self, [set, frozenset]) ||
             ! $B.$isinstance(other, [set, frozenset])){
         return _b_.NotImplemented
     }
@@ -529,7 +529,7 @@ _b_.set.nb_xor = function(self, other){
 }
 
 _b_.set.nb_or = function(self, other){
-    if(! $B.$isinstance(self, _b_.set) ||
+    if(! $B.$isinstance(self, [set, frozenset]) ||
             ! $B.$isinstance(other, [set, frozenset])){
         return _b_.NotImplemented
     }

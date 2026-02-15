@@ -285,6 +285,7 @@ $B.addToImported = function(name, modobj){
             modobj[attr].$in_js_module = true
             modobj[attr].ob_type = $B.function
             modobj[attr].dict = $B.empty_dict()
+            $B.add_function_infos(modobj, attr, name)
         }else if($B.$isinstance(modobj[attr], _b_.type) &&
                 modobj[attr].__module__ === undefined){
             modobj[attr].__module__ = name
@@ -1132,10 +1133,6 @@ function import_engine(mod_name, _path, from_stdlib){
             try{
                 exec_module(module)
             }catch(e){
-                console.log('error for module', module)
-                console.log(e)
-                console.log('frame obj', $B.frame_obj)
-                console.log('delete', _spec_name)
                 delete _sys_modules[_spec_name]
                 throw e
            }

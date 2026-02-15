@@ -867,7 +867,8 @@
              file: null, line:null, source: null},
              ['message', 'category', 'filename', 'lineno', 'file',
               'line', 'source'],
-             arguments, {file: _b_.None, line: _b_.None, source: _b_.None},
+             arguments,
+             {filename: _b_.None, file: _b_.None, line: _b_.None, source: _b_.None},
              null, null)
         var res = {
             ob_type: WarningMessage
@@ -938,9 +939,9 @@
                 lineno,
                 line
             if(category === _b_.SyntaxWarning){
-                filename = message.filename,
-                lineno = message.lineno,
-                line = message.text
+                filename = $B.str_dict_get(message.dict, 'filename'),
+                lineno = $B.str_dict_get(message.dict, 'lineno'),
+                line = $B.str_dict_get(message.dict, 'text', '')
                 var src = $B.file_cache[file]
                 if(src){
                     var lines = src.split('\n'),

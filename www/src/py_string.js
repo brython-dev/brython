@@ -1789,8 +1789,8 @@ str_funcs.format = function(){
 
         // Call attribute __format__ to perform the actual formatting
         if($B.is_type(value)){
-            // For classes, don't use the class __format__ method
-            res += $B.get_class(value).__format__(value, fmt.spec)
+            var format_func = $B.$getattr($B.get_class(value), '__format__')
+            res += $B.$call(format_func, value, fmt.spec)
         }else{
             res += $B.$call($B.$getattr(value, "__format__"), fmt.spec)
         }
@@ -2497,7 +2497,7 @@ str_funcs.splitlines = function(){
         throw _b_.TypeError('integer argument expected, got '+
             $B.class_name($.keepends))
     }
-    var keepends = _b_.int.$factory($.keepends),
+    var keepends = $B.int_value($.keepends),
         res = $B.$list([]),
         start = 0,
         pos = 0,
