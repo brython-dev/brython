@@ -1840,7 +1840,8 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
         if(need_typing_module){
             js += prefix + `$B.$import('typing')\n` +
                   prefix + 'var typing = $B.imported.typing\n' +
-                  prefix + `var unpack = $B.$call($B.$getattr(typing.Unpack, '__getitem__'))\n`
+                  prefix + `var Unpack = $B.module_getattr(typing, 'Unpack')\n` +
+                  prefix + `var unpack = $B.$call(Unpack, '__getitem__'))\n`
         }
         var name_map = new Map()
         for(let item of this.type_params){
@@ -1852,9 +1853,11 @@ $B.ast.ClassDef.prototype.to_js = function(scopes){
                 name = item.name.id
             }
             name_map.set(item, name)
-            js += prefix + `var ${name} = $B.$call(_typing.${param_type}, '${name}')\n`
+            js += prefix + `var ${name} = $B.$call($B.module_getattr(_typing, '${param_type}'), '${name}')\n`
         }
-        js += prefix + `var generic_base = _typing.Generic.__class_getitem__(_typing.Generic,` +
+        js += prefix + `var Generic = $B.module_getattr(_typing, 'Generic')\n` +
+              prefix + `var class_gi = $B.$getattr(Generic, '__class_getitem__')\n` +
+              prefix + `var generic_base = $B.$call(class_gi, ` +
                 ` $B.fast_tuple([${params.join(', ')}]))\n`
     }
 
@@ -2357,15 +2360,17 @@ function type_param_in_def(tp, ref, scopes){
               `throw err\n}\n}\n`
         scopes.pop()
     }
-    js += prefix + `locals_${ref}.${name} = ` +
-        `$B.$call(_typing.${param_type}, '${name}', [], {$kw: [{infer_variance: true}]})\n` +
-        prefix + `type_params.push(locals_${ref}.${name})\n`
+    js += prefix + `var ptype = $B.module_getattr(_typing, '${param_type}')\n` +
+          prefix + `locals_${ref}.${name} = ` +
+              `$B.$call(ptype, '${name}', {$kw: [{infer_variance: true}]})\n` +
+          prefix + `type_params.push(locals_${ref}.${name})\n` +
+          prefix + `var _set_lazy_eval = $B.$getattr(ptype, '_set_lazy_eval')\n`
     if(tp.bound){
         if(! tp.bound.elts){
-            js += `_typing.${param_type}._set_lazy_eval(locals_${ref}.${name}, ` +
+            js += `$B.$call(_set_lazy_eval, locals_${ref}.${name}, ` +
                 `'__bound__', BOUND_OF_${name})\n`
         }else{
-            js += `_typing.${param_type}._set_lazy_eval(locals_${ref}.${name}, ` +
+            js += `$B.$call(_set_lazy_eval, locals_${ref}.${name}, ` +
                 `'__constraints__', BOUND_OF_${name})\n`
         }
     }
@@ -2575,7 +2580,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
             class_ref = class_scope.name, // XXX qualname
             refs = class_ref.split('.').map(x => `'${x}'`)
         bind("__class__", scopes)
-        js += prefix + `locals.ob_type =  ` +
+        js += prefix + `locals.ob_type =  locals.__class__ = ` +
                   `$B.get_method_class(${name2}, ${scope_ref}, "${class_ref}", [${refs}])\n`
     }
 
@@ -3981,8 +3986,8 @@ $B.ast.TypeAlias.prototype.to_js = function(scopes){
           prefix + tab + `return ${value}\n` +
           prefix + `}\n`
     // The function returns an instance of _typing.TypeAliasType
-    js += prefix + `var res = $B.$call($B.imported._typing.TypeAliasType, ` +
-          `'${this.name.id}', get_value)\n` +
+    js += prefix + `var TA = $B.module_getattr($B.imported._typing, 'TypeAliasType')\n` +
+          prefix + `var res = $B.$call(TA, '${this.name.id}', get_value)\n` +
           prefix + `$B.$setattr(res, '__module__', $B.frame_obj.frame[2])\n` +
           prefix + `$B.$setattr(res, '__type_params__', type_params)\n` +
           prefix + `return res\n`
