@@ -21,6 +21,7 @@ var float_check = function(x) {
     try{
         return _b_.float.$factory(x).value
     }catch(err){
+        console.log(x, _b_.float.$factory(x))
         $B.RAISE(_b_.TypeError, 'must be real number, not ' +
             $B.class_name(x))
     }
@@ -1832,7 +1833,7 @@ function log(x, base){
         var mant_exp = longint_mant_exp(x)
         log = Math.log(mant_exp[0]) + Math.log(2) * mant_exp[1]
     }else if($B.$isinstance(x, _b_.int)){
-        x = _b_.int.$int_value(x)
+        x = $B.int_value(x)
         if(x <= 0){
             $B.RAISE(_b_.ValueError, 'math domain error')
         }
@@ -2656,10 +2657,10 @@ function trunc(x) {
     $B.check_nb_args('trunc', 1, arguments)
     $B.check_no_kw('trunc', x)
 
-   try{
-       return $B.$getattr(x, '__trunc__')()
-   }catch(err){
-   }
+    var trunc_method = $B.$getattr($B.get_class(x), '__trunc__', $B.NULL)
+    if(trunc_method !== $B.NULL){
+       return $B.$call(trunc_method, x)
+    }
    var x1 = float_check(x)
    if(!isNaN(parseFloat(x1)) && isFinite(x1)){
       if(Math.trunc !== undefined){

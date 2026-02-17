@@ -653,6 +653,12 @@
     }
     var $io_funcs = $io.tp_funcs = {}
 
+    $io_funcs.encoding_get = function(self){
+        return 'utf-8'
+    }
+
+    $io_funcs.encoding_set = _b_.None
+
     $io_funcs.flush = function(self){
         if(self.buf){
             // replace chr(0) by ' ' for printing
@@ -681,6 +687,8 @@
     }
 
     $io.tp_methods = ["flush", "write"]
+
+    $io.tp_getset = ["encoding"]
 
     // _sys module is at the core of Brython since it is paramount for
     // the import machinery.

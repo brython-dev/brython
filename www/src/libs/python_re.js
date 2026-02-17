@@ -1117,7 +1117,7 @@ Scanner.$factory = function(pattern, string, pos, endpos){
 }
 
 Scanner.match = function(self){
-    return Pattern.match(self.pattern, self.$string)
+    return Pattern.tp_funcs.match(self.pattern, self.$string)
 }
 
 Scanner.search = function(self){
@@ -1261,7 +1261,7 @@ Pattern_funcs.__deepcopy__ = function(self){
 }
 
 Pattern_funcs.__reduce__ = function(self){
-    return Pattern.__reduce_ex__(self, 4)
+    return Pattern.tp_funcs.__reduce_ex__(self, 4)
 }
 
 Pattern_funcs.__reduce_ex__ = function(self, protocol){
@@ -1275,7 +1275,7 @@ Pattern_funcs.__reduce_ex__ = function(self, protocol){
 }
 
 Pattern_funcs.findall = function(self){
-    var iter = Pattern.finditer.apply(null, arguments).js_gen,
+    var iter = Pattern.tp_funcs.finditer.apply(null, arguments).js_gen,
         res = []
 
     while(true){
@@ -3580,18 +3580,18 @@ MatchObject_funcs.start = function(self){
     }
 }
 
-MatchObject_funcs.string = _b_.property.$factory(
-    function(self){
-        return self.mo.string.to_str()
-    }
-)
+MatchObject_funcs.string_get = function(self){
+    return self.mo.string.to_str()
+}
+
+MatchObject_funcs.string_set = _b_.None
 
 MatchObject.tp_methods = [
     "__copy__", "__deepcopy__", "end", "expand", "group", "groupdict",
     "groups", "span", "start"
 ]
 
-MatchObject.tp_getset = ["regs"]
+MatchObject.tp_getset = ["regs", "string"]
 
 MatchObject.tp_members = [
     ["endpos", $B.TYPES.OBJECT, "endpos", 1],

@@ -507,7 +507,7 @@ function CHECK_CLOSED(fileobj, msg){
     }
 }
 
-_BufferedReader_funcs.read = function(_self, n=-1){
+_BufferedReader_funcs.read = function(self, n=-1){
     var res
 
     if(n < -1){
@@ -518,9 +518,9 @@ _BufferedReader_funcs.read = function(_self, n=-1){
 
     if(n == -1){
         /* The number of bytes is unspecified, read until the end of stream */
-        res = _bufferedreader_read_all(_self)
+        res = _bufferedreader_read_all(self)
     }else{
-        res = _bufferedreader_read_fast(_self, n)
+        res = _bufferedreader_read_fast(self, n)
         if (res != _b_.None){
             return res
         }

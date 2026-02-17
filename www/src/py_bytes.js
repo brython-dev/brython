@@ -2107,8 +2107,8 @@ _b_.bytes.mp_subscript = function(self, arg){
         }
         $B.RAISE(_b_.IndexError, "index out of range")
     }else if($B.$isinstance(arg, _b_.slice)){
-        let s = _b_.slice.$conv_for_seq(arg, self.source.length),
-            start = s.start,
+        let s = _b_.slice.$conv_for_seq(arg, self.source.length)
+        var start = s.start,
             stop = s.stop,
             step = s.step
         let res = [],
@@ -2506,7 +2506,6 @@ bytes_funcs.split = function(self){
         var seps = Array.from($B.make_js_iterator(sep))
         parts = bytes_split_with_sep($.self, seps, maxsplit)
     }
-    parts = parts.map(t => $B.fast_bytes(t))
     return $B.$list(parts)
 }
 

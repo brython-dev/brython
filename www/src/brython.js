@@ -669,8 +669,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-02-15 21:04:52.156483"
-__BRYTHON__.timestamp=1771185892156
+__BRYTHON__.compiled_date="2026-02-17 15:52:06.752993"
+__BRYTHON__.timestamp=1771339926752
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -2381,6 +2381,7 @@ for(var base of bases){if(base.__flags__ !==undefined &&
 delete extra_kwargs.metaclass
 var classdef_frame=$B.frame_obj.prev.frame
 var module=classdef_frame[2]
+if(Object.hasOwn(classdef_frame[1],'__name__')){module=classdef_frame[1].__name__}
 $B.str_dict_set(dict,'__module__',module)
 var stack=[]
 var frame_obj=$B.frame_obj.prev
@@ -2752,6 +2753,7 @@ var ctx={metatype,args,kwds,orig_dict,name,bases}
 var class_obj={ob_type:metatype,dict:cl_dict,tp_bases:bases,tp_name:name,tp_flags:$B.TPFLAGS.DEFAULT |$B.TPFLAGS.HEAPTYPE |
 $B.TPFLAGS.BASETYPE |$B.TPFLAGS.HAVE_GC}
 class_obj.tp_mro=$B.make_mro(class_obj)
+set_type_new(cl_dict)
 var res=type_new_get_bases(ctx,class_obj)
 class_obj.tp_base=ctx.base
 class_obj.tp_bases=ctx.bases
@@ -3329,9 +3331,8 @@ var res
 var eq=self===other
 if(op=='__eq__'){res=eq}else{res=! eq}
 return res}
-$B.builtin_function_or_method.tp_repr=function(self){if(self.m_self){console.log('self',self,self.ml,self.m_self)
-return `<built-in method ${self.ml.ml_name} `+
-`of ${$B.class_name(self.obj)} object>`}else{var name=self.$function_infos[$B.func_attrs.__name__]
+$B.builtin_function_or_method.tp_repr=function(self){if(self.m_self){return `<built-in method ${self.ml.ml_name} `+
+`of ${$B.class_name(self.m_self)} object>`}else{var name=self.$function_infos[$B.func_attrs.__name__]
 return `<built-in function ${name}>`}}
 $B.builtin_function_or_method.tp_hash=function(self){return _b_.object.tp_hash(self)}
 $B.builtin_function_or_method.tp_call=function(self,...args){return self(...args)}
@@ -4079,11 +4080,11 @@ if(whence===undefined){whence=0}
 if(whence===0){_self.$byte_pos=offset}else if(whence===1){_self.$byte_pos+=offset}else if(whence===2){_self.$byte_pos=self.$bytes.length+offset}
 return _b_.None}
 function CHECK_CLOSED(fileobj,msg){if(fileobj.closed){$B.RAISE(_b_.ValueError,msg)}}
-_BufferedReader_funcs.read=function(_self,n=-1){var res
+_BufferedReader_funcs.read=function(self,n=-1){var res
 if(n <-1){$B.RAISE(_b_.ValueError,"read length must be non-negative or -1")}
 CHECK_CLOSED(self,"read of closed file")
 if(n==-1){
-res=_bufferedreader_read_all(_self)}else{res=_bufferedreader_read_fast(_self,n)
+res=_bufferedreader_read_all(self)}else{res=_bufferedreader_read_fast(self,n)
 if(res !=_b_.None){return res}
 return $B.fast_bytes()}
 return res}
@@ -5618,6 +5619,8 @@ res.ob_type=$B.code
 positions=positions.map($B.decode_position)
 var co_positions=()=> $B.$list(positions)
 co_positions.ob_type=$B.function
+if(res.dict===undefined){console.log('no dict for f_code',self)}
+res.dict=res.dict ?? $B.empty_dict()
 $B.str_dict_set(res.dict,'co_positions',co_positions)
 return res}
 frame_funcs.f_code_set=_b_.None
@@ -5644,7 +5647,9 @@ $B.frame.tp_getset=["f_back","f_locals","f_lineno","f_trace","f_lasti","f_global
 $B.set_func_names(frame,"builtins")
 $B._frame=frame 
 $B.make_f_code=function(frame,varnames){
-frame.f_code={co_argcount:1,co_firstlineno:frame.$lineno,co_name:"<genexpr>",co_filename:frame.__file__,co_flags:115,co_freevars:$B.fast_tuple([]),co_kwonlyargcount:0,co_posonlyargount:0,co_qualname:"genexpr",co_varnames:$B.fast_tuple(['.0'].concat(varnames))}}
+frame.f_code={ob_type:$B.code,dict:$B.empty_dict()}
+Object.assign(frame.f_code.dict.$strings,{co_argcount:1,co_firstlineno:frame.$lineno,co_name:"<genexpr>",co_filename:frame.__file__,co_flags:115,co_freevars:$B.fast_tuple([]),co_kwonlyargcount:0,co_posonlyargount:0,co_qualname:"genexpr",co_varnames:$B.fast_tuple(['.0'].concat(varnames))}
+)}
 $B.restore_frame_obj=function(frame_obj,locals){$B.frame_obj=frame_obj
 $B.frame_obj.frame[1]=locals}
 var make_frames_stack=$B.make_frames_stack=function(frame_obj){var stack=[]
@@ -7060,7 +7065,8 @@ _b_.bytes.mp_subscript=function(self,arg){if($B.$isinstance(arg,_b_.int)){arg=$B
 let pos=arg
 if(arg < 0){pos=self.source.length+pos}
 if(pos >=0 && pos < self.source.length){return self.source[pos]}
-$B.RAISE(_b_.IndexError,"index out of range")}else if($B.$isinstance(arg,_b_.slice)){let s=_b_.slice.$conv_for_seq(arg,self.source.length),start=s.start,stop=s.stop,step=s.step
+$B.RAISE(_b_.IndexError,"index out of range")}else if($B.$isinstance(arg,_b_.slice)){let s=_b_.slice.$conv_for_seq(arg,self.source.length)
+var start=s.start,stop=s.stop,step=s.step
 let res=[],pos=0
 if(step > 0){stop=Math.min(stop,self.source.length)
 if(stop <=start){return bytes.$factory([])}
@@ -7185,7 +7191,6 @@ if(sep===_b_.None){parts=bytes_split_with_whitespace(self,maxsplit)}else{if($B.$
 )}
 var seps=Array.from($B.make_js_iterator(sep))
 parts=bytes_split_with_sep($.self,seps,maxsplit)}
-parts=parts.map(t=> $B.fast_bytes(t))
 return $B.$list(parts)}
 bytes_funcs.splitlines=function(self){var $=$B.args('splitlines',2,{self:null,keepends:null},['self','keepends'],arguments,{keepends:false},null,null)
 if(!$B.$isinstance($.keepends,[_b_.bool,_b_.int])){throw _b_.TypeError('integer argument expected, got '+
@@ -8107,6 +8112,7 @@ return $B.import_info[filename][info]}
 function import_engine(mod_name,_path,from_stdlib){
 var test=false 
 var meta_path=get_info('meta_path').slice(),_sys_modules=$B.imported,_loader,spec
+if(test){console.log('from stdlib ?',from_stdlib)}
 if(from_stdlib){
 var path_ix=meta_path.indexOf($B.finders["path"])
 if(path_ix >-1){meta_path.splice(path_ix,1)}}
@@ -8162,11 +8168,11 @@ throw exc}
 $B.$__import__=function(mod_name,globals,locals,fromlist){var $test=false 
 if($test){console.log("__import__",mod_name,'fromlist',fromlist)}
 var from_stdlib=false
-if(globals.$jsobj && globals.$jsobj.__file__){var file=globals.$jsobj.__file__
-if((file.startsWith($B.brython_path+"Lib/")&&
+if(globals !==_b_.None){var file=$B.str_dict_get(globals,'__file__',$B.NULL)
+if(file !==$B.NULL){if((file.startsWith($B.brython_path+"Lib/")&&
 ! file.startsWith($B.brython_path+"Lib/site-packages/"))||
 file.startsWith($B.brython_path+"libs/")||
-file.startsWith("VFS.")){from_stdlib=true}}
+file.startsWith("VFS.")){from_stdlib=true}}}
 var modobj=$B.imported[mod_name],parsed_name=mod_name.split('.'),has_from=fromlist.length > 0
 if(modobj==_b_.None){
 import_error(mod_name)}
@@ -9728,8 +9734,11 @@ _b_.int.nb_float=function(self){return $B.fast_float(Number(int_value(self)))}
 _b_.int.nb_floor_divide=function(self,other){var[x,y]=[self,other].map(toBigInt)
 if(x===$B.NULL ||y===$B.NULL){return _b_.NotImplemented}
 if(y===0n){$B.RAISE(_b_.ZeroDivisionError,'division by zero')}
-var res=x/y 
-if(x==res*y ||res >=0){return int_or_long(res)}else if(typeof res=='bigint'){return int_or_long(res-1n)}else{return int_or_long(res-1)}}
+var quot=x/y 
+var rest=x-y*quot
+if(rest==0){return int_or_long(quot)}
+var same_sign=(x >=0 && y > 0)||(x <=0 & y < 0)
+if(same_sign){return int_or_long(quot)}else{if(typeof quot=='bigint'){return int_or_long(quot-1n)}else{return int_or_long(quot-1)}}}
 _b_.int.nb_true_divide=function(self,other){var[x,y]=[self,other].map(toBigInt)
 if(x===$B.NULL ||y===$B.NULL){return _b_.NotImplemented}
 if(y===0n){$B.RAISE(_b_.ZeroDivisionError,'division by zero')}
@@ -10314,7 +10323,7 @@ case false:
 return fast_float(0)}
 var original_value=value
 if(typeof value=="number"){return fast_float(value)}
-if($B.exact_type(value,float)){return value}
+if($B.$isinstance(value,float)){return $B.float_value(value)}
 if($B.$isinstance(value,_b_.memoryview)){value=_b_.memoryview.tobytes(value)}
 if($B.$isinstance(value,_b_.bytes)){try{value=$B.$getattr(value,"decode")("utf-8")}catch(err){$B.RAISE(_b_.ValueError,"could not convert string to float: "+
 _b_.repr(original_value))}}
@@ -13622,6 +13631,8 @@ var $io=$B.$io=$B.make_builtin_class("io")
 $io.$factory=function(out){return{
 ob_type:$io,dict:$B.empty_dict(),out,encoding:'utf-8'}}
 var $io_funcs=$io.tp_funcs={}
+$io_funcs.encoding_get=function(self){return 'utf-8'}
+$io_funcs.encoding_set=_b_.None
 $io_funcs.flush=function(self){if(self.buf){
 var s=self.buf.join(''),chr0=String.fromCodePoint(0)
 s=s.replace(new RegExp(chr0,'g'),' ')
@@ -13635,6 +13646,7 @@ $B.class_name(msg))}
 self.buf.push(msg)
 return _b_.None}
 $io.tp_methods=["flush","write"]
+$io.tp_getset=["encoding"]
 modules['_sys']={_getframe :function(){var $=$B.args("_getframe",1,{depth:null},['depth'],arguments,{depth:0},null,null),depth=$.depth,frame_obj=$B.frame_obj
 for(var i=0;i < depth;i++){frame_obj=frame_obj.prev}
 var res=frame_obj.frame

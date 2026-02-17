@@ -60,6 +60,9 @@ $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
     // set __module__ and __qualname__ before calling metaclass.__new__
     var classdef_frame = $B.frame_obj.prev.frame
     var module = classdef_frame[2]
+    if(Object.hasOwn(classdef_frame[1], '__name__')){
+        module = classdef_frame[1].__name__
+    }
     $B.str_dict_set(dict, '__module__', module)
 
     var stack = []
@@ -1171,7 +1174,7 @@ _b_.type.tp_new = function(metatype, name, bases, cl_dict, extra_kwargs){
                 {}, 'args', 'kwds')
     var args = $.args,
         kwds = $.kwds
-    var test = false // name == 'C'
+    var test = false // name == 'TestResults'
     if(test){
         console.log('type.tp_new', name, 'metatype', metatype,
             'extrakw', extra_kwargs)
@@ -1205,6 +1208,8 @@ _b_.type.tp_new = function(metatype, name, bases, cl_dict, extra_kwargs){
     }
     class_obj.tp_mro = $B.make_mro(class_obj)
 
+    set_type_new(cl_dict)
+    
     var res = type_new_get_bases(ctx, class_obj)
     class_obj.tp_base = ctx.base
     class_obj.tp_bases = ctx.bases

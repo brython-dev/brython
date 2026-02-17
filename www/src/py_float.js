@@ -578,8 +578,8 @@ float.$factory = function(value){
     if(typeof value == "number"){
         return fast_float(value)
     }
-    if($B.exact_type(value, float)){
-        return value
+    if($B.$isinstance(value, float)){
+        return $B.float_value(value)
     }
 
     if($B.$isinstance(value, _b_.memoryview)){

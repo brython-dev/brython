@@ -299,6 +299,10 @@ frame_funcs.f_code_get = function(self){
     positions = positions.map($B.decode_position)
     var co_positions = () => $B.$list(positions)
     co_positions.ob_type = $B.function
+    if(res.dict === undefined){
+        console.log('no dict for f_code', self)
+    }
+    res.dict = res.dict ?? $B.empty_dict()
     $B.str_dict_set(res.dict, 'co_positions', co_positions)
     return res
 }
@@ -383,17 +387,23 @@ $B._frame = frame // used in builtin_modules.js
 $B.make_f_code = function(frame, varnames){
     // create attribute f_code of generator expressions frame
     frame.f_code = {
-       co_argcount: 1,
-       co_firstlineno: frame.$lineno,
-       co_name: "<genexpr>",
-       co_filename: frame.__file__,
-       co_flags: 115,
-       co_freevars: $B.fast_tuple([]),
-       co_kwonlyargcount: 0,
-       co_posonlyargount: 0,
-       co_qualname: "genexpr",
-       co_varnames: $B.fast_tuple(['.0'].concat(varnames))
+        ob_type: $B.code,
+        dict: $B.empty_dict()
     }
+    Object.assign(frame.f_code.dict.$strings,
+        {
+            co_argcount: 1,
+            co_firstlineno: frame.$lineno,
+            co_name: "<genexpr>",
+            co_filename: frame.__file__,
+            co_flags: 115,
+            co_freevars: $B.fast_tuple([]),
+            co_kwonlyargcount: 0,
+            co_posonlyargount: 0,
+            co_qualname: "genexpr",
+            co_varnames: $B.fast_tuple(['.0'].concat(varnames))
+        }
+    )
 }
 
 $B.restore_frame_obj = function(frame_obj, locals){

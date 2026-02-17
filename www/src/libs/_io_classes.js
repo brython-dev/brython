@@ -8,26 +8,15 @@ function get_self(name, args){
 
 var _IOBase = $B._IOBase
 
-/*
-_IOBase.close = function(){
-    get_self("close", arguments).closed = true
-}
-
-_IOBase.flush = function(){
-    get_self("flush", arguments)
-    return _b_.None
-}
-
-$B.set_func_names(_IOBase, '_io')
-*/
-
 // Base class for binary streams that support some kind of buffering.
 var _BufferedIOBase = $B.make_type("_BufferedIOBase", [_IOBase])
 
-_BufferedIOBase.__enter__ = function(self){
+var _BufferedIOBase_funcs = _BufferedIOBase.tp_funcs = {}
+
+_BufferedIOBase_funcs.__enter__ = function(self){
     return self
 }
-_BufferedIOBase.__exit__ = function(self, type, value, traceback){
+_BufferedIOBase_funcs.__exit__ = function(self, type, value, traceback){
     try{
         $B.$call($B.$getattr(self, 'close'))
         self.__closed = true
@@ -36,6 +25,8 @@ _BufferedIOBase.__exit__ = function(self, type, value, traceback){
         return false
     }
 }
+
+_BufferedIOBase.tp_methods = ["__enter__", "__exit__"]
 
 $B.set_func_names(_BufferedIOBase, '_io')
 $B.finalize_type(_BufferedIOBase)
@@ -469,7 +460,7 @@ BytesIO.tp_init = function(){
         initial_bytes = $.initial_bytes
     var buf = _b_.bytearray.$factory()
     if(initial_bytes !== _b_.None){
-        buf = _b_.bytearray.__add__(buf, initial_bytes)
+        buf = _b_.bytearray.sq_concat(buf, initial_bytes)
     }
     _self._buffer = buf
     _self._pos = 0
@@ -477,7 +468,9 @@ BytesIO.tp_init = function(){
     _self.exports = 0
 }
 
-BytesIO.__getstate__ = function(_self){
+var BytesIO_funcs = BytesIO.tp_funcs = {}
+
+BytesIO_funcs.__getstate__ = function(_self){
     if(_self.closed){
         $B.RAISE(_b_.ValueError, "__getstate__ on closed file")
     }
@@ -488,7 +481,7 @@ BytesIO.__getstate__ = function(_self){
     return $B.fast_tuple([initvalue, _self._pos, dict])
 }
 
-BytesIO.__setstate__ = function(_self, state){
+BytesIO_funcs.__setstate__ = function(_self, state){
     if(_self.closed){
         $B.RAISE(_b_.ValueError, "__setstate__ on closed file")
     }
@@ -525,14 +518,14 @@ BytesIO.__setstate__ = function(_self, state){
     return _b_.None
 }
 
-BytesIO.getvalue = function(_self){
+BytesIO_funcs.getvalue = function(_self){
     if(_self.closed){
         $B.RAISE(_b_.ValueError, "getvalue on closed file")
     }
     return _b_.bytes.$factory(_self._buffer)
 }
 
-BytesIO.getbuffer = function(_self){
+BytesIO_funcs.getbuffer = function(_self){
     if(_self.closed){
         $B.RAISE(_b_.ValueError, "getbuffer on closed file")
     }
@@ -540,14 +533,14 @@ BytesIO.getbuffer = function(_self){
     return _b_.memoryview.$factory(_self._buffer)
 }
 
-BytesIO.isatty = function(_self){
+BytesIO_funcs.isatty = function(_self){
     if(_self.closed){
         $B.RAISE(_b_.ValueError, "isatty on closed file")
     }
     return false
 }
 
-BytesIO.close = function(_self){
+BytesIO_funcs.close = function(_self){
     if(_self._buffer !== _b_.None){
         $B.$call($B.$getattr(_self._buffer, 'clear'))
     }
@@ -555,7 +548,7 @@ BytesIO.close = function(_self){
     $B._BufferedIOBase.close(_self)
 }
 
-BytesIO.read = function(){
+BytesIO_funcs.read = function(){
     var $ = $B.args('read', 2, {self: null, size: null}, ['self', 'size'],
             arguments, {size: -1}, null, null)
     var _self = $.self,
@@ -587,17 +580,17 @@ BytesIO.read = function(){
         return _b_.bytes.$factory()
     }
     var newpos = Math.min(_b_.len(_self._buffer), _self._pos + size)
-    var b = _b_.bytes.__getitem__(_self._buffer,
+    var b = _b_.bytes.mp_subscript(_self._buffer,
         _b_.slice.$factory(_self._pos, newpos))
     _self._pos = newpos
     return b
 }
 
-BytesIO.read1 = function(_self, size=-1){
-    return BytesIO.read(_self, size)
+BytesIO_funcs.read1 = function(_self, size=-1){
+    return BytesIO.tp_funcs.read(_self, size)
 }
 
-BytesIO.readinto = function(_self, buffer){
+BytesIO_funcs.readinto = function(_self, buffer){
     check_closed(_self)
 
     if(! $B.is_buffer(buffer)){
@@ -624,7 +617,7 @@ BytesIO.readinto = function(_self, buffer){
 }
 
 
-BytesIO.write = function(_self, b){
+BytesIO_funcs.write = function(_self, b){
     if(_self.closed){
         $B.RAISE(_b_.ValueError, "write to closed file")
     }
@@ -633,7 +626,7 @@ BytesIO.write = function(_self, b){
     }
 
     var view = _b_.memoryview.$factory(b)
-    var n = _b_.memoryview.nbytes.getter(view)  // Size of any bytes-like object
+    var n = _b_.memoryview.tp_funcs.nbytes_get(view)  // Size of any bytes-like object
     if(n == 0){
         return 0
     }
@@ -642,12 +635,12 @@ BytesIO.write = function(_self, b){
         // Pad buffer to pos with null bytes.
         $B.$call($B.$getattr(_self._buffer, 'resize'), pos)
     }
-    _b_.bytearray.__setitem__(_self._buffer, _b_.slice.$factory(pos, pos + n), b)
+    _b_.bytearray.sq_ass_item(_self._buffer, _b_.slice.$factory(pos, pos + n), b)
     _self._pos += n
     return n
 }
 
-BytesIO.seek = function(_self, pos, whence=0){
+BytesIO_funcs.seek = function(_self, pos, whence=0){
     if(_self.closed){
         $B.RAISE(_b_.ValueError, "seek on closed file")
     }
@@ -678,14 +671,14 @@ BytesIO.seek = function(_self, pos, whence=0){
     return _self._pos
 }
 
-BytesIO.tell = function(_self){
+BytesIO_funcs.tell = function(_self){
     if(_self.closed){
         $B.RAISE(_b_.ValueError, "tell on closed file")
     }
     return _self._pos
 }
 
-BytesIO.truncate = function(_self, pos=_b_.None){
+BytesIO_funcs.truncate = function(_self, pos=_b_.None){
     var $ = $B.args('truncate', 2, {self: null, pos: null}, ['self', 'pos'],
                 arguments, {pos: _b_.None}, null, null)
     var _self = $.self,
@@ -712,30 +705,36 @@ BytesIO.truncate = function(_self, pos=_b_.None){
             $B.RAISE(_b_.ValueError, `negative truncate position ${pos}`)
         }
     }
-    _b_.bytearray.resize(_self._buffer, pos)
+    _b_.bytearray.tp_funcs.resize(_self._buffer, pos)
     return pos
 }
 
-BytesIO.readable = function(_self){
+BytesIO_funcs.readable = function(_self){
     if(_self.closed){
         $B.RAISE(_b_.ValueError, "I/O operation on closed file.")
     }
     return true
 }
 
-BytesIO.writable = function(_self){
+BytesIO_funcs.writable = function(_self){
     if(_self.closed){
         $B.RAISE(_b_.ValueError, "I/O operation on closed file.")
     }
     return true
 }
 
-BytesIO.seekable = function(_self){
+BytesIO_funcs.seekable = function(_self){
     if(_self.closed){
         $B.RAISE(_b_.ValueError, "I/O operation on closed file.")
     }
     return true
 }
+
+BytesIO.tp_methods = [
+    "__getstate__", "__setstate__", "getvalue", "getbuffer", "isatty", "close",
+    "read", "read1", "readinto", "write", "seek", "tell", "truncate",
+    "readable"
+]
 
 $B.set_func_names(BytesIO, '_io')
 $B.finalize_type(BytesIO)

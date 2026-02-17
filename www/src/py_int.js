@@ -617,13 +617,20 @@ _b_.int.nb_floor_divide = function(self, other){
     if(y === 0n){
         $B.RAISE(_b_.ZeroDivisionError, 'division by zero')
     }
-    var res = x / y // bigint
-    if(x == res * y || res >= 0){
-        return int_or_long(res)
-    }else if(typeof res == 'bigint'){
-        return int_or_long(res - 1n)
+    var quot = x / y // bigint
+    var rest = x - y * quot
+    if(rest == 0){
+        return int_or_long(quot)
+    }
+    var same_sign = (x >= 0 && y > 0) || (x <= 0 & y < 0)
+    if(same_sign){
+        return int_or_long(quot)
     }else{
-        return int_or_long(res - 1)
+        if(typeof quot == 'bigint'){
+            return int_or_long(quot - 1n)
+        }else{
+            return int_or_long(quot - 1)
+        }
     }
 }
 

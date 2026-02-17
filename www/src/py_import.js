@@ -1012,13 +1012,16 @@ function import_engine(mod_name, _path, from_stdlib){
     If no spec was found, raise ModuleNotFoundError.
     If one of the methods raise an exception, raise it.
     */
-    var test = false // mod_name === 'from_import_test.relimport'
+    var test = false // mod_name === '_heapq'
 
     var meta_path = get_info('meta_path').slice(),
         _sys_modules = $B.imported,
         _loader,
         spec
 
+    if(test){
+        console.log('from stdlib ?', from_stdlib)
+    }
     if(from_stdlib){
         // When importing from a module in the standard library, remove
         // finder_path from the finders : the module can't be in the current
@@ -1179,16 +1182,17 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist){
    // Check if the script that imports the module is in the standard library.
    // If so, it's no use trying to import with PathFinder (in the importer's
    // directory)
-   if(globals.$jsobj && globals.$jsobj.__file__){
-       var file = globals.$jsobj.__file__
-       if((file.startsWith($B.brython_path + "Lib/") &&
-               ! file.startsWith($B.brython_path + "Lib/site-packages/")) ||
-               file.startsWith($B.brython_path + "libs/") ||
-               file.startsWith("VFS.")){
-           from_stdlib = true
+   if(globals !== _b_.None){
+       var file = $B.str_dict_get(globals, '__file__', $B.NULL)
+       if(file !== $B.NULL){
+           if((file.startsWith($B.brython_path + "Lib/") &&
+                   ! file.startsWith($B.brython_path + "Lib/site-packages/")) ||
+                   file.startsWith($B.brython_path + "libs/") ||
+                   file.startsWith("VFS.")){
+               from_stdlib = true
+           }
        }
    }
-
    var modobj = $B.imported[mod_name],
        parsed_name = mod_name.split('.'),
        has_from = fromlist.length > 0
@@ -1584,7 +1588,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum){
 $B.$import_from = function(module, names, aliases, level, locals, inum){
     // Import names from modules; level is 0 for absolute import, > 0
     // for relative import (number of dots before module name)
-    var test = false // module == 'posix' && names[0] == '_path_normpath'
+    var test = false // module == '_heapq' //&& names[0] == '_path_normpath'
     if(test){
         console.log('import from', module, names)
     }

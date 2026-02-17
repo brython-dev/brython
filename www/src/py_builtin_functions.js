@@ -2205,7 +2205,7 @@ _b_.super.tp_repr = function(self){
 _b_.super.tp_getattro = function(self, attr){
     /* We want __class__ to return the class of the super object
        (i.e. super, or a subclass), not the class of su->obj. */
-    var $test = false // attr == "__init__"
+    var $test = false // attr == "__new__" && self.type.tp_name == 'Z'
     if(attr == "__class__"){
         return _b_.object.tp_getattro(self, attr)
     }
