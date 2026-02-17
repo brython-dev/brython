@@ -392,6 +392,19 @@ function _bufferediobase_readinto_generic(_self, buffer, readinto1){
 
 var _BufferedIOBase_funcs = $B._BufferedIOBase.tp_funcs = {}
 
+_BufferedIOBase_funcs.__enter__ = function(self){
+    return self
+}
+_BufferedIOBase_funcs.__exit__ = function(self, type, value, traceback){
+    try{
+        $B.$call($B.$getattr(self, 'close'))
+        self.__closed = true
+        return true
+    }catch(err){
+        return false
+    }
+}
+
 _BufferedIOBase_funcs.readinto = function(_self, buffer){
     return _bufferediobase_readinto_generic(_self, buffer, 0);
 }
@@ -421,7 +434,8 @@ _BufferedIOBase_funcs.write = function(){
 }
 
 $B._BufferedIOBase.tp_methods = [
-    "readinto", "readinto1", "close", "detach", "read", "read1", "write"
+    "__enter__", "__exit__", "readinto", "readinto1", "close", "detach", 
+    "read", "read1", "write"
 ]
 
 $B.set_func_names($B._BufferedIOBase, '_io')

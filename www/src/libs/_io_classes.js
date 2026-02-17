@@ -8,6 +8,7 @@ function get_self(name, args){
 
 var _IOBase = $B._IOBase
 
+/*
 // Base class for binary streams that support some kind of buffering.
 var _BufferedIOBase = $B.make_type("_BufferedIOBase", [_IOBase])
 
@@ -30,6 +31,7 @@ _BufferedIOBase.tp_methods = ["__enter__", "__exit__"]
 
 $B.set_func_names(_BufferedIOBase, '_io')
 $B.finalize_type(_BufferedIOBase)
+*/
 
 _RawIOBase = $B._RawIOBase
 
@@ -525,12 +527,12 @@ BytesIO_funcs.getvalue = function(_self){
     return _b_.bytes.$factory(_self._buffer)
 }
 
-BytesIO_funcs.getbuffer = function(_self){
-    if(_self.closed){
+BytesIO_funcs.getbuffer = function(self){
+    if(self.closed){
         $B.RAISE(_b_.ValueError, "getbuffer on closed file")
     }
-    _self.exports++
-    return _b_.memoryview.$factory(_self._buffer)
+    self.exports++
+    return _b_.memoryview.$factory(self._buffer)
 }
 
 BytesIO_funcs.isatty = function(_self){
@@ -616,6 +618,53 @@ BytesIO_funcs.readinto = function(_self, buffer){
     return len
 }
 
+BytesIO_funcs.readline = function(){
+    var $ = $B.args('readline', 2, {self: null, size: null}, ['self', 'size'],
+            arguments, {size: -1}, null, null),
+        self = $.self,
+        size = $.size
+    var bytes = self._buffer.source
+    var len = bytes.length
+    if(size === _b_.None){
+        size = -1
+    }else{
+        size = $B.PyNumber_Index(size)
+    }
+    if(size < 0){
+        size = len
+    }
+    check_closed(self)
+    var nb = 0
+    var pos = self._pos
+    const EOL = '\n'.charCodeAt(0)
+    while(nb < size && pos + nb < len && bytes[pos + nb] !== EOL){
+        nb++
+    }
+    var res = $B.fast_bytes(bytes.slice(pos, pos + nb + 1))
+    self._pos += nb + 1
+    return res
+}
+
+BytesIO_funcs.readlines = function(){
+    var $ = $B.args('readlines', 2, {self: null, hint: null},
+                ['self', 'hint'], arguments, {hint: -1}, null, null)
+    var self = $.self,
+        hint = $B.PyNumber_Index($.hint)
+    var lines = []
+    var size = 0
+    while(true){
+        var line = BytesIO.tp_funcs.readline(self)
+        if(line.source.length === 0){
+            break
+        }
+        lines.push(line)
+        size += line.source.length
+        if(hint > 0 && size > hint){
+            break
+        }
+    }
+    return lines
+}
 
 BytesIO_funcs.write = function(_self, b){
     if(_self.closed){
@@ -732,8 +781,8 @@ BytesIO_funcs.seekable = function(_self){
 
 BytesIO.tp_methods = [
     "__getstate__", "__setstate__", "getvalue", "getbuffer", "isatty", "close",
-    "read", "read1", "readinto", "write", "seek", "tell", "truncate",
-    "readable"
+    "read", "read1", "readinto", "readline", "readlines", "write", "seek",
+    "tell", "truncate", "readable"
 ]
 
 $B.set_func_names(BytesIO, '_io')
@@ -780,7 +829,7 @@ IncrementalNewlineDecoder.$factory = function(){
 $B.finalize_type(IncrementalNewlineDecoder)
 
 var module = {
-    _BufferedIOBase,
+    _BufferedIOBase: $B._BufferedIOBase,
     _IOBase,
     _RawIOBase,
     _TextIOBase: $B._TextIOBase,

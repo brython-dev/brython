@@ -24,35 +24,35 @@ memoryview.$factory = function(obj){
     if($B.get_class(obj) === memoryview){
         return obj
     }
-    if($B.get_class(obj).$buffer_protocol){
-        obj.exports = obj.exports ?? 0
-        obj.exports++ // used to prevent resizing
-        var res = {
-            ob_type: memoryview,
-            obj: obj,
-            mbuf: null,
-            format: 'B',
-            itemsize: 1,
-            ndim: 1,
-            shape: _b_.tuple.$factory([_b_.len(obj)]),
-            strides: _b_.tuple.$factory([1]),
-            suboffsets: _b_.tuple.$factory([]),
-            c_contiguous: true,
-            f_contiguous: true,
-            contiguous: true
-        }
-        return res
-    }else{
+    var getbuffer = $B.search_slot($B.get_class(obj), 'tp_getbuffer', $B.NULL)
+    if(getbuffer === $B.NULL){
         $B.RAISE(_b_.TypeError, "memoryview: a bytes-like object " +
-            "is required, not '" + $B.class_name(obj) + "'")
+            "is required, not '" + $B.class_name(obj) + "'"
+        )
     }
+    obj.exports = obj.exports ?? 0
+    obj.exports++ // used to prevent resizing
+    var res = {
+        ob_type: memoryview,
+        obj: obj,
+        mbuf: null,
+        format: 'B',
+        itemsize: 1,
+        ndim: 1,
+        shape: _b_.tuple.$factory([_b_.len(obj)]),
+        strides: _b_.tuple.$factory([1]),
+        suboffsets: _b_.tuple.$factory([]),
+        c_contiguous: true,
+        f_contiguous: true,
+        contiguous: true
+    }
+    return res
 }
 
 memoryview.$match_sequence_pattern = true, // for Pattern Matching (PEP 634)
 memoryview.$buffer_protocol = true
 memoryview.$not_basetype = true // cannot be a base class
 memoryview.$is_sequence = true
-
 
 function memoryview_eq(self, other){
     if($B.get_class(other) !== memoryview){

@@ -797,6 +797,7 @@ $B.slot2dunder = {
     tp_descr_get: '__get__',
     tp_descr_set: '__set__',
     tp_getattro: '__getattribute__',
+    tp_getbuffer: '__buffer__',
     tp_hash: '__hash__',
     tp_init: '__init__',
     tp_iter: '__iter__',
@@ -1209,7 +1210,7 @@ _b_.type.tp_new = function(metatype, name, bases, cl_dict, extra_kwargs){
     class_obj.tp_mro = $B.make_mro(class_obj)
 
     set_type_new(cl_dict)
-    
+
     var res = type_new_get_bases(ctx, class_obj)
     class_obj.tp_base = ctx.base
     class_obj.tp_bases = ctx.bases
