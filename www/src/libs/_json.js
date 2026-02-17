@@ -2,6 +2,20 @@
 
 var _b_ = $B.builtins
 
+var JSONDecodeError = $B.make_type('JSONDecodeError', [_b_.Exception])
+
+$B.finalize_type(JSONDecodeError)
+$B.set_func_names(JSONDecodeError, '_json')
+
+function get_error(){
+    // If module json is imported, use JSONDecodeError
+    if($B.imported.json){
+        return $B.module_getattr($B.imported.json, 'JSONDecodeError')
+    }else{
+        return JSONDecodeError
+    }
+}
+
 function simple(obj){
     switch(typeof obj){
         case 'string':
@@ -91,6 +105,8 @@ function to_json(obj, level){
                         'Out of range float values are not JSON compliant')
                 }
             }
+            return obj.toString()
+        case "bigint":
             return obj.toString()
     }
     if(obj instanceof String){
@@ -191,6 +207,7 @@ function to_json(obj, level){
     }
     // For other types, use function default if provided
     if(_default == _b_.None){
+        console.log('obj', obj)
         $B.RAISE(_b_.TypeError, "Object of type " + $B.class_name(obj) +
             " is not JSON serializable")
     }else{
@@ -275,7 +292,7 @@ var escapes = {'n': '\n',
                }
 
 function string_at(s, i){
-    var error = $B.imported["json"].JSONDecodeError
+    var error = get_error()
 
     var j = i + 1,
         escaped = false,
@@ -552,19 +569,19 @@ function parse(s){
           if(err.ob_type){
               throw err
           }else{
-              var error = $B.imported["json"].JSONDecodeError
+              var error = get_error()
               throw $B.$call(error, err.message, s, item[1])
           }
       }
   }
   // Check if no valid JSON was parsed (empty string or whitespace only)
   if(!root.content && root.list.length === 0){
-      var error = $B.imported["json"].JSONDecodeError
+      var error = get_error()
       throw $B.$call(error, 'Expecting value', s, 0)
   }
   // Check if we're still inside an incomplete structure
   if(node !== root){
-      var error = $B.imported["json"].JSONDecodeError
+      var error = get_error()
       var expected = node instanceof Dict ? "'}'" : "']'"
       throw $B.$call(error, "Expecting ',' delimiter", s, last_pos)
   }

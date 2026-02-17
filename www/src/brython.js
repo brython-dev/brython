@@ -669,8 +669,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-02-17 15:52:06.752993"
-__BRYTHON__.timestamp=1771339926752
+__BRYTHON__.compiled_date="2026-02-17 17:56:39.552663"
+__BRYTHON__.timestamp=1771347399552
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1889,7 +1889,8 @@ var klass=$B.get_class(callable)
 if(test){console.log('call',callable,'klass',klass,'args',args)}
 var call_method=$B.search_slot(klass,'tp_call',$B.NULL)
 if(test){console.log('call_method',call_method)}
-if(call_method===$B.NULL){$B.RAISE(_b_.TypeError,"'"+$B.class_name(callable)+
+if(call_method===$B.NULL){console.log('not callable',callable)
+$B.RAISE(_b_.TypeError,"'"+$B.class_name(callable)+
 "' object is not callable")}
 if(test && typeof call_method !=='function'){console.log('cannot apply call method',call_method)}
 var res=call_method.apply(null,arguments)
@@ -2613,7 +2614,7 @@ for(var base of bases){$B.merge_class_dict(dict,base)}}
 $B.set_class_attr=function(cls_dict,attr,value){cls_dict.$strings[attr]=value}
 var NULL={NULL:true}
 var counter=0
-$B.slot2dunder={tp_call:'__call__',tp_descr_get:'__get__',tp_descr_set:'__set__',tp_getattro:'__getattribute__',tp_hash:'__hash__',tp_init:'__init__',tp_iter:'__iter__',tp_iternext:'__next__',tp_new:'__new__',tp_repr:'__repr__',tp_setattro:'__setattr__',tp_str:'__str__'}
+$B.slot2dunder={tp_call:'__call__',tp_descr_get:'__get__',tp_descr_set:'__set__',tp_getattro:'__getattribute__',tp_getbuffer:'__buffer__',tp_hash:'__hash__',tp_init:'__init__',tp_iter:'__iter__',tp_iternext:'__next__',tp_new:'__new__',tp_repr:'__repr__',tp_setattro:'__setattr__',tp_str:'__str__'}
 $B.dunder2slot={}
 for(var key in $B.slot2dunder){$B.dunder2slot[$B.slot2dunder[key]]=key}
 $B.search_own_slot=function(cls,slot,_default){var dunder=$B.slot2dunder[slot]
@@ -4041,6 +4042,10 @@ var setitem=$B.search_in_mro($B.get_class(buffer),'__setitem__')
 $B.$call(setitem,buffer,_b_.slice.$factory(0,len),data)
 return len}
 var _BufferedIOBase_funcs=$B._BufferedIOBase.tp_funcs={}
+_BufferedIOBase_funcs.__enter__=function(self){return self}
+_BufferedIOBase_funcs.__exit__=function(self,type,value,traceback){try{$B.$call($B.$getattr(self,'close'))
+self.__closed=true
+return true}catch(err){return false}}
 _BufferedIOBase_funcs.readinto=function(_self,buffer){return _bufferediobase_readinto_generic(_self,buffer,0);}
 _BufferedIOBase_funcs.readinto1=function(_self,buffer){return _bufferediobase_readinto_generic(_self,buffer,1);}
 _BufferedIOBase_funcs.close=function(_self){_self.closed=true}
@@ -4048,7 +4053,7 @@ _BufferedIOBase_funcs.detach=function(){_io_unsupported("detach")}
 _BufferedIOBase_funcs.read=function(){_io_unsupported("read")}
 _BufferedIOBase_funcs.read1=function(){_io_unsupported("read1")}
 _BufferedIOBase_funcs.write=function(){_io_unsupported("write")}
-$B._BufferedIOBase.tp_methods=["readinto","readinto1","close","detach","read","read1","write"
+$B._BufferedIOBase.tp_methods=["__enter__","__exit__","readinto","readinto1","close","detach","read","read1","write"
 ]
 $B.set_func_names($B._BufferedIOBase,'_io')
 function _bufferedreader_read_all(_self){return $B.$call($B.$getattr(_self.raw,'readall'))}
@@ -7251,11 +7256,14 @@ var memory_iterator_funcs=$B.memory_iterator.tp_funcs={}
 var memoryview=_b_.memoryview
 memoryview.$factory=function(obj){$B.check_nb_args_no_kw('memoryview',1,arguments)
 if($B.get_class(obj)===memoryview){return obj}
-if($B.get_class(obj).$buffer_protocol){obj.exports=obj.exports ?? 0
+var getbuffer=$B.search_slot($B.get_class(obj),'tp_getbuffer',$B.NULL)
+if(getbuffer===$B.NULL){$B.RAISE(_b_.TypeError,"memoryview: a bytes-like object "+
+"is required, not '"+$B.class_name(obj)+"'"
+)}
+obj.exports=obj.exports ?? 0
 obj.exports++
 var res={ob_type:memoryview,obj:obj,mbuf:null,format:'B',itemsize:1,ndim:1,shape:_b_.tuple.$factory([_b_.len(obj)]),strides:_b_.tuple.$factory([1]),suboffsets:_b_.tuple.$factory([]),c_contiguous:true,f_contiguous:true,contiguous:true}
-return res}else{$B.RAISE(_b_.TypeError,"memoryview: a bytes-like object "+
-"is required, not '"+$B.class_name(obj)+"'")}}
+return res}
 memoryview.$match_sequence_pattern=true,
 memoryview.$buffer_protocol=true
 memoryview.$not_basetype=true 
