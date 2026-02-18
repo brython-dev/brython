@@ -182,7 +182,7 @@ int.$factory = function(value, base){
 
     if(! $B.$isinstance(value, _b_.str)){
         if(base !== _b_.None){
-            console.log('value', value)
+            console.log('value', value, 'base', base)
             console.log(Error('trace').stack)
             $B.RAISE(_b_.TypeError,
                 "int() can't convert non-string with explicit base")

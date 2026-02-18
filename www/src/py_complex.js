@@ -260,13 +260,17 @@ _b_.complex.nb_positive = function(self){
 _b_.complex.nb_power = function(self, other, mod){
     // complex power : use Moivre formula
     // (cos(x) + i sin(x))**y = cos(xy)+ i sin(xy)
+    var [x, y] = conv_complex(self, other)
+    if(x === $B.NULL || y === $B.NULL){
+        return _b_.NotImplemented
+    }
     if(mod !== undefined && mod !== _b_.None){
         $B.RAISE(_b_.ValueError, 'complex modulo')
     }
     if($B.rich_comp('__eq__', other, 1)){
         var funcs = _b_.float.$funcs
-        if(funcs.isinf(self.real) || funcs.isninf(self.real) ||
-                funcs.isinf(self.imag) || funcs.isninf(self.imag)){
+        if(funcs.isinf(x.real) || funcs.isninf(x.real) ||
+                funcs.isinf(x.imag) || funcs.isninf(x.imag)){
             $B.RAISE(_b_.OverflowError, 'complex exponentiation')
         }
         return self
@@ -275,15 +279,11 @@ _b_.complex.nb_power = function(self, other, mod){
     // Check whether the exponent has a small integer value, and if so use
     // a faster and more accurate algorithm.
     var small_int = null
-    if ($B.$isinstance(other, _b_.int) && _b_.abs(other) < 100){
-        small_int = other
-    }else if($B.$isinstance(other, _b_.float) &&
-            Number.isInteger(other.value) && Math.abs(other.value < 100)){
-        small_int = other.value
-    }else if($B.$isinstance(other, complex) && other.imag.value == 0 &&
-            Number.isInteger(other.real.value) &&
-            Math.abs(other.real.value) < 100){
-        small_int = other.real.value
+    if(y.imag.value == 0 &&
+            Number.isInteger(y.real.value) &&
+            Math.abs(y.real.value) < 100){
+        small_int = y.real.value
+        console.log('small int', small_int)
     }
     if(small_int !== null){
         return c_powi(self, small_int)
@@ -291,22 +291,21 @@ _b_.complex.nb_power = function(self, other, mod){
     if($B.$isinstance(other, _b_.float)){
         other = _b_.float.$to_js_number(other)
     }
-    if(self.real.value == 0 && self.imag.value == 0){
-        if($B.$isinstance(other, complex) &&
-                (other.imag.value != 0 || other.real.value < 0)){
+    if(x.real.value == 0 && x.imag.value == 0){
+        if(y.imag.value != 0 || y.real.value < 0){
             $B.RAISE(_b_.ZeroDivisionError,
                 '0.0 to a negative or complex power')
         }
         return $B.make_complex(0, 0)
     }
-    var exp = complex2expo(self),
-        angle = exp.angle,
-        res = Math.pow(exp.norm, other)
-
+    var exp = complex2expo(x),
+        angle = exp.angle
     if($B.$isinstance(other, _b_.int)){
+        var res = Math.pow(exp.norm, other)
         return make_complex(res * Math.cos(angle * other),
             res * Math.sin(angle * other))
     }else if($B.$isinstance(other, _b_.float)){
+        var res = Math.pow(exp.norm, other)
         return make_complex(res * Math.cos(angle * other.value),
             res * Math.sin(angle * other.value))
     }else if($B.$isinstance(other, complex)){
@@ -471,7 +470,7 @@ _b_.complex.tp_new = function(){
             i = arg2.result
         }
     }
-    
+
     res = make_complex(r, i)
     res.ob_type = cls
     res.dict = $B.empty_dict()

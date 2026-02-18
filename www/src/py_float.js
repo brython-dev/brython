@@ -370,10 +370,13 @@ function frexp(x){
             return [x, 0]
         }
         x1 = float_value(x).value
-    }else if($B.$isinstance(x, $B.long_int)){
-        var exp = x.value.toString(2).length,
-            power = 2n ** BigInt(exp)
-        return[$B.fast_float(Number(x.value) / Number(power)), exp]
+    }else if($B.$isinstance(x, _b_.int)){
+        x = $B.int_value(x)
+        if(typeof x == "bigint"){
+            var exp = x.toString(2).length,
+                power = 2n ** BigInt(exp)
+            return[$B.fast_float(Number(x) / Number(power)), exp]
+        }
     }
     if(x1 == 0){
         return [0, 0]
@@ -1157,14 +1160,14 @@ float_funcs.as_integer_ratio = function(self){
             exponent--
         }
     }
-    var numerator = _b_.int.$factory(fp),
+    var numerator = _b_.int.$factory(fp, _b_.None),
         py_exponent = _b_.abs(exponent),
         denominator = 1,
         x
     if($B.shift1_cache[py_exponent] !== undefined){
         x = $B.shift1_cache[py_exponent]
     }else{
-        x = $B.$getattr(1, "__lshift__")(py_exponent)
+        x = $B.$call($B.$getattr(1, "__lshift__"), py_exponent)
         $B.shift1_cache[py_exponent] = x
     }
     py_exponent = x
@@ -1174,8 +1177,7 @@ float_funcs.as_integer_ratio = function(self){
         denominator = py_exponent
     }
 
-    return $B.fast_tuple([_b_.int.$factory(numerator),
-        _b_.int.$factory(denominator)])
+    return $B.fast_tuple([numerator, denominator])
 }
 
 float_funcs.conjugate = function(self){

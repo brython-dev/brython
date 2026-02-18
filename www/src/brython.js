@@ -669,8 +669,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-02-17 17:56:39.552663"
-__BRYTHON__.timestamp=1771347399552
+__BRYTHON__.compiled_date="2026-02-18 11:46:35.973028"
+__BRYTHON__.timestamp=1771411595971
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -9567,7 +9567,7 @@ int.$factory=function(value,base){
 var initial_value=value
 if($B.$isinstance(value,[_b_.bytes,_b_.bytearray])){
 value=$B.$getattr(value,'decode')('latin-1')}else if($B.$isinstance(value,_b_.memoryview)){value=$B.$getattr(_b_.memoryview.tobytes(value),'decode')('latin-1')}
-if(! $B.$isinstance(value,_b_.str)){if(base !==_b_.None){console.log('value',value)
+if(! $B.$isinstance(value,_b_.str)){if(base !==_b_.None){console.log('value',value,'base',base)
 console.log(Error('trace').stack)
 $B.RAISE(_b_.TypeError,"int() can't convert non-string with explicit base")}else{
 for(let special_method of['__int__','__index__','__trunc__']){let num_value=$B.$getattr($B.get_class(value),special_method,_b_.None)
@@ -10264,8 +10264,9 @@ function frexp(x){
 var x1=x
 if($B.$isinstance(x,float)){
 if(isnan(x)||isinf(x)){return[x,0]}
-x1=float_value(x).value}else if($B.$isinstance(x,$B.long_int)){var exp=x.value.toString(2).length,power=2n**BigInt(exp)
-return[$B.fast_float(Number(x.value)/Number(power)),exp]}
+x1=float_value(x).value}else if($B.$isinstance(x,_b_.int)){x=$B.int_value(x)
+if(typeof x=="bigint"){var exp=x.toString(2).length,power=2n**BigInt(exp)
+return[$B.fast_float(Number(x)/Number(power)),exp]}}
 if(x1==0){return[0,0]}
 var sign=1,ex=0,man=x1
 if(man < 0.){sign=-sign
@@ -10560,12 +10561,12 @@ if(isnan(self)){$B.RAISE(_b_.ValueError,"Cannot pass NaN to "+
 var tmp=frexp(self),fp=tmp[0],exponent=tmp[1]
 for(var i=0;i < 300;i++){if(fp==Math.floor(fp)){break}else{fp*=2
 exponent--}}
-var numerator=_b_.int.$factory(fp),py_exponent=_b_.abs(exponent),denominator=1,x
-if($B.shift1_cache[py_exponent]!==undefined){x=$B.shift1_cache[py_exponent]}else{x=$B.$getattr(1,"__lshift__")(py_exponent)
+var numerator=_b_.int.$factory(fp,_b_.None),py_exponent=_b_.abs(exponent),denominator=1,x
+if($B.shift1_cache[py_exponent]!==undefined){x=$B.shift1_cache[py_exponent]}else{x=$B.$call($B.$getattr(1,"__lshift__"),py_exponent)
 $B.shift1_cache[py_exponent]=x}
 py_exponent=x
 if(exponent > 0){numerator=$B.rich_op("__mul__",numerator,py_exponent)}else{denominator=py_exponent}
-return $B.fast_tuple([_b_.int.$factory(numerator),_b_.int.$factory(denominator)])}
+return $B.fast_tuple([numerator,denominator])}
 float_funcs.conjugate=function(self){$B.RAISE(_b_.NotImplementedError,'conjugate')}
 float_funcs.from_number=function(self){var $=$B.args('from_number',1,{number:null},['number'],arguments,{},null,null)
 var number=$.number
@@ -10766,23 +10767,26 @@ x.real.value*y.imag.value)}
 _b_.complex.nb_negative=function(self){return make_complex(-self.real.value,-self.imag.value)}
 _b_.complex.nb_positive=function(self){return self}
 _b_.complex.nb_power=function(self,other,mod){
+var[x,y]=conv_complex(self,other)
+if(x===$B.NULL ||y===$B.NULL){return _b_.NotImplemented}
 if(mod !==undefined && mod !==_b_.None){$B.RAISE(_b_.ValueError,'complex modulo')}
 if($B.rich_comp('__eq__',other,1)){var funcs=_b_.float.$funcs
-if(funcs.isinf(self.real)||funcs.isninf(self.real)||
-funcs.isinf(self.imag)||funcs.isninf(self.imag)){$B.RAISE(_b_.OverflowError,'complex exponentiation')}
+if(funcs.isinf(x.real)||funcs.isninf(x.real)||
+funcs.isinf(x.imag)||funcs.isninf(x.imag)){$B.RAISE(_b_.OverflowError,'complex exponentiation')}
 return self}
 var small_int=null
-if($B.$isinstance(other,_b_.int)&& _b_.abs(other)< 100){small_int=other}else if($B.$isinstance(other,_b_.float)&&
-Number.isInteger(other.value)&& Math.abs(other.value < 100)){small_int=other.value}else if($B.$isinstance(other,complex)&& other.imag.value==0 &&
-Number.isInteger(other.real.value)&&
-Math.abs(other.real.value)< 100){small_int=other.real.value}
+if(y.imag.value==0 &&
+Number.isInteger(y.real.value)&&
+Math.abs(y.real.value)< 100){small_int=y.real.value
+console.log('small int',small_int)}
 if(small_int !==null){return c_powi(self,small_int)}
 if($B.$isinstance(other,_b_.float)){other=_b_.float.$to_js_number(other)}
-if(self.real.value==0 && self.imag.value==0){if($B.$isinstance(other,complex)&&
-(other.imag.value !=0 ||other.real.value < 0)){$B.RAISE(_b_.ZeroDivisionError,'0.0 to a negative or complex power')}
+if(x.real.value==0 && x.imag.value==0){if(y.imag.value !=0 ||y.real.value < 0){$B.RAISE(_b_.ZeroDivisionError,'0.0 to a negative or complex power')}
 return $B.make_complex(0,0)}
-var exp=complex2expo(self),angle=exp.angle,res=Math.pow(exp.norm,other)
-if($B.$isinstance(other,_b_.int)){return make_complex(res*Math.cos(angle*other),res*Math.sin(angle*other))}else if($B.$isinstance(other,_b_.float)){return make_complex(res*Math.cos(angle*other.value),res*Math.sin(angle*other.value))}else if($B.$isinstance(other,complex)){
+var exp=complex2expo(x),angle=exp.angle
+if($B.$isinstance(other,_b_.int)){var res=Math.pow(exp.norm,other)
+return make_complex(res*Math.cos(angle*other),res*Math.sin(angle*other))}else if($B.$isinstance(other,_b_.float)){var res=Math.pow(exp.norm,other)
+return make_complex(res*Math.cos(angle*other.value),res*Math.sin(angle*other.value))}else if($B.$isinstance(other,complex)){
 var x=other.real.value,y=other.imag.value
 var pw=Math.pow(exp.norm,x)*Math.pow(Math.E,-y*angle),theta=y*Math.log(exp.norm)-x*angle
 if(pw==Number.POSITIVE_INFINITY ||pw===Number.NEGATIVE_INFINITY){$B.RAISE(_b_.OverflowError,'complex exponentiation')}

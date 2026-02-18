@@ -9,8 +9,8 @@ const INF = $B.fast_float(Number.POSITIVE_INFINITY),
 
 var float_check = function(x) {
     // Returns a Javascript number
-    if($B.exact_type(x, $B.long_int)){
-        var res = parseInt(x.value)
+    if(typeof x == 'bigint'){
+        var res = parseInt(x)
         if(! isFinite(res)){
             $B.RAISE(_b_.OverflowError, 'int too big for float')
         }
@@ -21,7 +21,6 @@ var float_check = function(x) {
     try{
         return _b_.float.$factory(x).value
     }catch(err){
-        console.log(x, _b_.float.$factory(x))
         $B.RAISE(_b_.TypeError, 'must be real number, not ' +
             $B.class_name(x))
     }
@@ -70,8 +69,8 @@ function nextUp(x){
         }
         return _mod.inf
     }
-    if($B.$isinstance(x, $B.long_int)){
-        x = Number(x.value)
+    if(typeof x == "bigint"){
+        x = Number(x)
     }else if($B.$isinstance(x, _b_.float)){
         x = x.value
     }
@@ -277,6 +276,52 @@ function m_lgamma(x){
         overflow()
     }
     return r;
+}
+
+// helpers for big integers
+
+var big_int = {
+    infos: function(self){
+        // return a JS object with bit length, power of 2 below self,
+        // rest = self - pow2, relative_rest = rst / pow2
+        var nbits = _b_.int.tp_funcs.bit_length(self),
+            pow2 = 2n ** BigInt(nbits - 1),
+            rest = self - pow2,
+            relative_rest = new Number(rest / pow2)
+        return {nbits, pow2, rest, relative_rest}
+    },
+    log2: function(x){
+        if(x.value < 0){
+            $B.RAISE(_b_.ValueError, 'math domain error')
+        }
+        // x = 2 ** (infos.nbits - 1) * ( 1 + infos.relative_rest)
+        var infos = big_int.infos(x)
+        return _b_.float.$factory(infos.nbits - 1 +
+            Math.log(1 + infos.relative_rest / Math.LN2))
+    },
+    log10: function(x){
+        if(x < 0){
+            $B.RAISE(_b_.ValueError, 'math domain error')
+        }
+        // x = mant * 10 ** exp
+        var x_string = x.toString(),
+            exp = x_string.length - 1,
+            mant = parseFloat(x_string[0] + '.' + x_string.substr(1))
+        return _b_.float.$factory(exp + Math.log10(mant))
+    },
+    mant_exp: function(value){
+        // Returns mantissa and exponent of a big integer
+        var exp = value.toString(2).length,
+            exp1 = exp,
+            nb = 0n
+        // 2 ** exp is infinite if n > 1023
+        var nb = Math.floor(exp / 1023),
+            exp1 = BigInt(exp - 1023 * nb)
+        nb = BigInt(nb)
+        var reduced_value = value / 2n ** (nb * 1023n)
+        var mant = Number(reduced_value) / Number(2n ** exp1)
+        return [mant, exp]
+    }
 }
 
 function acos(x){
@@ -1741,7 +1786,7 @@ function isqrt(x){
         return Math.floor(Math.sqrt(x))
     }else{ // big integer
         // adapted from code in mathmodule.c
-        var n = x.value,
+        var n = x,
             bit_length = n.toString(2).length,
             c = BigInt(Math.floor((bit_length - 1) / 2)),
             c_bit_length = c.toString(2).length,
@@ -1797,21 +1842,6 @@ function lgamma(x){
     return m_lgamma(x)
 }
 
-function longint_mant_exp(long_int){
-    // Returns mantissa and exponent of a long integer
-    var value = long_int.value,
-        exp = value.toString(2).length,
-        exp1 = exp,
-        nb = 0n
-    // 2 ** exp is infinite if n > 1023
-    var nb = Math.floor(exp / 1023),
-        exp1 = BigInt(exp - 1023 * nb)
-    nb = BigInt(nb)
-    var reduced_value = long_int.value / 2n ** (nb * 1023n)
-    var mant = Number(reduced_value) / Number(2n ** exp1)
-    return [mant, exp]
-}
-
 var log10_func = Math.log10 || (x => Math.log(x) / Math.log(10)),
     log2_func = Math.log2 || (x => Math.log(x) / Math.log(2))
 
@@ -1826,18 +1856,17 @@ function log(x, base){
         return log2(x)
     }
     var log
-    if($B.$isinstance(x, $B.long_int)){
-        if(x.value <= 0){
-            $B.RAISE(_b_.ValueError, 'math domain error')
-        }
-        var mant_exp = longint_mant_exp(x)
-        log = Math.log(mant_exp[0]) + Math.log(2) * mant_exp[1]
-    }else if($B.$isinstance(x, _b_.int)){
+    if($B.$isinstance(x, _b_.int)){
         x = $B.int_value(x)
         if(x <= 0){
             $B.RAISE(_b_.ValueError, 'math domain error')
         }
-        log = Math.log(x)
+        if(typeof x == 'bigint'){
+            var mant_exp = big_int.mant_exp(x)
+            log = Math.log(mant_exp[0]) + Math.log(2) * mant_exp[1]
+        }else{
+            log = Math.log(x)
+        }
     }else{
         var x1 = float_check(x)
         if(x1 <= 0){
@@ -1861,13 +1890,16 @@ function log(x, base){
 function log1p(x){
     $B.check_nb_args('log1p', 1, arguments)
     $B.check_no_kw('log1p', x)
-    if($B.$isinstance(x, $B.long_int)){
-        if($B.long_int.bit_length(x) > 1024){
-            $B.RAISE(_b_.OverflowError,
-                "int too large to convert to float")
+    if($B.$isinstance(x, _b_.int)){
+        x = $B.int_value(x)
+        if(typeof x == 'bigint'){
+            if(_b_.int.tp_funcs.bit_length(x) > 1024){
+                $B.RAISE(_b_.OverflowError,
+                    "int too large to convert to float")
+            }
+            x = big_int.log2(x + 1n).value
+            return $B.fast_float(Number(x) * Math.LN2)
         }
-        x = $B.long_int.$log2($B.fast_long_int(x.value + 1n))
-        return $B.fast_float(Number(x.value) * Math.LN2)
     }
     x = float_check(x)
     if(x + 1 <= 0){
@@ -1880,12 +1912,15 @@ function log2(x){
     $B.check_nb_args('log2', 1, arguments)
     $B.check_no_kw('log2', x)
     var log2_func = Math.log2 || (x => Math.log(x) / Math.LN2)
-    if($B.$isinstance(x, $B.long_int)){
-        if(x.value <= 0){
-            $B.RAISE(_b_.ValueError, 'math domain error')
+    if($B.$isinstance(x, _b_.int)){
+        x = $B.int_value(x)
+        if(typeof x == 'bigint'){
+            if(x <= 0n){
+                $B.RAISE(_b_.ValueError, 'math domain error')
+            }
+            var mant_exp = big_int.mant_exp(x)
+            return $B.fast_float(log2_func(mant_exp[0]) + mant_exp[1])
         }
-        var mant_exp = longint_mant_exp(x)
-        return $B.fast_float(log2_func(mant_exp[0]) + mant_exp[1])
     }
     if(_b_.float.$funcs.isninf(x)){
         $B.RAISE(_b_.ValueError, '')
@@ -1906,8 +1941,9 @@ function log2(x){
 function log10(x){
     $B.check_nb_args('log10', 1, arguments)
     $B.check_no_kw('log10', x)
-    if($B.$isinstance(x, $B.long_int)){
-        return $B.fast_float($B.long_int.$log10(x).value)
+    x = $B.int_value(x)
+    if(typeof x == "bigint"){
+        return $B.fast_float(big_int.log10(x).value)
     }
     x = float_check(x)
     if(x <= 0){
@@ -1999,11 +2035,7 @@ function byteArrayToDouble(bytearray) {
 
 function addSteps(array, steps){
     // convert to BigInt, avoids issue when steps >= 2 ** 32
-    if($B.exact_type(steps, $B.long_int)){
-        steps = steps.value
-    }else{
-        steps = BigInt(steps)
-    }
+    steps = $B.to_bigint(steps)
     var positive = steps > 0n
     if(steps < 0n){
         steps = -steps
@@ -2320,8 +2352,9 @@ function sinh(x) {
 }
 
 function sqrt(x){
-    $B.check_nb_args('sqrt ', 1, arguments)
-    $B.check_no_kw('sqrt ', x)
+    $B.check_nb_args_no_kw('sqrt ', 1, arguments)
+
+    float_check(x)
 
     if(_b_.float.$funcs.isninf(x)){
         value_error()
@@ -2416,7 +2449,7 @@ function long_add_would_overflow(a, b){
 }
 
 function PyLong_CheckExact(n){
-    return typeof n == 'number' || $B.exact_type(n, $B.long_int)
+    return typeof n == 'number' ||typeof n == "bigint"
 }
 
 /*
@@ -2582,11 +2615,11 @@ function sumprod(p, q){
                        times quantity, measurements with integer weights, or
                        data selected by a vector of bools. */
                     flt_p = p_i
-                    flt_q = _b_.int.$int_value(q_i)
+                    flt_q = $B.int_value(q_i)
                 }else if(q_type_float && (PyLong_CheckExact(p_i) ||
                                           typeof p_i == 'boolean')) {
                     flt_q = q_i
-                    flt_p = _b_.int.$int_value(p_i)
+                    flt_p = $B.int_value(p_i)
                 }else{
                     finalize_flt_path()
                 }
@@ -2685,11 +2718,12 @@ function ulp(){
             return _mod.nan
         }
     }
+    x = $B.int_value(x)
     if(typeof x == "number"){
         return x >= 0 ? $B.fast_float(nextUp(x) - x) :
                        $B.fast_float(x - (-nextUp(-x)))
-    }else if($B.$isinstance(x, $B.long_int)){
-        x = Number($B.to_bigint(x))
+    }else if(typeof x == "bigint"){
+        x = Number(x)
         return x > 0 ? $B.fast_float(nextUp(x) - x) :
                        $B.fast_float(x - (-nextUp(-x)))
     }else{
