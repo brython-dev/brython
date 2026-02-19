@@ -518,6 +518,13 @@ object_funcs.__reduce__ = function(cls){
 
 object_funcs.__reduce_ex__ = function(self, protocol){
     var klass = $B.get_class(self)
+    var reduce = $B.$getattr(klass, '__reduce__')
+
+    if(reduce !== object.tp_funcs.__reduce__ &&
+            ((reduce.ob_type === $B.method_descriptor) &&
+             (reduce.method !== object.tp_funcs.__reduce__))){
+        return $B.$call(reduce, self)
+    }
     if($B.imported.copyreg === undefined){
         $B.$import('copyreg')
     }
@@ -526,13 +533,6 @@ object_funcs.__reduce_ex__ = function(self, protocol){
         return $B.$call(_reduce_ex, self, protocol)
     }
 
-    var reduce = $B.$getattr(klass, '__reduce__')
-
-    if(reduce !== object.tp_funcs.__reduce__ &&
-            ((reduce.ob_type === $B.method_descriptor) &&
-             (reduce.method !== object.tp_funcs.__reduce__))){
-        return $B.$call(reduce, self)
-    }
     var res = [$B.module_getattr($B.imported.copyreg, '__newobj__')]
     var arg2 = [klass]
     var newargs = getNewArguments(self, klass)
@@ -587,7 +587,8 @@ _b_.object.functions_or_methods = ["__new__"]
 _b_.object.tp_methods = [
     "__reduce_ex__", "__reduce__", "__getstate__", "__subclasshook__",
     "__init_subclass__", "__format__", "__sizeof__",
-    "__dir__"]
+    "__dir__"
+]
 
 _b_.object.classmethods = ["__init_subclass__"]
 

@@ -1815,8 +1815,8 @@ dict_keyiterator_funcs.__length_hint__ = function(self){
 }
 
 dict_keyiterator_funcs.__reduce__ = function(self){
-    return $B.fast_tuple([_b_.iter,
-        $B.fast_tuple([$B.$list(Array.from(dict_keyiterator.tp_iternext(self)))])])
+    var keys = $B.$list(Array.from($B.dict_keyiterator.tp_iternext(self)))
+    return $B.fast_tuple([_b_.iter, $B.fast_tuple([keys])])
 }
 
 $B.dict_keyiterator.tp_methods = ["__length_hint__", "__reduce__"]

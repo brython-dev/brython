@@ -1693,19 +1693,20 @@ var Loader = {
     __name__ : "Loader"
 }
 
-var _importlib_module = {
-    ob_type : Module,
-    __name__ : "_importlib",
-    Loader: Loader,
-    VFSFinder: VFSFinder,
-    StdlibStatic: StdlibStaticFinder,
-    ImporterPath: PathFinder,
-    UrlPathFinder: url_hook,
-    optimize_import_for_path : optimize_import_for_path
-}
-_importlib_module.__repr__ = _importlib_module.__str__ = function(){
-return "<module '_importlib' (built-in)>"
-}
+var _importlib_module = Module.$factory('_importlib', _b_.None)
+
+$B.assign_dict(_importlib_module,
+    {
+        __name__ : "_importlib",
+        Loader: Loader,
+        VFSFinder: VFSFinder,
+        StdlibStatic: StdlibStaticFinder,
+        ImporterPath: PathFinder,
+        UrlPathFinder: url_hook,
+        optimize_import_for_path : optimize_import_for_path
+    }
+)
+
 $B.imported["_importlib"] = _importlib_module
 
 })(__BRYTHON__);

@@ -261,8 +261,7 @@ $B.method_descriptor.tp_descr_get = function(self, obj, klass){
     f.ob_type = $B.builtin_method
     f.$infos = self.$infos
     f.ml = {ml_name: self.d_name}
-    f.m_self = self
-    f.obj = obj
+    f.m_self = obj
     return f
 }
 
