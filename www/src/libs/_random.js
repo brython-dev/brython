@@ -283,13 +283,7 @@ function RandomStream(seed) {
         }
 
         // Transform to long integer
-        if(typeof seed == "number"){
-            seed = BigInt(seed)
-        }else if($B.exact_type(seed, $B.long_int)){
-            seed = seed.value
-        }else{
-            return random.seed(seed.$brython_value)
-        }
+        seed = $B.to_bigint(seed)
 
         // Take abs(seed)
         seed = seed > 0 ? seed : -seed
@@ -366,7 +360,7 @@ Random_funcs.getrandbits = function(){
         arguments, {}, null, null)
     var self = $.self,
         k = $B.PyNumber_Index($.k)
-    
+
     if(k < 0){
         $B.RAISE(_b_.ValueError, 'number of bits must be non-negative')
     }
