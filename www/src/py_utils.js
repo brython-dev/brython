@@ -1528,7 +1528,6 @@ $B.$call = function(callable, ...args){
         console.log('call_method', call_method)
     }
     if(call_method === $B.NULL){
-        console.log('not callable', callable)
         $B.RAISE(_b_.TypeError, "'" + $B.class_name(callable) +
             "' object is not callable")
     }

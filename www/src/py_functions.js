@@ -273,21 +273,21 @@ function_funcs.__closure___set = _b_.None
 function_funcs.__code___get = function(self){
     $B.check_infos(self)
     var res = {
-        ob_type: _b_.code,
+        ob_type: $B.code,
         dict: $B.empty_dict()
     }
     for(var attr in self.$infos.__code__){
-        $B.str_dict_set(res.dict, attr, self.$infos.__code__[attr])
+        res[attr] = self.$infos.__code__[attr]
     }
-    res.name = self.$infos.__name__
-    res.filename = self.$infos.__code__.co_filename
+    res.co_name = self.$infos.__name__
+    res.co_filename = self.$infos.__code__.co_filename
     res.co_code = self + "" // Javascript source code
     return res
 }
 
 function_funcs.__code___set = function(self, value){
     $B.check_infos(self)
-    if(! $B.$isinstance(value, _b_.code)){
+    if(! $B.$isinstance(value, $B.code)){
         $B.RAISE(_b_.TypeError,
             '__code__ must be set to a code object')
     }

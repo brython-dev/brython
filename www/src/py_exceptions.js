@@ -291,7 +291,7 @@ frame_funcs.f_code_get = function(self){
             dict: $B.empty_dict()
         }
         for(var attr in infos){
-            $B.str_dict_set(res.dict, attr, infos[attr])
+            res[attr] = infos[attr]
         }
         positions = self.positions ?? positions
     }
@@ -299,11 +299,7 @@ frame_funcs.f_code_get = function(self){
     positions = positions.map($B.decode_position)
     var co_positions = () => $B.$list(positions)
     co_positions.ob_type = $B.function
-    if(res.dict === undefined){
-        console.log('no dict for f_code', self)
-    }
-    res.dict = res.dict ?? $B.empty_dict()
-    $B.str_dict_set(res.dict, 'co_positions', co_positions)
+    res.co_positions = co_positions
     return res
 }
 
@@ -390,7 +386,7 @@ $B.make_f_code = function(frame, varnames){
         ob_type: $B.code,
         dict: $B.empty_dict()
     }
-    Object.assign(frame.f_code.dict.$strings,
+    Object.assign(frame.f_code,
         {
             co_argcount: 1,
             co_firstlineno: frame.$lineno,
