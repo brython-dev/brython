@@ -393,7 +393,7 @@
     }
 
     modules['browser'] = browser
-
+    
     // Class for Javascript "undefined"
     $B.UndefinedType = $B.make_builtin_class("UndefinedType")
 
@@ -1433,9 +1433,10 @@
                     }
                 )
             }
-            _b_.dict.$setitem(module_obj.dict, attr, module_obj[attr])
+            $B.module_setattr(module_obj, attr, module_obj[attr])
         }
-        module_obj.__name__ = name
+        $B.module_setattr(module_obj, '__name__', name)
+        $B.module_setattr(module_obj, '__module__', 'builtins')
     }
 
     for(let attr in modules){
