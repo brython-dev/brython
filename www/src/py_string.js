@@ -1155,7 +1155,7 @@ str.$factory = function(arg, encoding){
         var klass = $B.get_class(arg)
         var method = $B.search_slot(klass, 'tp_str', $B.NULL)
         if(method !== $B.NULL){
-            res = method(arg)
+            res = $B.$call(method, arg)
         }else{
             res = _b_.repr(arg)
         }

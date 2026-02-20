@@ -398,9 +398,11 @@ $B.make_annotate_func = function(dict, annotations, class_frame){
             __kwdefaults__: _b_.None,
             __name__: '__annotate__',
             __module__: class_frame[2],
-            __qualname__: class_frame[0] + '.__annotate__'
+            __qualname__: class_frame[0] + '.__annotate__',
+            __file__: class_frame.__file__
         }
     )
+    $B.setup_function(__annotate_func__)
 }
 
 $B.check_annotate_format = function(format){
@@ -408,6 +410,8 @@ $B.check_annotate_format = function(format){
         $B.RAISE(_b_.TypeError, '__annotate__ argument should be ' +
             `int, not ${$B.class_name(format)}`)
     }
+    format = $B.int_value(format)
+    console.log('format', format)
     if(format != 1 && format != 2){
         $B.RAISE(_b_.NotImplementedError, '')
     }
@@ -1175,7 +1179,7 @@ _b_.type.tp_new = function(metatype, name, bases, cl_dict, extra_kwargs){
                 {}, 'args', 'kwds')
     var args = $.args,
         kwds = $.kwds
-    var test = false // name == 'TestResults'
+    var test = false // name == 'Movie'
     if(test){
         console.log('type.tp_new', name, 'metatype', metatype,
             'extrakw', extra_kwargs)
@@ -1198,6 +1202,7 @@ _b_.type.tp_new = function(metatype, name, bases, cl_dict, extra_kwargs){
         name,
         bases
     }
+
     // PyObject *type = NULL;
     var class_obj = {
         ob_type: metatype,
@@ -1433,8 +1438,8 @@ type_funcs.__module___get = function(self){
     return 'builtins'
 }
 
-type_funcs.__module___set = function(self){
-
+type_funcs.__module___set = function(self, value){
+    $B.str_dict_set(self.dict, '__module__', value)
 }
 
 type_funcs.__mro___get = function(self){

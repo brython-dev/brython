@@ -655,11 +655,13 @@ def call_annotate_function(annotate, format, *, owner=None, _is_evaluate=False):
     on the generated ForwardRef objects.
 
     """
+    print('annotationlib 658, annotate', annotate, type(annotate))
     if format == Format.VALUE_WITH_FAKE_GLOBALS:
         raise ValueError("The VALUE_WITH_FAKE_GLOBALS format is for internal use only")
     try:
         return annotate(format)
     except NotImplementedError:
+        print('NotImplementedError for format')
         pass
     if format == Format.STRING:
         # STRING is implemented by calling the annotate function in a special
@@ -718,6 +720,7 @@ def call_annotate_function(annotate, format, *, owner=None, _is_evaluate=False):
         closure = _build_closure(
             annotate, owner, is_class, globals, allow_evaluation=True
         )
+        print('annotationlib 723', annotate.__code__)
         func = types.FunctionType(
             annotate.__code__,
             globals,

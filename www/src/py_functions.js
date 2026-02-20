@@ -195,6 +195,9 @@ $B.function.tp_repr = function(self){
 }
 
 $B.function.tp_call = function(self, ...args){
+    if(typeof self !== 'function'){
+        console.log('not a function', self)
+    }
     return self(...args)
 }
 
@@ -206,11 +209,11 @@ $B.function.tp_descr_get = function(self, obj){
 }
 
 $B.function.tp_new = function(cls, infos, globals){
-    return {
-        ob_type: $B.function,
-        $function_infos: infos,
-        globals
-    }
+    console.log('funcion new', cls, infos, globals)
+    var f = eval(infos.co_code)
+    f.ob_type = $B.function
+    f.func_globals = globals
+    return f
 }
 
 var function_funcs = $B.function.tp_funcs = {}
@@ -401,7 +404,7 @@ $B.setup_function = function(f){
     f.dict = $B.empty_dict()
     f.$args_parser = $B.make_args_parser_and_parse
     f.func_doc = f.$function_infos[$B.func_attrs.__doc__]
-    f.func_globals = $B.frame_obj.frame[3]
+    f.func_globals = $B.obj_dict($B.frame_obj.frame[3])
     f.func_module = f.$function_infos[$B.func_attrs.__module__]
 }
 

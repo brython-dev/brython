@@ -286,10 +286,13 @@ $B.addToImported = function(name, modobj){
             modobj[attr].ob_type = $B.function
             modobj[attr].dict = $B.empty_dict()
             $B.add_function_infos(modobj, attr, name)
-        }else if($B.$isinstance(modobj[attr], _b_.type) &&
-                $B.str_dict_get(modobj[attr].dict, '__module__', $B.NULL) ===
-                $B.NULL){
-            $B.str_dict_set(modobj[attr].dict, '__module__', name)
+        }else if($B.$isinstance(modobj[attr], _b_.type)){
+            if(modobj[attr].dict){
+                if($B.str_dict_get(modobj[attr].dict, '__module__', $B.NULL) ===
+                        $B.NULL){
+                    $B.str_dict_set(modobj[attr].dict, '__module__', name)
+                }
+            }
         }
         $B.module_setattr(module, attr, modobj[attr])
     }
