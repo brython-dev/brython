@@ -291,9 +291,6 @@ function set_symmetric_difference_update(so, other){
     return _b_.None
 }
 
-
-set.__class_getitem__ = $B.$class_getitem
-
 function set_eq(self, other){
     if($B.$isinstance(other, [_b_.set, _b_.frozenset])){
       if(self.$used != other.$used){
@@ -616,7 +613,9 @@ _b_.set.sq_contains = function(self, item){
 
 var set_funcs = _b_.set.tp_funcs = {}
 
-set_funcs.__class_getitem__ = $B.$class_getitem
+set_funcs.__class_getitem__ = function(cls, items){
+    return $B.$class_getitem(cls, items)
+}
 
 set_funcs.__reduce__ = function(self){
     return $B.fast_tuple([$B.get_class(self),

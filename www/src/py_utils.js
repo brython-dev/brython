@@ -1528,11 +1528,20 @@ $B.$call = function(callable, ...args){
         console.log('call_method', call_method)
     }
     if(call_method === $B.NULL){
+        console.log('not callable', callable)
+        Error.stackTraceLimit = 50
+        console.log(Error().stack)
         $B.RAISE(_b_.TypeError, "'" + $B.class_name(callable) +
             "' object is not callable")
     }
-    if(test && typeof call_method !== 'function'){
-        console.log('cannot apply call method', call_method)
+    if(typeof call_method !== 'function'){
+        if($B.search_slot($B.get_class(call_method), 'tp_call', $B.NULL)){
+            // for instance __call__ might be set to dict
+            return $B.$call(call_method, ...args)
+        }else{
+            $B.RAISE(_b_.TypeError, "'" + $B.class_name(callable) +
+                "' object is not callable")
+        }
     }
     var res = call_method.apply(null, arguments)
     if(test){
@@ -2060,7 +2069,21 @@ $B.rich_op1 = function(op, x, y){
     var res
     var fail
     var op_method = $B.search_in_mro(x_type, op, $B.NULL)
+    var test = false // $B.get_name(x_type) == 'MagicMock'
+    if(test){
+        console.log('x', x, 'op', op, 'op_method', op_method)
+    }
     if(op_method !== $B.NULL){
+        if(test){
+            console.log('type(op_method) has __get__ ?', _b_.hasattr(op_method, '__get__'))
+        }
+        var getter = $B.$getattr($B.get_class(op_method), '__get__', $B.NULL)
+        if(test){
+            console.log(x, 'getter', getter)
+        }
+        if(getter !== $B.NULL){
+            op_method = $B.$call(getter, op_method, $B.NULL)
+        }
         res = $B.$call(op_method, x, y)
         if(res !== _b_.NotImplemented){
             return res

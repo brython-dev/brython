@@ -208,11 +208,10 @@ $B.function.tp_descr_get = function(self, obj){
     return $B.$call($B.method, self, obj)
 }
 
-$B.function.tp_new = function(cls, infos, globals){
-    console.log('funcion new', cls, infos, globals)
-    var f = eval(infos.co_code)
-    f.ob_type = $B.function
-    f.func_globals = globals
+$B.function.tp_new = function(){
+    var [cls, ...args] = arguments
+    var f = $B.function.$factory(...args)
+    f.cls = cls
     return f
 }
 

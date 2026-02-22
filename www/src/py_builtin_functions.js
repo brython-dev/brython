@@ -1174,8 +1174,6 @@ var missing_attr = {'missing_attr': true}
 var NULL = $B.NULL
 
 $B.search_in_dict = function(obj, attr, _default){
-    var test = false // attr == 'now'
-    var is_type = $B.is_type(obj)
     if(obj.dict){
         var v = $B.str_dict_get(obj.dict, attr, $B.NULL)
         if(v !== $B.NULL){
@@ -1223,7 +1221,7 @@ $B.object_getattribute = function(obj, attr){
 
 $B.$getattr = function(obj, attr, _default){
     // Used internally to avoid having to parse the arguments
-    var test = false // attr == 'to_dict'
+    var test = false // attr == 'KW_ONLY'
     if(test){
         console.log('$getattr', obj, attr)
     }
@@ -1444,7 +1442,7 @@ $B.$isinstance = function(obj, cls){
     }
     var klass = $B.get_class(cls)
     if(klass === $B.UnionType){
-        for(kls of cls.items){
+        for(kls of cls.args){
             if($B.$isinstance(obj, kls)){
                 return true
             }

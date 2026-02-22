@@ -283,7 +283,6 @@ _b_.complex.nb_power = function(self, other, mod){
             Number.isInteger(y.real.value) &&
             Math.abs(y.real.value) < 100){
         small_int = y.real.value
-        console.log('small int', small_int)
     }
     if(small_int !== null){
         return c_powi(self, small_int)

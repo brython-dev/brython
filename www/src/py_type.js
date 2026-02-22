@@ -411,7 +411,6 @@ $B.check_annotate_format = function(format){
             `int, not ${$B.class_name(format)}`)
     }
     format = $B.int_value(format)
-    console.log('format', format)
     if(format != 1 && format != 2){
         $B.RAISE(_b_.NotImplementedError, '')
     }
@@ -1014,7 +1013,7 @@ _b_.type.tp_call = function(){
         kw = $.kw,
         kw_len = _b_.dict.mp_length(kw)
 
-    var test = false // cls.tp_name === 'Square2'
+    var test = false // cls.tp_name === 'TypeVar'
     if(test){
         console.log('type.tp_call', cls, args)
         console.log(Error('trace').stack)
@@ -1025,8 +1024,6 @@ _b_.type.tp_call = function(){
             return $B.get_class(args[0])
         }
         if(args.length !== 1 && args.length !== 3){
-            console.log(Error('trace').stack)
-            console.log('args', args)
             $B.RAISE(_b_.TypeError, 'type() takes 1 or 3 arguments')
         }
     }
@@ -1347,7 +1344,29 @@ type_funcs.__abstractmethods___set = function(cls, value){
 }
 
 type_funcs.__annotate___get = function(self){
-
+    if(! (self.tp_flags & TPFLAGS.HEAPTYPE)){
+        $B.RAISE(_b_.AttributeError,
+            `type object '${$B.get_name(self)}' ` +
+            `has no attribute '__annotate__'`
+        )
+    }
+    // First try __annotate__, in case that's been set explicitly
+    var annotate = $B.str_dict_get(self.dict, '__annotate__', $B.NULL)
+    if(annotate === $B.NULL){
+        annotate = $B.str_dict_get(self.dict, '__annotate_func__', $B.NULL)
+    }
+    if(annotate !== $B.NULL){
+        var get = $B.search_slot($B.get_class(annotate), 'tp_descr_get',
+            $B.NULL)
+        if(get !== $B.NULL){
+            console.log('get', get, $B.get_class(get))
+            annotate = get(annotate, $B.NULL, self)
+        }
+    }else{
+        annotate = _b_.None;
+        $B.str_dict_set(self.dict, '__annotate_func__', annotate)
+    }
+    return annotate
 }
 
 type_funcs.__annotate___set = function(self){
@@ -1366,8 +1385,11 @@ type_funcs.__annotations___get = function(cls){
     return $B.$call(ann_func, 1)
 }
 
-type_funcs.__annotations___set = function(self){
-
+type_funcs.__annotations___set = function(cls, value){
+    if(value === $B.NULL){
+        value = $B.empty_dict()
+    }
+    $B.str_dict_set(cls.dict, '__annotations__', value)
 }
 
 type_funcs.__bases___get = function(cls){
@@ -1574,12 +1596,7 @@ _b_.property.tp_descr_get = function(self, obj, type){
     if(self.prop_get === _b_.None){
         $B.RAISE_ATTRIBUTE_ERROR("unreadable attribute", self, '__get__')
     }
-    try{
-        return $B.$call(self.prop_get, obj)
-    }catch(err){
-        console.log('error', err)
-        throw err
-    }
+    return $B.$call(self.prop_get, obj)
 }
 
 _b_.property.tp_init = function(){
@@ -2212,6 +2229,31 @@ $B.GenericAlias.tp_getset = ["__parameters__", "__typing_unpacked_tuple_args__"]
 
 $B.set_func_names($B.GenericAlias, "types")
 
+/*
+__repr__ <slot wrapper '__repr__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
+__hash__ <slot wrapper '__hash__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
+__getattribute__ <slot wrapper '__getattribute__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
+__lt__ <slot wrapper '__lt__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
+__le__ <slot wrapper '__le__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
+__eq__ <slot wrapper '__eq__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
+__ne__ <slot wrapper '__ne__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
+__gt__ <slot wrapper '__gt__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
+__ge__ <slot wrapper '__ge__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
+__or__ <slot wrapper '__or__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
+__ror__ <slot wrapper '__ror__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
+__getitem__ <slot wrapper '__getitem__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
+__mro_entries__ <method '__mro_entries__' of 'typing.Union' objects> <class 'method_descriptor'>
+__class_getitem__ <method '__class_getitem__' of 'typing.Union' objects> <class 'classmethod_descriptor'>
+__args__ <member '__args__' of 'typing.Union' objects> <class 'member_descriptor'>
+__name__ <attribute '__name__' of 'typing.Union' objects> <class 'getset_descriptor'>
+__qualname__ <attribute '__qualname__' of 'typing.Union' objects> <class 'getset_descriptor'>
+__origin__ <attribute '__origin__' of 'typing.Union' objects> <class 'getset_descriptor'>
+__parameters__ <attribute '__parameters__' of 'typing.Union' objects> <class 'getset_descriptor'>
+__doc__ Represent a union type
+
+E.g. for int | str <class 'str'>
+*/
+
 $B.UnionType = $B.make_builtin_class("UnionType")
 
 $B.UnionType.$factory = function(items){
@@ -2221,33 +2263,18 @@ $B.UnionType.$factory = function(items){
     }
 }
 
-var UnionType_funcs = $B.UnionType.tp_funcs = {}
-
-$B.UnionType.__class_getitem__ = function(cls, items){
-    if($B.$isinstance(items, _b_.tuple)){
-        return $B.UnionType.$factory(items)
-    }else{
-        return items
-    }
-}
-
-$B.UnionType.__eq__ = function(self, other){
+$B.UnionType.tp_richcompare = function(self, other, op){
     if(! $B.$isinstance(other, $B.UnionType)){
         return _b_.NotImplemented
     }
-    return $B.list_eq(self.args, other.args)
-}
-
-$B.UnionType.__or__ = function(self, other){
-    var items = self.args.slice()
-    if(! items.includes(other)){
-        items.push(other)
+    switch(op){
+        case '__eq__':
+            return $B.list_eq(self.args, other.args)
+        case '__ne__':
+            return ! $B.list_eq(self.args, other.args)
+        default:
+            return _b_.NotImplemented
     }
-    return $B.UnionType.$factory(items)
-}
-
-UnionType_funcs.__parameters___get = function(self){
-    return $B.fast_tuple([]) // XXX
 }
 
 $B.UnionType.tp_repr = function(self){
@@ -2255,7 +2282,7 @@ $B.UnionType.tp_repr = function(self){
     for(var item of self.args){
         if($B.is_type(item)){
             var s = $B.get_name(item)
-            if(item.__module__ !== "builtins"){
+            if($B.str_dict_get(item.dict, '__module__') !== "builtins"){
                 s = item.__module__ + '.' + s
             }
             t.push(s)
@@ -2266,11 +2293,37 @@ $B.UnionType.tp_repr = function(self){
     return t.join(' | ')
 }
 
+$B.UnionType.nb_or = function(self, other){
+    var items = self.args.slice()
+    if(! items.includes(other)){
+        items.push(other)
+    }
+    return $B.UnionType.$factory(items)
+}
+
+var UnionType_funcs = $B.UnionType.tp_funcs = {}
+
+UnionType_funcs.__class_getitem__ = function(cls, items){
+    if($B.$isinstance(items, _b_.tuple)){
+        return $B.UnionType.$factory(items)
+    }else{
+        return items
+    }
+}
+
+UnionType_funcs.__parameters___get = function(self){
+    return $B.fast_tuple([]) // XXX
+}
+
+UnionType_funcs.__parameters___set = _b_.None
+
 $B.UnionType.tp_members = [
     ["__args__", $B.TYPES.OBJECT, "args", 1]
 ]
 
 $B.UnionType.tp_getset = ['__parameters__']
+
+$B.UnionType.classmethods = ["__class_getitem__"]
 
 $B.set_func_names($B.UnionType, "types")
 

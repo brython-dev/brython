@@ -393,7 +393,7 @@
     }
 
     modules['browser'] = browser
-    
+
     // Class for Javascript "undefined"
     $B.UndefinedType = $B.make_builtin_class("UndefinedType")
 
@@ -1632,16 +1632,23 @@ var builtins_doc = "Built-in functions, types, exceptions, and other " +
 $B.imported.builtins = $B.module.tp_new($B.module)
 $B.module.tp_init($B.imported.builtins, 'builtins', builtins_doc)
 
-for(var attr in _b_){
-    $B.module_setattr($B.imported.builtins, attr, _b_[attr])
-}
-$B.module_setattr($B.imported.builtins, '__package__', '')
+$B.imported.builtins.dict = $B.obj_dict(_b_)
+
+$B.module_setattr($B.imported.builtins, '__doc__', builtins_doc)
+//$B.module_setattr($B.imported.builtins, '__name__', 'builtins')
+
+$B.module_setattr($B.imported.builtins, '__package__', _b_.None)
 $B.module_setattr($B.imported.builtins, '__loader__', _b_.None)
 $B.module_setattr($B.imported.builtins, '__spec__',
-    $B.ModuleSpec.$factory({name: 'builtins', origin: 'built-in',
-        has_location: false,
-        loader: _b_.None,
-        submodule_search_locations: _b_.None})
+    $B.ModuleSpec.$factory(
+        {
+            name: 'builtins',
+            origin: 'built-in',
+            has_location: false,
+            loader: _b_.None,
+            submodule_search_locations: _b_.None
+        }
+    )
 )
 
 var copyright = `Copyright (c) 2001 Python Software Foundation.

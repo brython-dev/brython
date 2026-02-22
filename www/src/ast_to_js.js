@@ -560,7 +560,6 @@ function name_scope(name, scopes){
     return {found: false, resolve: scope_names}
 }
 
-
 function resolve_in_namespace(name, ns){
     if(ns.$proxy){
         // namespace is a proxy around the locals argument of exec()
@@ -751,9 +750,15 @@ opclass2dunder['UAdd'] = '__pos__'
 opclass2dunder['USub'] = '__neg__'
 opclass2dunder['Invert'] = '__invert__'
 
+var exclude_from_builtins = [
+    "__doc__", "__loader__",  "__name__",  "__package__",  "__spec__"
+]
+
 var builtins_scope = new Scope("__builtins__")
 for(var name in $B.builtins){
-    builtins_scope.locals.add(name)
+    if(! exclude_from_builtins.includes(name)){
+        builtins_scope.locals.add(name)
+    }
 }
 
 function mark_parents(node){
@@ -3971,6 +3976,7 @@ $B.ast.TypeAlias.prototype.to_js = function(scopes){
     // emulate the function that creates the instance of TypeAliasType
     // as explained in Python Reference
     // https://docs.python.org/3/reference/compound_stmts.html#generic-type-aliases
+    js += prefix + `$B.set_lineno(frame, ${this.lineno})\n`
     js += prefix + `function TYPE_PARAMS_OF_${this.name.id}(){\n`
     indent()
     js += prefix + `var locals_${qualified_name} = {},\n` +
@@ -3999,16 +4005,16 @@ $B.ast.TypeAlias.prototype.to_js = function(scopes){
 
 $B.ast.TypeVar.prototype.to_js = function(){
     check_type_params(this)
-    return `$B.$call($B.imported._typing.TypeVar, '${this.name}', [], ` +
+    return `$B.$call($B.module_getattr($B.imported._typing, 'TypeVar'), '${this.name}', ` +
         `{$kw: [{infer_variance: true}]})`
 }
 
 $B.ast.TypeVarTuple.prototype.to_js = function(){
-    return `$B.$call($B.imported._typing.TypeVarTuple, '${this.name.id}')`
+    return `$B.$call($B.module_getattr($B.imported._typing, 'TypeVarTuple'), '${this.name.id}')`
 }
 
 $B.ast.ParamSpec.prototype.to_js = function(){
-    return `$B.$call($B.imported._typing.ParamSpec, '${this.name.id}')`
+    return `$B.$call($B.module_getattr($B.imported._typing, 'ParamSpec'), '${this.name.id}')`
 }
 
 $B.ast.UnaryOp.prototype.to_js = function(scopes){

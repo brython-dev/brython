@@ -150,7 +150,7 @@ $B.precompiled = {}
 // Current frame
 $B.frame_obj = null
 
-var _b_ = $B.builtins = Object.create(null)
+var _b_ = $B.builtins = {}
 
 $B.created_types = {}
 

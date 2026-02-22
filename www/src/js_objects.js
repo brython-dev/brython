@@ -1214,7 +1214,8 @@ js_array.mp_ass_subscript = function(self, key, value){
     }
 }
 
-js_array.tp_getattro = function(_self, attr){
+js_array.tp_getattroXXXX = function(_self, attr){
+    console.log('js array getattro', _self, attr)
     if(! _b_.list.tp_funcs.hasOwnProperty(attr)){
         // Methods of Python lists take precedence, but if they fail, try
         // attributes of _self Javascript prototype
@@ -1229,6 +1230,11 @@ js_array.tp_getattro = function(_self, attr){
         }
         if(js_array.hasOwnProperty(attr)){
             return js_array[attr]
+        }
+        var method = $B.str_dict_get(js_array.dict, attr, $B.NULL)
+        if(method !== $B.NULL){
+            console.log('method', method)
+            return $B.$call(method, _self, attr)
         }
         return $B.NULL
     }
