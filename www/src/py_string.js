@@ -1153,13 +1153,21 @@ str.$factory = function(arg, encoding){
     }
     if(encoding === $B.NULL && errors === $B.NULL){
         var klass = $B.get_class(arg)
-        var method = $B.search_slot(klass, 'tp_str', $B.NULL)
+        var test = false // klass.tp_name == 'MagicMock'
+        var method = $B.search_in_mro(klass, '__str__', $B.NULL)
+        var getter = $B.NULL
         if(method !== $B.NULL){
-            try{
-                res = $B.$call(method, arg)
-            }catch(err){
-                console.log('err, method', method)
-                throw err
+            getter = $B.search_in_mro($B.get_class(method), '__get__', $B.NULL)
+            if(getter !== $B.NULL){
+                var method1 = $B.$call(getter, method, arg, klass)
+                res = $B.$call(method1)
+            }else{
+                var in_dict = $B.search_in_dict(arg, '__str__', $B.NULL)
+                if(in_dict !== $B.NULL){
+                    res = $B.$call(in_dict)
+                }else{
+                    res = $B.$call(method, arg)
+                }
             }
         }else{
             res = _b_.repr(arg)

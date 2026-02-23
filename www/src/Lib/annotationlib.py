@@ -719,7 +719,6 @@ def call_annotate_function(annotate, format, *, owner=None, _is_evaluate=False):
         closure = _build_closure(
             annotate, owner, is_class, globals, allow_evaluation=True
         )
-        print('annotationlib 723', annotate.__code__)
         func = types.FunctionType(
             annotate.__code__,
             globals,

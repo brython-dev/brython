@@ -1369,8 +1369,11 @@ type_funcs.__annotate___get = function(self){
     return annotate
 }
 
-type_funcs.__annotate___set = function(self){
-
+type_funcs.__annotate___set = function(cls, value){
+    if(value === $B.NULL){
+        $B.RAISE(_b_.TypeError, 'cannot delete __annotate__ attribute')
+    }
+    $B.str_dict_set(cls.dict, '__annotate__', value)
 }
 
 type_funcs.__annotations___get = function(cls){
@@ -1388,6 +1391,7 @@ type_funcs.__annotations___get = function(cls){
 type_funcs.__annotations___set = function(cls, value){
     if(value === $B.NULL){
         value = $B.empty_dict()
+        type.tp_funcs.__annotate___set(cls, _b_.None)
     }
     $B.str_dict_set(cls.dict, '__annotations__', value)
 }

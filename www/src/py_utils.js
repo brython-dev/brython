@@ -1518,7 +1518,7 @@ $B.$call_with_position = function(callable, inum, ...args){
 }
 
 $B.$call = function(callable, ...args){
-    var test = false // callable.d_name == '__str__' // && callable.$function_infos[1] == 'test_gen1'
+    var test = false //callable.d_name == '__str__' // && callable.$function_infos[1] == 'test_gen1'
     var klass = $B.get_class(callable)
     if(test){
         console.log('call', callable, 'klass', klass, 'args', args)
@@ -1535,7 +1535,8 @@ $B.$call = function(callable, ...args){
             "' object is not callable")
     }
     if(typeof call_method !== 'function'){
-        if($B.search_slot($B.get_class(call_method), 'tp_call', $B.NULL)){
+        console.log('not a function', call_method)
+        if($B.search_slot($B.get_class(call_method), 'tp_call', $B.NULL) !== $B.NULL){
             // for instance __call__ might be set to dict
             return $B.$call(call_method, ...args)
         }else{

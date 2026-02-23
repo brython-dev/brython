@@ -1614,7 +1614,7 @@ $B.PyObject_GetIter = function(obj){
 $B.$iter = function(obj, sentinel){
     // Function used internally by core Brython modules, to avoid the cost
     // of arguments control
-    var test = false // $B.get_class(obj).tp_name == 'permutations'
+    var test = $B.get_class(obj).tp_name == 'MagicMock'
     var NULL = {}
     if(test){
         console.log('iter', obj)
@@ -1627,7 +1627,13 @@ $B.$iter = function(obj, sentinel){
             console.log('iter func', iter_func)
         }
         if(iter_func !== $B.NULL){
-            var res = $B.$call(iter_func, obj)
+            var getter = $B.search_in_mro($B.get_class(iter_func), '__get__', $B.NULL)
+            if(getter === $B.NULL){
+                var in_dict = $B.search_in_dict(obj, '__iter__', $B.NULL)
+                var res = $B.$call(in_dict)
+            }else{
+                var res = $B.$call(iter_func, obj)
+            }
             if($B.search_slot($B.get_class(res), 'tp_iternext', $B.NULL) === $B.NULL){
                 console.log('iter, obj', obj, 'result of iter func', res)
                 console.log('no tp_iternext in', $B.get_class(res))
@@ -1990,6 +1996,10 @@ var $print = _b_.print = function(){
     var writer = $B.$getattr(file, 'write')
     for(var i = 0, len = args.length; i < len; i++){
         var arg = _b_.str.$factory(args[i])
+        if(arg == 'GHjkBNcx'){
+            Error.stackTraceLimit = 50
+            console.log(Error('trace call').stack)
+        }
         $B.$call(writer, arg)
         if(i < len - 1){
             $B.$call(writer, sep)
