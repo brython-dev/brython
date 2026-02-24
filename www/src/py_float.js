@@ -549,18 +549,23 @@ const fast_float = $B.fast_float  = function(value){
     }
 }
 
-function conv_float(obj){
-    if($B.$isinstance(obj, _b_.float)){
-        return obj
-    }else if($B.$isinstance(obj, _b_.int)){
-        return _b_.int.nb_float(obj)
-    }else{
-        var float_method = $B.$getattr($B.get_class(obj), '__float__', $B.NULL)
-        if(float_method !== $B.NULL){
-            return $B.$call(float_method, obj)
+function conv_float(...objs){
+    var res = []
+    for(var obj of objs){
+        var x = $B.NULL
+        if($B.$isinstance(obj, _b_.float)){
+            x = obj
+        }else if($B.$isinstance(obj, _b_.int)){
+            x = _b_.int.nb_float(obj)
+        }else{
+            var float_method = $B.$getattr($B.get_class(obj), '__float__', $B.NULL)
+            if(float_method !== $B.NULL){
+                x = $B.$call(float_method, obj)
+            }
         }
+        res.push(x)
     }
-    return $B.NULL
+    return res
 }
 
 // constructor for built-in class 'float'
@@ -734,66 +739,32 @@ _b_.float.tp_richcompare = function(self, other, op){
 }
 
 _b_.float.nb_add = function(self, other){
-    self = conv_float(self)
-    if(self === $B.NULL){
+    var [x, y] = conv_float(self, other)
+    if(x === $B.NULL || y === $B.NULL){
         return _b_.NotImplemented
     }
-    if($B.$isinstance(other, _b_.int)){
-        if(typeof other == "boolean"){
-            return other ? $B.fast_float(self.value + 1) : self
-        }else if(typeof other == 'bigint'){
-            return _b_.NotImplemented //return _b_.float.$factory(self.value + parseInt(other.value))
-        }else{
-            return $B.fast_float(self.value + other)
-        }
-    }
-    if($B.$isinstance(other, _b_.float)){
-        return $B.fast_float(self.value + other.value)
-    }
-    return _b_.NotImplemented
+    return $B.fast_float(x.value + y.value)
 }
 
 _b_.float.nb_subtract = function(self, other){
-    self = conv_float(self)
-    if(self === $B.NULL){
+    var [x, y] = conv_float(self, other)
+    if(x === $B.NULL || y === $B.NULL){
         return _b_.NotImplemented
     }
-    if($B.$isinstance(other, _b_.int)){
-        if(typeof other == "boolean"){
-            return other ? $B.fast_float(self.value - 1) : self
-        }else if($B.is_long_int(other)){
-            return _b_.float.$factory(self.value - parseInt(other.value))
-        }else{
-            return $B.fast_float(self.value - other)
-        }
-    }
-    if($B.$isinstance(other, _b_.float)){
-        return $B.fast_float(self.value - other.value)
-    }
-    return _b_.NotImplemented
+    return $B.fast_float(x.value - y.value)
 }
 
 _b_.float.nb_multiply = function(self, other){
-    self = conv_float(self)
-    if(self === $B.NULL){
+    var [x, y] = conv_float(self, other) //self = conv_float(self)
+    if(x === $B.NULL || y === $B.NULL){
         return _b_.NotImplemented
     }
-    if($B.$isinstance(other, _b_.int)){
-        if($B.is_long_int(other)){
-            return fast_float(self.value * parseFloat(other.value))
-        }
-        other = _b_.int.numerator(other)
-        return fast_float(self.value * other)
-    }
-    if($B.$isinstance(other, float)){
-        return fast_float(self.value * other.value)
-    }
-    return _b_.NotImplemented
+    return fast_float(x.value * y.value)
 }
 
 _b_.float.nb_remainder = function(self, other) {
     // can't use Javascript % because it works differently for negative numbers
-    self = conv_float(self)
+    self = conv_float(self)[0]
     if(self === $B.NULL){
         return _b_.NotImplemented
     }
@@ -819,17 +790,11 @@ _b_.float.nb_remainder = function(self, other) {
 }
 
 _b_.float.nb_divmod = function(self, other){
-    self = conv_float(self)
-    if(self === $B.NULL){
+    var [x, y] = conv_float(self, other) //self = conv_float(self)
+    if(x === $B.NULL || y === $B.NULL){
         return _b_.NotImplemented
     }
-    if(! $B.$isinstance(other, [_b_.int, float])){
-        return _b_.NotImplemented
-    }
-
-    var vx = self.value,
-        wx = float.$factory(other).value
-    var divmod = _float_div_mod(vx, wx)
+    var divmod = _float_div_mod(x.value, y.value)
     return $B.fast_tuple([$B.fast_float(divmod.floordiv),
                           $B.fast_float(divmod.mod)])
 }
@@ -1043,21 +1008,16 @@ _b_.float.nb_float = function(self){
 }
 
 _b_.float.nb_floor_divide = function(self, other){
-    self = conv_float(self)
-    if(self === $B.NULL){
+    var [x, y] = conv_float(self, other) //self = conv_float(self)
+    if(x === $B.NULL || y === $B.NULL){
         return _b_.NotImplemented
     }
-    if(! $B.$isinstance(other, [_b_.int, float])){
-        return _b_.NotImplemented
-    }
-    var vx = self.value,
-        wx = conv_num(other)
-    var divmod = _float_div_mod(vx, wx)
+    var divmod = _float_div_mod(x.value, y.value)
     return $B.fast_float(divmod.floordiv)
 }
 
 _b_.float.nb_true_divide = function(self, other){
-    self = conv_float(self)
+    self = conv_float(self)[0]
     if(self === $B.NULL){
         return _b_.NotImplemented
     }

@@ -43,7 +43,6 @@ _window.customElements   ||= {define: () => {} };
 var href = _window.location.href
 $B.protocol = href.split(':')[0]
 
-$B.BigInt = _window.BigInt
 $B.indexedDB = _window.indexedDB
 
 if($B.brython_path === undefined){
@@ -147,7 +146,7 @@ $B.namespace = Object.create(null)
 // Maps the name of modules to the matching Javascript code
 $B.precompiled = {}
 
-// Current frame
+// Frame object, reset every time an execution frame is entered or exited
 $B.frame_obj = null
 
 var _b_ = $B.builtins = {}

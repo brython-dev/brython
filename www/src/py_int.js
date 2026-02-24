@@ -60,12 +60,11 @@ var int_or_long = int.$int_or_long = function(bigint){
 
 int.$to_js_number = function(obj){
     // convert booleans, long ints, subclasses of int to a Javascript number
+    obj = $B.int_value(obj)
     if(typeof obj == "number"){
         return obj
-    }else if($B.is_long_int(obj)){
-        return Number(obj.value)
-    }else if($B.$isinstance(obj, _b_.int)){
-        return int.$to_js_value(obj.value)
+    }else if(typeof obj == "bigint"){
+        return Number(obj)
     }
     return null
 }
@@ -561,14 +560,13 @@ _b_.int.nb_or = function(self, other){
 
 _b_.int.tp_repr = function(self){
     $B.builtins_repr_check(int, arguments) // in brython_builtins.js
-    var value = int_value(self),
-        x = $B.is_long_int(value) ? value.value : value
+    var value = int_value(self)
     if($B.int_max_str_digits != 0 &&
-            x >= 10n ** BigInt($B.int_max_str_digits)){
+            value >= 10n ** BigInt($B.int_max_str_digits)){
         $B.RAISE(_b_.ValueError, `Exceeds the limit ` +
             `(${$B.int_max_str_digits}) for integer string conversion`)
     }
-    return x.toString()
+    return value.toString()
 }
 
 _b_.int.tp_hash = function(self){

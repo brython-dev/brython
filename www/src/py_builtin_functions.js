@@ -2094,22 +2094,14 @@ ellipsis.tp_repr = function(){
     return 'Ellipsis'
 }
 
+ellipsis.tp_new = function(){
+    return Ellipsis
+}
+
 var Ellipsis = _b_.Ellipsis = {
     ob_type: ellipsis
 }
 
-for(var comp in $B.$comps){ // Ellipsis is not orderable with any type
-    switch($B.$comps[comp]) {
-      case 'ge':
-      case 'gt':
-      case 'le':
-      case 'lt':
-        ellipsis['__' + $B.$comps[comp] + '__'] =
-            function(){
-                return _b_.NotImplemented
-            }
-    }
-}
 
 $B.set_func_names(ellipsis)
 
