@@ -18,6 +18,7 @@ core_scripts = [
     'py_io',
     'py_builtin_functions',
     'py_code',
+    'py_eval_exec',
     'py_sort',
     'py_exceptions',
     'py_range_slice',

@@ -4,25 +4,41 @@
 var _b_ = $B.builtins
 var object = _b_.object
 
-$B.make_class = function(qualname, factory){
-    // Builds a basic class object
-    console.log('old school make class', qualname)
-    var stack = Error().stack.split('\n')
-    console.log(stack[2])
-
-    var A = {
-        ob_type: _b_.type,
-        tp_bases: [object],
-        __mro__: [object],
-        __name__: qualname,
-        __qualname__: qualname
+$B.object_getattribute = function(obj, attr){
+    var klass = $B.get_class(obj)
+    var test = false // attr == 'clientHeight' // klass === _b_.TypeError
+    var getattribute = $B.search_slot(klass, 'tp_getattro', $B.NULL)
+    if(getattribute === $B.NULL){
+        $B.RAISE(_b_.TypeError, 'no __getattribute__')
     }
-
-    A.$factory = factory
-    return A
+    if(test){
+        console.log('get attr', attr, 'of obj', obj, 'klass', klass)
+        console.log(getattribute)
+    }
+    var res = $B.NULL
+    try{
+        res = getattribute(obj, attr)
+    }catch(err){
+        $B.RAISE_IF_NOT(err, _b_.AttributeError)
+    }
+    if(test){
+        console.log('result of getattribute', res)
+    }
+    if(res === $B.NULL){
+        var getattr = $B.search_in_mro(klass, '__getattr__')
+        if(getattr){
+            try{
+                res = $B.$call(getattr, obj, attr)
+            }catch(err){
+                $B.RAISE_IF_NOT(err, _b_.AttributeError)
+                return $B.NULL
+            }
+        }else{
+            return $B.NULL
+        }
+    }
+    return res
 }
-
-$B.nb_from_dict = 0
 
 object.$new = function(cls){
     return function(){
