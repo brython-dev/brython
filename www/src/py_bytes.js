@@ -942,7 +942,13 @@ bytearray_funcs.count = function(self){
 }
 
 bytearray_funcs.decode = function(self){
-    return decode.apply(null, arguments)
+    var $ = $B.args('decode', 3, {self: null, encoding: null, errors: null},
+                ['self', 'encoding', 'errors'], arguments,
+                {encoding: 'utf-8', errors: 'strict'}, null, null)
+    var self = $.self,
+        encoding = $.encoding,
+        errors = $.errors
+    return decode(self, encoding, errors)
 }
 
 bytearray_funcs.endswith = function(self){
@@ -2207,7 +2213,13 @@ bytes_funcs.count = function(self){
 }
 
 bytes_funcs.decode = function(self){
-    return decode.apply(null, arguments)
+    var $ = $B.args('decode', 3, {self: null, encoding: null, errors: null},
+                ['self', 'encoding', 'errors'], arguments,
+                {encoding: 'utf-8', errors: 'strict'}, null, null)
+    var self = $.self,
+        encoding = $.encoding,
+        errors = $.errors
+    return decode(self, encoding, errors)
 }
 
 bytes_funcs.endswith = function(self){

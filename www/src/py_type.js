@@ -1359,7 +1359,6 @@ type_funcs.__annotate___get = function(self){
         var get = $B.search_slot($B.get_class(annotate), 'tp_descr_get',
             $B.NULL)
         if(get !== $B.NULL){
-            console.log('get', get, $B.get_class(get))
             annotate = get(annotate, $B.NULL, self)
         }
     }else{

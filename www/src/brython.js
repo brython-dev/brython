@@ -60,7 +60,7 @@ $B.imported={}
 $B.namespace=Object.create(null)
 $B.precompiled={}
 $B.frame_obj=null
-var _b_=$B.builtins=Object.create(null)
+var _b_=$B.builtins={}
 $B.created_types={}
 $B.NULL={null:null}
 $B.get_mro=function(cls){return cls.tp_mro ?? cls.__mro__}
@@ -669,8 +669,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-02-18 11:46:35.973028"
-__BRYTHON__.timestamp=1771411595971
+__BRYTHON__.compiled_date="2026-02-24 07:26:14.916875"
+__BRYTHON__.timestamp=1771914374916
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1889,10 +1889,11 @@ var klass=$B.get_class(callable)
 if(test){console.log('call',callable,'klass',klass,'args',args)}
 var call_method=$B.search_slot(klass,'tp_call',$B.NULL)
 if(test){console.log('call_method',call_method)}
-if(call_method===$B.NULL){console.log('not callable',callable)
-$B.RAISE(_b_.TypeError,"'"+$B.class_name(callable)+
+if(call_method===$B.NULL){$B.RAISE(_b_.TypeError,"'"+$B.class_name(callable)+
 "' object is not callable")}
-if(test && typeof call_method !=='function'){console.log('cannot apply call method',call_method)}
+if(typeof call_method !=='function'){if($B.search_slot($B.get_class(call_method),'tp_call',$B.NULL)!==$B.NULL){
+return $B.$call(call_method,...args)}else{$B.RAISE(_b_.TypeError,"'"+$B.class_name(callable)+
+"' object is not callable")}}
 var res=call_method.apply(null,arguments)
 if(test){console.log('result of call1',res)}
 if(callable.$in_js_module && res===undefined){return _b_.None}
@@ -2101,7 +2102,13 @@ if(y_type.$is_sequence && $B.$isinstance(x,[_b_.float,_b_.complex])){$B.RAISE(_b
 var res
 var fail
 var op_method=$B.search_in_mro(x_type,op,$B.NULL)
-if(op_method !==$B.NULL){res=$B.$call(op_method,x,y)
+var test=false 
+if(test){console.log('x',x,'op',op,'op_method',op_method)}
+if(op_method !==$B.NULL){if(test){console.log('type(op_method) has __get__ ?',_b_.hasattr(op_method,'__get__'))}
+var getter=$B.$getattr($B.get_class(op_method),'__get__',$B.NULL)
+if(test){console.log(x,'getter',getter)}
+if(getter !==$B.NULL){op_method=$B.$call(getter,op_method,$B.NULL)}
+res=$B.$call(op_method,x,y)
 if(res !==_b_.NotImplemented){return res}}
 var rop_method=$B.search_in_mro(y_type,rop,$B.NULL)
 if(rop_method !==$B.NULL){res=$B.$call(rop_method,y,x)
@@ -2336,13 +2343,13 @@ for(var attr of _b_.dict.$keys_string(cls.dict)){_b_.dict.$setitem(d,attr,_b_.di
 res.push(d)
 return _b_.tuple.$factory(res)}
 object_funcs.__reduce_ex__=function(self,protocol){var klass=$B.get_class(self)
-if($B.imported.copyreg===undefined){$B.$import('copyreg')}
-if(protocol < 2){var _reduce_ex=$B.module_getattr($B.imported.copyreg,'_reduce_ex')
-return $B.$call(_reduce_ex,self,protocol)}
 var reduce=$B.$getattr(klass,'__reduce__')
 if(reduce !==object.tp_funcs.__reduce__ &&
 ((reduce.ob_type===$B.method_descriptor)&&
 (reduce.method !==object.tp_funcs.__reduce__))){return $B.$call(reduce,self)}
+if($B.imported.copyreg===undefined){$B.$import('copyreg')}
+if(protocol < 2){var _reduce_ex=$B.module_getattr($B.imported.copyreg,'_reduce_ex')
+return $B.$call(_reduce_ex,self,protocol)}
 var res=[$B.module_getattr($B.imported.copyreg,'__newobj__')]
 var arg2=[klass]
 var newargs=getNewArguments(self,klass)
@@ -2366,7 +2373,8 @@ return $B.fast_tuple(res)}
 object_funcs.__sizeof__=function(self){}
 object_funcs.__subclasshook__=function(self){return _b_.NotImplemented}
 _b_.object.functions_or_methods=["__new__"]
-_b_.object.tp_methods=["__reduce_ex__","__reduce__","__getstate__","__subclasshook__","__init_subclass__","__format__","__sizeof__","__dir__"]
+_b_.object.tp_methods=["__reduce_ex__","__reduce__","__getstate__","__subclasshook__","__init_subclass__","__format__","__sizeof__","__dir__"
+]
 _b_.object.classmethods=["__init_subclass__"]
 _b_.object.tp_getset=["__class__"]
 $B.set_func_names(object,"builtins")})(__BRYTHON__);
@@ -2499,10 +2507,12 @@ $B.make_annotate_func=function(dict,annotations,class_frame){if(annotations===un
 return}
 var __annotate_func__=annotations
 $B.str_dict_set(dict,'__annotate_func__',__annotate_func__)
-$B.set_function_infos(__annotate_func__,{__defaults__:_b_.None,__kwdefaults__:_b_.None,__name__:'__annotate__',__module__:class_frame[2],__qualname__:class_frame[0]+'.__annotate__'}
-)}
+$B.set_function_infos(__annotate_func__,{__defaults__:_b_.None,__kwdefaults__:_b_.None,__name__:'__annotate__',__module__:class_frame[2],__qualname__:class_frame[0]+'.__annotate__',__file__:class_frame.__file__}
+)
+$B.setup_function(__annotate_func__)}
 $B.check_annotate_format=function(format){if(! $B.$isinstance(format,_b_.int)){$B.RAISE(_b_.TypeError,'__annotate__ argument should be '+
 `int, not ${$B.class_name(format)}`)}
+format=$B.int_value(format)
 if(format !=1 && format !=2){$B.RAISE(_b_.NotImplementedError,'')}}
 $B.postpone_annotations=function(obj,file){
 var module_frame=$B.frame_obj.frame
@@ -2688,9 +2698,7 @@ if(test){console.log('type.tp_call',cls,args)
 console.log(Error('trace').stack)}
 if(cls===_b_.type){if($.args.length==1 && kw_len==0){
 return $B.get_class(args[0])}
-if(args.length !==1 && args.length !==3){console.log(Error('trace').stack)
-console.log('args',args)
-$B.RAISE(_b_.TypeError,'type() takes 1 or 3 arguments')}}
+if(args.length !==1 && args.length !==3){$B.RAISE(_b_.TypeError,'type() takes 1 or 3 arguments')}}
 var new_func=$B.search_slot(cls,"tp_new")
 if(test){console.log('new_func',new_func)}
 var instance=new_func(cls,...args,$B.dict2kwarg(kw)),instance_class=$B.get_class(instance)
@@ -2803,14 +2811,25 @@ res=$B.str_dict_set(dict,'__abstractmethods__',value)}else{abstract=0;
 res=$B.str_dict_pop(dict,'__abstractmethods__')
 if(res===$B.NULL){$B.RAISE(_b_.AttributeError,'__abstractmethods__')}}
 if(abstract){cls.tp_flags |=$B.TPFLAGS.IS_ABSTRACT}else{cls.tp_flags=cls.tp_flags & ~ $B.TPFLAGS.IS_ABSTRACT}}
-type_funcs.__annotate___get=function(self){}
-type_funcs.__annotate___set=function(self){}
+type_funcs.__annotate___get=function(self){if(!(self.tp_flags & TPFLAGS.HEAPTYPE)){$B.RAISE(_b_.AttributeError,`type object '${$B.get_name(self)}' `+
+`has no attribute '__annotate__'`
+)}
+var annotate=$B.str_dict_get(self.dict,'__annotate__',$B.NULL)
+if(annotate===$B.NULL){annotate=$B.str_dict_get(self.dict,'__annotate_func__',$B.NULL)}
+if(annotate !==$B.NULL){var get=$B.search_slot($B.get_class(annotate),'tp_descr_get',$B.NULL)
+if(get !==$B.NULL){annotate=get(annotate,$B.NULL,self)}}else{annotate=_b_.None;
+$B.str_dict_set(self.dict,'__annotate_func__',annotate)}
+return annotate}
+type_funcs.__annotate___set=function(cls,value){if(value===$B.NULL){$B.RAISE(_b_.TypeError,'cannot delete __annotate__ attribute')}
+$B.str_dict_set(cls.dict,'__annotate__',value)}
 type_funcs.__annotations___get=function(cls){var annotations=$B.str_dict_get(cls.dict,'__annotations__',$B.NULL)
 if(annotations !==$B.NULL){return annotations}
 var ann_func=$B.str_dict_get(cls.dict,'__annotate_func__',$B.NULL)
 if(ann_func===$B.NULL ||ann_func===_b_.None){return $B.empty_dict()}
 return $B.$call(ann_func,1)}
-type_funcs.__annotations___set=function(self){}
+type_funcs.__annotations___set=function(cls,value){if(value===$B.NULL){value=$B.empty_dict()
+type.tp_funcs.__annotate___set(cls,_b_.None)}
+$B.str_dict_set(cls.dict,'__annotations__',value)}
 type_funcs.__bases___get=function(cls){return $B.fast_tuple(cls.tp_bases)}
 type_funcs.__bases___set=function(){var $=$B.args('__bases__',2,{cls:null,bases:null},['cls','bases'],arguments,{},null,null)
 var cls=$.cls,bases=$.bases
@@ -2835,7 +2854,7 @@ return false}
 type_funcs.__module___get=function(self){if(self.dict){var module=$B.str_dict_get(self.dict,'__module__',$B.NULL)
 if(module !==$B.NULL){return module}}
 return 'builtins'}
-type_funcs.__module___set=function(self){}
+type_funcs.__module___set=function(self,value){$B.str_dict_set(self.dict,'__module__',value)}
 type_funcs.__mro___get=function(self){return $B.fast_tuple($B.get_mro(self))}
 type_funcs.__mro___set=function(self){}
 type_funcs.__name___get=function(cls){return $B.get_name(cls)}
@@ -2877,8 +2896,7 @@ if(value===$B.NULL){if(self.prop_del===_b_.None){$B.RAISE(_b_.AttributeError,`pr
 $B.$call(self.prop_del,obj)}else{$B.$call(self.prop_set,obj,value)}}
 _b_.property.tp_descr_get=function(self,obj,type){if(obj===$B.NULL){return self}
 if(self.prop_get===_b_.None){$B.RAISE_ATTRIBUTE_ERROR("unreadable attribute",self,'__get__')}
-try{return $B.$call(self.prop_get,obj)}catch(err){console.log('error',err)
-throw err}}
+return $B.$call(self.prop_get,obj)}
 _b_.property.tp_init=function(){var $=$B.args('__init__',5,{self:null,fget:null,fset:null,fdel:null,doc:null},['self','fget','fset','fdel','doc'],arguments,{fget:_b_.None,fset:_b_.None,fdel:_b_.None,doc:_b_.None},null,null),self=$.self,fget=$.fget,fset=$.fset,fdel=$.fdel,doc=$.doc
 self.prop_doc=doc
 if($B.$getattr && doc===_b_.None){self.prop_doc=$B.$getattr(fget,'__doc__',doc)}
@@ -3119,22 +3137,29 @@ $B.set_func_names($B.GenericAlias,"types")
 $B.UnionType=$B.make_builtin_class("UnionType")
 $B.UnionType.$factory=function(items){return{
 ob_type:$B.UnionType,args:$B.fast_tuple(items)}}
-var UnionType_funcs=$B.UnionType.tp_funcs={}
-$B.UnionType.__class_getitem__=function(cls,items){if($B.$isinstance(items,_b_.tuple)){return $B.UnionType.$factory(items)}else{return items}}
-$B.UnionType.__eq__=function(self,other){if(! $B.$isinstance(other,$B.UnionType)){return _b_.NotImplemented}
-return $B.list_eq(self.args,other.args)}
-$B.UnionType.__or__=function(self,other){var items=self.args.slice()
-if(! items.includes(other)){items.push(other)}
-return $B.UnionType.$factory(items)}
-UnionType_funcs.__parameters___get=function(self){return $B.fast_tuple([])}
+$B.UnionType.tp_richcompare=function(self,other,op){if(! $B.$isinstance(other,$B.UnionType)){return _b_.NotImplemented}
+switch(op){case '__eq__':
+return $B.list_eq(self.args,other.args)
+case '__ne__':
+return ! $B.list_eq(self.args,other.args)
+default:
+return _b_.NotImplemented}}
 $B.UnionType.tp_repr=function(self){var t=[]
 for(var item of self.args){if($B.is_type(item)){var s=$B.get_name(item)
-if(item.__module__ !=="builtins"){s=item.__module__+'.'+s}
+if($B.str_dict_get(item.dict,'__module__')!=="builtins"){s=item.__module__+'.'+s}
 t.push(s)}else{t.push(_b_.repr(item))}}
 return t.join(' | ')}
+$B.UnionType.nb_or=function(self,other){var items=self.args.slice()
+if(! items.includes(other)){items.push(other)}
+return $B.UnionType.$factory(items)}
+var UnionType_funcs=$B.UnionType.tp_funcs={}
+UnionType_funcs.__class_getitem__=function(cls,items){if($B.$isinstance(items,_b_.tuple)){return $B.UnionType.$factory(items)}else{return items}}
+UnionType_funcs.__parameters___get=function(self){return $B.fast_tuple([])}
+UnionType_funcs.__parameters___set=_b_.None
 $B.UnionType.tp_members=[["__args__",$B.TYPES.OBJECT,"args",1]
 ]
 $B.UnionType.tp_getset=['__parameters__']
+$B.UnionType.classmethods=["__class_getitem__"]
 $B.set_func_names($B.UnionType,"types")})(__BRYTHON__);
 ;
 (function($B){var _b_=$B.builtins
@@ -3235,8 +3260,7 @@ var f=self.method.bind(null,obj)
 f.ob_type=$B.builtin_method
 f.$infos=self.$infos
 f.ml={ml_name:self.d_name}
-f.m_self=self
-f.obj=obj
+f.m_self=obj
 return f}
 var method_descriptor_funcs=$B.method_descriptor.tp_funcs={}
 method_descriptor_funcs.__qualname___get=function(self){return self.d_name}
@@ -3342,7 +3366,7 @@ builtin_function_or_method_funcs.__name___get=function(self){return self.$functi
 builtin_function_or_method_funcs.__name___set=_b_.None
 builtin_function_or_method_funcs.__qualname___get=function(self){return self.$function_infos[$B.func_attrs.__qualname__]}
 builtin_function_or_method_funcs.__qualname___set=_b_.None
-builtin_function_or_method_funcs.__reduce__=function(self){}
+builtin_function_or_method_funcs.__reduce__=function(self){return self.$function_infos[$B.func_attrs.__name__]}
 builtin_function_or_method_funcs.__self___get=function(self){return $B.imported.builtins}
 builtin_function_or_method_funcs.__self___set=_b_.None
 builtin_function_or_method_funcs.__text_signature___get=function(self){}
@@ -3390,11 +3414,14 @@ if(kwargs.hasOwnProperty('argdefs')){$B.set_function_attr(f,'__defaults__',kwarg
 if(kwargs.hasOwnProperty('kwdefaults')){$B.set_function_attr(f,'__kwdefaults__',kwargs.kwdefaults)}
 return f}
 $B.function.tp_repr=function(self){if(self.$function_infos){return `<function ${self.$function_infos[$B.func_attrs.__qualname__]}>`}else if(self.$infos===undefined){return '<function '+self.name+'>'}else{return '<function '+self.$infos.__qualname__+'>'}}
-$B.function.tp_call=function(self,...args){return self(...args)}
+$B.function.tp_call=function(self,...args){if(typeof self !=='function'){console.log('not a function',self)}
+return self(...args)}
 $B.function.tp_descr_get=function(self,obj){if(obj===$B.NULL){return self}
 return $B.$call($B.method,self,obj)}
-$B.function.tp_new=function(cls,infos,globals){return{
-ob_type:$B.function,$function_infos:infos,globals}}
+$B.function.tp_new=function(){var[cls,...args]=arguments
+var f=$B.function.$factory(...args)
+f.cls=cls
+return f}
 var function_funcs=$B.function.tp_funcs={}
 function_funcs.__annotate___get=function(self){return self.__annotate__ ?? _b_.None}
 function_funcs.__annotate___set=function(self,value){self.__annotate__=value}
@@ -3415,14 +3442,14 @@ cells.push($B.cell.$factory(_b_.None))}}
 return $B.fast_tuple(cells)}
 function_funcs.__closure___set=_b_.None
 function_funcs.__code___get=function(self){$B.check_infos(self)
-var res={ob_type:_b_.code,dict:$B.empty_dict()}
-for(var attr in self.$infos.__code__){$B.str_dict_set(res.dict,attr,self.$infos.__code__[attr])}
-res.name=self.$infos.__name__
-res.filename=self.$infos.__code__.co_filename
+var res={ob_type:$B.code,dict:$B.empty_dict()}
+for(var attr in self.$infos.__code__){res[attr]=self.$infos.__code__[attr]}
+res.co_name=self.$infos.__name__
+res.co_filename=self.$infos.__code__.co_filename
 res.co_code=self+"" 
 return res}
 function_funcs.__code___set=function(self,value){$B.check_infos(self)
-if(! $B.$isinstance(value,_b_.code)){$B.RAISE(_b_.TypeError,'__code__ must be set to a code object')}
+if(! $B.$isinstance(value,$B.code)){$B.RAISE(_b_.TypeError,'__code__ must be set to a code object')}
 self.$infos.__code__=value}
 function_funcs.__defaults___get=function(self){$B.check_infos(self)
 return self.$infos.__defaults__}
@@ -3462,7 +3489,7 @@ $B.setup_function=function(f){f.ob_type=$B.function
 f.dict=$B.empty_dict()
 f.$args_parser=$B.make_args_parser_and_parse
 f.func_doc=f.$function_infos[$B.func_attrs.__doc__]
-f.func_globals=$B.frame_obj.frame[3]
+f.func_globals=$B.obj_dict($B.frame_obj.frame[3])
 f.func_module=f.$function_infos[$B.func_attrs.__module__]}
 $B.check_infos=function(f){if(! f.$infos){if(f.$function_infos){$B.make_function_infos(f,...f.$function_infos)}else{console.log('no $infos, no $function_infos')}}}
 $B.make_function_infos=function(f,__module__,co_name,co_qualname,co_filename,__defaults__,__kwdefaults__,__doc__,arg_names,vararg,kwarg,co_argcount,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_posonlyargcount,co_varnames,annotations,type_params
@@ -4411,20 +4438,49 @@ if(i < 0 ||i > 1114111){$B.RAISE(_b_.ValueError,'Outside valid range')}else if(i
 String.fromCodePoint(0xDC00 |(code & 0x3FF))
 return $B.make_String(s,[0])}else{return String.fromCodePoint(i)}}
 var code=$B.code
-code.tp_repr=function(_self){return `<code object ${_self.co_name}, file '${_self.co_filename}', `+
-`line ${_self.co_firstlineno || 1}>`}
-code.replace=function(){var $=$B.args('replace',1,{self:null},['self'],arguments,{},null,'kw')
-var _self=$.self
+$B.code.tp_richcompare=function(self){}
+$B.code.tp_repr=function(self){return `<code object ${self.co_name}, file '${self.co_filename}', `+
+`line ${self.co_firstlineno || 1}>`}
+$B.code.tp_hash=function(self){}
+$B.code.tp_new=function(self){return{
+ob_type:$B.code,dict:$B.empty_dict()}}
+var code_funcs=$B.code.tp_funcs={}
+code_funcs.__replace__=function(self){}
+code_funcs.__sizeof__=function(self){}
+code_funcs._co_code_adaptive_get=function(self){return _b_.None}
+code_funcs._co_code_adaptive_set=_b_.None
+code_funcs._varname_from_oparg=function(self){}
+code_funcs.co_argcount=function(self){return self.co_argcount}
+code_funcs.co_branches=function(self){console.log('get co branches',self)}
+code_funcs.co_cellvars_get=function(self){return self.co_cellvars}
+code_funcs.co_cellvars_set=_b_.None
+code_funcs.co_code_get=function(self){return self.co_code}
+code_funcs.co_code_set=_b_.None
+code_funcs.co_freevars_get=function(self){return self.co_freevars}
+code_funcs.co_freevars_set=_b_.None
+code_funcs.co_lines=function(self){console.log('get co_lines',self)}
+code_funcs.co_lnotab_get=function(self){return _b_.None}
+code_funcs.co_lnotab_set=_b_.None
+code_funcs.co_positions=function(self){return self.co_positions()}
+code_funcs.co_varnames_get=function(self){return self.co_varnames}
+code_funcs.co_varnames_set=_b_.None
+code_funcs.replace=function(self){var $=$B.args('replace',1,{self:null},['self'],arguments,{},null,'kw')
+var self=$.self
 var expected=['co_argcount','co_branches','co_cellvars','co_code','co_consts','co_exceptiontable','co_filename','co_firstlineno','co_flags','co_freevars','co_kwonlyargcount','co_lines','co_linetable','co_lnotab','co_name','co_names','co_nlocals','co_positions','co_posonlyargcount','co_qualname','co_stacksize','co_varnames']
-$B.set_expected_kwargs(_self,expected,$.kw)
-return _self}
+$B.set_expected_kwargs(self,expected,$.kw)
+return self}
+$B.code.tp_methods=["__sizeof__","co_lines","co_branches","co_positions","replace","_varname_from_oparg","__replace__"
+]
+$B.code.tp_members=[["co_argcount",$B.TYPES.INT,'co_argcount',1],["co_posonlyargcount",$B.TYPES.INT,'co_posonlyargcount',1],["co_kwonlyargcount",$B.TYPES.INT,'co_kwonlyargcount',1],["co_stacksize",$B.TYPES.INT,'co_stacksize',1],["co_flags",$B.TYPES.INT,'co_flags',1],["co_nlocals",$B.TYPES.INT,'co_nlocals',1],["co_consts",$B.TYPES.OBJECT,'co_consts',1],["co_names",$B.TYPES.OBJECT,'co_names',1],["co_filename",$B.TYPES.OBJECT,'co_filename',1],["co_name",$B.TYPES.OBJECT,'co_name',1],["co_qualname",$B.TYPES.OBJECT,'co_qualname',1],["co_firstlineno",$B.TYPES.INT,'co_firstlineno',1],["co_linetable",$B.TYPES.OBJECT,'co_linetable',1],["co_exceptiontable",$B.TYPES.OBJECT,'co_exceptiontable',1],]
+$B.code.tp_getset=["co_lnotab","_co_code_adaptive","co_varnames","co_cellvars","co_freevars","co_code"
+]
 $B.set_func_names(code,"builtins")
 _b_.compile=function(){var $=$B.args('compile',7,{source:null,filename:null,mode:null,flags:null,dont_inherit:null,optimize:null,_feature_version:null},['source','filename','mode','flags','dont_inherit','optimize','_feature_version'],arguments,{flags:0,dont_inherit:false,optimize:-1,_feature_version:0},null,null)
 var module_name='$exec_'+$B.UUID()
 $.ob_type=code
 $.dict=$B.empty_dict()
 var infos={co_flags:$.flags,co_name:"<module>",co_filename:$.filename}
-for(var key in infos){$B.str_dict_set($.dict,key,infos[key])}
+for(var key in infos){$[key]=infos[key]}
 var filename=$.filename
 var interactive=$.mode=="single" &&($.flags & 0x200)
 $B.file_cache[filename]=$.source
@@ -4721,9 +4777,7 @@ return v}}}
 return _default}
 var missing_attr={'missing_attr':true}
 var NULL=$B.NULL
-$B.search_in_dict=function(obj,attr,_default){var test=false 
-var is_type=$B.is_type(obj)
-if(obj.dict){var v=$B.str_dict_get(obj.dict,attr,$B.NULL)
+$B.search_in_dict=function(obj,attr,_default){if(obj.dict){var v=$B.str_dict_get(obj.dict,attr,$B.NULL)
 if(v !==$B.NULL){return v}}
 return _default}
 $B.object_getattribute=function(obj,attr){var klass=$B.get_class(obj)
@@ -4819,7 +4873,7 @@ $B.$isinstance=function(obj,cls){var kls
 if(Array.isArray(cls)){for(kls of cls){if($B.$isinstance(obj,kls)){return true}}
 return false}
 var klass=$B.get_class(cls)
-if(klass===$B.UnionType){for(kls of cls.items){if($B.$isinstance(obj,kls)){return true}}
+if(klass===$B.UnionType){for(kls of cls.args){if($B.$isinstance(obj,kls)){return true}}
 return false}
 if(klass===$B.GenericAlias){
 $B.RAISE(_b_.TypeError,'isinstance() arg 2 cannot be a parameterized generic')}
@@ -4878,13 +4932,15 @@ if(! $B.PyIter_Check(res)){$B.RAISE(_b_.TypeError,"iter() returned non-iterator 
 `of type '${$B.class_name(res)}'`)}
 return res}}
 $B.$iter=function(obj,sentinel){
-var test=false 
+var test=$B.get_class(obj).tp_name=='MagicMock'
 var NULL={}
 if(test){console.log('iter',obj)}
 if(sentinel===undefined){var klass=$B.get_class(obj)
 var iter_func=$B.search_slot(klass,'tp_iter',$B.NULL)
 if(test){console.log('iter func',iter_func)}
-if(iter_func !==$B.NULL){var res=$B.$call(iter_func,obj)
+if(iter_func !==$B.NULL){var getter=$B.search_in_mro($B.get_class(iter_func),'__get__',$B.NULL)
+if(getter===$B.NULL){var in_dict=$B.search_in_dict(obj,'__iter__',$B.NULL)
+if(in_dict===iter_func){var res=$B.$call(in_dict)}}else{var res=$B.$call(iter_func,obj)}
 if($B.search_slot($B.get_class(res),'tp_iternext',$B.NULL)===$B.NULL){console.log('iter, obj',obj,'result of iter func',res)
 console.log('no tp_iternext in',$B.get_class(res))
 $B.RAISE(_b_.TypeError,`iter() returned non-iterable of type '${$B.class_name(res)}'`)}
@@ -5017,6 +5073,8 @@ var kw=$ns['kw'],end=$B.str_dict_get(kw,'end','\n'),sep=$B.str_dict_get(kw,'sep'
 var args=$ns['args']
 var writer=$B.$getattr(file,'write')
 for(var i=0,len=args.length;i < len;i++){var arg=_b_.str.$factory(args[i])
+if(arg=='GHjkBNcx'){Error.stackTraceLimit=50
+console.log(Error('trace call').stack)}
 $B.$call(writer,arg)
 if(i < len-1){$B.$call(writer,sep)}}
 $B.$call(writer,end)
@@ -5618,15 +5676,13 @@ positions=self.positions ?? positions}else if(self.f_code){
 res=self.f_code}else{var infos={co_name:(self[0]==self[2]? '<module>' :self[0]),co_filename:self.__file__,co_varnames:$B.fast_tuple([]),co_firstlineno:1}
 infos.co_qualname=infos.co_name 
 res={ob_type:$B.code,dict:$B.empty_dict()}
-for(var attr in infos){$B.str_dict_set(res.dict,attr,infos[attr])}
+for(var attr in infos){res[attr]=infos[attr]}
 positions=self.positions ?? positions}
 res.ob_type=$B.code
 positions=positions.map($B.decode_position)
 var co_positions=()=> $B.$list(positions)
 co_positions.ob_type=$B.function
-if(res.dict===undefined){console.log('no dict for f_code',self)}
-res.dict=res.dict ?? $B.empty_dict()
-$B.str_dict_set(res.dict,'co_positions',co_positions)
+res.co_positions=co_positions
 return res}
 frame_funcs.f_code_set=_b_.None
 frame_funcs.f_generator_get=function(self){}
@@ -5653,7 +5709,7 @@ $B.set_func_names(frame,"builtins")
 $B._frame=frame 
 $B.make_f_code=function(frame,varnames){
 frame.f_code={ob_type:$B.code,dict:$B.empty_dict()}
-Object.assign(frame.f_code.dict.$strings,{co_argcount:1,co_firstlineno:frame.$lineno,co_name:"<genexpr>",co_filename:frame.__file__,co_flags:115,co_freevars:$B.fast_tuple([]),co_kwonlyargcount:0,co_posonlyargount:0,co_qualname:"genexpr",co_varnames:$B.fast_tuple(['.0'].concat(varnames))}
+Object.assign(frame.f_code,{co_argcount:1,co_firstlineno:frame.$lineno,co_name:"<genexpr>",co_filename:frame.__file__,co_flags:115,co_freevars:$B.fast_tuple([]),co_kwonlyargcount:0,co_posonlyargount:0,co_qualname:"genexpr",co_varnames:$B.fast_tuple(['.0'].concat(varnames))}
 )}
 $B.restore_frame_obj=function(frame_obj,locals){$B.frame_obj=frame_obj
 $B.frame_obj.frame[1]=locals}
@@ -6694,7 +6750,9 @@ bytearray_funcs.clear=function(self){check_exports(self)
 self.source=[]}
 bytearray_funcs.copy=function(self){}
 bytearray_funcs.count=function(self){return count.apply(null,arguments)}
-bytearray_funcs.decode=function(self){return decode.apply(null,arguments)}
+bytearray_funcs.decode=function(self){var $=$B.args('decode',3,{self:null,encoding:null,errors:null},['self','encoding','errors'],arguments,{encoding:'utf-8',errors:'strict'},null,null)
+var self=$.self,encoding=$.encoding,errors=$.errors
+return decode(self,encoding,errors)}
 bytearray_funcs.endswith=function(self){return endswith.apply(null,arguments)}
 bytearray_funcs.expandtabs=function(self){return expandtabs.apply(null,arguments)}
 bytearray_funcs.extend=function(self,b){check_exports(self)
@@ -7103,7 +7161,9 @@ bytes_funcs.__getnewargs__=function(self){return bytes.$getnewargs($B.single_arg
 bytes_funcs.capitalize=function(self){return capitalize.apply(null,arguments)}
 bytes_funcs.center=function(self){return center.apply(null,arguments)}
 bytes_funcs.count=function(self){return count.apply(null,arguments)}
-bytes_funcs.decode=function(self){return decode.apply(null,arguments)}
+bytes_funcs.decode=function(self){var $=$B.args('decode',3,{self:null,encoding:null,errors:null},['self','encoding','errors'],arguments,{encoding:'utf-8',errors:'strict'},null,null)
+var self=$.self,encoding=$.encoding,errors=$.errors
+return decode(self,encoding,errors)}
 bytes_funcs.endswith=function(self){return endswith.apply(null,arguments)}
 bytes_funcs.expandtabs=function(self){return expandtabs.apply(null,arguments)}
 bytes_funcs.find=function(self,sub){return find.apply('find',arguments)}
@@ -7491,7 +7551,6 @@ if($B.$isinstance(other,_b_.dict)){for(let entry of _b_.dict.$iter_items(other))
 if(rv==DISCARD_NOTFOUND){set_add(so,entry.key,entry.hash)}}}else if($B.$isinstance(other,[set,frozenset])){for(let entry of set_iter_with_hash(other)){let rv=set_discard_entry(so,entry.item,entry.hash)
 if(rv==DISCARD_NOTFOUND){set_add(so,entry.item,entry.hash)}}}else{return set_symmetric_difference_update(so,set.$factory(other))}
 return _b_.None}
-set.__class_getitem__=$B.$class_getitem
 function set_eq(self,other){if($B.$isinstance(other,[_b_.set,_b_.frozenset])){if(self.$used !=other.$used){return false}
 for(var hash in self.$store){if(other.$store[hash]===undefined){return false}
 var in_self=self.$store[hash],in_other=other.$store[hash]
@@ -7620,7 +7679,7 @@ return self}
 _b_.set.mp_length=function(self){return self.$used}
 _b_.set.sq_contains=function(self,item){return set_contains(self,item)}
 var set_funcs=_b_.set.tp_funcs={}
-set_funcs.__class_getitem__=$B.$class_getitem
+set_funcs.__class_getitem__=function(cls,items){return $B.$class_getitem(cls,items)}
 set_funcs.__reduce__=function(self){return $B.fast_tuple([$B.get_class(self),$B.fast_tuple([set_make_items(self)]),_b_.None])}
 set_funcs.__sizeof__=function(self){}
 set_funcs.add=function(self,item){$B.check_nb_args_no_kw('set.add',2,arguments)
@@ -7752,622 +7811,6 @@ _b_.frozenset.tp_methods=["copy","difference","intersection","isdisjoint","issub
 ]
 _b_.frozenset.classmethods=["__class_getitem__"]
 $B.set_func_names(frozenset,"builtins")})(__BRYTHON__);
-;
-
-(function($B){var _b_=$B.builtins,_window=globalThis
-$B.namespace=function(module_name){
-if($B.imported.hasOwnProperty(module_name)){return $B.imported[module_name].dict.$strings}
-return{}}
-var Module=$B.module
-Module.$factory=function(name,doc,$package){var self=Module.tp_new()
-Module.tp_init(self,name,doc,$package)
-return self}
-$B.module_getattr=function(module,attr){return $B.str_dict_get(module.dict,attr,$B.NULL)}
-$B.module_setattr=function(module,attr,value){_b_.dict.$setitem(module.dict,attr,value)}
-$B.module_items=function(module){return _b_.dict.$iter_items(module.dict)}
-$B.module.tp_methods=["__dir__"]
-$B.module.tp_getset=["__annotations__","__annotate__"]
-$B.module.tp_repr=function(self){var name=$B.module_getattr(self,'__name__')
-var file=$B.module_getattr(self,'__file__')
-if(file===$B.NULL){file='(built_in)'}else{file='from '+file}
-return `<module '${name}' ${file}>`}
-$B.module.tp_getattro=function(self,attr){if(self.dict===undefined){console.log('no dict for module',self)}
-var res=_b_.object.tp_getattro(self,attr)
-if(res !==$B.NULL){return res}
-var getattr=$B.str_dict_get(self.dict,'__getattr__',$B.NULL)
-if(getattr !==$B.NULL){return $B.$call(getattr,attr)}
-return $B.NULL}
-$B.module.tp_init=function(self){var $=$B.args('__init__',3,{self:null,name:null,doc:null},['self','name','doc'],arguments,{doc:_b_.None},'args','kw')
-var self=$.self
-$B.module_setattr(self,'__name__',$.name)
-$B.module_setattr(self,'__doc__',$.doc)}
-$B.module.tp_new=function(self){return{
-ob_type:$B.module,dict:$B.empty_dict(),}}
-var module_funcs=$B.module.tp_funcs={}
-module_funcs.__annotate___get=function(self){}
-module_funcs.__annotate___set=function(self){}
-module_funcs.__annotations___get=function(self){}
-module_funcs.__annotations___set=function(self){}
-module_funcs.__dir__=function(self){var dir_func=$B.module_getattr(self,'__dir__')
-if(dir_func !==$B.NULL){return $B.$call(dir_func)}
-var names=[]
-for(var item of _b_.dict.$iter_items(self.dict)){names.push(item.key)}
-return $B.$list(names.sort())}
-$B.module.tp_methods=["__dir__"]
-$B.module.tp_members=[["__dict__",$B.TYPES.OBJECT,"dict",1]
-]
-$B.module.tp_getset=["__annotations__","__annotate__"]
-$B.set_func_names(Module,"builtins")
-$B.make_import_paths=function(filename){
-var filepath=$B.script_domain ? $B.script_domain+'/'+filename :filename
-var elts=filepath.split('/')
-elts.pop()
-var script_dir=elts.join('/'),path=[$B.brython_path+'Lib',$B.brython_path+'libs',script_dir,$B.brython_path+'Lib/site-packages']
-var meta_path=[],path_hooks=[]
-if($B.use_VFS){meta_path.push($B.finders.VFS)}
-var static_stdlib_import=$B.get_option_from_filename('static_stdlib_import',filename)
-if(static_stdlib_import !==false && $B.protocol !="file"){
-meta_path.push($B.finders.stdlib_static)
-if(path.length > 3){path.shift()
-path.shift()}}
-var pythonpath=$B.get_option_from_filename('pythonpath',filename)
-if(pythonpath){
-var ix=path.indexOf(script_dir)
-if(ix===-1){console.log('bizarre, script_dir',script_dir,'not in path',path)}else{var fullpaths=[]
-for(var p of pythonpath){if(p=='.'){fullpaths.push(script_dir)}else if(p.startsWith('/')){
-fullpaths.push($B.script_domain+p)}else if(p.split('://')[0].startsWith('http')){
-fullpaths.push(p)}else if(! p.startsWith($B.script_domain)){fullpaths.push(script_dir+'/'+p)}else{fullpaths.push(p)}}
-path.splice(ix,1,...fullpaths)}}
-if($B.protocol !=="file"){meta_path.push($B.finders.path)
-path_hooks.push($B.url_hook)}
-$B.import_info[filename]={meta_path,path_hooks,path}}
-function $download_module(mod,url){var xhr=new XMLHttpRequest(),fake_qs="?v="+(new Date().getTime()),res=null,mod_name=mod.__name__
-if($B.get_option('cache')){xhr.open("GET",url,false)}else{xhr.open("GET",url+fake_qs,false)}
-var timer=_window.setTimeout(function(){xhr.abort()},5000)
-xhr.send()
-if($B.$CORS){if(xhr.status==200 ||xhr.status==0){res=xhr.responseText}else{res=$B.EXC(_b_.ModuleNotFoundError,"No module named '"+
-mod_name+"'")}}else{if(xhr.readyState==4){if(xhr.status==200){res=xhr.responseText
-mod.$last_modified=
-xhr.getResponseHeader("Last-Modified")}else{
-console.info("Trying to import "+mod_name+
-", not found at url "+url)
-res=$B.EXC(_b_.ModuleNotFoundError,"No module named '"+
-mod_name+"'")}}}
-_window.clearTimeout(timer)
-if(res==null){$B.RAISE(_b_.ModuleNotFoundError,"No module named '"+
-mod_name+"' (res is null)")}
-if($B.$isinstance(res,_b_.BaseException)){throw res}
-return res}
-$B.$download_module=$download_module
-$B.addToImported=function(name,modobj){var module=$B.imported[name]
-if(modobj===undefined){$B.RAISE(_b_.ImportError,'imported not set by module')}
-for(var attr in modobj){if(typeof modobj[attr]=="function" && ! modobj[attr].$infos){modobj[attr].$infos={__module__:name,__name__:attr,__qualname__:attr,__code__:{co_filename:modobj.__file__,co_code:modobj[attr]+'',co_flags:$B.COMPILER_FLAGS.OPTIMIZED |$B.COMPILER_FLAGS.NEWLOCALS}}
-modobj[attr].$in_js_module=true
-modobj[attr].ob_type=$B.function
-modobj[attr].dict=$B.empty_dict()
-$B.add_function_infos(modobj,attr,name)}else if($B.$isinstance(modobj[attr],_b_.type)&&
-$B.str_dict_get(modobj[attr].dict,'__module__',$B.NULL)===
-$B.NULL){$B.str_dict_set(modobj[attr].dict,'__module__',name)}
-$B.module_setattr(module,attr,modobj[attr])}}
-function run_js(module_contents,path,_module){var mod_name=$B.module_getattr(_module,'__name__')
-var keys_before=new Set(Object.keys(globalThis))
-try{new Function(module_contents)()}catch(err){throw $B.exception(err)}
-var new_keys=(new Set(Object.keys(globalThis))).difference(keys_before)
-var modobj=$B.imported[mod_name]
-if(modobj===undefined){console.log('_module',_module,mod_name)
-$B.RAISE(_b_.ImportError,'imported not set by module')}
-modobj.ob_type=Module
-$B.module_setattr(modobj,'__name__',mod_name)
-for(var new_key of new_keys){modobj[new_key]=globalThis[new_key]
-delete globalThis[new_key]}
-for(var attr in modobj){if(typeof modobj[attr]=="function" && ! modobj[attr].$infos){modobj[attr].$infos={__module__:_module.__name__,__name__:attr,__qualname__:attr}
-modobj[attr].$in_js_module=true}else if($B.$isinstance(modobj[attr],_b_.type)&&
-modobj[attr].__module__===undefined){modobj[attr].__module__=_module.__name__}}
-return true}
-function run_py(module_contents,path,module,compiled){
-var filename=$B.module_getattr(module,'__file__')
-var test=false 
-if(test){console.log('run py',filename)}
-$B.file_cache[filename]=module_contents
-$B.url2name[filename]=$B.module_getattr(module,'__name__')
-var root,js,mod_name=$B.module_getattr(module,'__name__'),
-src
-if(! compiled){src={src:module_contents,filename,imported:true}
-try{root=$B.py2js(src,module,$B.module_getattr(module,'__name__'),$B.builtins_scope)}catch(err){err.$frame_obj=$B.frame_obj
-if($B.get_option('debug',err)> 1){console.log('error in imported module',module)
-console.log('stack',$B.make_frames_stack(err.$frame_obj))}
-throw err}}
-var module_name=$B.module_getattr(module,'__name__')
-try{js=compiled ? module_contents :root.to_js()
-if($B.get_option('debug')==10){console.log("code for module "+module_name)
-console.log($B.format_indent(js,0))}
-src=js
-js="var $module = (function(){\n"+js
-var prefix='locals_'
-js+='return '+prefix
-js+=module_name.replace(/\./g,"_")+"})(__BRYTHON__)\n"+
-"return $module"
-var module_id=prefix+module_name.replace(/\./g,'_')
-var mod=(new Function(module_id,js))(module)}catch(err){err.$frame_obj=err.$frame_obj ||$B.frame_obj
-if($B.get_option('debug',err)> 2){console.log('error',err,"\n for module "+module_name)
-console.log("module",module)
-console.log(root)
-if($B.get_option('debug',err)> 1){console.log(src)}
-for(let attr in err){console.log(attr,err[attr])}
-console.log("message: "+err.$message)
-console.log("filename: "+err.fileName)
-console.log("linenum: "+err.lineNumber)
-console.log(js.split('\n').slice(err.lineNumber-3,err.lineNumber+3).join('\n'))
-console.log(err.stack)}
-throw err}
-var imports=Object.keys(root.imports).join(",")
-try{
-for(let attr in mod){$B.module_setattr(module,attr,mod[attr])}
-$B.module_setattr(module,'__initializing__',false)
-var spec=$B.module_getattr(module,'__spec__')
-return{
-content:src,name:mod_name,imports,is_package:module.$is_package,path,timestamp:$B.timestamp,source_ts:$B.$getattr(spec,'loader_state').timestamp}}catch(err){console.log(""+err+" "+" for module "+module.__name__)
-for(let attr in err){console.log(attr+" "+err[attr])}
-if($B.get_option('debug')> 0){console.log("line info "+__BRYTHON__.line_info)}
-throw err}}
-$B.run_py=run_py 
-$B.run_js=run_js
-var ModuleSpec=$B.ModuleSpec=$B.make_builtin_class("ModuleSpec")
-ModuleSpec.$factory=function(fields){var spec={ob_type:ModuleSpec,dict:$B.empty_dict()}
-for(var field in fields){$B.str_dict_set(spec.dict,field,fields[field])}
-if(! fields.hasOwnProperty('loader')){console.log('no loader',fields)
-console.log(Error('trace').stack)}
-return spec}
-ModuleSpec.tp_repr=function(self){var res=`ModuleSpec(name='${self.name}', `+
-`loader=${_b_.str.$factory(self.loader)}, `+
-`origin='${self.origin}'`
-if(self.submodule_search_locations !==_b_.None){res+=`, submodule_search_locations=`+
-`${_b_.str.$factory(self.submodule_search_locations)}`}
-return res+')'}
-$B.set_func_names(ModuleSpec,"builtins")
-function parent_package(mod_name){
-var parts=mod_name.split(".")
-parts.pop()
-return parts.join(".")}
-var VFSFinder=$B.make_builtin_class("VFSFinder")
-VFSFinder.$factory=function(){return{
-ob_type:VFSFinder}}
-var VFSFinder_funcs=VFSFinder.tp_funcs={}
-VFSFinder_funcs.find_spec=function(cls,fullname){var stored,is_package,timestamp
-if(!$B.use_VFS){return _b_.None}
-stored=$B.VFS[fullname]
-if(stored===undefined){return _b_.None}
-is_package=stored[3]||false
-timestamp=stored.timestamp
-if(stored){var is_builtin=$B.builtin_module_names.indexOf(fullname)>-1
-return ModuleSpec.$factory({name :fullname,loader:VFSLoader.$factory(),
-origin :is_builtin? "built-in" :"brython_stdlib",
-submodule_search_locations:is_package? $B.$list([]):_b_.None,loader_state:{stored:stored,timestamp:timestamp},
-cached:_b_.None,parent:is_package? fullname :parent_package(fullname),has_location:_b_.False})}}
-VFSFinder.classmethods=["find_spec"]
-$B.set_func_names(VFSFinder,"<import>")
-const VFSLoader=$B.make_builtin_class("VFSLoader")
-VFSLoader.$factory=function(){return{
-ob_type:VFSLoader}}
-var VFSLoader_funcs=VFSLoader.tp_funcs={}
-VFSLoader_funcs.create_module=function(){
-return _b_.None}
-VFSLoader_funcs.exec_module=function(self,modobj){
-if(modobj===undefined){console.log('no module')
-console.log(Error('trace').stack)}
-var spec=$B.$getattr(modobj,'__spec__'),loader_state=$B.$getattr(spec,'loader_state'),stored=loader_state.stored,timestamp=loader_state.timestamp
-var ext=stored[0],module_contents=stored[1],imports=stored[2]
-modobj.$is_package=stored[3]||false
-var mod_name=$B.module_getattr(modobj,'__name__')
-var path="VFS."+mod_name
-path+=modobj.$is_package ? "/__init__.py" :ext
-$B.module_setattr(modobj,'__file__',path)
-$B.file_cache[path]=$B.VFS[mod_name][1]
-$B.url2name[path]=mod_name
-if(ext=='.js'){run_js(module_contents,$B.module_getattr(modobj,'__path__'),modobj)}else if($B.precompiled.hasOwnProperty(mod_name)){if($B.get_option('debug')> 1){console.info("load",mod_name,"from precompiled")}
-var parts=mod_name.split(".")
-for(var i=0;i < parts.length;i++){var parent=parts.slice(0,i+1).join(".")
-if($B.imported.hasOwnProperty(parent)&&
-$B.module_getattr($B.imported[parent],'__initialized__')!==$B.NULL){continue}
-var mod_js=$B.precompiled[parent],is_package=modobj.$is_package
-if(mod_js===undefined){
-continue}
-if(Array.isArray(mod_js)){mod_js=mod_js[0]}
-var mod=$B.imported[parent]=Module.$factory(parent,undefined,is_package)
-$B.module_setattr(mod,'__initialized__',true)
-$B.module_setattr(mod,'__spec__',spec)
-if(is_package){$B.module_setattr(mod,'__path__',"<stdlib>")
-$B.module_setattr(mod,'__package__',parent)
-mod.$is_package=true}else{let elts=parent.split(".")
-elts.pop()
-$B.module_setattr(mod,'__package__',elts.join("."))}
-$B.module_setattr(mod,'__file__',path)
-try{var parent_id=parent.replace(/\./g,"_"),prefix='locals_'
-mod_js+="return "+prefix+parent_id
-var $module=new Function(prefix+parent_id,mod_js)(
-mod)}catch(err){if($B.get_option('debug')> 1){console.log('error in module',mod)
-console.log(err)
-for(var k in err){console.log(k,err[k])}
-console.log(Object.keys($B.imported))
-console.log(modobj,"mod_js",mod_js)}
-throw err}
-for(var attr in $module){$B.module_setattr(mod,attr,$module[attr])}
-$module.__file__=path
-if(i > 0){
-$B.builtins.setattr(
-$B.imported[parts.slice(0,i).join(".")],parts[i],$module)}}
-return $module}else{var mod_name=$B.module_getattr(modobj,'__name__')
-if($B.get_option('debug')> 1){console.log("run Python code from VFS",mod_name)}
-var path=$B.brython_path+'/'+modobj.__file__
-var record=run_py(module_contents,path,modobj)
-record.imports=imports.join(',')
-record.is_package=modobj.$is_package
-record.timestamp=$B.timestamp
-record.source_ts=timestamp
-$B.precompiled[mod_name]=record.is_package ?[record.content]:
-record.content
-let elts=mod_name.split(".")
-if(elts.length > 1){elts.pop()}
-if($B.get_page_option('indexeddb')&& $B.indexedDB &&
-$B.idb_name){
-var idb_cx=indexedDB.open($B.idb_name)
-idb_cx.onsuccess=function(evt){var db=evt.target.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),request=store.put(record)
-request.onsuccess=function(){if($B.get_option('debug')> 1){console.info(modobj.__name__,"stored in db")}}
-request.onerror=function(){console.info("could not store "+modobj.__name__)}}}}}
-VFSLoader.tp_methods=["create_module","exec_module"]
-$B.set_func_names(VFSLoader,"builtins")
-var StdlibStaticFinder=$B.make_builtin_class("StdlibStaticFinder")
-StdlibStaticFinder.$factory=function(){return{
-ob_type:StdlibStaticFinder}}
-var StdlibStaticFinder_funcs=StdlibStaticFinder.tp_funcs={}
-StdlibStaticFinder_funcs.find_spec=function(self,fullname){
-if($B.stdlib && $B.get_option('static_stdlib_import')){var address=$B.stdlib[fullname]
-if(address===undefined){var elts=fullname.split(".")
-if(elts.length > 1){elts.pop()
-var $package=$B.stdlib[elts.join(".")]
-if($package && $package[1]){address=["py"]}}}
-if(address !==undefined){var ext=address[0],is_pkg=address[1]!==undefined,path=$B.brython_path+
-((ext=="py")? "Lib/" :"libs/")+
-fullname.replace(/\./g,"/"),metadata={ext:ext,is_package:is_pkg,path:path+(is_pkg? "/__init__.py" :
-((ext=="py")? ".py" :".js")),address:address},_module=Module.$factory(fullname)
-metadata.code=$download_module(_module,metadata.path)
-var res=ModuleSpec.$factory({name :fullname,loader:PathLoader.$factory(),
-origin :metadata.path,submodule_search_locations:is_pkg? $B.$list([path]):_b_.None,loader_state:metadata,
-cached:_b_.None,parent:is_pkg ? fullname :parent_package(fullname),has_location:_b_.True})
-return res}}
-return _b_.None}
-StdlibStaticFinder.classmethods=["find_spec"]
-$B.set_func_names(StdlibStaticFinder,"<import>")
-var PathFinder=$B.make_builtin_class("PathFinder")
-PathFinder.$factory=function(){return{
-ob_type:PathFinder}}
-var PathFinder_funcs=PathFinder.tp_funcs={}
-PathFinder_funcs.find_spec=function(cls,fullname,path){var test=false 
-if(test){console.log('find_spec',fullname,'path',path)}
-if($B.VFS && $B.VFS[fullname]){
-return _b_.None}
-if($B.is_none(path)){
-path=get_info('path')
-if(test){console.log('use path',path)}}
-for(var i=0,li=path.length;i < li;++i){var path_entry=path[i]
-if(path_entry[path_entry.length-1]!="/"){path_entry+="/"}
-var finder=$B.path_importer_cache[path_entry]
-if(test){console.log('finder in cache',finder)}
-if(finder===undefined){
-var path_hooks=get_info('path_hooks')
-for(var j=0,lj=path_hooks.length;j < lj;++j){var hook=path_hooks[j]
-try{finder=$B.$call(hook,path_entry)
-$B.path_importer_cache[path_entry]=finder
-break}catch(e){if($B.get_class(e)!==_b_.ImportError){throw e}}}}
-if($B.is_none(finder)){continue}
-var find_spec=$B.$getattr(finder,"find_spec"),spec=$B.$call(find_spec,fullname)
-if(!$B.is_none(spec)){return spec}}
-return _b_.None}
-PathFinder.classmethods=["find_spec"]
-$B.set_func_names(PathFinder,"<import>")
-var PathEntryFinder=$B.make_builtin_class("PathEntryFinder")
-PathEntryFinder.$factory=function(path_entry,hint){return{
-ob_type:PathEntryFinder,path_entry:path_entry,hint:hint}}
-var PathEntryFinder_funcs=PathEntryFinder.tp_funcs={}
-PathEntryFinder_funcs.find_spec=function(self,fullname){
-var test=false 
-if(test){console.log('PathEntryFinder.find_spec',self,fullname)
-console.log('self.path_entry',self.path_entry)
-console.log(fullname.match(/[^.]+$/g)[0])}
-var loader_data={},notfound=true,hint=self.hint,base_path=self.path_entry+fullname.match(/[^.]+$/g)[0],modpaths=[],py_ext=$B.get_option('python_extension')
-if(test){console.log('basepath',base_path)}
-var tryall=hint===undefined
-if(tryall ||hint=='py'){
-modpaths=modpaths.concat([[base_path+py_ext,"py",false],[base_path+"/__init__"+py_ext,"py",true],[base_path+'.js','js',false]])}
-for(var j=0;notfound && j < modpaths.length;++j){try{var file_info=modpaths[j],module={__name__:fullname,$is_package:false}
-loader_data.code=$download_module(module,file_info[0],undefined)
-notfound=false
-loader_data.ext=file_info[1]
-loader_data.is_package=file_info[2]
-loader_data.timestamp=Date.parse(module.$last_modified)
-if(hint===undefined){self.hint=file_info[1]
-$B.path_importer_cache[self.path_entry]=self}
-if(loader_data.is_package){
-$B.path_importer_cache[base_path+'/']=
-$B.$call(url_hook,base_path+'/',self.hint)}
-loader_data.path=file_info[0]}catch(err){if(! $B.is_exc(err,_b_.ModuleNotFoundError)){throw err}}}
-if(!notfound){return ModuleSpec.$factory({name :fullname,loader:PathLoader.$factory(),origin :loader_data.path,
-submodule_search_locations:loader_data.is_package?
-$B.$list([base_path]):_b_.None,loader_state:loader_data,
-cached:_b_.None,parent:loader_data.is_package? fullname :
-parent_package(fullname),has_location:_b_.True})}
-return _b_.None}
-PathEntryFinder.tp_methods=["find_spec"]
-$B.set_func_names(PathEntryFinder,"builtins")
-var PathLoader=$B.make_builtin_class("PathLoader")
-PathLoader.$factory=function(){return{
-ob_type:PathLoader}}
-var PathLoader_funcs=PathLoader.tp_funcs={}
-PathLoader_funcs.create_module=function(){
-return _b_.None}
-PathLoader_funcs.exec_module=function(self,module){
-var spec=$B.module_getattr(module,'__spec__')
-var metadata=$B.$getattr(spec,'loader_state')
-module.$is_package=metadata.is_package
-if(metadata.ext=="py"){run_py(metadata.code,metadata.path,module)}else{run_js(metadata.code,metadata.path,module)}}
-PathLoader.tp_methods=['create_module','exec_module']
-var url_hook=$B.url_hook=function(path_entry){
-path_entry=path_entry.endsWith("/")? path_entry :path_entry+"/"
-return PathEntryFinder.$factory(path_entry)}
-function get_info(info){var filename=$B.get_filename(),import_info=$B.import_info[filename]
-if(import_info===undefined && info=='meta_path'){$B.make_import_paths(filename)}
-return $B.import_info[filename][info]}
-function import_engine(mod_name,_path,from_stdlib){
-var test=false 
-var meta_path=get_info('meta_path').slice(),_sys_modules=$B.imported,_loader,spec
-if(test){console.log('from stdlib ?',from_stdlib)}
-if(from_stdlib){
-var path_ix=meta_path.indexOf($B.finders["path"])
-if(path_ix >-1){meta_path.splice(path_ix,1)}}
-for(var i=0,len=meta_path.length;i < len;i++){var _finder=meta_path[i],find_spec=$B.$getattr(_finder,"find_spec",_b_.None)
-if(find_spec==_b_.None){
-var find_module=$B.$getattr(_finder,"find_module",_b_.None)
-if(find_module !==_b_.None){_loader=find_module(mod_name,_path)
-if(_loader !==_b_.None){
-var load_module=$B.$getattr(_loader,"load_module"),module=$B.$call(load_module,mod_name)
-_sys_modules[mod_name]=module
-return module}}}else{if(test){console.log('call find_spec of finder',_finder)}
-spec=$B.$call(find_spec,mod_name,_path)
-if(test){console.log('spec',spec)}
-if(!$B.is_none(spec)){module=$B.imported[spec.name]
-if(module !==undefined){
-return _sys_modules[spec.name]=module}
-_loader=$B.$getattr(spec,"loader",_b_.None)
-break}}}
-if(test){console.log('loader',_loader)}
-if(_loader===undefined){
-var message=mod_name
-if($B.protocol=="file"){message+=" (warning: cannot import local files with protocol 'file')"}
-var exc=$B.EXC(_b_.ModuleNotFoundError,message)
-exc.name=mod_name
-throw exc}
-if($B.is_none(module)){if(spec===_b_.None){$B.RAISE(_b_.ModuleNotFoundError,mod_name)}
-var _spec_name=$B.$getattr(spec,"name")
-if(!$B.is_none(_loader)){var create_module=$B.$getattr(_loader,"create_module",_b_.None)
-if(!$B.is_none(create_module)){module=$B.$call(create_module,spec)}}
-if(module===undefined){$B.RAISE(_b_.ImportError,mod_name)}
-if($B.is_none(module)){module=$B.module.$factory(mod_name)}}
-$B.module_setattr(module,'__name__',_spec_name)
-$B.module_setattr(module,'__loader__',_loader)
-$B.module_setattr(module,'__package__',$B.$getattr(spec,"parent",""))
-$B.module_setattr(module,'__spec__',spec)
-var locs=$B.$getattr(spec,"submodule_search_locations")
-if(module.$is_package=!$B.is_none(locs)){$B.module_setattr(module,'__path__',locs)}
-if($B.$getattr(spec,"has_location")){$B.module_setattr(module,'__file__',$B.$getattr(spec,"origin"))}
-var cached=$B.$getattr(spec,"cached")
-if(! $B.is_none(cached)){$B.module_setattr(module,'__cached__',cached)}
-if($B.is_none(_loader)){if(!$B.is_none(locs)){_sys_modules[_spec_name]=module}else{$B.RAISE(_b_.ImportError,mod_name)}}else{var exec_module=$B.$getattr(_loader,"exec_module",_b_.None)
-if($B.is_none(exec_module)){
-module=$B.$getattr(_loader,"load_module")(_spec_name)}else{_sys_modules[_spec_name]=module
-$B.namespace[_spec_name]=Object.create(null)
-if(module===undefined){console.log('no module !!!')}
-try{exec_module(module)}catch(e){delete _sys_modules[_spec_name]
-throw e}}}
-return _sys_modules[_spec_name]}
-$B.path_importer_cache={}
-function import_error(mod_name){var exc=$B.EXC(_b_.ImportError,mod_name)
-exc.name=mod_name
-throw exc}
-$B.$__import__=function(mod_name,globals,locals,fromlist){var $test=false 
-if($test){console.log("__import__",mod_name,'fromlist',fromlist)}
-var from_stdlib=false
-if(globals !==_b_.None){var file=$B.str_dict_get(globals,'__file__',$B.NULL)
-if(file !==$B.NULL){if((file.startsWith($B.brython_path+"Lib/")&&
-! file.startsWith($B.brython_path+"Lib/site-packages/"))||
-file.startsWith($B.brython_path+"libs/")||
-file.startsWith("VFS.")){from_stdlib=true}}}
-var modobj=$B.imported[mod_name],parsed_name=mod_name.split('.'),has_from=fromlist.length > 0
-if(modobj==_b_.None){
-import_error(mod_name)}
-if(modobj===undefined){
-if($B.is_none(fromlist)){fromlist=[]}
-for(var i=0,modsep="",_mod_name="",len=parsed_name.length-1,__path__=_b_.None;i <=len;++i){var _parent_name=_mod_name;
-_mod_name+=modsep+parsed_name[i]
-modsep="."
-modobj=$B.imported[_mod_name]
-if($test){console.log("iter",i,_mod_name,"\nmodobj",modobj,"\n__path__",__path__,Array.isArray(__path__))
-alert()}
-if(modobj==_b_.None){
-import_error(_mod_name)}else if(modobj===undefined){if($test){console.log('try import_engine with',_mod_name,$B.imported[_mod_name])}
-try{import_engine(_mod_name,__path__,from_stdlib)}catch(err){delete $B.imported[_mod_name]
-throw err}
-if($B.is_none($B.imported[_mod_name])){import_error(_mod_name)}else{
-if(_parent_name){_b_.setattr($B.imported[_parent_name],parsed_name[i],$B.imported[_mod_name])}}}else if($B.imported[_parent_name]&&
-$B.imported[_parent_name][parsed_name[i]]===undefined){
-_b_.setattr($B.imported[_parent_name],parsed_name[i],$B.imported[_mod_name])}
-if(i < len){__path__=$B.module_getattr($B.imported[_mod_name],'__path__')
-if(__path__===$B.NULL){if($test){console.log('no __path__',_mod_name,$B.imported[_mod_name])
-console.log('modobj',modobj)}
-if(i==len-1){var v=$B.$getattr($B.imported[_mod_name],parsed_name[len],$B.NULL)
-if(v !==$B.NULL && $B.exact_type(v,$B.module)){return v}}
-if(has_from){
-import_error(mod_name)}else{
-var exc=$B.EXC(_b_.ModuleNotFoundError)
-exc.__traceback__=$B.make_tb()
-exc.msg="No module named '"+mod_name+"'; '"+
-_mod_name+"' is not a package"
-exc.args=$B.fast_tuple([exc.msg])
-exc.name=mod_name
-exc.path=_b_.None
-throw exc}}}}}else{if($B.imported[parsed_name[0]]&&
-parsed_name.length==2){try{var v=$B.module_getattr($B.imported[parsed_name[0]],parsed_name[1])
-if(v===$B.NULL){$B.module_setattr($B.imported[parsed_name[0]],parsed_name[1],modobj)}}catch(err){console.log("error",parsed_name,modobj)
-throw err}}}
-if($test){console.log(1280,mod_name,$B.imported[mod_name])}
-if(fromlist.length > 0){
-return $B.imported[mod_name]}else{
-let package_name=mod_name
-while(parsed_name.length > 1){var module=parsed_name.pop();
-package_name=parsed_name.join('.')
-if($B.imported[package_name]===undefined){
-$B.$import(package_name,[],{},locals)
-$B.module_setattr($B.imported[package_name],module,$B.imported[mod_name])
-mod_name=module}}
-return $B.imported[package_name]}}
-$B.$import=function(mod_name,fromlist,aliases,locals,inum){
-var test=false 
-if(test){console.log('import',mod_name,fromlist,aliases)}
-if(mod_name=='_frozen_importlib_external'){
-var ns,alias
-if(aliases[mod_name]){[ns,alias]=aliases[mod_name]}else{[ns,alias]=[locals,mod_name]}
-$B.$import_from("importlib",["_bootstrap_external"],{_bootstrap_external:[ns,alias]},locals,0)
-let _bootstrap=$B.module_getattr($B.imported.importlib,'_bootstrap')
-let _bootstrap_external=$B.module_getattr($B.imported.importlib,'_bootstrap_external')
-$B.module_getattr(_bootstrap_external,'_set_bootstrap_module')(_bootstrap)
-$B.module_setattr(_bootstrap,'_bootstap_external',_bootstrap_external)
-let _frozen_importlib=$B.imported._frozen_importlib
-if(_frozen_importlib){$B.module_setattr(_frozen_importlib,'_bootstrap_external',_bootstrap_external)}
-return}
-var level=0,frame=$B.frame_obj.frame,current_module=frame[2],parts=current_module.split('.')
-while(mod_name.length > 0 && mod_name.startsWith('.')){level++
-mod_name=mod_name.substr(1)
-if(parts.length==0){$B.RAISE(_b_.ImportError,"Parent module '' not loaded, "+
-"cannot perform relative import")}
-current_module=parts.join('.')
-parts.pop()}
-if(level > 0){mod_name=current_module+
-(mod_name.length > 0 ? '.'+mod_name :'')}
-parts=mod_name.split(".")
-if(mod_name[mod_name.length-1]=="."){parts.pop()}
-var norm_parts=[],prefix=true
-for(var p of parts){if(prefix && p==""){
-var elt=norm_parts.pop()
-if(elt===undefined){$B.RAISE(_b_.ImportError,"Parent module '' not loaded, "+
-"cannot perform relative import")}}else{prefix=false;
-norm_parts.push(p)}}
-mod_name=norm_parts.join(".")
-fromlist=fromlist===undefined ?[]:fromlist
-aliases=aliases===undefined ?{}:aliases
-locals=locals===undefined ?{}:locals
-if(test){console.log('step 2, mod_name',mod_name,'fromlist',fromlist)}
-if($B.get_option('debug')==10){console.log("$import "+mod_name)
-console.log("use VFS ? "+$B.use_VFS)
-console.log("use static stdlib paths ? "+
-$B.get_option('static_stdlib_import'))}
-var current_frame=$B.frame_obj.frame,_globals=current_frame[3],__import__=_globals["__import__"],globals=$B.obj_dict(_globals)
-if(__import__===undefined){
-__import__=$B.$__import__}
-var importer=typeof __import__=="function" ?
-__import__ :
-$B.$getattr(__import__,"__call__")
-if(test){console.log('use importer',importer,'mod_name',mod_name,'fromlist',fromlist)
-console.log('in imported',$B.imported[mod_name])}
-try{var modobj=importer(mod_name,globals,undefined,fromlist,0)}catch(err){if(test){console.log('set error',$B.get_class(err))}
-$B.set_inum(inum)
-throw err}
-if(test){console.log('step 3, mod_name',mod_name,'fromlist',fromlist)
-console.log('modobj',modobj)}
-if(! fromlist ||fromlist.length==0){
-let alias=aliases[mod_name]
-if(alias){var[ns,name]=alias
-ns[name]=$B.imported[mod_name]}else{locals[norm_parts[0]]=modobj
-if(test){console.log('locals of',norm_parts[0],'set to',modobj)}}}else{var __all__=fromlist,thunk={}
-if(fromlist && fromlist[0]=="*"){if(test){console.log('import *',modobj)}
-try{__all__=$B.$getattr(modobj,"__all__",thunk);}catch(err){console.log('getattr __all__ raised',err)
-throw err}
-if(__all__ !==thunk){
-aliases={}}}
-if(__all__===thunk){
-for(var item of _b_.dict.$iter_items(modobj.dict)){var attr=item.key
-if(attr[0]!=="_"){locals[attr]=item.value}}}else{
-for(let name of __all__){var[ns,alias]=[locals,name]
-if(aliases[name]){[ns,alias]=aliases[name]}
-try{
-ns[alias]=$B.$getattr(modobj,name)
-if(ns[alias]&& ns[alias].$js_func){
-ns[alias]=ns[alias].$js_func}}catch($err1){if(! $B.is_exc($err1,[_b_.AttributeError])){$B.set_inum(inum)
-throw $err1}
-try{if(test){console.log('try to import',mod_name+'.'+name)}
-var submodule_name=mod_name+'.'+name
-$B.$call(__import__,mod_name+'.'+name,globals,undefined,[],0)
-if(test){console.log('import',mod_name+'.'+name,'ok')
-console.log($B.imported[mod_name+'.'+name])}
-ns[alias]=$B.imported[submodule_name]}catch($err3){if(test){console.log('error 3',$err3)}
-$B.set_inum(inum)
-if(! $B.is_exc($err3,[_b_.ImportError])){throw $err3}
-if(mod_name==="__future__"){
-var exc=$B.EXC(_b_.SyntaxError,"future feature "+name+" is not defined")
-throw exc}
-var $frame=[mod_name,modobj,mod_name,modobj],suggestion=$B.offer_suggestions_for_name_error($err3,$frame)
-if($err3.$py_error){$err3.ob_type=_b_.ImportError
-$err3.args[0]=`cannot import name '${name}' `+
-`from '${mod_name}'`
-if(modobj.__file__){$err3.args[0]+=` (${modobj.__file__})`}
-$err3.$suggestion=suggestion
-throw $err3}
-if($B.get_option('debug')> 2){console.log('no name',name,'in module',modobj)
-console.log($err3)
-console.log($B.frame_obj.frame)}
-$B.RAISE(_b_.ImportError,"cannot import name '"+name+"'")}}}}
-return locals}}
-$B.$import_from=function(module,names,aliases,level,locals,inum){
-var test=false 
-if(test){console.log('import from',module,names)}
-var current_module_name=$B.frame_obj.frame[2],parts=current_module_name.split('.'),relative=level > 0,current_module
-if(relative){
-current_module=$B.imported[parts.join('.')]
-if(current_module===undefined){$B.set_inum(inum)
-$B.RAISE(_b_.ImportError,'attempted relative import with no known parent package')}
-if(! current_module.$is_package){if(parts.length==1){$B.set_inum(inum)
-$B.RAISE(_b_.ImportError,'attempted relative import with no known parent package')}else{parts.pop()
-current_module=$B.imported[parts.join('.')]}}
-while(level > 0){current_module=$B.imported[parts.join('.')]
-if(! current_module.$is_package){$B.set_inum(inum)
-$B.RAISE(_b_.ImportError,'attempted relative import with no known parent package')}
-level--
-parts.pop()}
-if(module){
-var submodule=$B.module_getattr(current_module,'__name__')+
-'.'+module
-$B.$import(submodule,[],{},{},inum)
-current_module=$B.imported[submodule]}
-if(names.length > 0 && names[0]=='*'){
-for(var item of $B.module_items(current_module)){if(item.key.startsWith('$')||item.key.startsWith('_')){continue}
-locals[item.key]=item.value}}else{for(var name of names){var ns,alias
-if(aliases[name]){[ns,alias]=aliases[name]}else{[ns,alias]=[locals,name]}
-var value=$B.module_getattr(current_module,name)
-if(value !==$B.NULL){
-ns[alias]=value}else{
-var sub_module=$B.module_getattr(current_module,'__name__')+
-'.'+name
-$B.$import(sub_module,[],{},{})
-ns[alias]=$B.imported[sub_module]}}}}else{
-$B.$import(module,names,aliases,locals,inum)}}
-$B.$meta_path=[VFSFinder,StdlibStaticFinder,PathFinder]
-$B.finders={VFS:VFSFinder,stdlib_static:StdlibStaticFinder,path:PathFinder}
-function optimize_import_for_path(path,filetype){if(path.slice(-1)!="/"){path=path+"/" }
-var value=(filetype=='none')? _b_.None :
-url_hook(path,filetype)
-$B.path_importer_cache[path]=value}
-var Loader={ob_type:_b_.type,__mro__:[_b_.object],__name__ :"Loader"}
-var _importlib_module={ob_type :Module,__name__ :"_importlib",Loader:Loader,VFSFinder:VFSFinder,StdlibStatic:StdlibStaticFinder,ImporterPath:PathFinder,UrlPathFinder:url_hook,optimize_import_for_path :optimize_import_for_path}
-_importlib_module.__repr__=_importlib_module.__str__=function(){return "<module '_importlib' (built-in)>"}
-$B.imported["_importlib"]=_importlib_module})(__BRYTHON__);
 ;
 (function($B){var _b_=$B.builtins
 var escape2cp=$B.escape2cp={b:'\b',f:'\f',n:'\n',r:'\r',t:'\t',v:'\v'}
@@ -8738,8 +8181,13 @@ var arg=$.arg,encoding=$.encoding,errors=$.errors
 var res
 if(arg===''){return arg}
 if(encoding===$B.NULL && errors===$B.NULL){var klass=$B.get_class(arg)
-var method=$B.search_slot(klass,'tp_str',$B.NULL)
-if(method !==$B.NULL){res=method(arg)}else{res=_b_.repr(arg)}}else{if(! $B.is_bytes_like(arg)){$B.RAISE(_b_.TypeError,`decoding to str: need a bytes-like object, `+
+var test=false 
+var method=$B.search_in_mro(klass,'__str__',$B.NULL)
+var getter=$B.NULL
+if(method !==$B.NULL){getter=$B.search_in_mro($B.get_class(method),'__get__',$B.NULL)
+if(getter !==$B.NULL){var method1=$B.$call(getter,method,arg,klass)
+res=$B.$call(method1)}else{var in_dict=$B.search_in_dict(arg,'__str__',$B.NULL)
+if(in_dict===method){res=$B.$call(in_dict)}else{res=$B.$call(method,arg)}}}else{res=_b_.repr(arg)}}else{if(! $B.is_bytes_like(arg)){$B.RAISE(_b_.TypeError,`decoding to str: need a bytes-like object, `+
 `${$B.class_name(arg)} found`
 )}
 encoding=encoding===$B.NULL ? 'utf-8' :encoding
@@ -10777,8 +10225,7 @@ return self}
 var small_int=null
 if(y.imag.value==0 &&
 Number.isInteger(y.real.value)&&
-Math.abs(y.real.value)< 100){small_int=y.real.value
-console.log('small int',small_int)}
+Math.abs(y.real.value)< 100){small_int=y.real.value}
 if(small_int !==null){return c_powi(self,small_int)}
 if($B.$isinstance(other,_b_.float)){other=_b_.float.$to_js_number(other)}
 if(x.real.value==0 && x.imag.value==0){if(y.imag.value !=0 ||y.real.value < 0){$B.RAISE(_b_.ZeroDivisionError,'0.0 to a negative or complex power')}
@@ -11499,7 +10946,8 @@ $B.dict_keyiterator.tp_iter=function(self){return self}
 $B.dict_keyiterator.tp_iternext=function*(self){for(var item of self.it){yield item.key}}
 var dict_keyiterator_funcs=$B.dict_keyiterator.tp_funcs={}
 dict_keyiterator_funcs.__length_hint__=function(self){return _b_.dict.mp_length(self.dict_obj)}
-dict_keyiterator_funcs.__reduce__=function(self){return $B.fast_tuple([_b_.iter,$B.fast_tuple([$B.$list(Array.from(dict_keyiterator.tp_iternext(self)))])])}
+dict_keyiterator_funcs.__reduce__=function(self){var keys=$B.$list(Array.from($B.dict_keyiterator.tp_iternext(self)))
+return $B.fast_tuple([_b_.iter,$B.fast_tuple([keys])])}
 $B.dict_keyiterator.tp_methods=["__length_hint__","__reduce__"]
 $B.dict_reversekeyiterator.tp_iter=function(self){return self}
 $B.dict_reversekeyiterator.tp_iternext=function*(self){for(var entry of self.it){yield entry[0]}}
@@ -12387,13 +11835,17 @@ if($B.$isinstance(other,js_array)){return _self.slice().concat(other)}
 for(var item of $B.make_js_iterator(other)){res.push(pyobj2jsobj(item))}
 return res}
 js_array.mp_ass_subscript=function(self,key,value){if(value===$B.NULL){self.splice(key,1)}else{self[key]=pyobj2jsobj(value)}}
-js_array.tp_getattro=function(_self,attr){if(! _b_.list.tp_funcs.hasOwnProperty(attr)){
+js_array.tp_getattroXXXX=function(_self,attr){console.log('js array getattro',_self,attr)
+if(! _b_.list.tp_funcs.hasOwnProperty(attr)){
 var proto=Object.getPrototypeOf(_self),res=proto[attr]
 if(res !==undefined){
 return jsobj2pyobj(res,_self)}
 if(_self.hasOwnProperty(attr)){
 return jsobj2pyobj(_self[attr])}
 if(js_array.hasOwnProperty(attr)){return js_array[attr]}
+var method=$B.str_dict_get(js_array.dict,attr,$B.NULL)
+if(method !==$B.NULL){console.log('method',method)
+return $B.$call(method,_self,attr)}
 return $B.NULL}
 if(js_array.hasOwnProperty(attr)){return function(){return js_array[attr](_self,...arguments)}}
 return function(){var args=pyobj2jsobj(Array.from(arguments))
@@ -13437,6 +12889,622 @@ $B.RAISE(_b_.TypeError,`object ${$B.class_name(obj)} `+
 `can't be used in 'await' expression`)}})(__BRYTHON__);
 ;
 
+(function($B){var _b_=$B.builtins,_window=globalThis
+$B.namespace=function(module_name){
+if($B.imported.hasOwnProperty(module_name)){return $B.imported[module_name].dict.$strings}
+return{}}
+var Module=$B.module
+Module.$factory=function(name,doc,$package){var self=Module.tp_new()
+Module.tp_init(self,name,doc,$package)
+return self}
+$B.module_getattr=function(module,attr){return $B.str_dict_get(module.dict,attr,$B.NULL)}
+$B.module_setattr=function(module,attr,value){_b_.dict.$setitem(module.dict,attr,value)}
+$B.module_items=function(module){return _b_.dict.$iter_items(module.dict)}
+$B.module.tp_methods=["__dir__"]
+$B.module.tp_getset=["__annotations__","__annotate__"]
+$B.module.tp_repr=function(self){var name=$B.module_getattr(self,'__name__')
+var file=$B.module_getattr(self,'__file__')
+if(file===$B.NULL){file='(built_in)'}else{file='from '+file}
+return `<module '${name}' ${file}>`}
+$B.module.tp_getattro=function(self,attr){if(self.dict===undefined){console.log('no dict for module',self)}
+var res=_b_.object.tp_getattro(self,attr)
+if(res !==$B.NULL){return res}
+var getattr=$B.str_dict_get(self.dict,'__getattr__',$B.NULL)
+if(getattr !==$B.NULL){return $B.$call(getattr,attr)}
+return $B.NULL}
+$B.module.tp_init=function(self){var $=$B.args('__init__',3,{self:null,name:null,doc:null},['self','name','doc'],arguments,{doc:_b_.None},'args','kw')
+var self=$.self
+$B.module_setattr(self,'__name__',$.name)
+$B.module_setattr(self,'__doc__',$.doc)}
+$B.module.tp_new=function(self){return{
+ob_type:$B.module,dict:$B.empty_dict(),}}
+var module_funcs=$B.module.tp_funcs={}
+module_funcs.__annotate___get=function(self){}
+module_funcs.__annotate___set=function(self){}
+module_funcs.__annotations___get=function(self){}
+module_funcs.__annotations___set=function(self){}
+module_funcs.__dir__=function(self){var dir_func=$B.module_getattr(self,'__dir__')
+if(dir_func !==$B.NULL){return $B.$call(dir_func)}
+var names=[]
+for(var item of _b_.dict.$iter_items(self.dict)){names.push(item.key)}
+return $B.$list(names.sort())}
+$B.module.tp_methods=["__dir__"]
+$B.module.tp_members=[["__dict__",$B.TYPES.OBJECT,"dict",1]
+]
+$B.module.tp_getset=["__annotations__","__annotate__"]
+$B.set_func_names(Module,"builtins")
+$B.make_import_paths=function(filename){
+var filepath=$B.script_domain ? $B.script_domain+'/'+filename :filename
+var elts=filepath.split('/')
+elts.pop()
+var script_dir=elts.join('/'),path=[$B.brython_path+'Lib',$B.brython_path+'libs',script_dir,$B.brython_path+'Lib/site-packages']
+var meta_path=[],path_hooks=[]
+if($B.use_VFS){meta_path.push($B.finders.VFS)}
+var static_stdlib_import=$B.get_option_from_filename('static_stdlib_import',filename)
+if(static_stdlib_import !==false && $B.protocol !="file"){
+meta_path.push($B.finders.stdlib_static)
+if(path.length > 3){path.shift()
+path.shift()}}
+var pythonpath=$B.get_option_from_filename('pythonpath',filename)
+if(pythonpath){
+var ix=path.indexOf(script_dir)
+if(ix===-1){console.log('bizarre, script_dir',script_dir,'not in path',path)}else{var fullpaths=[]
+for(var p of pythonpath){if(p=='.'){fullpaths.push(script_dir)}else if(p.startsWith('/')){
+fullpaths.push($B.script_domain+p)}else if(p.split('://')[0].startsWith('http')){
+fullpaths.push(p)}else if(! p.startsWith($B.script_domain)){fullpaths.push(script_dir+'/'+p)}else{fullpaths.push(p)}}
+path.splice(ix,1,...fullpaths)}}
+if($B.protocol !=="file"){meta_path.push($B.finders.path)
+path_hooks.push($B.url_hook)}
+$B.import_info[filename]={meta_path,path_hooks,path}}
+function $download_module(mod,url){var xhr=new XMLHttpRequest(),fake_qs="?v="+(new Date().getTime()),res=null,mod_name=mod.__name__
+if($B.get_option('cache')){xhr.open("GET",url,false)}else{xhr.open("GET",url+fake_qs,false)}
+var timer=_window.setTimeout(function(){xhr.abort()},5000)
+xhr.send()
+if($B.$CORS){if(xhr.status==200 ||xhr.status==0){res=xhr.responseText}else{res=$B.EXC(_b_.ModuleNotFoundError,"No module named '"+
+mod_name+"'")}}else{if(xhr.readyState==4){if(xhr.status==200){res=xhr.responseText
+mod.$last_modified=
+xhr.getResponseHeader("Last-Modified")}else{
+console.info("Trying to import "+mod_name+
+", not found at url "+url)
+res=$B.EXC(_b_.ModuleNotFoundError,"No module named '"+
+mod_name+"'")}}}
+_window.clearTimeout(timer)
+if(res==null){$B.RAISE(_b_.ModuleNotFoundError,"No module named '"+
+mod_name+"' (res is null)")}
+if($B.$isinstance(res,_b_.BaseException)){throw res}
+return res}
+$B.$download_module=$download_module
+$B.addToImported=function(name,modobj){var module=$B.imported[name]
+if(modobj===undefined){$B.RAISE(_b_.ImportError,'imported not set by module')}
+for(var attr in modobj){if(typeof modobj[attr]=="function" && ! modobj[attr].$infos){modobj[attr].$infos={__module__:name,__name__:attr,__qualname__:attr,__code__:{co_filename:modobj.__file__,co_code:modobj[attr]+'',co_flags:$B.COMPILER_FLAGS.OPTIMIZED |$B.COMPILER_FLAGS.NEWLOCALS}}
+modobj[attr].$in_js_module=true
+modobj[attr].ob_type=$B.function
+modobj[attr].dict=$B.empty_dict()
+$B.add_function_infos(modobj,attr,name)}else if($B.$isinstance(modobj[attr],_b_.type)){if(modobj[attr].dict){if($B.str_dict_get(modobj[attr].dict,'__module__',$B.NULL)===
+$B.NULL){$B.str_dict_set(modobj[attr].dict,'__module__',name)}}}
+$B.module_setattr(module,attr,modobj[attr])}}
+function run_js(module_contents,path,_module){var mod_name=$B.module_getattr(_module,'__name__')
+var keys_before=new Set(Object.keys(globalThis))
+try{new Function(module_contents)()}catch(err){throw $B.exception(err)}
+var new_keys=(new Set(Object.keys(globalThis))).difference(keys_before)
+var modobj=$B.imported[mod_name]
+if(modobj===undefined){console.log('_module',_module,mod_name)
+$B.RAISE(_b_.ImportError,'imported not set by module')}
+modobj.ob_type=Module
+$B.module_setattr(modobj,'__name__',mod_name)
+for(var new_key of new_keys){modobj[new_key]=globalThis[new_key]
+delete globalThis[new_key]}
+for(var attr in modobj){if(typeof modobj[attr]=="function" && ! modobj[attr].$infos){modobj[attr].$infos={__module__:_module.__name__,__name__:attr,__qualname__:attr}
+modobj[attr].$in_js_module=true}else if($B.$isinstance(modobj[attr],_b_.type)&&
+modobj[attr].__module__===undefined){modobj[attr].__module__=_module.__name__}}
+return true}
+function run_py(module_contents,path,module,compiled){
+var filename=$B.module_getattr(module,'__file__')
+var test=false 
+if(test){console.log('run py',filename)}
+$B.file_cache[filename]=module_contents
+$B.url2name[filename]=$B.module_getattr(module,'__name__')
+var root,js,mod_name=$B.module_getattr(module,'__name__'),
+src
+if(! compiled){src={src:module_contents,filename,imported:true}
+try{root=$B.py2js(src,module,$B.module_getattr(module,'__name__'),$B.builtins_scope)}catch(err){err.$frame_obj=$B.frame_obj
+if($B.get_option('debug',err)> 1){console.log('error in imported module',module)
+console.log('stack',$B.make_frames_stack(err.$frame_obj))}
+throw err}}
+var module_name=$B.module_getattr(module,'__name__')
+try{js=compiled ? module_contents :root.to_js()
+if($B.get_option('debug')==10){console.log("code for module "+module_name)
+console.log($B.format_indent(js,0))}
+src=js
+js="var $module = (function(){\n"+js
+var prefix='locals_'
+js+='return '+prefix
+js+=module_name.replace(/\./g,"_")+"})(__BRYTHON__)\n"+
+"return $module"
+var module_id=prefix+module_name.replace(/\./g,'_')
+var mod=(new Function(module_id,js))(module)}catch(err){err.$frame_obj=err.$frame_obj ||$B.frame_obj
+if($B.get_option('debug',err)> 2){console.log('error',err,"\n for module "+module_name)
+console.log("module",module)
+console.log(root)
+if($B.get_option('debug',err)> 1){console.log(src)}
+for(let attr in err){console.log(attr,err[attr])}
+console.log("message: "+err.$message)
+console.log("filename: "+err.fileName)
+console.log("linenum: "+err.lineNumber)
+console.log(js.split('\n').slice(err.lineNumber-3,err.lineNumber+3).join('\n'))
+console.log(err.stack)}
+throw err}
+var imports=Object.keys(root.imports).join(",")
+try{
+for(let attr in mod){$B.module_setattr(module,attr,mod[attr])}
+$B.module_setattr(module,'__initializing__',false)
+var spec=$B.module_getattr(module,'__spec__')
+return{
+content:src,name:mod_name,imports,is_package:module.$is_package,path,timestamp:$B.timestamp,source_ts:$B.$getattr(spec,'loader_state').timestamp}}catch(err){console.log(""+err+" "+" for module "+module.__name__)
+for(let attr in err){console.log(attr+" "+err[attr])}
+if($B.get_option('debug')> 0){console.log("line info "+__BRYTHON__.line_info)}
+throw err}}
+$B.run_py=run_py 
+$B.run_js=run_js
+var ModuleSpec=$B.ModuleSpec=$B.make_builtin_class("ModuleSpec")
+ModuleSpec.$factory=function(fields){var spec={ob_type:ModuleSpec,dict:$B.empty_dict()}
+for(var field in fields){$B.str_dict_set(spec.dict,field,fields[field])}
+if(! fields.hasOwnProperty('loader')){console.log('no loader',fields)
+console.log(Error('trace').stack)}
+return spec}
+ModuleSpec.tp_repr=function(self){var res=`ModuleSpec(name='${self.name}', `+
+`loader=${_b_.str.$factory(self.loader)}, `+
+`origin='${self.origin}'`
+if(self.submodule_search_locations !==_b_.None){res+=`, submodule_search_locations=`+
+`${_b_.str.$factory(self.submodule_search_locations)}`}
+return res+')'}
+$B.set_func_names(ModuleSpec,"builtins")
+function parent_package(mod_name){
+var parts=mod_name.split(".")
+parts.pop()
+return parts.join(".")}
+var VFSFinder=$B.make_builtin_class("VFSFinder")
+VFSFinder.$factory=function(){return{
+ob_type:VFSFinder}}
+var VFSFinder_funcs=VFSFinder.tp_funcs={}
+VFSFinder_funcs.find_spec=function(cls,fullname){var stored,is_package,timestamp
+if(!$B.use_VFS){return _b_.None}
+stored=$B.VFS[fullname]
+if(stored===undefined){return _b_.None}
+is_package=stored[3]||false
+timestamp=stored.timestamp
+if(stored){var is_builtin=$B.builtin_module_names.indexOf(fullname)>-1
+return ModuleSpec.$factory({name :fullname,loader:VFSLoader.$factory(),
+origin :is_builtin? "built-in" :"brython_stdlib",
+submodule_search_locations:is_package? $B.$list([]):_b_.None,loader_state:{stored:stored,timestamp:timestamp},
+cached:_b_.None,parent:is_package? fullname :parent_package(fullname),has_location:_b_.False})}}
+VFSFinder.classmethods=["find_spec"]
+$B.set_func_names(VFSFinder,"<import>")
+const VFSLoader=$B.make_builtin_class("VFSLoader")
+VFSLoader.$factory=function(){return{
+ob_type:VFSLoader}}
+var VFSLoader_funcs=VFSLoader.tp_funcs={}
+VFSLoader_funcs.create_module=function(){
+return _b_.None}
+VFSLoader_funcs.exec_module=function(self,modobj){
+if(modobj===undefined){console.log('no module')
+console.log(Error('trace').stack)}
+var spec=$B.$getattr(modobj,'__spec__'),loader_state=$B.$getattr(spec,'loader_state'),stored=loader_state.stored,timestamp=loader_state.timestamp
+var ext=stored[0],module_contents=stored[1],imports=stored[2]
+modobj.$is_package=stored[3]||false
+var mod_name=$B.module_getattr(modobj,'__name__')
+var path="VFS."+mod_name
+path+=modobj.$is_package ? "/__init__.py" :ext
+$B.module_setattr(modobj,'__file__',path)
+$B.file_cache[path]=$B.VFS[mod_name][1]
+$B.url2name[path]=mod_name
+if(ext=='.js'){run_js(module_contents,$B.module_getattr(modobj,'__path__'),modobj)}else if($B.precompiled.hasOwnProperty(mod_name)){if($B.get_option('debug')> 1){console.info("load",mod_name,"from precompiled")}
+var parts=mod_name.split(".")
+for(var i=0;i < parts.length;i++){var parent=parts.slice(0,i+1).join(".")
+if($B.imported.hasOwnProperty(parent)&&
+$B.module_getattr($B.imported[parent],'__initialized__')!==$B.NULL){continue}
+var mod_js=$B.precompiled[parent],is_package=modobj.$is_package
+if(mod_js===undefined){
+continue}
+if(Array.isArray(mod_js)){mod_js=mod_js[0]}
+var mod=$B.imported[parent]=Module.$factory(parent,undefined,is_package)
+$B.module_setattr(mod,'__initialized__',true)
+$B.module_setattr(mod,'__spec__',spec)
+if(is_package){$B.module_setattr(mod,'__path__',"<stdlib>")
+$B.module_setattr(mod,'__package__',parent)
+mod.$is_package=true}else{let elts=parent.split(".")
+elts.pop()
+$B.module_setattr(mod,'__package__',elts.join("."))}
+$B.module_setattr(mod,'__file__',path)
+try{var parent_id=parent.replace(/\./g,"_"),prefix='locals_'
+mod_js+="return "+prefix+parent_id
+var $module=new Function(prefix+parent_id,mod_js)(
+mod)}catch(err){if($B.get_option('debug')> 1){console.log('error in module',mod)
+console.log(err)
+for(var k in err){console.log(k,err[k])}
+console.log(Object.keys($B.imported))
+console.log(modobj,"mod_js",mod_js)}
+throw err}
+for(var attr in $module){$B.module_setattr(mod,attr,$module[attr])}
+$module.__file__=path
+if(i > 0){
+$B.builtins.setattr(
+$B.imported[parts.slice(0,i).join(".")],parts[i],$module)}}
+return $module}else{var mod_name=$B.module_getattr(modobj,'__name__')
+if($B.get_option('debug')> 1){console.log("run Python code from VFS",mod_name)}
+var path=$B.brython_path+'/'+modobj.__file__
+var record=run_py(module_contents,path,modobj)
+record.imports=imports.join(',')
+record.is_package=modobj.$is_package
+record.timestamp=$B.timestamp
+record.source_ts=timestamp
+$B.precompiled[mod_name]=record.is_package ?[record.content]:
+record.content
+let elts=mod_name.split(".")
+if(elts.length > 1){elts.pop()}
+if($B.get_page_option('indexeddb')&& $B.indexedDB &&
+$B.idb_name){
+var idb_cx=indexedDB.open($B.idb_name)
+idb_cx.onsuccess=function(evt){var db=evt.target.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),request=store.put(record)
+request.onsuccess=function(){if($B.get_option('debug')> 1){console.info(modobj.__name__,"stored in db")}}
+request.onerror=function(){console.info("could not store "+modobj.__name__)}}}}}
+VFSLoader.tp_methods=["create_module","exec_module"]
+$B.set_func_names(VFSLoader,"builtins")
+var StdlibStaticFinder=$B.make_builtin_class("StdlibStaticFinder")
+StdlibStaticFinder.$factory=function(){return{
+ob_type:StdlibStaticFinder}}
+var StdlibStaticFinder_funcs=StdlibStaticFinder.tp_funcs={}
+StdlibStaticFinder_funcs.find_spec=function(self,fullname){
+if($B.stdlib && $B.get_option('static_stdlib_import')){var address=$B.stdlib[fullname]
+if(address===undefined){var elts=fullname.split(".")
+if(elts.length > 1){elts.pop()
+var $package=$B.stdlib[elts.join(".")]
+if($package && $package[1]){address=["py"]}}}
+if(address !==undefined){var ext=address[0],is_pkg=address[1]!==undefined,path=$B.brython_path+
+((ext=="py")? "Lib/" :"libs/")+
+fullname.replace(/\./g,"/"),metadata={ext:ext,is_package:is_pkg,path:path+(is_pkg? "/__init__.py" :
+((ext=="py")? ".py" :".js")),address:address},_module=Module.$factory(fullname)
+metadata.code=$download_module(_module,metadata.path)
+var res=ModuleSpec.$factory({name :fullname,loader:PathLoader.$factory(),
+origin :metadata.path,submodule_search_locations:is_pkg? $B.$list([path]):_b_.None,loader_state:metadata,
+cached:_b_.None,parent:is_pkg ? fullname :parent_package(fullname),has_location:_b_.True})
+return res}}
+return _b_.None}
+StdlibStaticFinder.classmethods=["find_spec"]
+$B.set_func_names(StdlibStaticFinder,"<import>")
+var PathFinder=$B.make_builtin_class("PathFinder")
+PathFinder.$factory=function(){return{
+ob_type:PathFinder}}
+var PathFinder_funcs=PathFinder.tp_funcs={}
+PathFinder_funcs.find_spec=function(cls,fullname,path){var test=false 
+if(test){console.log('find_spec',fullname,'path',path)}
+if($B.VFS && $B.VFS[fullname]){
+return _b_.None}
+if($B.is_none(path)){
+path=get_info('path')
+if(test){console.log('use path',path)}}
+for(var i=0,li=path.length;i < li;++i){var path_entry=path[i]
+if(path_entry[path_entry.length-1]!="/"){path_entry+="/"}
+var finder=$B.path_importer_cache[path_entry]
+if(test){console.log('finder in cache',finder)}
+if(finder===undefined){
+var path_hooks=get_info('path_hooks')
+for(var j=0,lj=path_hooks.length;j < lj;++j){var hook=path_hooks[j]
+try{finder=$B.$call(hook,path_entry)
+$B.path_importer_cache[path_entry]=finder
+break}catch(e){if($B.get_class(e)!==_b_.ImportError){throw e}}}}
+if($B.is_none(finder)){continue}
+var find_spec=$B.$getattr(finder,"find_spec"),spec=$B.$call(find_spec,fullname)
+if(!$B.is_none(spec)){return spec}}
+return _b_.None}
+PathFinder.classmethods=["find_spec"]
+$B.set_func_names(PathFinder,"<import>")
+var PathEntryFinder=$B.make_builtin_class("PathEntryFinder")
+PathEntryFinder.$factory=function(path_entry,hint){return{
+ob_type:PathEntryFinder,path_entry:path_entry,hint:hint}}
+var PathEntryFinder_funcs=PathEntryFinder.tp_funcs={}
+PathEntryFinder_funcs.find_spec=function(self,fullname){
+var test=false 
+if(test){console.log('PathEntryFinder.find_spec',self,fullname)
+console.log('self.path_entry',self.path_entry)
+console.log(fullname.match(/[^.]+$/g)[0])}
+var loader_data={},notfound=true,hint=self.hint,base_path=self.path_entry+fullname.match(/[^.]+$/g)[0],modpaths=[],py_ext=$B.get_option('python_extension')
+if(test){console.log('basepath',base_path)}
+var tryall=hint===undefined
+if(tryall ||hint=='py'){
+modpaths=modpaths.concat([[base_path+py_ext,"py",false],[base_path+"/__init__"+py_ext,"py",true],[base_path+'.js','js',false]])}
+for(var j=0;notfound && j < modpaths.length;++j){try{var file_info=modpaths[j],module={__name__:fullname,$is_package:false}
+loader_data.code=$download_module(module,file_info[0],undefined)
+notfound=false
+loader_data.ext=file_info[1]
+loader_data.is_package=file_info[2]
+loader_data.timestamp=Date.parse(module.$last_modified)
+if(hint===undefined){self.hint=file_info[1]
+$B.path_importer_cache[self.path_entry]=self}
+if(loader_data.is_package){
+$B.path_importer_cache[base_path+'/']=
+$B.$call(url_hook,base_path+'/',self.hint)}
+loader_data.path=file_info[0]}catch(err){if(! $B.is_exc(err,_b_.ModuleNotFoundError)){throw err}}}
+if(!notfound){return ModuleSpec.$factory({name :fullname,loader:PathLoader.$factory(),origin :loader_data.path,
+submodule_search_locations:loader_data.is_package?
+$B.$list([base_path]):_b_.None,loader_state:loader_data,
+cached:_b_.None,parent:loader_data.is_package? fullname :
+parent_package(fullname),has_location:_b_.True})}
+return _b_.None}
+PathEntryFinder.tp_methods=["find_spec"]
+$B.set_func_names(PathEntryFinder,"builtins")
+var PathLoader=$B.make_builtin_class("PathLoader")
+PathLoader.$factory=function(){return{
+ob_type:PathLoader}}
+var PathLoader_funcs=PathLoader.tp_funcs={}
+PathLoader_funcs.create_module=function(){
+return _b_.None}
+PathLoader_funcs.exec_module=function(self,module){
+var spec=$B.module_getattr(module,'__spec__')
+var metadata=$B.$getattr(spec,'loader_state')
+module.$is_package=metadata.is_package
+if(metadata.ext=="py"){run_py(metadata.code,metadata.path,module)}else{run_js(metadata.code,metadata.path,module)}}
+PathLoader.tp_methods=['create_module','exec_module']
+var url_hook=$B.url_hook=function(path_entry){
+path_entry=path_entry.endsWith("/")? path_entry :path_entry+"/"
+return PathEntryFinder.$factory(path_entry)}
+function get_info(info){var filename=$B.get_filename(),import_info=$B.import_info[filename]
+if(import_info===undefined && info=='meta_path'){$B.make_import_paths(filename)}
+return $B.import_info[filename][info]}
+function import_engine(mod_name,_path,from_stdlib){
+var test=false 
+var meta_path=get_info('meta_path').slice(),_sys_modules=$B.imported,_loader,spec
+if(test){console.log('from stdlib ?',from_stdlib)}
+if(from_stdlib){
+var path_ix=meta_path.indexOf($B.finders["path"])
+if(path_ix >-1){meta_path.splice(path_ix,1)}}
+for(var i=0,len=meta_path.length;i < len;i++){var _finder=meta_path[i],find_spec=$B.$getattr(_finder,"find_spec",_b_.None)
+if(find_spec==_b_.None){
+var find_module=$B.$getattr(_finder,"find_module",_b_.None)
+if(find_module !==_b_.None){_loader=find_module(mod_name,_path)
+if(_loader !==_b_.None){
+var load_module=$B.$getattr(_loader,"load_module"),module=$B.$call(load_module,mod_name)
+_sys_modules[mod_name]=module
+return module}}}else{if(test){console.log('call find_spec of finder',_finder)}
+spec=$B.$call(find_spec,mod_name,_path)
+if(test){console.log('spec',spec)}
+if(!$B.is_none(spec)){module=$B.imported[spec.name]
+if(module !==undefined){
+return _sys_modules[spec.name]=module}
+_loader=$B.$getattr(spec,"loader",_b_.None)
+break}}}
+if(test){console.log('loader',_loader)}
+if(_loader===undefined){
+var message=mod_name
+if($B.protocol=="file"){message+=" (warning: cannot import local files with protocol 'file')"}
+var exc=$B.EXC(_b_.ModuleNotFoundError,message)
+exc.name=mod_name
+throw exc}
+if($B.is_none(module)){if(spec===_b_.None){$B.RAISE(_b_.ModuleNotFoundError,mod_name)}
+var _spec_name=$B.$getattr(spec,"name")
+if(!$B.is_none(_loader)){var create_module=$B.$getattr(_loader,"create_module",_b_.None)
+if(!$B.is_none(create_module)){module=$B.$call(create_module,spec)}}
+if(module===undefined){$B.RAISE(_b_.ImportError,mod_name)}
+if($B.is_none(module)){module=$B.module.$factory(mod_name)}}
+$B.module_setattr(module,'__name__',_spec_name)
+$B.module_setattr(module,'__loader__',_loader)
+$B.module_setattr(module,'__package__',$B.$getattr(spec,"parent",""))
+$B.module_setattr(module,'__spec__',spec)
+var locs=$B.$getattr(spec,"submodule_search_locations")
+if(module.$is_package=!$B.is_none(locs)){$B.module_setattr(module,'__path__',locs)}
+if($B.$getattr(spec,"has_location")){$B.module_setattr(module,'__file__',$B.$getattr(spec,"origin"))}
+var cached=$B.$getattr(spec,"cached")
+if(! $B.is_none(cached)){$B.module_setattr(module,'__cached__',cached)}
+if($B.is_none(_loader)){if(!$B.is_none(locs)){_sys_modules[_spec_name]=module}else{$B.RAISE(_b_.ImportError,mod_name)}}else{var exec_module=$B.$getattr(_loader,"exec_module",_b_.None)
+if($B.is_none(exec_module)){
+module=$B.$getattr(_loader,"load_module")(_spec_name)}else{_sys_modules[_spec_name]=module
+$B.namespace[_spec_name]=Object.create(null)
+if(module===undefined){console.log('no module !!!')}
+try{exec_module(module)}catch(e){delete _sys_modules[_spec_name]
+throw e}}}
+return _sys_modules[_spec_name]}
+$B.path_importer_cache={}
+function import_error(mod_name){var exc=$B.EXC(_b_.ImportError,mod_name)
+exc.name=mod_name
+throw exc}
+$B.$__import__=function(mod_name,globals,locals,fromlist){var $test=false 
+if($test){console.log("__import__",mod_name,'fromlist',fromlist)}
+var from_stdlib=false
+if(globals !==_b_.None){var file=$B.str_dict_get(globals,'__file__',$B.NULL)
+if(file !==$B.NULL){if((file.startsWith($B.brython_path+"Lib/")&&
+! file.startsWith($B.brython_path+"Lib/site-packages/"))||
+file.startsWith($B.brython_path+"libs/")||
+file.startsWith("VFS.")){from_stdlib=true}}}
+var modobj=$B.imported[mod_name],parsed_name=mod_name.split('.'),has_from=fromlist.length > 0
+if(modobj==_b_.None){
+import_error(mod_name)}
+if(modobj===undefined){
+if($B.is_none(fromlist)){fromlist=[]}
+for(var i=0,modsep="",_mod_name="",len=parsed_name.length-1,__path__=_b_.None;i <=len;++i){var _parent_name=_mod_name;
+_mod_name+=modsep+parsed_name[i]
+modsep="."
+modobj=$B.imported[_mod_name]
+if($test){console.log("iter",i,_mod_name,"\nmodobj",modobj,"\n__path__",__path__,Array.isArray(__path__))
+alert()}
+if(modobj==_b_.None){
+import_error(_mod_name)}else if(modobj===undefined){if($test){console.log('try import_engine with',_mod_name,$B.imported[_mod_name])}
+try{import_engine(_mod_name,__path__,from_stdlib)}catch(err){delete $B.imported[_mod_name]
+throw err}
+if($B.is_none($B.imported[_mod_name])){import_error(_mod_name)}else{
+if(_parent_name){_b_.setattr($B.imported[_parent_name],parsed_name[i],$B.imported[_mod_name])}}}else if($B.imported[_parent_name]&&
+$B.imported[_parent_name][parsed_name[i]]===undefined){
+_b_.setattr($B.imported[_parent_name],parsed_name[i],$B.imported[_mod_name])}
+if(i < len){__path__=$B.module_getattr($B.imported[_mod_name],'__path__')
+if(__path__===$B.NULL){if($test){console.log('no __path__',_mod_name,$B.imported[_mod_name])
+console.log('modobj',modobj)}
+if(i==len-1){var v=$B.$getattr($B.imported[_mod_name],parsed_name[len],$B.NULL)
+if(v !==$B.NULL && $B.exact_type(v,$B.module)){return v}}
+if(has_from){
+import_error(mod_name)}else{
+var exc=$B.EXC(_b_.ModuleNotFoundError)
+exc.__traceback__=$B.make_tb()
+exc.msg="No module named '"+mod_name+"'; '"+
+_mod_name+"' is not a package"
+exc.args=$B.fast_tuple([exc.msg])
+exc.name=mod_name
+exc.path=_b_.None
+throw exc}}}}}else{if($B.imported[parsed_name[0]]&&
+parsed_name.length==2){try{var v=$B.module_getattr($B.imported[parsed_name[0]],parsed_name[1])
+if(v===$B.NULL){$B.module_setattr($B.imported[parsed_name[0]],parsed_name[1],modobj)}}catch(err){console.log("error",parsed_name,modobj)
+throw err}}}
+if($test){console.log(1280,mod_name,$B.imported[mod_name])}
+if(fromlist.length > 0){
+return $B.imported[mod_name]}else{
+let package_name=mod_name
+while(parsed_name.length > 1){var module=parsed_name.pop();
+package_name=parsed_name.join('.')
+if($B.imported[package_name]===undefined){
+$B.$import(package_name,[],{},locals)
+$B.module_setattr($B.imported[package_name],module,$B.imported[mod_name])
+mod_name=module}}
+return $B.imported[package_name]}}
+$B.$import=function(mod_name,fromlist,aliases,locals,inum){
+var test=false 
+if(test){console.log('import',mod_name,fromlist,aliases)}
+if(mod_name=='_frozen_importlib_external'){
+var ns,alias
+if(aliases[mod_name]){[ns,alias]=aliases[mod_name]}else{[ns,alias]=[locals,mod_name]}
+$B.$import_from("importlib",["_bootstrap_external"],{_bootstrap_external:[ns,alias]},locals,0)
+let _bootstrap=$B.module_getattr($B.imported.importlib,'_bootstrap')
+let _bootstrap_external=$B.module_getattr($B.imported.importlib,'_bootstrap_external')
+$B.module_getattr(_bootstrap_external,'_set_bootstrap_module')(_bootstrap)
+$B.module_setattr(_bootstrap,'_bootstap_external',_bootstrap_external)
+let _frozen_importlib=$B.imported._frozen_importlib
+if(_frozen_importlib){$B.module_setattr(_frozen_importlib,'_bootstrap_external',_bootstrap_external)}
+return}
+var level=0,frame=$B.frame_obj.frame,current_module=frame[2],parts=current_module.split('.')
+while(mod_name.length > 0 && mod_name.startsWith('.')){level++
+mod_name=mod_name.substr(1)
+if(parts.length==0){$B.RAISE(_b_.ImportError,"Parent module '' not loaded, "+
+"cannot perform relative import")}
+current_module=parts.join('.')
+parts.pop()}
+if(level > 0){mod_name=current_module+
+(mod_name.length > 0 ? '.'+mod_name :'')}
+parts=mod_name.split(".")
+if(mod_name[mod_name.length-1]=="."){parts.pop()}
+var norm_parts=[],prefix=true
+for(var p of parts){if(prefix && p==""){
+var elt=norm_parts.pop()
+if(elt===undefined){$B.RAISE(_b_.ImportError,"Parent module '' not loaded, "+
+"cannot perform relative import")}}else{prefix=false;
+norm_parts.push(p)}}
+mod_name=norm_parts.join(".")
+fromlist=fromlist===undefined ?[]:fromlist
+aliases=aliases===undefined ?{}:aliases
+locals=locals===undefined ?{}:locals
+if(test){console.log('step 2, mod_name',mod_name,'fromlist',fromlist)}
+if($B.get_option('debug')==10){console.log("$import "+mod_name)
+console.log("use VFS ? "+$B.use_VFS)
+console.log("use static stdlib paths ? "+
+$B.get_option('static_stdlib_import'))}
+var current_frame=$B.frame_obj.frame,_globals=current_frame[3],__import__=_globals["__import__"],globals=$B.obj_dict(_globals)
+if(__import__===undefined){
+__import__=$B.$__import__}
+var importer=typeof __import__=="function" ?
+__import__ :
+$B.$getattr(__import__,"__call__")
+if(test){console.log('use importer',importer,'mod_name',mod_name,'fromlist',fromlist)
+console.log('in imported',$B.imported[mod_name])}
+try{var modobj=importer(mod_name,globals,undefined,fromlist,0)}catch(err){if(test){console.log('set error',$B.get_class(err))}
+$B.set_inum(inum)
+throw err}
+if(test){console.log('step 3, mod_name',mod_name,'fromlist',fromlist)
+console.log('modobj',modobj)}
+if(! fromlist ||fromlist.length==0){
+let alias=aliases[mod_name]
+if(alias){var[ns,name]=alias
+ns[name]=$B.imported[mod_name]}else{locals[norm_parts[0]]=modobj
+if(test){console.log('locals of',norm_parts[0],'set to',modobj)}}}else{var __all__=fromlist,thunk={}
+if(fromlist && fromlist[0]=="*"){if(test){console.log('import *',modobj)}
+try{__all__=$B.$getattr(modobj,"__all__",thunk);}catch(err){console.log('getattr __all__ raised',err)
+throw err}
+if(__all__ !==thunk){
+aliases={}}}
+if(__all__===thunk){
+for(var item of _b_.dict.$iter_items(modobj.dict)){var attr=item.key
+if(attr[0]!=="_"){locals[attr]=item.value}}}else{
+for(let name of __all__){var[ns,alias]=[locals,name]
+if(aliases[name]){[ns,alias]=aliases[name]}
+try{
+ns[alias]=$B.$getattr(modobj,name)
+if(ns[alias]&& ns[alias].$js_func){
+ns[alias]=ns[alias].$js_func}}catch($err1){if(! $B.is_exc($err1,[_b_.AttributeError])){$B.set_inum(inum)
+throw $err1}
+try{if(test){console.log('try to import',mod_name+'.'+name)}
+var submodule_name=mod_name+'.'+name
+$B.$call(__import__,mod_name+'.'+name,globals,undefined,[],0)
+if(test){console.log('import',mod_name+'.'+name,'ok')
+console.log($B.imported[mod_name+'.'+name])}
+ns[alias]=$B.imported[submodule_name]}catch($err3){if(test){console.log('error 3',$err3)}
+$B.set_inum(inum)
+if(! $B.is_exc($err3,[_b_.ImportError])){throw $err3}
+if(mod_name==="__future__"){
+var exc=$B.EXC(_b_.SyntaxError,"future feature "+name+" is not defined")
+throw exc}
+var $frame=[mod_name,modobj,mod_name,modobj],suggestion=$B.offer_suggestions_for_name_error($err3,$frame)
+if($err3.$py_error){$err3.ob_type=_b_.ImportError
+$err3.args[0]=`cannot import name '${name}' `+
+`from '${mod_name}'`
+if(modobj.__file__){$err3.args[0]+=` (${modobj.__file__})`}
+$err3.$suggestion=suggestion
+throw $err3}
+if($B.get_option('debug')> 2){console.log('no name',name,'in module',modobj)
+console.log($err3)
+console.log($B.frame_obj.frame)}
+$B.RAISE(_b_.ImportError,"cannot import name '"+name+"'")}}}}
+return locals}}
+$B.$import_from=function(module,names,aliases,level,locals,inum){
+var test=false 
+if(test){console.log('import from',module,names)}
+var current_module_name=$B.frame_obj.frame[2],parts=current_module_name.split('.'),relative=level > 0,current_module
+if(relative){
+current_module=$B.imported[parts.join('.')]
+if(current_module===undefined){$B.set_inum(inum)
+$B.RAISE(_b_.ImportError,'attempted relative import with no known parent package')}
+if(! current_module.$is_package){if(parts.length==1){$B.set_inum(inum)
+$B.RAISE(_b_.ImportError,'attempted relative import with no known parent package')}else{parts.pop()
+current_module=$B.imported[parts.join('.')]}}
+while(level > 0){current_module=$B.imported[parts.join('.')]
+if(! current_module.$is_package){$B.set_inum(inum)
+$B.RAISE(_b_.ImportError,'attempted relative import with no known parent package')}
+level--
+parts.pop()}
+if(module){
+var submodule=$B.module_getattr(current_module,'__name__')+
+'.'+module
+$B.$import(submodule,[],{},{},inum)
+current_module=$B.imported[submodule]}
+if(names.length > 0 && names[0]=='*'){
+for(var item of $B.module_items(current_module)){if(item.key.startsWith('$')||item.key.startsWith('_')){continue}
+locals[item.key]=item.value}}else{for(var name of names){var ns,alias
+if(aliases[name]){[ns,alias]=aliases[name]}else{[ns,alias]=[locals,name]}
+var value=$B.module_getattr(current_module,name)
+if(value !==$B.NULL){
+ns[alias]=value}else{
+var sub_module=$B.module_getattr(current_module,'__name__')+
+'.'+name
+$B.$import(sub_module,[],{},{})
+ns[alias]=$B.imported[sub_module]}}}}else{
+$B.$import(module,names,aliases,locals,inum)}}
+$B.$meta_path=[VFSFinder,StdlibStaticFinder,PathFinder]
+$B.finders={VFS:VFSFinder,stdlib_static:StdlibStaticFinder,path:PathFinder}
+function optimize_import_for_path(path,filetype){if(path.slice(-1)!="/"){path=path+"/" }
+var value=(filetype=='none')? _b_.None :
+url_hook(path,filetype)
+$B.path_importer_cache[path]=value}
+var Loader={ob_type:_b_.type,__mro__:[_b_.object],__name__ :"Loader"}
+var _importlib_module=Module.$factory('_importlib',_b_.None)
+$B.assign_dict(_importlib_module,{__name__ :"_importlib",Loader:Loader,VFSFinder:VFSFinder,StdlibStatic:StdlibStaticFinder,ImporterPath:PathFinder,UrlPathFinder:url_hook,optimize_import_for_path :optimize_import_for_path}
+)
+$B.imported["_importlib"]=_importlib_module})(__BRYTHON__);
+;
+
 (function($B){$B.builtin_class_flags={builtins:{1073763586:['ModuleNotFoundError','WindowsError','AttributeError','PendingDeprecationWarning','StopAsyncIteration','SystemExit','ResourceWarning','KeyboardInterrupt','FloatingPointError','ChildProcessError','RuntimeWarning','Warning','SystemError','RecursionError','ArithmeticError','PythonFinalizationError','EncodingWarning','TypeError','UnboundLocalError','SyntaxError','UserWarning','AssertionError','ImportError','Exception','RuntimeError','StopIteration','ConnectionRefusedError','ValueError','SyntaxWarning','DeprecationWarning','ConnectionError','OverflowError','BaseException','FileExistsError','EnvironmentError','ImportWarning','InterruptedError','NotImplementedError','ZeroDivisionError','EOFError','PermissionError','MemoryError','ConnectionAbortedError','IndexError','BrokenPipeError','BufferError','KeyError','UnicodeError','UnicodeDecodeError','ReferenceError','FutureWarning','IsADirectoryError','BlockingIOError','OSError','NotADirectoryError','UnicodeTranslateError','ProcessLookupError','FileNotFoundError','GeneratorExit','ConnectionResetError','BaseExceptionGroup','UnicodeWarning','LookupError','NameError','TabError','_IncompleteInputError','IOError','IndentationError','UnicodeEncodeError','TimeoutError','BytesWarning'],1073763848:['ExceptionGroup'],20975874:['bool'],4199682:['bytearray','float'],138417410:['bytes'],21762:['zip','filter','enumerate','property','reversed','map','staticmethod','super','classmethod'],5378:['complex','object'],541087042:['dict'],4216066:['set','frozenset'],20976898:['int'],37770530:['list'],20770:['memoryview'],4386:['range'],20738:['slice'],272635138:['str'],71324962:['tuple'],2155896066:['type'],},types:{20866:['PyCapsule','member_descriptor','getset_descriptor','coroutine','generator','frame','async_generator','classmethod_descriptor','method-wrapper'],22914:['builtin_function_or_method'],20738:['traceback','cell'],4354:['code','NotImplementedType','NoneType','ellipsis'],153858:['function'],20802:['mappingproxy'],153986:['method_descriptor'],22786:['method'],21762:['module'],151938:['wrapper_descriptor'],}}})(__BRYTHON__);
 ;
 (function($B){var _b_=$B.builtins
@@ -13903,8 +13971,9 @@ $B.imported[name]=module_obj
 for(var attr in module_obj){if(typeof module_obj[attr]=='function'){module_obj[attr].$infos={__module__:name,__name__:attr,__qualname__:name+'.'+attr}
 $B.set_function_infos(module_obj[attr],{__module__:name,__name__:attr,__qualname__:name+'.'+attr}
 )}
-_b_.dict.$setitem(module_obj.dict,attr,module_obj[attr])}
-module_obj.__name__=name}
+$B.module_setattr(module_obj,attr,module_obj[attr])}
+$B.module_setattr(module_obj,'__name__',name)
+$B.module_setattr(module_obj,'__module__','builtins')}
 for(let attr in modules){load(attr,modules[attr])}
 if(!($B.isWebWorker ||$B.isNode)){modules['browser'].html=modules['browser.html']
 modules['browser'].aio=modules['browser.aio']}
@@ -13969,10 +14038,13 @@ var builtins_doc="Built-in functions, types, exceptions, and other "+
 "but in\nwhich the built-in of that name is also needed."
 $B.imported.builtins=$B.module.tp_new($B.module)
 $B.module.tp_init($B.imported.builtins,'builtins',builtins_doc)
-for(var attr in _b_){$B.module_setattr($B.imported.builtins,attr,_b_[attr])}
-$B.module_setattr($B.imported.builtins,'__package__','')
+$B.imported.builtins.dict=$B.obj_dict(_b_)
+$B.module_setattr($B.imported.builtins,'__doc__',builtins_doc)
+$B.module_setattr($B.imported.builtins,'__package__',_b_.None)
 $B.module_setattr($B.imported.builtins,'__loader__',_b_.None)
-$B.module_setattr($B.imported.builtins,'__spec__',$B.ModuleSpec.$factory({name:'builtins',origin:'built-in',has_location:false,loader:_b_.None,submodule_search_locations:_b_.None})
+$B.module_setattr($B.imported.builtins,'__spec__',$B.ModuleSpec.$factory(
+{name:'builtins',origin:'built-in',has_location:false,loader:_b_.None,submodule_search_locations:_b_.None}
+)
 )
 var copyright=`Copyright (c) 2001 Python Software Foundation.
 All Rights Reserved.
@@ -14655,8 +14727,10 @@ for(var operator in op_type){opclass2dunder[op_type[operator]]='__'+$operators[o
 opclass2dunder['UAdd']='__pos__'
 opclass2dunder['USub']='__neg__'
 opclass2dunder['Invert']='__invert__'
+var exclude_from_builtins=["__doc__","__loader__","__name__","__package__","__spec__"
+]
 var builtins_scope=new Scope("__builtins__")
-for(var name in $B.builtins){builtins_scope.locals.add(name)}
+for(var name in $B.builtins){if(! exclude_from_builtins.includes(name)){builtins_scope.locals.add(name)}}
 function mark_parents(node){if(node.body && node.body instanceof Array){for(let child of node.body){child.$parent=node
 mark_parents(child)}}else if(node.handlers){
 var p={$parent:node,'type':'except_handler'}
@@ -16141,6 +16215,7 @@ scopes.pop()
 scopes.pop()
 var js=prefix+`$B.$import('_typing')\n`
 js+=prefix+`var locals_${qualified_scope_name(scopes, type_param_scope)} = {}\n`
+js+=prefix+`$B.set_lineno(frame, ${this.lineno})\n`
 js+=prefix+`function TYPE_PARAMS_OF_${this.name.id}(){\n`
 indent()
 js+=prefix+`var locals_${qualified_name} = {},\n`+
@@ -16161,10 +16236,10 @@ js+=prefix+`}\n`+
 prefix+`locals.${this.name.id} = TYPE_PARAMS_OF_${this.name.id}()`
 return js}
 $B.ast.TypeVar.prototype.to_js=function(){check_type_params(this)
-return `$B.$call($B.imported._typing.TypeVar, '${this.name}', [], `+
+return `$B.$call($B.module_getattr($B.imported._typing, 'TypeVar'), '${this.name}', `+
 `{$kw: [{infer_variance: true}]})`}
-$B.ast.TypeVarTuple.prototype.to_js=function(){return `$B.$call($B.imported._typing.TypeVarTuple, '${this.name.id}')`}
-$B.ast.ParamSpec.prototype.to_js=function(){return `$B.$call($B.imported._typing.ParamSpec, '${this.name.id}')`}
+$B.ast.TypeVarTuple.prototype.to_js=function(){return `$B.$call($B.module_getattr($B.imported._typing, 'TypeVarTuple'), '${this.name.id}')`}
+$B.ast.ParamSpec.prototype.to_js=function(){return `$B.$call($B.module_getattr($B.imported._typing, 'ParamSpec'), '${this.name.id}')`}
 $B.ast.UnaryOp.prototype.to_js=function(scopes){var operand=$B.js_from_ast(this.operand,scopes)
 if(this.op instanceof $B.ast.Not){return `! $B.$bool(${operand})`}
 if(typeof operand=="number" ||operand instanceof Number){if(this.op instanceof $B.ast.UAdd){return operand+''}else if(this.op instanceof $B.ast.USub){return-operand+''}}

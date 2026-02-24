@@ -637,7 +637,6 @@ def _unquote_impl(string: bytes | bytearray | str) -> bytes | bytearray:
         return b''
     if isinstance(string, str):
         string = string.encode('utf-8')
-    print('urllib.parse, string', string)
     bits = string.split(b'%')
     if len(bits) == 1:
         return string
@@ -650,8 +649,6 @@ def _unquote_impl(string: bytes | bytearray | str) -> bytes | bytearray:
         _hextobyte = {(a + b).encode(): bytes.fromhex(a + b)
                       for a in _hexdig for b in _hexdig}
     for item in bits[1:]:
-        print('urllib.parse 652, item', item, type(item))
-        print(item[:2])
         try:
             append(_hextobyte[item[:2]])
             append(item[2:])

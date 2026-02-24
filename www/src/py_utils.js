@@ -1528,14 +1528,10 @@ $B.$call = function(callable, ...args){
         console.log('call_method', call_method)
     }
     if(call_method === $B.NULL){
-        console.log('not callable', callable)
-        Error.stackTraceLimit = 50
-        console.log(Error().stack)
         $B.RAISE(_b_.TypeError, "'" + $B.class_name(callable) +
             "' object is not callable")
     }
     if(typeof call_method !== 'function'){
-        console.log('not a function', call_method)
         if($B.search_slot($B.get_class(call_method), 'tp_call', $B.NULL) !== $B.NULL){
             // for instance __call__ might be set to dict
             return $B.$call(call_method, ...args)
