@@ -669,8 +669,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-02-24 07:26:14.916875"
-__BRYTHON__.timestamp=1771914374916
+__BRYTHON__.compiled_date="2026-02-24 07:56:09.403520"
+__BRYTHON__.timestamp=1771916169403
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -4437,47 +4437,9 @@ i=$B.PyNumber_Index(i)
 if(i < 0 ||i > 1114111){$B.RAISE(_b_.ValueError,'Outside valid range')}else if(i >=0x10000 && i <=0x10FFFF){var code=(i-0x10000),s=String.fromCodePoint(0xD800 |(code >> 10))+
 String.fromCodePoint(0xDC00 |(code & 0x3FF))
 return $B.make_String(s,[0])}else{return String.fromCodePoint(i)}}
-var code=$B.code
-$B.code.tp_richcompare=function(self){}
-$B.code.tp_repr=function(self){return `<code object ${self.co_name}, file '${self.co_filename}', `+
-`line ${self.co_firstlineno || 1}>`}
-$B.code.tp_hash=function(self){}
-$B.code.tp_new=function(self){return{
-ob_type:$B.code,dict:$B.empty_dict()}}
-var code_funcs=$B.code.tp_funcs={}
-code_funcs.__replace__=function(self){}
-code_funcs.__sizeof__=function(self){}
-code_funcs._co_code_adaptive_get=function(self){return _b_.None}
-code_funcs._co_code_adaptive_set=_b_.None
-code_funcs._varname_from_oparg=function(self){}
-code_funcs.co_argcount=function(self){return self.co_argcount}
-code_funcs.co_branches=function(self){console.log('get co branches',self)}
-code_funcs.co_cellvars_get=function(self){return self.co_cellvars}
-code_funcs.co_cellvars_set=_b_.None
-code_funcs.co_code_get=function(self){return self.co_code}
-code_funcs.co_code_set=_b_.None
-code_funcs.co_freevars_get=function(self){return self.co_freevars}
-code_funcs.co_freevars_set=_b_.None
-code_funcs.co_lines=function(self){console.log('get co_lines',self)}
-code_funcs.co_lnotab_get=function(self){return _b_.None}
-code_funcs.co_lnotab_set=_b_.None
-code_funcs.co_positions=function(self){return self.co_positions()}
-code_funcs.co_varnames_get=function(self){return self.co_varnames}
-code_funcs.co_varnames_set=_b_.None
-code_funcs.replace=function(self){var $=$B.args('replace',1,{self:null},['self'],arguments,{},null,'kw')
-var self=$.self
-var expected=['co_argcount','co_branches','co_cellvars','co_code','co_consts','co_exceptiontable','co_filename','co_firstlineno','co_flags','co_freevars','co_kwonlyargcount','co_lines','co_linetable','co_lnotab','co_name','co_names','co_nlocals','co_positions','co_posonlyargcount','co_qualname','co_stacksize','co_varnames']
-$B.set_expected_kwargs(self,expected,$.kw)
-return self}
-$B.code.tp_methods=["__sizeof__","co_lines","co_branches","co_positions","replace","_varname_from_oparg","__replace__"
-]
-$B.code.tp_members=[["co_argcount",$B.TYPES.INT,'co_argcount',1],["co_posonlyargcount",$B.TYPES.INT,'co_posonlyargcount',1],["co_kwonlyargcount",$B.TYPES.INT,'co_kwonlyargcount',1],["co_stacksize",$B.TYPES.INT,'co_stacksize',1],["co_flags",$B.TYPES.INT,'co_flags',1],["co_nlocals",$B.TYPES.INT,'co_nlocals',1],["co_consts",$B.TYPES.OBJECT,'co_consts',1],["co_names",$B.TYPES.OBJECT,'co_names',1],["co_filename",$B.TYPES.OBJECT,'co_filename',1],["co_name",$B.TYPES.OBJECT,'co_name',1],["co_qualname",$B.TYPES.OBJECT,'co_qualname',1],["co_firstlineno",$B.TYPES.INT,'co_firstlineno',1],["co_linetable",$B.TYPES.OBJECT,'co_linetable',1],["co_exceptiontable",$B.TYPES.OBJECT,'co_exceptiontable',1],]
-$B.code.tp_getset=["co_lnotab","_co_code_adaptive","co_varnames","co_cellvars","co_freevars","co_code"
-]
-$B.set_func_names(code,"builtins")
 _b_.compile=function(){var $=$B.args('compile',7,{source:null,filename:null,mode:null,flags:null,dont_inherit:null,optimize:null,_feature_version:null},['source','filename','mode','flags','dont_inherit','optimize','_feature_version'],arguments,{flags:0,dont_inherit:false,optimize:-1,_feature_version:0},null,null)
 var module_name='$exec_'+$B.UUID()
-$.ob_type=code
+$.ob_type=$B.code
 $.dict=$B.empty_dict()
 var infos={co_flags:$.flags,co_name:"<module>",co_filename:$.filename}
 for(var key in infos){$[key]=infos[key]}
@@ -4613,7 +4575,7 @@ if($.src.mode && $.src.mode=="single" &&
 ["<console>","<stdin>"].indexOf($.src.filename)>-1){
 _b_.print(">",$.src.source.trim())}
 var filename='<string>'
-if($B.get_class(src)===code){filename=src.filename}else if((! src.valueOf)||typeof src.valueOf()!=='string'){$B.RAISE(_b_.TypeError,`${mode}() arg 1 must be a string,`+
+if($B.exact_type(src,$B.code)){filename=src.filename}else if((! src.valueOf)||typeof src.valueOf()!=='string'){$B.RAISE(_b_.TypeError,`${mode}() arg 1 must be a string,`+
 " bytes or code object")}else{
 src=src.valueOf()
 src=src.replace(/\r\n/g,'\n').
@@ -4662,7 +4624,7 @@ frame=[__name__,exec_locals,__name__,exec_globals]
 frame.is_exec_top=true
 $B.enter_frame(frame,filename,1)
 var _frame_obj=$B.frame_obj
-if($B.get_class(src)===code){if(src.mode=='exec' && mode=='eval'){return _b_.None}
+if($B.exact_type(src,$B.code)){if(src.mode=='exec' && mode=='eval'){return _b_.None}
 _ast=src._ast
 if(_ast.$js_ast){_ast=_ast.$js_ast}else{_ast=$B.ast_py_to_js(_ast)}
 if(_ast instanceof $B.ast.Expression){
@@ -4719,15 +4681,15 @@ iterable=iter(iterable)
 if(func===_b_.None){func=$B.$bool}
 return{
 ob_type:filter,func:func,iterable:iterable}}
-_b_.filter.tp_iter=function(self){return self}
+filter.tp_iter=function(self){return self}
 filter.tp_iternext=function*(self){for(var item of self.it){if($B.$bool($B.$call(self.func,item))){yield item}}}
-_b_.filter.tp_new=function(){var $=$B.args('__new__',3,{cls:null,func:null,iterable:null},['cls','func','iterable'],arguments,{},null,null)
+filter.tp_new=function(){var $=$B.args('__new__',3,{cls:null,func:null,iterable:null},['cls','func','iterable'],arguments,{},null,null)
 var func=$.func===_b_.None ?(x)=> x :$.func
 return{
 ob_type:_b_.filter,func,it:$B.make_js_iterator($.iterable)}}
 var filter_funcs=_b_.filter.tp_funcs={}
 filter_funcs.__reduce__=function(self){}
-_b_.filter.tp_methods=["__reduce__"]
+filter.tp_methods=["__reduce__"]
 $B.set_func_names(filter,"builtins")
 _b_.format=function(){var $=$B.args("format",2,{value:null,format_spec:null},["value","format_spec"],arguments,{format_spec:''},null,null),value=$.value
 var klass=$B.get_class(value)
@@ -5284,6 +5246,46 @@ ellipsis['__'+$B.$comps[comp]+'__']=
 function(){return _b_.NotImplemented}}}
 $B.set_func_names(ellipsis)
 _b_.__BRYTHON__=__BRYTHON__})(__BRYTHON__);
+;
+(function($B){var _b_=$B.builtins
+var code=$B.code
+$B.code.tp_richcompare=function(self){}
+$B.code.tp_repr=function(self){return `<code object ${self.co_name}, file '${self.co_filename}', `+
+`line ${self.co_firstlineno || 1}>`}
+$B.code.tp_hash=function(self){}
+$B.code.tp_new=function(self){return{
+ob_type:$B.code,dict:$B.empty_dict()}}
+var code_funcs=$B.code.tp_funcs={}
+code_funcs.__replace__=function(self){}
+code_funcs.__sizeof__=function(self){}
+code_funcs._co_code_adaptive_get=function(self){return _b_.None}
+code_funcs._co_code_adaptive_set=_b_.None
+code_funcs._varname_from_oparg=function(self){}
+code_funcs.co_argcount=function(self){return self.co_argcount}
+code_funcs.co_branches=function(self){console.log('get co branches',self)}
+code_funcs.co_cellvars_get=function(self){return self.co_cellvars}
+code_funcs.co_cellvars_set=_b_.None
+code_funcs.co_code_get=function(self){return self.co_code}
+code_funcs.co_code_set=_b_.None
+code_funcs.co_freevars_get=function(self){return self.co_freevars}
+code_funcs.co_freevars_set=_b_.None
+code_funcs.co_lines=function(self){console.log('get co_lines',self)}
+code_funcs.co_lnotab_get=function(self){return _b_.None}
+code_funcs.co_lnotab_set=_b_.None
+code_funcs.co_positions=function(self){return self.co_positions()}
+code_funcs.co_varnames_get=function(self){return self.co_varnames}
+code_funcs.co_varnames_set=_b_.None
+code_funcs.replace=function(self){var $=$B.args('replace',1,{self:null},['self'],arguments,{},null,'kw')
+var self=$.self
+var expected=['co_argcount','co_branches','co_cellvars','co_code','co_consts','co_exceptiontable','co_filename','co_firstlineno','co_flags','co_freevars','co_kwonlyargcount','co_lines','co_linetable','co_lnotab','co_name','co_names','co_nlocals','co_positions','co_posonlyargcount','co_qualname','co_stacksize','co_varnames']
+$B.set_expected_kwargs(self,expected,$.kw)
+return self}
+$B.code.tp_methods=["__sizeof__","co_lines","co_branches","co_positions","replace","_varname_from_oparg","__replace__"
+]
+$B.code.tp_members=[["co_argcount",$B.TYPES.INT,'co_argcount',1],["co_posonlyargcount",$B.TYPES.INT,'co_posonlyargcount',1],["co_kwonlyargcount",$B.TYPES.INT,'co_kwonlyargcount',1],["co_stacksize",$B.TYPES.INT,'co_stacksize',1],["co_flags",$B.TYPES.INT,'co_flags',1],["co_nlocals",$B.TYPES.INT,'co_nlocals',1],["co_consts",$B.TYPES.OBJECT,'co_consts',1],["co_names",$B.TYPES.OBJECT,'co_names',1],["co_filename",$B.TYPES.OBJECT,'co_filename',1],["co_name",$B.TYPES.OBJECT,'co_name',1],["co_qualname",$B.TYPES.OBJECT,'co_qualname',1],["co_firstlineno",$B.TYPES.INT,'co_firstlineno',1],["co_linetable",$B.TYPES.OBJECT,'co_linetable',1],["co_exceptiontable",$B.TYPES.OBJECT,'co_exceptiontable',1],]
+$B.code.tp_getset=["co_lnotab","_co_code_adaptive","co_varnames","co_cellvars","co_freevars","co_code"
+]
+$B.set_func_names(code,"builtins")})(__BRYTHON__)
 ;
 ;(function($B){var _b_=$B.builtins
 var DEFAULT_MIN_MERGE=32
