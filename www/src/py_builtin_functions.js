@@ -1089,48 +1089,6 @@ callable_iterator.tp_iternext = function(self){
 
 $B.set_func_names(callable_iterator, "builtins")
 
-$B.PySequence_Check = function(s){
-    if($B.$isinstance(s, _b_.dict)){
-        return false
-    }
-    var t = $B.get_class(s)
-    return t.$tp_as_sequence &&
-        t.$tp_as_sequence.sq_item != undefined
-}
-
-$B.PyIter_Check = function(obj){
-    var tp = $B.get_class(obj)
-    return (tp.tp_iternext !== undefined &&
-            tp.tp_iternext != $B._PyObject_NextNotImplemented)
-}
-
-$B.PySeqIter_New = function(seq){
-    return {
-        ob_type : $B.PySeqIter_Type,
-        it_index: 0,
-        it_seq: seq
-    }
-}
-
-$B.PyObject_GetIter = function(obj){
-    var t = $B.get_class(obj)
-    var f = t.tp_iter;
-    if(f === undefined){
-        if(PySequence_Check(o)){
-            return PySeqIter_New(o);
-        }
-        $B.RAISE(_b_.TypeError, `'${t.__name__}' object is not iterable`)
-    }else{
-        var res = f(o)
-        if(! $B.PyIter_Check(res)){
-            $B.RAISE(_b_.TypeError,
-                         "iter() returned non-iterator "
-                         `of type '${$B.class_name(res)}'`)
-        }
-        return res
-    }
-}
-
 $B.$iter = function(obj, sentinel){
     // Function used internally by core Brython modules, to avoid the cost
     // of arguments control
@@ -1534,15 +1492,13 @@ var $print = _b_.print = function(){
     return None
 }
 
-$print.__name__ = 'print'
-$print.is_func = true
 $print.ob_type = $B.builtin_function_or_method
 
 var quit = _b_.quit = function(){
     throw _b_.SystemExit
 }
 
-quit.__repr__ = quit.__str__ = function(){
+quit.__repr__ = function(){
     return "Use quit() or Ctrl-Z plus Return to exit"
 }
 
@@ -1552,8 +1508,6 @@ var repr = _b_.repr = function(obj){
     var tp_repr = $B.search_slot(klass, 'tp_repr')
     return tp_repr(obj)
 }
-
-repr.ob_type = $B.builtin_function_or_method
 
 var reversed = _b_.reversed
 
@@ -1703,7 +1657,6 @@ _b_.round = function(){
 }
 
 _b_.setattr = function(){
-
     var $ = $B.args('setattr', 3, {obj: null, attr: null, value: null},
         ['obj', 'attr', 'value'], arguments, {}, null, null),
         obj = $.obj, attr = $.attr, value = $.value
