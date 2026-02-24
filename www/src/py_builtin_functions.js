@@ -1630,7 +1630,9 @@ $B.$iter = function(obj, sentinel){
             var getter = $B.search_in_mro($B.get_class(iter_func), '__get__', $B.NULL)
             if(getter === $B.NULL){
                 var in_dict = $B.search_in_dict(obj, '__iter__', $B.NULL)
-                var res = $B.$call(in_dict)
+                if(in_dict === iter_func){
+                    var res = $B.$call(in_dict)
+                }
             }else{
                 var res = $B.$call(iter_func, obj)
             }

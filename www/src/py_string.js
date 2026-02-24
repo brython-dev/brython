@@ -1163,7 +1163,7 @@ str.$factory = function(arg, encoding){
                 res = $B.$call(method1)
             }else{
                 var in_dict = $B.search_in_dict(arg, '__str__', $B.NULL)
-                if(in_dict !== $B.NULL){
+                if(in_dict === method){
                     res = $B.$call(in_dict)
                 }else{
                     res = $B.$call(method, arg)
