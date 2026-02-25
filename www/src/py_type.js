@@ -3,36 +3,7 @@
 
 var _b_ = $B.builtins
 
-const TPFLAGS = {
-    DEFAULT: 0,
-    STATIC_BUILTIN: 1 << 1,
-    MANAGED_WEAKREF: 1 << 3,
-    MANAGED_DICT: 1 << 4,
-    SEQUENCE: 1 << 5,
-    MAPPING: 1 << 6,
-    DISALLOW_INSTANTIATION: 1 << 7,
-    IMMUTABLETYPE: 1 << 8,
-    HEAPTYPE: 1 << 9,
-    BASETYPE: 1 << 10,
-    HAVE_VECTORCALL: 1 << 11,
-    READY: 1 << 12,
-    READYING: 1 << 13,
-    HAVE_GC: 1 << 14,
-    METHOD_DESCRIPTOR: 1 << 17,
-    VALID_VERSION_TAG:  1 << 19,
-    IS_ABSTRACT: 1 << 20,
-    MATCH_SELF: 1 << 22,
-    LONG_SUBCLASS: 1 << 24,
-    LIST_SUBCLASS: 1 << 25,
-    TUPLE_SUBCLASS: 1 << 26,
-    BYTES_SUBCLASS: 1 << 27,
-    UNICODE_SUBCLASS: 1 << 28,
-    DICT_SUBCLASS: 1 << 29,
-    BASE_EXC_SUBCLASS: 1 << 30,
-    TYPE_SUBCLASS: 1 << 31,
-    HAVE_FINALIZE: 1 << 0,
-    HAVE_VERSION_TAG: 1 << 18
-}
+const TPFLAGS = $B.TPFLAGS // defined ib brython_builtins.js
 
 // generic code for class constructor
 $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,

@@ -3,6 +3,7 @@
 
 var _b_ = $B.builtins
 
+
 /* builtin_function_or_method start */
 $B.builtin_function_or_method.tp_richcompare = function(self, other, op){
     if((op != '__eq__' && op != '__ne__') ||

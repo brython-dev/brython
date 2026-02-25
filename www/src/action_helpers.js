@@ -737,11 +737,6 @@ $B._PyPegen.get_expr_name = function(e){
         case 'NamedExpr':
             return "named expression";
         default:
-            /*
-            PyErr_Format(PyExc_SystemError,
-                         "unexpected expression in assignment %d (line %d)",
-                         e.kind, e.lineno);
-            */
             return NULL;
     }
 }
@@ -797,7 +792,6 @@ $B._PyPegen.add_type_comment_to_arg = function(p, a, tc){
     var ast_obj = $B._PyAST.arg(a.arg, a.annotation, tco,
                       a.lineno, a.col_offset, a.end_lineno, a.end_col_offset,
                       p.arena);
-    console.log('arg with type comment', ast_obj)
     return ast_obj
 }
 
@@ -889,10 +883,6 @@ $B._PyPegen.make_arguments = function(p, slash_without_default,
 
     var ast_obj = $B._PyAST.arguments(posonlyargs, posargs, vararg, kwonlyargs,
                             kwdefaults, kwarg, posdefaults, p.arena)
-    if(ast_obj.posonlyargs === undefined){
-        console.log('pas de posonlyargs', ast_bj)
-        alert()
-    }
     return ast_obj
 }
 

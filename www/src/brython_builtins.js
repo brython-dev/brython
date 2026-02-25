@@ -20,6 +20,28 @@ $B.isNode = (typeof process !=='undefined') && (process.release.name === 'node')
     && (process.__nwjs !== 1)
 
 
+var has_storage = typeof(Storage) !== "undefined"
+if(has_storage){
+    $B.has_local_storage = false
+    // add attributes local_storage and session_storage
+    try{
+        if(localStorage){
+            $B.local_storage = localStorage
+            $B.has_local_storage = true
+        }
+    }catch(err){}
+    $B.has_session_storage = false
+    try{
+        if(sessionStorage){
+            $B.session_storage = sessionStorage
+            $B.has_session_storage = true
+        }
+    }catch(err){}
+}else{
+    $B.has_local_storage = false
+    $B.has_session_storage = false
+}
+
 var _window = globalThis;
 
 _window.location ||= {
@@ -366,7 +388,11 @@ $B.set_function_attr = function(func, attr, value){
     func.$function_infos[$B.func_attrs[attr]] = value
 }
 
-$B.builtins_scope = {id:'__builtins__', module:'__builtins__', binding: {}}
+$B.builtins_scope = {
+    id:'__builtins__',
+    module:'__builtins__',
+    binding: {}
+}
 
 // system language ( _not_ the one set in browser settings)
 // cf http://stackoverflow.com/questions/1043339/javascript-for-detecting-browser-language-preference
@@ -450,6 +476,7 @@ $B.COMPILER_FLAGS = {
     ITERABLE_COROUTINE: 256,
     ASYNC_GENERATOR: 512
 }
+
 var DEF_GLOBAL = 1,           /* global stmt */
     DEF_LOCAL = 2 ,           /* assignment in code block */
     DEF_PARAM = 2 << 1,         /* formal parameter */
@@ -642,28 +669,6 @@ var i = 0
 $B.func_attrs = {}
 for(var func_attr of func_attrs){
     $B.func_attrs[func_attr] = i++
-}
-
-var has_storage = typeof(Storage) !== "undefined"
-if(has_storage){
-    $B.has_local_storage = false
-    // add attributes local_storage and session_storage
-    try{
-        if(localStorage){
-            $B.local_storage = localStorage
-            $B.has_local_storage = true
-        }
-    }catch(err){}
-    $B.has_session_storage = false
-    try{
-        if(sessionStorage){
-            $B.session_storage = sessionStorage
-            $B.has_session_storage = true
-        }
-    }catch(err){}
-}else{
-    $B.has_local_storage = false
-    $B.has_session_storage = false
 }
 
 $B.globals = function(){

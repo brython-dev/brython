@@ -1024,14 +1024,6 @@ function make_comp(scopes){
     js += prefix + `return result_${id}\n`
     dedent()
     js += prefix + `}` + `)(${outmost_expr})\n`
-    if(prefix.length != plen){
-        console.log('comprehension, prefix length start', plen,
-            'end', prefix.length)
-        console.log('file', scopes.filename)
-        console.log(this)
-        console.log('>>>\n', js, '\n<<<')
-    }
-
     return js
 }
 
@@ -4358,13 +4350,6 @@ $B.ast.YieldFrom.prototype.to_js = function(scopes){
         var line_head = line.length - tlen
         var line_indent = (line_head - head) / 4
         if(line_indent < 0){
-            /*
-            console.log(js)
-            console.log('bug for line', line)
-            console.log(scopes.filename)
-            console.log('code for value\n', value)
-            console.log('value ends with LN ?', value.endsWith('\n'))
-            */
             console.warn('wrong indentation')
             line_indent = 0
         }
