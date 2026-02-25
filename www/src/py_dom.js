@@ -20,8 +20,8 @@ function convertDomValue(v){
 var py_immutable_to_js = $B.py_immutable_to_js = function (pyobj){
     if($B.$isinstance(pyobj, _b_.float)){
         return pyobj.value
-    }else if($B.$isinstance(pyobj, $B.long_int)){
-        return $B.long_int.$to_js_number(pyobj)
+    }else if($B.$isinstance(pyobj, _b_.int) && typeof pyobj !== "boolean"){
+        return Number($B.int_value(pyobj))
     }
     return pyobj
 }
@@ -30,8 +30,6 @@ function js_immutable_to_py(jsobj){
     if(typeof jsobj == "number"){
         if(Number.isSafeInteger(jsobj)){
             return jsobj
-        }else if(Number.isInteger(jsobj)){
-            return $B.fast_long_int(BigInt(jsobj + ''))
         }else{
             return $B.fast_float(jsobj)
         }

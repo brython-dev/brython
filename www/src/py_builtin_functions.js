@@ -910,8 +910,7 @@ _b_.id = function(obj){
    check_nb_args_no_kw('id', 1, arguments)
    if(obj.$id !== undefined){
        return obj.$id
-   }else if($B.$isinstance(obj, [_b_.str, _b_.int, _b_.float]) &&
-           ! $B.$isinstance(obj, $B.long_int)){
+   }else if($B.$isinstance(obj, [_b_.str, _b_.int, _b_.float])){
        return $B.$call($B.$getattr(_b_.str.$factory(obj), '__hash__'))
    }else{
        return obj.$id = $B.UUID()

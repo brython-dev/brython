@@ -317,7 +317,7 @@ float.$hash_func = function(self){
     }else if(isNaN(_v)){
         return self.__hashvalue__ = nan_hash
     }else if(_v === Number.MAX_VALUE){
-        return self.__hashvalue__ = $B.fast_long_int(2234066890152476671n)
+        return self.__hashvalue__ = 2234066890152476671n
     }
     // for integers, return the value
     if(Number.isInteger(_v)){
@@ -421,7 +421,8 @@ function ldexp(mantissa, exponent) {
     }else if(isNaN(mantissa)){
         return NAN
     }
-    if($B.$isinstance(exponent, $B.long_int)){
+    if($B.is_big_int(exponent)){
+        exponent = $B.int_value(exponent)
         if(exponent.value < 0){
             return ZERO
         }else{
@@ -474,8 +475,8 @@ function float_round(x, ndigits){
        }
        return $B.fast_float(res)
     }
-    if($B.exact_type(ndigits, $B.long_int)){
-        ndigits = Number(ndigits.value)
+    if(typeof ndigits == "bigint"){
+        ndigits = Number(ndigits)
     }
     // avoids parsing arguments
     var pow1,
@@ -998,7 +999,7 @@ _b_.float.nb_int = function(self){
             res_num = Number(res)
         return Number.isSafeInteger(res_num) ?
                    res_num :
-                   $B.fast_long_int(res)
+                   BigInt(res)
     }
     return Math.trunc(self.value)
 }
@@ -1024,8 +1025,8 @@ _b_.float.nb_true_divide = function(self, other){
     if($B.$isinstance(other, _b_.int)){
         if(other.valueOf() == 0){
             $B.RAISE(_b_.ZeroDivisionError, "division by zero")
-        }else if($B.$isinstance(other, $B.long_int)){
-            return float.$factory(self.value / Number(other.value))
+        }else if($B.is_big_int(other)){
+            return float.$factory(self.value / Number($B.int_value(other)))
         }
         return float.$factory(self.value / other)
     }else if($B.$isinstance(other, float)){

@@ -262,8 +262,8 @@ $B.is_type = function(obj){
     return $B.$isinstance(obj, _b_.type)
 }
 
-$B.is_long_int = function(obj){
-    return $B.get_class(obj) === $B.long_int
+$B.is_big_int = function(obj){
+    return typeof $B.int_value(obj) === 'bigint'
 }
 
 $B.is_sequence = function(obj){

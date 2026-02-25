@@ -161,8 +161,8 @@ function to_json(obj, level){
         return first + res.join(sep) + last
     }else if($B.$isinstance(obj, _b_.float)){
         return obj.value
-    }else if($B.exact_type(obj, $B.long_int)){
-        return obj.value.toString()
+    }else if($B.is_big_int(obj)){
+        return $B.int_value(obj).toString()
     }else if(obj === _b_.None){
         return "null"
     }else if($B.$isinstance(obj, _b_.dict)){
@@ -264,14 +264,14 @@ function to_py(obj, kw){
             if(Math.abs(int) < $B.max_int){
                 return int
             }else{
-                return $B.fast_long_int(BigInt(obj.value))
+                return BigInt(obj.value)
             }
         }
     }else{
         if(obj instanceof Number && kw.parse_float !== _b_.None){
             return $B.$call(kw.parse_float, obj)
         }else if(kw.parse_int !== _b_.None &&
-                (typeof obj == 'number' || $B.exact_type(obj, $B.long_int))){
+                (typeof obj == 'number' || typeof obj == "bigint")){
             return $B.$call(kw.parse_int, obj)
         }else if(kw.parse_constant !== _b_.None && ! isFinite(obj)){
             return kw.parse_constant(obj)
@@ -337,11 +337,7 @@ function to_num(num_string, nb_dots, exp){
         if(Math.abs(int) < $B.max_int){
             return int
         }else{
-            if(num_string.startsWith('-')){
-                return $B.fast_long_int(num_string.substr(1), false)
-            }else{
-                return $B.fast_long_int(num_string, true)
-            }
+            return BigInt(num_string)
         }
     }
 }

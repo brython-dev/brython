@@ -60,8 +60,8 @@ $B.pyobj2structuredclone = function(obj, strict){
             res[to_simple(entry.key)] = $B.pyobj2structuredclone(entry.value)
         }
         return res
-    }else if($B.exact_type(obj, $B.long_int)){
-        return obj.value
+    }else if($B.is_big_int(obj)){
+        return $B.int_value(obj)
     }else if(Object.getPrototypeOf(obj).constructor === Object){
         var res = {}
         for(var key in obj){
@@ -165,7 +165,7 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
         case 'number':
              // convert JS numbers with no decimal to a Python int
              if(jsobj % 1 === 0){
-                 return Number.isSafeInteger(jsobj) ? jsobj : $B.fast_long_int(jsobj)
+                 return jsobj
              }
              // other numbers to Python floats
              return _b_.float.$factory(jsobj)
@@ -352,8 +352,8 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
         return pyobj.valueOf()
     }
 
-    if(klass === $B.long_int){
-        return pyobj.value
+    if($B.is_big_int(pyobj)){
+        return $B.int_value(pyobj)
     }
 
     if(has_type(klass, _b_.float)){

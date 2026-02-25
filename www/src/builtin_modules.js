@@ -1561,11 +1561,12 @@
             // literal constant
             switch(js_node.type){
                 case 'int':
+                    console.log('AST convert, js_node', js_node)
                     var value = js_node.value[1],
                         base = js_node.value[0]
                     var res = parseInt(value, base)
                     if(! Number.isSafeInteger(res)){
-                        res = $B.long_int.$factory(value, base)
+                        res = BigInt(res)
                     }
                     return res
                 case 'float':

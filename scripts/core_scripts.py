@@ -27,7 +27,6 @@ core_scripts = [
     'py_set',
     'py_string',
     'py_int',
-    'py_long_int',
     'py_float',
     'py_complex',
     'py_dict',

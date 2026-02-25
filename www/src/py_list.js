@@ -54,7 +54,7 @@ function sq_repeat(self, other){
         }
         res.ob_type = cls
         return res
-    }else if(isinstance(other, $B.long_int)){
+    }else if($B.is_big_int(other)){
         $B.RAISE(_b_.OverflowError, `cannot fit ` +
         `'${$B.class_name(other)}' into an index-sized integer`)
     }else{
@@ -70,8 +70,8 @@ function index(self){
         self = $.self,
         start = $.start,
         stop = $.stop
-    if($B.exact_type(start, $B.long_int)){
-        start = parseInt(start.value) * (start.pos ? 1 : -1)
+    if($B.is_big_int(start)){
+        start = Number($B.int_value(start))
     }
     if(start < 0){
         start = Math.max(0, start + self.length)
@@ -79,8 +79,8 @@ function index(self){
     if(stop === missing){
         stop = self.length
     }else{
-        if($B.exact_type(stop, $B.long_int)){
-            stop = parseInt(stop.value) * (stop.pos ? 1 : -1)
+        if($B.is_big_int(stop)){
+            stop = Number($B.int_value(stop))
         }
         if(stop < 0){
             stop = Math.min(self.length, stop + self.length)

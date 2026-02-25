@@ -611,11 +611,11 @@ function prepared_number_value(prepared){
                     num_str = prepared.value[1]
                 switch(base){
                     case 8:
-                        return $B.fast_long_int(BigInt('0x' + num_str))
+                        return BigInt('0x' + num_str)
                     case 10:
-                        return $B.fast_long_int(BigInt(num_str))
+                        return BigInt(num_str)
                     case 16:
-                        return $B.fast_long_int(BigInt('0x' + num_str))
+                        return BigInt('0x' + num_str)
                 }
             }
             return res

@@ -523,11 +523,7 @@ type.$factory = function(){
         if(bases !== missing){
             $B.RAISE(_b_.TypeError, 'type() takes 1 or 3 arguments')
         }
-        var res = $B.get_class(kls)
-        if(res === $B.long_int){
-            return _b_.int
-        }
-        return res
+        return $B.get_class(kls)
     }else{
         var module = $B.frame_obj.frame[2],
             resolved_bases = $B.resolve_mro_entries(bases),

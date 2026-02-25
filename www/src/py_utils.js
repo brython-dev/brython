@@ -1415,10 +1415,6 @@ $B.$is = function(a, b){
         }
         return a.value == b.value
     }
-    if((a === _b_.int && b == $B.long_int) ||
-            (a === $B.long_int && b === _b_.int)){
-        return true
-    }
     return a === b
 }
 
@@ -1613,12 +1609,9 @@ $B.PyNumber_Index = function(item){
         case "bigint":
             return item
         case "object":
-            if($B.get_class(item) === $B.long_int){
-                return item
-            }
             if($B.$isinstance(item, _b_.int)){
                 // int subclass
-                return item.$brython_value
+                return item.value
             }
             var method = $B.$getattr(item, "__index__", _b_.None)
             if(method !== _b_.None){
@@ -1640,14 +1633,8 @@ $B.int_or_bool = function(v){
         case "boolean":
             return v ? 1 : 0
         case "number":
+        case "bigint":
             return v
-        case "object":
-            if($B.get_class(v) === $B.long_int){
-                return v
-            }else{
-                $B.RAISE(_b_.TypeError, "'" + $B.class_name(v) +
-                "' object cannot be interpreted as an integer")
-            }
         default:
             $B.RAISE(_b_.TypeError, "'" + $B.class_name(v) +
                 "' object cannot be interpreted as an integer")

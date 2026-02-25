@@ -261,8 +261,8 @@ var format_int_precision = function(val, flags){
         $B.RAISE(_b_.OverflowError, 'precision too large')
     }
     var s
-    if($B.exact_type(val, $B.long_int)){
-       s = $B.long_int.to_base(val, 10)
+    if($B.is_big_int(val)){
+       s = $B.int_value(val).toString()
     }else{
        s = val.toString()
     }
@@ -574,8 +574,8 @@ var signed_hex_format = function(val, upper, flags){
         val = val ? 1 : 0
     }
 
-    if($B.exact_type(val, $B.long_int)){
-       ret = val.value.toString(16)
+    if($B.is_big_int(val)){
+       ret = $B.int_value(val).toString(16)
     }else{
        ret = parseInt(val)
        ret = ret.toString(16)
@@ -609,8 +609,8 @@ var octal_format = function(val, flags) {
     number_check(val, flags)
     var ret
 
-    if($B.exact_type(val, $B.long_int)){
-        ret = $B.long_int.to_base(8)
+    if($B.is_big_int(val)){
+        ret = $B.int_value(val).toString(8)
     }else{
         ret = parseInt(val)
         ret = ret.toString(8)
@@ -668,7 +668,7 @@ function series_of_bytes(val, flags){
 var single_char_format = function(val, flags, type){
     if(type == 'bytes'){
         if($B.$isinstance(val, _b_.int)){
-            if($B.exact_type(val, $B.long_int) || val < 0 || val > 255){
+            if($B.is_big_int(val) || val < 0 || val > 255){
                 $B.RAISE(_b_.OverflowError, "%c arg not in range(256)")
             }
         }else if($B.$isinstance(val, [_b_.bytes, _b_.bytearray])){
@@ -687,10 +687,12 @@ var single_char_format = function(val, flags, type){
         }else if(! $B.$isinstance(val, _b_.int)){
             $B.RAISE(_b_.TypeError, "%c requires int or char")
         }
-        if(($B.exact_type(val, $B.long_int) &&
-                (val.value < 0 || val.value >= 0x110000)) ||
-                (val < 0 || val >= 0x110000)){
-            $B.RAISE(_b_.OverflowError, '%c arg not in range(0x110000)')
+        if($B.is_big_int(val)){
+            val = $B.int_value(val)
+            if((val < 0 || val >= 0x110000) ||
+                    (val < 0 || val >= 0x110000)){
+                $B.RAISE(_b_.OverflowError, '%c arg not in range(0x110000)')
+            }
         }
     }
     return format_padding(_b_.chr(val), flags)
@@ -2254,8 +2256,8 @@ str_funcs.replace = function(){
     if(count == 0){
         return _self
     }
-    if($B.exact_type(count, $B.long_int)){
-        count = parseInt(count.value)
+    if($B.is_big_int(count)){
+        count = parseInt($B.int_value(count))
     };
     [old, _new] = to_string(old, _new)
     var elts
@@ -2428,8 +2430,8 @@ str_funcs.split = function(){
         sep = $.sep,
         pos = 0,
         _self = to_string($.self)
-    if($B.exact_type(maxsplit, $B.long_int)){
-        maxsplit = parseInt(maxsplit.value)
+    if($B.is_big_int(maxsplit)){
+        maxsplit = Number($B.int_value(maxsplit))
     }
     if(sep == ""){
         $B.RAISE(_b_.ValueError, "empty separator")

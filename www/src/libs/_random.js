@@ -297,8 +297,6 @@ function RandomStream(seed) {
                 rest = seed % int32_1
             // Rest is a JS number (< 2 ** 32)
             keys.push(Number(rest))
-            // Quotient is either a JS number or a instance of long_int
-            // but seed must be long_int
             seed = quot
         }
         keys.push(Number(seed))
