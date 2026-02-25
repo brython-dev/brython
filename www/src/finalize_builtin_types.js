@@ -76,6 +76,8 @@ function wrap_with_same_reflected(dunder, rdunder){
 $B.wrapper_methods = Object.create(null)
 Object.assign($B.wrapper_methods,
     {
+        am_aiter: wrap('__aiter__'),
+        am_anext: wrap('__anext__'),
         bf_getbuffer: wrap('__buffer__'),
         bf_releasebuffer: wrap('__release_buffer__'),
         mp_length: wrap('__len__'),

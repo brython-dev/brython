@@ -13,6 +13,14 @@ $B.isWebWorker=('undefined' !==typeof WorkerGlobalScope)&&
 (navigator instanceof WorkerNavigator)
 $B.isNode=(typeof process !=='undefined')&&(process.release.name==='node')
 &&(process.__nwjs !==1)
+var has_storage=typeof(Storage)!=="undefined"
+if(has_storage){$B.has_local_storage=false
+try{if(localStorage){$B.local_storage=localStorage
+$B.has_local_storage=true}}catch(err){}
+$B.has_session_storage=false
+try{if(sessionStorage){$B.session_storage=sessionStorage
+$B.has_session_storage=true}}catch(err){}}else{$B.has_local_storage=false
+$B.has_session_storage=false}
 var _window=globalThis;
 _window.location ||={href:'',origin:'',pathname:''};
 _window.navigator ||={userLanguage:''}
@@ -211,14 +219,6 @@ const func_attrs=['__module__','__name__','__qualname__','__file__','__defaults_
 var i=0
 $B.func_attrs={}
 for(var func_attr of func_attrs){$B.func_attrs[func_attr]=i++}
-var has_storage=typeof(Storage)!=="undefined"
-if(has_storage){$B.has_local_storage=false
-try{if(localStorage){$B.local_storage=localStorage
-$B.has_local_storage=true}}catch(err){}
-$B.has_session_storage=false
-try{if(sessionStorage){$B.session_storage=sessionStorage
-$B.has_session_storage=true}}catch(err){}}else{$B.has_local_storage=false
-$B.has_session_storage=false}
 $B.globals=function(){
 return $B.frame_obj.frame[3]}
 $B.$options={}
@@ -668,8 +668,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-02-25 08:57:24.953599"
-__BRYTHON__.timestamp=1772006244953
+__BRYTHON__.compiled_date="2026-02-25 09:35:32.613662"
+__BRYTHON__.timestamp=1772008532613
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -2379,7 +2379,7 @@ _b_.object.tp_getset=["__class__"]
 $B.set_func_names(object,"builtins")})(__BRYTHON__);
 ;
 (function($B){var _b_=$B.builtins
-const TPFLAGS={DEFAULT:0,STATIC_BUILTIN:1 << 1,MANAGED_WEAKREF:1 << 3,MANAGED_DICT:1 << 4,SEQUENCE:1 << 5,MAPPING:1 << 6,DISALLOW_INSTANTIATION:1 << 7,IMMUTABLETYPE:1 << 8,HEAPTYPE:1 << 9,BASETYPE:1 << 10,HAVE_VECTORCALL:1 << 11,READY:1 << 12,READYING:1 << 13,HAVE_GC:1 << 14,METHOD_DESCRIPTOR:1 << 17,VALID_VERSION_TAG:1 << 19,IS_ABSTRACT:1 << 20,MATCH_SELF:1 << 22,LONG_SUBCLASS:1 << 24,LIST_SUBCLASS:1 << 25,TUPLE_SUBCLASS:1 << 26,BYTES_SUBCLASS:1 << 27,UNICODE_SUBCLASS:1 << 28,DICT_SUBCLASS:1 << 29,BASE_EXC_SUBCLASS:1 << 30,TYPE_SUBCLASS:1 << 31,HAVE_FINALIZE:1 << 0,HAVE_VERSION_TAG:1 << 18}
+const TPFLAGS=$B.TPFLAGS 
 $B.$class_constructor=function(class_name,dict,metaclass,resolved_bases,bases,extra_kwargs){var test=false 
 if(test){console.log('class constructor',class_name,'dict',dict)
 console.log('metaclass',metaclass)}
@@ -11738,13 +11738,33 @@ $B.async_generator.$factory=function(func){var f=function(){var gen=func.apply(n
 var res=Object.create(null)
 res.ob_type=$B.async_generator
 res.js_gen=gen
+res.ag_running=false
 return res}
 return f}
-$B.async_generator.__aiter__=function(self){return self}
-$B.async_generator.__anext__=function(self){return $B.async_generator.asend(self,_b_.None)}
-$B.async_generator.aclose=function(self){self.js_gen.$finished=true
+$B.async_generator.tp_repr=function(self){var name=self.js_gen.$name ||'generator'
+if(self.js_gen.$func && self.js_gen.$func.$infos){name=self.js_gen.$func.$infos.__qualname__}
+return `<async generator object ${name}>`}
+$B.async_generator.tp_finalize=function(self){}
+$B.async_generator.am_aiter=function(self){return self}
+$B.async_generator.am_anext=function(self){return $B.async_generator.tp_funcs.asend(self,_b_.None)}
+var async_generator_funcs=$B.async_generator.tp_funcs={}
+async_generator_funcs.__class_getitem__=function(){return $B.class_getitem.apply(null,arguments)}
+async_generator_funcs.__name___get=function(self){return self.js_gen.$name}
+async_generator_funcs.__name___set=function(self,value){self.js_gen.$name=value}
+async_generator_funcs.__qualname___get=function(self){return self.js_gen.$name}
+async_generator_funcs.__qualname___set=function(self,value){self.js_gen.$name=value}
+async_generator_funcs.__sizeof__=function(self){$B.RAISE(_b_.NotImplementedError)}
+async_generator_funcs.aclose=function(self){self.js_gen.$finished=true
 return _b_.None}
-$B.async_generator.asend=async function(self,value){var gen=self.js_gen
+async_generator_funcs.ag_await_get=function(self){$B.RAISE(_b_.NotImplementedError)}
+async_generator_funcs.ag_await_set=_b_.None
+async_generator_funcs.ag_code_get=function(self){$B.RAISE(_b_.NotImplementedError)}
+async_generator_funcs.ag_code_set=_b_.None
+async_generator_funcs.ag_frame_get=function(self){return self.$frame}
+async_generator_funcs.ag_frame_set=_b_.None
+async_generator_funcs.ag_suspended_get=function(self){$B.RAISE(_b_.NotImplementedError)}
+async_generator_funcs.ag_suspended_set=_b_.None
+async_generator_funcs.asend=async function(self,value){var gen=self.js_gen
 if(gen.$finished){$B.RAISE(_b_.StopAsyncIteration,value)}
 if(gen.ag_running===true){$B.RAISE(_b_.ValueError,"generator already executing")}
 gen.ag_running=true
@@ -11760,7 +11780,7 @@ if($B.exact_type(res.value,$GeneratorReturn)){gen.$finished=true
 $B.RAISE(_b_.StopAsyncIteration,res.value.value)}
 gen.ag_running=false
 return res.value}
-$B.async_generator.athrow=async function(self,type,value,traceback){var gen=self.js_gen,exc=type
+async_generator_funcs.athrow=async function(self,type,value,traceback){var gen=self.js_gen,exc=type
 if($B.is_type(exc)){if(! _b_.issubclass(type,_b_.BaseException)){$B.RAISE(_b_.TypeError,"exception value must be an "+
 "instance of BaseException")}else if(value===undefined){value=$B.$call(exc)}}else{if(value===undefined){value=exc}else{exc=$B.$call(exc,value)}}
 if(traceback !==undefined){exc.$traceback=traceback}
@@ -11768,6 +11788,12 @@ var save_frame_obj=$B.frame_obj
 if(self.$frame){$B.frame_obj=$B.push_frame(self.$frame)}
 await gen.throw(value)
 $B.frame_obj=save_frame_obj}
+$B.async_generator.tp_methods=["asend","athrow","aclose","__sizeof__"]
+$B.async_generator.classmethods=["__class_getitem__"]
+$B.async_generator.tp_members=[["ag_running",$B.TYPES.BOOL,"ag_running",1]
+]
+$B.async_generator.tp_getset=["__name__","__qualname__","ag_await","ag_frame","ag_code","ag_suspended"
+]
 $B.set_func_names($B.async_generator,"builtins")})(__BRYTHON__);
 ;
 (function($B){var _b_=$B.builtins,object=_b_.object,_window=globalThis
@@ -13783,7 +13809,7 @@ $B.str_dict_set(cls.dict,rdunder,$B.wrapper_descriptor.$factory(
 cls,rdunder,func
 ))}}
 $B.wrapper_methods=Object.create(null)
-Object.assign($B.wrapper_methods,{bf_getbuffer:wrap('__buffer__'),bf_releasebuffer:wrap('__release_buffer__'),mp_length:wrap('__len__'),mp_subscript:wrap('__getitem__'),mp_ass_subscript:make_setitem_delitem,nb_absolute:wrap('__abs__'),nb_add:wrap_with_reflected('__add__','__radd__'),nb_and:wrap_with_reflected('__and__','__rand__'),nb_bool:wrap('__bool__'),nb_divmod:wrap_with_reflected('__divmod__','__rdivmod__'),nb_floor_divide:wrap_with_reflected('__floordiv__','__rfloordiv__'),nb_index:wrap('__index__'),nb_lshift:wrap_with_reflected('__lshift__','__rlshift__'),nb_inplace_add :wrap('__iadd__'),nb_inplace_and :wrap('__iand__'),nb_inplace_floor_divide :wrap('__ifloordiv__'),nb_inplace_lshift :wrap('__ilshift__'),nb_inplace_matrix_multiply :wrap('__imatmul__'),nb_inplace_multiply :wrap('__imul__'),nb_inplace_or :wrap('__ior__'),nb_inplace_remainder :wrap('__imod__'),nb_inplace_power :wrap('__ipow__'),nb_inplace_subtract :wrap('__isub__'),nb_inplace_true_divide :wrap('__itruediv__'),nb_inplace_rshift :wrap('__irshift__'),nb_inplace_xor :wrap('__ixor__'),nb_int :wrap('__int__'),nb_invert:wrap('__invert__'),nb_matrix_multiply:wrap_with_reflected('__matmul__','__rmatmul__'),nb_multiply:wrap_with_reflected('__mul__','__rmul__'),nb_negative:wrap('__neg__'),nb_or:wrap_with_reflected('__or__','__ror__'),nb_positive:wrap('__pos__'),nb_power:wrap_with_reflected('__pow__','__rpow__'),nb_remainder:wrap_with_reflected('__mod__','__rmod__'),nb_subtract:wrap_with_reflected('__sub__','__rsub__'),nb_rshift:wrap_with_reflected('__rshift__','__rrshift__'),nb_true_divide:wrap_with_reflected('__truediv__','__rtruediv__'),nb_xor:wrap_with_reflected('__xor__','__rxor__'),sq_ass_item:make_setitem_delitem,sq_concat:wrap('__add__'),sq_contains:wrap('__contains__'),sq_length:wrap('__len__'),sq_repeat:wrap_with_same_reflected('__mul__','__rmul__'),tp_call:wrap('__call__'),tp_descr_get:wrap('__get__'),tp_descr_set:make_set_del,tp_doc:make_doc,tp_getattro:make_getattribute,tp_finalize:wrap('__del__'),tp_hash:wrap('__hash__'),tp_init:wrap('__init__'),tp_iter:wrap('__iter__'),tp_iternext:make_next,tp_new:make_new,tp_repr:wrap('__repr__',1),tp_str :wrap('__str__',1),tp_setattro:make_setattr_delattr,tp_richcompare:make_richcompare}
+Object.assign($B.wrapper_methods,{am_aiter:wrap('__aiter__'),am_anext:wrap('__anext__'),bf_getbuffer:wrap('__buffer__'),bf_releasebuffer:wrap('__release_buffer__'),mp_length:wrap('__len__'),mp_subscript:wrap('__getitem__'),mp_ass_subscript:make_setitem_delitem,nb_absolute:wrap('__abs__'),nb_add:wrap_with_reflected('__add__','__radd__'),nb_and:wrap_with_reflected('__and__','__rand__'),nb_bool:wrap('__bool__'),nb_divmod:wrap_with_reflected('__divmod__','__rdivmod__'),nb_floor_divide:wrap_with_reflected('__floordiv__','__rfloordiv__'),nb_index:wrap('__index__'),nb_lshift:wrap_with_reflected('__lshift__','__rlshift__'),nb_inplace_add :wrap('__iadd__'),nb_inplace_and :wrap('__iand__'),nb_inplace_floor_divide :wrap('__ifloordiv__'),nb_inplace_lshift :wrap('__ilshift__'),nb_inplace_matrix_multiply :wrap('__imatmul__'),nb_inplace_multiply :wrap('__imul__'),nb_inplace_or :wrap('__ior__'),nb_inplace_remainder :wrap('__imod__'),nb_inplace_power :wrap('__ipow__'),nb_inplace_subtract :wrap('__isub__'),nb_inplace_true_divide :wrap('__itruediv__'),nb_inplace_rshift :wrap('__irshift__'),nb_inplace_xor :wrap('__ixor__'),nb_int :wrap('__int__'),nb_invert:wrap('__invert__'),nb_matrix_multiply:wrap_with_reflected('__matmul__','__rmatmul__'),nb_multiply:wrap_with_reflected('__mul__','__rmul__'),nb_negative:wrap('__neg__'),nb_or:wrap_with_reflected('__or__','__ror__'),nb_positive:wrap('__pos__'),nb_power:wrap_with_reflected('__pow__','__rpow__'),nb_remainder:wrap_with_reflected('__mod__','__rmod__'),nb_subtract:wrap_with_reflected('__sub__','__rsub__'),nb_rshift:wrap_with_reflected('__rshift__','__rrshift__'),nb_true_divide:wrap_with_reflected('__truediv__','__rtruediv__'),nb_xor:wrap_with_reflected('__xor__','__rxor__'),sq_ass_item:make_setitem_delitem,sq_concat:wrap('__add__'),sq_contains:wrap('__contains__'),sq_length:wrap('__len__'),sq_repeat:wrap_with_same_reflected('__mul__','__rmul__'),tp_call:wrap('__call__'),tp_descr_get:wrap('__get__'),tp_descr_set:make_set_del,tp_doc:make_doc,tp_getattro:make_getattribute,tp_finalize:wrap('__del__'),tp_hash:wrap('__hash__'),tp_init:wrap('__init__'),tp_iter:wrap('__iter__'),tp_iternext:make_next,tp_new:make_new,tp_repr:wrap('__repr__',1),tp_str :wrap('__str__',1),tp_setattro:make_setattr_delattr,tp_richcompare:make_richcompare}
 )
 function make_doc(cls){var in_dict=$B.str_dict_get(cls.dict,'__doc__',$B.NULL)
 if(in_dict===$B.NULL){$B.str_dict_set(cls.dict,'__doc__',cls.tp_doc)}}
@@ -14533,10 +14559,6 @@ if(comp_iter_scope.found){js+=prefix+`${name_reference(comp_iter, scopes)} = sav
 js+=prefix+`return result_${id}\n`
 dedent()
 js+=prefix+`}`+`)(${outmost_expr})\n`
-if(prefix.length !=plen){console.log('comprehension, prefix length start',plen,'end',prefix.length)
-console.log('file',scopes.filename)
-console.log(this)
-console.log('>>>\n',js,'\n<<<')}
 return js}
 function init_scopes(type,scopes){
 var filename=scopes?.symtable?.table?.filename,name=$B.url2name[filename]
@@ -16136,8 +16158,7 @@ if(tlen==0){res+='\n'
 continue}
 var line_head=line.length-tlen
 var line_indent=(line_head-head)/4
-if(line_indent < 0){
-console.warn('wrong indentation')
+if(line_indent < 0){console.warn('wrong indentation')
 line_indent=0}
 res+=prefix+tab.repeat(line_indent)+trimmed+'\n'}
 dedent()
@@ -17405,7 +17426,6 @@ return ast_obj}
 $B._PyPegen.add_type_comment_to_arg=function(p,a,tc){if(tc==NULL){return a}
 var bytes=_b_.bytes.$factory(tc),tco=$B._PyPegen.new_type_comment(p,bytes);
 var ast_obj=$B._PyAST.arg(a.arg,a.annotation,tco,a.lineno,a.col_offset,a.end_lineno,a.end_col_offset,p.arena);
-console.log('arg with type comment',ast_obj)
 return ast_obj}
 $B._PyPegen.check_barry_as_flufl=function(p,t){return false}
 $B._PyPegen.empty_arguments=function(p){return $B._PyAST.arguments([],[],NULL,[],[],NULL,[],p.arena)}
@@ -17436,8 +17456,6 @@ if(_make_kwargs(p,star_etc,kwonlyargs,kwdefaults)==-1){return NULL;}
 var kwarg=NULL;
 if(star_etc !=NULL && star_etc.kwarg !=NULL){kwarg=star_etc.kwarg;}
 var ast_obj=$B._PyAST.arguments(posonlyargs,posargs,vararg,kwonlyargs,kwdefaults,kwarg,posdefaults,p.arena)
-if(ast_obj.posonlyargs===undefined){console.log('pas de posonlyargs',ast_bj)
-alert()}
 return ast_obj}
 $B._PyPegen.name_default_pair=function(p,arg,value,tc){return{
 arg:$B._PyPegen.add_type_comment_to_arg(p,arg,tc),value:value}}

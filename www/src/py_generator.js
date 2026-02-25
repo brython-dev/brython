@@ -243,33 +243,96 @@ $B.generator.tp_getset = [
 $B.set_func_names($B.generator, "builtins")
 
 $B.async_generator = $B.make_builtin_class("async_generator")
+
 $B.async_generator.$factory = function(func){
     var f = function(){
         var gen = func.apply(null, arguments)
         var res = Object.create(null)
         res.ob_type = $B.async_generator
         res.js_gen = gen
+        res.ag_running = false
         return res
     }
     return f
 }
 
-$B.async_generator.__aiter__ = function(self){
+/* async_generator start */
+$B.async_generator.tp_repr = function(self){
+    var name = self.js_gen.$name || 'generator'
+    if(self.js_gen.$func && self.js_gen.$func.$infos){
+        name = self.js_gen.$func.$infos.__qualname__
+    }
+    return `<async generator object ${name}>`
+}
+
+$B.async_generator.tp_finalize = function(self){
+
+}
+
+$B.async_generator.am_aiter = function(self){
     return self
 }
 
-$B.async_generator.__anext__ = function(self){
-    return $B.async_generator.asend(self, _b_.None)
+$B.async_generator.am_anext = function(self){
+    return $B.async_generator.tp_funcs.asend(self, _b_.None)
 }
 
-//$B.async_generator.__dir__ = generator.__dir__
+var async_generator_funcs = $B.async_generator.tp_funcs = {}
 
-$B.async_generator.aclose = function(self){
+async_generator_funcs.__class_getitem__ = function(){
+    return $B.class_getitem.apply(null, arguments)
+}
+
+async_generator_funcs.__name___get = function(self){
+    return self.js_gen.$name
+}
+
+async_generator_funcs.__name___set = function(self, value){
+    self.js_gen.$name = value
+}
+
+async_generator_funcs.__qualname___get = function(self){
+    return self.js_gen.$name
+}
+
+async_generator_funcs.__qualname___set = function(self, value){
+    self.js_gen.$name = value
+}
+
+async_generator_funcs.__sizeof__ = function(self){
+    $B.RAISE(_b_.NotImplementedError)
+}
+
+async_generator_funcs.aclose = function(self){
     self.js_gen.$finished = true
     return _b_.None
 }
 
-$B.async_generator.asend = async function(self, value){
+async_generator_funcs.ag_await_get = function(self){
+    $B.RAISE(_b_.NotImplementedError)
+}
+
+async_generator_funcs.ag_await_set = _b_.None
+
+async_generator_funcs.ag_code_get = function(self){
+    $B.RAISE(_b_.NotImplementedError)
+}
+
+async_generator_funcs.ag_code_set = _b_.None
+
+async_generator_funcs.ag_frame_get = function(self){
+    return self.$frame
+}
+
+async_generator_funcs.ag_frame_set = _b_.None
+
+async_generator_funcs.ag_suspended_get = function(self){
+    $B.RAISE(_b_.NotImplementedError)
+}
+
+async_generator_funcs.ag_suspended_set = _b_.None
+
+async_generator_funcs.asend = async function(self, value){
     var gen = self.js_gen
     if(gen.$finished){
         $B.RAISE(_b_.StopAsyncIteration, value)
@@ -309,7 +372,7 @@ $B.async_generator.asend = async function(self, value){
     return res.value
 }
 
-$B.async_generator.athrow = async function(self, type, value, traceback){
+async_generator_funcs.athrow = async function(self, type, value, traceback){
     var gen = self.js_gen,
         exc = type
 
@@ -327,7 +390,9 @@ $B.async_generator.athrow = async function(self, type, value, traceback){
             exc = $B.$call(exc, value)
         }
     }
-    if(traceback !== undefined){exc.$traceback = traceback}
+    if(traceback !== undefined){
+        exc.$traceback = traceback
+    }
     var save_frame_obj = $B.frame_obj
     if(self.$frame){
         $B.frame_obj = $B.push_frame(self.$frame)
@@ -335,6 +400,20 @@ $B.async_generator.athrow = async function(self, type, value, traceback){
     await gen.throw(value)
     $B.frame_obj = save_frame_obj
 }
+
+$B.async_generator.tp_methods = ["asend", "athrow", "aclose", "__sizeof__"]
+
+$B.async_generator.classmethods = ["__class_getitem__"]
+
+$B.async_generator.tp_members = [
+    ["ag_running", $B.TYPES.BOOL, "ag_running", 1]
+]
+
+$B.async_generator.tp_getset = [
+    "__name__", "__qualname__", "ag_await", "ag_frame", "ag_code", "ag_suspended"
+]
+
+/* async_generator end */
 
 
 $B.set_func_names($B.async_generator, "builtins")
