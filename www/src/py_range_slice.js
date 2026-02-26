@@ -160,17 +160,11 @@ _b_.range.tp_iter = function(self){
     }
 }
 
-_b_.range.tp_new = function(self){
-    var $ = $B.args("range", 4, {cls: null, start: null, stop: null, step: null},
-                ["cls", "start", "stop", "step"], arguments,
-                {start: null, stop: null, step: null}, null, null)
-    var cls = $.cls,
-        start = $.start,
-        stop = $.stop,
-        step = $.step,
-        safe
-    if(stop === null && step === null){
-        if(start == null){
+_b_.range.tp_new = function(cls, args, kw){
+    var [start, stop, step] = args
+    var safe
+    if(stop === undefined && step === undefined){
+        if(start == undefined){
             $B.RAISE(_b_.TypeError, "range expected 1 arguments, got 0")
         }
         stop = $B.PyNumber_Index(start)
@@ -184,7 +178,7 @@ _b_.range.tp_new = function(self){
             $safe: safe
         }
     }
-    if(step === null){
+    if(step === undefined){
         step = 1
     }
     start = $B.PyNumber_Index(start)
@@ -464,20 +458,17 @@ slice.$conv_for_seq = function(self, len){
     return {start: start, stop: stop, step: step}
 }
 
-slice.$factory = function(){
-    var $ = $B.args("slice", 3, {start: null, stop: null, step: null},
-        ["start", "stop", "step"], arguments,{stop: null, step: null},
-        null, null)
-    return slice.$fast_slice($.start, $.stop, $.step)
+slice.$factory = function(start, stop){
+    return slice.$fast_slice(start, stop, 1)
 }
 
 slice.$fast_slice = function(start, stop, step){
-    if(stop === null && step === null){
+    if(stop === $B.NULL && step === $B.NULL){
         stop = start
         start = _b_.None
         step = _b_.None
     }else{
-        step = step === null ? _b_.None : step
+        step = step === $B.NULL ? _b_.None : step
     }
 
     var res = {
@@ -537,13 +528,11 @@ _b_.slice.tp_hash = function(self){
     return acc
 }
 
-_b_.slice.tp_new = function(){
-    var $ = $B.args("slice", 4,
-                {cls: null, start: null, stop: null, step: null},
-                ["cls", "start", "stop", "step"], arguments,
-                {stop: null, step: null}, null, null)
-    var res = slice.$fast_slice($.start, $.stop, $.step)
-    res.ob_type = $.cls
+_b_.slice.tp_new = function(cls, args, kw){
+    var [start, stop, step] = $B.unpack_args('slice', args,
+        ['start', 'stop', 'step'], {stop: $B.NULL, step: $B.NULL})
+    var res = slice.$fast_slice(start, stop, step)
+    res.ob_type = cls
     return res
 }
 

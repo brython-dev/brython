@@ -336,10 +336,7 @@ Random.$factory = function(){
     }
 }
 
-Random.tp_new = function(){
-    var $ = $B.args('__new__', 1, {cls: null}, ['cls'], arguments, {},
-                'args', 'kw')
-    var cls = $.cls
+Random.tp_new = function(cls, args, kw){
     return {
         ob_type: cls,
         _random: RandomStream(Date.now()),

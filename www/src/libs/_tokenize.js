@@ -18,13 +18,18 @@ TokenizerIter.$factory = function(it){
     }
 }
 
-TokenizerIter.tp_new = function(){
-    var $ = $B.args('TokenizerIter', 1, {cls: null}, ['cls'],
-                arguments, {}, 'args', 'kw')
-    var [cls, ...args] = arguments
-    var obj = TokenizerIter.$factory(...args)
-    obj.cls = cls
-    return obj
+TokenizerIter.tp_new = function(cls, args, kw){
+    var [source] = $B.unpack_args('TokenizerIter', args, ['source'])
+    $B.check_expected_keywords('TokenizerIter', kw,
+        ['encoding', 'extra_tokens'])
+    var encoding = $B.str_dict_get(kw, 'encoding', _b_.None)
+    var extra_tokens = $B.str_dict_get(kw, 'extra_tokens', false)
+    return {
+        ob_type: cls,
+        it: source,
+        encoding,
+        extra_tokens
+    }
 }
 
 TokenizerIter.tp_iter = function(self){

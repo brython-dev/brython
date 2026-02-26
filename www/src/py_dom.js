@@ -306,10 +306,12 @@ $B.set_func_names(Attributes, "<dom>")
 var DOMEvent = $B.DOMEvent = $B.make_builtin_class("DOMEvent")
 DOMEvent.$factory = function(evt_name){
     // Factory to create instances of DOMEvent, based on an event name
-    return DOMEvent.tp_new(DOMEvent, evt_name)
+    return DOMEvent.tp_new(DOMEvent, [evt_name])
 }
 
-DOMEvent.tp_new = function(cls, evt_name){
+DOMEvent.tp_new = function(cls, args, kw){
+    var [evt_name] = $B.unpack_args('DOMEvent', args, ['evt_name'], {})
+    $B.check_kw_empty('DOMEvent', kw)
     var ev = new Event(evt_name)
     ev.ob_type = DOMEvent
     if(ev.preventDefault === undefined){

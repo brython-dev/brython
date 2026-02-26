@@ -166,10 +166,22 @@ function make_getattribute(cls){
 }
 
 function make_new(cls){
-    cls.tp_new.ob_type = $B.builtin_function_or_method
-    cls.tp_new.m_self = cls
-    cls.tp_new.ml = {ml_name: '__new__'}
-    $B.str_dict_set(cls.dict, '__new__', cls.tp_new)
+    function new_func(){
+        var $ = $B.args('__new__', 1, {cls: null}, ['cls'], arguments, {}, 'args',
+                'kw')
+        return cls.tp_new($.cls, $.args, $.kw)
+    }
+    new_func.ob_type = $B.builtin_function_or_method
+    new_func.m_self = cls
+    new_func.ml = {ml_name: '__new__'}
+    $B.set_function_infos(new_func,
+        {
+            __name__: '__new__',
+            __qualname__: '__new__'
+        }
+    )
+    cls.tp_new.$is_slot = true
+    $B.str_dict_set(cls.dict, '__new__', new_func)
 }
 
 function make_next(cls){
@@ -263,12 +275,14 @@ function make_richcompare(cls){
 
 $B.finalize_type = function(cls){
     cls.tp_mro = $B.make_mro(cls)
-    cls.dict = $B.empty_dict()
+    cls.dict = cls.dict ?? $B.empty_dict()
     var parts = cls.tp_name.split('.')
     var module = parts.length == 1 ? 'builtins' :
         parts.slice(0, parts.length - 1).join('.')
-    $B.str_dict_set(cls.dict, '__module__', module)
-
+    if($B.str_dict_get(cls.dict, '__module__', $B.NULL) === $B.NULL){
+        $B.str_dict_set(cls.dict, '__module__', module)
+    }
+    
     if(cls.tp_getset){
         for(var descr of cls.tp_getset){
             var getset = [

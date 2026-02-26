@@ -79,9 +79,19 @@ $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
     if(test){
         console.log('metaclass', metaclass, 'meta_new', meta_new)
     }
+    var kls
     try{
-        var kls = $B.$call(meta_new, metaclass, class_name, resolved_bases, dict,
-                       {$kw:[extra_kwargs]})
+        if(meta_new.$is_slot){
+            try{
+                kls = meta_new(metaclass, [class_name, resolved_bases, dict],
+                    $B.obj_dict(extra_kwargs))
+            }catch(err){
+                throw err
+            }
+        }else{
+            kls = $B.$call(meta_new, metaclass, class_name, resolved_bases, dict,
+                           {$kw:[extra_kwargs]})
+        }
     }catch(err){
         if(test){
             console.log('error in meta_new', meta_new, extra_kwargs)
@@ -299,7 +309,11 @@ function type_new_get_bases(ctx, type){
         var type_new_func = $B.search_slot(type, 'tp_new', $B.NULL)
         if(winner_new_func !== type_new_func){
             /* Pass it to the winner */
-            type = winner_new_func(winner, ...ctx.args, $B.dict2kwarg(ctx.kwds))
+            if(winner_new_func.$is_slot){
+                type = winner_new_func(winner, ctx.args, ctx.kwds)
+            }else{
+                type = winner_new_func(winner, ...ctx.args, $B.dict2kwarg(ctx.kwds))
+            }
             return {type}
         }
         ctx.metatype = winner
@@ -464,7 +478,7 @@ $B.make_module_annotate = function(locals){
 
 function object_get_dict(obj){
     if($B.is_type(obj)){
-        return $B.mappingproxy.tp_new($B.mappingproxy, obj.dict)
+        return $B.mappingproxy.tp_new($B.mappingproxy, [obj.dict])
     }
     return obj.dict
 }
@@ -565,7 +579,7 @@ _b_.classmethod.tp_init = function(self, func){
     self.cm_callable = func
 }
 
-_b_.classmethod.tp_new = function(cls){
+_b_.classmethod.tp_new = function(cls, args, kw){
     return {
         ob_type: cls,
         dict: $B.empty_dict()
@@ -642,9 +656,9 @@ _b_.staticmethod.tp_init = function(self, func){
     self.sm_callable = func
 }
 
-_b_.staticmethod.tp_new = function(self){
+_b_.staticmethod.tp_new = function(cls, args, kw){
     return {
-        ob_type: _b_.staticmethod,
+        ob_type: cls,
         sm_callable: _b_.None
     }
 }
@@ -980,7 +994,7 @@ _b_.type.tp_call = function(){
         kw = $.kw,
         kw_len = _b_.dict.mp_length(kw)
 
-    var test = false // cls.tp_name === 'TypeVar'
+    var test = false // cls.tp_name === 'A'
     if(test){
         console.log('type.tp_call', cls, args)
         console.log(Error('trace').stack)
@@ -996,12 +1010,17 @@ _b_.type.tp_call = function(){
     }
     var new_func = $B.search_slot(cls, "tp_new")
     if(test){
-        console.log('new_func', new_func)
+        console.log('new_func', new_func, 'is slot tp_new', new_func.$is_slot)
     }
 
     // create an instance with __new__
-    var instance = new_func(cls, ...args, $B.dict2kwarg(kw)),
-        instance_class = $B.get_class(instance)
+    var instance
+    if(new_func.$is_slot){
+        instance = new_func(cls, args, kw)
+    }else{
+        instance = new_func(cls, ...args, $B.dict2kwarg(kw))
+    }
+    var instance_class = $B.get_class(instance)
     if(test){
         console.log('instance of type', instance, 'cls', cls)
         console.log('instance type is cls ?', $B.type_check(instance, cls))
@@ -1131,7 +1150,7 @@ _b_.type.tp_init = function(self){
     }
 }
 
-_b_.type.tp_new = function(metatype, name, bases, cl_dict, extra_kwargs){
+_b_.type.tp_new = function(cls, args, kw){
     // Return a new type object. This is essentially a dynamic form of the
     // class statement. The name string is the class name and becomes the
     // __name__ attribute; the bases tuple itemizes the base classes and
@@ -1139,16 +1158,15 @@ _b_.type.tp_new = function(metatype, name, bases, cl_dict, extra_kwargs){
     // namespace containing definitions for class body and becomes the
     // __dict__ attribute
     // arguments passed as keywords in class definition
-    var $ = $B.args('__new__', 1, {metatype: null}, ['metatype'], arguments,
-                {}, 'args', 'kwds')
-    var args = $.args,
-        kwds = $.kwds
+    var metatype = cls
+    var kwds = kw
     var test = false // name == 'Movie'
     if(test){
         console.log('type.tp_new', name, 'metatype', metatype,
-            'extrakw', extra_kwargs)
+            'extrakw', kwds)
     }
-    extra_kwargs = kwds
+    var extra_kwargs = kwds
+    var [name, bases, cl_dict] = args
 
     // Create the class dictionary
     var module = $B.str_dict_get(cl_dict, '__module__', $B.frame_obj.frame[2])
@@ -1156,13 +1174,12 @@ _b_.type.tp_new = function(metatype, name, bases, cl_dict, extra_kwargs){
     var qualname = $B.str_dict_get(cl_dict, '__qualname__', name)
     $B.set_class_attr(cl_dict, '__qualname__', qualname)
 
-    var [name, bases, orig_dict] = args
 
     var ctx = {
         metatype,
         args,
         kwds,
-        orig_dict,
+        cl_dict,
         name,
         bases
     }
@@ -1273,7 +1290,11 @@ _b_.type.tp_new = function(metatype, name, bases, cl_dict, extra_kwargs){
         console.log('call init subclass', init_subclass)
         console.log('extra_kwargs', extra_kwargs)
     }
-    $B.$call(init_subclass, $B.dict2kwarg(extra_kwargs))
+    try{
+        $B.$call(init_subclass, $B.dict2kwarg(extra_kwargs))
+    }catch(err){
+        throw err
+    }
     class_obj.tp_flags |= $B.TPFLAGS.READY
     return class_obj
 }
@@ -1447,7 +1468,6 @@ type_funcs.__name___get = function(cls){
 }
 
 type_funcs.__name___set = function(cls,value){
-    console.log('set name of class', cls, value)
     cls.tp_name = value
 }
 
@@ -1596,7 +1616,7 @@ _b_.property.tp_init = function(){
     }
 }
 
-_b_.property.tp_new = function(cls){
+_b_.property.tp_new = function(cls, args, kw){
     return {
         ob_type: cls
     }
@@ -2127,7 +2147,9 @@ $B.GenericAlias.tp_iter = function(self){
 
 }
 
-$B.GenericAlias.tp_new = function(cls, origin, args){
+$B.GenericAlias.tp_new = function(cls, args, kw){
+    var [origin, args] = $B.unpack_args('GenericAlias', args,
+        ['origin', 'args'], {})
     return {
         ob_type: cls,
         origin,

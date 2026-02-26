@@ -263,10 +263,11 @@ _b_.object.tp_str = function(self){
 }
 
 _b_.object.tp_getattro = function(self, attr){
-    var test = false // attr == '__str__' && self.ob_type && self.ob_type.tp_name == 'MagicMock'
+    var test = attr == '__qualname__' && self.ob_type && self.ob_type.tp_name == 'tuple'
     var klass = $B.get_class(self)
     if(test){
         console.log('getattr', attr, 'of self', self, klass)
+        console.log(Error('trace').stack)
         if(self.jsobj){
             console.log('in jsobj', self.jsobj[attr])
         }
@@ -362,13 +363,8 @@ _b_.object.tp_init = function(){
     return _b_.None
 }
 
-_b_.object.tp_new = function(){
-    var $ = $B.args('__new__', 1, {cls: null}, ['cls'], arguments, {}, 'args',
-                'kw')
-    var cls = $.cls,
-        args = $.args,
-        kw = $.kw
-    if(args.length > 0 || _b_.len(kw)){
+_b_.object.tp_new = function(cls, args, kw){
+    if(args.length > 0 || ! $B.str_dict_empty(kw)){
         if($B.search_slot(cls, 'tp_new', $B.NULL) !== _b_.object.tp_new){
             $B.RAISE(_b_.TypeError,
                 "object.__new__() takes exactly one argument "  +

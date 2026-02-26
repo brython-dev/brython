@@ -187,10 +187,6 @@ var make_complex = $B.make_complex = function(real, imag){
 
 var c_1 = make_complex(1, 0)
 
-complex.$factory = function(){
-    return complex.tp_new(complex, ...arguments)
-}
-
 /* complex start */
 
 _b_.complex.nb_absolute = function(self){
@@ -358,18 +354,32 @@ _b_.complex.tp_hash = function(self){
     return $B.$hash(self.real) + $B.$hash(self.imag) * 1000003
 }
 
-_b_.complex.tp_new = function(){
-    var res,
-        missing = {},
-        $ = $B.args("complex", 3, {cls: null, real: null, imag: null},
-            ["cls", "real", "imag"], arguments, {real: 0, imag: missing},
-            null, null)
-    var cls = $.cls
-    var first = $.real,
-        second = $.imag
-
+_b_.complex.tp_new = function(cls, args, kw){
+    var nb_args = args.length + $B.str_dict_length(kw)
+    if(nb_args > 2){
+        $B.RAISE(_b_.TypeError,
+            `complex() takes at most 2 arguments (${nb_args} given)`
+        )
+    }else if(nb_args == 0){
+        return $B.make_complex(0, 0)
+    }
+    var [first, second] = $B.unpack_args('complex', args, ['first', 'second'],
+                              {first: $B.NULL, second: $B.NULL})
+    $B.check_expected_keywords('complex', kw, ['real', 'imag'])
+    for(var entry of _b_.dict.$iter_items(kw)){
+        if(entry.key == 'real'){
+            if(first !== $B.NULL){
+                $B.RAISE(_b_.TypeError,
+                    `argument for complex() given by name ('real') ` +
+                    `and position (1)`
+                )
+            }else{
+                first = entry.value
+            }
+        }
+    }
     if(typeof first == "string"){
-        if(second !== missing){
+        if(second !== $B.NULL){
             $B.RAISE(_b_.TypeError, "complex() can't take second arg " +
                 "if first is a string")
         }else{
@@ -423,14 +433,14 @@ _b_.complex.tp_new = function(){
                 first = to_num(parts[_real])
                 second = 0
             }
-            res = make_complex(first, second)
+            var res = make_complex(first, second)
             res.ob_type = cls
             res.dict = $B.empty_dict()
             return res
         }
     }
 
-    if($B.exact_type(first, complex) && cls === complex && second === missing){
+    if($B.exact_type(first, complex) && cls === complex && second === $B.NULL){
         return first
     }
     var arg1 = _convert(first),
@@ -445,7 +455,7 @@ _b_.complex.tp_new = function(){
         $B.RAISE(_b_.TypeError, "complex() second arg can't be a string")
     }
 
-    var arg2 = _convert(second === missing ? 0 : second)
+    var arg2 = _convert(second === $B.NULL ? 0 : second)
 
     if(arg2 === null){
         $B.RAISE(_b_.TypeError, "complex() second argument must be a " +

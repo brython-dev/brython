@@ -573,7 +573,7 @@ const O_RDONLY = 0,
       O_TRUNC = 512,
       O_APPEND = 8
 
-$B._FileIO.tp_new = function(cls){
+$B._FileIO.tp_new = function(cls, args, kw){
     return {
         ob_type: cls,
         fd: -1,
@@ -858,7 +858,7 @@ $B._TextIOWrapper.$factory = function(){
     return res
 }
 
-$B._TextIOWrapper.tp_new = function(cls, ...args){
+$B._TextIOWrapper.tp_new = function(cls, args, kw){
     return $B._TextIOWrapper.$factory(...args)
 }
 

@@ -154,7 +154,7 @@ $B.pattern_match = function(subject, pattern){
         let supported = false
         let Mapping
         if($B.imported['collections.abc']){
-            Mapping = $B.module_getattr($B.imported['collections.abc'], 
+            Mapping = $B.module_getattr($B.imported['collections.abc'],
                 'Mapping')
         }
         let klass = $B.get_class(subject)

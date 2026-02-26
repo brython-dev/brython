@@ -958,7 +958,8 @@ _b_.float.tp_hash = function(self){
     return float.$hash_func(self)
 }
 
-_b_.float.tp_new = function(cls, value){
+_b_.float.tp_new = function(cls, args, kw){
+    var [value] = $B.unpack_args('float', args, ['value'], {value: 0})
     if(cls === undefined){
         $B.RAISE(_b_.TypeError, "float.__new__(): not enough arguments")
     }else if(! $B.$isinstance(cls, _b_.type)){

@@ -31,13 +31,10 @@ function normalize_index(self, i){
     return i
 }
 
-function make_array(){
-    var missing = {},
-        $ = $B.args("array", 2, {typecode: null, initializer: null},
-            ["typecode", "initializer"], arguments, {initializer: missing},
-            null, null),
-        typecode = $.typecode,
-        initializer = $.initializer
+function make_array(args, kw){
+    $B.check_kw_empty(kw)
+    var [typecode, initializer] = $B.unpack_args('array', args,
+        ['typecode', 'initializer'], {initializer: $B.NULL})
     if(! typecodes.hasOwnProperty(typecode)){
         $B.RAISE(_b_.ValueError, "bad typecode (must be b, " +
             "B, u, h, H, i, I, l, L, q, Q, f or d)")
@@ -51,7 +48,7 @@ function make_array(){
         typecode: typecode,
         obj: null
     }
-    if(initializer !== missing){
+    if(initializer !== $B.NULL){
         if(Array.isArray(initializer)){
             array_funcs.fromlist(res, initializer)
         }else if($B.$isinstance(initializer, _b_.bytes)){
@@ -152,9 +149,9 @@ array.mp_ass_subscript = function(_self, index, value){
     }
 }
 
-array.tp_new = function(){
+array.tp_new = function(cls, args, kw){
     var [cls, ...args] = arguments
-    var obj = make_array(...args)
+    var obj = make_array(args, kw)
     obj.cls = cls
     return obj
 }

@@ -1142,17 +1142,13 @@ const numeric_re = /\p{Nd}|\p{Nl}|\p{No}/u
 // This regex should match the one in py2js.js
 var unprintable_re = /\p{Cc}|\p{Cf}|\p{Co}|\p{Cs}|\p{Zl}|\p{Zp}|\p{Zs}/u
 
-str.$factory = function(arg, encoding){
-    var $ = $B.args("str", 3, {arg: null, encoding: null, errors: null},
-                ["arg", "encoding", "errors"], arguments,
-                {arg: '', encoding: $B.NULL, errors: $B.NULL}, null, null)
-    var arg = $.arg,
-        encoding = $.encoding,
-        errors = $.errors
+str.$factory = function(arg, encoding, errors){
     var res
     if(arg === ''){
         return arg
     }
+    encoding = encoding ?? $B.NULL
+    errors = errors ?? $B.NULL
     if(encoding === $B.NULL && errors === $B.NULL){
         var klass = $B.get_class(arg)
         var test = false // klass.tp_name == 'MagicMock'
@@ -1176,6 +1172,7 @@ str.$factory = function(arg, encoding){
         }
     }else{
         if(! $B.is_bytes_like(arg)){
+            console.log(Error().stack)
             $B.RAISE(_b_.TypeError,
                 `decoding to str: need a bytes-like object, ` +
                 `${$B.class_name(arg)} found`
@@ -1199,47 +1196,6 @@ str.$factory = function(arg, encoding){
     }
     $B.RAISE(_b_.TypeError, "__str__ returned non-string " +
         `(type ${$B.class_name(res)})`)
-    /*
-
-    if(arg === undefined){
-        return $B.UndefinedType.tp_str()
-    }else if(arg === null){
-        return '<Javascript null>'
-    }
-    var test = false // arg.__class__ && arg.__class__.__name__ == 'MagicMock'
-    if(test){
-        console.log('call str of', arg)
-    }
-    // Arguments may be passed as keywords (cf. issue #1060)
-    if(! $B.$isinstance(encoding, str)){
-        $B.RAISE(_b_.TypeError,
-            `str() argument 'encoding' must be str, not ${$B.class_name(encoding)}`)
-    }
-    if(! $B.$isinstance(errors, str)){
-        $B.RAISE(_b_.TypeError,
-            `str() argument 'errors' must be str, not ${$B.class_name(errors)}`)
-    }
-    if(typeof arg == "string" || arg instanceof String){
-        return arg.toString()
-    }else if(typeof arg == "number" && Number.isInteger(arg)){
-        return arg.toString()
-    }
-
-    // Implicit invocation of __str__ uses method __str__ on the class,
-    // even if arg has an attribute __str__
-    var klass = $B.get_class(arg)
-    var method = $B.search_slot(klass, 'tp_str', $B.NULL)
-    if(method === $B.NULL){
-        $B.RAISE_ATTRIBUTE_ERROR('no __str__ or __repr__', klass, '__str__')
-    }
-    console.log('arg', arg, 'method', method)
-    var res = method(arg)
-    if(typeof res == "string" || $B.$isinstance(res, str)){
-        return res
-    }
-    $B.RAISE(_b_.TypeError, "__str__ returned non-string " +
-        `(type ${$B.class_name(res)})`)
-    */
 }
 
 /* str start */
@@ -1372,17 +1328,47 @@ _b_.str.tp_iter = function(self){
     }
 }
 
-_b_.str.tp_new = function(cls, ...args){
+_b_.str.tp_new = function(cls, args, kw){
     if(cls === undefined){
         $B.RAISE(_b_.TypeError, "str.__new__(): not enough arguments")
-    }else if(cls === _b_.str){
-        return str.$factory(...args)
-    }else{
-        return {
-            ob_type: cls,
-            $brython_value: str.$factory(...args),
-            dict: $B.empty_dict()
+    }
+    $B.check_expected_keywords('str', kw, ['encoding', 'errors'])
+    var nb_kwargs = $B.str_dict_length(kw)
+    var nb_args = args.length + nb_kwargs
+    if(nb_args > 3){
+        $B.RAISE(_b_.TypeError,
+            `str() takes at most 3 arguments (${nb_args} given)`
+        )
+    }
+    if(args.length == 0){
+        return ''
+    }
+    var arg = args[0]
+    var encoding = $B.str_dict_get(kw, 'encoding', $B.NULL)
+    var errors = $B.str_dict_get(kw, 'errors', $B.NULL)
+    if(args.length > 2){
+        if(errors !== $B.NULL){
+            $B.RAISE(_b_.TypeError,
+                `argument for str() given by name ('errors') and position (3)`
+            )
         }
+        errors = args[2]
+    }
+    if(args.length > 1){
+        if(encoding !== $B.NULL){
+            $B.RAISE(_b_.TypeError,
+                `argument for str() given by name ('encoding') and position (2)`
+            )
+        }
+        encoding = args[1]
+    }
+    if(cls === _b_.str){
+        return str.$factory(arg, encoding, errors)
+    }
+    return {
+        ob_type: cls,
+        $brython_value: str.$factory(arg, encoding, errors),
+        dict: $B.empty_dict()
     }
 }
 
@@ -1592,7 +1578,8 @@ str_funcs.encode = function(){
         }
         return res
     }
-    return _b_.bytes.tp_new(_b_.bytes, $.self, $.encoding, $.errors)
+    return _b_.bytes.tp_new(_b_.bytes, [$.self, $.encoding, $.errors], 
+        $B.empty_dict())
 }
 
 str_funcs.endswith = function(){

@@ -97,7 +97,7 @@ function _PyDictView_Intersect(self, other){
     /* at this point, two things should be true
        1. self is a dictview
        2. if other is a dictview then it is smaller than self */
-    var result = _b_.set.tp_new()
+    var result = _b_.set.tp_new(set, [], $B.empty_dict())
     var it = $B.make_js_iterator(other)
 
     if($B.$isinstance(self, $B.dict_keys)){
@@ -343,6 +343,14 @@ $B.str_dict_pop = function(d, attr){
         return $B.NULL
     }
     delete d.$strings[attr]
+}
+
+$B.str_dict_empty = function(d){
+    return Object.keys(d.$strings).length == 0
+}
+
+$B.str_dict_length = function(d){
+    return Object.keys(d.$strings).length
 }
 
 $B.hasOnlyStringKeys = function(d){
@@ -1269,7 +1277,7 @@ _b_.dict.sq_contains = function(self){
     return _b_.dict.$contains(self, key)
 }
 
-_b_.dict.tp_new = function(cls){
+_b_.dict.tp_new = function(cls, args, kw){
     if(cls === undefined){
         $B.RAISE(_b_.TypeError, "int.__new__(): not enough arguments")
     }
@@ -1630,7 +1638,7 @@ dict_items_funcs.isdisjoint = function(self){
 }
 
 dict_items_funcs.mapping_get = function(self){
-    return $B.mappingproxy.tp_new(self.dict_obj)
+    return $B.mappingproxy.tp_new(self.dict_obj, [], $B.empty_dict())
 }
 
 dict_items_funcs.mapping_set = _b_.None
@@ -1708,7 +1716,7 @@ dict_keys_funcs.isdisjoint = function(self, other){
 }
 
 dict_keys_funcs.mapping_get = function(self){
-    return $B.mappingproxy.tp_new(self.dict_obj)
+    return $B.mappingproxy.tp_new(self.dict_obj, [], $B.empty_dict())
 }
 
 dict_keys_funcs.mapping_set = _b_.None
@@ -1783,7 +1791,7 @@ dict_values_funcs.__reversed__ = function(self){
 }
 
 dict_values_funcs.mapping_get = function(self){
-    return $B.mappingproxy.tp_new(self.dict_obj)
+    return $B.mappingproxy.tp_new(self.dict_obj, [], $B.empty_dict())
 }
 
 dict_values_funcs.mapping_set = _b_.None
@@ -2060,7 +2068,31 @@ $B.mappingproxy.tp_iter = function(self){
     }
 }
 
-$B.mappingproxy.tp_new = function(cls, mapping){
+$B.mappingproxy.tp_new = function(cls, args, kw){
+    kw = kw ?? $B.empty_dict()
+    var nb_kwargs = $B.str_dict_length(kw)
+    var nb_args = args.length + nb_kwargs
+    var mapping
+    if(nb_args == 0){
+        $B.RAISE(_b_.TypeError,
+            "mappingproxy() missing required argument 'mapping' (pos 1)"
+        )
+    }else if(nb_args > 1){
+        $B.RAISE(_b_.TypeError,
+            `mappingproxy() takes at most 1 argument (${nb_args} given)`
+        )
+    }else if(args.length == 0){
+        $B.check_expected_keywords('mappingproxy', ['mapping'], kw)
+        if(nb_kwargs > 1){
+            $B.RAISE(_b_.TypeError,
+                `mappingproxy() takes at most 1 keyword argument ` +
+                `(${nb_kwargs} given)`
+            )
+        }
+        mapping = $B.str_dict_get(kw, 'mapping')
+    }else{
+        mapping = args[0]
+    }
     return {
         ob_type: cls,
         mapping
@@ -2098,7 +2130,7 @@ mappingproxy_funcs.__reversed__ = function(self){
 
 mappingproxy_funcs.copy = function(self){
     var copy_func = $B.type_getattribute(_b_.dict, 'copy')
-    return $B.mappingproxy.tp_new($B.mappingproxy, copy_func(self.mapping))
+    return $B.mappingproxy.tp_new($B.mappingproxy, [copy_func(self.mapping)])
 }
 
 mappingproxy_funcs.get = function(self, key, _default){

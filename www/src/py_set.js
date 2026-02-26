@@ -449,9 +449,12 @@ set.$literal = function(items){
 }
 
 set.$factory = function(){
-    var args = [set].concat(Array.from(arguments)),
-        self = set.tp_new.apply(null, args)
-    set.tp_init(self, ...arguments)
+    var args = Array.from(arguments)
+    var self = set.tp_new(set, args)
+    if(args[0] === _b_.None){
+        args = [[]]
+    }
+    set.tp_init(self, ...args)
     return self
 }
 
@@ -550,7 +553,7 @@ _b_.set.tp_iter = function(self){
 }
 
 _b_.set.tp_init = function(self, iterable){
-    if(iterable === undefined){
+    if(iterable === _b_.None){
         return _b_.None
     }
     $B.check_nb_args_no_kw('set', 2, arguments)
@@ -561,10 +564,10 @@ _b_.set.tp_init = function(self, iterable){
     return _b_.None
 }
 
-_b_.set.tp_new = function(cls, iterable){
-    var $ = $B.args('__new__', 2, {cls: null, iterable: null},
-            ['cls', 'iterable'], arguments, {iterable: _b_.None}, null, null)
-    return make_new_set($.cls)
+_b_.set.tp_new = function(cls, args, kw){
+    var [iterable] = $B.unpack_args('set', args, ['iterable'],
+        {iterable: _b_.None})
+    return make_new_set(cls)
 }
 
 _b_.set.nb_inplace_subtract = function(self, other){
@@ -873,8 +876,8 @@ $B.set_func_names(set, "builtins")
 var frozenset = _b_.frozenset
 
 frozenset.$factory = function(){
-    var args = [frozenset].concat(Array.from(arguments)),
-        self = frozenset.tp_new.apply(null, args)
+    var self = frozenset.tp_new(frozenset, Array.from(arguments), 
+            $B.empty_dict())
     frozenset.tp_init(self, ...arguments)
     return self
 }
@@ -938,19 +941,14 @@ frozenset.tp_init = function(){
     return _b_.None
 }
 
-frozenset.tp_new = function(cls, iterable){
-    var $ = $B.args('__new__', 2, {cls: null, iterable: null},
-                ['cls', 'iterable'], arguments, {iterable: _b_.None}, null,
-                null)
-    var cls = $.cls,
-        iterable = $.iterable
+frozenset.tp_new = function(cls, args, kw){
+    var [iterable] = $B.unpack_args('frozenset', args, ['iterable'],
+        {iterable: _b_.None})
     var self = make_new_set(cls)
 
     if(iterable === _b_.None){
         return self
     }
-
-    $B.check_nb_args_no_kw('__new__', 2, arguments)
 
     if(cls === frozenset && $B.get_class(iterable) === frozenset){
         return iterable

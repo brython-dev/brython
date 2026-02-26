@@ -468,7 +468,8 @@ function pyargs2jsargs(pyargs){
 
 $B.JSClassMeta = $B.make_builtin_class('JSClassMeta', [_b_.type])
 
-$B.JSClassMeta.tp_new = function(cls, name, bases, dict){
+$B.JSClassMeta.tp_new = function(cls, args, kw){
+    var [name, bases, dict] = args
     console.log('create new class with type JSClassMeta, bases', bases)
     var js_class = bases[0].js_class
     var klass = {
@@ -479,7 +480,7 @@ $B.JSClassMeta.tp_new = function(cls, name, bases, dict){
         js_class
     }
     klass.tp_mro = $B.make_mro(klass)
-    klass.tp_new = function(cls, ...args){
+    klass.tp_new = function(cls, args, kw){
         return {
             ob_type: klass,
             dict: $B.empty_dict(),
@@ -503,7 +504,8 @@ $B.JSClass.tp_getattro = function(self, attr){
     return jsobj2pyobj(self.jsobj[attr], self.jsobj)
 }
 
-$B.JSClass.tp_new = function(cls, name, bases, dict){
+$B.JSClass.tp_new = function(cls, args, kw){
+    var [name, bases, dict] = args
     var cls = {
         ob_type: cls,
         tp_name: name,
@@ -1400,10 +1402,11 @@ $B.JSMeta.__init_subclass__ = function(){
     // do nothing
 }
 
-$B.JSMeta.tp_new = function(metaclass, class_name, bases, cl_dict){
+$B.JSMeta.tp_new = function(cls, args, kw){
     // Creating a class that inherits a Javascript class A must return
     // another Javascript class B that extends A
-    console.log('JS meta new')
+    var metaclass = cls
+    var [class_name, bases, cl_dict] = args
     var body = `
     var _b_ = __BRYTHON__.builtins
     return function(){
@@ -1469,7 +1472,8 @@ $B.JSFunction.tp_call = function(self, ...args){
     return self(...args)
 }
 
-$B.JSFunction.tp_new = function(cls, name, bases, dict){
+$B.JSFunction.tp_new = function(cls, args, kw){
+    var [name, bases, dict] = args
     var cls = {
         ob_type: $B.JSConstructor,
         tp_name: name,

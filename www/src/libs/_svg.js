@@ -60,7 +60,7 @@ function makeTagDict(tagName){
         }
     }
 
-    dict.tp_new = function(cls){
+    dict.tp_new = function(cls, args, kw){
         var res = $B.DOMNode.$factory(document.createElementNS($svgNS, tagName))
         res.ob_type = cls
         return res

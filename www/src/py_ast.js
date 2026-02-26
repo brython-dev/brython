@@ -69,8 +69,7 @@ $B.ast_js_to_py = function(obj){
         if(py_class === undefined){
             return obj
         }
-
-        for(var field of py_class._fields){
+        for(var field of $B.str_dict_get(py_class.dict, '_fields', [])){
             $B.str_dict_set(py_ast_obj.dict, field,
                 $B.ast_js_to_py(obj[field]))
         }
@@ -184,13 +183,16 @@ $B.create_python_ast_classes = function(){
             }
 
             if(_fields){
-                cls._fields = _fields
+                $B.str_dict_set(cls.dict, '_fields', _fields)
             }
 
-            cls.tp_new = function(){
-                var [cls, ...args] = arguments
-                var obj = cls.$factory(...args)
+            cls.tp_new = function(cls, args, kw){
+                var _args = args.concat($B.dict2kwarg(kw))
+                var obj = cls.$factory(..._args)
                 obj.ob_type = cls
+                if(cls.tp_name === 'ast.Module'){
+                    console.log(obj)
+                }
                 return obj
             }
 
@@ -204,6 +206,8 @@ $B.create_python_ast_classes = function(){
                     }
                 }
             }
+
+            $B.finalize_type(cls)
 
             return cls
         })(klass)

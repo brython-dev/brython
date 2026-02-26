@@ -24,7 +24,7 @@ var Module = $B.module
 
 // legacy
 Module.$factory = function(name, doc, $package){
-    var self = Module.tp_new()
+    var self = Module.tp_new(Module)
     Module.tp_init(self, name, doc, $package)
     return self
 }
@@ -82,9 +82,9 @@ $B.module.tp_init = function(self){
     $B.module_setattr(self, '__doc__', $.doc)
 }
 
-$B.module.tp_new = function(self){
+$B.module.tp_new = function(cls, args, kw){
     return {
-        ob_type: $B.module,
+        ob_type: cls,
         dict: $B.empty_dict(),
     }
 }

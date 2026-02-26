@@ -12,15 +12,10 @@ MatchObject.$factory = function(jsmatch, string, pattern){
     }
 }
 
-MatchObject.tp_new = function(){
-    var $ = $B.args('MatchObject', 4,
-                {cls: null, jsmatch: null, string: null, pattern: null},
-                ['cls', 'jsmatch', 'string', 'pattern'], arguments, {},
-                null, null)
-    var cls = $.cls,
-        jsmatch = $.jsmatch,
-        string = $.string,
-        pattern = $.pattern
+MatchObject.tp_new = function(cls, args, kw){
+    $B.check_kw_empty('MatchObject', kw)
+    var [jsmatch, string, pattern] = $B.unpack_args('MatchObject', args,
+        ['jsmatch', 'string', 'pattern'], {})
     var mo = MatchObject.$factory(jsmatch, string, pattern)
     mo.ob_type = cls
     return mo

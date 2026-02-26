@@ -535,14 +535,41 @@ _b_.enumerate.tp_iternext = function*(self){
     }
 }
 
-_b_.enumerate.tp_new = function(cls,self){
-    var $ = $B.args("enumerate", 3, {cls: null, iterable: null, start: null},
-        ['cls', 'iterable', 'start'], arguments, {start: 0}, null, null)
+_b_.enumerate.tp_new = function(cls, args, kw){
+    var nb_kwargs = $B.str_dict_length(kw)
+    var nb_args = args.length + nb_kwargs
+    if(nb_args > 2){
+        $B.RAISE(_b_.TypeError,
+            `enumerate() takes at most 2 arguments (${nb_args} given)`
+        )
+    }
+    var [iterable, start] = args
+    $B.check_expected_keywords('enumerate', kw, ['iterable', 'start'])
+    for(var entry of _b_.dict.$iter_items(kw)){
+        switch(entry.key){
+            case 'iterable':
+                if(iterable !== undefined){
+                    $B.RAISE(_b_.TypeError,
+                        "enumerate() receives argument 'iterable' twice"
+                    )
+                }
+                iterable = entry.value
+                break
+            case 'start':
+                if(start !== undefined){
+                    $B.RAISE(_b_.TypeError,
+                        "enumerate() receives argument 'start' twice"
+                    )
+                }
+                start = entry.value
+                break
+        }
+    }
     return {
         ob_type: _b_.enumerate,
         dict: $B.empty_dict(),
-        it: $B.make_js_iterator($.iterable),
-        counter: $.start
+        it: $B.make_js_iterator(iterable),
+        counter: start ?? 0
     }
 }
 
@@ -602,14 +629,15 @@ filter.tp_iternext = function*(self){
     }
 }
 
-filter.tp_new = function(){
-    var $ = $B.args('__new__', 3, {cls: null, func: null, iterable: null},
-                ['cls', 'func', 'iterable'], arguments, {}, null, null)
-    var func = $.func === _b_.None ? (x) => x : $.func
+filter.tp_new = function(cls, args, kw){
+    var [func, iterable] = $B.unpack_args('filter', args,
+        ['func', 'iterable'], {})
+    $B.check_kw_empty('filter', kw)
+    var func = func === _b_.None ? (x) => x : func
     return {
         ob_type: _b_.filter,
         func,
-        it: $B.make_js_iterator($.iterable)
+        it: $B.make_js_iterator(iterable)
     }
 }
 
@@ -1234,13 +1262,14 @@ _b_.map.tp_iternext = function*(self){
     yield $B.$call(self.func, ...args)
 }
 
-_b_.map.tp_new = function(){
-    var $ = $B.args('map', 3, {cls: null, func: null, it1:null},
-                ['cls', 'func', 'it1'], arguments, {}, 'args', null)
-    var cls = $.cls,
-        func = $.func
-    var iter_args = [$B.make_js_iterator($.it1)]
-    for(var arg of $.args){
+_b_.map.tp_new = function(cls, args, kw){
+    $B.check_kw_empty('map', kw)
+    if(args.length < 2){
+        $B.RAISE(_b_.TypeError, 'map() must have at least two arguments.')
+    }
+    var [func, it1, ...extra_args] = args
+    var iter_args = [$B.make_js_iterator(it1)]
+    for(var arg of extra_args){
         iter_args.push($B.make_js_iterator(arg))
     }
     return {
@@ -1554,8 +1583,9 @@ _b_.reversed.tp_iternext = function*(self){
     yield $B.$call(self.getitem, self.seq, self.counter)
 }
 
-_b_.reversed.tp_new = function(cls, seq){
-    check_nb_args_no_kw('reversed', 2, arguments)
+_b_.reversed.tp_new = function(cls, args, kw){
+    var [seq] = $B.unpack_args('reversed', args, [], {})
+    $B.check_kw_empty('reversed', kw)
 
     var rev_method = $B.$getattr($B.get_class(seq), '__reversed__', $B.NULL)
     if(rev_method !== $B.NULL){
@@ -1797,7 +1827,7 @@ _b_.super.tp_repr = function(self){
 _b_.super.tp_getattro = function(self, attr){
     /* We want __class__ to return the class of the super object
        (i.e. super, or a subclass), not the class of su->obj. */
-    var $test = false // attr == "__new__" && self.type.tp_name == 'Z'
+    var $test = false // attr == "__new__" //&& self.type.tp_name == 'Z'
     if(attr == "__class__"){
         return _b_.object.tp_getattro(self, attr)
     }
@@ -1939,9 +1969,9 @@ _b_.super.tp_init = function(self, _type, object_or_type){
     self.obj_type = supercheck(type, object_or_type)
 }
 
-_b_.super.tp_new = function(self){
+_b_.super.tp_new = function(cls){
     return {
-        ob_type: _b_.super,
+        ob_type: cls,
         dict: $B.empty_dict()
     }
 }
@@ -2030,11 +2060,7 @@ _b_.zip.tp_iternext = function*(self){
     yield $B.fast_tuple(res)
 }
 
-_b_.zip.tp_new = function(){
-    var $ = $B.args('zip', 1, {cls: null}, ['cls'], arguments, {}, 'args', 'kw')
-    var cls = $.cls,
-        args = $.args,
-        kw = $.kw
+_b_.zip.tp_new = function(cls, args, kw){
     var res = {
         ob_type: cls,
         items: []

@@ -145,11 +145,8 @@ _b_.memoryview.tp_iter = function(self){
     }
 }
 
-_b_.memoryview.tp_new = function(){
-    var $ = $B.args('__new__', 2, {cls: null, obj: null}, ['cls', 'obj'],
-                arguments, {}, null, null)
-    var cls = $.cls,
-        obj = $.obj
+_b_.memoryview.tp_new = function(cls, args, kw){
+    var obj = args[0]
     if($B.get_class(obj) === memoryview){
         return obj
     }

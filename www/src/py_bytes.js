@@ -715,11 +715,8 @@ function check_exports(self){
 }
 
 bytearray.$factory = function(){
-    var args = [bytearray]
-    for(var i = 0, len = arguments.length; i < len; i++){
-        args.push(arguments[i])
-    }
-    var res = bytearray.tp_new.apply(null, args)
+    var res = bytearray.tp_new(bytearray, Array.from(arguments), 
+        $B.empty_dict())
     res.exports = 0
     return res
 }
@@ -824,8 +821,8 @@ _b_.bytearray.tp_init = function(self){
 
 }
 
-_b_.bytearray.tp_new = function(cls){
-    var b = _b_.bytes.tp_new.apply(null, arguments)
+_b_.bytearray.tp_new = function(cls, args, kw){
+    var b = _b_.bytes.tp_new(cls, args, kw)
     b.ob_type = cls
     return b
 }
@@ -1927,7 +1924,7 @@ function fast_bytes(t){
 $B.fast_bytes = fast_bytes
 
 bytes.$factory = function(){
-    return bytes.tp_new.bind(null, bytes).apply(null, arguments)
+    return bytes.tp_new(bytes, Array.from(arguments), $B.empty_dict())
 }
 
 /* bytes start */
@@ -2010,56 +2007,77 @@ _b_.bytes.tp_iter = function(self){
     }
 }
 
-_b_.bytes.tp_new = function(){
-    var missing = {},
-        $ = $B.args("__new__", 4,
-            {cls: null, source: null, encoding: null, errors: null},
-            ["cls", "source", "encoding", "errors"], arguments,
-            {source: missing, encoding: missing, errors: missing}, null, null),
-        source = $.source
-    if($.source === missing){
+_b_.bytes.tp_new = function(cls, args, kw){
+    var [source, encoding, errors] = $B.unpack_args('bytes', args,
+        ['source', 'encoding', 'errors'],
+        {source: $B.NULL, encoding: $B.NULL, errors: $B.NULL}
+    )
+    if(source === $B.NULL){
         return {
-            ob_type: $.cls,
+            ob_type: cls,
             source: []
         }
-    }else if(typeof $.source == "string" || $B.$isinstance($.source, _b_.str)){
-        if($.encoding === missing){
-            $B.RAISE(_b_.TypeError, 'string argument without an encoding')
+    }
+    var kw_encoding = $B.str_dict_get(kw, 'encoding', $B.NULL)
+    if(encoding !== $B.NULL){
+        if(kw_encoding !== $B.NULL){
+            $B.RAISE(_b_.TypeError,
+                `argument for bytes() given by name ('encoding') ` +
+                `and position (2)`
+            )
         }
-        $.errors = $.errors === missing ? 'strict' : $.errors
-        let res = encode($.source, $.encoding, $.errors)
+    }else{
+        encoding = kw_encoding
+    }
+    var kw_errors = $B.str_dict_get(kw, 'errors', $B.NULL)
+    if(errors !== $B.NULL){
+        if(kw_errors !== $B.NULL){
+            $B.RAISE(_b_.TypeError,
+                `argument for bytes() given by name ('errors') ` +
+                `and position (3)`
+            )
+        }
+    }else{
+        errors = kw_errors === $B.NULL ? 'strict' : kw_errors
+    }
+
+    if(typeof source == "string" || $B.$isinstance(source, _b_.str)){
+        if(encoding === $B.NULL){
+             $B.RAISE(_b_.TypeError, 'string argument without an encoding')
+        }
+        let res = encode(source, encoding, errors)
         if(! $B.$isinstance(res, bytes)){
-            $B.RAISE(_b_.TypeError, `'${$.encoding}' codec returns ` +
+            $B.RAISE(_b_.TypeError, `'${encoding}' codec returns ` +
                 `${$B.class_name(res)}, not bytes`)
         }
         // encode returns bytes
-        res.ob_type = $.cls
+        res.ob_type = cls
         return res
     }
-    if($.encoding !== missing){
+    if(encoding !== $B.NULL){
         $B.RAISE(_b_.TypeError, "encoding without a string argument")
     }
-    if(typeof $.source == "number" || $B.$isinstance($.source, _b_.int)){
-        var size = $B.PyNumber_Index($.source)
+    if(typeof source == "number" || $B.$isinstance(source, _b_.int)){
+        var size = $B.PyNumber_Index(source)
         source = []
         for(var i = 0; i < size; i++){
             source[i] = 0
         }
-    }else if($B.$isinstance($.source, [_b_.bytes, _b_.bytearray])){
-        source = $.source.source
-    }else if($B.$isinstance($.source, _b_.memoryview)){
-        source = $.source.obj.source
+    }else if($B.$isinstance(source, [_b_.bytes, _b_.bytearray])){
+        source = source.source
+    }else if($B.$isinstance(source, _b_.memoryview)){
+        source = source.obj.source
     }else if($B.imported.array &&
-            $B.$isinstance($.source, $B.module_getattr($B.imported.array, 'array'))){
+            $B.$isinstance(source, $B.module_getattr($B.imported.array, 'array'))){
         var array = $B.module_getattr($B.imported.array, 'array')
-        source = array.tp_funcs.tobytes($.source).source
+        source = array.tp_funcs.tobytes(source).source
     }else{
         var int_list
-        if(Array.isArray($.source)){
-            int_list = $.source
+        if(Array.isArray(source)){
+            int_list = source
         }else{
             try{
-                int_list = _b_.list.$factory($.source)
+                int_list = _b_.list.$factory(source)
             }catch(err){
                 var bytes_method = $B.$getattr(source, '__bytes__', _b_.None)
                 if(bytes_method === _b_.None){
@@ -2072,7 +2090,7 @@ _b_.bytes.tp_new = function(){
                         `non-bytes (type ${$B.class_name(res)})`)
                 }
                 if(res.source === undefined){
-                    console.log('!!!!!!!', $.source)
+                    console.log('!!!!!!!', source)
                 }
                 return res
             }
@@ -2089,10 +2107,10 @@ _b_.bytes.tp_new = function(){
         }
     }
     if(source === undefined){
-        console.log('bytes.__new__, no source', $.source)
+        console.log('bytes.__new__, no source', source)
     }
     return {
-        ob_type: $.cls,
+        ob_type: cls,
         source
     }
 }

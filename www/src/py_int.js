@@ -647,13 +647,35 @@ _b_.int.nb_index = function(self){
     return int_value(self)
 }
 
-_b_.int.tp_new = function(){
-    var $ = $B.args('int', 3, {cls: null, value: null, base: null},
-                ['cls', 'value', 'base'], arguments, {value: 0, base: _b_.None},
-                null, null)
-    var cls = $.cls,
-        value = $.value,
-        base = $.base
+_b_.int.tp_new = function(cls, args, kw){
+    var nb_kwargs = $B.str_dict_length(kw)
+    var nb_args = args.length + nb_kwargs
+    var value, base
+    if(nb_args > 2){
+        $B.RAISE(_b_.TypeError,
+            `int() takes at most 2 arguments (${nb_args} given)`
+        )
+    }
+    $B.check_expected_keywords('int', kw, ['base'])
+    switch(nb_args){
+        case 0:
+            return 0
+        case 1:
+            if(args.length == 0){
+                $B.RAISE(_b_.TypeError, "int() missing string argument")
+            }
+            value = args[0]
+            base = _b_.None
+            break
+        case 2:
+            if(nb_kwargs == 0){
+                [value, base] = args
+            }else{
+                value = args[0]
+                base = $B.str_dict_get(kw, 'base', _b_.None)
+            }
+            break
+    }
     if(! $B.$isinstance(cls, _b_.type)){
         $B.RAISE(_b_.TypeError, "int.__new__(X): X is not a type object")
     }
@@ -966,11 +988,9 @@ _b_.bool.tp_repr = function(self){
     return self ? "True" : "False"
 }
 
-_b_.bool.tp_new = function(cls, value){
-    var $ = $B.args('__new__', 2, {cls: null, value: null}, ['cls', 'value'],
-                arguments, {}, null, null)
-    var cls = $.cls,
-        value = $.value
+_b_.bool.tp_new = function(cls, args, kw){
+    $B.check_no_kw('bool', kw)
+    var [value] = $B.unpack_args('bool', args, ['value'], {value: false})
     if(!$B.$isinstance(cls, _b_.type)) {
         $B.RAISE(_b_.TypeError, `bool.__new__(X): X is not a type object (${$B.class_name(cls) })`)
     }else if(!_b_.issubclass(cls, bool)) {

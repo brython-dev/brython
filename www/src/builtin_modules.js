@@ -279,17 +279,6 @@
                     return res
                 }
 
-                cls.tp_getattroXXX = function(self, attr){
-                    console.log('getattro', cls, self, attr)
-                    var res = self[attr] ?? $B.NULL
-                    if(res === $B.NULL && self.dict){
-                        res = _b_.dict.$get_string(self.dict, attr, $B.NULL)
-                    }else{
-                        res = $B.jsobj2pyobj(res)
-                    }
-                    return res
-                }
-
                 cls_funcs.__rmul__ = function(self, num){
                     return $B.DOMNode.nb_multiply(self, num)
                 }
@@ -1514,10 +1503,6 @@
     }
 
     var cell_funcs = $B.cell.tp_funcs = {}
-
-    cell_funcs.__new__ = function(self){
-
-    }
 
     cell_funcs.cell_contents_get = function(self){
         if(self.$cell_contents === null){

@@ -203,7 +203,8 @@ $B.method.tp_descr_get = function(self){
     return self
 }
 
-$B.method.tp_new = function(cls, func, obj){
+$B.method.tp_new = function(cls, args, kw){
+    var [func, obj] = args
     return {
         ob_type: cls,
         im_func: func,

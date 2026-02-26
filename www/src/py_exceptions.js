@@ -164,7 +164,7 @@ traceback.$factory = function(exc){
 }
 
 /* traceback start */
-$B.traceback.tp_new = function(self){
+$B.traceback.tp_new = function(cls, args, kw){
     return make_tb()
 }
 
@@ -563,12 +563,11 @@ _b_.BaseException.tp_init = function(self, ...args){
     self.args = $B.fast_tuple(args)
 }
 
-_b_.BaseException.tp_new = function(cls){
-    var $ = $B.args('__new__', 1, {cls: null}, ['cls'], arguments, {}, 'args', 'kw')
+_b_.BaseException.tp_new = function(cls, args, kw){
     var res = {
-        ob_type: $.cls,
+        ob_type: cls,
         dict: $B.empty_dict(),
-        args: $B.fast_tuple($.args),
+        args: $B.fast_tuple(args),
         notes: _b_.None,
         __traceback__: _b_.None,
         __cause__: _b_.None,
@@ -845,8 +844,8 @@ _b_.UnboundLocalError.tp_repr = function(self){
 $B.set_func_names(_b_.UnboundLocalError, 'builtins')
 
 /* IndexError start */
-_b_.IndexError.tp_new = function(cls, ...args){
-    return _b_.BaseException.tp_new(cls, ...args)
+_b_.IndexError.tp_new = function(cls, args, kw){
+    return _b_.BaseException.tp_new(cls, args, kw)
 }
 
 var IndexError_funcs = _b_.IndexError.tp_funcs = {}
@@ -955,13 +954,9 @@ _b_.BaseExceptionGroup.tp_init = function(self, ...args){
     _b_.BaseException.tp_init(self, ...args)
 }
 
-_b_.BaseExceptionGroup.tp_new = function(){
-    var $ = $B.args('__new__', 3,
-                {cls: null, message: null, exceptions: null},
-                ['cls', 'message', 'exceptions'], arguments, {}, null, null)
-    var cls = $.cls,
-        message = $.message,
-        exceptions = $.exceptions
+_b_.BaseExceptionGroup.tp_new = function(cls, args, kw){
+    var [message, exceptions] = $B.unpack_args('BaseExceptionGroup', args,
+        ['message', 'exceptions'], {})
 
     if(! $B.is_sequence(exceptions)){
         $B.RAISE(_b_.TypeError,
@@ -1069,7 +1064,7 @@ BaseExceptionGroup_funcs.split = function(self, condition){
             res.push(item)
         }else{
             var eg = _b_.BaseExceptionGroup.tp_new(_b_.BaseExceptionGroup,
-                self.msg, $B.$list(item))
+                [self.msg, $B.$list(item)])
             eg.__cause__ = self.__cause__
             eg.__context__ = self.__context__
             eg.__traceback__ = self.__traceback__

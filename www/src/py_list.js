@@ -706,7 +706,7 @@ _b_.list.tp_init = function(self){
     return _b_.None
 }
 
-_b_.list.tp_new = function(cls){
+_b_.list.tp_new = function(cls, args, kw){
     // ignores other arguments than the first
     if(cls === undefined){
         $B.RAISE(_b_.TypeError, "list.__new__(): not enough arguments")
@@ -1027,35 +1027,6 @@ $B.fast_tuple = function(array){
     return array
 }
 
-// add tuple methods
-/*
-for(let attr in list){
-    switch(attr) {
-        case "__delitem__":
-        case "__iadd__":
-        case "__imul__":
-        case "__setitem__":
-        case "append":
-        case "extend":
-        case "insert":
-        case "pop":
-        case "remove":
-        case "reverse":
-        case "sort":
-            break
-        default:
-            if(tuple[attr] === undefined){
-                if(typeof list[attr] == "function"){
-                    tuple[attr] = (function(x){
-                        return function(){
-                            return list[x].apply(null, arguments)
-                        }
-                    })(attr)
-                }
-            }
-    }
-}
-*/
 function c_mul(a, b){
     var s = ((parseInt(a) * b) & 0xFFFFFFFF).toString(16)
     return parseInt(s.substr(0, s.length - 1), 16)
@@ -1098,29 +1069,28 @@ _b_.tuple.tp_iter = function(self){
     }
 }
 
-_b_.tuple.tp_new = function(self){
-    var $ = $B.args('__new__', 1, {cls: null}, ['cls'], arguments,
-                    {}, 'args', 'kw'),
-        cls = $.cls,
-        args = $.args,
-        kw = $.kw
+_b_.tuple.tp_new = function(cls, args, kw){
+    if(cls === _b_.tuple){
+        $B.check_no_kw('tuple', kw)
+    }
     var self = []
     self.ob_type = cls
     if(cls !== tuple){
         self.dict = $B.empty_dict()
     }
+    args = args ?? []
     if(args.length > 0){
         if(args.length == 1){
             for(var item of $B.make_js_iterator(args[0])){
                 self.push(item)
             }
         }else{
+            console.log('args', args)
+            console.log(Error().stack)
+            console.log('cls', cls)
             $B.RAISE(_b_.TypeError, 'tuple expected at most 1 ' +
                 `argument, got ${args.length}`)
         }
-    }
-    if(cls === tuple && _b_.len(kw) > 0){
-        $B.RAISE(_b_.TypeError, 'tuple() takes no keyword arguments')
     }
     return self
 }

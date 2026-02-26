@@ -42,6 +42,9 @@ $B.builtin_function_or_method.tp_call = function(self, ...args){
 var builtin_function_or_method_funcs = $B.builtin_function_or_method.tp_funcs = {}
 
 builtin_function_or_method_funcs.__name___get = function(self){
+    if(self.$function_infos === undefined){
+        console.log('no function infos', self)
+    }
     return self.$function_infos[$B.func_attrs.__name__]
 }
 
@@ -209,8 +212,7 @@ $B.function.tp_descr_get = function(self, obj){
     return $B.$call($B.method, self, obj)
 }
 
-$B.function.tp_new = function(){
-    var [cls, ...args] = arguments
+$B.function.tp_new = function(cls, args, kw){
     var f = $B.function.$factory(...args)
     f.cls = cls
     return f

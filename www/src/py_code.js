@@ -18,9 +18,9 @@ $B.code.tp_hash = function(self){
 
 }
 
-$B.code.tp_new = function(self){
+$B.code.tp_new = function(cls, args, kw){
     return {
-        ob_type: $B.code,
+        ob_type: cls,
         dict: $B.empty_dict()
     }
 }

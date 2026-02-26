@@ -204,7 +204,7 @@ ajax.bind = function(self, evt, func){
     return _b_.None
 }
 
-ajax.tp_new = function(cls, ...args){
+ajax.tp_new = function(cls, args, kw){
     var obj = ajax.$factory(...args)
     obj.cls = cls
     return obj

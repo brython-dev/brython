@@ -80,6 +80,17 @@ function too_many_pos_args(fname, kwarg, arg_names, nb_kwonly, defaults, args, s
         `${expected} positional argument${plural} but ${nb_pos} ${verb} given`)
 }
 
+$B.check_expected_keywords = function(name, kw, expected){
+    for(var entry of _b_.dict.$iter_items(kw)){
+        var key = entry.key
+        if(! expected.includes(key)){
+            var suggestion =
+                $B.offer_suggestions_for_unexpected_keyword_error(expected, key)
+            throw unexpected_keyword(name, key, suggestion)
+        }
+    }
+}
+
 function unexpected_keyword(fname, k, suggestion){
     var msg = `${fname}() got an unexpected keyword argument '${k}'`
     if(suggestion !== _b_.None){
@@ -87,6 +98,8 @@ function unexpected_keyword(fname, k, suggestion){
     }
     return $B.EXC(_b_.TypeError, msg)
 }
+
+$B.unexpected_keyword = unexpected_keyword
 
 var empty = {}
 
@@ -737,6 +750,25 @@ $B.check_nb_args_no_kw = function(name, expected, args){
                 expected + " argument" + (expected < 2 ? '' : 's') +
                 " (" + len + " given)")
         }
+    }
+}
+
+$B.unpack_args = function(name, args, vars, defaults){
+    var args_length = args.length
+    for(var i = 0, len = vars.length; i < len; i++){
+        if(i >= args.length){
+            if(! defaults || ! defaults.hasOwnProperty(vars[i])){
+                $B.RAISE(_b_.TypeError, `${name} missing argument ${vars[i]}`)
+            }
+            args[i] = defaults[vars[i]]
+        }
+    }
+    return args
+}
+
+$B.check_kw_empty = function(name, kw){
+    if(kw && _b_.dict.mp_length(kw) > 0){
+        $B.RAISE(_b_.TypeError, `${name}() takes no keyword arguments`)
     }
 }
 

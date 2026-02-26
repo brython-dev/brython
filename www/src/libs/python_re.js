@@ -1025,11 +1025,9 @@ Flag.tp_richcompare = function(self, other, op){
     return res
 }
 
-Flag.tp_new = function(){
-    var $ = $B.args('__new__', 2, {cls: null, value: null}, ['cls', 'value'],
-                arguments, {}, null, null)
-    var cls = $.cls,
-        value = $.value
+Flag.tp_new = function(cls, args, kw){
+    $B.check_kw_empty('Flag', kw)
+    var [value] = $B.unpack_args('Flag', args, ['value'], {})
     var res = Flag.$factory(value)
     res.ob_type = cls
     return res
@@ -1212,11 +1210,9 @@ Pattern.tp_hash = function(self){
     return _b_.hash(self.pattern) + self.flags.value
 }
 
-Pattern.tp_new = function(){
-    var $ = $B.args('__new__', {cls: null, pattern: null}, ['cls', 'pattern'],
-                arguments, {}, null)
-    var cls = $.cls,
-        pattern = $.pattern
+Pattern.tp_new = function(cls, args, kw){
+    $B.check_kw_empty('Pattern', kw)
+    var [pattern] = $B.unpack_args('Pattern', args, ['pattern'] , {})
     var res = Pattern.$factory(pattern)
     res.ob_type = cls
     return res
@@ -3378,11 +3374,9 @@ MatchObject.mp_subscript = function(){
     $B.RAISE(_b_.IndexError, "no such group")
 }
 
-MatchObject.tp_new = function(){
-    var $ = $B.args('__new__', 2, {cls: null, mo: null}, ['cls', 'mo'],
-                arguments, {}, null, null)
-    var cls = $.cls,
-        mo = $.mo
+MatchObject.tp_new = function(cls, args, kw){
+    $B.check_kw_empty('MatchObject', kw)
+    var [mo] = $B.unpack_args('MatchObject', args, ['mo'], {})
     var res = MatchObject.$factory(mo)
     res.ob_type = cls
     res.endpos = self.mo.endpos

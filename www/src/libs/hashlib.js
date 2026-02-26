@@ -111,7 +111,7 @@ hash.$factory = function(alg, obj) {
     return res
 }
 
-hash.tp_new = function(cls, ...args){
+hash.tp_new = function(cls, args, kw){
     var obj = hash.$factory(...args)
     obj.ob_type = cls
     return obj
