@@ -6,6 +6,8 @@ var _b_ = $B.builtins
 var int = _b_.int
 var NULL = $B.NULL
 
+$B.max_printable = 10n ** BigInt($B.int_max_str_digits)
+
 function $err(op, other){
     var msg = "unsupported operand type(s) for " + op +
         " : 'int' and '" + $B.class_name(other) + "'"
@@ -561,8 +563,8 @@ _b_.int.nb_or = function(self, other){
 _b_.int.tp_repr = function(self){
     $B.builtins_repr_check(int, arguments) // in brython_builtins.js
     var value = int_value(self)
-    if($B.int_max_str_digits != 0 &&
-            value >= 10n ** BigInt($B.int_max_str_digits)){
+    if(false && $B.int_max_str_digits != 0 &&
+            value >= $B.max_printable){
         $B.RAISE(_b_.ValueError, `Exceeds the limit ` +
             `(${$B.int_max_str_digits}) for integer string conversion`)
     }

@@ -840,6 +840,15 @@ $B.search_slot = function(cls, slot, _default){
     return _default
 }
 
+$B.builtin_slot = function(cls, slot){
+    for(var kls of cls.tp_mro){
+        if(Object.hasOwn(kls, slot)){
+            return kls[slot]
+        }
+    }
+    return $B.NULL
+}
+
 $B.type_getattribute = function(klass, attr, _default){
     var test = false // attr == 'spam'
     if(test){

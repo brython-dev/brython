@@ -1151,8 +1151,15 @@ str.$factory = function(arg, encoding, errors){
     errors = errors ?? $B.NULL
     if(encoding === $B.NULL && errors === $B.NULL){
         var klass = $B.get_class(arg)
-        var test = false // klass.tp_name == 'MagicMock'
+        if(! (klass.tp_flags & $B.TPFLAGS.HEAPTYPE)){
+            var tp_str = $B.builtin_slot(klass, 'tp_str', $B.NULL)
+            return tp_str(arg)
+        }
+        var test = klass.tp_name == 'int'
         var method = $B.search_in_mro(klass, '__str__', $B.NULL)
+        if(test){
+            console.log('method', method)
+        }
         var getter = $B.NULL
         if(method !== $B.NULL){
             getter = $B.search_in_mro($B.get_class(method), '__get__', $B.NULL)
@@ -1578,7 +1585,7 @@ str_funcs.encode = function(){
         }
         return res
     }
-    return _b_.bytes.tp_new(_b_.bytes, [$.self, $.encoding, $.errors], 
+    return _b_.bytes.tp_new(_b_.bytes, [$.self, $.encoding, $.errors],
         $B.empty_dict())
 }
 

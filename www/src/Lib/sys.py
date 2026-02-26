@@ -131,6 +131,7 @@ def set_int_max_str_digits(value):
     if value != 0 and value < int_info.str_digits_check_threshold:
         raise ValueError('maxdigits must be 0 or larger than 640')
     __BRYTHON__.int_max_str_digits = value
+    __BRYTHON__.max_printable = 10 ** value
 
 # maximum array size
 maxsize = __BRYTHON__.max_array_size

@@ -8,31 +8,6 @@ function get_self(name, args){
 
 var _IOBase = $B._IOBase
 
-/*
-// Base class for binary streams that support some kind of buffering.
-var _BufferedIOBase = $B.make_type("_BufferedIOBase", [_IOBase])
-
-var _BufferedIOBase_funcs = _BufferedIOBase.tp_funcs = {}
-
-_BufferedIOBase_funcs.__enter__ = function(self){
-    return self
-}
-_BufferedIOBase_funcs.__exit__ = function(self, type, value, traceback){
-    try{
-        $B.$call($B.$getattr(self, 'close'))
-        self.__closed = true
-        return true
-    }catch(err){
-        return false
-    }
-}
-
-_BufferedIOBase.tp_methods = ["__enter__", "__exit__"]
-
-$B.set_func_names(_BufferedIOBase, '_io')
-$B.finalize_type(_BufferedIOBase)
-*/
-
 _RawIOBase = $B._RawIOBase
 
 function check_closed(_self){

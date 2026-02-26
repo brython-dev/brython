@@ -108,6 +108,7 @@ if(mro[mro.length-1]!==_b_.object){mro[mpos++]=_b_.object}
 if(mro[0]!==cls){console.log('bizarre',cls,mro)}
 return mro}
 $B.is_type=function(obj){return $B.$isinstance(obj,_b_.type)}
+$B.is_builtin_type=function(cls){return !(cls.tp_flags & $B.TPFLAGS.HEAPTYPE)}
 $B.is_big_int=function(obj){return typeof $B.int_value(obj)==='bigint'}
 $B.is_sequence=function(obj){var type=$B.get_class(obj)
 var flags=$B.search_slot(type,'tp_flags',$B.NULL)
@@ -668,8 +669,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-02-26 12:14:37.130478"
-__BRYTHON__.timestamp=1772104477130
+__BRYTHON__.compiled_date="2026-02-26 12:55:40.540391"
+__BRYTHON__.timestamp=1772106940540
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -2237,6 +2238,8 @@ return self.__hashvalue__=$B.$py_next_hash--}
 _b_.object.tp_str=function(self){if(self===undefined ||self.$kw){$B.RAISE(_b_.TypeError,"descriptor '__str__' of 'object' "+
 "object needs an argument")}
 var klass=$B.get_class(self)
+if($B.is_builtin_type(klass)){var tp_repr=$B.builtin_slot(klass,'tp_repr')
+return tp_repr(self)}
 var repr_func=$B.$getattr(klass,"__repr__",$B.NULL)
 return $B.$call(repr_func,self)}
 _b_.object.tp_getattro=function(self,attr){var test=attr=='__qualname__' && self.ob_type && self.ob_type.tp_name=='tuple'
@@ -2651,6 +2654,8 @@ var getter=$B.search_slot(v_type,'tp_descr_get',$B.NULL)
 if(getter !==$B.NULL){v=getter(v,cls)}}
 return v}}}
 return _default}
+$B.builtin_slot=function(cls,slot){for(var kls of cls.tp_mro){if(Object.hasOwn(kls,slot)){return kls[slot]}}
+return $B.NULL}
 $B.type_getattribute=function(klass,attr,_default){var test=false 
 if(test){console.log('type getattribute',attr,klass)}
 var meta=$B.get_class(klass)
@@ -8173,8 +8178,11 @@ if(arg===''){return arg}
 encoding=encoding ?? $B.NULL
 errors=errors ?? $B.NULL
 if(encoding===$B.NULL && errors===$B.NULL){var klass=$B.get_class(arg)
-var test=false 
+if(!(klass.tp_flags & $B.TPFLAGS.HEAPTYPE)){var tp_str=$B.builtin_slot(klass,'tp_str',$B.NULL)
+return tp_str(arg)}
+var test=klass.tp_name=='int'
 var method=$B.search_in_mro(klass,'__str__',$B.NULL)
+if(test){console.log('method',method)}
 var getter=$B.NULL
 if(method !==$B.NULL){getter=$B.search_in_mro($B.get_class(method),'__get__',$B.NULL)
 if(getter !==$B.NULL){var method1=$B.$call(getter,method,arg,klass)
@@ -8956,6 +8964,7 @@ Template.tp_getset=["values"]})(__BRYTHON__);
 (function($B){var _b_=$B.builtins
 var int=_b_.int
 var NULL=$B.NULL
+$B.max_printable=10n**BigInt($B.int_max_str_digits)
 function $err(op,other){var msg="unsupported operand type(s) for "+op+
 " : 'int' and '"+$B.class_name(other)+"'"
 $B.RAISE(_b_.TypeError,msg)}
@@ -9182,8 +9191,8 @@ if(x===$B.NULL ||y===$B.NULL){return _b_.NotImplemented}
 return int_or_long(x |y)}
 _b_.int.tp_repr=function(self){$B.builtins_repr_check(int,arguments)
 var value=int_value(self)
-if($B.int_max_str_digits !=0 &&
-value >=10n**BigInt($B.int_max_str_digits)){$B.RAISE(_b_.ValueError,`Exceeds the limit `+
+if(false && $B.int_max_str_digits !=0 &&
+value >=$B.max_printable){$B.RAISE(_b_.ValueError,`Exceeds the limit `+
 `(${$B.int_max_str_digits}) for integer string conversion`)}
 return value.toString()}
 _b_.int.tp_hash=function(self){
@@ -10840,16 +10849,14 @@ return list_res}
 if(! $B.$isinstance(key,[_b_.int,_b_.slice])){$B.RAISE(_b_.TypeError,`list indices must be integers or slices, `+
 `not ${$B.class_name(key)}`
 )}
-var int_key
-try{int_key=$B.$call(_b_.int,key)}catch(err){}
-if(int_key !==undefined){let items=self.valueOf(),pos=int_key
+if($B.$isinstance(key,_b_.slice)){return _b_.list.$getitem_slice(self,key)}
+try{var int_key=$B.PyNumber_Index(key)}catch(err){$B.RAISE(_b_.TypeError,$B.class_name(self)+
+" indices must be integer, not "+$B.class_name(key))}
+let items=self.valueOf(),pos=int_key
 if(int_key < 0){pos=items.length+pos}
 if(pos >=0 && pos < items.length){return items[pos]}
 $B.RAISE(_b_.IndexError,$B.class_name(self)+
 " index out of range")}
-if($B.$isinstance(key,_b_.slice)){return _b_.list.$getitem_slice(self,key)}
-$B.RAISE(_b_.TypeError,$B.class_name(self)+
-" indices must be integer, not "+$B.class_name(key))}
 function sq_concat(self,other){if($B.get_class(self)!==$B.get_class(other)){return _b_.NotImplemented}
 var res=self.slice()
 for(const item of other){res.push(item)}

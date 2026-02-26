@@ -258,6 +258,10 @@ _b_.object.tp_str = function(self){
     }
     // Default to __repr__
     var klass = $B.get_class(self)
+    if($B.is_builtin_type(klass)){
+        var tp_repr = $B.builtin_slot(klass, 'tp_repr')
+        return tp_repr(self)
+    }
     var repr_func = $B.$getattr(klass, "__repr__", $B.NULL)
     return $B.$call(repr_func, self)
 }

@@ -284,6 +284,10 @@ $B.is_type = function(obj){
     return $B.$isinstance(obj, _b_.type)
 }
 
+$B.is_builtin_type = function(cls){
+    return ! (cls.tp_flags & $B.TPFLAGS.HEAPTYPE)
+}
+
 $B.is_big_int = function(obj){
     return typeof $B.int_value(obj) === 'bigint'
 }
