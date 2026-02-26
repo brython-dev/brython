@@ -109,32 +109,29 @@ function mp_subscript(self, key){
             `not ${$B.class_name(key)}`
         )
     }
-    var int_key
-    try{
-        int_key = $B.$call(_b_.int, key)
-    }catch(err){
-        // ignore
-    }
 
-    if(int_key !== undefined){
-        let items = self.valueOf(),
-            pos = int_key
-        if(int_key < 0){
-            pos = items.length + pos
-        }
-        if(pos >= 0 && pos < items.length){
-            return items[pos]
-        }
-
-        $B.RAISE(_b_.IndexError, $B.class_name(self) +
-            " index out of range")
-    }
     if($B.$isinstance(key, _b_.slice)){
         return _b_.list.$getitem_slice(self, key)
     }
 
-    $B.RAISE(_b_.TypeError, $B.class_name(self) +
-        " indices must be integer, not " + $B.class_name(key))
+    try{
+        var int_key = $B.PyNumber_Index(key)
+    }catch(err){
+        $B.RAISE(_b_.TypeError, $B.class_name(self) +
+            " indices must be integer, not " + $B.class_name(key))
+    }
+
+    let items = self.valueOf(),
+        pos = int_key
+    if(int_key < 0){
+        pos = items.length + pos
+    }
+    if(pos >= 0 && pos < items.length){
+        return items[pos]
+    }
+
+    $B.RAISE(_b_.IndexError, $B.class_name(self) +
+        " index out of range")
 }
 
 function sq_concat(self, other){
