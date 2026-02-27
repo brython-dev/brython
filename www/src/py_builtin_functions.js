@@ -1502,11 +1502,7 @@ var $print = _b_.print = function(){
     var args = $ns['args']
     var writer = $B.$getattr(file, 'write')
     for(var i = 0, len = args.length; i < len; i++){
-        var arg = _b_.str.$factory(args[i])
-        if(arg == 'GHjkBNcx'){
-            Error.stackTraceLimit = 50
-            console.log(Error('trace call').stack)
-        }
+        var arg = $B.make_str(args[i])
         $B.$call(writer, arg)
         if(i < len - 1){
             $B.$call(writer, sep)

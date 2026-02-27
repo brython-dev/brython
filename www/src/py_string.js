@@ -1142,6 +1142,49 @@ const numeric_re = /\p{Nd}|\p{Nl}|\p{No}/u
 // This regex should match the one in py2js.js
 var unprintable_re = /\p{Cc}|\p{Cf}|\p{Co}|\p{Cs}|\p{Zl}|\p{Zp}|\p{Zs}/u
 
+$B.make_str = function(arg){
+    // called by print
+    switch(typeof arg){
+        case "int":
+        case "bigint":
+        case "string":
+        case "number":
+            return arg.toString()
+        case "boolean":
+            return arg ? 'True' : 'False'
+        default:
+            var klass = $B.get_class(arg)
+            if(! (klass.tp_flags & $B.TPFLAGS.HEAPTYPE)){
+                var tp_str = $B.builtin_slot(klass, 'tp_str', $B.NULL)
+                return tp_str(arg)
+            }
+            var res
+            var test = klass.tp_name == 'int'
+            var method = $B.search_in_mro(klass, '__str__', $B.NULL)
+            if(test){
+                console.log('method', method)
+            }
+            var getter = $B.NULL
+            if(method !== $B.NULL){
+                getter = $B.search_in_mro($B.get_class(method), '__get__', $B.NULL)
+                if(getter !== $B.NULL){
+                    var method1 = $B.$call(getter, method, arg, klass)
+                    res = $B.$call(method1)
+                }else{
+                    var in_dict = $B.search_in_dict(arg, '__str__', $B.NULL)
+                    if(in_dict === method){
+                        res = $B.$call(in_dict)
+                    }else{
+                        res = $B.$call(method, arg)
+                    }
+                }
+            }else{
+                res = _b_.repr(arg)
+            }
+            return res
+    }
+}
+
 str.$factory = function(arg, encoding, errors){
     var res
     if(arg === ''){
@@ -1150,33 +1193,7 @@ str.$factory = function(arg, encoding, errors){
     encoding = encoding ?? $B.NULL
     errors = errors ?? $B.NULL
     if(encoding === $B.NULL && errors === $B.NULL){
-        var klass = $B.get_class(arg)
-        if(! (klass.tp_flags & $B.TPFLAGS.HEAPTYPE)){
-            var tp_str = $B.builtin_slot(klass, 'tp_str', $B.NULL)
-            return tp_str(arg)
-        }
-        var test = klass.tp_name == 'int'
-        var method = $B.search_in_mro(klass, '__str__', $B.NULL)
-        if(test){
-            console.log('method', method)
-        }
-        var getter = $B.NULL
-        if(method !== $B.NULL){
-            getter = $B.search_in_mro($B.get_class(method), '__get__', $B.NULL)
-            if(getter !== $B.NULL){
-                var method1 = $B.$call(getter, method, arg, klass)
-                res = $B.$call(method1)
-            }else{
-                var in_dict = $B.search_in_dict(arg, '__str__', $B.NULL)
-                if(in_dict === method){
-                    res = $B.$call(in_dict)
-                }else{
-                    res = $B.$call(method, arg)
-                }
-            }
-        }else{
-            res = _b_.repr(arg)
-        }
+        res = $B.make_str(arg)
     }else{
         if(! $B.is_bytes_like(arg)){
             console.log(Error().stack)

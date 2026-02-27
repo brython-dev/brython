@@ -669,8 +669,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-02-26 12:55:40.540391"
-__BRYTHON__.timestamp=1772106940540
+__BRYTHON__.compiled_date="2026-02-27 14:16:34.528536"
+__BRYTHON__.timestamp=1772198194528
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -4932,9 +4932,7 @@ var $print=_b_.print=function(){var $ns=$B.args('print',0,{},[],arguments,{},'ar
 var kw=$ns['kw'],end=$B.str_dict_get(kw,'end','\n'),sep=$B.str_dict_get(kw,'sep',' '),file=$B.str_dict_get(kw,'file',$B.get_stdout())
 var args=$ns['args']
 var writer=$B.$getattr(file,'write')
-for(var i=0,len=args.length;i < len;i++){var arg=_b_.str.$factory(args[i])
-if(arg=='GHjkBNcx'){Error.stackTraceLimit=50
-console.log(Error('trace call').stack)}
+for(var i=0,len=args.length;i < len;i++){var arg=$B.make_str(args[i])
 $B.$call(writer,arg)
 if(i < len-1){$B.$call(writer,sep)}}
 $B.$call(writer,end)
@@ -8173,13 +8171,19 @@ var alpha_categories=['Ll','Lu','Lm','Lt','Lo']
 var alnum_categories=['Ll','Lu','Lm','Lt','Lo','Nd']
 const numeric_re=/\p{Nd}|\p{Nl}|\p{No}/u
 var unprintable_re=/\p{Cc}|\p{Cf}|\p{Co}|\p{Cs}|\p{Zl}|\p{Zp}|\p{Zs}/u
-str.$factory=function(arg,encoding,errors){var res
-if(arg===''){return arg}
-encoding=encoding ?? $B.NULL
-errors=errors ?? $B.NULL
-if(encoding===$B.NULL && errors===$B.NULL){var klass=$B.get_class(arg)
+$B.make_str=function(arg){
+switch(typeof arg){case "int":
+case "bigint":
+case "string":
+case "number":
+return arg.toString()
+case "boolean":
+return arg ? 'True' :'False'
+default:
+var klass=$B.get_class(arg)
 if(!(klass.tp_flags & $B.TPFLAGS.HEAPTYPE)){var tp_str=$B.builtin_slot(klass,'tp_str',$B.NULL)
 return tp_str(arg)}
+var res
 var test=klass.tp_name=='int'
 var method=$B.search_in_mro(klass,'__str__',$B.NULL)
 if(test){console.log('method',method)}
@@ -8187,7 +8191,13 @@ var getter=$B.NULL
 if(method !==$B.NULL){getter=$B.search_in_mro($B.get_class(method),'__get__',$B.NULL)
 if(getter !==$B.NULL){var method1=$B.$call(getter,method,arg,klass)
 res=$B.$call(method1)}else{var in_dict=$B.search_in_dict(arg,'__str__',$B.NULL)
-if(in_dict===method){res=$B.$call(in_dict)}else{res=$B.$call(method,arg)}}}else{res=_b_.repr(arg)}}else{if(! $B.is_bytes_like(arg)){console.log(Error().stack)
+if(in_dict===method){res=$B.$call(in_dict)}else{res=$B.$call(method,arg)}}}else{res=_b_.repr(arg)}
+return res}}
+str.$factory=function(arg,encoding,errors){var res
+if(arg===''){return arg}
+encoding=encoding ?? $B.NULL
+errors=errors ?? $B.NULL
+if(encoding===$B.NULL && errors===$B.NULL){res=$B.make_str(arg)}else{if(! $B.is_bytes_like(arg)){console.log(Error().stack)
 $B.RAISE(_b_.TypeError,`decoding to str: need a bytes-like object, `+
 `${$B.class_name(arg)} found`
 )}
