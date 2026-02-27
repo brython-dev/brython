@@ -75,23 +75,25 @@ $B.bytearray_iterator.tp_iter = function(self){
 }
 
 $B.bytearray_iterator.tp_iternext = function*(self){
-    for(var item of self.it){
-        yield item
+    self.index++
+    if(self.index == self.len){
+        return
     }
+    yield self.obj.source[self.index]
 }
 
 var bytearray_iterator_funcs = $B.bytearray_iterator.tp_funcs = {}
 
 bytearray_iterator_funcs.__length_hint__ = function(self){
-
+    return self.len
 }
 
 bytearray_iterator_funcs.__reduce__ = function(self){
-
+    return $B.fast_tuple([_b_.iter, $B.fast_tuple([self.obj]), 0])
 }
 
-bytearray_iterator_funcs.__setstate__ = function(self){
-
+bytearray_iterator_funcs.__setstate__ = function(self, value){
+    self.index = $B.PyNumber_Index(value) - 1
 }
 
 $B.bytearray_iterator.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]
@@ -1210,7 +1212,9 @@ _b_.bytearray.tp_str = function(self){
 _b_.bytearray.tp_iter = function(self){
     return {
         ob_type: $B.bytearray_iterator,
-        it: self.source[Symbol.iterator]()
+        obj: self,
+        len: self.source.length,
+        index: -1
     }
 }
 
@@ -1724,27 +1728,30 @@ var bytes_iterator = $B.bytes_iterator
 
 /* bytes_iterator start */
 $B.bytes_iterator.tp_iter = function(self){
+    self.index = -1
     return self
 }
 
 $B.bytes_iterator.tp_iternext = function*(self){
-    for(var value of self.it){
-        yield value
+    self.index++
+    if(self.index == self.len){
+        return
     }
+    yield self.obj.source[self.index]
 }
 
 var bytes_iterator_funcs = $B.bytes_iterator.tp_funcs = {}
 
 bytes_iterator_funcs.__length_hint__ = function(self){
-
+    return self.len
 }
 
 bytes_iterator_funcs.__reduce__ = function(self){
-
+    return $B.fast_tuple([_b_.iter, $B.fast_tuple([self.obj]), 0])
 }
 
-bytes_iterator_funcs.__setstate__ = function(self){
-
+bytes_iterator_funcs.__setstate__ = function(self, value){
+    self.index = $B.PyNumber_Index(value) - 1
 }
 
 $B.bytes_iterator.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]
@@ -1752,7 +1759,6 @@ $B.bytes_iterator.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]
 /* bytes_iterator end */
 
 $B.set_func_names(bytes_iterator, 'builtins')
-
 
 bytes.$getnewargs = function(self){
     return $B.fast_tuple([bytes_value(self)])
@@ -2415,7 +2421,9 @@ _b_.bytes.tp_str = function(self){
 _b_.bytes.tp_iter = function(self){
     return {
         ob_type: bytes_iterator,
-        it: self.source[Symbol.iterator]()
+        obj: self,
+        len: self.source.length,
+        index: -1
     }
 }
 

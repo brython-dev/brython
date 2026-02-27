@@ -669,8 +669,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-02-27 15:53:05.246839"
-__BRYTHON__.timestamp=1772203985246
+__BRYTHON__.compiled_date="2026-02-27 16:25:54.402415"
+__BRYTHON__.timestamp=1772205954402
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -6435,11 +6435,13 @@ function check_buffer_or_int(arg){if(! $B.$isinstance(arg,_b_.int)&& ! is_bytes_
 `not '${$B.class_name(sub)}'`
 )}}
 $B.bytearray_iterator.tp_iter=function(self){return self}
-$B.bytearray_iterator.tp_iternext=function*(self){for(var item of self.it){yield item}}
+$B.bytearray_iterator.tp_iternext=function*(self){self.index++
+if(self.index==self.len){return}
+yield self.obj.source[self.index]}
 var bytearray_iterator_funcs=$B.bytearray_iterator.tp_funcs={}
-bytearray_iterator_funcs.__length_hint__=function(self){}
-bytearray_iterator_funcs.__reduce__=function(self){}
-bytearray_iterator_funcs.__setstate__=function(self){}
+bytearray_iterator_funcs.__length_hint__=function(self){return self.len}
+bytearray_iterator_funcs.__reduce__=function(self){return $B.fast_tuple([_b_.iter,$B.fast_tuple([self.obj]),0])}
+bytearray_iterator_funcs.__setstate__=function(self,value){self.index=$B.PyNumber_Index(value)-1}
 $B.bytearray_iterator.tp_methods=["__length_hint__","__reduce__","__setstate__"]
 var bytearray=_b_.bytearray
 function no_resizing(){$B.RAISE(_b_.BufferError,"Existing exports of data: object cannot be re-sized")}
@@ -6833,7 +6835,7 @@ return `bytearray(${b})`}
 _b_.bytearray.tp_hash=_b_.None
 _b_.bytearray.tp_str=function(self){return _b_.bytearray.tp_repr(self)}
 _b_.bytearray.tp_iter=function(self){return{
-ob_type:$B.bytearray_iterator,it:self.source[Symbol.iterator]()}}
+ob_type:$B.bytearray_iterator,obj:self,len:self.source.length,index:-1}}
 _b_.bytearray.tp_init=function(self){}
 _b_.bytearray.tp_new=function(cls,args,kw){var b=_b_.bytes.tp_new(cls,args,kw)
 b.ob_type=cls
@@ -7006,12 +7008,15 @@ if(acc.length > 0){parts.push(acc)}
 parts=parts.map(t=> cls.$factory(t))
 return $B.$list(parts)}
 var bytes_iterator=$B.bytes_iterator
-$B.bytes_iterator.tp_iter=function(self){return self}
-$B.bytes_iterator.tp_iternext=function*(self){for(var value of self.it){yield value}}
+$B.bytes_iterator.tp_iter=function(self){self.index=-1
+return self}
+$B.bytes_iterator.tp_iternext=function*(self){self.index++
+if(self.index==self.len){return}
+yield self.obj.source[self.index]}
 var bytes_iterator_funcs=$B.bytes_iterator.tp_funcs={}
-bytes_iterator_funcs.__length_hint__=function(self){}
-bytes_iterator_funcs.__reduce__=function(self){}
-bytes_iterator_funcs.__setstate__=function(self){}
+bytes_iterator_funcs.__length_hint__=function(self){return self.len}
+bytes_iterator_funcs.__reduce__=function(self){return $B.fast_tuple([_b_.iter,$B.fast_tuple([self.obj]),0])}
+bytes_iterator_funcs.__setstate__=function(self,value){self.index=$B.PyNumber_Index(value)-1}
 $B.bytes_iterator.tp_methods=["__length_hint__","__reduce__","__setstate__"]
 $B.set_func_names(bytes_iterator,'builtins')
 bytes.$getnewargs=function(self){return $B.fast_tuple([bytes_value(self)])}
@@ -7226,7 +7231,7 @@ for(var i=0,len=self.source.length;i < len;i++){hash=(101*hash+self.source[i])& 
 return hash}
 _b_.bytes.tp_str=function(self){return _b_.bytes.tp_repr(self)}
 _b_.bytes.tp_iter=function(self){return{
-ob_type:bytes_iterator,it:self.source[Symbol.iterator]()}}
+ob_type:bytes_iterator,obj:self,len:self.source.length,index:-1}}
 _b_.bytes.tp_new=function(cls,args,kw){var[source,encoding,errors]=$B.unpack_args('bytes',args,['source','encoding','errors'],{source:$B.NULL,encoding:$B.NULL,errors:$B.NULL}
 )
 if(source===$B.NULL){return{
