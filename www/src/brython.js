@@ -669,8 +669,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-02-27 14:16:34.528536"
-__BRYTHON__.timestamp=1772198194528
+__BRYTHON__.compiled_date="2026-02-27 15:53:05.246839"
+__BRYTHON__.timestamp=1772203985246
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -6420,15 +6420,9 @@ $B.to_bytes=function(obj){var res
 if($B.$isinstance(obj,[bytes,bytearray])){res=obj.source}else{var ga=$B.$getattr(obj,"tobytes",null)
 if(ga !==null){res=$B.$call(ga).source}else{$B.RAISE(_b_.TypeError,"object doesn't support the buffer protocol")}}
 return res}
-function _strip(self,cars,lr){if(cars===undefined){cars=[]
+var ws_cars=[]
 var ws='\r\n \t'
-for(let i=0,len=ws.length;i < len;i++){cars.push(ws.charCodeAt(i))}}else if($B.$isinstance(cars,bytes)){cars=cars.source}else{$B.RAISE(_b_.TypeError,"Type str doesn't support the buffer API")}
-if(lr=='l'){let i,len
-for(i=0,len=self.source.length;i < len;i++){if(cars.indexOf(self.source[i])==-1){break}}
-return bytes.$factory(self.source.slice(i))}
-let i
-for(i=self.source.length-1;i >=0;i--){if(cars.indexOf(self.source[i])==-1){break}}
-return bytes.$factory(self.source.slice(0,i+1))}
+for(let i=0,len=ws.length;i < len;i++){ws_cars.push(ws.charCodeAt(i))}
 function invalid(other){return ! $B.$isinstance(other,[bytes,bytearray])}
 var is_bytes_like=$B.is_bytes_like=function(obj){return $B.$getattr(obj,'__buffer__',$B.NULL)!==$B.NULL}
 function get_list_from_bytes_like(obj){var buf=$B.$call($B.$getattr(obj,'__buffer__'),0)
@@ -6607,6 +6601,38 @@ for(let i=0;i < len;++i){
 res=res ||(src[i]> 64 && src[i]< 91)
 if(src[i]> 96 && src[i]< 123){return false}}
 return res}
+function join(){var $ns=$B.args('join',2,{self:null,iterable:null},['self','iterable'],arguments,{}),self=$ns['self'],iterable=$ns['iterable']
+var res=this.$factory(),empty=true
+for(var item of $B.make_js_iterator(iterable)){if(empty){empty=false}else{res=bytes.sq_concat(res,self)}
+res=bytes.sq_concat(res,item)}
+return res}
+function ljust(){
+var $=$B.args('ljust',3,{self:null,width:null,fillbyte:null},['self','width','fillbyte'],arguments,{fillbyte:bytes.$factory([32])},null,null)
+var self=$.self,width=$.width,fillbyte=$.fillbyte
+check_buffer(fillbyte)
+var padding=[],count=width-self.source.length
+for(var i=0;i < count;++i){padding.push(fillbyte.source[0])}
+return this.$factory(self.source.concat(padding))}
+function lower(self){var _res=[],pos=0
+for(var i=0,len=self.source.length;i < len;i++){if(self.source[i]){_res[pos++]=_lower(self.source[i])}}
+return this.$factory(_res)}
+function maketrans(){var $=$B.args('maketrans',2,{from:null,to:null},['from','to'],arguments,{},null,null)
+var from=$.from,to=$.to
+var _t=[]
+to=$B.to_bytes(to)
+for(let i=0;i < 256;i++){_t[i]=i}
+for(let i=0,len=from.source.length;i < len;i++){var _ndx=from.source[i]
+_t[_ndx]=to[i]}
+return this.$factory(_t)}
+function strip(self,cars,lr){if(cars===undefined){cars=[]
+var ws='\r\n \t'
+for(let i=0,len=ws.length;i < len;i++){cars.push(ws.charCodeAt(i))}}else if($B.$isinstance(cars,bytes)){cars=cars.source}else{$B.RAISE(_b_.TypeError,"Type str doesn't support the buffer API")}
+switch(lr){case 'l':
+for(var i=0,len=self.source.length;i < len;i++){if(cars.indexOf(self.source[i])==-1){break}}
+return this.$factory(self.source.slice(i))
+case 'r':
+for(var i=self.source.length-1;i >=0;i--){if(cars.indexOf(self.source[i])==-1){break}}
+return this.$factory(self.source.slice(0,i+1))}}
 function nb_multiply(){var $=$B.args('__mul__',2,{self:null,value:null},['self','value'],arguments,{},null,null)
 var self=$.self,value=$.value
 var v=$B.PyNumber_Index(value)
@@ -6620,6 +6646,12 @@ var $=$B.args('__mod__',2,{self:null,args:null},['self','args'],arguments,{},nul
 var self=$.self,args=$.args
 var s=decode(self,"latin-1","strict"),res=$B.printf_format(s,'bytes',args)
 return _b_.str.tp_funcs.encode(res,"ascii")}
+function partition(){var $=$B.args('partition',2,{self:null,sep:null},['self','sep'],arguments,{},null,null)
+var self=$.self,sep=$.sep
+check_buffer(sep)
+var len=sep.source.length,src=self.source,i=bytes_funcs.find(self,sep)
+return _b_.tuple.$factory([this.$factory(src.slice(0,i)),this.$factory(src.slice(i,i+len)),this.$factory(src.slice(i+len))
+])}
 function removeprefix(self,prefix){var $=$B.args('removeprefix',2,{self:null,prefix:null},['self','prefix'],arguments,{},null,null)
 var self=$.self,prefix=$.prefix
 check_buffer(prefix)
@@ -6641,6 +6673,42 @@ break}}
 if(found){return{
 ob_type:$B.get_class(self),source:self.source.slice(0,len-seq_len)}}
 return self}
+function replace(){var $=$B.args('replace',4,{self:null,old:null,new:null,count:null},['self','old','new','count'],arguments,{count:-1},null,null),res=[]
+var self=$.self,src=self.source,len=src.length,old=$.old,$new=$.new
+var count=$.count >=0 ? $.count :src.length
+check_buffer($.old)
+check_buffer($.new)
+for(var i=0;i < len;i++){if(bytes_funcs.startswith(self,old,i)&& count){for(var j=0;j < $new.source.length;j++){res.push($new.source[j])}
+i+=(old.source.length-1)
+count--}else{res.push(src[i])}}
+return this.$factory(res)}
+function rjust(){var $=$B.args('rjust',3,{self:null,width:null,fillbyte:null},['self','width','fillbyte'],arguments,{fillbyte:bytes.$factory([32])},null,null)
+var self=$.self,width=$.width,fillbyte=$.fillbyte
+check_buffer(fillbyte)
+var padding=[],count=width-self.source.length
+for(var i=0;i < count;++i){padding.push(fillbyte.source[0])}
+return this.$factory(padding.concat(self.source))}
+function rpartition(){var $=$B.args('rpartition',2,{self:null,sep:null},['self','sep'],arguments,{},null,null)
+var self=$.self,sep=$.sep
+check_buffer(sep)
+var len=sep.source.length,src=self.source,i=bytes_funcs.rfind(self,sep)
+return _b_.tuple.$factory([this.$factory(src.slice(0,i)),this.$factory(src.slice(i,i+len)),this.$factory(src.slice(i+len))
+])}
+function rsplit(){var $=$B.args('rsplit',3,{self:null,sep:null,maxsplit:null},['self','sep','maxsplit'],arguments,{sep:_b_.None,maxsplit:-1},null,null)
+var self=$.self,sep=$.sep,maxsplit=$.maxsplit
+var cls=this
+var reversed_self=$B.fast_bytes(self.source.toReversed())
+if(! $B.$isinstance(maxsplit,_b_.int)){$B.RAISE(_b_.ValueError,`maxsplit should be int, not ${$B.class_name(maxsplit)}`
+)}
+var parts=[]
+if(sep===_b_.None){parts=bytes_split_with_whitespace(cls,self,maxsplit)}else{if($B.$getattr(sep,'__buffer__',$B.NULL)===$B.NULL){$B.RAISE(_b_.TypeError,`a bytes-like object is required, not '${$B.class_name(sep)}'`
+)}
+var reversed_seps=Array.from($B.make_js_iterator(sep)).reverse()
+parts=bytes_split_with_sep(cls,reversed_self,reversed_seps,maxsplit)}
+parts.reverse()
+for(part of parts){part.reverse()}
+parts=parts.map(t=> this.$factory(t))
+return $B.$list(parts)}
 function sq_contains(self,other){var[self,other]=self_other_args('__contains__',arguments)
 if(typeof other=="number"){return self.source.indexOf(other)>-1}
 if(! is_bytes_like(other)){return false}
@@ -6653,10 +6721,78 @@ for(var j=0;j < seq_len;j++){if(self.source[i+j]!=seq[j]){flag=false
 break}}
 if(flag){return true}}
 return false}
+function split(){var $=$B.args('split',3,{self:null,sep:null,maxsplit:null},['self','sep','maxsplit'],arguments,{sep:_b_.None,maxsplit:-1},null,null)
+var self=$.self,sep=$.sep,maxsplit=$.maxsplit
+var cls=this 
+if(! $B.$isinstance(maxsplit,_b_.int)){$B.RAISE(_b_.ValueError,`maxsplit should be int, not ${$B.class_name(maxsplit)}`
+)}
+var parts=[]
+if(sep===_b_.None){parts=bytes_split_with_whitespace(cls,self,maxsplit)}else{if($B.$getattr(sep,'__buffer__',$B.NULL)===$B.NULL){$B.RAISE(_b_.TypeError,`a bytes-like object is required, not '${$B.class_name(sep)}'`
+)}
+var seps=Array.from($B.make_js_iterator(sep))
+parts=bytes_split_with_sep(cls,self,seps,maxsplit)}
+return $B.$list(parts)}
+function splitlines(){var $=$B.args('splitlines',2,{self:null,keepends:null},['self','keepends'],arguments,{keepends:false},null,null)
+var self=$.self,keepends=$.keepends
+var cls=this 
+if(!$B.$isinstance(keepends,[_b_.bool,_b_.int])){throw _b_.TypeError('integer argument expected, got '+
+$B.get_class(keepends).__name)}
+var keepends=$B.int_value(keepends),res=$B.$list([]),source=self.source,start=0,pos=0
+if(! source.length){return res}
+while(pos < source.length){if(pos < source.length-1 && source[pos]==0x0d &&
+source[pos+1]==0x0a){res.push(cls.$factory(source.slice(start,keepends ? pos+2 :pos)))
+start=pos=pos+2}else if(source[pos]==0x0d ||source[pos]==0x0a){res.push(cls.$factory(source.slice(start,keepends ? pos+1 :pos)))
+start=pos=pos+1}else{pos++}}
+if(start < source.length){res.push(cls.$factory(source.slice(start)))}
+return $B.$list(res)}
+function startswith(){var $=$B.args('startswith',3,{self:null,prefix:null,start:null},['self','prefix','start'],arguments,{start:0},null,null),start=$.start
+var self=$.self,prefix=$.prefix,start=$.start
+var cls=this 
+if($B.$isinstance($.prefix,[bytes,bytearray])){let res=true
+for(let i=0;i < prefix.source.length && res;i++){res=self.source[start+i]==prefix.source[i]}
+return res}else if($B.$isinstance(prefix,_b_.tuple)){let items=[]
+for(let i=0;i < prefix.length;i++){if($B.$isinstance(prefix[i],[bytes,bytearray])){items=items.concat(prefix[i].source)}else{$B.RAISE(_b_.TypeError,"startswith first arg must be "+
+"bytes or a tuple of bytes, not "+
+$B.class_name(prefix))}}
+let prefix=cls.$factory(items)
+return startswith.call(cls,self,prefix,start)}else{$B.RAISE(_b_.TypeError,"startswith first arg must be bytes "+
+"or a tuple of bytes, not "+$B.class_name(prefix))}}
 function upper(){var self=self_arg('upper',arguments)
 var _res=[],pos=0
 for(var i=0,len=self.source.length;i < len;i++){if(self.source[i]){_res[pos++]=_upper(self.source[i])}}
 return main_type(self).$factory(_res)}
+function swapcase(){var self=$B.single_arg('swapcase','self',arguments)
+var src=self.source,len=src.length,buffer=src.slice()
+var cls=this
+for(var i=0;i < len;++i){if(buffer[i]> 96 && buffer[i]< 123){buffer[i]-=32}else if(buffer[i]> 64 && buffer[i]< 91){buffer[i]+=32}}
+return cls.$factory(buffer)}
+function title(){var self=$B.single_arg('title','self',arguments)
+var cls=this 
+var src=self.source,len=src.length,buffer=src.slice(),current_char_is_letter=false,prev_char_was_letter=false,is_uppercase=false,is_lowercase=false
+for(var i=0;i < len;++i){is_lowercase=buffer[i]> 96 && buffer[i]< 123
+is_uppercase=buffer[i]> 64 && buffer[i]< 91
+current_char_is_letter=is_lowercase ||is_uppercase
+if(current_char_is_letter){if(prev_char_was_letter && is_uppercase){buffer[i]+=32}else if(! prev_char_was_letter && is_lowercase){buffer[i]-=32}}
+prev_char_was_letter=current_char_is_letter}
+return cls.$factory(buffer)}
+function translate(){var $=$B.args('translate',3,{self:null,table:null,_delete:null},['self','table','_delete'],arguments,{_delete:$B.NULL},null,null)
+var self=$.self,table=$.table,_delete=$._delete
+var cls=this 
+if(_delete===$B.NULL){_delete=[]}else if($B.$isinstance(_delete,[bytes,bytearray])){_delete=_delete.source}else{$B.RAISE(_b_.TypeError,"Type "+
+$B.class_name(_delete)+" doesn't support the buffer API")}
+var res=[],pos=0
+if($B.$isinstance(table,[bytes,bytearray])&& table.source.length==256){for(var i=0,len=self.source.length;i < len;i++){if(_delete.indexOf(self.source[i])>-1){continue}
+res[pos++]=table.source[self.source[i]]}}
+return cls.$factory(res)}
+function zfill(){var $=$B.args('zfill',2,{self:null,width:null},['self','width'],arguments,{},null,null)
+var self=$.self,width=$.width
+var cls=this 
+var buffer=self.source.slice(),prefix_offset=(buffer[0]==43 ||buffer[0]==45)? 1 :0
+var count=width-self.source.length
+var padding=[]
+for(var i=0;i < count;++i){padding.push(48)}
+buffer.splice.apply(buffer,[prefix_offset,0].concat(padding))
+return cls.$factory(buffer)}
 function check_exports(self){if(self.exports==0){return}
 var frame_obj=$B.frame_obj
 var has_exports=false
@@ -6722,9 +6858,10 @@ _b_.bytearray.bf_getbuffer=function(self){return $B.$call(_b_.memoryview,self)}
 _b_.bytearray.bf_releasebuffer=function(self){}
 var bytearray_funcs=_b_.bytearray.tp_funcs={}
 bytearray_funcs.__alloc__=function(self){}
-bytearray_funcs.__reduce__=function(self){}
-bytearray_funcs.__reduce_ex__=function(self){}
-bytearray_funcs.__sizeof__=function(self){}
+bytearray_funcs.__reduce__=function(self){var s=$B.decode(self,'latin-1')
+return $B.fast_tuple([bytearray,$B.fast_tuple([s,'latin-1']),_b_.None])}
+bytearray_funcs.__reduce_ex__=function(self,protocol){return bytearray_funcs.__reduce__(self)}
+bytearray_funcs.__sizeof__=function(self){return 60}
 bytearray_funcs.append=function(self,b){check_exports(self)
 if(arguments.length !=2){$B.RAISE(_b_.TypeError,"append takes exactly one argument ("+(arguments.length-1)+
 " given)")}
@@ -6735,7 +6872,8 @@ bytearray_funcs.capitalize=function(){return capitalize.apply(null,arguments)}
 bytearray_funcs.center=function(self){return center.apply(null,arguments)}
 bytearray_funcs.clear=function(self){check_exports(self)
 self.source=[]}
-bytearray_funcs.copy=function(self){}
+bytearray_funcs.copy=function(self){return{
+ob_type:_b_.bytearray,source:self.source.slice()}}
 bytearray_funcs.count=function(self){return count.apply(null,arguments)}
 bytearray_funcs.decode=function(self){var $=$B.args('decode',3,{self:null,encoding:null,errors:null},['self','encoding','errors'],arguments,{encoding:'utf-8',errors:'strict'},null,null)
 var self=$.self,encoding=$.encoding,errors=$.errors
@@ -6761,20 +6899,22 @@ if(arguments.length !=3){$B.RAISE(_b_.TypeError,"insert takes exactly 2 argument
 if(! $B.$isinstance(b,_b_.int)){$B.RAISE(_b_.TypeError,"an integer is required")}
 if(b > 255){$B.RAISE(_b_.ValueError,"byte must be in range(0, 256)")}
 _b_.list.tp_funcs.insert(self.source,pos,b)}
-bytearray_funcs.isalnum=function(self){return isalnum.apply(null,arguments)}
-bytearray_funcs.isalpha=function(self){return isalpha.apply(null,arguments)}
-bytearray_funcs.isascii=function(self){return isascii.apply(null,arguments)}
-bytearray_funcs.isdigit=function(self){return isdigit.apply(null,arguments)}
-bytearray_funcs.islower=function(self){return islower.apply(null,arguments)}
-bytearray_funcs.isspace=function(self){return isspace.apply(null,arguments)}
-bytearray_funcs.istitle=function(self){return istitle.apply(null,arguments)}
-bytearray_funcs.isupper=function(self){return isupper.apply(null,arguments)}
-bytearray_funcs.join=function(self){}
-bytearray_funcs.ljust=function(self){}
-bytearray_funcs.lower=function(self){}
-bytearray_funcs.lstrip=function(self){}
-bytearray_funcs.maketrans=function(self){}
-bytearray_funcs.partition=function(self){}
+bytearray_funcs.isalnum=function(){return isalnum.apply(null,arguments)}
+bytearray_funcs.isalpha=function(){return isalpha.apply(null,arguments)}
+bytearray_funcs.isascii=function(){return isascii.apply(null,arguments)}
+bytearray_funcs.isdigit=function(){return isdigit.apply(null,arguments)}
+bytearray_funcs.islower=function(){return islower.apply(null,arguments)}
+bytearray_funcs.isspace=function(){return isspace.apply(null,arguments)}
+bytearray_funcs.istitle=function(){return istitle.apply(null,arguments)}
+bytearray_funcs.isupper=function(){return isupper.apply(null,arguments)}
+bytearray_funcs.join=function(){return join.apply(_b_.bytearray,arguments)}
+bytearray_funcs.ljust=function(){return ljust.apply(_b_.bytearray,arguments)}
+bytearray_funcs.lower=function(self){return lower.apply(_b_.bytearray,arguments)}
+bytearray_funcs.lstrip=function(self){var $=$B.args('lstrip',2,{self:null,cars:null},['self','cars'],arguments,{cars:ws_cars},null,null)
+var self=$.self,cars=$.cars
+return strip.call(_b_.bytearray,self,cars,'l')}
+bytearray_funcs.maketrans=function(self){return maketrans.apply(_b_.bytearray,arguments)}
+bytearray_funcs.partition=function(self){return partition.apply(_b_.bytearray,arguments)}
 bytearray_funcs.pop=function(self){var $=$B.args('pop',2,{self:null,index:null},['self','index'],arguments,{index:-1},null,null)
 var self=$.self,index=$.index
 check_exports(self)
@@ -6787,7 +6927,7 @@ var ix=self.source.indexOf(value)
 if(ix !=-1){self.source.splice(ix,1)}}
 bytearray_funcs.removeprefix=function(self,prefix){return removeprefix.apply(null,arguments)}
 bytearray_funcs.removesuffix=function(self){return removesuffix.apply(null,arguments)}
-bytearray_funcs.replace=function(self){}
+bytearray_funcs.replace=function(self){return replace.apply(_b_.bytearray,arguments)}
 bytearray_funcs.resize=function(self,size){check_exports(self)
 size=$B.PyNumber_Index(size)
 if(size < 0){$B.RAISE(_b_.ValueError,`Can only resize to positive sizes, got -${size}`)}
@@ -6798,30 +6938,36 @@ bytearray_funcs.rfind=function(){return find.apply('rfind',arguments)}
 bytearray_funcs.rindex=function(self){var res=find.apply('rfind',arguments)
 if(res==-1){$B.RAISE(_b_.ValueError,'subsection not found')}
 return res}
-bytearray_funcs.rjust=function(self){}
-bytearray_funcs.rpartition=function(self){}
-bytearray_funcs.rsplit=function(self){}
-bytearray_funcs.rstrip=function(self){}
-bytearray_funcs.split=function(self){}
-bytearray_funcs.splitlines=function(self){}
-bytearray_funcs.startswith=function(self){}
-bytearray_funcs.strip=function(self){}
-bytearray_funcs.swapcase=function(self){}
-bytearray_funcs.title=function(self){}
-bytearray_funcs.translate=function(self){}
+bytearray_funcs.rjust=function(){return rjust.apply(_b_.bytearray,arguments)}
+bytearray_funcs.rpartition=function(self){return rpartition.apply(_b_.bytearray,arguments)}
+bytearray_funcs.rsplit=function(self){return rsplit.apply(_b_.bytearray,arguments)}
+bytearray_funcs.rstrip=function(self){var $=$B.args('rstrip',2,{self:null,cars:null},['self','cars'],arguments,{cars:ws_cars},null,null)
+var self=$.self,cars=$.cars
+return strip.call(_b_.bytearray,self,cars,'r')}
+bytearray_funcs.split=function(){return split.apply(_b_.bytearray,arguments)}
+bytearray_funcs.splitlines=function(self){return splitlines.apply(_b_.bytearray,arguments)}
+bytearray_funcs.startswith=function(self){return startswith.apply(_b_.bytearray,arguments)}
+bytearray_funcs.strip=function(self){var $=$B.args('lstrip',2,{self:null,cars:null},['self','cars'],arguments,{cars:ws_cars},null,null)
+var self=$.self,cars=$.cars
+var stripped_right=strip.call(_b_.bytearray,self,cars,'r')
+return strip.call(_b_.bytearray,res,cars,'l')}
+bytearray_funcs.swapcase=function(self){return swapcase.apply(_b_.bytearray,arguments)}
+bytearray_funcs.title=function(self){return title.apply(_b_.bytearray,arguments)}
+bytearray_funcs.translate=function(self){return translate.apply(_b_.bytearray,arguments)}
 bytearray_funcs.upper=function(self){return upper.apply(null,arguments)}
-bytearray_funcs.zfill=function(self){}
-_b_.bytearray.tp_methods=["__alloc__","__reduce__","__reduce_ex__","__sizeof__","append","capitalize","center","clear","copy","count","decode","endswith","expandtabs","extend","find","hex","index","insert","isalnum","isalpha","isascii","isdigit","islower","isspace","istitle","isupper","join","ljust","lower","lstrip","partition","pop","remove","replace","removeprefix","removesuffix","resize","reverse","rfind","rindex","rjust","rpartition","rsplit","rstrip","split","splitlines","startswith","strip","swapcase","title","translate","upper","zfill"]
+bytearray_funcs.zfill=function(self){return zfill.apply(_b_.bytearray,arguments)}
+_b_.bytearray.tp_methods=["__alloc__","__reduce__","__reduce_ex__","__sizeof__","append","capitalize","center","clear","copy","count","decode","endswith","expandtabs","extend","find","hex","index","insert","isalnum","isalpha","isascii","isdigit","islower","isspace","istitle","isupper","join","ljust","lower","lstrip","partition","pop","remove","replace","removeprefix","removesuffix","resize","reverse","rfind","rindex","rjust","rpartition","rsplit","rstrip","split","splitlines","startswith","strip","swapcase","title","translate","upper","zfill"
+]
 _b_.bytearray.classmethods=["fromhex"]
 _b_.bytearray.staticmethods=["maketrans"]
 $B.set_func_names(bytearray,"builtins")
 var bytes=_b_.bytes
 bytes.$buffer_protocol=true
 bytes.$is_sequence=true
-function bytes_split_with_sep(self,seps,maxsplit){var parts=[],pos=0,source=self.source,len=source.length
+function bytes_split_with_sep(cls,self,seps,maxsplit){var parts=[],pos=0,source=self.source,len=source.length
 var sep_len=seps.length
 if(sep_len==0){$B.RAISE(_b_.ValueError,'empty separator')}
-if(self.source.length==0){return $B.$list([$B.fast_bytes()])}
+if(self.source.length==0){return $B.$list([cls.$factory()])}
 var acc=[]
 var done=false
 while(pos < len){var i=0,found=false
@@ -6836,9 +6982,9 @@ acc=[]
 pos+=sep_len}else{acc.push(source[pos])
 pos+=1}}
 if(! done){parts.push(acc)}
-parts=parts.map(t=> $B.fast_bytes(t))
+parts=parts.map(t=> cls.$factory(t))
 return $B.$list(parts)}
-function bytes_split_with_whitespace(self,maxsplit){var parts=[],pos=0,seps,source=self.source,len=source.length
+function bytes_split_with_whitespace(cls,self,maxsplit){var parts=[],pos=0,seps,source=self.source,len=source.length
 maxsplit=$B.int_value(maxsplit)
 var ws=[9,10,11,12,13,32]
 while(pos < len && ws.includes(source[pos])){pos++}
@@ -6857,7 +7003,7 @@ acc=[]
 pos+=i}else{acc.push(source[pos])
 pos++}}
 if(acc.length > 0){parts.push(acc)}
-parts=parts.map(t=> $B.fast_bytes(t))
+parts=parts.map(t=> cls.$factory(t))
 return $B.$list(parts)}
 var bytes_iterator=$B.bytes_iterator
 $B.bytes_iterator.tp_iter=function(self){return self}
@@ -7177,129 +7323,42 @@ bytes_funcs.islower=function(){return islower.apply(null,arguments)}
 bytes_funcs.isspace=function(){return isspace.apply(null,arguments)}
 bytes_funcs.istitle=function(){return istitle.apply(null,arguments)}
 bytes_funcs.isupper=function(){return isupper.apply(null,arguments)}
-bytes_funcs.join=function(){var $ns=$B.args('join',2,{self:null,iterable:null},['self','iterable'],arguments,{}),self=$ns['self'],iterable=$ns['iterable']
-var res=$B.get_class(self).$factory(),empty=true
-for(var item of $B.make_js_iterator(iterable)){if(empty){empty=false}else{res=bytes.sq_concat(res,self)}
-res=bytes.sq_concat(res,item)}
-return res}
-bytes_funcs.ljust=function(){var $=$B.args('ljust',3,{self:null,width:null,fillbyte:null},['self','width','fillbyte'],arguments,{fillbyte:bytes.$factory([32])},null,null)
-check_buffer($.fillbyte)
-var padding=[],count=$.width-$.self.source.length
-for(var i=0;i < count;++i){padding.push($.fillbyte.source[0])}
-return bytes.$factory($.self.source.concat(padding))}
-bytes_funcs.lower=function(self){var _res=[],pos=0
-for(var i=0,len=self.source.length;i < len;i++){if(self.source[i]){_res[pos++]=_lower(self.source[i])}}
-return bytes.$factory(_res)}
-bytes_funcs.lstrip=function(self,cars){return _strip(self,cars,'l')}
-bytes_funcs.maketrans=function(from,to){var _t=[]
-to=$B.to_bytes(to)
-for(let i=0;i < 256;i++){_t[i]=i}
-for(let i=0,len=from.source.length;i < len;i++){var _ndx=from.source[i]
-_t[_ndx]=to[i]}
-return bytes.$factory(_t)}
-bytes_funcs.partition=function(){var $=$B.args('partition',2,{self:null,sep:null},['self','sep'],arguments,{},null,null)
-check_buffer($.sep)
-var len=$.sep.source.length,src=$.self.source,i=bytes_funcs.find($.self,$.sep)
-return _b_.tuple.$factory([bytes.$factory(src.slice(0,i)),bytes.$factory(src.slice(i,i+len)),bytes.$factory(src.slice(i+len))
-])}
+bytes_funcs.join=function(){return join.apply(_b_.bytes,arguments)}
+bytes_funcs.ljust=function(){return ljust.apply(bytes,arguments)}
+bytes_funcs.lower=function(){return lower.apply(_b_.bytes,arguments)}
+bytes_funcs.lstrip=function(self,cars){var $=$B.args('lstrip',2,{self:null,cars:null},['self','cars'],arguments,{cars:ws_cars},null,null)
+var self=$.self,cars=$.cars
+return strip.call(_b_.bytes,self,cars,'l')}
+bytes_funcs.maketrans=function(){return maketrans.apply(_b_.bytes,arguments)}
+bytes_funcs.partition=function(){return partition.apply(_b_.bytes,arguments)}
 bytes_funcs.removeprefix=function(){return removeprefix.apply(null,arguments)}
 bytes_funcs.removesuffix=function(){return removesuffix.apply(null,arguments)}
-bytes_funcs.replace=function(){var $=$B.args('replace',4,{self:null,old:null,new:null,count:null},['self','old','new','count'],arguments,{count:-1},null,null),res=[]
-var self=$.self,src=self.source,len=src.length,old=$.old,$new=$.new
-var count=$.count >=0 ? $.count :src.length
-check_buffer($.old)
-check_buffer($.new)
-for(var i=0;i < len;i++){if(bytes_funcs.startswith(self,old,i)&& count){for(var j=0;j < $new.source.length;j++){res.push($new.source[j])}
-i+=(old.source.length-1)
-count--}else{res.push(src[i])}}
-return bytes.$factory(res)}
+bytes_funcs.replace=function(){return replace.apply(_b_.bytes,arguments)}
 bytes_funcs.rfind=function(){return find.apply('rfind',arguments)}
 bytes_funcs.rindex=function(){var $=$B.args('rfind',4,{self:null,sub:null,start:null,end:null},['self','sub','start','end'],arguments,{start:0,end:-1},null,null)
 var index=bytes_funcs.rfind($.self,$.sub,$.start,$.end)
 if(index==-1){$B.RAISE(_b_.ValueError,"subsection not found")}
 return index}
-bytes_funcs.rjust=function(){var $=$B.args('rjust',3,{self:null,width:null,fillbyte:null},['self','width','fillbyte'],arguments,{fillbyte:bytes.$factory([32])},null,null)
-check_buffer($.fillbyte)
-var padding=[],count=$.width-$.self.source.length
-for(var i=0;i < count;++i){padding.push($.fillbyte.source[0])}
-return bytes.$factory(padding.concat($.self.source))}
-bytes_funcs.rpartition=function(){var $=$B.args('rpartition',2,{self:null,sep:null},['self','sep'],arguments,{},null,null)
-check_buffer($.sep)
-var len=$.sep.source.length,src=$.self.source,i=bytes_funcs.rfind($.self,$.sep)
-return _b_.tuple.$factory([bytes.$factory(src.slice(0,i)),bytes.$factory(src.slice(i,i+len)),bytes.$factory(src.slice(i+len))
-])}
-bytes_funcs.rsplit=function(self){var $=$B.args('rsplit',3,{self:null,sep:null,maxsplit:null},['self','sep','maxsplit'],arguments,{sep:_b_.None,maxsplit:-1},null,null)
-var self=$.self,sep=$.sep,maxsplit=$.maxsplit
-var reversed_self=$B.fast_bytes(self.source.toReversed())
-if(! $B.$isinstance(maxsplit,_b_.int)){$B.RAISE(_b_.ValueError,`maxsplit should be int, not ${$B.class_name(maxsplit)}`
-)}
-var parts=[]
-if(sep===_b_.None){parts=bytes_split_with_whitespace(self,maxsplit)}else{if($B.$getattr(sep,'__buffer__',$B.NULL)===$B.NULL){$B.RAISE(_b_.TypeError,`a bytes-like object is required, not '${$B.class_name(sep)}'`
-)}
-var reversed_seps=Array.from($B.make_js_iterator(sep)).reverse()
-parts=bytes_split_with_sep(reversed_self,reversed_seps,maxsplit)}
-parts.reverse()
-for(part of parts){part.reverse()}
-parts=parts.map(t=> $B.fast_bytes(t))
-return $B.$list(parts)}
-bytes_funcs.rstrip=function(self,cars){return _strip(self,cars,'r')}
-bytes_funcs.split=function(self){var $=$B.args('split',3,{self:null,sep:null,maxsplit:null},['self','sep','maxsplit'],arguments,{sep:_b_.None,maxsplit:-1},null,null)
-var self=$.self,sep=$.sep,maxsplit=$.maxsplit
-if(! $B.$isinstance(maxsplit,_b_.int)){$B.RAISE(_b_.ValueError,`maxsplit should be int, not ${$B.class_name(maxsplit)}`
-)}
-var parts=[]
-if(sep===_b_.None){parts=bytes_split_with_whitespace(self,maxsplit)}else{if($B.$getattr(sep,'__buffer__',$B.NULL)===$B.NULL){$B.RAISE(_b_.TypeError,`a bytes-like object is required, not '${$B.class_name(sep)}'`
-)}
-var seps=Array.from($B.make_js_iterator(sep))
-parts=bytes_split_with_sep($.self,seps,maxsplit)}
-return $B.$list(parts)}
-bytes_funcs.splitlines=function(self){var $=$B.args('splitlines',2,{self:null,keepends:null},['self','keepends'],arguments,{keepends:false},null,null)
-if(!$B.$isinstance($.keepends,[_b_.bool,_b_.int])){throw _b_.TypeError('integer argument expected, got '+
-$B.get_class($.keepends).__name)}
-var keepends=$B.int_value($.keepends),res=$B.$list([]),source=$.self.source,start=0,pos=0
-if(! source.length){return res}
-while(pos < source.length){if(pos < source.length-1 && source[pos]==0x0d &&
-source[pos+1]==0x0a){res.push(bytes.$factory(source.slice(start,keepends ? pos+2 :pos)))
-start=pos=pos+2}else if(source[pos]==0x0d ||source[pos]==0x0a){res.push(bytes.$factory(source.slice(start,keepends ? pos+1 :pos)))
-start=pos=pos+1}else{pos++}}
-if(start < source.length){res.push(bytes.$factory(source.slice(start)))}
-return $B.$list(res)}
-bytes_funcs.startswith=function(self){var $=$B.args('startswith',3,{self:null,prefix:null,start:null},['self','prefix','start'],arguments,{start:0},null,null),start=$.start
-if($B.$isinstance($.prefix,bytes)){let res=true
-for(let i=0;i < $.prefix.source.length && res;i++){res=$.self.source[start+i]==$.prefix.source[i]}
-return res}else if($B.$isinstance($.prefix,_b_.tuple)){let items=[]
-for(let i=0;i < $.prefix.length;i++){if($B.$isinstance($.prefix[i],bytes)){items=items.concat($.prefix[i].source)}else{$B.RAISE(_b_.TypeError,"startswith first arg must be "+
-"bytes or a tuple of bytes, not "+
-$B.class_name($.prefix))}}
-let prefix=bytes.$factory(items)
-return bytes_funcs.startswith($.self,prefix,start)}else{$B.RAISE(_b_.TypeError,"startswith first arg must be bytes "+
-"or a tuple of bytes, not "+$B.class_name($.prefix))}}
-bytes_funcs.strip=function(self,cars){var res=bytes_funcs.lstrip(self,cars)
-return bytes_funcs.rstrip(res,cars)}
-bytes_funcs.swapcase=function(self){var src=self.source,len=src.length,buffer=src.slice()
-for(var i=0;i < len;++i){if(buffer[i]> 96 && buffer[i]< 123){buffer[i]-=32}else if(buffer[i]> 64 && buffer[i]< 91){buffer[i]+=32}}
-return bytes.$factory(buffer)}
-bytes_funcs.title=function(self){var src=self.source,len=src.length,buffer=src.slice(),current_char_is_letter=false,prev_char_was_letter=false,is_uppercase=false,is_lowercase=false
-for(var i=0;i < len;++i){is_lowercase=buffer[i]> 96 && buffer[i]< 123
-is_uppercase=buffer[i]> 64 && buffer[i]< 91
-current_char_is_letter=is_lowercase ||is_uppercase
-if(current_char_is_letter){if(prev_char_was_letter && is_uppercase){buffer[i]+=32}else if(! prev_char_was_letter && is_lowercase){buffer[i]-=32}}
-prev_char_was_letter=current_char_is_letter}
-return bytes.$factory(buffer)}
-bytes_funcs.translate=function(self,table,_delete){if(_delete===undefined){_delete=[]}else if($B.$isinstance(_delete,bytes)){_delete=_delete.source}else{$B.RAISE(_b_.TypeError,"Type "+
-$B.get_class(_delete).__name+" doesn't support the buffer API")}
-var res=[],pos=0
-if($B.$isinstance(table,bytes)&& table.source.length==256){for(var i=0,len=self.source.length;i < len;i++){if(_delete.indexOf(self.source[i])>-1){continue}
-res[pos++]=table.source[self.source[i]]}}
-return bytes.$factory(res)}
-bytes_funcs.upper=function(self){return upper.apply(null,arguments)}
-bytes_funcs.zfill=function(self,width){var buffer=self.source.slice(),prefix_offset=(buffer[0]==43 ||buffer[0]==45)? 1 :0
-var count=width-self.source.length
-var padding=[]
-for(var i=0;i < count;++i){padding.push(48)}
-buffer.splice.apply(buffer,[prefix_offset,0].concat(padding))
-return bytes.$factory(buffer)}
-_b_.bytes.tp_methods=["__getnewargs__","__bytes__","capitalize","center","count","decode","endswith","expandtabs","find","hex","index","isalnum","isalpha","isascii","isdigit","islower","isspace","istitle","isupper","join","ljust","lower","lstrip","partition","replace","removeprefix","removesuffix","rfind","rindex","rjust","rpartition","rsplit","rstrip","split","splitlines","startswith","strip","swapcase","title","translate","upper","zfill"]
+bytes_funcs.rjust=function(){return rjust.apply(_b_.bytes,arguments)}
+bytes_funcs.rpartition=function(){return rpartition.apply(_b_.bytes,arguments)}
+bytes_funcs.rsplit=function(){return rsplit.apply(_b_.bytes,arguments)}
+bytes_funcs.rstrip=function(){var $=$B.args('lstrip',2,{self:null,cars:null},['self','cars'],arguments,{cars:ws_cars},null,null)
+var self=$.self,cars=$.cars
+return strip.call(_b_.bytes,self,cars,'r')}
+bytes_funcs.split=function(){return split.apply(_b_.bytes,arguments)}
+bytes_funcs.splitlines=function(){return splitlines.apply(_b_.bytes,arguments)}
+bytes_funcs.startswith=function(self){return startswith.apply(_b_.bytes,arguments)}
+bytes_funcs.strip=function(){var $=$B.args('lstrip',2,{self:null,cars:null},['self','cars'],arguments,{cars:ws_cars},null,null)
+var self=$.self,cars=$.cars
+var stripped_right=strip.call(_b_.bytes,self,cars,'r')
+return strip.call(_b_.bytes,res,cars,'l')}
+bytes_funcs.swapcase=function(){return swapcase.apply(_b_.bytes,arguments)}
+bytes_funcs.title=function(){return title.apply(_b_.bytes,arguments)}
+bytes_funcs.translate=function(){return translate.apply(_b_.bytes,arguments)}
+bytes_funcs.upper=function(){return upper.apply(null,arguments)}
+bytes_funcs.zfill=function(){return zfill.apply(_b_.bytes,arguments)}
+_b_.bytes.tp_methods=["__getnewargs__","__bytes__","capitalize","center","count","decode","endswith","expandtabs","find","hex","index","isalnum","isalpha","isascii","isdigit","islower","isspace","istitle","isupper","join","ljust","lower","lstrip","partition","replace","removeprefix","removesuffix","rfind","rindex","rjust","rpartition","rsplit","rstrip","split","splitlines","startswith","strip","swapcase","title","translate","upper","zfill"
+]
 _b_.bytes.classmethods=["fromhex"]
 _b_.bytes.staticmethods=["maketrans"]
 $B.set_func_names(bytes,"builtins")
