@@ -76,7 +76,7 @@ $B.bytearray_iterator.tp_iter = function(self){
 
 $B.bytearray_iterator.tp_iternext = function*(self){
     self.index++
-    if(self.index == self.len){
+    if(self.index >= self.len){
         return
     }
     yield self.obj.source[self.index]
@@ -1734,7 +1734,7 @@ $B.bytes_iterator.tp_iter = function(self){
 
 $B.bytes_iterator.tp_iternext = function*(self){
     self.index++
-    if(self.index == self.len){
+    if(self.index >= self.len){
         return
     }
     yield self.obj.source[self.index]
