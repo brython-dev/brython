@@ -669,8 +669,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-02-27 16:25:54.402415"
-__BRYTHON__.timestamp=1772205954402
+__BRYTHON__.compiled_date="2026-02-27 22:53:44.323439"
+__BRYTHON__.timestamp=1772229224323
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -5135,18 +5135,28 @@ _b_.__BRYTHON__=__BRYTHON__})(__BRYTHON__);
 ;
 (function($B){var _b_=$B.builtins
 var code=$B.code
-$B.code.tp_richcompare=function(self){}
+var co_attrs=["co_argcount","co_posonlyargcount","co_kwonlyargcount","co_stacksize","co_flags","co_nlocals","co_consts","co_names","co_filename","co_name","co_qualname","co_firstlineno","co_linetable","co_exceptiontable"
+]
+function code_eq(self,other){for(var attr of co_attrs){if(! $B.is_or_equals(self[attr],other[attr])){return false}}
+return true}
+$B.code.tp_richcompare=function(self,other,op){if(! $B.$isinstance(other,$B.code)){return _b_.NotImplemented}
+switch(op){case '__eq__':
+return code_eq(self,other)
+case '__ne__':
+return ! code_eq(self,other)
+default:
+return _b_.NotImplemented}}
 $B.code.tp_repr=function(self){return `<code object ${self.co_name}, file '${self.co_filename}', `+
 `line ${self.co_firstlineno || 1}>`}
-$B.code.tp_hash=function(self){}
+$B.code.tp_hash=function(self){return _b_.object.tp_hash(self)}
 $B.code.tp_new=function(cls,args,kw){return{
 ob_type:cls,dict:$B.empty_dict()}}
 var code_funcs=$B.code.tp_funcs={}
-code_funcs.__replace__=function(self){}
-code_funcs.__sizeof__=function(self){}
+code_funcs.__replace__=function(self){$B.RAISE(_b_.NotImplementedError)}
+code_funcs.__sizeof__=function(self){return 216}
 code_funcs._co_code_adaptive_get=function(self){return _b_.None}
 code_funcs._co_code_adaptive_set=_b_.None
-code_funcs._varname_from_oparg=function(self){}
+code_funcs._varname_from_oparg=function(self){$B.RAISE(_b_.NotImplementedError)}
 code_funcs.co_argcount=function(self){return self.co_argcount}
 code_funcs.co_branches=function(self){console.log('get co branches',self)}
 code_funcs.co_cellvars_get=function(self){return self.co_cellvars}
@@ -5155,7 +5165,7 @@ code_funcs.co_code_get=function(self){return self.co_code}
 code_funcs.co_code_set=_b_.None
 code_funcs.co_freevars_get=function(self){return self.co_freevars}
 code_funcs.co_freevars_set=_b_.None
-code_funcs.co_lines=function(self){console.log('get co_lines',self)}
+code_funcs.co_lines=function(self){return _b_.NotImplemented}
 code_funcs.co_lnotab_get=function(self){return _b_.None}
 code_funcs.co_lnotab_set=_b_.None
 code_funcs.co_positions=function(self){return self.co_positions()}
@@ -6436,7 +6446,7 @@ function check_buffer_or_int(arg){if(! $B.$isinstance(arg,_b_.int)&& ! is_bytes_
 )}}
 $B.bytearray_iterator.tp_iter=function(self){return self}
 $B.bytearray_iterator.tp_iternext=function*(self){self.index++
-if(self.index==self.len){return}
+if(self.index >=self.len){return}
 yield self.obj.source[self.index]}
 var bytearray_iterator_funcs=$B.bytearray_iterator.tp_funcs={}
 bytearray_iterator_funcs.__length_hint__=function(self){return self.len}
@@ -7011,7 +7021,7 @@ var bytes_iterator=$B.bytes_iterator
 $B.bytes_iterator.tp_iter=function(self){self.index=-1
 return self}
 $B.bytes_iterator.tp_iternext=function*(self){self.index++
-if(self.index==self.len){return}
+if(self.index >=self.len){return}
 yield self.obj.source[self.index]}
 var bytes_iterator_funcs=$B.bytes_iterator.tp_funcs={}
 bytes_iterator_funcs.__length_hint__=function(self){return self.len}
@@ -11452,18 +11462,6 @@ $B.RAISE(_b_.TypeError,"A Javascript function can't take "+
 "keyword arguments")}
 args[i]=$B.pyobj2jsobj(arg)}
 return args}
-$B.JSClassMeta=$B.make_builtin_class('JSClassMeta',[_b_.type])
-$B.JSClassMeta.tp_new=function(cls,args,kw){var[name,bases,dict]=args
-console.log('create new class with type JSClassMeta, bases',bases)
-var js_class=bases[0].js_class
-var klass={ob_type:cls,tp_name:name,tp_bases:bases,dict,js_class}
-klass.tp_mro=$B.make_mro(klass)
-klass.tp_new=function(cls,args,kw){return{
-ob_type:klass,dict:$B.empty_dict(),}}
-klass.tp_init=function(self,...args){var js_class=$B.get_class(self).js_class
-var res=new js_class(...args)
-self[$B.JSOBJ]=res}
-return klass}
 $B.JSClass=$B.make_builtin_class('JSClass',[_b_.type])
 $B.JSClass.tp_getattro=function(self,attr){console.log('JSClass getattro',self,attr)
 if(! self.js_class.hasOwnProperty(attr)){return $B.NULL}
@@ -11489,39 +11487,25 @@ return cls}
 var js_iterator=$B.make_builtin_class('js_iterator')
 js_iterator.tp_iternext=function*(self){for(var key of self.it){yield key}}
 $B.set_func_names(js_iterator,'builtins')
-function JSObj_eq(_self,other){switch(typeof _self){case "string":
-return _self==other
+function JSObj_eq(self,other){switch(typeof self){case "string":
+return self==other
 case "object":
-if(_self.__eq__ !==undefined){return _self.__eq__(other)}
-if(Object.keys(_self).length !==Object.keys(other).length){return false}
-if(_self===other){return true}
-for(var key in _self){if(! $B.rich_comp('__eq__',_self[key],other[key])){return false}}
+if(self.__eq__ !==undefined){return self.__eq__(other)}
+if(Object.keys(self).length !==Object.keys(other).length){return false}
+if(self===other){return true}
+for(var key in self){if(! $B.rich_comp('__eq__',self[key],other[key])){return false}}
 return true
 case 'function':
-if(_self.$js_func && other.$js_func){return _self.$js_func===other.$js_func}
-return _self===other
+if(self.$js_func && other.$js_func){return self.$js_func===other.$js_func}
+return self===other
 default:
-return _self===other}}
+return self===other}}
 $B.JSObj=$B.make_builtin_class("JSObject")
 $B.JSObj.$factory=jsobj2pyobj
-function check_big_int(x,y){if(typeof x !="bigint" ||typeof y !="bigint"){$B.RAISE(_b_.TypeError,"unsupported operand type(s) for - : '"+
-$B.class_name(x)+"' and '"+$B.class_name(y)+"'")}}
-var js_ops={__add__:function(_self,other){check_big_int(_self,other)
-return _self+other},__mod__:function(_self,other){check_big_int(_self,other)
-return _self % other},__mul__:function(_self,other){check_big_int(_self,other)
-return _self*other},__pow__:function(_self,other){check_big_int(_self,other)
-return _self**other},__sub__:function(_self,other){check_big_int(_self,other)
-return _self-other}}
-for(var js_op in js_ops){$B.JSObj[js_op]=js_ops[js_op]}
-$B.JSObj.nb_bool=function(_self){if(typeof _self=='object'){for(var key in _self){return true}
+$B.JSObj.nb_bool=function(self){if(typeof self=='object'){for(var key in self){return true}
 return false}
-return !! _self}
-$B.JSObj.sq_contains=function(_self,key){return key in _self}
-$B.JSObj.__delitem__=function(_self,key){delete _self[key]
-return _b_.None}
-$B.JSObj.__dir__=function(_self){var attrs=Object.keys(_self);
-attrs=attrs.sort()
-return attrs}
+return !! self}
+$B.JSObj.sq_contains=function(self,key){return key in self}
 $B.JSObj.tp_richcompare=function(self,other,op){switch(op){case '__eq__':
 return JSObj_eq(self,other)
 case '__ne__':
@@ -11583,12 +11567,15 @@ for(var i=_slice.start;i < _slice.stop;i+=_slice.step){res[offset++]=_self.item(
 return res}
 $B.RAISE(_b_.KeyError,key)}
 $B.JSObj.mp_ass_subscript=function(){return $B.JSObj.tp_setattro.apply(null,arguments)}
-$B.JSObj.tp_repr=function(_self){if(typeof _self=='number'){return _self+''}
-if(typeof _self=='function' && _self.$js_func.name &&
-globalThis[_self.$js_func.name]===_self.$js_func){return `<function window.${_self.$js_func.name}>`}
-var js_repr=Object.prototype.toString.call(_self)
+$B.JSObj.tp_repr=function(self){if(typeof self=='number'){return self+''}
+if(typeof self=='function' && self.$js_func.name &&
+globalThis[self.$js_func.name]===self.$js_func){return `<function window.${self.$js_func.name}>`}
+var js_repr=Object.prototype.toString.call(self)
 return `<Javascript object: ${js_repr}>`}
 var JSObj_funcs=$B.JSObj.tp_funcs={}
+JSObj_funcs.__dir__=function(self){var attrs=Object.keys(self)
+attrs=attrs.sort()
+return attrs}
 JSObj_funcs.__getattr__=function(self,attr){var test=false 
 var js_attr=self[attr]
 if(js_attr==undefined && typeof self=="function"){js_attr=self.$js_func[attr]}
@@ -11696,43 +11683,28 @@ if($B.$isinstance(other,js_array)){return _self.slice().concat(other)}
 for(var item of $B.make_js_iterator(other)){res.push(pyobj2jsobj(item))}
 return res}
 js_array.mp_ass_subscript=function(self,key,value){if(value===$B.NULL){self.splice(key,1)}else{self[key]=pyobj2jsobj(value)}}
-js_array.tp_getattroXXXX=function(_self,attr){console.log('js array getattro',_self,attr)
-if(! _b_.list.tp_funcs.hasOwnProperty(attr)){
-var proto=Object.getPrototypeOf(_self),res=proto[attr]
-if(res !==undefined){
-return jsobj2pyobj(res,_self)}
-if(_self.hasOwnProperty(attr)){
-return jsobj2pyobj(_self[attr])}
-if(js_array.hasOwnProperty(attr)){return js_array[attr]}
-var method=$B.str_dict_get(js_array.dict,attr,$B.NULL)
-if(method !==$B.NULL){console.log('method',method)
-return $B.$call(method,_self,attr)}
-return $B.NULL}
-if(js_array.hasOwnProperty(attr)){return function(){return js_array[attr](_self,...arguments)}}
-return function(){var args=pyobj2jsobj(Array.from(arguments))
-return _b_.list.tp_funcs[attr].call(null,_self,...args)}}
 js_array.mp_length=function(self){return self.length}
-js_array.mp_subscript=function(_self,i){i=$B.PyNumber_Index(i)
-return jsobj2pyobj(_self[i])}
+js_array.mp_subscript=function(self,i){i=$B.PyNumber_Index(i)
+return jsobj2pyobj(self[i])}
 js_array.sq_contains=function(self,item){item=pyobj2jsobj(item)
 for(var x of self){if($B.is_or_equals(x,item)){return true}}
 return false}
-js_array.nb_inplace_add=function(_self,other){if($B.$isinstance(other,js_array)){for(var item of other){_self.push(item)}}else{for(var item of $B.make_js_iterator(other)){_self.push($B.pyobj2jsobj(item))}}
-return _self}
-js_array.tp_iter=function(_self){return js_array_iterator.$factory(_self)}
-js_array.nb_multiply=function(_self,nb){var res=_self.slice()
-for(var i=1;i < nb;i++){res=res.concat(_self)}
+js_array.nb_inplace_add=function(self,other){if($B.$isinstance(other,js_array)){for(var item of other){self.push(item)}}else{for(var item of $B.make_js_iterator(other)){self.push($B.pyobj2jsobj(item))}}
+return self}
+js_array.tp_iter=function(self){return js_array_iterator.$factory(self)}
+js_array.nb_multiply=function(self,nb){var res=self.slice()
+for(var i=1;i < nb;i++){res=res.concat(self)}
 return res}
-js_array.tp_repr=function(_self){if($B.repr.enter(_self)){
+js_array.tp_repr=function(self){if($B.repr.enter(self)){
 return '[...]'}
-var _r=new Array(_self.length),res
-for(var i=0;i < _self.length;++i){_r[i]=_b_.str.$factory(_self[i])}
+var _r=new Array(self.length),res
+for(var i=0;i < self.length;++i){_r[i]=$B.make_str(self[i])}
 res="["+_r.join(", ")+"]"
-$B.repr.leave(_self)
+$B.repr.leave(self)
 return res}
 var js_array_funcs=js_array.tp_funcs={}
-js_array_funcs.append=function(_self,x){_self.push(pyobj2jsobj(x))
-if(_self[PYOBJ]){_self[PYOBJ].push(x)}
+js_array_funcs.append=function(self,x){self.push(pyobj2jsobj(x))
+if(self[PYOBJ]){self[PYOBJ].push(x)}
 return _b_.None}
 js_array_funcs.extend=function(self){var $=$B.args("extend",2,{self:null,t:null},["self","t"],arguments,{},null,null)
 var self=$.self,t=$.t
@@ -11822,7 +11794,6 @@ value[$B.func_attrs.__qualname__]=attr
 Object.defineProperty(new_func,'$function_infos',{value,writable:true}
 )
 new_func.ob_type=$B.builtin_function_or_method
-console.log('JSObject.new returns',new_func)
 new_func.__name__='new'
 return new_func}
 $B.JSFunction.tp_methods=["__getattr__","new"]})(__BRYTHON__);
@@ -11988,8 +11959,8 @@ left+=parent_pos.left
 top+=parent_pos.top}
 return{left:left,top:top,width:width,height:height}}
 var $mouseCoords=$B.$mouseCoords=function(ev){if(ev.type.startsWith("touch")){let res={}
-res.x=_b_.int.$factory(ev.touches[0].screenX)
-res.y=_b_.int.$factory(ev.touches[0].screenY)
+res.x=ev.touches[0].screenX
+res.y=ev.touches[0].screenY
 res.__getattr__=function(attr){return this[attr]}
 res.ob_type="MouseCoords"
 return res}
@@ -12001,8 +11972,8 @@ document.documentElement.scrollLeft
 posy=ev.clientY+document.body.scrollTop+
 document.documentElement.scrollTop}
 let res={}
-res.x=_b_.int.$factory(posx)
-res.y=_b_.int.$factory(posy)
+res.x=posx
+res.y=posy
 res.__getattr__=function(attr){return this[attr]}
 res.ob_type="MouseCoords"
 return res}

@@ -66,8 +66,8 @@ function $getPosition(e){
 var $mouseCoords = $B.$mouseCoords = function(ev){
     if(ev.type.startsWith("touch")){
         let res = {}
-        res.x = _b_.int.$factory(ev.touches[0].screenX)
-        res.y = _b_.int.$factory(ev.touches[0].screenY)
+        res.x = ev.touches[0].screenX
+        res.y = ev.touches[0].screenY
         res.__getattr__ = function(attr){return this[attr]}
         res.ob_type = "MouseCoords"
         return res
@@ -87,8 +87,8 @@ var $mouseCoords = $B.$mouseCoords = function(ev){
             document.documentElement.scrollTop
     }
     let res = {}
-    res.x = _b_.int.$factory(posx)
-    res.y = _b_.int.$factory(posy)
+    res.x = posx
+    res.y = posy
     res.__getattr__ = function(attr){return this[attr]}
     res.ob_type = "MouseCoords"
     return res

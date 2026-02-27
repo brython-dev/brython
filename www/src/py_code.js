@@ -4,9 +4,45 @@ var _b_ = $B.builtins
 
 var code = $B.code
 
-/* code start */
-$B.code.tp_richcompare = function(self){
+var co_attrs = [
+    "co_argcount",
+    "co_posonlyargcount",
+    "co_kwonlyargcount",
+    "co_stacksize",
+    "co_flags",
+    "co_nlocals",
+    "co_consts",
+    "co_names",
+    "co_filename",
+    "co_name",
+    "co_qualname",
+    "co_firstlineno",
+    "co_linetable",
+    "co_exceptiontable"
+]
 
+function code_eq(self, other){
+    for(var attr of co_attrs){
+        if(! $B.is_or_equals(self[attr], other[attr])){
+            return false
+        }
+    }
+    return true
+}
+
+/* code start */
+$B.code.tp_richcompare = function(self, other, op){
+    if(! $B.$isinstance(other, $B.code)){
+        return _b_.NotImplemented
+    }
+    switch(op){
+        case '__eq__':
+            return code_eq(self, other)
+        case '__ne__':
+            return ! code_eq(self, other)
+        default:
+            return _b_.NotImplemented
+    }
 }
 
 $B.code.tp_repr = function(self){
@@ -15,7 +51,7 @@ $B.code.tp_repr = function(self){
 }
 
 $B.code.tp_hash = function(self){
-
+    return _b_.object.tp_hash(self)
 }
 
 $B.code.tp_new = function(cls, args, kw){
@@ -28,11 +64,11 @@ $B.code.tp_new = function(cls, args, kw){
 var code_funcs = $B.code.tp_funcs = {}
 
 code_funcs.__replace__ = function(self){
-
+    $B.RAISE(_b_.NotImplementedError)
 }
 
 code_funcs.__sizeof__ = function(self){
-
+    return 216
 }
 
 code_funcs._co_code_adaptive_get = function(self){
@@ -42,7 +78,7 @@ code_funcs._co_code_adaptive_get = function(self){
 code_funcs._co_code_adaptive_set = _b_.None
 
 code_funcs._varname_from_oparg = function(self){
-
+    $B.RAISE(_b_.NotImplementedError)
 }
 
 code_funcs.co_argcount = function(self){
@@ -72,7 +108,7 @@ code_funcs.co_freevars_get = function(self){
 code_funcs.co_freevars_set = _b_.None
 
 code_funcs.co_lines = function(self){
-    console.log('get co_lines', self)
+    return _b_.NotImplemented
 }
 
 code_funcs.co_lnotab_get = function(self){

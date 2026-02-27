@@ -247,7 +247,9 @@ _b_.object.tp_repr = function(self){
 
 _b_.object.tp_hash = function(self){
     var hash = self.__hashvalue__
-    if(hash !== undefined){return hash}
+    if(hash !== undefined){
+        return hash
+    }
     return self.__hashvalue__ = $B.$py_next_hash--
 }
 
