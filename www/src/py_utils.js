@@ -436,14 +436,14 @@ $B.args = function(fname, argcount, slots, var_names, args, $dobj,
     var nb_posonly = nb_posonly || 0,
         nb_kwonly = var_names.length - argcount,
         defaults  = [],
-        kwdefaults = {$jsobj: {}}
+        kwdefaults = $B.empty_dict()
     for(var i = 0, len = var_names.length; i < len; i++){
         var var_name = var_names[i]
         if($dobj.hasOwnProperty(var_name)){
             if(i < argcount){
                 defaults.push($dobj[var_name])
             }else{
-                kwdefaults.$jsobj[var_name] = $dobj[var_name]
+                $B.str_dict_set(kwdefaults, var_name, $dobj[var_name])
             }
         }
     }
@@ -1134,7 +1134,7 @@ $B.$getitem = function(obj, item, inum){
 
 $B.$getitem1 = function(obj, item){
     var is_list = Array.isArray(obj) && $B.get_class(obj) === _b_.list,
-        is_dict = $B.get_class(obj) === _b_.dict && ! obj.$jsobj
+        is_dict = $B.get_class(obj) === _b_.dict && ! obj[$B.JSOBJ]
     if(typeof item == "number"){
         if(is_list || typeof obj == "string"){
             item = item >=0 ? item : obj.length + item

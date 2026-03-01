@@ -251,6 +251,7 @@ function create_worker(){
              `${js}\n` +
              `self.postMessage('${ok_token}')\n` +
          `}catch(err){\n` +
+             `console.log('worker error', err)\n` +
              `self.postMessage('${error_token}Error in worker "${id}"\\n'` +
              ` + $B.error_trace(err))\n` +
          `}\n})`

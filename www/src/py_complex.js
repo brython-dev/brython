@@ -3,11 +3,6 @@
 
 var _b_ = $B.builtins
 
-function $UnsupportedOpType(op, class1, class2){
-    $B.RAISE(_b_.TypeError, "unsupported operand type(s) for " +
-        op + ": '" + class1 + "' and '" + class2 + "'")
-}
-
 function conv_complex(...objs){
     var res = []
     for(var obj of objs){
@@ -49,8 +44,6 @@ function complex_eq(self, other){
 }
 
 const max_precision = 2 ** 31 - 4
-
-
 
 complex.$getnewargs = function(self){
     return $B.fast_tuple([self.real, self.imag])

@@ -1082,9 +1082,6 @@ _b_.tuple.tp_new = function(cls, args, kw){
                 self.push(item)
             }
         }else{
-            console.log('args', args)
-            console.log(Error().stack)
-            console.log('cls', cls)
             $B.RAISE(_b_.TypeError, 'tuple expected at most 1 ' +
                 `argument, got ${args.length}`)
         }

@@ -9,8 +9,8 @@ $B.del_exc = function(frame){
 
 $B.set_exc = function(exc, frame){
     exc.__traceback__ = exc.__traceback__ === _b_.None ? make_tb() : exc.__traceback__
-    if(! $B.get_class(exc)){
-        console.log('no class', exc)
+    if(exc.ob_type === undefined){
+        // console.log('no class', exc)
     }
     exc.ob_type = exc.ob_type ?? _b_.JavascriptError
     exc.args = exc.args ?? [exc.message]

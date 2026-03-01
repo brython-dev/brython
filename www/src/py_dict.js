@@ -22,7 +22,7 @@ attributes:
   _keys and _values
 
 Lookup by keys:
-- if all keys are strings, use $strings[key]
+- if the key is strings, use $strings[key]
 - otherwise:
     - compute hash(key)
     - if dict.table[hash] exists, it is a list of indices
@@ -311,17 +311,8 @@ function make_view_comparison_methods(klass){
 $B.str_dict = function(){}
 
 var dict = _b_.dict
+
 dict.$match_mapping_pattern = true // for pattern matching (PEP 634)
-
-
-
-function dict_subscript(){
-
-}
-
-function dict___sizeof__(){
-
-}
 
 $B.str_dict_get = function(d, key, _default){
     if(d.$strings.hasOwnProperty(key)){
@@ -382,18 +373,6 @@ dict.$to_obj = function(d){
     return res
 }
 
-dict.$iter_keys_check = function*(d){
-    for(var entry of dict.$iter_items(d)){
-        yield entry.key
-    }
-}
-
-dict.$iter_values_check = function*(d){
-    for(var entry of dict.$iter_items(d)){
-        yield entry.value
-    }
-}
-
 dict.$set_like = function(self){
     // return true if all values are hashable
     for(var v of self._values){
@@ -421,29 +400,19 @@ dict.$iter_items = function*(d){
         }
         return
     }
-    if(d.$jsobj){
-        for(let key in d.$jsobj){
-            if(!d.$exclude || ! d.$exclude(key)){
-                yield {key, value: d.$jsobj[key]}
+    var version = d.$version
+    for(var i = 0, len = d._keys.length; i < len; i++){
+        if(d._keys[i] !== undefined){
+            yield {key: d._keys[i], value: d._values[i], hash: d._hashes[i]}
+            if(d.$version !== version){
+                $B.RAISE(_b_.RuntimeError, 'changed in iteration')
             }
-        }
-    }else{
-        var version = d.$version
-        for(var i = 0, len = d._keys.length; i < len; i++){
-            if(d._keys[i] !== undefined){
-                yield {key: d._keys[i], value: d._values[i], hash: d._hashes[i]}
-                if(d.$version !== version){
-                    $B.RAISE(_b_.RuntimeError, 'changed in iteration')
-                }
-            }
-        }
-        if(d.$version !== version){
-            $B.RAISE(_b_.RuntimeError, 'changed in iteration')
         }
     }
+    if(d.$version !== version){
+        $B.RAISE(_b_.RuntimeError, 'changed in iteration')
+    }
 }
-
-
 
 
 var $copy_dict = function(left, right){
@@ -469,16 +438,6 @@ var $copy_dict = function(left, right){
         }
     }
 }
-
-/*
-dict.__bool__ = function () {
-    var $ = $B.args("__bool__", 1, {self: null}, ["self"],
-        arguments, {}, null, null)
-    return dict.mp_length($.self) > 0
-}
-*/
-
-dict.__class_getitem__ = $B.$class_getitem
 
 dict.$lookup_by_key = function(d, key, hash){
     hash = hash === undefined ? _b_.hash(key) : hash
@@ -517,10 +476,6 @@ dict.$contains = function(self, key){
         convert_all_str(self)
     }
 
-    if(self.$jsobj){
-        return self.$jsobj[key] !== undefined
-    }
-
     return dict.$lookup_by_key(self, key).found
 }
 
@@ -540,13 +495,6 @@ dict.$delitem  = function(self, key){
         if(! dict.sq_contains(self, key)){
             $B.RAISE(_b_.KeyError, _b_.str.$factory(key))
         }
-    }
-    if(self.$jsobj){
-        if(self.$jsobj[key] === undefined){
-            $B.RAISE(_b_.KeyError, key)
-        }
-        delete self.$jsobj[key]
-        return _b_.None
     }
 
     var lookup = dict.$lookup_by_key(self, key)
@@ -594,21 +542,6 @@ dict.$eq = function(self, other){
         return true
     }
 
-    if(self.$jsobj && other.$jsobj){
-        if(dict.mp_length(self) !== dict.mp_length(other)){
-            return false
-        }
-        for(var k in self.$jsobj){
-            if(! other.$jsobj.hasOwnProperty(k)){
-                return false
-            }
-            if(! $B.is_or_equals(self.$jsobj[k], other.$jsobj[k])){
-                return false
-            }
-        }
-        return true
-    }
-
     if(self.$all_str){
         let d = dict.tp_funcs.copy(self)
         convert_all_str(d)
@@ -618,13 +551,6 @@ dict.$eq = function(self, other){
         let d = dict.tp_funcs.copy(other)
         convert_all_str(d)
         return dict.$eq(self, d)
-    }
-
-    if(self.$jsobj){
-        return dict.$eq(jsobj2dict(self.$jsobj), other)
-    }
-    if(other.$jsobj){
-        return dict.$eq(self, jsobj2dict(other.$jsobj))
     }
 
     if(dict.mp_length(self) != dict.mp_length(other)){
@@ -669,9 +595,6 @@ dict.$contains_string = function(self, key){
     if(self.$all_str){
         return self.$strings.hasOwnProperty(key)
     }
-    if(self.$jsobj && self.$jsobj.hasOwnProperty(key)){
-        return true
-    }
     if(self.table && self.table[_b_.hash(key)] !== undefined){
         return true
     }
@@ -686,9 +609,7 @@ dict.$delete_string = function(self, key){
             delete self.$strings[key]
         }
     }
-    if(self.$jsobj){
-        delete self.$jsobj[key]
-    }
+
     if(self.table){
         delete self.table[_b_.hash(key)]
     }
@@ -700,9 +621,6 @@ dict.$get_string = function(self, key, _default){
     // Used for dicts where all keys are strings
     if(self.$all_str && self.$strings.hasOwnProperty(key)){
         return self.$strings[key]
-    }
-    if(self.$jsobj && self.$jsobj.hasOwnProperty(key)){
-        return self.$jsobj[key]
     }
     if(self.table && dict.mp_length(self)){
         var indices = self.table[_b_.hash(key)]
@@ -718,9 +636,6 @@ dict.$getitem_string = function(self, key){
     if(self.$all_str && self.$strings.hasOwnProperty(key)){
         return self.$strings[key]
     }
-    if(self.$jsobj && self.$jsobj.hasOwnProperty(key)){
-        return self.$jsobj[key]
-    }
     if(self.table){
         var indices = self.table[_b_.hash(key)]
         if(indices !== undefined){
@@ -735,9 +650,6 @@ dict.$keys_string = function(self){
     var res = []
     if(self.$all_str){
         return Object.keys(self.$strings)
-    }
-    if(self.$jsobj){
-        res = res.concat(Object.keys(self.$jsobj))
     }
     if(self.table){
         res = res.concat(self._keys.filter((x) => x !== undefined))
@@ -782,16 +694,6 @@ dict.$getitem = function(self, key, ignore_missing){
                     return lookup.value
                 }
             }
-        }
-    }else if(self.$jsobj){
-        if(self.$exclude && self.$exclude(key)){
-            $B.RAISE(_b_.KeyError, key)
-        }
-        if(self.$jsobj.hasOwnProperty(key)){
-            return self.$jsobj[key]
-        }
-        if(! self.table){
-            $B.RAISE(_b_.KeyError, key)
         }
     }else{
         let lookup = dict.$lookup_by_key(self, key)
@@ -945,6 +847,13 @@ function make_reverse_iterator(name, iter_func){
 function convert_all_str(d){
     // convert dict with only str keys to regular dict
     d.$all_str = false
+
+    // add addtional fields
+    d.table = Object.create(null)
+    d._keys = []
+    d._values = []
+    d._hashes = []
+
     for(var key in d.$strings){
         dict.$setitem(d, key, d.$strings[key])
     }
@@ -980,23 +889,7 @@ dict.$setitem = function(self, key, value, $hash, from_setdefault){
             convert_all_str(self)
         }
     }
-    if(self.$jsobj){
-        if(self.$from_js){
-            // dictionary created by method to_dict of JSObj instances
-            value = $B.pyobj2jsobj(value)
-        }
-        if($B.exact_type(self.$jsobj, _b_.type)){
-            self.$jsobj[key] = value
-            if(key == "__init__" || key == "__new__"){
-                // If class attribute __init__ or __new__ are reset,
-                // the factory function has to change
-                self.$jsobj.$factory = $B.$instance_creator(self.$jsobj)
-            }
-        }else{
-            self.$jsobj[key] = value
-        }
-        return _b_.None
-    }
+
     if(key instanceof String){
         key = key.valueOf()
     }
@@ -1093,9 +986,6 @@ _b_.dict.nb_or = function(self, other){
 
 _b_.dict.tp_repr = function(self){
     $B.builtins_repr_check(dict, arguments) // in brython_builtins.js
-    if(self.$jsobj){ // wrapper around Javascript object
-        return dict.tp_repr(jsobj2dict(self.$jsobj, self.$exclude))
-    }
     if($B.repr.enter(self)){
         return "{...}"
     }
@@ -1242,15 +1132,6 @@ _b_.dict.mp_length = function(self){
     if(self.$all_str){
         return Object.keys(self.$strings).length
     }
-    if(self.$jsobj){
-        for(var attr in self.$jsobj){
-            if(attr.charAt(0) != "$" &&
-                    ((! self.$exclude) || ! self.$exclude(attr))){
-                _count++
-            }
-        }
-        return _count
-    }
 
     for(var d of self._keys){
         if(d !== undefined){
@@ -1310,20 +1191,14 @@ dict_funcs.clear = function(self){
         null, null),
         self = $.self
 
-    self.table = Object.create(null)
-
-    self._keys = []
-    self._values = []
+    if(! self.all_str){
+        delete self.table
+        delete self._hashes
+        delete self._keys
+        delete self._values
+    }
     self.$all_str = true
     self.$strings = {}
-
-    if(self.$jsobj){
-        for(var attr in self.$jsobj){
-            if(attr.charAt(0) !== "$" && attr !== "__class__"){
-                delete self.$jsobj[attr]
-            }
-        }
-    }
     self.$version++
     return _b_.None
 }
@@ -1470,13 +1345,6 @@ dict_funcs.setdefault = function(self){
         }
     }
 
-    if(self.$jsobj){
-        if(! self.$jsobj.hasOwnProperty(key)){
-            self.$jsobj[key] = _default
-        }
-        return self.$jsobj[key]
-    }
-
     var lookup = dict.$lookup_by_key(self, key)
     if(lookup.found){
         return lookup.value
@@ -1495,9 +1363,6 @@ dict_funcs.update = function(self){
     if(args.length > 0){
         var o = args[0]
         if($B.$isinstance(o, dict)){
-            if(o.$jsobj){
-                o = jsobj2dict(o.$jsobj)
-            }
             $copy_dict(self, o)
         }else if(_b_.hasattr(o, "keys")){
             var _keys = _b_.list.$factory($B.$call($B.$getattr(o, "keys")))
@@ -1727,41 +1592,6 @@ $B.dict_keys.tp_getset = ["mapping"]
 
 /* dict_keys end */
 
-/*
-var dict_values = $B.make_builtin_class("dict_values")
-
-dict_values.tp_iter = function(self){
-    return {
-        ob_type: dict_valueiterator,
-        it: dict.$iter_items(self)
-    }
-}
-
-dict_values.sq_length = function(self){
-    return dict.mp_length(self.dict)
-}
-
-dict_values.__reduce__ = function(self){
-    var items = $B.$list(Array.from(dict_values.tp_iter(self)))
-    return $B.fast_tuple([_b_.iter, $B.fast_tuple([items])])
-}
-
-dict_values.tp_repr = function(self){
-    var items = Array.from(dict_values.tp_iter(self))
-    return 'dict_values(' + _b_.repr(items) + ')'
-}
-
-const dict_reversevalueiterator = make_reverse_iterator(
-    'dict_reversevalueiterator',
-    dict.$iter_values_reversed)
-
-dict_values.__reversed__ = function(self){
-    return dict_reversevalueiterator.$factory(self.dict)
-}
-
-make_view_comparison_methods(dict_values)
-*/
-
 /* dict_values start */
 $B.dict_values.tp_repr = function(self){
     var values = Array.from(dict.$iter_items(self.dict_obj)).map(x => x.value)
@@ -1960,10 +1790,6 @@ $B.dict_reverseitemiterator.tp_methods = ["__length_hint__", "__reduce__"]
 $B.empty_dict = function(){
     return {
         ob_type: dict,
-        table: Object.create(null),
-        _keys: [],
-        _values: [],
-        _hashes: [],
         $strings: {},
         $version: 0,
         $all_str: true
@@ -1996,49 +1822,6 @@ mappingproxy.$factory = function(obj){
 
 mappingproxy.$match_mapping_pattern = true // for pattern matching (PEP 634)
 
-mappingproxy.__hash__ = function(self){
-    $B.RAISE(_b_.TypeError, `unhashable type: '${$B.class_name(self)}'`)
-}
-
-$B.mappingproxy_contains = mappingproxy.__contains__
-
-mappingproxy.__setitem__ = function(){
-    $B.RAISE(_b_.TypeError, "'mappingproxy' object does not support " +
-        "item assignment")
-}
-
-
-/*
-for(var attr in dict){
-    if(mappingproxy[attr] !== undefined ||
-            ["__class__", "__mro__", "__new__", "__init__", "__delitem__",
-             "clear", "fromkeys", "pop", "popitem", "setdefault",
-             "update",
-             "tp_getset", "tp_methods",
-             "__getitem__", "__contains__"].indexOf(attr) > -1){
-        continue
-    }
-    if(typeof dict[attr] == "function"){
-        mappingproxy[attr] = (function(key){
-            return function(){
-                console.log('call attr', attr)
-                return dict[key].apply(null, arguments)
-            }
-        })(attr)
-    }else{
-        mappingproxy[attr] = dict[attr]
-    }
-}
-
-
-for(var attr in $B.dunder_methods){
-    if(mappingproxy.hasOwnProperty($B.dunder_methods[attr])){
-        // will created in set_func_names
-        delete mappingproxy[$B.dunder_methods[attr]]
-    }
-}
-*/
-
 /* mappingproxy start */
 $B.mappingproxy.tp_richcompare = function(self){
 
@@ -2052,9 +1835,7 @@ $B.mappingproxy.tp_repr = function(self){
     return dict.tp_repr(self.mapping)
 }
 
-$B.mappingproxy.tp_hash = function(self){
-
-}
+$B.mappingproxy.tp_hash = _b_.None
 
 $B.mappingproxy.tp_str = function(self){
     return $B.mappingproxy.tp_repr(self)
@@ -2181,8 +1962,6 @@ function jsobj2dict(x, exclude){
                 dict.$setitem(d, attr, _b_.None)
             }else if(x[attr] === undefined){
                 continue
-            }else if(x[attr].$jsobj === x){
-                dict.$setitem(d, attr, d)
             }else{
                 dict.$setitem(d, attr, $B.jsobj2pyobj(x[attr]))
             }
