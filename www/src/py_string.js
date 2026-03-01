@@ -3,9 +3,15 @@
 
 var _b_ = $B.builtins
 
-
 // build tables from data in unicode_data.js
-var escape2cp = $B.escape2cp = {b: '\b', f: '\f', n: '\n', r: '\r', t: '\t', v: '\v'}
+var escape2cp = $B.escape2cp = {
+    b: '\b',
+    f: '\f',
+    n: '\n',
+    r: '\r',
+    t: '\t',
+    v: '\v'
+}
 
 $B.surrogates = function(s){
     var s1 = '',
@@ -199,19 +205,39 @@ str.$getnewargs = function(self){
     return $B.fast_tuple([to_string(self)])
 }
 
-var str_iterator = $B.make_builtin_class("str_iterator")
-
-str_iterator.tp_iter = function(self){
+/* str_iterator start */
+$B.str_iterator.tp_iter = function(self){
     return self
 }
 
-str_iterator.tp_iternext = function*(self){
+$B.str_iterator.tp_iternext = function*(self){
     for(var char of self.it){
         yield char
     }
 }
 
-$B.set_func_names(str_iterator, 'builtins')
+var str_iterator_funcs = $B.str_iterator.tp_funcs = {}
+
+str_iterator_funcs.__length_hint__ = function(self){
+    return self.len
+}
+
+str_iterator_funcs.__reduce__ = function(self){
+    return $B.fast_tuple([_b_.iter, $B.fast_tuple([self.obj]), 0])
+}
+
+str_iterator_funcs.__setstate__ = function(self, value){
+    self.it = self.obj[Symbol.iterator]()
+    for(var i = 0; i < value; i++){
+        self.it.next()
+    }
+}
+
+$B.str_iterator.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]
+
+/* str_iterator end */
+
+$B.set_func_names($B.str_iterator, 'builtins')
 
 // Start of section for legacy formatting (with %)
 
@@ -960,24 +986,6 @@ $B.printf_format = function(s, type, args){
     return ret
 }
 
-/*
-str.__setattr__ = function(_self, attr, value){
-    if(typeof _self === "string"){
-        if(str.hasOwnProperty(attr)){
-            $B.RAISE_ATTRIBUTE_ERROR("'str' object attribute '" +
-                attr + "' is read-only", _self, attr)
-        }else{
-            $B.RAISE_ATTRIBUTE_ERROR(
-                `'str' object has no attribute '${attr}' and no __dict__ ` +
-                'for setting new attributes', _self, attr)
-        }
-    }
-    // str subclass : use __dict__
-    _b_.dict.$setitem(_self.dict, attr, value)
-    return _b_.None
-}
-*/
-
 var combining = []
 for(var cp = 0x300; cp <= 0x36F; cp++){
     combining.push(String.fromCharCode(cp))
@@ -1222,6 +1230,433 @@ str.$factory = function(arg, encoding, errors){
         `(type ${$B.class_name(res)})`)
 }
 
+// Function to parse the 2nd argument of format()
+$B.parse_format_spec = function(spec, obj){
+    if(spec == ""){
+        this.empty = true
+    }else{
+        var pos = 0,
+            aligns = "<>=^",
+            digits = "0123456789",
+            types = "bcdeEfFgGnosxX%",
+            align_pos = aligns.indexOf(spec.charAt(0))
+        if(align_pos != -1){
+            if(spec.charAt(1) && aligns.indexOf(spec.charAt(1)) != -1){
+                // If the second char is also an alignment specifier, the
+                // first char is the fill value
+                this.fill = spec.charAt(0)
+                this.align = spec.charAt(1)
+                pos = 2
+            }else{
+                // The first character defines alignment : fill defaults to ' '
+                this.align = aligns[align_pos]
+                this.fill = " "
+                pos++
+            }
+        }else{
+            align_pos = aligns.indexOf(spec.charAt(1))
+            if(spec.charAt(1) && align_pos != -1){
+                // The second character defines alignment : fill is the first one
+                this.align = aligns[align_pos]
+                this.fill = spec.charAt(0)
+                pos = 2
+            }
+        }
+        var car = spec.charAt(pos)
+        if(car == "+" || car == "-" || car == " "){
+            this.sign = car
+            pos++
+            car = spec.charAt(pos)
+        }
+        if(car == "z"){
+            this.z = true
+            pos++
+            car = spec.charAt(pos)
+        }
+        if(car == "#"){
+            this.alternate = true;
+            pos++;
+            car = spec.charAt(pos)
+        }
+        if(car == "0"){
+            // sign-aware : equivalent to fill = 0 and align == "="
+            this.fill = "0"
+            if(align_pos == -1){
+                this.align = "="
+            }
+            pos++
+            car = spec.charAt(pos)
+        }
+        while(car && digits.indexOf(car) > -1){
+            if(this.width === undefined){
+                this.width = car
+            }else{
+                this.width += car
+            }
+            pos++
+            car = spec.charAt(pos)
+        }
+        if(this.width !== undefined){
+            this.width = parseInt(this.width)
+        }
+        if(this.width === undefined && car == "{"){
+            // Width is determined by a parameter
+            var end_param_pos = spec.substr(pos).search("}")
+            this.width = spec.substring(pos, end_param_pos)
+            pos += end_param_pos + 1
+        }
+        if(car == "," || car == "_"){
+            this.comma = true
+            this.grouping_option = car
+            pos++
+            car = spec.charAt(pos)
+            if(car == "," || car == "_"){
+                if(car == this.grouping_option){
+                    $B.RAISE(_b_.ValueError,
+                        `Cannot specify '${car}' with '${car}'.`)
+                }else{
+                    $B.RAISE(_b_.ValueError,
+                        "Cannot specify both ',' and '_'.")
+                }
+            }
+        }
+        if(car == "."){
+            if(digits.indexOf(spec.charAt(pos + 1)) == -1){
+                $B.RAISE(_b_.ValueError,
+                    "Missing precision in format spec")
+            }
+            this.precision = spec.charAt(pos + 1)
+            pos += 2
+            car = spec.charAt(pos)
+            while(car && digits.indexOf(car) > -1){
+                this.precision += car
+                pos++
+                car = spec.charAt(pos)
+            }
+            this.precision = parseInt(this.precision)
+        }
+        if(car && types.indexOf(car) > -1){
+            this.type = car
+            pos++
+            car = spec.charAt(pos)
+        }
+        if(pos !== spec.length){
+            var err_msg = `Invalid format specifier '${spec}'`
+            if(obj){
+                err_msg += ` for object of type '${$B.class_name(obj)}'`
+            }
+            $B.RAISE(_b_.ValueError, err_msg)
+        }
+    }
+
+    this.toString = function(){
+        return (this.fill === undefined ? "" : _b_.str.$factory(this.fill)) +
+            (this.align || "") +
+            (this.sign || "") +
+            (this.alternate ? "#" : "") +
+            (this.sign_aware ? "0" : "") +
+            (this.width || "") +
+            (this.comma ? "," : "") +
+            (this.precision ? "." + this.precision : "") +
+            (this.type || "")
+    }
+}
+
+$B.format_width = function(s, fmt){
+    if(fmt.width && s.length < fmt.width){
+        var fill = fmt.fill || " ",
+            align = fmt.align || "<",
+            missing = fmt.width - s.length
+        switch(align){
+            case "<":
+                return s + fill.repeat(missing)
+            case ">":
+                return fill.repeat(missing) + s
+            case "=":
+                if("+-".indexOf(s.charAt(0)) > -1){
+                    return s.charAt(0) + fill.repeat(missing) + s.substr(1)
+                }else{
+                    return fill.repeat(missing) + s
+                }
+            case "^":
+                var left = parseInt(missing / 2)
+                return fill.repeat(left) + s + fill.repeat(missing - left)
+        }
+    }
+    return s
+}
+
+function fstring_expression(start){
+    this.type = "expression"
+    this.start = start
+    this.expression = ""
+    this.conversion = null
+    this.fmt = null
+}
+
+function fstring_error(msg, pos){
+    var error = Error(msg)
+    error.position = pos
+    throw error
+}
+
+$B.parse_fstring = function(string){
+    // Parse a f-string
+    var elts = [],
+        pos = 0,
+        current = "",
+        ctype = null,
+        nb_braces = 0,
+        expr_start,
+        car
+
+    while(pos < string.length){
+        if(ctype === null){
+            car = string.charAt(pos)
+            if(car == "{"){
+                if(string.charAt(pos + 1) == "{"){
+                    ctype = "string"
+                    current = "{"
+                    pos += 2
+                }else{
+                    ctype = "expression"
+                    expr_start = pos + 1
+                    nb_braces = 1
+                    pos++
+                }
+            }else if(car == "}"){
+                if(string.charAt(pos + 1) == car){
+                    ctype = "string"
+                    current = "}"
+                    pos += 2
+                }else{
+                    fstring_error(" f-string: single '}' is not allowed",
+                        pos)
+                }
+            }else{
+                ctype = "string"
+                current = car
+                pos++
+            }
+        }else if(ctype == "string"){
+            // end of string is the first single { or end of string
+            var i = pos
+            while(i < string.length){
+                car = string.charAt(i)
+                if(car == "{"){
+                    if(string.charAt(i + 1) == "{"){
+                        current += "{"
+                        i += 2
+                    }else{
+                        elts.push(current)
+                        ctype = "expression"
+                        expr_start = i + 1
+                        pos = i + 1
+                        break
+                    }
+                }else if(car == "}"){
+                    if(string.charAt(i + 1) == car){
+                        current += car
+                        i += 2
+                    }else{
+                        fstring_error(" f-string: single '}' is not allowed",
+                            pos)
+                    }
+                }else{
+                    current += car
+                    i++
+                }
+            }
+            pos = i + 1
+        }else if(ctype == "debug"){
+            // after the equal sign, whitespace are ignored and the only
+            // valid characters are } and :
+            while(string.charAt(i) == " "){i++}
+            if(string.charAt(i) == "}"){
+                // end of debug expression
+                elts.push(current)
+                ctype = null
+                current = ""
+                pos = i + 1
+            }
+        }else{
+            // End of expression is the } matching the opening {
+            // There may be nested braces
+            let i = pos,
+                nb_paren = 0
+            nb_braces = 1
+            current = new fstring_expression(expr_start)
+            while(i < string.length){
+                car = string.charAt(i)
+                if(car == "{" && nb_paren == 0){
+                    nb_braces++
+                    current.expression += car
+                    i++
+                }else if(car == "}" && nb_paren == 0){
+                    nb_braces -= 1
+                    if(nb_braces == 0){
+                        // end of expression
+                        if(current.expression == ""){
+                            fstring_error("f-string: empty expression not allowed",
+                                pos)
+                        }
+                        elts.push(current)
+                        ctype = null
+                        current = ""
+                        pos = i + 1
+                        break
+                    }
+                    current.expression += car
+                    i++
+                }else if(car == "\\"){
+                    // backslash is not allowed in expressions
+                    throw Error("f-string expression part cannot include a" +
+                        " backslash")
+                }else if(nb_paren == 0 && car == "!" && current.fmt === null &&
+                        ":}".indexOf(string.charAt(i + 2)) > -1){
+                    if(current.expression.length == 0){
+                        throw Error("f-string: empty expression not allowed")
+                    }
+                    if("ars".indexOf(string.charAt(i + 1)) == -1){
+                        throw Error("f-string: invalid conversion character:" +
+                            " expected 's', 'r', or 'a'")
+                    }else{
+                        current.conversion = string.charAt(i + 1)
+                        i += 2
+                    }
+                }else if(car == "(" || car == '['){
+                    nb_paren++
+                    current.expression += car
+                    i++
+                }else if(car == ")" || car == ']'){
+                    nb_paren--
+                    current.expression += car
+                    i++
+                }else if(car == '"'){
+                    // triple string ?
+                    if(string.substr(i, 3) == '"""'){
+                        let end = string.indexOf('"""', i + 3)
+                        if(end == -1){
+                            fstring_error("f-string: unterminated string", pos)
+                        }else{
+                            var trs = string.substring(i, end + 3)
+                            trs = trs.replace("\n", "\\n\\")
+                            current.expression += trs
+                            i = end + 3
+                        }
+                    }else{
+                        let end = string.indexOf('"', i + 1)
+                        if(end == -1){
+                            fstring_error("f-string: unterminated string", pos)
+                        }else{
+                            current.expression += string.substring(i, end + 1)
+                            i = end + 1
+                        }
+                    }
+                }else if(nb_paren == 0 && car == ":"){
+                    // start format
+                    current.fmt = true
+                    var cb = 0,
+                        fmt_complete = false
+                    for(var j = i + 1; j < string.length; j++){
+                        if(string[j] == '{'){
+                            if(string[j + 1] == '{'){
+                                j += 2
+                            }else{
+                                cb++
+                            }
+                        }else if(string[j] == '}'){
+                            if(string[j + 1] == '}'){
+                                j += 2
+                            }else if(cb == 0){
+                                fmt_complete = true
+                                var fmt = string.substring(i + 1, j)
+                                current.format = $B.parse_fstring(fmt)
+                                i = j
+                                break
+                            }else{
+                                cb--
+                            }
+                        }
+                    }
+                    if(! fmt_complete){
+                        fstring_error('invalid format', pos)
+                    }
+                }else if(car == "="){
+                    // might be a "debug expression", eg f"{x=}"
+                    var ce = current.expression,
+                        last_char = ce.charAt(ce.length - 1),
+                        last_char_re = ('()'.indexOf(last_char) > -1 ? "\\" : "") + last_char
+
+                    if(ce.length == 0 ||
+                            nb_paren > 0 ||
+                            string.charAt(i + 1) == "=" ||
+                            "=!<>:".search(last_char_re) > -1){
+                        // not a debug expression
+                        current.expression += car
+                        i += 1
+                    }else{
+                        // add debug string
+                        var tail = car
+                        while(string.charAt(i + 1).match(/\s/)){
+                            tail += string.charAt(i + 1)
+                            i++
+                        }
+                        // push simple string
+                        elts.push(current.expression + tail)
+                        // remove trailing whitespace from expression
+                        while(ce.match(/\s$/)){
+                            ce = ce.substr(0, ce.length - 1)
+                        }
+                        current.expression = ce
+                        ctype = "debug"
+                        i++
+                    }
+                }else{
+                    current.expression += car
+                    i++
+                }
+            }
+            if(nb_braces > 0){
+                fstring_error("f-string: expected '}'", pos)
+            }
+        }
+    }
+    if(current.length > 0){
+        elts.push(current)
+    }
+    for(var elt of elts){
+        if(typeof elt == "object"){
+            if(elt.fmt_pos !== undefined &&
+                    elt.expression.charAt(elt.fmt_pos) != ':'){
+                throw Error()
+            }
+        }
+    }
+    return elts
+}
+
+$B.codepoint2jsstring = function(i){
+    if(i >= 0x10000 && i <= 0x10FFFF){
+        var code = (i - 0x10000)
+        return String.fromCodePoint(0xD800 | (code >> 10)) +
+            String.fromCodePoint(0xDC00 | (code & 0x3FF))
+    }else{
+        return String.fromCodePoint(i)
+    }
+}
+
+$B.jsstring2codepoint = function(c){
+    if(c.length == 1){
+        return c.charCodeAt(0)
+    }
+    var code = 0x10000
+    code += (c.charCodeAt(0) & 0x03FF) << 10
+    code += (c.charCodeAt(1) & 0x03FF)
+    return code
+}
+
+
 /* str start */
 _b_.str.tp_richcompare = function(self, other, op){
     if(! $B.$isinstance(other, str)){
@@ -1347,7 +1782,9 @@ _b_.str.tp_str = function(self){
 
 _b_.str.tp_iter = function(self){
     return {
-        ob_type: str_iterator,
+        ob_type: $B.str_iterator,
+        obj: self,
+        len: _b_.str.mp_length(self),
         it: self[Symbol.iterator]()
     }
 }
@@ -1482,7 +1919,7 @@ str_funcs.__getnewargs__ = function(self){
 }
 
 str_funcs.__sizeof__ = function(self){
-
+    return 62
 }
 
 str_funcs.capitalize = function(self){
@@ -2684,7 +3121,16 @@ str_funcs.zfill = function(self, width){
     }
 }
 
-_b_.str.tp_methods = ["encode", "replace", "split", "rsplit", "join", "capitalize", "casefold", "title", "center", "count", "expandtabs", "find", "partition", "index", "ljust", "lower", "lstrip", "rfind", "rindex", "rjust", "rstrip", "rpartition", "splitlines", "strip", "swapcase", "translate", "upper", "startswith", "endswith", "removeprefix", "removesuffix", "isascii", "islower", "isupper", "istitle", "isspace", "isdecimal", "isdigit", "isnumeric", "isalpha", "isalnum", "isidentifier", "isprintable", "zfill", "format", "format_map", "__format__", "__sizeof__", "__getnewargs__"]
+_b_.str.tp_methods = [
+    "encode", "replace", "split", "rsplit", "join", "capitalize", "casefold",
+    "title", "center", "count", "expandtabs", "find", "partition", "index",
+    "ljust", "lower", "lstrip", "rfind", "rindex", "rjust", "rstrip",
+    "rpartition", "splitlines", "strip", "swapcase", "translate", "upper",
+    "startswith", "endswith", "removeprefix", "removesuffix", "isascii",
+    "islower", "isupper", "istitle", "isspace", "isdecimal", "isdigit",
+    "isnumeric", "isalpha", "isalnum", "isidentifier", "isprintable", "zfill",
+    "format", "format_map", "__format__", "__sizeof__", "__getnewargs__"
+]
 
 _b_.str.staticmethods = ["maketrans"]
 
@@ -2695,431 +3141,6 @@ $B.set_func_names(str, "builtins")
 // exports
 $B.str_len = _b_.str.mp_length
 
-// Function to parse the 2nd argument of format()
-$B.parse_format_spec = function(spec, obj){
-    if(spec == ""){
-        this.empty = true
-    }else{
-        var pos = 0,
-            aligns = "<>=^",
-            digits = "0123456789",
-            types = "bcdeEfFgGnosxX%",
-            align_pos = aligns.indexOf(spec.charAt(0))
-        if(align_pos != -1){
-            if(spec.charAt(1) && aligns.indexOf(spec.charAt(1)) != -1){
-                // If the second char is also an alignment specifier, the
-                // first char is the fill value
-                this.fill = spec.charAt(0)
-                this.align = spec.charAt(1)
-                pos = 2
-            }else{
-                // The first character defines alignment : fill defaults to ' '
-                this.align = aligns[align_pos]
-                this.fill = " "
-                pos++
-            }
-        }else{
-            align_pos = aligns.indexOf(spec.charAt(1))
-            if(spec.charAt(1) && align_pos != -1){
-                // The second character defines alignment : fill is the first one
-                this.align = aligns[align_pos]
-                this.fill = spec.charAt(0)
-                pos = 2
-            }
-        }
-        var car = spec.charAt(pos)
-        if(car == "+" || car == "-" || car == " "){
-            this.sign = car
-            pos++
-            car = spec.charAt(pos)
-        }
-        if(car == "z"){
-            this.z = true
-            pos++
-            car = spec.charAt(pos)
-        }
-        if(car == "#"){
-            this.alternate = true;
-            pos++;
-            car = spec.charAt(pos)
-        }
-        if(car == "0"){
-            // sign-aware : equivalent to fill = 0 and align == "="
-            this.fill = "0"
-            if(align_pos == -1){
-                this.align = "="
-            }
-            pos++
-            car = spec.charAt(pos)
-        }
-        while(car && digits.indexOf(car) > -1){
-            if(this.width === undefined){
-                this.width = car
-            }else{
-                this.width += car
-            }
-            pos++
-            car = spec.charAt(pos)
-        }
-        if(this.width !== undefined){
-            this.width = parseInt(this.width)
-        }
-        if(this.width === undefined && car == "{"){
-            // Width is determined by a parameter
-            var end_param_pos = spec.substr(pos).search("}")
-            this.width = spec.substring(pos, end_param_pos)
-            pos += end_param_pos + 1
-        }
-        if(car == "," || car == "_"){
-            this.comma = true
-            this.grouping_option = car
-            pos++
-            car = spec.charAt(pos)
-            if(car == "," || car == "_"){
-                if(car == this.grouping_option){
-                    $B.RAISE(_b_.ValueError,
-                        `Cannot specify '${car}' with '${car}'.`)
-                }else{
-                    $B.RAISE(_b_.ValueError,
-                        "Cannot specify both ',' and '_'.")
-                }
-            }
-        }
-        if(car == "."){
-            if(digits.indexOf(spec.charAt(pos + 1)) == -1){
-                $B.RAISE(_b_.ValueError,
-                    "Missing precision in format spec")
-            }
-            this.precision = spec.charAt(pos + 1)
-            pos += 2
-            car = spec.charAt(pos)
-            while(car && digits.indexOf(car) > -1){
-                this.precision += car
-                pos++
-                car = spec.charAt(pos)
-            }
-            this.precision = parseInt(this.precision)
-        }
-        if(car && types.indexOf(car) > -1){
-            this.type = car
-            pos++
-            car = spec.charAt(pos)
-        }
-        if(pos !== spec.length){
-            var err_msg = `Invalid format specifier '${spec}'`
-            if(obj){
-                err_msg += ` for object of type '${$B.class_name(obj)}'`
-            }
-            $B.RAISE(_b_.ValueError, err_msg)
-        }
-    }
-
-    this.toString = function(){
-        return (this.fill === undefined ? "" : _b_.str.$factory(this.fill)) +
-            (this.align || "") +
-            (this.sign || "") +
-            (this.alternate ? "#" : "") +
-            (this.sign_aware ? "0" : "") +
-            (this.width || "") +
-            (this.comma ? "," : "") +
-            (this.precision ? "." + this.precision : "") +
-            (this.type || "")
-    }
-}
-
-$B.format_width = function(s, fmt){
-    if(fmt.width && s.length < fmt.width){
-        var fill = fmt.fill || " ",
-            align = fmt.align || "<",
-            missing = fmt.width - s.length
-        switch(align){
-            case "<":
-                return s + fill.repeat(missing)
-            case ">":
-                return fill.repeat(missing) + s
-            case "=":
-                if("+-".indexOf(s.charAt(0)) > -1){
-                    return s.charAt(0) + fill.repeat(missing) + s.substr(1)
-                }else{
-                    return fill.repeat(missing) + s
-                }
-            case "^":
-                var left = parseInt(missing / 2)
-                return fill.repeat(left) + s + fill.repeat(missing - left)
-        }
-    }
-    return s
-}
-
-function fstring_expression(start){
-    this.type = "expression"
-    this.start = start
-    this.expression = ""
-    this.conversion = null
-    this.fmt = null
-}
-
-function fstring_error(msg, pos){
-    var error = Error(msg)
-    error.position = pos
-    throw error
-}
-
-$B.parse_fstring = function(string){
-    // Parse a f-string
-    var elts = [],
-        pos = 0,
-        current = "",
-        ctype = null,
-        nb_braces = 0,
-        expr_start,
-        car
-
-    while(pos < string.length){
-        if(ctype === null){
-            car = string.charAt(pos)
-            if(car == "{"){
-                if(string.charAt(pos + 1) == "{"){
-                    ctype = "string"
-                    current = "{"
-                    pos += 2
-                }else{
-                    ctype = "expression"
-                    expr_start = pos + 1
-                    nb_braces = 1
-                    pos++
-                }
-            }else if(car == "}"){
-                if(string.charAt(pos + 1) == car){
-                    ctype = "string"
-                    current = "}"
-                    pos += 2
-                }else{
-                    fstring_error(" f-string: single '}' is not allowed",
-                        pos)
-                }
-            }else{
-                ctype = "string"
-                current = car
-                pos++
-            }
-        }else if(ctype == "string"){
-            // end of string is the first single { or end of string
-            var i = pos
-            while(i < string.length){
-                car = string.charAt(i)
-                if(car == "{"){
-                    if(string.charAt(i + 1) == "{"){
-                        current += "{"
-                        i += 2
-                    }else{
-                        elts.push(current)
-                        ctype = "expression"
-                        expr_start = i + 1
-                        pos = i + 1
-                        break
-                    }
-                }else if(car == "}"){
-                    if(string.charAt(i + 1) == car){
-                        current += car
-                        i += 2
-                    }else{
-                        fstring_error(" f-string: single '}' is not allowed",
-                            pos)
-                    }
-                }else{
-                    current += car
-                    i++
-                }
-            }
-            pos = i + 1
-        }else if(ctype == "debug"){
-            // after the equal sign, whitespace are ignored and the only
-            // valid characters are } and :
-            while(string.charAt(i) == " "){i++}
-            if(string.charAt(i) == "}"){
-                // end of debug expression
-                elts.push(current)
-                ctype = null
-                current = ""
-                pos = i + 1
-            }
-        }else{
-            // End of expression is the } matching the opening {
-            // There may be nested braces
-            let i = pos,
-                nb_paren = 0
-            nb_braces = 1
-            current = new fstring_expression(expr_start)
-            while(i < string.length){
-                car = string.charAt(i)
-                if(car == "{" && nb_paren == 0){
-                    nb_braces++
-                    current.expression += car
-                    i++
-                }else if(car == "}" && nb_paren == 0){
-                    nb_braces -= 1
-                    if(nb_braces == 0){
-                        // end of expression
-                        if(current.expression == ""){
-                            fstring_error("f-string: empty expression not allowed",
-                                pos)
-                        }
-                        elts.push(current)
-                        ctype = null
-                        current = ""
-                        pos = i + 1
-                        break
-                    }
-                    current.expression += car
-                    i++
-                }else if(car == "\\"){
-                    // backslash is not allowed in expressions
-                    throw Error("f-string expression part cannot include a" +
-                        " backslash")
-                }else if(nb_paren == 0 && car == "!" && current.fmt === null &&
-                        ":}".indexOf(string.charAt(i + 2)) > -1){
-                    if(current.expression.length == 0){
-                        throw Error("f-string: empty expression not allowed")
-                    }
-                    if("ars".indexOf(string.charAt(i + 1)) == -1){
-                        throw Error("f-string: invalid conversion character:" +
-                            " expected 's', 'r', or 'a'")
-                    }else{
-                        current.conversion = string.charAt(i + 1)
-                        i += 2
-                    }
-                }else if(car == "(" || car == '['){
-                    nb_paren++
-                    current.expression += car
-                    i++
-                }else if(car == ")" || car == ']'){
-                    nb_paren--
-                    current.expression += car
-                    i++
-                }else if(car == '"'){
-                    // triple string ?
-                    if(string.substr(i, 3) == '"""'){
-                        let end = string.indexOf('"""', i + 3)
-                        if(end == -1){
-                            fstring_error("f-string: unterminated string", pos)
-                        }else{
-                            var trs = string.substring(i, end + 3)
-                            trs = trs.replace("\n", "\\n\\")
-                            current.expression += trs
-                            i = end + 3
-                        }
-                    }else{
-                        let end = string.indexOf('"', i + 1)
-                        if(end == -1){
-                            fstring_error("f-string: unterminated string", pos)
-                        }else{
-                            current.expression += string.substring(i, end + 1)
-                            i = end + 1
-                        }
-                    }
-                }else if(nb_paren == 0 && car == ":"){
-                    // start format
-                    current.fmt = true
-                    var cb = 0,
-                        fmt_complete = false
-                    for(var j = i + 1; j < string.length; j++){
-                        if(string[j] == '{'){
-                            if(string[j + 1] == '{'){
-                                j += 2
-                            }else{
-                                cb++
-                            }
-                        }else if(string[j] == '}'){
-                            if(string[j + 1] == '}'){
-                                j += 2
-                            }else if(cb == 0){
-                                fmt_complete = true
-                                var fmt = string.substring(i + 1, j)
-                                current.format = $B.parse_fstring(fmt)
-                                i = j
-                                break
-                            }else{
-                                cb--
-                            }
-                        }
-                    }
-                    if(! fmt_complete){
-                        fstring_error('invalid format', pos)
-                    }
-                }else if(car == "="){
-                    // might be a "debug expression", eg f"{x=}"
-                    var ce = current.expression,
-                        last_char = ce.charAt(ce.length - 1),
-                        last_char_re = ('()'.indexOf(last_char) > -1 ? "\\" : "") + last_char
-
-                    if(ce.length == 0 ||
-                            nb_paren > 0 ||
-                            string.charAt(i + 1) == "=" ||
-                            "=!<>:".search(last_char_re) > -1){
-                        // not a debug expression
-                        current.expression += car
-                        i += 1
-                    }else{
-                        // add debug string
-                        var tail = car
-                        while(string.charAt(i + 1).match(/\s/)){
-                            tail += string.charAt(i + 1)
-                            i++
-                        }
-                        // push simple string
-                        elts.push(current.expression + tail)
-                        // remove trailing whitespace from expression
-                        while(ce.match(/\s$/)){
-                            ce = ce.substr(0, ce.length - 1)
-                        }
-                        current.expression = ce
-                        ctype = "debug"
-                        i++
-                    }
-                }else{
-                    current.expression += car
-                    i++
-                }
-            }
-            if(nb_braces > 0){
-                fstring_error("f-string: expected '}'", pos)
-            }
-        }
-    }
-    if(current.length > 0){
-        elts.push(current)
-    }
-    for(var elt of elts){
-        if(typeof elt == "object"){
-            if(elt.fmt_pos !== undefined &&
-                    elt.expression.charAt(elt.fmt_pos) != ':'){
-                throw Error()
-            }
-        }
-    }
-    return elts
-}
-
-$B.codepoint2jsstring = function(i){
-    if(i >= 0x10000 && i <= 0x10FFFF){
-        var code = (i - 0x10000)
-        return String.fromCodePoint(0xD800 | (code >> 10)) +
-            String.fromCodePoint(0xDC00 | (code & 0x3FF))
-    }else{
-        return String.fromCodePoint(i)
-    }
-}
-
-$B.jsstring2codepoint = function(c){
-    if(c.length == 1){
-        return c.charCodeAt(0)
-    }
-    var code = 0x10000
-    code += (c.charCodeAt(0) & 0x03FF) << 10
-    code += (c.charCodeAt(1) & 0x03FF)
-    return code
-}
 
 var Interpolation = $B.make_builtin_class('Interpolation')
 
@@ -3144,7 +3165,9 @@ Interpolation.tp_repr = function(self){
 
 $B.set_func_names(Interpolation, 'builtins')
 
-var Template = $B.Template = $B.make_builtin_class('Template')
+var Template = $B.Template = $B.make_builtin_class('string.templatelib.Template')
+
+Template.tp_flags = 0b101001000011100 // not a BASETYPE
 
 Template.$factory = function(){
     // create a Template string (PEP 750)
@@ -3193,13 +3216,45 @@ Template.tp_iternext = function(self){
             if(s.length > 0){
                 return s
             }
-            return Template.__next__(self)
+            return Template.tp_iternext(self)
         case 'i':
             return self.interpolations[rank]
     }
 }
 
+
+Template.tp_new = function(cls, args, kw){
+    if(! $B.str_dict_empty(kw)){
+        $B.RAISE(_b_.TypeError,
+            "Template.__new__ only accepts *args arguments")
+    }
+    var res = Template.$factory(...args)
+    res.ob_type = cls
+    return res
+}
+
+Template.tp_repr = function(self){
+    var strings = 'strings=(' + _b_.repr(self.strings) +
+        ')'
+    var interpolations = 'interpolations=' +
+        _b_.repr($B.fast_tuple(self.interpolations))
+    return `<Template(${strings}, ${interpolations})>`
+}
+
 var Template_funcs = $B.Template.tp_funcs = {}
+
+Template_funcs.__class_getitem__ = function(){
+    return $B.$class_getitem.apply(null, arguments)
+}
+
+Template_funcs.__reduce__ = function(self){
+    $B.$import('string.templatelib')
+    var module = $B.imported['string.templatelib']
+    var _template_unpickle = $B.module_getattr(module, '_template_unpickle')
+    return $B.fast_tuple([_template_unpickle, 
+        $B.fast_tuple([$B.fast_tuple(self.strings),
+        $B.fast_tuple(self.interpolations)])])
+}
 
 Template_funcs.values_get = function(self){
     var values = []
@@ -3209,10 +3264,17 @@ Template_funcs.values_get = function(self){
     return $B.fast_tuple(values)
 }
 
-$B.set_func_names(Template, 'builtins')
+$B.Template.tp_methods = ["__class_getitem__", "__reduce__"]
 
+$B.Template.tp_members = [
+    ["strings", $B.TYPES.OBJECT, "strings", 1],
+    ["interpolations", $B.TYPES.OBJECT, "interpolations", 1]
+]
 
 Template.tp_getset = ["values"]
+
+$B.set_func_names(Template, 'builtins')
+
 
 })(__BRYTHON__);
 

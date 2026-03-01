@@ -656,7 +656,7 @@ var pylist=['VFS_import','__future__','_aio','_ast_unparse','_codecs','_codecs_j
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
 var js=['_ajax','_ast','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_random','_sre','_sre_utils','_string','_svg','_symtable','_tokenize','_webcomponent','_webworker','_zlib_utils','aes','array','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','marshal','math','md5','modulefinder','pbkdf2','posix','pyexpat','python_re','rabbit','rabbit-legacy','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata','xml_helpers','xml_parser']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
-var pkglist=['_pyrepl','browser','browser.widgets','collections','compression','compression._common','compression.zstd','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','importlib.metadata','importlib.resources','json','logging','multiprocessing','multiprocessing.dummy','pyexpat_utils','site-packages.foobar','site-packages.simpleaio','site-packages.ui','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.support._hypothesis_stubs','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
+var pkglist=['_pyrepl','browser','browser.widgets','collections','compression','compression._common','compression.zstd','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','importlib.metadata','importlib.resources','json','logging','multiprocessing','multiprocessing.dummy','pyexpat_utils','site-packages.foobar','site-packages.simpleaio','site-packages.ui','string','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.support._hypothesis_stubs','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}
 $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__);
 ;
@@ -669,8 +669,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-03-01 17:00:37.553433"
-__BRYTHON__.timestamp=1772380837553
+__BRYTHON__.compiled_date="2026-03-01 22:00:28.223464"
+__BRYTHON__.timestamp=1772398828223
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -2398,8 +2398,8 @@ $B.$class_constructor=function(class_name,dict,metaclass,resolved_bases,bases,ex
 if(test){console.log('class constructor',class_name,'dict',dict)
 console.log('metaclass',metaclass)}
 if(metaclass.tp_mro===undefined){console.log('no mro in metaclass',metaclass)}
-for(var base of bases){if(base.__flags__ !==undefined &&
-!(base.__flags__ & TPFLAGS.BASETYPE)){$B.RAISE(_b_.TypeError,`type '${base.__qualname__}' is not an acceptable base type`)}}
+for(var base of bases){if(base.tp_flags !==undefined &&
+!(base.tp_flags & TPFLAGS.BASETYPE)){$B.RAISE(_b_.TypeError,`type '${$B.$getattr(base, '__qualname__')}' is not an acceptable base type`)}}
 delete extra_kwargs.metaclass
 var classdef_frame=$B.frame_obj.prev.frame
 var module=classdef_frame[2]
@@ -7950,10 +7950,15 @@ for(let i=start;i > stop;i+=step){res+=_self[i]}}
 return $B.String(res)}
 var prefix=2,suffix=3
 str.$getnewargs=function(self){return $B.fast_tuple([to_string(self)])}
-var str_iterator=$B.make_builtin_class("str_iterator")
-str_iterator.tp_iter=function(self){return self}
-str_iterator.tp_iternext=function*(self){for(var char of self.it){yield char}}
-$B.set_func_names(str_iterator,'builtins')
+$B.str_iterator.tp_iter=function(self){return self}
+$B.str_iterator.tp_iternext=function*(self){for(var char of self.it){yield char}}
+var str_iterator_funcs=$B.str_iterator.tp_funcs={}
+str_iterator_funcs.__length_hint__=function(self){return self.len}
+str_iterator_funcs.__reduce__=function(self){return $B.fast_tuple([_b_.iter,$B.fast_tuple([self.obj]),0])}
+str_iterator_funcs.__setstate__=function(self,value){self.it=self.obj[Symbol.iterator]()
+for(var i=0;i < value;i++){self.it.next()}}
+$B.str_iterator.tp_methods=["__length_hint__","__reduce__","__setstate__"]
+$B.set_func_names($B.str_iterator,'builtins')
 var number_check=function(s,flags){if(! $B.$isinstance(s,[_b_.int,_b_.float])){var type=flags.conversion_type
 $B.RAISE(_b_.TypeError,`%${type} format: a real number `+
 `is required, not ${$B.class_name(s)}`)}}
@@ -8285,6 +8290,188 @@ res=$B.bytes_decode(arg,encoding,errors)}
 if(typeof res=="string" ||$B.$isinstance(res,str)){return res}
 $B.RAISE(_b_.TypeError,"__str__ returned non-string "+
 `(type ${$B.class_name(res)})`)}
+$B.parse_format_spec=function(spec,obj){if(spec==""){this.empty=true}else{var pos=0,aligns="<>=^",digits="0123456789",types="bcdeEfFgGnosxX%",align_pos=aligns.indexOf(spec.charAt(0))
+if(align_pos !=-1){if(spec.charAt(1)&& aligns.indexOf(spec.charAt(1))!=-1){
+this.fill=spec.charAt(0)
+this.align=spec.charAt(1)
+pos=2}else{
+this.align=aligns[align_pos]
+this.fill=" "
+pos++}}else{align_pos=aligns.indexOf(spec.charAt(1))
+if(spec.charAt(1)&& align_pos !=-1){
+this.align=aligns[align_pos]
+this.fill=spec.charAt(0)
+pos=2}}
+var car=spec.charAt(pos)
+if(car=="+" ||car=="-" ||car==" "){this.sign=car
+pos++
+car=spec.charAt(pos)}
+if(car=="z"){this.z=true
+pos++
+car=spec.charAt(pos)}
+if(car=="#"){this.alternate=true;
+pos++;
+car=spec.charAt(pos)}
+if(car=="0"){
+this.fill="0"
+if(align_pos==-1){this.align="="}
+pos++
+car=spec.charAt(pos)}
+while(car && digits.indexOf(car)>-1){if(this.width===undefined){this.width=car}else{this.width+=car}
+pos++
+car=spec.charAt(pos)}
+if(this.width !==undefined){this.width=parseInt(this.width)}
+if(this.width===undefined && car=="{"){
+var end_param_pos=spec.substr(pos).search("}")
+this.width=spec.substring(pos,end_param_pos)
+pos+=end_param_pos+1}
+if(car=="," ||car=="_"){this.comma=true
+this.grouping_option=car
+pos++
+car=spec.charAt(pos)
+if(car=="," ||car=="_"){if(car==this.grouping_option){$B.RAISE(_b_.ValueError,`Cannot specify '${car}' with '${car}'.`)}else{$B.RAISE(_b_.ValueError,"Cannot specify both ',' and '_'.")}}}
+if(car=="."){if(digits.indexOf(spec.charAt(pos+1))==-1){$B.RAISE(_b_.ValueError,"Missing precision in format spec")}
+this.precision=spec.charAt(pos+1)
+pos+=2
+car=spec.charAt(pos)
+while(car && digits.indexOf(car)>-1){this.precision+=car
+pos++
+car=spec.charAt(pos)}
+this.precision=parseInt(this.precision)}
+if(car && types.indexOf(car)>-1){this.type=car
+pos++
+car=spec.charAt(pos)}
+if(pos !==spec.length){var err_msg=`Invalid format specifier '${spec}'`
+if(obj){err_msg+=` for object of type '${$B.class_name(obj)}'`}
+$B.RAISE(_b_.ValueError,err_msg)}}
+this.toString=function(){return(this.fill===undefined ? "" :_b_.str.$factory(this.fill))+
+(this.align ||"")+
+(this.sign ||"")+
+(this.alternate ? "#" :"")+
+(this.sign_aware ? "0" :"")+
+(this.width ||"")+
+(this.comma ? "," :"")+
+(this.precision ? "."+this.precision :"")+
+(this.type ||"")}}
+$B.format_width=function(s,fmt){if(fmt.width && s.length < fmt.width){var fill=fmt.fill ||" ",align=fmt.align ||"<",missing=fmt.width-s.length
+switch(align){case "<":
+return s+fill.repeat(missing)
+case ">":
+return fill.repeat(missing)+s
+case "=":
+if("+-".indexOf(s.charAt(0))>-1){return s.charAt(0)+fill.repeat(missing)+s.substr(1)}else{return fill.repeat(missing)+s}
+case "^":
+var left=parseInt(missing/2)
+return fill.repeat(left)+s+fill.repeat(missing-left)}}
+return s}
+function fstring_expression(start){this.type="expression"
+this.start=start
+this.expression=""
+this.conversion=null
+this.fmt=null}
+function fstring_error(msg,pos){var error=Error(msg)
+error.position=pos
+throw error}
+$B.parse_fstring=function(string){
+var elts=[],pos=0,current="",ctype=null,nb_braces=0,expr_start,car
+while(pos < string.length){if(ctype===null){car=string.charAt(pos)
+if(car=="{"){if(string.charAt(pos+1)=="{"){ctype="string"
+current="{"
+pos+=2}else{ctype="expression"
+expr_start=pos+1
+nb_braces=1
+pos++}}else if(car=="}"){if(string.charAt(pos+1)==car){ctype="string"
+current="}"
+pos+=2}else{fstring_error(" f-string: single '}' is not allowed",pos)}}else{ctype="string"
+current=car
+pos++}}else if(ctype=="string"){
+var i=pos
+while(i < string.length){car=string.charAt(i)
+if(car=="{"){if(string.charAt(i+1)=="{"){current+="{"
+i+=2}else{elts.push(current)
+ctype="expression"
+expr_start=i+1
+pos=i+1
+break}}else if(car=="}"){if(string.charAt(i+1)==car){current+=car
+i+=2}else{fstring_error(" f-string: single '}' is not allowed",pos)}}else{current+=car
+i++}}
+pos=i+1}else if(ctype=="debug"){
+while(string.charAt(i)==" "){i++}
+if(string.charAt(i)=="}"){
+elts.push(current)
+ctype=null
+current=""
+pos=i+1}}else{
+let i=pos,nb_paren=0
+nb_braces=1
+current=new fstring_expression(expr_start)
+while(i < string.length){car=string.charAt(i)
+if(car=="{" && nb_paren==0){nb_braces++
+current.expression+=car
+i++}else if(car=="}" && nb_paren==0){nb_braces-=1
+if(nb_braces==0){
+if(current.expression==""){fstring_error("f-string: empty expression not allowed",pos)}
+elts.push(current)
+ctype=null
+current=""
+pos=i+1
+break}
+current.expression+=car
+i++}else if(car=="\\"){
+throw Error("f-string expression part cannot include a"+
+" backslash")}else if(nb_paren==0 && car=="!" && current.fmt===null &&
+":}".indexOf(string.charAt(i+2))>-1){if(current.expression.length==0){throw Error("f-string: empty expression not allowed")}
+if("ars".indexOf(string.charAt(i+1))==-1){throw Error("f-string: invalid conversion character:"+
+" expected 's', 'r', or 'a'")}else{current.conversion=string.charAt(i+1)
+i+=2}}else if(car=="(" ||car=='['){nb_paren++
+current.expression+=car
+i++}else if(car==")" ||car==']'){nb_paren--
+current.expression+=car
+i++}else if(car=='"'){
+if(string.substr(i,3)=='"""'){let end=string.indexOf('"""',i+3)
+if(end==-1){fstring_error("f-string: unterminated string",pos)}else{var trs=string.substring(i,end+3)
+trs=trs.replace("\n","\\n\\")
+current.expression+=trs
+i=end+3}}else{let end=string.indexOf('"',i+1)
+if(end==-1){fstring_error("f-string: unterminated string",pos)}else{current.expression+=string.substring(i,end+1)
+i=end+1}}}else if(nb_paren==0 && car==":"){
+current.fmt=true
+var cb=0,fmt_complete=false
+for(var j=i+1;j < string.length;j++){if(string[j]=='{'){if(string[j+1]=='{'){j+=2}else{cb++}}else if(string[j]=='}'){if(string[j+1]=='}'){j+=2}else if(cb==0){fmt_complete=true
+var fmt=string.substring(i+1,j)
+current.format=$B.parse_fstring(fmt)
+i=j
+break}else{cb--}}}
+if(! fmt_complete){fstring_error('invalid format',pos)}}else if(car=="="){
+var ce=current.expression,last_char=ce.charAt(ce.length-1),last_char_re=('()'.indexOf(last_char)>-1 ? "\\" :"")+last_char
+if(ce.length==0 ||
+nb_paren > 0 ||
+string.charAt(i+1)=="=" ||
+"=!<>:".search(last_char_re)>-1){
+current.expression+=car
+i+=1}else{
+var tail=car
+while(string.charAt(i+1).match(/\s/)){tail+=string.charAt(i+1)
+i++}
+elts.push(current.expression+tail)
+while(ce.match(/\s$/)){ce=ce.substr(0,ce.length-1)}
+current.expression=ce
+ctype="debug"
+i++}}else{current.expression+=car
+i++}}
+if(nb_braces > 0){fstring_error("f-string: expected '}'",pos)}}}
+if(current.length > 0){elts.push(current)}
+for(var elt of elts){if(typeof elt=="object"){if(elt.fmt_pos !==undefined &&
+elt.expression.charAt(elt.fmt_pos)!=':'){throw Error()}}}
+return elts}
+$B.codepoint2jsstring=function(i){if(i >=0x10000 && i <=0x10FFFF){var code=(i-0x10000)
+return String.fromCodePoint(0xD800 |(code >> 10))+
+String.fromCodePoint(0xDC00 |(code & 0x3FF))}else{return String.fromCodePoint(i)}}
+$B.jsstring2codepoint=function(c){if(c.length==1){return c.charCodeAt(0)}
+var code=0x10000
+code+=(c.charCodeAt(0)& 0x03FF)<< 10
+code+=(c.charCodeAt(1)& 0x03FF)
+return code}
 _b_.str.tp_richcompare=function(self,other,op){if(! $B.$isinstance(other,str)){return _b_.NotImplemented}
 [self,other]=to_string(self,other)
 self+=''
@@ -8345,7 +8532,7 @@ for(var i=0;i < chars.length;i++){var cp=_b_.ord(chars[i])
 if(cp >=0x300 && cp <=0x36F){repl+="\u200B"+chars[i]}else{repl+=chars[i]}}
 return repl}
 _b_.str.tp_iter=function(self){return{
-ob_type:str_iterator,it:self[Symbol.iterator]()}}
+ob_type:$B.str_iterator,obj:self,len:_b_.str.mp_length(self),it:self[Symbol.iterator]()}}
 _b_.str.tp_new=function(cls,args,kw){if(cls===undefined){$B.RAISE(_b_.TypeError,"str.__new__(): not enough arguments")}
 $B.check_expected_keywords('str',kw,['encoding','errors'])
 var nb_kwargs=$B.str_dict_length(kw)
@@ -8398,7 +8585,7 @@ if(fmt.precision){self=self.substr(0,fmt.precision)}
 fmt.align=fmt.align ||"<"
 return $B.format_width(preformat(self,fmt),fmt)}
 str_funcs.__getnewargs__=function(self){return str.$getnewargs($B.single_arg('__getnewargs__','self',arguments))}
-str_funcs.__sizeof__=function(self){}
+str_funcs.__sizeof__=function(self){return 62}
 str_funcs.capitalize=function(self){$B.check_nb_args_no_kw('str.capitalize',1,arguments)
 var _self=to_string(self)
 if(_self.length==0){return ""}
@@ -8823,192 +9010,11 @@ return _self.charAt(0)+
 "0".repeat(width-len)+_self.substr(1)
 default:
 return "0".repeat(width-len)+_self}}
-_b_.str.tp_methods=["encode","replace","split","rsplit","join","capitalize","casefold","title","center","count","expandtabs","find","partition","index","ljust","lower","lstrip","rfind","rindex","rjust","rstrip","rpartition","splitlines","strip","swapcase","translate","upper","startswith","endswith","removeprefix","removesuffix","isascii","islower","isupper","istitle","isspace","isdecimal","isdigit","isnumeric","isalpha","isalnum","isidentifier","isprintable","zfill","format","format_map","__format__","__sizeof__","__getnewargs__"]
+_b_.str.tp_methods=["encode","replace","split","rsplit","join","capitalize","casefold","title","center","count","expandtabs","find","partition","index","ljust","lower","lstrip","rfind","rindex","rjust","rstrip","rpartition","splitlines","strip","swapcase","translate","upper","startswith","endswith","removeprefix","removesuffix","isascii","islower","isupper","istitle","isspace","isdecimal","isdigit","isnumeric","isalpha","isalnum","isidentifier","isprintable","zfill","format","format_map","__format__","__sizeof__","__getnewargs__"
+]
 _b_.str.staticmethods=["maketrans"]
 $B.set_func_names(str,"builtins")
 $B.str_len=_b_.str.mp_length
-$B.parse_format_spec=function(spec,obj){if(spec==""){this.empty=true}else{var pos=0,aligns="<>=^",digits="0123456789",types="bcdeEfFgGnosxX%",align_pos=aligns.indexOf(spec.charAt(0))
-if(align_pos !=-1){if(spec.charAt(1)&& aligns.indexOf(spec.charAt(1))!=-1){
-this.fill=spec.charAt(0)
-this.align=spec.charAt(1)
-pos=2}else{
-this.align=aligns[align_pos]
-this.fill=" "
-pos++}}else{align_pos=aligns.indexOf(spec.charAt(1))
-if(spec.charAt(1)&& align_pos !=-1){
-this.align=aligns[align_pos]
-this.fill=spec.charAt(0)
-pos=2}}
-var car=spec.charAt(pos)
-if(car=="+" ||car=="-" ||car==" "){this.sign=car
-pos++
-car=spec.charAt(pos)}
-if(car=="z"){this.z=true
-pos++
-car=spec.charAt(pos)}
-if(car=="#"){this.alternate=true;
-pos++;
-car=spec.charAt(pos)}
-if(car=="0"){
-this.fill="0"
-if(align_pos==-1){this.align="="}
-pos++
-car=spec.charAt(pos)}
-while(car && digits.indexOf(car)>-1){if(this.width===undefined){this.width=car}else{this.width+=car}
-pos++
-car=spec.charAt(pos)}
-if(this.width !==undefined){this.width=parseInt(this.width)}
-if(this.width===undefined && car=="{"){
-var end_param_pos=spec.substr(pos).search("}")
-this.width=spec.substring(pos,end_param_pos)
-pos+=end_param_pos+1}
-if(car=="," ||car=="_"){this.comma=true
-this.grouping_option=car
-pos++
-car=spec.charAt(pos)
-if(car=="," ||car=="_"){if(car==this.grouping_option){$B.RAISE(_b_.ValueError,`Cannot specify '${car}' with '${car}'.`)}else{$B.RAISE(_b_.ValueError,"Cannot specify both ',' and '_'.")}}}
-if(car=="."){if(digits.indexOf(spec.charAt(pos+1))==-1){$B.RAISE(_b_.ValueError,"Missing precision in format spec")}
-this.precision=spec.charAt(pos+1)
-pos+=2
-car=spec.charAt(pos)
-while(car && digits.indexOf(car)>-1){this.precision+=car
-pos++
-car=spec.charAt(pos)}
-this.precision=parseInt(this.precision)}
-if(car && types.indexOf(car)>-1){this.type=car
-pos++
-car=spec.charAt(pos)}
-if(pos !==spec.length){var err_msg=`Invalid format specifier '${spec}'`
-if(obj){err_msg+=` for object of type '${$B.class_name(obj)}'`}
-$B.RAISE(_b_.ValueError,err_msg)}}
-this.toString=function(){return(this.fill===undefined ? "" :_b_.str.$factory(this.fill))+
-(this.align ||"")+
-(this.sign ||"")+
-(this.alternate ? "#" :"")+
-(this.sign_aware ? "0" :"")+
-(this.width ||"")+
-(this.comma ? "," :"")+
-(this.precision ? "."+this.precision :"")+
-(this.type ||"")}}
-$B.format_width=function(s,fmt){if(fmt.width && s.length < fmt.width){var fill=fmt.fill ||" ",align=fmt.align ||"<",missing=fmt.width-s.length
-switch(align){case "<":
-return s+fill.repeat(missing)
-case ">":
-return fill.repeat(missing)+s
-case "=":
-if("+-".indexOf(s.charAt(0))>-1){return s.charAt(0)+fill.repeat(missing)+s.substr(1)}else{return fill.repeat(missing)+s}
-case "^":
-var left=parseInt(missing/2)
-return fill.repeat(left)+s+fill.repeat(missing-left)}}
-return s}
-function fstring_expression(start){this.type="expression"
-this.start=start
-this.expression=""
-this.conversion=null
-this.fmt=null}
-function fstring_error(msg,pos){var error=Error(msg)
-error.position=pos
-throw error}
-$B.parse_fstring=function(string){
-var elts=[],pos=0,current="",ctype=null,nb_braces=0,expr_start,car
-while(pos < string.length){if(ctype===null){car=string.charAt(pos)
-if(car=="{"){if(string.charAt(pos+1)=="{"){ctype="string"
-current="{"
-pos+=2}else{ctype="expression"
-expr_start=pos+1
-nb_braces=1
-pos++}}else if(car=="}"){if(string.charAt(pos+1)==car){ctype="string"
-current="}"
-pos+=2}else{fstring_error(" f-string: single '}' is not allowed",pos)}}else{ctype="string"
-current=car
-pos++}}else if(ctype=="string"){
-var i=pos
-while(i < string.length){car=string.charAt(i)
-if(car=="{"){if(string.charAt(i+1)=="{"){current+="{"
-i+=2}else{elts.push(current)
-ctype="expression"
-expr_start=i+1
-pos=i+1
-break}}else if(car=="}"){if(string.charAt(i+1)==car){current+=car
-i+=2}else{fstring_error(" f-string: single '}' is not allowed",pos)}}else{current+=car
-i++}}
-pos=i+1}else if(ctype=="debug"){
-while(string.charAt(i)==" "){i++}
-if(string.charAt(i)=="}"){
-elts.push(current)
-ctype=null
-current=""
-pos=i+1}}else{
-let i=pos,nb_paren=0
-nb_braces=1
-current=new fstring_expression(expr_start)
-while(i < string.length){car=string.charAt(i)
-if(car=="{" && nb_paren==0){nb_braces++
-current.expression+=car
-i++}else if(car=="}" && nb_paren==0){nb_braces-=1
-if(nb_braces==0){
-if(current.expression==""){fstring_error("f-string: empty expression not allowed",pos)}
-elts.push(current)
-ctype=null
-current=""
-pos=i+1
-break}
-current.expression+=car
-i++}else if(car=="\\"){
-throw Error("f-string expression part cannot include a"+
-" backslash")}else if(nb_paren==0 && car=="!" && current.fmt===null &&
-":}".indexOf(string.charAt(i+2))>-1){if(current.expression.length==0){throw Error("f-string: empty expression not allowed")}
-if("ars".indexOf(string.charAt(i+1))==-1){throw Error("f-string: invalid conversion character:"+
-" expected 's', 'r', or 'a'")}else{current.conversion=string.charAt(i+1)
-i+=2}}else if(car=="(" ||car=='['){nb_paren++
-current.expression+=car
-i++}else if(car==")" ||car==']'){nb_paren--
-current.expression+=car
-i++}else if(car=='"'){
-if(string.substr(i,3)=='"""'){let end=string.indexOf('"""',i+3)
-if(end==-1){fstring_error("f-string: unterminated string",pos)}else{var trs=string.substring(i,end+3)
-trs=trs.replace("\n","\\n\\")
-current.expression+=trs
-i=end+3}}else{let end=string.indexOf('"',i+1)
-if(end==-1){fstring_error("f-string: unterminated string",pos)}else{current.expression+=string.substring(i,end+1)
-i=end+1}}}else if(nb_paren==0 && car==":"){
-current.fmt=true
-var cb=0,fmt_complete=false
-for(var j=i+1;j < string.length;j++){if(string[j]=='{'){if(string[j+1]=='{'){j+=2}else{cb++}}else if(string[j]=='}'){if(string[j+1]=='}'){j+=2}else if(cb==0){fmt_complete=true
-var fmt=string.substring(i+1,j)
-current.format=$B.parse_fstring(fmt)
-i=j
-break}else{cb--}}}
-if(! fmt_complete){fstring_error('invalid format',pos)}}else if(car=="="){
-var ce=current.expression,last_char=ce.charAt(ce.length-1),last_char_re=('()'.indexOf(last_char)>-1 ? "\\" :"")+last_char
-if(ce.length==0 ||
-nb_paren > 0 ||
-string.charAt(i+1)=="=" ||
-"=!<>:".search(last_char_re)>-1){
-current.expression+=car
-i+=1}else{
-var tail=car
-while(string.charAt(i+1).match(/\s/)){tail+=string.charAt(i+1)
-i++}
-elts.push(current.expression+tail)
-while(ce.match(/\s$/)){ce=ce.substr(0,ce.length-1)}
-current.expression=ce
-ctype="debug"
-i++}}else{current.expression+=car
-i++}}
-if(nb_braces > 0){fstring_error("f-string: expected '}'",pos)}}}
-if(current.length > 0){elts.push(current)}
-for(var elt of elts){if(typeof elt=="object"){if(elt.fmt_pos !==undefined &&
-elt.expression.charAt(elt.fmt_pos)!=':'){throw Error()}}}
-return elts}
-$B.codepoint2jsstring=function(i){if(i >=0x10000 && i <=0x10FFFF){var code=(i-0x10000)
-return String.fromCodePoint(0xD800 |(code >> 10))+
-String.fromCodePoint(0xDC00 |(code & 0x3FF))}else{return String.fromCodePoint(i)}}
-$B.jsstring2codepoint=function(c){if(c.length==1){return c.charCodeAt(0)}
-var code=0x10000
-code+=(c.charCodeAt(0)& 0x03FF)<< 10
-code+=(c.charCodeAt(1)& 0x03FF)
-return code}
 var Interpolation=$B.make_builtin_class('Interpolation')
 Interpolation.$factory=function(value,expression,conversion,format_spec){return{
 ob_type:Interpolation,value,expression,conversion,format_spec}}
@@ -9016,7 +9022,8 @@ Interpolation.tp_repr=function(self){var res='Interpolation(',items=[]
 for(var attr of['value','expression','conversion','format_spec']){items.push(`${_b_.repr(self[attr])}`)}
 return res+items.join(', ')+')'}
 $B.set_func_names(Interpolation,'builtins')
-var Template=$B.Template=$B.make_builtin_class('Template')
+var Template=$B.Template=$B.make_builtin_class('string.templatelib.Template')
+Template.tp_flags=0b101001000011100 
 Template.$factory=function(){
 var strings=$B.fast_tuple([]),interpolations=$B.fast_tuple([])
 var expect_str=true
@@ -9037,15 +9044,32 @@ var rank=Math.floor(self.$counter/2)
 switch(type){case 's':
 var s=self.strings[rank]
 if(s.length > 0){return s}
-return Template.__next__(self)
+return Template.tp_iternext(self)
 case 'i':
 return self.interpolations[rank]}}
+Template.tp_new=function(cls,args,kw){if(! $B.str_dict_empty(kw)){$B.RAISE(_b_.TypeError,"Template.__new__ only accepts *args arguments")}
+var res=Template.$factory(...args)
+res.ob_type=cls
+return res}
+Template.tp_repr=function(self){var strings='strings=('+_b_.repr(self.strings)+
+')'
+var interpolations='interpolations='+
+_b_.repr($B.fast_tuple(self.interpolations))
+return `<Template(${strings}, ${interpolations})>`}
 var Template_funcs=$B.Template.tp_funcs={}
+Template_funcs.__class_getitem__=function(){return $B.$class_getitem.apply(null,arguments)}
+Template_funcs.__reduce__=function(self){$B.$import('string.templatelib')
+var module=$B.imported['string.templatelib']
+var _template_unpickle=$B.module_getattr(module,'_template_unpickle')
+return $B.fast_tuple([_template_unpickle,$B.fast_tuple([$B.fast_tuple(self.strings),$B.fast_tuple(self.interpolations)])])}
 Template_funcs.values_get=function(self){var values=[]
 for(var itp of self.interpolations){values.push(itp.value)}
 return $B.fast_tuple(values)}
-$B.set_func_names(Template,'builtins')
-Template.tp_getset=["values"]})(__BRYTHON__);
+$B.Template.tp_methods=["__class_getitem__","__reduce__"]
+$B.Template.tp_members=[["strings",$B.TYPES.OBJECT,"strings",1],["interpolations",$B.TYPES.OBJECT,"interpolations",1]
+]
+Template.tp_getset=["values"]
+$B.set_func_names(Template,'builtins')})(__BRYTHON__);
 ;
 (function($B){var _b_=$B.builtins
 var int=_b_.int

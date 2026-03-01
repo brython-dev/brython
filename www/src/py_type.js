@@ -19,10 +19,10 @@ $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
 
     // bool is not a valid base
     for(var base of bases){
-        if(base.__flags__ !== undefined &&
-                 ! (base.__flags__ & TPFLAGS.BASETYPE)){
+        if(base.tp_flags !== undefined &&
+                 ! (base.tp_flags & TPFLAGS.BASETYPE)){
             $B.RAISE(_b_.TypeError,
-                `type '${base.__qualname__}' is not an acceptable base type`)
+                `type '${$B.$getattr(base, '__qualname__')}' is not an acceptable base type`)
         }
     }
 
