@@ -580,43 +580,85 @@ _b_.BaseException.tp_new = function(cls, args, kw){
 var BaseException_funcs = _b_.BaseException.tp_funcs = {}
 
 BaseException_funcs.__cause___get = function(self){
-    return self.__cause__
+    return self.__cause__ ?? _b_.None
 }
 
-BaseException_funcs.__cause___set = function(self){
-
+BaseException_funcs.__cause___set = function(self, value){
+    if(value === $B.NULL){
+        $B.RAISE(_b_.TypeError, "__cause__ may not be deleted")
+    }else if(value === _b_.None){
+        delete self.__cause__
+    }else if(! $B.$isinstance(value, _b_.BaseException)){
+        $B.RAISE(_b_.TypeError,
+            "exception cause must be None or derive from BaseException"
+        )
+    }else{
+        self.__cause__ = value
+    }
 }
 
 BaseException_funcs.__context___get = function(self){
-    return self.__context__
+    return self.__context__ ?? _b_.None
 }
 
-BaseException_funcs.__context___set = function(self){
-
+BaseException_funcs.__context___set = function(self, value){
+    if(value === $B.NULL){
+        $B.RAISE(_b_.TypeError, "__context__ may not be deleted")
+    }else if(value === _b_.None){
+        delete self.__context__
+    }else if(! $B.$isinstance(value, _b_.BaseException)){
+        $B.RAISE(_b_.TypeError,
+            "exception context must be None or derive from BaseException"
+        )
+    }else{
+        self.__context__ = value
+    }
 }
 
 BaseException_funcs.__dict___get = function(self){
     return self.dict
 }
 
-BaseException_funcs.__dict___set = function(self){
-
+BaseException_funcs.__dict___set = function(self, value){
+    self.dict = value
 }
 
 BaseException_funcs.__reduce__ = function(self){
-
+    if(self.args && self.dict && ! $B.str_dict_empty(self.dict)){
+        return $B.fast_tuple([$B.get_class(self), $B.fast_tuple(self.args),
+            self.dict])
+    }else{
+        return $B.fast_tuple([$B.get_class(self), $B.fast_tuple(self.args)])
+    }
 }
 
-BaseException_funcs.__setstate__ = function(self){
-
+BaseException_funcs.__setstate__ = function(self, state){
+    if(state != _b_.None){
+        if(! $B.$isinstance(state, _b_.dict)){
+            $B.RAISE(_b_.TypeError, "state is not a dictionary")
+        }
+        for(var entry of _b_.dict.$iter_items(state)){
+            _b_.object.tp_setattro(self, entry.key, entry.value)
+        }
+    }
+    return _b_.None
 }
 
 BaseException_funcs.__traceback___get = function(self){
-    return self.__traceback__
+    return self.__traceback__ ?? _b_.None
 }
 
-BaseException_funcs.__traceback___set = function(self){
-
+BaseException_funcs.__traceback___set = function(self, value){
+    if(value === $B.NULL){
+        $B.RAISE(_b_.TypeError, "__traceback__ may not be deleted")
+    }
+    if($B.exact_type(value, $B.traceback)){
+        self.__traceback__ = value
+    }else if(value === _b_.None){
+        delete self.__traceback__
+    }else{
+        $B.RAISE(_b_.TypeError, "__traceback__ must be a traceback or None")
+    }
 }
 
 BaseException_funcs.add_note = function(self, note){
@@ -637,8 +679,11 @@ BaseException_funcs.args_get = function(self){
     return self.args
 }
 
-BaseException_funcs.args_set = function(self){
-
+BaseException_funcs.args_set = function(self, value){
+    if(value === $B.NULL){
+        $B.RAISE(_b_.TypeError, "args may not be deleted")
+    }
+    self.args = $B.fast_tuple(value)
 }
 
 BaseException_funcs.with_traceback = function(self, tb){
@@ -648,7 +693,9 @@ BaseException_funcs.with_traceback = function(self, tb){
 
 _b_.BaseException.functions_or_methods = ["__new__"]
 
-_b_.BaseException.tp_methods = ["__reduce__", "__setstate__", "with_traceback", "add_note"]
+_b_.BaseException.tp_methods = [
+    "__reduce__", "__setstate__", "with_traceback", "add_note"
+]
 
 _b_.BaseException.tp_members = [
     ["__suppress_context__", $B.TYPES.BOOL, "suppress_context", 0]
@@ -784,7 +831,6 @@ $B.set_expected_kwargs = function(obj, expected, kwargs){
 }
 
 // AttributeError supports keyword-only "name" and "obj" parameters
-// _b_.AttributeError = $B.make_class('AttributeError')
 
 _b_.AttributeError.tp_init = function(){
     var $ = $B.args("AttributeError", 1, {self: null},
@@ -1020,8 +1066,9 @@ BaseExceptionGroup_funcs.__class_getitem__ = function(){
     return $B.$class_getitem.apply(null, arguments)
 }
 
-BaseExceptionGroup_funcs.derive = function(self){
-
+BaseExceptionGroup_funcs.derive = function(self, excs){
+    var init_args = $B.fast_tuple([self.msg, excs])
+    return $B.$call(_b_.BaseExceptionGroup, ...init_args)
 }
 
 BaseExceptionGroup_funcs.split = function(self, condition){

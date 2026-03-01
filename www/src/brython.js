@@ -669,8 +669,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-03-01 22:00:28.223464"
-__BRYTHON__.timestamp=1772398828223
+__BRYTHON__.compiled_date="2026-03-01 23:01:20.721198"
+__BRYTHON__.timestamp=1772402480720
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -5784,27 +5784,34 @@ self.args=$B.fast_tuple(args)}
 _b_.BaseException.tp_new=function(cls,args,kw){var res={ob_type:cls,dict:$B.empty_dict(),args:$B.fast_tuple(args),notes:_b_.None,__traceback__:_b_.None,__cause__:_b_.None,__context__:_b_.None,suppress_context:false}
 return res}
 var BaseException_funcs=_b_.BaseException.tp_funcs={}
-BaseException_funcs.__cause___get=function(self){return self.__cause__}
-BaseException_funcs.__cause___set=function(self){}
-BaseException_funcs.__context___get=function(self){return self.__context__}
-BaseException_funcs.__context___set=function(self){}
+BaseException_funcs.__cause___get=function(self){return self.__cause__ ?? _b_.None}
+BaseException_funcs.__cause___set=function(self,value){if(value===$B.NULL){$B.RAISE(_b_.TypeError,"__cause__ may not be deleted")}else if(value===_b_.None){delete self.__cause__}else if(! $B.$isinstance(value,_b_.BaseException)){$B.RAISE(_b_.TypeError,"exception cause must be None or derive from BaseException"
+)}else{self.__cause__=value}}
+BaseException_funcs.__context___get=function(self){return self.__context__ ?? _b_.None}
+BaseException_funcs.__context___set=function(self,value){if(value===$B.NULL){$B.RAISE(_b_.TypeError,"__context__ may not be deleted")}else if(value===_b_.None){delete self.__context__}else if(! $B.$isinstance(value,_b_.BaseException)){$B.RAISE(_b_.TypeError,"exception context must be None or derive from BaseException"
+)}else{self.__context__=value}}
 BaseException_funcs.__dict___get=function(self){return self.dict}
-BaseException_funcs.__dict___set=function(self){}
-BaseException_funcs.__reduce__=function(self){}
-BaseException_funcs.__setstate__=function(self){}
-BaseException_funcs.__traceback___get=function(self){return self.__traceback__}
-BaseException_funcs.__traceback___set=function(self){}
+BaseException_funcs.__dict___set=function(self,value){self.dict=value}
+BaseException_funcs.__reduce__=function(self){if(self.args && self.dict && ! $B.str_dict_empty(self.dict)){return $B.fast_tuple([$B.get_class(self),$B.fast_tuple(self.args),self.dict])}else{return $B.fast_tuple([$B.get_class(self),$B.fast_tuple(self.args)])}}
+BaseException_funcs.__setstate__=function(self,state){if(state !=_b_.None){if(! $B.$isinstance(state,_b_.dict)){$B.RAISE(_b_.TypeError,"state is not a dictionary")}
+for(var entry of _b_.dict.$iter_items(state)){_b_.object.tp_setattro(self,entry.key,entry.value)}}
+return _b_.None}
+BaseException_funcs.__traceback___get=function(self){return self.__traceback__ ?? _b_.None}
+BaseException_funcs.__traceback___set=function(self,value){if(value===$B.NULL){$B.RAISE(_b_.TypeError,"__traceback__ may not be deleted")}
+if($B.exact_type(value,$B.traceback)){self.__traceback__=value}else if(value===_b_.None){delete self.__traceback__}else{$B.RAISE(_b_.TypeError,"__traceback__ must be a traceback or None")}}
 BaseException_funcs.add_note=function(self,note){
 if(! $B.$isinstance(note,_b_.str)){$B.RAISE(_b_.TypeError,'note must be a str, not '+
 `'${$B.class_name(note)}'`)}
 var notes=$B.str_dict_get(self.dict,'__notes__',$B.NULL)
 if(notes !==$B.NULL){notes.push(note)}else{$B.str_dict_set(self.dict,'__notes__',$B.$list([note]))}}
 BaseException_funcs.args_get=function(self){return self.args}
-BaseException_funcs.args_set=function(self){}
+BaseException_funcs.args_set=function(self,value){if(value===$B.NULL){$B.RAISE(_b_.TypeError,"args may not be deleted")}
+self.args=$B.fast_tuple(value)}
 BaseException_funcs.with_traceback=function(self,tb){self.__traceback__=tb
 return self}
 _b_.BaseException.functions_or_methods=["__new__"]
-_b_.BaseException.tp_methods=["__reduce__","__setstate__","with_traceback","add_note"]
+_b_.BaseException.tp_methods=["__reduce__","__setstate__","with_traceback","add_note"
+]
 _b_.BaseException.tp_members=[["__suppress_context__",$B.TYPES.BOOL,"suppress_context",0]
 ]
 _b_.BaseException.tp_getset=["__dict__","args","__traceback__","__context__","__cause__"
@@ -5938,7 +5945,8 @@ self.excs=exceptions
 return self}
 var BaseExceptionGroup_funcs=_b_.BaseExceptionGroup.tp_funcs={}
 BaseExceptionGroup_funcs.__class_getitem__=function(){return $B.$class_getitem.apply(null,arguments)}
-BaseExceptionGroup_funcs.derive=function(self){}
+BaseExceptionGroup_funcs.derive=function(self,excs){var init_args=$B.fast_tuple([self.msg,excs])
+return $B.$call(_b_.BaseExceptionGroup,...init_args)}
 BaseExceptionGroup_funcs.split=function(self,condition){
 var matching_excs=[],non_matching_excs=[]
 for(var exc of self.excs){if($B.$isinstance(exc,_b_.BaseExceptionGroup)){var subsplit=BaseExceptionGroup_funcs.split(exc,condition),matching=subsplit[0],non_matching=subsplit[1]
