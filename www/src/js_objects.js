@@ -397,7 +397,12 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
                         ! pyobj.$function_infos){
                     res = new pyobj(...args)
                 }else{
-                    res = pyobj.apply(this, args)
+                    if(klass === $B.function){
+                        res = pyobj.apply(this, args)
+                    }else{
+                        // method
+                        res = pyobj.im_func.call(this, pyobj.im_self, ...args)
+                    }
                 }
                 // Return a Javascript result
                 return pyobj2jsobj(res)
@@ -469,7 +474,12 @@ function pyargs2jsargs(pyargs){
 $B.JSClass = $B.make_builtin_class('JSClass', [_b_.type])
 
 $B.JSClass.tp_getattro = function(self, attr){
-    console.log('JSClass getattro', self, attr)
+    if(attr == 'new'){
+        return function(){
+            var args = Array.from(arguments).map(pyobj2jsobj)
+            return jsobj2pyobj(new self.js_class(...args))
+        }
+    }
     if(! self.js_class.hasOwnProperty(attr)){
         return $B.NULL
     }

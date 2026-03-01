@@ -729,9 +729,12 @@ $B.search_in_mro = function(klass, attr, _default){
                     $B.str_dict_get(mro[i].dict, dunder, $B.NULL) === $B.NULL){
                 console.log('attr', attr, 'found in mro[i]', mro[i],
                     'but absent in dict')
+                console.log($B.frame_obj.frame.$lineno)
+                console.log(Error('trace').stack)
             }
-            return mro[i][attr]
-        }else if(mro[i].dict){
+            //return mro[i][attr]
+        }
+        if(mro[i].dict){
             if(mro[i].dict.$strings === undefined){
                 console.log('no $strings in dict', mro[i])
             }

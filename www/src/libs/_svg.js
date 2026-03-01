@@ -38,11 +38,11 @@ function makeTagDict(tagName){
             if(arg.toLowerCase().substr(0,2) == "on"){
                 // Event binding passed as argument "onclick", "onfocus"...
                 // Better use method bind of DOMNode objects
-                $B.DOMNode.bind(self,
+                $B.DOMNode.tp_funcs.bind(self,
                                 arg.toLowerCase().substr(2),
                                 value)
             }else if(arg.toLowerCase() == "style"){
-                $B.DOMNode.set_style(self, value)
+                $B.$setattr(self, 'style', value)
             }else if(arg.toLowerCase().indexOf("href") !== -1){ // xlink:href
                 self.setAttributeNS( "http://www.w3.org/1999/xlink",
                     "href",value)

@@ -416,6 +416,7 @@ var $DOMEvent = $B.$DOMEvent = function(ev){
 $B.set_func_names(DOMEvent, "browser")
 
 var Clipboard = $B.make_builtin_class('Clipboard')
+
 Clipboard.$factory = function(data){
     return {
         ob_type : Clipboard,
@@ -424,11 +425,11 @@ Clipboard.$factory = function(data){
     }
 }
 
-Clipboard.__getitem__ = function(self, name){
+Clipboard.mp_subscript = function(self, name){
     return self.data.getData(name)
 }
 
-Clipboard.__setitem__ = function(self, name, value){
+Clipboard.mp_ass_subscript = function(self, name, value){
     self.data.setData(name, value)
 }
 
@@ -1605,7 +1606,7 @@ Query_funcs.getlist = function(self, key){
 
 Query_funcs.getvalue = function(self, key, _default){
     try{
-        return Query.__getitem__(self, key)
+        return Query.mp_subscript(self, key)
     }catch(err){
         if(_default === undefined){
             return _b_.None
@@ -1628,16 +1629,11 @@ var TagSum = $B.make_builtin_class("TagSum")
 TagSum.$factory = function(){
     return {
         ob_type: TagSum,
-        children: [],
-        toString: function(){return "(TagSum)"}
+        children: []
     }
 }
 
-TagSum.appendChild = function(self, child){
-    self.children.push(child)
-}
-
-TagSum.__add__ = function(self, other){
+TagSum.sq_concat = function(self, other){
     if($B.get_class(other) === TagSum){
         self.children = self.children.concat(other.children)
     }else if($B.$isinstance(other, [_b_.str, _b_.int, _b_.float,
@@ -1648,13 +1644,6 @@ TagSum.__add__ = function(self, other){
         self.children.push(other)
     }
     return self
-}
-
-TagSum.__radd__ = function(self, other){
-    var res = TagSum.$factory()
-    res.children = self.children.slice()
-    res.children.splice(0, 0, DOMNode.$factory(document.createTextNode(other)))
-    return res
 }
 
 TagSum.tp_repr = function(self){
@@ -1668,13 +1657,21 @@ TagSum.tp_repr = function(self){
     return res
 }
 
-TagSum.clone = function(self){
+var TagSum_funcs = TagSum.tp_funcs = {}
+
+TagSum_funcs.clone = function(self){
     var res = TagSum.$factory()
     for(var i = 0; i < self.children.length; i++){
         res.children.push(self.children[i].cloneNode(true))
     }
     return res
 }
+
+TagSum_funcs.appendChild = function(self, child){
+    self.children.push(child)
+}
+
+TagSum.tp_methods = ["appendChild", "clone"]
 
 $B.set_func_names(TagSum, "<dom>")
 

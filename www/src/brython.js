@@ -669,8 +669,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,0,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-02-27 22:53:44.323439"
-__BRYTHON__.timestamp=1772229224323
+__BRYTHON__.compiled_date="2026-03-01 16:02:14.603506"
+__BRYTHON__.timestamp=1772377334603
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -4658,8 +4658,10 @@ console.log(mro[i][attr])}
 var dunder=$B.slot2dunder.hasOwnProperty(attr)?
 $B.slot2dunder[attr]:attr
 if(! mro[i].dict ||
-$B.str_dict_get(mro[i].dict,dunder,$B.NULL)===$B.NULL){console.log('attr',attr,'found in mro[i]',mro[i],'but absent in dict')}
-return mro[i][attr]}else if(mro[i].dict){if(mro[i].dict.$strings===undefined){console.log('no $strings in dict',mro[i])}
+$B.str_dict_get(mro[i].dict,dunder,$B.NULL)===$B.NULL){console.log('attr',attr,'found in mro[i]',mro[i],'but absent in dict')
+console.log($B.frame_obj.frame.$lineno)
+console.log(Error('trace').stack)}}
+if(mro[i].dict){if(mro[i].dict.$strings===undefined){console.log('no $strings in dict',mro[i])}
 var v=$B.str_dict_get(mro[i].dict,attr,$B.NULL)
 if(v !==$B.NULL){if(test){console.log('found in dict of mro',i,v)}
 return v}}else if(mro[i].__dict__){console.log('old school __dict__')
@@ -11436,7 +11438,8 @@ var args=new Array(arguments.length)
 for(var i=0;i < arguments.length;++i){args[i]=jsobj2pyobj(arguments[i])}
 let res
 if(pyobj.prototype && pyobj.prototype.constructor===pyobj &&
-! pyobj.$function_infos){res=new pyobj(...args)}else{res=pyobj.apply(this,args)}
+! pyobj.$function_infos){res=new pyobj(...args)}else{if(klass===$B.function){res=pyobj.apply(this,args)}else{
+res=pyobj.im_func.call(this,pyobj.im_self,...args)}}
 return pyobj2jsobj(res)}catch(err){$B.handle_error(err)}}
 pyobj[JSOBJ]=jsobj
 jsobj[PYOBJ]=pyobj
@@ -11463,7 +11466,8 @@ $B.RAISE(_b_.TypeError,"A Javascript function can't take "+
 args[i]=$B.pyobj2jsobj(arg)}
 return args}
 $B.JSClass=$B.make_builtin_class('JSClass',[_b_.type])
-$B.JSClass.tp_getattro=function(self,attr){console.log('JSClass getattro',self,attr)
+$B.JSClass.tp_getattro=function(self,attr){if(attr=='new'){return function(){var args=Array.from(arguments).map(pyobj2jsobj)
+return jsobj2pyobj(new self.js_class(...args))}}
 if(! self.js_class.hasOwnProperty(attr)){return $B.NULL}
 return jsobj2pyobj(self.jsobj[attr],self.jsobj)}
 $B.JSClass.tp_new=function(cls,args,kw){var[name,bases,dict]=args
@@ -12102,8 +12106,8 @@ $B.set_func_names(DOMEvent,"browser")
 var Clipboard=$B.make_builtin_class('Clipboard')
 Clipboard.$factory=function(data){return{
 ob_type :Clipboard,dict:$B.empty_dict(),data :data}}
-Clipboard.__getitem__=function(self,name){return self.data.getData(name)}
-Clipboard.__setitem__=function(self,name,value){self.data.setData(name,value)}
+Clipboard.mp_subscript=function(self,name){return self.data.getData(name)}
+Clipboard.mp_ass_subscript=function(self,name,value){self.data.setData(name,value)}
 $B.set_func_names(Clipboard,"<dom>")
 function dimension_get(self,attr){
 if(self.tagName=="CANVAS" && self[attr]){return self[attr]}
@@ -12527,29 +12531,27 @@ return _default}
 return result[0]}
 Query_funcs.getlist=function(self,key){
 return $B.$list(self._values[key]??[])}
-Query_funcs.getvalue=function(self,key,_default){try{return Query.__getitem__(self,key)}catch(err){if(_default===undefined){return _b_.None}
+Query_funcs.getvalue=function(self,key,_default){try{return Query.mp_subscript(self,key)}catch(err){if(_default===undefined){return _b_.None}
 return _default}}
 Query_funcs.keys=function(self){return self._keys}
 Query.tp_methods=["getfirst","getlist","getvalue","keys"]
 $B.set_func_names(Query,"<dom>")
 var TagSum=$B.make_builtin_class("TagSum")
 TagSum.$factory=function(){return{
-ob_type:TagSum,children:[],toString:function(){return "(TagSum)"}}}
-TagSum.appendChild=function(self,child){self.children.push(child)}
-TagSum.__add__=function(self,other){if($B.get_class(other)===TagSum){self.children=self.children.concat(other.children)}else if($B.$isinstance(other,[_b_.str,_b_.int,_b_.float,_b_.dict,_b_.set,_b_.list])){self.children=self.children.concat(
+ob_type:TagSum,children:[]}}
+TagSum.sq_concat=function(self,other){if($B.get_class(other)===TagSum){self.children=self.children.concat(other.children)}else if($B.$isinstance(other,[_b_.str,_b_.int,_b_.float,_b_.dict,_b_.set,_b_.list])){self.children=self.children.concat(
 DOMNode.$factory(document.createTextNode(other)))}else{self.children.push(other)}
 return self}
-TagSum.__radd__=function(self,other){var res=TagSum.$factory()
-res.children=self.children.slice()
-res.children.splice(0,0,DOMNode.$factory(document.createTextNode(other)))
-return res}
 TagSum.tp_repr=function(self){var res="<object TagSum> "
 for(var i=0;i < self.children.length;i++){res+=self.children[i]
 if(self.children[i].toString()=="[object Text]"){res+=" ["+self.children[i].textContent+"]\n"}}
 return res}
-TagSum.clone=function(self){var res=TagSum.$factory()
+var TagSum_funcs=TagSum.tp_funcs={}
+TagSum_funcs.clone=function(self){var res=TagSum.$factory()
 for(var i=0;i < self.children.length;i++){res.children.push(self.children[i].cloneNode(true))}
 return res}
+TagSum_funcs.appendChild=function(self,child){self.children.push(child)}
+TagSum.tp_methods=["appendChild","clone"]
 $B.set_func_names(TagSum,"<dom>")
 $B.TagSum=TagSum 
 $B.DOMNode=DOMNode})(__BRYTHON__);
@@ -13101,11 +13103,16 @@ ob_type:PathLoader}}
 var PathLoader_funcs=PathLoader.tp_funcs={}
 PathLoader_funcs.create_module=function(){
 return _b_.None}
+$B.in_path_exec={}
 PathLoader_funcs.exec_module=function(self,module){
+var t0=window.performance.now()
 var spec=$B.module_getattr(module,'__spec__')
 var metadata=$B.$getattr(spec,'loader_state')
+if($B.in_path_exec==0){console.log('spec',spec)}
 module.$is_package=metadata.is_package
-if(metadata.ext=="py"){run_py(metadata.code,metadata.path,module)}else{run_js(metadata.code,metadata.path,module)}}
+if(metadata.ext=="py"){var name=$B.module_getattr(module,'__name__')
+run_py(metadata.code,metadata.path,module)
+$B.in_path_exec[name]=window.performance.now()-t0}else{run_js(metadata.code,metadata.path,module)}}
 PathLoader.tp_methods=['create_module','exec_module']
 var url_hook=$B.url_hook=function(path_entry){
 path_entry=path_entry.endsWith("/")? path_entry :path_entry+"/"
