@@ -815,11 +815,10 @@ $B.get_class = function(obj){
                 return $B.DOMNode
             }else if(obj instanceof Event){
                 return $B.DOMEvent
-            }else{
-                return $B.get_jsobj_class(obj)
             }
             break
     }
+    return $B.get_jsobj_class(obj)
 }
 
 $B.exact_type = function(obj, cls){

@@ -664,8 +664,7 @@ const func_attrs = ['__module__', '__name__', '__qualname__', '__file__',
     '__defaults__', '__kwdefaults__', '__doc__', 'arg_names',
     'args_vararg', 'args_kwarg', 'positional_length', 'lineno', 'flags',
     'free_vars', 'kwonlyargs_length', 'posonlyargs_length', 'varnames',
-    '__annotations__', '__type_params__',
-    'method_class'
+    '__annotations__', '__type_params__', '__globals__', 'method_class'
     ]
 
 // Rank of function attributes in .$function_infos

@@ -335,6 +335,21 @@ function_funcs.__dict___set = function(self, value){
     self.dict = value
 }
 
+function_funcs.__doc___get = function(self){
+    return self.$function_infos[$B.func_attrs.__doc__]
+}
+
+function_funcs.__doc___set = function(self, value){
+    self.$function_infos[$B.func_attrs.__doc__] = value
+}
+
+function_funcs.__globals___get = function(self){
+    var frame = self.$function_infos[$B.func_attrs.__globals__]
+    return $B.obj_dict(frame[3])
+}
+
+function_funcs.__globals___set = _b_.None
+
 function_funcs.__kwdefaults___get = function(self){
     $B.check_infos(self)
     return self.$infos.__kwdefaults__
@@ -356,6 +371,14 @@ function_funcs.__kwdefaults___set = function(self, value){
     self.$function_infos[$B.func_attrs.__kwdefaults__] = kwd
     // Make a new version of arguments parser
     $B.make_args_parser(self)
+}
+
+function_funcs.__module___get = function(self){
+    return self.$function_infos[$B.func_attrs.__module__]
+}
+
+function_funcs.__module___set = function(self, value){
+    self.$function_infos[$B.func_attrs.__module__] = value
 }
 
 function_funcs.__name___get = function(self){
@@ -383,16 +406,11 @@ function_funcs.__type_params___set = function(self, value){
     self.$function_infos[$B.func_attrs.__type_params__] = value
 }
 
-$B.function.tp_members = [
-    ["__doc__", $B.TYPES.OBJECT, "func_doc", 0],
-    ["__globals__", $B.TYPES.OBJECT, "func_globals", 1],
-    ["__module__", $B.TYPES.OBJECT, "func_module", 0]
-]
-
 $B.function.tp_getset = [
     "__code__", "__defaults__", "__kwdefaults__", "__annotations__",
     "__annotate__", "__dict__", "__name__", "__qualname__", "__type_params__",
-    "__builtins__", "__closure__" // members in CPython
+    // the following are members in CPython
+    "__builtins__", "__closure__", "__doc__", "__globals__", "__module__"
 ]
 
 
@@ -402,9 +420,7 @@ $B.function.tp_getset = [
 $B.set_func_names($B.function, "builtins")
 
 $B.setup_function = function(f){
-    f.ob_type = $B.function
     f.dict = $B.empty_dict()
-    f.$args_parser = $B.make_args_parser_and_parse
     f.func_doc = f.$function_infos[$B.func_attrs.__doc__]
     f.func_globals = $B.obj_dict($B.frame_obj.frame[3])
     f.func_module = f.$function_infos[$B.func_attrs.__module__]

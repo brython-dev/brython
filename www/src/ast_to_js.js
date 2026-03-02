@@ -2735,8 +2735,10 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `${this.args.posonlyargs.length}, ` +
         `[${varnames}], ` +
         `${annotations}, ` +
-        `${has_type_params ? 'type_params' : '[]'}]\n`;
-    js += prefix + `$B.setup_function(${name2})\n`
+        `${has_type_params ? 'type_params' : '[]'}, frame]\n`;
+    js += prefix + `${name2}.ob_type = $B.function\n` +
+          prefix + `${name2}.$args_parser = $B.make_args_parser_and_parse\n` +
+          prefix + `${name2}.dict = $B.empty_dict()\n`
 
     if(anns && ! postponed){
         //var annotate_scope = new Scope('__annotate__', 'def', this)
