@@ -785,54 +785,41 @@ $B.get_class = function(obj){
     if(obj.ob_type){
         return obj.ob_type
     }
-    var klass = obj.__class__
-    if(klass !== undefined){
-        console.log('old school __class__', klass)
-        console.log(Error('trace').stack)
-    }
-    if(klass === undefined){
-        switch(typeof obj){
-            case "number":
-                if(Number.isInteger(obj)){
-                    return _b_.int
+    switch(typeof obj){
+        case "number":
+        case "bigint":
+            return _b_.int
+        case "string":
+            return _b_.str
+        case "boolean":
+            return _b_.bool
+        case "function":
+            /*
+            if(! obj.$js_func){
+                // not a Javascript function or constructor
+                return $B.function
+            }
+            */
+            return $B.JSFunction
+        case "object":
+            if(Array.isArray(obj)){
+                return $B.js_array
+            }else if(obj instanceof $B.str_dict){
+                return _b_.dict
+            }else if(typeof Node !== "undefined" // undefined in Web Workers
+                    && obj instanceof Node){
+                if(obj.tagName){
+                    return $B.imported['browser.html'][obj.tagName] ||
+                               $B.DOMNode
                 }
-                break
-            case "bigint":
-                return _b_.int
-            case "string":
-                return _b_.str
-            case "boolean":
-                return _b_.bool
-            case "function":
-                /*
-                if(! obj.$js_func){
-                    // not a Javascript function or constructor
-                    return $B.function
-                }
-                */
-                return $B.JSFunction
-            case "object":
-                if(Array.isArray(obj)){
-                    return $B.js_array
-                }else if(obj instanceof $B.str_dict){
-                    return _b_.dict
-                }else if(typeof Node !== "undefined" // undefined in Web Workers
-                        && obj instanceof Node){
-                    if(obj.tagName){
-                        return $B.imported['browser.html'][obj.tagName] ||
-                                   $B.DOMNode
-                    }
-                    return $B.DOMNode
-                }else if(obj instanceof Event){
-                    return $B.DOMEvent
-                }
-                break
-        }
+                return $B.DOMNode
+            }else if(obj instanceof Event){
+                return $B.DOMEvent
+            }else{
+                return $B.get_jsobj_class(obj)
+            }
+            break
     }
-    if(klass === undefined){
-        return $B.get_jsobj_class(obj)
-    }
-    return klass
 }
 
 $B.exact_type = function(obj, cls){
@@ -915,6 +902,7 @@ $B.make_js_iterator = function(iterator, frame, lineno){
         }
     }
     if(iterator.ob_type === _b_.range){
+        console.log('fast trange')
         var obj = {ix: iterator.start}
         if(iterator.step > 0){
             return {
