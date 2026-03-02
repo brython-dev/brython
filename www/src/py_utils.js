@@ -785,8 +785,13 @@ $B.get_class = function(obj){
     if(obj.ob_type){
         return obj.ob_type
     }
+    var klass
     switch(typeof obj){
         case "number":
+            if(Number.isInteger(obj)){
+                return _b_.int
+            }
+            break
         case "bigint":
             return _b_.int
         case "string":
@@ -794,18 +799,11 @@ $B.get_class = function(obj){
         case "boolean":
             return _b_.bool
         case "function":
-            /*
-            if(! obj.$js_func){
-                // not a Javascript function or constructor
-                return $B.function
-            }
-            */
+            // Python functions have ob_type set
             return $B.JSFunction
         case "object":
             if(Array.isArray(obj)){
                 return $B.js_array
-            }else if(obj instanceof $B.str_dict){
-                return _b_.dict
             }else if(typeof Node !== "undefined" // undefined in Web Workers
                     && obj instanceof Node){
                 if(obj.tagName){
@@ -818,7 +816,10 @@ $B.get_class = function(obj){
             }
             break
     }
-    return $B.get_jsobj_class(obj)
+    if(klass === undefined){
+        return $B.get_jsobj_class(obj)
+    }
+    return klass
 }
 
 $B.exact_type = function(obj, cls){
