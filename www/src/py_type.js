@@ -376,10 +376,14 @@ $B.make_annotate_func = function(dict, annotations, class_frame){
         return
     }
     var __annotate_func__ = annotations
+    __annotate_func__.ob_type = $B.function
+    __annotate_func__.dict = $B.empty_dict()
     $B.str_dict_set(dict, '__annotate_func__', __annotate_func__)
     $B.set_function_infos(__annotate_func__,
         {
             __defaults__: _b_.None,
+            __doc__: _b_.None,
+            __globals__: $B.frame_obj.frame,
             __kwdefaults__: _b_.None,
             __name__: '__annotate__',
             __module__: class_frame[2],
@@ -387,7 +391,6 @@ $B.make_annotate_func = function(dict, annotations, class_frame){
             __file__: class_frame.__file__
         }
     )
-    $B.setup_function(__annotate_func__)
 }
 
 $B.check_annotate_format = function(format){

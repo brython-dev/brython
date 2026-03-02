@@ -215,7 +215,7 @@ $B.special_string_repr={8:"\\x08",9:"\\t",10:"\\n",11:"\\x0b",12:"\\x0c",13:"\\r
 $B.$py_next_hash=Math.pow(2,53)-1
 $B.$py_UUID=Math.floor(Math.random()*2**50)
 $B.lambda_magic=Math.random().toString(36).substr(2,8)
-const func_attrs=['__module__','__name__','__qualname__','__file__','__defaults__','__kwdefaults__','__doc__','arg_names','args_vararg','args_kwarg','positional_length','lineno','flags','free_vars','kwonlyargs_length','posonlyargs_length','varnames','__annotations__','__type_params__','method_class'
+const func_attrs=['__module__','__name__','__qualname__','__file__','__defaults__','__kwdefaults__','__doc__','arg_names','args_vararg','args_kwarg','positional_length','lineno','flags','free_vars','kwonlyargs_length','posonlyargs_length','varnames','__annotations__','__type_params__','__globals__','method_class'
 ]
 var i=0
 $B.func_attrs={}
@@ -669,8 +669,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-03-02 14:54:30.707852"
-__BRYTHON__.timestamp=1772459670707
+__BRYTHON__.compiled_date="2026-03-02 22:50:41.116837"
+__BRYTHON__.timestamp=1772488241116
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1632,10 +1632,8 @@ $B.get_class=function(obj){
 if(obj===null){return $B.imported.javascript.NullType }
 if(obj===undefined){return $B.imported.javascript.UndefinedType }
 if(obj.ob_type){return obj.ob_type}
-var klass=obj.__class__
-if(klass !==undefined){console.log('old school __class__',klass)
-console.log(Error('trace').stack)}
-if(klass===undefined){switch(typeof obj){case "number":
+var klass
+switch(typeof obj){case "number":
 if(Number.isInteger(obj)){return _b_.int}
 break
 case "bigint":
@@ -1647,11 +1645,11 @@ return _b_.bool
 case "function":
 return $B.JSFunction
 case "object":
-if(Array.isArray(obj)){return $B.js_array}else if(obj instanceof $B.str_dict){return _b_.dict}else if(typeof Node !=="undefined" 
+if(Array.isArray(obj)){return $B.js_array}else if(typeof Node !=="undefined" 
 && obj instanceof Node){if(obj.tagName){return $B.imported['browser.html'][obj.tagName]||
 $B.DOMNode}
 return $B.DOMNode}else if(obj instanceof Event){return $B.DOMEvent}
-break}}
+break}
 if(klass===undefined){return $B.get_jsobj_class(obj)}
 return klass}
 $B.exact_type=function(obj,cls){var klass=$B.get_class(obj)
@@ -2064,13 +2062,13 @@ if(frame.positions){return frame.positions[Math.floor(inum/2)]}}}
 $B.rich_op=function(op,x,y,inum){try{return $B.rich_op1(op,x,y)}catch(exc){$B.set_inum(inum)
 throw exc}}
 $B.rich_op1=function(op,x,y){
-var res_is_int,res_is_float,x_num,y_num,x_type=$B.get_class(x),y_type=$B.get_class(y)
+var res_is_int,res_is_float,x_num,y_num
 if(typeof x=="number"){x_num=x
 if(typeof y=="number"){res_is_int=true
-y_num=y}else if(y_type===_b_.float){res_is_float=true
-y_num=y.value}}else if(x_type===_b_.float){x_num=x.value
+y_num=y}else if(y.ob_type===_b_.float){res_is_float=true
+y_num=y.value}}else if(x.ob_type===_b_.float){x_num=x.value
 if(typeof y=="number"){y_num=y
-res_is_float=true}else if(y_type===_b_.float){res_is_float=true
+res_is_float=true}else if(y.ob_type===_b_.float){res_is_float=true
 y_num=y.value}}
 if(res_is_int ||res_is_float){var z
 switch(op){case "__add__":
@@ -2090,6 +2088,7 @@ if(y_num==0){$B.RAISE(_b_.ZeroDivisionError,"division by zero")}
 z=x_num/y_num
 return{ob_type:_b_.float,value:z}}
 if(z){if(res_is_int && Number.isSafeInteger(z)){return z}else if(res_is_float){return{ob_type:_b_.float,value:z}}}}else if(typeof x=="string" && typeof y=="string" && op=="__add__"){return x+y}
+var x_type=$B.get_class(x),y_type=$B.get_class(y)
 var rop='__r'+op.substr(2),method
 if(x_type===y_type){
 method=$B.$getattr(x_type,op,$B.NULL)
@@ -2520,10 +2519,11 @@ return has_mro_entries ? new_bases :bases}
 $B.make_annotate_func=function(dict,annotations,class_frame){if(annotations===undefined){$B.str_dict_set(dict,'__annotate_func__',_b_.None)
 return}
 var __annotate_func__=annotations
+__annotate_func__.ob_type=$B.function
+__annotate_func__.dict=$B.empty_dict()
 $B.str_dict_set(dict,'__annotate_func__',__annotate_func__)
-$B.set_function_infos(__annotate_func__,{__defaults__:_b_.None,__kwdefaults__:_b_.None,__name__:'__annotate__',__module__:class_frame[2],__qualname__:class_frame[0]+'.__annotate__',__file__:class_frame.__file__}
-)
-$B.setup_function(__annotate_func__)}
+$B.set_function_infos(__annotate_func__,{__defaults__:_b_.None,__doc__:_b_.None,__globals__:$B.frame_obj.frame,__kwdefaults__:_b_.None,__name__:'__annotate__',__module__:class_frame[2],__qualname__:class_frame[0]+'.__annotate__',__file__:class_frame.__file__}
+)}
 $B.check_annotate_format=function(format){if(! $B.$isinstance(format,_b_.int)){$B.RAISE(_b_.TypeError,'__annotate__ argument should be '+
 `int, not ${$B.class_name(format)}`)}
 format=$B.int_value(format)
@@ -3481,6 +3481,11 @@ if(! $B.$isinstance(value,_b_.dict)){$B.RAISE(_b_.TypeError,`__dict__ must be se
 `'${$B.class_name(value)}'`
 )}
 self.dict=value}
+function_funcs.__doc___get=function(self){return self.$function_infos[$B.func_attrs.__doc__]}
+function_funcs.__doc___set=function(self,value){self.$function_infos[$B.func_attrs.__doc__]=value}
+function_funcs.__globals___get=function(self){var frame=self.$function_infos[$B.func_attrs.__globals__]
+return $B.obj_dict(frame[3])}
+function_funcs.__globals___set=_b_.None
 function_funcs.__kwdefaults___get=function(self){$B.check_infos(self)
 return self.$infos.__kwdefaults__}
 function_funcs.__kwdefaults___set=function(self,value){$B.check_infos(self)
@@ -3490,6 +3495,8 @@ var kwd={}
 for(var item of _b_.dict.$iter_items(value)){kwd[item.key]=item.value}
 self.$function_infos[$B.func_attrs.__kwdefaults__]=kwd
 $B.make_args_parser(self)}
+function_funcs.__module___get=function(self){return self.$function_infos[$B.func_attrs.__module__]}
+function_funcs.__module___set=function(self,value){self.$function_infos[$B.func_attrs.__module__]=value}
 function_funcs.__name___get=function(self){return self.$function_infos[$B.func_attrs.__name__]}
 function_funcs.__name___set=function(self,value){self.$function_infos[$B.func_attrs.__name__]=value}
 function_funcs.__qualname___get=function(self){return self.$function_infos[$B.func_attrs.__qualname__]}
@@ -3497,17 +3504,10 @@ function_funcs.__qualname___set=function(self,value){self.$function_infos[$B.fun
 function_funcs.__type_params___get=function(self){var res=self.$function_infos[$B.func_attrs.__type_params__]
 return $B.fast_tuple(res)}
 function_funcs.__type_params___set=function(self,value){self.$function_infos[$B.func_attrs.__type_params__]=value}
-$B.function.tp_members=[["__doc__",$B.TYPES.OBJECT,"func_doc",0],["__globals__",$B.TYPES.OBJECT,"func_globals",1],["__module__",$B.TYPES.OBJECT,"func_module",0]
-]
-$B.function.tp_getset=["__code__","__defaults__","__kwdefaults__","__annotations__","__annotate__","__dict__","__name__","__qualname__","__type_params__","__builtins__","__closure__" 
+$B.function.tp_getset=["__code__","__defaults__","__kwdefaults__","__annotations__","__annotate__","__dict__","__name__","__qualname__","__type_params__",
+"__builtins__","__closure__","__doc__","__globals__","__module__"
 ]
 $B.set_func_names($B.function,"builtins")
-$B.setup_function=function(f){f.ob_type=$B.function
-f.dict=$B.empty_dict()
-f.$args_parser=$B.make_args_parser_and_parse
-f.func_doc=f.$function_infos[$B.func_attrs.__doc__]
-f.func_globals=$B.obj_dict($B.frame_obj.frame[3])
-f.func_module=f.$function_infos[$B.func_attrs.__module__]}
 $B.check_infos=function(f){if(! f.$infos){if(f.$function_infos){$B.make_function_infos(f,...f.$function_infos)}else{console.log('no $infos, no $function_infos')}}}
 $B.make_function_infos=function(f,__module__,co_name,co_qualname,co_filename,__defaults__,__kwdefaults__,__doc__,arg_names,vararg,kwarg,co_argcount,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_posonlyargcount,co_varnames,annotations,type_params
 ){f.$is_func=true
@@ -10354,7 +10354,6 @@ if($B.exact_type(self,_dict_keys)||
 if(! $B.exact_type(other,klass)){return false}
 var other_items=_b_.list.$factory(other)
 return dict_view_op[op](self.items,other_items)}}})(op)}}
-$B.str_dict=function(){}
 var dict=_b_.dict
 dict.$match_mapping_pattern=true 
 $B.str_dict_get=function(d,key,_default){if(d.$strings.hasOwnProperty(key)){return d.$strings[key]}
@@ -15469,8 +15468,10 @@ prefix+tab+`${positional.length}, `+
 `${this.args.posonlyargs.length}, `+
 `[${varnames}], `+
 `${annotations}, `+
-`${has_type_params ? 'type_params' : '[]'}]\n`;
-js+=prefix+`$B.setup_function(${name2})\n`
+`${has_type_params ? 'type_params' : '[]'}, frame]\n`;
+js+=prefix+`${name2}.ob_type = $B.function\n`+
+prefix+`${name2}.$args_parser = $B.make_args_parser_and_parse\n`+
+prefix+`${name2}.dict = $B.empty_dict()\n`
 if(anns && ! postponed){
 var inum=add_to_positions(scopes,this)
 js+=prefix+`${name2}.__annotate__ = function(format){\n`

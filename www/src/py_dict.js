@@ -308,8 +308,6 @@ function make_view_comparison_methods(klass){
     }
 }
 
-$B.str_dict = function(){}
-
 var dict = _b_.dict
 
 dict.$match_mapping_pattern = true // for pattern matching (PEP 634)

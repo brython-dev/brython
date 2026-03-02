@@ -416,15 +416,7 @@ $B.function.tp_getset = [
 
 /* function end */
 
-
 $B.set_func_names($B.function, "builtins")
-
-$B.setup_function = function(f){
-    f.dict = $B.empty_dict()
-    f.func_doc = f.$function_infos[$B.func_attrs.__doc__]
-    f.func_globals = $B.obj_dict($B.frame_obj.frame[3])
-    f.func_module = f.$function_infos[$B.func_attrs.__module__]
-}
 
 $B.check_infos = function(f){
     if(! f.$infos){
