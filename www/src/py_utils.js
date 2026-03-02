@@ -902,7 +902,6 @@ $B.make_js_iterator = function(iterator, frame, lineno){
         }
     }
     if(iterator.ob_type === _b_.range){
-        console.log('fast trange')
         var obj = {ix: iterator.start}
         if(iterator.step > 0){
             return {
@@ -936,20 +935,6 @@ $B.make_js_iterator = function(iterator, frame, lineno){
             }
         }
     }
-    /*
-    if(iterator[Symbol.iterator] && ! iterator.$is_js_array){
-        var it = iterator[Symbol.iterator]()
-        return {
-            [Symbol.iterator](){
-                return this
-            },
-            next(){
-                set_lineno(frame, lineno)
-                return it.next()
-            }
-        }
-    }
-    */
 
     var it = _b_.iter(iterator)
     var test = false // $B.get_class(iterator) === $B.js_array //.tp_name == 'FlagBoundary'
@@ -1971,24 +1956,22 @@ $B.rich_op1 = function(op, x, y){
     var res_is_int,
         res_is_float,
         x_num,
-        y_num,
-        x_type = $B.get_class(x),
-        y_type = $B.get_class(y)
+        y_num
     if(typeof x == "number"){
         x_num = x
         if(typeof y == "number"){
             res_is_int = true
             y_num = y
-        }else if(y_type === _b_.float){
+        }else if(y.ob_type === _b_.float){
             res_is_float = true
             y_num = y.value
         }
-    }else if(x_type === _b_.float){
+    }else if(x.ob_type === _b_.float){
         x_num = x.value
         if(typeof y == "number"){
             y_num = y
             res_is_float = true
-        }else if(y_type === _b_.float){
+        }else if(y.ob_type === _b_.float){
             res_is_float = true
             y_num = y.value
         }
@@ -2029,18 +2012,13 @@ $B.rich_op1 = function(op, x, y){
         return x + y
     }
 
+    var x_type = $B.get_class(x),
+        y_type = $B.get_class(y)
+
     var rop = '__r' + op.substr(2),
         method
     if(x_type === y_type){
         // For objects of the same type, don't try the reversed operator
-        /*
-        if(x_type === _b_.int){
-            return $B.$call($B.str_dict_get(_b_.int.dict, op), x, y)
-        }else if(x_type === _b_.bool){
-            var method = $B.search_in_mro(_b_.bool, op)
-            return $B.$call(method, x, y)
-        }
-        */
         method = $B.$getattr(x_type, op, $B.NULL)
         if(method === $B.NULL){
             var kl_name = $B.class_name(x)
