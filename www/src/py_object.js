@@ -4,7 +4,11 @@
 var _b_ = $B.builtins
 var object = _b_.object
 
+$B.time_object_getattribute = 0
+$B.time_getattribute = 0
+
 $B.object_getattribute = function(obj, attr){
+        var t0 = window.performance.now()
     var klass = $B.get_class(obj)
     var test = false // attr == 'clientHeight' // klass === _b_.TypeError
     var getattribute = $B.search_slot(klass, 'tp_getattro', $B.NULL)
@@ -17,7 +21,9 @@ $B.object_getattribute = function(obj, attr){
     }
     var res = $B.NULL
     try{
+        var t1 = window.performance.now()
         res = getattribute(obj, attr)
+        $B.time_getattribute += window.performance.now() - t1
     }catch(err){
         $B.RAISE_IF_NOT(err, _b_.AttributeError)
     }
@@ -37,6 +43,7 @@ $B.object_getattribute = function(obj, attr){
             return $B.NULL
         }
     }
+        $B.time_object_getattribute += window.performance.now() - t0
     return res
 }
 
@@ -268,8 +275,10 @@ _b_.object.tp_str = function(self){
     return $B.$call(repr_func, self)
 }
 
+$B.nb_obj_ga = 0
+
 _b_.object.tp_getattro = function(self, attr){
-    var test = attr == '__qualname__' && self.ob_type && self.ob_type.tp_name == 'tuple'
+    var test = false // attr == '__qualname__' && self.ob_type && self.ob_type.tp_name == 'tuple'
     var klass = $B.get_class(self)
     if(test){
         console.log('getattr', attr, 'of self', self, klass)
@@ -326,6 +335,11 @@ _b_.object.tp_getattro = function(self, attr){
         if(test){
             console.log('call getter of non-data descr', in_mro, self, klass)
         }
+        klass.$fast_attr = klass.$fast_attr ?? {}
+        klass.$fast_attr[attr] = function(self){
+            return getter(in_mro, self, klass)
+        }
+        $B.nb_obj_ga++
         return getter(in_mro, self, klass)
     }else if(in_mro !== $B.NULL){
         if(test){
@@ -453,7 +467,7 @@ object_funcs.__dir__ = function(self){
 
     /* Merge in attrs reachable from its class. */
     itsclass = $B.get_class(self)
-    if(itsclass != NULL){
+    if(itsclass != $B.NULL){
         $B.merge_class_dict(temp, itsclass)
     }
     result = $B.$list(Array.from($B.make_js_iterator(temp)))
@@ -486,13 +500,12 @@ object_funcs.__init_subclass__ = function(self){
     var $ = $B.args("__init_subclass__", 1, {cls: null}, ['cls'],
             arguments, {}, "args", "kwargs")
     if($.args.length > 0){
-        console.log('init subclass, args', $.args)
         var qualname = $B.$getattr($.cls, '__qualname__', '<type>')
         $B.RAISE(_b_.TypeError,
             `${qualname}.__init_subclass__ takes no arguments ` +
             `(${$.args.length} given)`)
     }
-    if(_b_.len($.kwargs) > 0){
+    if(_b_.dict.mp_length($.kwargs) > 0){
         var qualname = $B.$getattr($.cls, '__qualname__', '<type>')
         $B.RAISE(_b_.TypeError,
             `${qualname}.__init_subclass__() ` +

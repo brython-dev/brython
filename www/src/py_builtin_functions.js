@@ -761,7 +761,12 @@ $B.search_in_mro = function(klass, attr, _default){
 
 $B.search_in_dict = function(obj, attr, _default){
     if(obj.dict){
-        var v = $B.str_dict_get(obj.dict, attr, $B.NULL)
+        try{
+            var v = $B.str_dict_get(obj.dict, attr, $B.NULL)
+        }catch(err){
+            console.log('error', obj, attr)
+            throw err
+        }
         if(v !== $B.NULL){
             return v
         }
@@ -770,8 +775,21 @@ $B.search_in_dict = function(obj, attr, _default){
 }
 
 
+$B.$getattr_pep657 = function(obj, attr, inum){
+    try{
+        return $B.$getattr(obj, attr)
+    }catch(err){
+        $B.set_inum(inum)
+        throw err
+    }
+}
+
+$B.time_getattr = 0
+$B.time_obj_getattr = 0
+
 $B.$getattr = function(obj, attr, _default){
     // Used internally to avoid having to parse the arguments
+    var t0 = window.performance.now()
     var test = false // attr == 'KW_ONLY'
     if(test){
         console.log('$getattr', obj, attr)
@@ -819,6 +837,7 @@ $B.$getattr = function(obj, attr, _default){
         }
         throw $B.attr_error(attr, obj)
     }
+    $B.time_getattr += window.performance.now() - t0
     return res
 }
 
@@ -1028,7 +1047,9 @@ $B.$isinstance = function(obj, cls){
     var instancecheck = $B.type_getattribute($B.get_class(cls),
         '__instancecheck__', $B.NULL)
     if(instancecheck !== $B.NULL){
-        return $B.$call(instancecheck, cls, obj)
+        if(instancecheck.method !== _b_.type.tp_funcs.__instancecheck__){
+            return $B.$call(instancecheck, cls, obj)
+        }
     }
     return false
 }
@@ -1767,10 +1788,10 @@ var $$super = _b_.super
 function supercheck(type, obj){
     /* obj can be a class, or an instance of one:
 
-       - If it is a class, it must be a subclass of 'type'.      This case is
+       - If it is a class, it must be a subclass of 'type'. This case is
          used for class methods; the return value is obj.
 
-       - If it is an instance, it must be an instance of 'type'.  This is
+       - If it is an instance, it must be an instance of 'type'. This is
          the normal case; the return value is obj.__class__.
 
        But... when obj is an instance, we want to allow for the case where

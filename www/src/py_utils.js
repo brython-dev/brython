@@ -1175,15 +1175,6 @@ $B.getitem_slice = function(obj, slice, inum){
     }
 }
 
-$B.$getattr_pep657 = function(obj, attr, inum){
-    try{
-        return $B.$getattr(obj, attr)
-    }catch(err){
-        $B.set_inum(inum)
-        throw err
-    }
-}
-
 $B.$setitem = function(obj, item, value, inum){
     var klass = $B.get_class(obj)
     if(Array.isArray(obj) && klass === $B.js_array &&

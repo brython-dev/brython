@@ -662,7 +662,7 @@ $B.JSObj.tp_iter = function(self){
 }
 
 $B.JSObj.tp_getattro = function(_self, attr){
-    var test = false // attr == "eval"
+    var test = false //attr == "performance"
     if(test){
         console.log("__ga__", _self, attr)
     }
@@ -670,7 +670,10 @@ $B.JSObj.tp_getattro = function(_self, attr){
     if(test){
         console.log(res)
     }
-    return res
+    if(res !== $B.NULL){
+        return res
+    }
+
     var js_attr = _self[attr]
     if(js_attr == undefined && typeof _self == "function"){
         js_attr = _self.$js_func[attr]

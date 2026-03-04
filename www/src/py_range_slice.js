@@ -5,9 +5,8 @@ var _b_ = $B.builtins,
     None = _b_.None,
     range = _b_.range
 
-range.$match_sequence_pattern = true, // for Pattern Matching (PEP 634)
+range.$match_sequence_pattern = true // for Pattern Matching (PEP 634)
 range.$is_sequence = true
-range.$not_basetype = true  // range cannot be a base class
 
 function range_eq(self, other){
     if($B.$isinstance(other, range)){
@@ -79,15 +78,15 @@ $B.range_iterator.tp_iternext = function*(self){
 var range_iterator_funcs = $B.range_iterator.tp_funcs = {}
 
 range_iterator_funcs.__length_hint__ = function(self){
-
+    return _b_.range.mp_length(self.obj)
 }
 
 range_iterator_funcs.__reduce__ = function(self){
-
+    return $B.fast_tuple([_b_.iter, $B.fast_tuple([self.obj]), _b_.None])
 }
 
-range_iterator_funcs.__setstate__ = function(self){
-
+range_iterator_funcs.__setstate__ = function(self, value){
+    self.it = self.start + value * self.step
 }
 
 $B.range_iterator.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]
@@ -156,7 +155,8 @@ _b_.range.tp_iter = function(self){
         stop,
         step,
         safe: self.$safe,
-        it: start
+        it: start,
+        obj: self
     }
 }
 
@@ -290,7 +290,7 @@ _b_.range.sq_contains = function(self, other){
 var range_funcs = _b_.range.tp_funcs = {}
 
 range_funcs.__reduce__ = function(self){
-
+    return $B.fast_tuple([_b_.range, $B.fast_tuple([self.start, self.stop, self.step])])
 }
 
 range_funcs.__reversed__ = function(self){

@@ -137,6 +137,17 @@ function set_type_new(dict){
     }
 }
 
+function set_type_getattro(cls){
+    for(var klass of cls.tp_mro){
+        if($B.str_dict_get(klass.dict, '__getattribute__', $B.NULL) !== $B.NULL){
+            break
+        }else if(klass.tp_getattro){
+            cls.tp_getattro = klass.tp_getattro
+            break
+        }
+    }
+}
+
 function current_module(){
     if($B.frame_obj === null){
         return '<unknown>'
@@ -852,13 +863,16 @@ $B.builtin_slot = function(cls, slot){
     return $B.NULL
 }
 
-$B.type_getattribute = function(klass, attr, _default){
+$B.type_getattribute = function(klass, attr){
     var test = false // attr == 'spam'
     if(test){
         console.log('type getattribute', attr, klass)
 
     }
     var meta = $B.get_class(klass)
+    if(meta === _b_.type){
+        return meta.tp_getattro(klass, attr)
+    }
     var getattro = $B.search_slot(meta, 'tp_getattro', $B.NULL)
     if(getattro !== $B.NULL){
         if(test){
@@ -1208,6 +1222,7 @@ _b_.type.tp_new = function(cls, args, kw){
     class_obj.tp_mro = $B.make_mro(class_obj)
 
     set_type_new(cl_dict)
+    set_type_getattro(class_obj)
 
     var res = type_new_get_bases(ctx, class_obj)
     class_obj.tp_base = ctx.base
@@ -1255,7 +1270,6 @@ _b_.type.tp_new = function(cls, args, kw){
             [object_get_dict, object_set_dict]
         )
     )
-
     // set class attributes
     for(var item of _b_.dict.$iter_items(cl_dict)){
         var key = item.key,
@@ -1295,8 +1309,13 @@ _b_.type.tp_new = function(cls, args, kw){
     if(test){
         console.log('class obj', class_obj)
     }
-    // set_tp_slots(class_obj)
-    var sup = $B.$call(_b_.super, class_obj, class_obj)
+    var sup =
+        {
+        ob_type: _b_.super,
+        type: class_obj,
+        obj: class_obj,
+        obj_type: class_obj
+    }
     var init_subclass = _b_.super.tp_getattro(sup, "__init_subclass__")
     if(test){
         console.log('call init subclass', init_subclass)
@@ -1308,6 +1327,7 @@ _b_.type.tp_new = function(cls, args, kw){
         throw err
     }
     class_obj.tp_flags |= $B.TPFLAGS.READY
+
     return class_obj
 }
 
