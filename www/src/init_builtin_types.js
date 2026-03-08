@@ -741,7 +741,7 @@ init_type($B, "cell", [
 
   contents
     the contents of the cell. If not specified, the cell will be empty,
-    and
+    and 
  further attempts to access its cell_contents attribute will
     raise a ValueError.`,
     [_b_.object],
@@ -1531,7 +1531,7 @@ init_type($B, "builtin_method", [
     0,
     22786,
     40,
-    _b_.builtin_function_or_method,
+    $B.builtin_function_or_method,
     0,
     $B.NULL,
     [$B.builtin_function_or_method],
@@ -1543,7 +1543,7 @@ init_type($B, "odict_items", [
     0,
     20738,
     0,
-    _b_.dict_items,
+    $B.dict_items,
     0,
     $B.NULL,
     [$B.dict_items],
@@ -1555,7 +1555,7 @@ init_type($B, "odict_keys", [
     0,
     20738,
     0,
-    _b_.dict_keys,
+    $B.dict_keys,
     0,
     $B.NULL,
     [$B.dict_keys],
@@ -1567,7 +1567,7 @@ init_type($B, "odict_values", [
     0,
     20738,
     0,
-    _b_.dict_values,
+    $B.dict_values,
     0,
     $B.NULL,
     [$B.dict_values],
