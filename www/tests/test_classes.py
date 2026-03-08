@@ -1204,5 +1204,46 @@ assert_raises(TypeError, Foo, foo_id=1, bar_id=2,
 
 Foo(foo_id=1)
 Foo(foo_id=1, **{})
-  
+
+# resetting __getattribute__ and __getattr__
+class Meta(type):
+  pass
+
+class A(metaclass=Meta):
+
+  def __getattr__(self, attr):
+    return 555
+
+  def f(self):
+    pass
+
+class B(A):
+    pass
+
+try:
+  A.g
+except AttributeError:
+  pass
+
+a = A()
+
+A.__getattr__ = lambda obj, attr: 101
+
+assert A().g == 101
+
+A.__getattribute__ = lambda obj, attr: 104
+
+assert A().h == 104
+assert B().h == 104
+
+del A.__getattribute__
+
+assert A().h == 101
+assert B().h == 101
+
+del A.__getattr__
+
+assert not hasattr(A(), 'h')
+assert not hasattr(B(), 'h')
+
 print('passed all tests..')

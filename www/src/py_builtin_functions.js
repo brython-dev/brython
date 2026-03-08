@@ -789,7 +789,7 @@ $B.time_obj_getattr = 0
 
 $B.$getattr = function(obj, attr, _default){
     // Used internally to avoid having to parse the arguments
-    var t0 = window.performance.now()
+    var t0 = globalThis.performance.now()
     var test = false // attr == 'KW_ONLY'
     if(test){
         console.log('$getattr', obj, attr)
@@ -817,9 +817,8 @@ $B.$getattr = function(obj, attr, _default){
         console.log("get attr", attr, "of undefined")
     }
 
-    var is_class = $B.is_type(obj) // obj.$is_class || obj.$factory
-
     var klass = $B.get_class(obj)
+    var is_class = klass.tp_mro.includes(_b_.type)
 
     if(test){
         console.log("attr", attr, "of", obj, "class", klass ?? $B.get_class(obj),
@@ -837,7 +836,7 @@ $B.$getattr = function(obj, attr, _default){
         }
         throw $B.attr_error(attr, obj)
     }
-    $B.time_getattr += window.performance.now() - t0
+    $B.time_getattr += globalThis.performance.now() - t0
     return res
 }
 
@@ -913,7 +912,7 @@ var help = _b_.help = function(obj){
             }else{
                 doc_url = lib_url
             }
-            window.open(`${doc_url}/${url}.html#` + obj)
+            globalThis.open(`${doc_url}/${url}.html#` + obj)
             return
         }
         // built-in functions or classes
@@ -928,7 +927,7 @@ var help = _b_.help = function(obj){
                 url = lib_url + `/exceptions.html#${obj}`
             }
             if(url){
-                window.open(url)
+                globalThis.open(url)
                 return
             }
         }
@@ -1925,6 +1924,9 @@ _b_.super.tp_getattro = function(self, attr){
         if($test){
             console.log('call getter', getter)
             console.log('args', self.obj, self.obj_type)
+        }
+        if(typeof getter != 'function'){
+            console.log('not a function', getter, f_cls)
         }
         res = getter(f, self.obj, self.obj_type)
     }else{

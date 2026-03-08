@@ -276,13 +276,17 @@ function make_richcompare(cls){
 $B.finalize_type = function(cls){
     cls.tp_mro = $B.make_mro(cls)
     cls.dict = cls.dict ?? $B.empty_dict()
+    cls.tp_subclasses = []
+    for(var base of cls.tp_bases){
+        base.tp_subclasses.push(cls)
+    }
     var parts = cls.tp_name.split('.')
     var module = parts.length == 1 ? 'builtins' :
         parts.slice(0, parts.length - 1).join('.')
     if($B.str_dict_get(cls.dict, '__module__', $B.NULL) === $B.NULL){
         $B.str_dict_set(cls.dict, '__module__', module)
     }
-    
+
     if(cls.tp_getset){
         for(var descr of cls.tp_getset){
             var getset = [
@@ -345,6 +349,8 @@ $B.finalize_type = function(cls){
             $B.wrapper_methods[slot](cls, slot)
         }
     }
+
+    $B.make_getattr(cls)
 }
 
 

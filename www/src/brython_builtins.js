@@ -281,7 +281,8 @@ $B.make_mro = function(cls){
 }
 
 $B.is_type = function(obj){
-    return $B.$isinstance(obj, _b_.type)
+    var klass = $B.get_class(obj)
+    return klass.tp_mro.includes(_b_.type)
 }
 
 $B.is_builtin_type = function(cls){
@@ -313,7 +314,8 @@ $B.make_builtin_class = function(tp_name, tp_bases){
     var cls = {
         ob_type: _b_.type,
         tp_name,
-        tp_bases: tp_bases ?? [_b_.object]
+        tp_bases: tp_bases ?? [_b_.object],
+        tp_base: tp_bases ? tp_bases[0] : _b_.object
     }
     if(tp_bases){
         cls.tp_mro = [cls, ...tp_bases, _b_.object]
@@ -334,6 +336,7 @@ $B.make_type = function(tp_name, tp_bases){
         ob_type: _b_.type,
         tp_name,
         tp_bases: tp_bases ?? [_b_.object],
+        tp_base: tp_bases ? tp_bases[0] : _b_.object,
         dict: $B.empty_dict()
     }
     if(tp_bases){

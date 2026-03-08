@@ -6,25 +6,41 @@ var object = _b_.object
 
 $B.time_object_getattribute = 0
 $B.time_getattribute = 0
+$B.time_search_slot = 0
 
 $B.object_getattribute = function(obj, attr){
-        var t0 = window.performance.now()
+    var t0 = globalThis.performance.now()
     var klass = $B.get_class(obj)
-    var test = false // attr == 'clientHeight' // klass === _b_.TypeError
-    var getattribute = $B.search_slot(klass, 'tp_getattro', $B.NULL)
-    if(getattribute === $B.NULL){
-        $B.RAISE(_b_.TypeError, 'no __getattribute__')
+    var test = false // attr == '__path__' // && klass.tp_name === 'AttributeError'
+    var getattribute = klass.$getattribute ?? $B.search_slot(klass, 'tp_getattro', $B.NULL)
+    $B.time_search_slot += globalThis.performance.now() - t0
+    if(test){
+        console.log('attr', attr, 'of obj', obj, 'klass', klass,
+            '\n  getattribute', getattribute)
     }
+    var res
+    try{
+        res = getattribute(obj, attr)
+    }catch(err){
+        $B.RAISE_IF_NOT(err, _b_.AttributeError)
+        res = $B.NULL
+    }
+    $B.time_object_getattribute += globalThis.performance.now() - t0
+    return res
+    /*
     if(test){
         console.log('get attr', attr, 'of obj', obj, 'klass', klass)
         console.log(getattribute)
     }
     var res = $B.NULL
     try{
-        var t1 = window.performance.now()
+        var t1 = globalThis.performance.now()
         res = getattribute(obj, attr)
-        $B.time_getattribute += window.performance.now() - t1
+        $B.time_getattribute += globalThis.performance.now() - t1
     }catch(err){
+        if(typeof getattribute !== 'function'){
+            console.log('not a function', getattribute, obj, attr)
+        }
         $B.RAISE_IF_NOT(err, _b_.AttributeError)
     }
     if(test){
@@ -43,8 +59,8 @@ $B.object_getattribute = function(obj, attr){
             return $B.NULL
         }
     }
-        $B.time_object_getattribute += window.performance.now() - t0
     return res
+    */
 }
 
 object.$new = function(cls){
@@ -230,10 +246,10 @@ _b_.object.tp_setattro = function(self, attr, value){
     if(dict){
         _b_.dict.$setitem(dict, attr, value)
     }else{
-        $B.RAISE(_b_.AttributeError,
-            `'${$B.get_name(klass)}' object has no attribute ` +
+        var exc = $B.attr_error(attr, self)
+        exc.args[0] = `'${$B.get_name(klass)}' object has no attribute ` +
             `'${attr}' and no __dict__ for setting new attributes`
-        )
+        throw exc
     }
     return _b_.None
 }
@@ -275,10 +291,11 @@ _b_.object.tp_str = function(self){
     return $B.$call(repr_func, self)
 }
 
-$B.nb_obj_ga = 0
+$B.time_object_tp_getattro = 0
 
 _b_.object.tp_getattro = function(self, attr){
-    var test = false // attr == '__qualname__' && self.ob_type && self.ob_type.tp_name == 'tuple'
+    var t0 = globalThis.performance.now()
+    var test = false // attr == '__dict__' // && self.ob_type && self.ob_type.tp_name == 'tuple'
     var klass = $B.get_class(self)
     if(test){
         console.log('getattr', attr, 'of self', self, klass)
@@ -297,6 +314,14 @@ _b_.object.tp_getattro = function(self, attr){
             console.log('class of in_mro', $B.get_class(in_mro))
         }
     }
+
+    if(in_mro !== $B.NULL &&
+            $B.get_class(in_mro) === $B.function &&
+            ((! self.dict) || $B.str_dict_get(self.dict, attr, $B.NULL) === $B.NULL)){
+        return $B.method.tp_new($B.method, [in_mro, self])
+    }
+
+
     var getter = $B.NULL
     if(in_mro !== $B.NULL){
         var in_mro_class = $B.get_class(in_mro)
@@ -315,6 +340,7 @@ _b_.object.tp_getattro = function(self, attr){
                 if(test){
                     console.log('res', res)
                 }
+                $B.time_object_tp_getattro += globalThis.performance.now() - t0
                 return res
             }
         }
@@ -325,6 +351,7 @@ _b_.object.tp_getattro = function(self, attr){
         console.log('in object dict', in_dict, '\n    type', $B.get_class(in_dict))
     }
     if(in_dict !== $B.NULL){
+                $B.time_object_tp_getattro += globalThis.performance.now() - t0
         return in_dict
     }else if(getter !== $B.NULL){
         // non-data descriptor
@@ -340,11 +367,13 @@ _b_.object.tp_getattro = function(self, attr){
             return getter(in_mro, self, klass)
         }
         $B.nb_obj_ga++
+                $B.time_object_tp_getattro += globalThis.performance.now() - t0
         return getter(in_mro, self, klass)
     }else if(in_mro !== $B.NULL){
         if(test){
             console.log('return in_mro', in_mro)
         }
+                $B.time_object_tp_getattro += globalThis.performance.now() - t0
         return in_mro
     }
     if(test){

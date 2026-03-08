@@ -60,7 +60,8 @@ function define(tag_name, cls, options){
     }
     cls.$webcomponent = true
     cls.tp_mro.splice(cls.tp_mro.length - 1, 0, $B.DOMNode)
-    
+    $B.make_getattr(cls)
+
     // Create the Javascript class used for the component. It must have
     // the same name as the Python class
     var src = String.raw`var WebComponent = class extends HTMLElement {
