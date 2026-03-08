@@ -210,7 +210,8 @@ def get_slots_by_type(cls):
         elif slot == 'tp_base':
             attr_value = getattr(cls, slots[slot], None)
             if attr_value is not None:
-                value = '_b_.' + attr_value.__name__
+                head = '_b_' if attr_value.__name__ in dir(builtins) else '$B'
+                value = f'{head}.{attr_value.__name__}'
         elif slot == 'tp_bases':
             if hasattr(cls, '__bases__'):
                 bases = []
