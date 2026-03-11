@@ -2870,7 +2870,10 @@ str_funcs.rstrip = function(){
     return ''
 }
 
+$B.time_string_split = 0
+
 str_funcs.split = function(){
+    var t0 = globalThis.performance.now()
     var $ = $B.args("split", 3, {self: null, sep: null, maxsplit: null},
         ["self", "sep", "maxsplit"], arguments,
         {sep: _b_.None, maxsplit: -1}, null, null),
@@ -2932,23 +2935,33 @@ str_funcs.split = function(){
             seplen = sep.length
         if(maxsplit == 0){
             return $B.$list([$.self])
+        }else if(maxsplit == -1){
+            res = _self.split(sep)
+            if(_self.surrogates){
+                res = res.map($B.String)
+            }
+            return $B.$list(res)
         }
+        // can't use Javascript split(sep, maxsplit) because the part after
+        // maxplit is lost
+
         while(pos < _self.length){
-            if(_self.substr(pos, seplen) == sep){
-                res.push(s)
-                pos += seplen
-                if(maxsplit > -1 && res.length >= maxsplit){
-                    res.push(_self.substr(pos))
-                    return $B.$list(res.map($B.String))
-                }
-                s = ""
-            }else{
-                s += _self.charAt(pos)
-                pos++
+            var ix = _self.indexOf(sep, pos)
+            if(ix == -1){
+                res.push(_self.substr(pos))
+                break
+            }
+            res.push(_self.substring(pos, ix))
+            pos = ix + seplen
+            if(maxsplit > -1 && res.length >= maxsplit){
+                res.push(_self.substr(pos))
+                break
             }
         }
-        res.push(s)
-        return $B.$list(res.map($B.String))
+        if(_self.surrogates){
+            res = res.map($B.String)
+        }
+        return $B.$list(res)
     }
 }
 
@@ -3251,7 +3264,7 @@ Template_funcs.__reduce__ = function(self){
     $B.$import('string.templatelib')
     var module = $B.imported['string.templatelib']
     var _template_unpickle = $B.module_getattr(module, '_template_unpickle')
-    return $B.fast_tuple([_template_unpickle, 
+    return $B.fast_tuple([_template_unpickle,
         $B.fast_tuple([$B.fast_tuple(self.strings),
         $B.fast_tuple(self.interpolations)])])
 }
@@ -3274,6 +3287,100 @@ $B.Template.tp_members = [
 Template.tp_getset = ["values"]
 
 $B.set_func_names(Template, 'builtins')
+
+$B.ZTR = function(s){
+    this.s = s
+}
+
+$B.ZTR.prototype.split = function(sep){
+    var t0 = globalThis.performance.now()
+    var $ = $B.args("split", 2, {sep: null, maxsplit: null},
+        ["sep", "maxsplit"], arguments,
+        {sep: _b_.None, maxsplit: -1}, null, null),
+        maxsplit = $.maxsplit,
+        sep = $.sep,
+        pos = 0,
+        _self = to_string(this.s)
+    if($B.is_big_int(maxsplit)){
+        maxsplit = Number($B.int_value(maxsplit))
+    }
+    if(sep == ""){
+        $B.RAISE(_b_.ValueError, "empty separator")
+    }
+
+    if(sep === _b_.None){
+        let res = []
+        while(pos < _self.length && _self.charAt(pos).search(/\s/) > -1){
+            pos++
+        }
+        if(pos === _self.length - 1){
+            return $B.$list([_self])
+        }
+        let name = ""
+        while(1){
+            if(_self.charAt(pos).search(/\s/) == -1){
+                if(name == ""){
+                    name = _self.charAt(pos)
+                }else{
+                    name += _self.charAt(pos)
+                }
+            }else{
+                if(name !== ""){
+                    res.push(name)
+                    if(maxsplit !== -1 && res.length == maxsplit + 1){
+                        res.pop()
+                        res.push(name + _self.substr(pos))
+                        return $B.$list(res.map($B.String))
+                    }
+                    name = ""
+                }
+            }
+            pos++
+            if(pos > _self.length - 1){
+                if(name){
+                    res.push(name)
+                }
+                break
+            }
+        }
+        return $B.$list(res.map($B.String))
+    }else{
+        if(! $B.$isinstance(sep, _b_.str)){
+            $B.RAISE(_b_.TypeError, 'must be str or None, not ' +
+                $B.class_name(sep))
+        }
+        sep = to_string(sep)
+        let res = [],
+            s = "",
+            seplen = sep.length
+        if(maxsplit == 0){
+            return $B.$list([$.self])
+        }
+        while(pos < _self.length){
+            if(_self.substr(pos, seplen) == sep){
+                res.push(s)
+                pos += seplen
+                if(maxsplit > -1 && res.length >= maxsplit){
+                    res.push(_self.substr(pos))
+                }
+                s = ""
+            }else{
+                s += _self.charAt(pos)
+                pos++
+            }
+        }
+        if(_self.surrogates){
+            res = res.map($B.String)
+        }
+        return $B.$list(res)
+    }
+}
+
+_b_.ztr = $B.make_builtin_class('ztr')
+
+_b_.ztr.tp_new = function(cls, args, kw){
+    return new $B.ZTR(args[0])
+}
 
 
 })(__BRYTHON__);
