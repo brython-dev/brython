@@ -670,8 +670,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-03-08 17:37:15.813849"
-__BRYTHON__.timestamp=1772987835813
+__BRYTHON__.compiled_date="2026-03-11 11:58:07.662110"
+__BRYTHON__.timestamp=1773226687660
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1633,6 +1633,7 @@ $B.get_class=function(obj){
 if(obj===null){return $B.imported.javascript.NullType }
 if(obj===undefined){return $B.imported.javascript.UndefinedType }
 if(obj.ob_type){return obj.ob_type}
+if(obj.constructor===$B.ZTR){return _b_.ztr}
 var klass
 switch(typeof obj){case "number":
 if(Number.isInteger(obj)){return _b_.int}
@@ -1892,6 +1893,9 @@ throw exc}}
 f.$original=original
 return f}
 $B.$call=function(callable,...args){var test=false 
+if(typeof callable=='function'){var res=callable(...args)
+if(callable.$in_js_module && res===undefined){return _b_.None}
+return res}
 var klass=$B.get_class(callable)
 if(test){console.log('call',callable,'klass',klass,'args',args)}
 var call_method=$B.search_slot(klass,'tp_call',$B.NULL)
@@ -2133,9 +2137,50 @@ var object=_b_.object
 $B.time_object_getattribute=0
 $B.time_getattribute=0
 $B.time_search_slot=0
-$B.object_getattribute=function(obj,attr){var t0=globalThis.performance.now()
-var klass=$B.get_class(obj)
+$B.builtin_object_getattro=function(self,klass,attr){var t0=globalThis.performance.now()
 var test=false 
+var klass=$B.get_class(self)
+if(test){console.log('getattr',attr,'of self',self,klass)
+console.log(Error('trace').stack)
+if(self.jsobj){console.log('in jsobj',self.jsobj[attr])}
+if(klass.js_class){console.log('in js_class',klass.js_class.prototype[attr])}}
+var in_mro=$B.search_in_mro(klass,attr,$B.NULL)
+if(test){console.log('in mro',in_mro)
+if(in_mro !==$B.NULL){console.log('class of in_mro',$B.get_class(in_mro))}}
+if(in_mro !==$B.NULL &&
+$B.get_class(in_mro)===$B.function &&
+((! self.dict)||$B.str_dict_get(self.dict,attr,$B.NULL)===$B.NULL)){return $B.method.tp_new($B.method,[in_mro,self])}
+var getter=$B.NULL
+if(in_mro !==$B.NULL){var in_mro_class=$B.get_class(in_mro)
+var getter=$B.search_slot(in_mro_class,'tp_descr_get',$B.NULL)
+if(test){console.log('getter',getter)}
+if(getter !==$B.NULL){var is_data_descr=$B.search_slot(in_mro_class,'tp_descr_set',$B.NULL)!==$B.NULL
+if(is_data_descr){if(test){console.log('data descriptor')
+console.log('call getter with',in_mro,self,klass)}
+var res=getter(in_mro,self,klass)
+if(test){console.log('res',res)}
+$B.time_object_tp_getattro+=globalThis.performance.now()-t0
+return res}}}
+var in_dict=$B.search_in_dict(self,attr,$B.NULL)
+if(test){console.log('in object dict',in_dict,'\n    type',$B.get_class(in_dict))}
+if(in_dict !==$B.NULL){$B.time_object_tp_getattro+=globalThis.performance.now()-t0
+return in_dict}else if(getter !==$B.NULL){
+if(typeof getter !=='function'){console.log('not a function',getter)
+console.log('class of in_mro',in_mro_class)}
+if(test){console.log('call getter of non-data descr',in_mro,self,klass)}
+klass.$fast_attr=klass.$fast_attr ??{}
+klass.$fast_attr[attr]=function(self){return getter(in_mro,self,klass)}
+$B.nb_obj_ga++
+$B.time_object_tp_getattro+=globalThis.performance.now()-t0
+return getter(in_mro,self,klass)}else if(in_mro !==$B.NULL){if(test){console.log('return in_mro',in_mro)}
+$B.time_object_tp_getattro+=globalThis.performance.now()-t0
+return in_mro}
+if(test){console.log('attr',attr,'not found on self',self)
+console.log('self[attr]',self[attr])}
+return $B.NULL}
+$B.object_getattribute=function(obj,klass,attr){var t0=globalThis.performance.now()
+var test=false 
+if(test){console.log('klass',klass,'attr',attr)}
 var getattribute=klass.$getattribute ?? $B.search_slot(klass,'tp_getattro',$B.NULL)
 $B.time_search_slot+=globalThis.performance.now()-t0
 if(test){console.log('attr',attr,'of obj',obj,'klass',klass,'\n  getattribute',getattribute)}
@@ -3295,7 +3340,7 @@ $B.method.tp_getattro=function(self,attr){var tp=$B.get_class(self)
 var descr=$B.search_in_mro(tp,attr,$B.NULL)
 if(descr !==$B.NULL){var getter=$B.search_slot($B.get_class(descr),'tp_descr_get',$B.NULL)
 if(getter !==$B.NULL){return getter(descr,self,tp)}else{return descr}}
-return $B.object_getattribute(self.im_func,attr)}
+return $B.object_getattribute(self.im_func,$B.get_class(self.im_func),attr)}
 $B.method.tp_descr_get=function(self){return self}
 $B.method.tp_new=function(cls,args,kw){var[func,obj]=args
 return{
@@ -4737,7 +4782,14 @@ if(obj===undefined){console.log("get attr",attr,"of undefined")}
 var klass=$B.get_class(obj)
 var is_class=klass.tp_mro.includes(_b_.type)
 if(test){console.log("attr",attr,"of",obj,"class",klass ?? $B.get_class(obj),"isclass",is_class)}
-if(! is_class){var res=$B.object_getattribute(obj,attr)}else{var res=$B.type_getattribute(obj,attr)}
+if(! is_class){if(klass.tp_funcs && Object.hasOwn(klass.tp_funcs,attr)){var func=klass.tp_funcs[attr]
+var res=$B.NULL
+switch(func.ob_type){case $B.builtin_method:
+res=klass.tp_funcs[attr].bind(obj,obj)
+break}
+if(res !==$B.NULL){res.ob_type=func.ob_type
+return res}}
+var res=$B.object_getattribute(obj,klass,attr)}else{var res=$B.type_getattribute(obj,attr)}
 if(res===$B.NULL){if(_default !==undefined){return _default}
 throw $B.attr_error(attr,obj)}
 $B.time_getattr+=globalThis.performance.now()-t0
@@ -7904,6 +7956,7 @@ _b_.set.tp_methods=["add","clear","copy","discard","difference","difference_upda
 _b_.set.classmethods=["__class_getitem__"]
 $B.set_func_names(set,"builtins")
 var frozenset=_b_.frozenset
+_b_.frozenset.tp_funcs={}
 frozenset.$factory=function(){var self=frozenset.tp_new(frozenset,Array.from(arguments),$B.empty_dict())
 frozenset.tp_init(self,...arguments)
 return self}
@@ -7913,6 +7966,7 @@ case "discard":
 case "pop":
 case "remove":
 case "update":
+case "tp_funcs":
 case "tp_methods":
 case "classmethods":
 break
@@ -7940,6 +7994,7 @@ return set_repr(self)}
 _b_.frozenset.tp_methods=["copy","difference","intersection","isdisjoint","issubset","issuperset","__reduce__","__sizeof__","symmetric_difference","union"
 ]
 _b_.frozenset.classmethods=["__class_getitem__"]
+for(var tp_method of _b_.frozenset.tp_methods){_b_.frozenset.tp_funcs[tp_method]=_b_.set.tp_funcs[tp_method]}
 $B.set_func_names(frozenset,"builtins")})(__BRYTHON__);
 ;
 (function($B){var _b_=$B.builtins
@@ -8980,7 +9035,9 @@ flag=true
 break}}
 if(! flag){return _self.surrogates ? $B.String(_self):_self}}
 return ''}
-str_funcs.split=function(){var $=$B.args("split",3,{self:null,sep:null,maxsplit:null},["self","sep","maxsplit"],arguments,{sep:_b_.None,maxsplit:-1},null,null),maxsplit=$.maxsplit,sep=$.sep,pos=0,_self=to_string($.self)
+$B.time_string_split=0
+str_funcs.split=function(){var t0=globalThis.performance.now()
+var $=$B.args("split",3,{self:null,sep:null,maxsplit:null},["self","sep","maxsplit"],arguments,{sep:_b_.None,maxsplit:-1},null,null),maxsplit=$.maxsplit,sep=$.sep,pos=0,_self=to_string($.self)
 if($B.is_big_int(maxsplit)){maxsplit=Number($B.int_value(maxsplit))}
 if(sep==""){$B.RAISE(_b_.ValueError,"empty separator")}
 if(sep===_b_.None){let res=[]
@@ -8999,15 +9056,18 @@ return $B.$list(res.map($B.String))}else{if(! $B.$isinstance(sep,_b_.str)){$B.RA
 $B.class_name(sep))}
 sep=to_string(sep)
 let res=[],s="",seplen=sep.length
-if(maxsplit==0){return $B.$list([$.self])}
-while(pos < _self.length){if(_self.substr(pos,seplen)==sep){res.push(s)
-pos+=seplen
+if(maxsplit==0){return $B.$list([$.self])}else if(maxsplit==-1){res=_self.split(sep)
+if(_self.surrogates){res=res.map($B.String)}
+return $B.$list(res)}
+while(pos < _self.length){var ix=_self.indexOf(sep,pos)
+if(ix==-1){res.push(_self.substr(pos))
+break}
+res.push(_self.substring(pos,ix))
+pos=ix+seplen
 if(maxsplit >-1 && res.length >=maxsplit){res.push(_self.substr(pos))
-return $B.$list(res.map($B.String))}
-s=""}else{s+=_self.charAt(pos)
-pos++}}
-res.push(s)
-return $B.$list(res.map($B.String))}}
+break}}
+if(_self.surrogates){res=res.map($B.String)}
+return $B.$list(res)}}
 str_funcs.splitlines=function(){var $=$B.args('splitlines',2,{self:null,keepends:null},['self','keepends'],arguments,{keepends:false},null,null)
 if(!$B.$isinstance($.keepends,[_b_.bool,_b_.int])){throw _b_.TypeError('integer argument expected, got '+
 $B.class_name($.keepends))}
@@ -9128,7 +9188,38 @@ $B.Template.tp_methods=["__class_getitem__","__reduce__"]
 $B.Template.tp_members=[["strings",$B.TYPES.OBJECT,"strings",1],["interpolations",$B.TYPES.OBJECT,"interpolations",1]
 ]
 Template.tp_getset=["values"]
-$B.set_func_names(Template,'builtins')})(__BRYTHON__);
+$B.set_func_names(Template,'builtins')
+$B.ZTR=function(s){this.s=s}
+$B.ZTR.prototype.split=function(sep){var t0=globalThis.performance.now()
+var $=$B.args("split",2,{sep:null,maxsplit:null},["sep","maxsplit"],arguments,{sep:_b_.None,maxsplit:-1},null,null),maxsplit=$.maxsplit,sep=$.sep,pos=0,_self=to_string(this.s)
+if($B.is_big_int(maxsplit)){maxsplit=Number($B.int_value(maxsplit))}
+if(sep==""){$B.RAISE(_b_.ValueError,"empty separator")}
+if(sep===_b_.None){let res=[]
+while(pos < _self.length && _self.charAt(pos).search(/\s/)>-1){pos++}
+if(pos===_self.length-1){return $B.$list([_self])}
+let name=""
+while(1){if(_self.charAt(pos).search(/\s/)==-1){if(name==""){name=_self.charAt(pos)}else{name+=_self.charAt(pos)}}else{if(name !==""){res.push(name)
+if(maxsplit !==-1 && res.length==maxsplit+1){res.pop()
+res.push(name+_self.substr(pos))
+return $B.$list(res.map($B.String))}
+name=""}}
+pos++
+if(pos > _self.length-1){if(name){res.push(name)}
+break}}
+return $B.$list(res.map($B.String))}else{if(! $B.$isinstance(sep,_b_.str)){$B.RAISE(_b_.TypeError,'must be str or None, not '+
+$B.class_name(sep))}
+sep=to_string(sep)
+let res=[],s="",seplen=sep.length
+if(maxsplit==0){return $B.$list([$.self])}
+while(pos < _self.length){if(_self.substr(pos,seplen)==sep){res.push(s)
+pos+=seplen
+if(maxsplit >-1 && res.length >=maxsplit){res.push(_self.substr(pos))}
+s=""}else{s+=_self.charAt(pos)
+pos++}}
+if(_self.surrogates){res=res.map($B.String)}
+return $B.$list(res)}}
+_b_.ztr=$B.make_builtin_class('ztr')
+_b_.ztr.tp_new=function(cls,args,kw){return new $B.ZTR(args[0])}})(__BRYTHON__);
 ;
 (function($B){var _b_=$B.builtins
 var int=_b_.int

@@ -875,8 +875,10 @@ $B.set_func_names(set, "builtins")
 
 var frozenset = _b_.frozenset
 
+_b_.frozenset.tp_funcs = {}
+
 frozenset.$factory = function(){
-    var self = frozenset.tp_new(frozenset, Array.from(arguments), 
+    var self = frozenset.tp_new(frozenset, Array.from(arguments),
             $B.empty_dict())
     frozenset.tp_init(self, ...arguments)
     return self
@@ -890,6 +892,7 @@ for(var attr in set){
       case "pop":
       case "remove":
       case "update":
+      case "tp_funcs":
       case "tp_methods":
       case "classmethods":
           break
@@ -970,6 +973,10 @@ _b_.frozenset.tp_methods = [
 ]
 
 _b_.frozenset.classmethods = ["__class_getitem__"]
+
+for(var tp_method of _b_.frozenset.tp_methods){
+    _b_.frozenset.tp_funcs[tp_method] = _b_.set.tp_funcs[tp_method]
+}
 
 $B.set_func_names(frozenset, "builtins")
 

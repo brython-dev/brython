@@ -196,7 +196,7 @@ $B.method.tp_getattro = function(self, attr){
             return descr
         }
     }
-    return $B.object_getattribute(self.im_func, attr)
+    return $B.object_getattribute(self.im_func, $B.get_class(self.im_func), attr)
 }
 
 $B.method.tp_descr_get = function(self){

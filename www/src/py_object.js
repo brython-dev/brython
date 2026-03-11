@@ -8,10 +8,102 @@ $B.time_object_getattribute = 0
 $B.time_getattribute = 0
 $B.time_search_slot = 0
 
-$B.object_getattribute = function(obj, attr){
+$B.builtin_object_getattro = function(self, klass, attr){
     var t0 = globalThis.performance.now()
-    var klass = $B.get_class(obj)
-    var test = false // attr == '__path__' // && klass.tp_name === 'AttributeError'
+    var test = false // attr == '__dict__' // && self.ob_type && self.ob_type.tp_name == 'tuple'
+    var klass = $B.get_class(self)
+    if(test){
+        console.log('getattr', attr, 'of self', self, klass)
+        console.log(Error('trace').stack)
+        if(self.jsobj){
+            console.log('in jsobj', self.jsobj[attr])
+        }
+        if(klass.js_class){
+            console.log('in js_class', klass.js_class.prototype[attr])
+        }
+    }
+    var in_mro = $B.search_in_mro(klass, attr, $B.NULL)
+    if(test){
+        console.log('in mro', in_mro)
+        if(in_mro !== $B.NULL){
+            console.log('class of in_mro', $B.get_class(in_mro))
+        }
+    }
+
+    if(in_mro !== $B.NULL &&
+            $B.get_class(in_mro) === $B.function &&
+            ((! self.dict) || $B.str_dict_get(self.dict, attr, $B.NULL) === $B.NULL)){
+        return $B.method.tp_new($B.method, [in_mro, self])
+    }
+
+
+    var getter = $B.NULL
+    if(in_mro !== $B.NULL){
+        var in_mro_class = $B.get_class(in_mro)
+        var getter = $B.search_slot(in_mro_class, 'tp_descr_get', $B.NULL)
+        if(test){
+            console.log('getter', getter)
+        }
+        if(getter !== $B.NULL){
+            var is_data_descr = $B.search_slot(in_mro_class, 'tp_descr_set', $B.NULL) !== $B.NULL
+            if(is_data_descr){
+                if(test){
+                    console.log('data descriptor')
+                    console.log('call getter with', in_mro, self, klass)
+                }
+                var res = getter(in_mro, self, klass)
+                if(test){
+                    console.log('res', res)
+                }
+                $B.time_object_tp_getattro += globalThis.performance.now() - t0
+                return res
+            }
+        }
+    }
+    // search in self dict
+    var in_dict = $B.search_in_dict(self, attr, $B.NULL)
+    if(test){
+        console.log('in object dict', in_dict, '\n    type', $B.get_class(in_dict))
+    }
+    if(in_dict !== $B.NULL){
+                $B.time_object_tp_getattro += globalThis.performance.now() - t0
+        return in_dict
+    }else if(getter !== $B.NULL){
+        // non-data descriptor
+        if(typeof getter !== 'function'){
+            console.log('not a function', getter)
+            console.log('class of in_mro', in_mro_class)
+        }
+        if(test){
+            console.log('call getter of non-data descr', in_mro, self, klass)
+        }
+        klass.$fast_attr = klass.$fast_attr ?? {}
+        klass.$fast_attr[attr] = function(self){
+            return getter(in_mro, self, klass)
+        }
+        $B.nb_obj_ga++
+                $B.time_object_tp_getattro += globalThis.performance.now() - t0
+        return getter(in_mro, self, klass)
+    }else if(in_mro !== $B.NULL){
+        if(test){
+            console.log('return in_mro', in_mro)
+        }
+                $B.time_object_tp_getattro += globalThis.performance.now() - t0
+        return in_mro
+    }
+    if(test){
+        console.log('attr', attr, 'not found on self', self)
+        console.log('self[attr]', self[attr])
+    }
+    return $B.NULL
+}
+
+$B.object_getattribute = function(obj, klass, attr){
+    var t0 = globalThis.performance.now()
+    var test = false // attr == 'split' // && klass.tp_name === 'AttributeError'
+    if(test){
+        console.log('klass', klass, 'attr', attr)
+    }
     var getattribute = klass.$getattribute ?? $B.search_slot(klass, 'tp_getattro', $B.NULL)
     $B.time_search_slot += globalThis.performance.now() - t0
     if(test){

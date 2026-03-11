@@ -785,6 +785,10 @@ $B.get_class = function(obj){
     if(obj.ob_type){
         return obj.ob_type
     }
+    if(obj.constructor === $B.ZTR){
+        return _b_.ztr
+    }
+
     var klass
     switch(typeof obj){
         case "number":
@@ -1511,6 +1515,13 @@ $B.$call_with_position = function(callable, inum, ...args){
 
 $B.$call = function(callable, ...args){
     var test = false //callable.d_name == '__str__' // && callable.$function_infos[1] == 'test_gen1'
+    if(typeof callable == 'function'){
+        var res = callable(...args)
+        if(callable.$in_js_module && res === undefined){
+            return _b_.None
+        }
+        return res
+    }
     var klass = $B.get_class(callable)
     if(test){
         console.log('call', callable, 'klass', klass, 'args', args)

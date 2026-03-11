@@ -826,7 +826,20 @@ $B.$getattr = function(obj, attr, _default){
     }
 
     if(! is_class){
-        var res =  $B.object_getattribute(obj, attr)
+        if(klass.tp_funcs && Object.hasOwn(klass.tp_funcs, attr)){
+            var func = klass.tp_funcs[attr]
+            var res = $B.NULL
+            switch(func.ob_type){
+                case $B.builtin_method:
+                    res = klass.tp_funcs[attr].bind(obj, obj)
+                    break
+            }
+            if(res !== $B.NULL){
+                res.ob_type = func.ob_type
+                return res
+            }
+        }
+        var res =  $B.object_getattribute(obj, klass, attr)
     }else{
         var res = $B.type_getattribute(obj, attr)
     }
