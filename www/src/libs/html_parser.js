@@ -21,6 +21,13 @@ HTMLNode.tp_repr = function(self){
     return self.text
 }
 
+HTMLNode.tp_getattro = function(self, attr){
+    if(Object.hasOwn(self, attr)){
+        return self[attr]
+    }
+    return _b_.object.tp_getattro(self, attr)
+}
+
 $B.set_func_names(HTMLNode, "_html_parser")
 
 function* tokenize(src){
