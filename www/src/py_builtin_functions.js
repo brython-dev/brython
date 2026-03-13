@@ -1333,48 +1333,54 @@ $B.set_func_names(map, "builtins")
 
 
 function $extreme(args, op){ // used by min() and max()
-    var $op_name = 'min'
-    if(op === '__gt__'){$op_name = "max"}
+    var $op_name = op == '__lt__' ? 'min' : 'max'
+    var last = args[args.length - 1]
+    var nb_args = args.length
+    var kw
+    if(last.$kw){
+        nb_args--
+        kw = $B.parse_kwargs(last.$kw)
+    }
 
-    var $ = $B.args($op_name, 0, {}, [], args, {}, 'args', 'kw')
+    //var $ = $B.args($op_name, 0, {}, [], args, {}, 'args', 'kw')
 
     var has_default = false,
         func = false
-    for(var item of _b_.dict.$iter_items($.kw)){
-        switch(item.key){
-            case 'key':
-                func = item.value
-                //func = func === _b_.None ? func : $B.$call(func)
-                break
-            case 'default':
-                var default_value = item.value
-                has_default = true
-                break
-            default:
-                $B.RAISE(_b_.TypeError, "'" + item.key +
-                    "' is an invalid keyword argument for this function")
+    if(kw){
+        for(var key in kw){
+            switch(key){
+                case 'key':
+                    func = kw.key
+                    break
+                case 'default':
+                    var default_value = kw.default
+                    has_default = true
+                    break
+                default:
+                    $B.RAISE(_b_.TypeError, "'" + item.key +
+                        "' is an invalid keyword argument for this function")
+            }
         }
     }
 
     if((! func) || func === _b_.None){
-        func = x => x
+        func = null
     }
 
-    if($.args.length == 0){
-        $B.RAISE(_b_.TypeError, $op_name +
-            " expected 1 arguments, got 0")
-    }else if($.args.length == 1){
+    if(nb_args == 0){
+        $B.RAISE(_b_.TypeError, $op_name + " expected 1 arguments, got 0")
+    }else if(nb_args == 1){
         // Only one positional argument : it must be an iterable
-        var $iter = $B.make_js_iterator($.args[0]),
+        var $iter = $B.make_js_iterator(args[0]),
             res = null,
             x_value,
             extr_value
         for(var x of $iter){
             if(res === null){
-                extr_value = $B.$call(func, x)
+                extr_value = func === null ? x : $B.$call(func, x)
                 res = x
             }else{
-                x_value = $B.$call(func, x)
+                x_value = func === null ? x : $B.$call(func, x)
                 if($B.rich_comp(op, x_value, extr_value)){
                     res = x
                     extr_value = x_value
@@ -1396,13 +1402,29 @@ function $extreme(args, op){ // used by min() and max()
            $B.RAISE(_b_.TypeError, "Cannot specify a default for " +
                $op_name + "() with multiple positional arguments")
         }
-        var _args
-        if($B.last(args).$kw){
-            _args = [$.args].concat($B.last(args))
-        }else{
-            _args = [$.args]
+        var res = null,
+            x,
+            x_value,
+            extr_value
+        for(var i = 0; i < nb_args; i++){
+            x = args[i]
+            if(res === null){
+                extr_value = func === null ? x : $B.$call(func, x)
+                res = x
+            }else{
+                x_value = func === null ? x : $B.$call(func, x)
+                if($B.rich_comp(op, x_value, extr_value)){
+                    res = x
+                    extr_value = x_value
+                }
+            }
         }
-        return $extreme.call(null, _args, op)
+        if(res === null){
+            $B.RAISE(_b_.ValueError, $op_name +
+                "() arg is an empty sequence")
+        }else{
+            return res
+        }
     }
 }
 
@@ -2051,7 +2073,7 @@ zip.$factory = function(){
     }
     var $ns = $B.args('zip', 0, {}, [], arguments, {}, 'args', 'kw')
     var _args = $ns['args'],
-        strict = $B.$bool(_b_.dict.get($ns.kw, 'strict', false))
+        strict = $B.$bool($B.str_dict_get($ns.kw, 'strict', false))
     var iters = []
     for(var arg of _args){
         iters.push($B.make_js_iterator(arg))

@@ -192,7 +192,7 @@ _IOBase_funcs.readline = function(_self, limit=-1){
             break;
         }
 
-        _b_.bytearray.extend(buffer, b)
+        _b_.bytearray.tp_funcs.extend(buffer, b)
 
         if($B.last(_b_.list.$factory(buffer)) == 10){ // ends with '\n')
             break
@@ -331,7 +331,7 @@ _RawIOBase_funcs.readall = function(_self){
         }
         chunks.push(data)
     }
-    result = _b_.bytes.join(_b_.bytes.$fast_bytes([]), chunks)
+    result = _b_.bytes.tp_funcs.join(_b_.bytes.$fast_bytes([]), chunks)
     return result
 }
 
@@ -378,7 +378,7 @@ function _bufferediobase_readinto_generic(_self, buffer, readinto1){
         $B.RAISE(_b_.TypeError, "read() should return bytes")
     }
 
-    len = _b_.bytes.__len__(data)
+    len = _b_.bytes.mp_length(data)
     if(len > _b_.len(buffer)) {
         $B.RAISE(_b_.ValueError,
             "read() returned too much data: "

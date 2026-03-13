@@ -363,7 +363,7 @@ function inline_comprehension(ste, comp, scopes, comp_free, inlined_cells){
             if ((existing & SF.DEF_BOUND) &&
                     !is_free_in_any_child(comp, k) &&
                     ste.type !== ClassBlock) {
-                _b_.set.remove(comp_free, k)
+                _b_.set.tp_funcs.remove(comp_free, k)
             }
         }
     }

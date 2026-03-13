@@ -1140,7 +1140,7 @@ _b_.BaseExceptionGroup.tp_members = [
 $B.set_func_names(_b_.BaseExceptionGroup, "builtins")
 
 
-_b_.ExceptionGroup.factory = function(){
+_b_.ExceptionGroup.$factory = function(){
     var missing = {},
         $ = $B.args("ExceptionGroup", 2, {message: null, exceptions: null},
                     ['message', 'exceptions'], arguments, {exceptions: missing},

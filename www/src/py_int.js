@@ -178,7 +178,7 @@ int.$factory = function(value, base){
         // transform to string
         value = $B.$getattr(value, 'decode')('latin-1')
     }else if($B.$isinstance(value, _b_.memoryview)){
-        value = $B.$getattr(_b_.memoryview.tobytes(value), 'decode')('latin-1')
+        value = $B.$getattr(_b_.memoryview.tp_funcs.tobytes(value), 'decode')('latin-1')
     }
 
     if(! $B.$isinstance(value, _b_.str)){
@@ -708,7 +708,7 @@ int_funcs.__format__ = function(self, format_spec){
     var fmt = new $B.parse_format_spec(format_spec, self)
     if(fmt.type && 'eEfFgG%'.indexOf(fmt.type) != -1){
         // Call __format__ on float(self)
-        return _b_.float.__format__($B.fast_float(self), format_spec)
+        return _b_.float.tp_funcs.__format__($B.fast_float(self), format_spec)
     }
     fmt.align = fmt.align || ">"
     var res = preformat(self, fmt)

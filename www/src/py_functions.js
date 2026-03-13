@@ -89,14 +89,6 @@ $B.set_func_names($B.builtin_function_or_method, "builtins")
 
 // add attributes to native Function
 
-/*
-$B.function.__delattr__ = function(self, attr){
-    if(attr == "__dict__"){
-        $B.RAISE(_b_.TypeError, "can't delete function __dict__")
-    }
-}
-*/
-
 function doc_set(f, value){
     $B.check_infos(f)
     f.$infos.__doc__ = value
@@ -199,9 +191,6 @@ $B.function.tp_repr = function(self){
 }
 
 $B.function.tp_call = function(self, ...args){
-    if(typeof self !== 'function'){
-        console.log('not a function', self)
-    }
     return self(...args)
 }
 

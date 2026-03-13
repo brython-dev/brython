@@ -592,7 +592,7 @@ float.$factory = function(value){
     }
 
     if($B.$isinstance(value, _b_.memoryview)){
-        value = _b_.memoryview.tobytes(value)
+        value = _b_.memoryview.tp_funcs.tobytes(value)
     }
 
     if($B.$isinstance(value, _b_.bytes)){
@@ -773,7 +773,7 @@ _b_.float.nb_remainder = function(self, other) {
         $B.RAISE(_b_.ZeroDivisionError, "float modulo")
     }
     if($B.$isinstance(other, _b_.int)){
-        other = _b_.int.numerator(other)
+        other = _b_.int.numerator_get(other)
         return fast_float((self.value % other + other) % other)
     }
 

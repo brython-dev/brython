@@ -477,12 +477,13 @@ function dimension_set(self, attr, value){
 
 // Class for DOM nodes
 var DOMNode = $B.make_builtin_class('DOMNode')
+
 DOMNode.$factory = (elt) => elt
 
 DOMNode.nb_add = function(self, other){
     // adding another element to self returns an instance of TagSum
     var res = TagSum.$factory()
-    res.children = [self]
+    res = TagSum.sq_concat(res, self)
     var pos = 1
     if($B.$isinstance(other, TagSum)){
         res.children = res.children.concat(other.children)
@@ -832,12 +833,14 @@ DOMNode.tp_iternext = function(self){
    $B.RAISE(_b_.StopIteration, "StopIteration")
 }
 
+/*
 DOMNode.__radd__ = function(self, other){ // add to a string
     var res = TagSum.$factory()
     var txt = DOMNode.$factory(document.createTextNode(other))
     res.children = [txt, self]
     return res
 }
+*/
 
 DOMNode.tp_repr = function(self){
     var attrs = self.attributes,
@@ -1183,7 +1186,7 @@ DOMNode_funcs.bindings = function(self){
     return res
 }
 
-DOMNode_funcs.events_get = function(self, event){
+DOMNode_funcs.events = function(self, event){
     self.$events = self.$events || {}
     var evt_list = self.$events[event] = self.$events[event] || [],
         funcs = evt_list.map(x => x[0])
@@ -1250,24 +1253,6 @@ DOMNode_funcs.get = function(self){
     }
     return $B.$list([])
 }
-
-/*
-DOMNode.getContext = function(self){ // for CANVAS tag
-    if(!("getContext" in self)){
-      $B.RAISE_ATTRIBUTE_ERROR("object has no attribute 'getContext'", self,
-          'getContext')
-    }
-    return function(ctx){
-        return $B.jsobj2pyobj(self.getContext(ctx))
-    }
-}
-
-DOMNode.getSelectionRange = function(self){ // for TEXTAREA
-    if(self["getSelectionRange"] !== undefined){
-        return self.getSelectionRange.apply(null, arguments)
-    }
-}
-*/
 
 DOMNode_funcs.height_get = function(self){
     return dimension_get(self, 'height')
@@ -1530,12 +1515,12 @@ DOMNode_funcs.width_set = function(self, value){
 DOMNode.tp_getset = [
     "abs_left", "abs_top", "class_name", "closest", "html", "scrolled_left",
     "scrolled_top", "style", "text", "height", "left", "top", "width",
-    "events", "parent"
+    "parent"
 ]
 
 DOMNode.tp_methods = [
     "__dir__", "bind", "bindings", "children", "child_nodes", "clear",
-    "clone", "get", "index", "inside", "reset", "select",
+    "clone", "events", "get", "index", "inside", "reset", "select",
     "select_one", "setSelectionRange", "trigger", "unbind"
 ]
 
@@ -1561,10 +1546,24 @@ Query.mp_subscript = function(self, key){
     return result
 }
 
-var Query_iterator = $B.make_iterator_class("query string iterator")
+var Query_iterator = $B.make_builtin_class("query string iterator")
+
+Query_iterator.tp_iter = function(self){
+    return self
+}
+
+Query_iterator.tp_iternext = function*(self){
+    for(var key of self.it){
+        yield key
+    }
+}
 
 Query.tp_iter = function(self){
-    return Query_iterator.$factory(self._keys)
+    return {
+        ob_type: Query_iterator,
+        obj: self,
+        it: Object.keys(self._values)[Symbol.iterator]()
+    }
 }
 
 Query.mp_ass_subscript = function(self, key, value){

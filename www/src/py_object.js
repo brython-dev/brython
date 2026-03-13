@@ -100,7 +100,7 @@ $B.builtin_object_getattro = function(self, klass, attr){
 
 $B.object_getattribute = function(obj, klass, attr){
     var t0 = globalThis.performance.now()
-    var test = false // attr == 'split' // && klass.tp_name === 'AttributeError'
+    var test = false // attr == 'nodeType' // && klass.tp_name === 'AttributeError'
     if(test){
         console.log('klass', klass, 'attr', attr)
     }
@@ -119,46 +119,12 @@ $B.object_getattribute = function(obj, klass, attr){
     }
     $B.time_object_getattribute += globalThis.performance.now() - t0
     return res
-    /*
-    if(test){
-        console.log('get attr', attr, 'of obj', obj, 'klass', klass)
-        console.log(getattribute)
-    }
-    var res = $B.NULL
-    try{
-        var t1 = globalThis.performance.now()
-        res = getattribute(obj, attr)
-        $B.time_getattribute += globalThis.performance.now() - t1
-    }catch(err){
-        if(typeof getattribute !== 'function'){
-            console.log('not a function', getattribute, obj, attr)
-        }
-        $B.RAISE_IF_NOT(err, _b_.AttributeError)
-    }
-    if(test){
-        console.log('result of getattribute', res)
-    }
-    if(res === $B.NULL){
-        var getattr = $B.search_in_mro(klass, '__getattr__')
-        if(getattr){
-            try{
-                res = $B.$call(getattr, obj, attr)
-            }catch(err){
-                $B.RAISE_IF_NOT(err, _b_.AttributeError)
-                return $B.NULL
-            }
-        }else{
-            return $B.NULL
-        }
-    }
-    return res
-    */
 }
 
 object.$new = function(cls){
     return function(){
         var $ = $B.args('__new__', 0, [], [], arguments, {}, 'args', 'kwargs')
-        if($.args.length > 0 || _b_.dict.__len__($.kwargs) > 0){
+        if($.args.length > 0 || _b_.dict.mp_length($.kwargs) > 0){
             $B.RAISE(_b_.TypeError, "object() takes no parameters")
         }
         var res = Object.create(null)

@@ -372,5 +372,4 @@ for(var builtin_func of $B.builtin_funcs){
     }
 }
 
-console.log('OSError module', _b_.OSError.dict.$strings.__module__)
 })(__BRYTHON__)

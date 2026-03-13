@@ -11,8 +11,7 @@ and because Map is much slower than regular Javascript objects.
 A Python dictionary is implemented as a Javascript objects with these
 attributes:
 . $all_str: indicates if all the keys are strings. Common use case, optimized
-. $strings: a JS object mapping string keys to values, used only if $all_str
-  is true
+. $strings: a JS object mapping string keys to values, used for string keys
 . $version: an integer with an initial value of 0, incremented at each
   insertion
 . _keys: list of the keys
@@ -22,7 +21,7 @@ attributes:
   _keys and _values
 
 Lookup by keys:
-- if the key is strings, use $strings[key]
+- if the key is a string, use $strings[key]
 - otherwise:
     - compute hash(key)
     - if dict.table[hash] exists, it is a list of indices
@@ -283,31 +282,6 @@ const dict_view_op = {
 
 }
 
-function make_view_comparison_methods(klass){
-    for(var i = 0, len = set_ops.length; i < len; i++){
-        var op = "__" + set_ops[i] + "__"
-        klass[op] = (function(op){
-            return function(self, other){
-                // compare set of items to other
-                if($B.exact_type(self, _dict_keys) ||
-                        ($B.exact_type(self, _dict_items)
-                         && dict.$set_like(self.dict_obj))){
-                    return _b_.set[op](_b_.set.$factory(self),
-                        _b_.set.$factory(other))
-                }else{
-                    // Non-set like views can only be compared to
-                    // instances of the same class
-                    if(! $B.exact_type(other, klass)){
-                        return false
-                    }
-                    var other_items = _b_.list.$factory(other)
-                    return dict_view_op[op](self.items, other_items)
-                }
-            }
-        })(op)
-    }
-}
-
 var dict = _b_.dict
 
 dict.$match_mapping_pattern = true // for pattern matching (PEP 634)
@@ -468,7 +442,7 @@ dict.$contains = function(self, key){
             return self.$strings.hasOwnProperty(key)
         }
         var hash = $B.$getattr($B.get_class(key), '__hash__')
-        if(hash === _b_.object.__hash__){
+        if(hash === $B.str_dict_get(_b_.object.dict, '__hash__')){
             return false
         }
         convert_all_str(self)
@@ -685,7 +659,7 @@ dict.$getitem = function(self, key, ignore_missing){
             }
         }else{
             var hash_method = $B.$getattr($B.get_class(key), '__hash__')
-            if(hash_method !== _b_.object.__hash__){
+            if(hash_method !== $B.str_dict_get(_b_.object.dict, '__hash__')){
                 convert_all_str(self)
                 let lookup = dict.$lookup_by_key(self, key)
                 if(lookup.found){
@@ -1180,7 +1154,7 @@ dict_funcs.__reversed__ = function(self){
 }
 
 dict_funcs.__sizeof__ = function(self){
-
+    return 48
 }
 
 dict_funcs.clear = function(self){
@@ -1496,8 +1470,11 @@ dict_items_funcs.__reversed__ = function(self){
     }
 }
 
-dict_items_funcs.isdisjoint = function(self){
-
+dict_items_funcs.isdisjoint = function(self, other){
+    var items = Array.from(dict.$iter_items(self.dict_obj))
+        .map(x => $B.fast_tuple([x.key, x.value]))
+    var self_as_set = $B.$call(_b_.set, items)
+    return _b_.set.tp_funcs.isdisjoint(self_as_set, other)
 }
 
 dict_items_funcs.mapping_get = function(self){
@@ -1575,7 +1552,7 @@ dict_keys_funcs.__reversed__ = function(self){
 dict_keys_funcs.isdisjoint = function(self, other){
     var keys = Array.from(dict.$iter_items(self.dict_obj)).map(x => x.key)
     var self_as_set = $B.$call(_b_.set, keys)
-    return _b_.set.isdisjoint(as_set, other)
+    return _b_.set.tp_funcs.isdisjoint(self_as_set, other)
 }
 
 dict_keys_funcs.mapping_get = function(self){
