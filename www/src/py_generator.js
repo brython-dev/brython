@@ -8,40 +8,36 @@ var _b_ = $B.builtins
 // Class used for "return" inside a generator function
 var $GeneratorReturn = {}
 $B.generator_return = function(value){
-    return {__class__: $GeneratorReturn, value: value}
-}
-
-$B.generator = $B.make_class("generator",
-    function(func, name){
-        // func is a Javascript generator, created by "function* "
-        // name is the optional generator name (eg "zip" in
-        // py_builtin_functions.js)
-        var res = function(){
-            var gen = func.apply(null, arguments)
-            gen.$name = name || 'generator'
-            gen.$func = func
-            gen.$has_run = false
-            return {
-                __class__: $B.generator,
-                js_gen: gen
-            }
-        }
-        res.$infos = func.$infos
-        res.$is_genfunc = true
-        res.$name = name
-        return res
+    return {
+        ob_type: $GeneratorReturn,
+        value: value
     }
-)
-
-$B.generator.__iter__ = function(self){
-    return self
 }
 
-$B.generator.__next__ = function(self){
-    return $B.generator.send(self, _b_.None)
+$B.generator = $B.make_builtin_class("generator")
+$B.generator.$factory = function(func, name){
+    // func is a Javascript generator, created by "function* "
+    // name is the optional generator name (eg "zip" in
+    // py_builtin_functions.js)
+    var res = function(){
+        var gen = func.apply(null, arguments)
+        gen.$name = name || 'generator'
+        gen.$func = func
+        gen.$has_run = false
+        return {
+            ob_type: $B.generator,
+            js_gen: gen
+        }
+    }
+    res.$infos = func.$infos
+    res.$is_genfunc = true
+    res.$name = name
+    return res
 }
 
-$B.generator.__str__ = function(self){
+
+/* generator start */
+$B.generator.tp_repr = function(self){
     var name = self.js_gen.$name || 'generator'
     if(self.js_gen.$func && self.js_gen.$func.$infos){
         name = self.js_gen.$func.$infos.__qualname__
@@ -49,13 +45,53 @@ $B.generator.__str__ = function(self){
     return `<generator object ${name}>`
 }
 
-$B.generator.close = function(self){
+$B.generator.tp_iter = function(self){
+    return self
+}
+
+$B.generator.tp_iternext = function*(self){
+    while(true){
+        yield $B.generator.tp_funcs.send(self, _b_.None)
+    }
+}
+
+$B.generator.tp_finalize = function(self){
+
+}
+
+var generator_funcs = $B.generator.tp_funcs = {}
+
+generator_funcs.__class_getitem__ = function(){
+    return $B.$class_getitem.apply(null, arguments)
+}
+
+generator_funcs.__name___get = function(self){
+    return self.js_gen.$name
+}
+
+generator_funcs.__name___set = function(self, value){
+    self.js_gen.$name = value
+}
+
+generator_funcs.__qualname___get = function(self){
+    return self.js_gen.$name
+}
+
+generator_funcs.__qualname___set = function(self, value){
+    self.js_jen.$name = value
+}
+
+generator_funcs.__sizeof__ = function(self){
+
+}
+
+generator_funcs.close = function(self){
     var save_frame_obj = $B.frame_obj
     if(self.$frame){
         $B.frame_obj = $B.push_frame(self.$frame)
     }
     try{
-        $B.generator.throw(self, $B.EXC(_b_.GeneratorExit))
+        $B.generator.tp_funcs.throw(self, $B.EXC(_b_.GeneratorExit))
     }catch(err){
         if(! $B.is_exc(err, [_b_.GeneratorExit, _b_.StopIteration])){
             $B.frame_obj = save_frame_obj
@@ -65,7 +101,47 @@ $B.generator.close = function(self){
     $B.frame_obj = save_frame_obj
 }
 
-$B.generator.send = function(self, value){
+generator_funcs.gi_code_get = function(self){
+
+}
+
+generator_funcs.gi_code_set = function(self){
+
+}
+
+generator_funcs.gi_frame_get = function(self){
+
+}
+
+generator_funcs.gi_frame_set = function(self){
+
+}
+
+generator_funcs.gi_running_get = function(self){
+
+}
+
+generator_funcs.gi_running_set = function(self){
+
+}
+
+generator_funcs.gi_suspended_get = function(self){
+
+}
+
+generator_funcs.gi_suspended_set = function(self){
+
+}
+
+generator_funcs.gi_yieldfrom_get = function(self){
+
+}
+
+generator_funcs.gi_yieldfrom_set = function(self){
+
+}
+
+generator_funcs.send = function(self, value){
     // Set attribute $has_run. It is used in py_utils.js/$B.leave_frame()
     // to decide if a generator with "yield" inside context managers must
     // be applied method .return()
@@ -98,7 +174,7 @@ $B.generator.send = function(self, value){
     }
     // restore stack
     $B.frame_obj = save_frame_obj
-    if(res.value && res.value.__class__ === $GeneratorReturn){
+    if(res.value && $B.exact_type(res.value, $GeneratorReturn)){
         gen.$finished = true
         $B.RAISE(_b_.StopIteration, res.value.value)
     }
@@ -109,7 +185,7 @@ $B.generator.send = function(self, value){
     return res.value
 }
 
-$B.generator.throw = function(){
+generator_funcs.throw = function(self){
     var $ = $B.args('throw', 4,
                     {self: null, type: null, value: null, traceback: null},
                     ['self', 'type', 'value', 'traceback'],
@@ -122,13 +198,12 @@ $B.generator.throw = function(){
         traceback = $.traceback
     var gen = self.js_gen,
         exc = type
-
-    if(exc.$is_class){
+    if($B.is_type(exc)){
         if(! _b_.issubclass(type, _b_.BaseException)){
             $B.RAISE(_b_.TypeError, "exception value must be an " +
                 "instance of BaseException")
         }else if(value === undefined || value === _b_.None){
-            exc = $B.$call(exc)()
+            exc = $B.$call(exc)
         }else if($B.$isinstance(value, type)){
             exc = value
         }
@@ -136,7 +211,7 @@ $B.generator.throw = function(){
         if(value === _b_.None){
             value = exc
         }else{
-            exc = $B.$call(exc)(value)
+            exc = $B.$call(exc, value)
         }
     }
     if(traceback !== _b_.None){
@@ -154,38 +229,110 @@ $B.generator.throw = function(){
     return res.value
 }
 
+$B.generator.tp_methods = ["send", "throw", "close", "__sizeof__"]
+
+$B.generator.classmethods = ["__class_getitem__"]
+
+$B.generator.tp_getset = [
+    "__name__", "__qualname__", "gi_yieldfrom", "gi_running", "gi_frame",
+    "gi_suspended", "gi_code"
+]
+
+/* generator end */
 
 $B.set_func_names($B.generator, "builtins")
 
-$B.async_generator = $B.make_class("async_generator",
-    function(func){
-        var f = function(){
-            var gen = func.apply(null, arguments)
-            var res = Object.create(null)
-            res.__class__ = $B.async_generator
-            res.js_gen = gen
-            return res
-        }
-        return f
-    }
-)
+$B.async_generator = $B.make_builtin_class("async_generator")
 
-$B.async_generator.__aiter__ = function(self){
+$B.async_generator.$factory = function(func){
+    var f = function(){
+        var gen = func.apply(null, arguments)
+        var res = Object.create(null)
+        res.ob_type = $B.async_generator
+        res.js_gen = gen
+        res.ag_running = false
+        return res
+    }
+    return f
+}
+
+/* async_generator start */
+$B.async_generator.tp_repr = function(self){
+    var name = self.js_gen.$name || 'generator'
+    if(self.js_gen.$func && self.js_gen.$func.$infos){
+        name = self.js_gen.$func.$infos.__qualname__
+    }
+    return `<async generator object ${name}>`
+}
+
+$B.async_generator.tp_finalize = function(self){
+
+}
+
+$B.async_generator.am_aiter = function(self){
     return self
 }
 
-$B.async_generator.__anext__ = function(self){
-    return $B.async_generator.asend(self, _b_.None)
+$B.async_generator.am_anext = function(self){
+    return $B.async_generator.tp_funcs.asend(self, _b_.None)
 }
 
-//$B.async_generator.__dir__ = generator.__dir__
+var async_generator_funcs = $B.async_generator.tp_funcs = {}
 
-$B.async_generator.aclose = function(self){
+async_generator_funcs.__class_getitem__ = function(){
+    return $B.class_getitem.apply(null, arguments)
+}
+
+async_generator_funcs.__name___get = function(self){
+    return self.js_gen.$name
+}
+
+async_generator_funcs.__name___set = function(self, value){
+    self.js_gen.$name = value
+}
+
+async_generator_funcs.__qualname___get = function(self){
+    return self.js_gen.$name
+}
+
+async_generator_funcs.__qualname___set = function(self, value){
+    self.js_gen.$name = value
+}
+
+async_generator_funcs.__sizeof__ = function(self){
+    $B.RAISE(_b_.NotImplementedError)
+}
+
+async_generator_funcs.aclose = function(self){
     self.js_gen.$finished = true
     return _b_.None
 }
 
-$B.async_generator.asend = async function(self, value){
+async_generator_funcs.ag_await_get = function(self){
+    $B.RAISE(_b_.NotImplementedError)
+}
+
+async_generator_funcs.ag_await_set = _b_.None
+
+async_generator_funcs.ag_code_get = function(self){
+    $B.RAISE(_b_.NotImplementedError)
+}
+
+async_generator_funcs.ag_code_set = _b_.None
+
+async_generator_funcs.ag_frame_get = function(self){
+    return self.$frame
+}
+
+async_generator_funcs.ag_frame_set = _b_.None
+
+async_generator_funcs.ag_suspended_get = function(self){
+    $B.RAISE(_b_.NotImplementedError)
+}
+
+async_generator_funcs.ag_suspended_set = _b_.None
+
+async_generator_funcs.asend = async function(self, value){
     var gen = self.js_gen
     if(gen.$finished){
         $B.RAISE(_b_.StopAsyncIteration, value)
@@ -217,7 +364,7 @@ $B.async_generator.asend = async function(self, value){
     if(res.done){
         $B.RAISE(_b_.StopAsyncIteration, value)
     }
-    if(res.value.__class__ === $GeneratorReturn){
+    if($B.exact_type(res.value, $GeneratorReturn)){
         gen.$finished = true
         $B.RAISE(_b_.StopAsyncIteration, res.value.value)
     }
@@ -225,25 +372,27 @@ $B.async_generator.asend = async function(self, value){
     return res.value
 }
 
-$B.async_generator.athrow = async function(self, type, value, traceback){
+async_generator_funcs.athrow = async function(self, type, value, traceback){
     var gen = self.js_gen,
         exc = type
 
-    if(exc.$is_class){
+    if($B.is_type(exc)){
         if(! _b_.issubclass(type, _b_.BaseException)){
             $B.RAISE(_b_.TypeError, "exception value must be an " +
                 "instance of BaseException")
         }else if(value === undefined){
-            value = $B.$call(exc)()
+            value = $B.$call(exc)
         }
     }else{
         if(value === undefined){
             value = exc
         }else{
-            exc = $B.$call(exc)(value)
+            exc = $B.$call(exc, value)
         }
     }
-    if(traceback !== undefined){exc.$traceback = traceback}
+    if(traceback !== undefined){
+        exc.$traceback = traceback
+    }
     var save_frame_obj = $B.frame_obj
     if(self.$frame){
         $B.frame_obj = $B.push_frame(self.$frame)
@@ -251,6 +400,20 @@ $B.async_generator.athrow = async function(self, type, value, traceback){
     await gen.throw(value)
     $B.frame_obj = save_frame_obj
 }
+
+$B.async_generator.tp_methods = ["asend", "athrow", "aclose", "__sizeof__"]
+
+$B.async_generator.classmethods = ["__class_getitem__"]
+
+$B.async_generator.tp_members = [
+    ["ag_running", $B.TYPES.BOOL, "ag_running", 1]
+]
+
+$B.async_generator.tp_getset = [
+    "__name__", "__qualname__", "ag_await", "ag_frame", "ag_code", "ag_suspended"
+]
+
+/* async_generator end */
 
 
 $B.set_func_names($B.async_generator, "builtins")

@@ -20,6 +20,28 @@ $B.isNode = (typeof process !=='undefined') && (process.release.name === 'node')
     && (process.__nwjs !== 1)
 
 
+var has_storage = typeof(Storage) !== "undefined"
+if(has_storage){
+    $B.has_local_storage = false
+    // add attributes local_storage and session_storage
+    try{
+        if(localStorage){
+            $B.local_storage = localStorage
+            $B.has_local_storage = true
+        }
+    }catch(err){}
+    $B.has_session_storage = false
+    try{
+        if(sessionStorage){
+            $B.session_storage = sessionStorage
+            $B.has_session_storage = true
+        }
+    }catch(err){}
+}else{
+    $B.has_local_storage = false
+    $B.has_session_storage = false
+}
+
 var _window = globalThis;
 
 _window.location ||= {
@@ -43,7 +65,6 @@ _window.customElements   ||= {define: () => {} };
 var href = _window.location.href
 $B.protocol = href.split(':')[0]
 
-$B.BigInt = _window.BigInt
 $B.indexedDB = _window.indexedDB
 
 if($B.brython_path === undefined){
@@ -141,18 +162,244 @@ $B.import_info = {}
 // Maps the name of imported modules to the module object
 $B.imported = {}
 
+// Maps the name of module to their namespace
+$B.namespace = Object.create(null)
+
 // Maps the name of modules to the matching Javascript code
 $B.precompiled = {}
 
-// Current frame
+// Frame object, reset every time an execution frame is entered or exited
 $B.frame_obj = null
 
-// Python __builtins__
-// Set to Object.create(null) instead of {}
-// to avoid conflicts with JS attributes such as "constructor"
-$B.builtins = Object.create(null)
+var _b_ = $B.builtins = {}
 
-$B.builtins_scope = {id:'__builtins__', module:'__builtins__', binding: {}}
+$B.created_types = {}
+
+$B.NULL = {null: null}
+
+$B.get_mro = function(cls){
+    return cls.tp_mro ?? cls.__mro__
+}
+
+$B.make_mro = function(cls){
+    // method resolution order
+    // copied from http://code.activestate.com/recipes/577748-calculate-the-mro-of-a-class/
+    // by Steve d'Aprano
+    if(cls === undefined){
+        $B.RAISE(_b_.TypeError,
+            'unbound method type.mro() needs an argument')
+    }
+    var bases = cls.tp_bases,
+        seqs = [],
+        pos1 = 0
+    for(var base of bases){
+        // We can't simply push bases[i].__mro__
+        // because it would be modified in the algorithm
+        let bmro = [],
+            pos = 0
+        if(base === undefined ||
+                $B.get_mro(base) === undefined){
+            if(base === undefined){
+                console.log('no base', cls)
+            }
+            if(base.ob_type === undefined){
+                // Brython class inherits a Javascript constructor. The
+                // constructor is the attribute js_func
+                return [_b_.object]
+            }else{
+                console.log('error for base', base)
+                console.log('cls', cls)
+            }
+        }
+        bmro[pos++] = base
+        if(base.tp_mro === undefined){
+            console.log('no tp_mro for base', base)
+        }
+        var _tmp = base.tp_mro.slice()
+        if(_tmp){
+            if(_tmp[0] === base){
+                _tmp.splice(0, 1)
+            }
+            for(var k = 0; k < _tmp.length; k++){
+                bmro[pos++] = _tmp[k]
+            }
+        }
+        seqs[pos1++] = bmro
+    }
+
+    seqs[pos1++] = bases.slice()
+
+    var mro = [cls],
+        mpos = 1
+    while(1){
+        let non_empty = [],
+            pos = 0
+        for(let i = 0; i < seqs.length; i++){
+            if(seqs[i].length > 0){non_empty[pos++] = seqs[i]}
+        }
+        if(non_empty.length == 0){
+            break
+        }
+        let candidate
+        for(let i = 0; i < non_empty.length; i++){
+            let seq = non_empty[i]
+            candidate = seq[0]
+            let not_head = [],
+                pos = 0
+            for(let j = 0; j < non_empty.length; j++){
+                let s = non_empty[j]
+                if(s.slice(1).indexOf(candidate) > -1){
+                    not_head[pos++] = s
+                }
+            }
+            if(not_head.length > 0){
+                candidate = null
+            }else{
+                break
+            }
+        }
+        if(candidate === null){
+            $B.RAISE(_b_.TypeError,
+                "inconsistent hierarchy, no C3 MRO is possible")
+        }
+        mro[mpos++] = candidate
+        for(let i = 0; i < seqs.length;  i++){
+            let seq = seqs[i]
+            if(seq[0] === candidate){ // remove candidate
+                seqs[i].shift()
+            }
+        }
+    }
+    if(mro[mro.length - 1] !== _b_.object){
+        mro[mpos++] = _b_.object
+    }
+    if(mro[0] !== cls){
+        console.log('bizarre', cls, mro)
+    }
+
+    return mro
+}
+
+$B.is_type = function(obj){
+    var klass = $B.get_class(obj)
+    return klass.tp_mro.includes(_b_.type)
+}
+
+$B.is_builtin_type = function(cls){
+    return ! (cls.tp_flags & $B.TPFLAGS.HEAPTYPE)
+}
+
+$B.is_big_int = function(obj){
+    return typeof $B.int_value(obj) === 'bigint'
+}
+
+$B.is_sequence = function(obj){
+    var type = $B.get_class(obj)
+    var flags = $B.search_slot(type, 'tp_flags', $B.NULL)
+    if(flags !== $B.NULL){
+        return flags & $B.TPFLAGS.SEQUENCE
+    }
+    return false
+}
+
+$B._PyType_HasFeature = function(type, feature){
+    return type.tp_flags & feature != 0
+}
+
+$B.make_builtin_class = function(tp_name, tp_bases){
+    if(tp_name === undefined){
+        console.log('no tp name')
+        console.log(Error().stack)
+    }
+    var cls = {
+        ob_type: _b_.type,
+        tp_name,
+        tp_bases: tp_bases ?? [_b_.object],
+        tp_base: tp_bases ? tp_bases[0] : _b_.object
+    }
+    if(tp_bases){
+        cls.tp_mro = [cls, ...tp_bases, _b_.object]
+    }else{
+        cls.tp_mro = [cls, _b_.object]
+    }
+    $B.created_types[tp_name] = cls
+    return cls
+}
+
+// same, but used in Javascript modules, not in core scripts
+$B.make_type = function(tp_name, tp_bases){
+    if(tp_name === undefined){
+        console.log('no tp name')
+        console.log(Error().stack)
+    }
+    var cls = {
+        ob_type: _b_.type,
+        tp_name,
+        tp_bases: tp_bases ?? [_b_.object],
+        tp_base: tp_bases ? tp_bases[0] : _b_.object,
+        dict: $B.empty_dict()
+    }
+    if(tp_bases){
+        cls.tp_mro = [cls, ...tp_bases, _b_.object]
+    }else{
+        cls.tp_mro = [cls, _b_.object]
+    }
+    return cls
+}
+
+$B.obj_dict = function(obj, exclude){
+    var res = $B.empty_dict()
+    res.$strings = obj
+    return res
+}
+
+// Set attributes of klass methods
+$B.set_func_names = function(klass, module){
+    for(var attr in klass){
+        if(typeof klass[attr] == 'function'){
+            $B.add_function_infos(klass, attr, module)
+        }
+    }
+}
+
+$B.add_function_infos = function(klass, attr, module, qualname){
+    module = module ?? klass.__module__
+    qualname = qualname ?? module + '.' + attr
+    $B.set_function_infos(klass[attr],
+        {
+            __doc__: klass[attr].__doc__ || '',
+            __module__: module,
+            __name__: attr,
+            __qualname__ : qualname,
+            __defaults__: [],
+            __kwdefaults__: {}
+       }
+    )
+}
+
+// Set function attributes
+$B.set_function_infos = function(f, attrs){
+    f.$function_infos = f.$function_infos ?? []
+    for(var key in attrs){
+        if($B.func_attrs[key] === undefined){
+            throw Error('no function attribute ' + key)
+        }
+        f.$function_infos[$B.func_attrs[key]] = attrs[key]
+    }
+}
+
+$B.set_function_attr = function(func, attr, value){
+    if($B.func_attrs[attr] === undefined){
+        throw Error('no function attribute ' + attr)
+    }
+    func.$function_infos[$B.func_attrs[attr]] = value
+}
+
+$B.builtins_scope = {
+    id:'__builtins__',
+    module:'__builtins__',
+    binding: {}
+}
 
 // system language ( _not_ the one set in browser settings)
 // cf http://stackoverflow.com/questions/1043339/javascript-for-detecting-browser-language-preference
@@ -174,6 +421,50 @@ while(ix < minlen && short[ix] == long[ix]){
 }
 $B.tz_name = long.substr(ix).trim()
 
+// flags for methods
+$B.METH_VARARGS = 0x0001
+$B.METH_KEYWORDS = 0x0002
+$B.METH_NOARGS = 0x0004
+$B.METH_O = 0x0008
+$B.METH_CLASS = 0x0010
+$B.METH_STATIC = 0x0020
+$B.METH_COEXIST = 0x0040
+$B.METH_FASTCALL = 0x0080
+$B.METH_METHOD = 0x0200
+
+// type flags, copied from CPython Include/object.h
+$B.TPFLAGS = {
+    STATIC_BUILTIN: 1 << 1,
+    INLINE_VALUES: 1 << 2,
+    MANAGED_WEAKREF: 1 << 3,
+    MANAGED_DICT: 1 << 4,
+    SEQUENCE: 1 << 5,
+    MAPPING: 1 << 6,
+    DISALLOW_INSTANTIATION: 1 << 7,
+    IMMUTABLETYPE: 1 << 8,
+    HEAPTYPE: 1 << 9,
+    BASETYPE: 1 << 10,
+    HAVE_VECTORCALL: 1 << 11,
+    READY: 1 << 12,
+    READYING: 1 << 13,
+    HAVE_GC: 1 << 14,
+    METHOD_DESCRIPTOR: 1 << 17,
+    IS_ABSTRACT:1 << 20,
+    MATCH_SELF: 1 << 22,
+    ITEMS_AT_END: 1 << 23,
+    LONG_SUBCLASS: 1 << 24,
+    LIST_SUBCLASS: 1 << 25,
+    TUPLE_SUBCLASS: 1 << 26,
+    BYTES_SUBCLASS: 1 << 27,
+    UNICODE_SUBCLASS: 1 << 28,
+    DICT_SUBCLASS: 1 << 29,
+    BASE_EXC_SUBCLASS: 1 << 30,
+    TYPE_SUBCLASS: 1 << 31,
+    HAVE_FINALIZE: 1 << 0,
+    HAVE_VERSION_TAG: 1 << 18
+}
+$B.TPFLAGS.PREHEADER = $B.TPFLAGS.MANAGED_WEAKREF | $B.TPFLAGS.MANAGED_DICT
+
 // compiler flags, used in libs/_ast.js and compile()
 $B.PyCF_ONLY_AST = 1024
 $B.PyCF_TYPE_COMMENTS = 0x1000
@@ -192,6 +483,7 @@ $B.COMPILER_FLAGS = {
     ITERABLE_COROUTINE: 256,
     ASYNC_GENERATOR: 512
 }
+
 var DEF_GLOBAL = 1,           /* global stmt */
     DEF_LOCAL = 2 ,           /* assignment in code block */
     DEF_PARAM = 2 << 1,         /* formal parameter */
@@ -255,6 +547,31 @@ $B.SYMBOL_FLAGS = {
     TYPE_FUNCTION,
     TYPE_MODULE
 }
+
+/* Types allowed for setting member values */
+$B.TYPES = {
+    SHORT: 0,
+    INT: 1,
+    LONG: 2,
+    FLOAT: 3,
+    DOUBLE: 4,
+    STRING: 5,
+    OBJECT: 6,
+    CHAR: 7,
+    BYTE: 8,
+    UBYTE: 9,
+    USHORT: 10,
+    UINT: 11,
+    ULONG: 12,
+    STRING_INPLACE: 13,
+    BOOL: 14,
+    OBJECT_EX: 16,
+    LONGLONG: 17,
+    ULONGLONG: 18,
+    PYSSIZET: 19,
+    NONE: 20
+}
+
 
 // minimum and maximum safe integers
 $B.max_int = Math.pow(2, 53) - 1
@@ -350,8 +667,7 @@ const func_attrs = ['__module__', '__name__', '__qualname__', '__file__',
     '__defaults__', '__kwdefaults__', '__doc__', 'arg_names',
     'args_vararg', 'args_kwarg', 'positional_length', 'lineno', 'flags',
     'free_vars', 'kwonlyargs_length', 'posonlyargs_length', 'varnames',
-    '__annotations__', '__type_params__',
-    'method_class'
+    '__annotations__', '__type_params__', '__globals__', 'method_class'
     ]
 
 // Rank of function attributes in .$function_infos
@@ -359,73 +675,6 @@ var i = 0
 $B.func_attrs = {}
 for(var func_attr of func_attrs){
     $B.func_attrs[func_attr] = i++
-}
-
-// Set attributes of klass methods
-$B.set_func_names = function(klass, module){
-    klass.__module__ = module
-    for(var attr in klass){
-        if(typeof klass[attr] == 'function'){
-            $B.add_function_infos(klass, attr)
-        }
-    }
-}
-
-$B.add_function_infos = function(klass, attr){
-    var module = klass.__module__
-    $B.set_function_infos(klass[attr],
-        {
-            __doc__: klass[attr].__doc__ || '',
-            __module__: module,
-            __name__: attr,
-            __qualname__ : klass.__qualname__ + '.' + attr,
-            __defaults__: [],
-            __kwdefaults__: {}
-       }
-    )
-    if(klass[attr].$type == "classmethod"){
-        klass[attr].__class__ = $B.method
-    }
-}
-
-// Set function attributes
-$B.set_function_infos = function(f, attrs){
-    f.$function_infos = f.$function_infos ?? []
-    for(var key in attrs){
-        if($B.func_attrs[key] === undefined){
-            throw Error('no function attribute ' + key)
-        }
-        f.$function_infos[$B.func_attrs[key]] = attrs[key]
-    }
-}
-
-$B.set_function_attr = function(func, attr, value){
-    if($B.func_attrs[attr] === undefined){
-        throw Error('no function attribute ' + attr)
-    }
-    func.$function_infos[$B.func_attrs[attr]] = value
-}
-
-var has_storage = typeof(Storage) !== "undefined"
-if(has_storage){
-    $B.has_local_storage = false
-    // add attributes local_storage and session_storage
-    try{
-        if(localStorage){
-            $B.local_storage = localStorage
-            $B.has_local_storage = true
-        }
-    }catch(err){}
-    $B.has_session_storage = false
-    try{
-        if(sessionStorage){
-            $B.session_storage = sessionStorage
-            $B.has_session_storage = true
-        }
-    }catch(err){}
-}else{
-    $B.has_local_storage = false
-    $B.has_session_storage = false
 }
 
 $B.globals = function(){
@@ -444,8 +693,9 @@ $B.builtins_repr_check = function(builtin, args){
         self = $.self
     if(! $B.$isinstance(self, builtin)){
         var _b_ = $B.builtins
+        console.log(Error().stack)
         $B.RAISE(_b_.TypeError, "descriptor '__repr__' requires a " +
-            `'${builtin.__name__}' object but received a ` +
+            `'${builtin.tp_name}' object but received a ` +
             `'${$B.class_name(self)}'`)
     }
 }
@@ -505,7 +755,7 @@ function from_py(src, script_id){
     script_id = script_id  || 'python_script_' + $B.UUID()
     var filename = $B.script_path + '#' + script_id
     $B.url2name[filename] = script_id
-    $B.imported[script_id] = {}
+    $B.imported[script_id] = $B.module.$factory(script_id)
 
     var root = __BRYTHON__.py2js({src, filename},
                                  script_id, script_id,

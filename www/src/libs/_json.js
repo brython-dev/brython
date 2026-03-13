@@ -2,6 +2,20 @@
 
 var _b_ = $B.builtins
 
+var JSONDecodeError = $B.make_type('JSONDecodeError', [_b_.Exception])
+
+$B.finalize_type(JSONDecodeError)
+$B.set_func_names(JSONDecodeError, '_json')
+
+function get_error(){
+    // If module json is imported, use JSONDecodeError
+    if($B.imported.json){
+        return $B.module_getattr($B.imported.json, 'JSONDecodeError')
+    }else{
+        return JSONDecodeError
+    }
+}
+
 function simple(obj){
     switch(typeof obj){
         case 'string':
@@ -87,10 +101,12 @@ function to_json(obj, level){
             if([Infinity, -Infinity].indexOf(obj) > -1 ||
                     isNaN(obj)){
                 if(! allow_nan){
-                    $B.RAISE(_b_.ValueError, 
+                    $B.RAISE(_b_.ValueError,
                         'Out of range float values are not JSON compliant')
                 }
             }
+            return obj.toString()
+        case "bigint":
             return obj.toString()
     }
     if(obj instanceof String){
@@ -145,13 +161,13 @@ function to_json(obj, level){
         return first + res.join(sep) + last
     }else if($B.$isinstance(obj, _b_.float)){
         return obj.value
-    }else if(obj.__class__ === $B.long_int){
-        return obj.value.toString()
+    }else if($B.is_big_int(obj)){
+        return $B.int_value(obj).toString()
     }else if(obj === _b_.None){
         return "null"
     }else if($B.$isinstance(obj, _b_.dict)){
         var res = [],
-            items = Array.from($B.make_js_iterator(_b_.dict.items(obj)))
+            items = Array.from($B.make_js_iterator(_b_.dict.tp_funcs.items(obj)))
         if(sort_keys){
             // Sort keys by alphabetical order
             items.sort()
@@ -191,10 +207,11 @@ function to_json(obj, level){
     }
     // For other types, use function default if provided
     if(_default == _b_.None){
+        console.log('obj', obj)
         $B.RAISE(_b_.TypeError, "Object of type " + $B.class_name(obj) +
             " is not JSON serializable")
     }else{
-        return to_json($B.$call(_default)(obj), level, kwarg)
+        return to_json($B.$call(_default, obj), level, kwarg)
     }
 }
 
@@ -220,14 +237,14 @@ function to_py(obj, kw){
                 pairs.push($B.fast_tuple([obj.keys[i],
                     to_py(obj.values[i], kw)]))
             }
-            return $B.$call(kw.object_pairs_hook)(pairs)
+            return $B.$call(kw.object_pairs_hook, pairs)
         }else{
             var dict = $B.empty_dict()
             for(var i = 0, len = obj.keys.length; i < len; i++){
                 _b_.dict.$setitem(dict, obj.keys[i], to_py(obj.values[i], kw))
             }
             return kw.object_hook === _b_.None ? dict :
-                $B.$call(kw.object_hook)(dict)
+                $B.$call(kw.object_hook, dict)
         }
     }else if(obj.type == 'str'){
         return obj.value
@@ -235,27 +252,27 @@ function to_py(obj, kw){
         if(obj.value.search(/[.eE]/) > -1){
             // float
             if(kw.parse_float !== _b_.None){
-                return $B.$call(kw.parse_float)(obj.value)
+                return $B.$call(kw.parse_float, obj.value)
             }
             return $B.fast_float(parseFloat(obj.value))
         }else{
             // integer
             if(kw.parse_int !== _b_.None){
-                return $B.$call(kw.parse_int)(obj.value)
+                return $B.$call(kw.parse_int, obj.value)
             }
             var int = parseInt(obj.value)
             if(Math.abs(int) < $B.max_int){
                 return int
             }else{
-                return $B.fast_long_int(BigInt(obj.value))
+                return BigInt(obj.value)
             }
         }
     }else{
         if(obj instanceof Number && kw.parse_float !== _b_.None){
-            return $B.$call(kw.parse_float)(obj)
+            return $B.$call(kw.parse_float, obj)
         }else if(kw.parse_int !== _b_.None &&
-                (typeof obj == 'number' || obj.__class__ === $B.long_int)){
-            return $B.$call(kw.parse_int)(obj)
+                (typeof obj == 'number' || typeof obj == "bigint")){
+            return $B.$call(kw.parse_int, obj)
         }else if(kw.parse_constant !== _b_.None && ! isFinite(obj)){
             return kw.parse_constant(obj)
         }
@@ -275,7 +292,7 @@ var escapes = {'n': '\n',
                }
 
 function string_at(s, i){
-    var error = $B.$call($B.imported["json"].JSONDecodeError)
+    var error = get_error()
 
     var j = i + 1,
         escaped = false,
@@ -300,7 +317,7 @@ function string_at(s, i){
                 j += 5
                 escaped = ! escaped
             }else{
-                throw error('invalid escape "' + s[j] + '"', s, j)
+                throw $B.$call(error, 'invalid escape "' + s[j] + '"', s, j)
             }
         }else{
             value += s[j]
@@ -308,7 +325,7 @@ function string_at(s, i){
         }
     }
     // If we reach here, the string was not properly closed
-    throw error('Unterminated string starting at', s, i)
+    throw $B.$call(error, 'Unterminated string starting at', s, i)
 }
 
 function to_num(num_string, nb_dots, exp){
@@ -320,11 +337,7 @@ function to_num(num_string, nb_dots, exp){
         if(Math.abs(int) < $B.max_int){
             return int
         }else{
-            if(num_string.startsWith('-')){
-                return $B.fast_long_int(num_string.substr(1), false)
-            }else{
-                return $B.fast_long_int(num_string, true)
-            }
+            return BigInt(num_string)
         }
     }
 }
@@ -353,10 +366,9 @@ function num_at(s, i){
   return [{type: 'num', value: s.substring(i, j)}, j]
 }
 
-var JSONError = $B.make_class('json.decoder.JSONError')
-JSONError.__bases__ = [_b_.Exception]
-JSONError.__mro__ = _b_.type.mro(JSONError)
+var JSONError = $B.make_type('json.decoder.JSONError', [_b_.Exception])
 
+$B.finalize_type(JSONError)
 
 function* tokenize(s){
   var i = 0,
@@ -400,7 +412,7 @@ function* tokenize(s){
       yield value
       i = value[1]
     }else{
-      throw $B.$call(JSONError)('Extra data: ' +
+      throw $B.$call(JSONError, 'Extra data: ' +
           `line ${line_num} column ${1 + i - column_start}`)
     }
   }
@@ -550,62 +562,67 @@ function parse(s){
           console.log('error, item', item)
           console.log(err, err.message)
           console.log('node', node)
-          if(err.__class__){
+          if(err.ob_type){
               throw err
           }else{
-              var error = $B.$call($B.imported["json"].JSONDecodeError)
-              throw error(err.message, s, item[1])
+              var error = get_error()
+              throw $B.$call(error, err.message, s, item[1])
           }
       }
   }
   // Check if no valid JSON was parsed (empty string or whitespace only)
   if(!root.content && root.list.length === 0){
-      var error = $B.$call($B.imported["json"].JSONDecodeError)
-      throw error('Expecting value', s, 0)
+      var error = get_error()
+      throw $B.$call(error, 'Expecting value', s, 0)
   }
   // Check if we're still inside an incomplete structure
   if(node !== root){
-      var error = $B.$call($B.imported["json"].JSONDecodeError)
+      var error = get_error()
       var expected = node instanceof Dict ? "'}'" : "']'"
-      throw error("Expecting ',' delimiter", s, last_pos)
+      throw $B.$call(error, "Expecting ',' delimiter", s, last_pos)
   }
   return root.content ? root.content : root.list[0]
 }
 
-var JSONDecoder = $B.make_class("JSONDecoder",
-    function(){
-        var $defaults = {cls: _b_.None, object_hook: _b_.None,
-                parse_float: _b_.None, parse_int: _b_.None,
-                parse_constant: _b_.None, object_pairs_hook: _b_.None},
-            $ = $B.args("decode", 0, {}, [], arguments, {}, null, "kw")
-        var kw = _b_.dict.$to_obj($.kw)
-        for(var key in $defaults){
-            if(kw[key] === undefined){
-                kw[key] = $defaults[key]
-            }
-        }
-        return {
-            __class__: JSONDecoder,
-            object_hook: kw.object_hook,
-            parse_float: kw.parse_float,
-            parse_int: kw.parse_int,
-            parse_constant: kw.parse_constant,
-            object_pairs_hook: kw.object_pairs_hook,
-            memo: $B.empty_dict()
+var JSONDecoder = $B.make_type("JSONDecoder")
+
+JSONDecoder.$factory = function(){
+    var $defaults = {cls: _b_.None, object_hook: _b_.None,
+            parse_float: _b_.None, parse_int: _b_.None,
+            parse_constant: _b_.None, object_pairs_hook: _b_.None},
+        $ = $B.args("decode", 0, {}, [], arguments, {}, null, "kw")
+    var kw = _b_.dict.$to_obj($.kw)
+    for(var key in $defaults){
+        if(kw[key] === undefined){
+            kw[key] = $defaults[key]
         }
     }
-)
+    return {
+        ob_type: JSONDecoder,
+        object_hook: kw.object_hook,
+        parse_float: kw.parse_float,
+        parse_int: kw.parse_int,
+        parse_constant: kw.parse_constant,
+        object_pairs_hook: kw.object_pairs_hook,
+        memo: $B.empty_dict()
+    }
+}
 
 JSONDecoder.decode = function(self, s){
     return to_py(parse(s), self)
 }
 
-$B.imported._json = {
-    dumps: function(){
-        return _b_.str.$factory(to_json.apply(null, arguments))
-    },
-    loads,
-    JSONDecoder
-}
+$B.set_func_names(JSONDecoder, '_json')
+$B.finalize_type(JSONDecoder)
+
+$B.addToImported('_json',
+    {
+        dumps: function(){
+            return _b_.str.$factory(to_json.apply(null, arguments))
+        },
+        loads,
+        JSONDecoder
+    }
+)
 
 })(__BRYTHON__)

@@ -262,6 +262,7 @@ $B._PyPegen.constant_from_string = function(p, token){
         try{
             value = _b_.bytes.$factory(encode_bytestring(value))
         }catch(err){
+            console.log('err', err)
             $B._PyPegen.raise_error_known_location(p,
                 _b_.SyntaxError,
                 token.lineno, token.col_offset,
@@ -400,13 +401,14 @@ $B._PyPegen.formatted_value = function(p,
             debug_end_offset = format.result.col_offset + 1
             debug_metadata = format.metadata
         }else{
-            debug_end_line = p.end_lineno
-            debug_end_offset = p.end_col_offset
+            debug_end_line = arena.end_lineno
+            debug_end_offset = arena.end_col_offset
             debug_metadata = closing_brace.metadata
         }
+        debug_metadata = debug_metadata.replace(new RegExp("'", "g"), "\\'")
         var debug = new $B.ast.Constant(debug_metadata)
-        debug.lineno = p.lineno
-        debug.col_offset = p.col_offset + 1
+        debug.lineno = arena.lineno
+        debug.col_offset = arena.col_offset + 1
         debug.end_lineno = debug_end_line
         debug.end_col_offset = debug_end_offset
         var joined_str = new $B.ast.JoinedStr([debug, formatted_value])
@@ -735,11 +737,6 @@ $B._PyPegen.get_expr_name = function(e){
         case 'NamedExpr':
             return "named expression";
         default:
-            /*
-            PyErr_Format(PyExc_SystemError,
-                         "unexpected expression in assignment %d (line %d)",
-                         e.kind, e.lineno);
-            */
             return NULL;
     }
 }
@@ -795,7 +792,6 @@ $B._PyPegen.add_type_comment_to_arg = function(p, a, tc){
     var ast_obj = $B._PyAST.arg(a.arg, a.annotation, tco,
                       a.lineno, a.col_offset, a.end_lineno, a.end_col_offset,
                       p.arena);
-    console.log('arg with type comment', ast_obj)
     return ast_obj
 }
 
@@ -887,10 +883,6 @@ $B._PyPegen.make_arguments = function(p, slash_without_default,
 
     var ast_obj = $B._PyAST.arguments(posonlyargs, posargs, vararg, kwonlyargs,
                             kwdefaults, kwarg, posdefaults, p.arena)
-    if(ast_obj.posonlyargs === undefined){
-        console.log('pas de posonlyargs', ast_bj)
-        alert()
-    }
     return ast_obj
 }
 
@@ -1124,7 +1116,7 @@ function _build_concatenated_str(p, strings){
 
                    u"abc" "def" -> u"abcdef"
                    "abc" u"abc" ->  "abcabc" */
-                var kind = elem.__class__
+                var kind = $B.get_class(elem.value)
 
                 var concat_str = ''
                 var last_elem = elem;
@@ -1242,7 +1234,7 @@ $B._PyPegen.concatenate_strings = function(p, strings){
             state = 'string'
         }else{
             items.push(string)
-            var is_bytes = string.value.__class__ === _b_.bytes
+            var is_bytes = $B.exact_type(string.value, _b_.bytes)
             if((is_bytes && state == 'string') ||
                     (state == 'bytestring' && ! is_bytes)){
                 error('cannot mix bytes and nonbytes literals')
@@ -1341,8 +1333,8 @@ $B._PyPegen.register_stmts = function(p, stmts){
 
 $B._PyPegen.ensure_imaginary = function(p, exp){
     if (! (exp instanceof $B.ast.Constant) ||
-            exp.value.__class__ != _b_.complex) {
-        $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(exp,
+            ! $B.exact_type(exp.value, _b_.complex)){
+        $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, exp,
             "imaginary number required in complex literal");
         return NULL
     }
@@ -1352,6 +1344,7 @@ $B._PyPegen.ensure_imaginary = function(p, exp){
 $B._PyPegen.ensure_real = function(p, exp){
     if (! (exp instanceof $B.ast.Constant) || exp.value.type == 'imaginary') {
        $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(
+            p,
             exp,
             "real number required in complex literal");
         return NULL

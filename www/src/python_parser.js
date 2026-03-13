@@ -184,7 +184,7 @@ var helper_functions = {
 
     RAISE_INDENTATION_ERROR: function(p, msg, arg){
         if(arg !== undefined){
-            msg = _b_.str.__mod__(msg, arg)
+            msg = _b_.str.nb_remainder(msg, arg)
         }
         var last_token = $B.last(p.tokens)
         if(last_token.type == "ENDMARKER"){
@@ -204,7 +204,7 @@ var helper_functions = {
 
     RAISE_SYNTAX_ERROR_KNOWN_LOCATION: function(p, a, err_msg, arg){
         if(arg !== undefined){
-            err_msg = _b_.str.__mod__(err_msg, arg)
+            err_msg = _b_.str.nb_remainder(err_msg, arg)
         }
 
         helper_functions.RAISE_ERROR_KNOWN_LOCATION(p, _b_.SyntaxError,
@@ -216,7 +216,7 @@ var helper_functions = {
     RAISE_SYNTAX_ERROR_KNOWN_RANGE: function(p, a, b, msg){
         var extra_args = arguments[4]
         if(extra_args){
-            msg = _b_.str.__mod__(msg, extra_args)
+            msg = _b_.str.nb_remainder(msg, extra_args)
         }
         helper_functions.RAISE_ERROR_KNOWN_LOCATION(p, _b_.SyntaxError,
             a.lineno, a.col_offset,

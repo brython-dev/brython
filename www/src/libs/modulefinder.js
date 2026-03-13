@@ -3,7 +3,7 @@
 var _b_=$B.builtins
 var _mod = {}
 
-$ModuleFinderDict = {__class__:_b_.type,__name__:'ModuleFinder'}
+$ModuleFinderDict = {ob_type:_b_.type,__name__:'ModuleFinder'}
 $ModuleFinderDict.__mro__ = [_b_.object]
 
 $ModuleFinderDict.run_script = function(self, pathname){
@@ -40,10 +40,10 @@ $ModuleFinderDict.run_script = function(self, pathname){
     self.modules = walk(root)
 }
 
-_mod.ModuleFinder = function(){return {__class__:$ModuleFinderDict}
+_mod.ModuleFinder = function(){return {ob_type:$ModuleFinderDict}
 }
 _mod.ModuleFinder.$dict = $ModuleFinderDict
-_mod.ModuleFinder.__class__ = $B.$factory
+_mod.ModuleFinder.ob_type = $B.$factory
 $ModuleFinderDict.$factory = _mod.ModuleFinder
 
 $B.addToImported('modulefinder', _mod)

@@ -4,27 +4,41 @@ var _b_ = $B.builtins
 
 $B.$import('token')
 
-var TokenizerIter = $B.make_class('TokenizerIter',
-    function(it){
-        var $ = $B.args('TokenizerIter', 3, {it: null, encoding: null, extra_tokens:null},
-                    ['it', 'encoding', 'extra_tokens'], arguments,
-                    {encoding: _b_.None, extra_tokens: false}, null, null)
-        return {
-            __class__: TokenizerIter,
-            it: $B.$call($.it),
-            encoding: $.encoding,
-            extra_tokens: $.extra_tokens
-        }
-    }
-)
+var TokenizerIter = $B.make_type('TokenizerIter')
 
-TokenizerIter.__iter__ = function(self){
+TokenizerIter.$factory = function(it){
+    var $ = $B.args('TokenizerIter', 3, {it: null, encoding: null, extra_tokens:null},
+                ['it', 'encoding', 'extra_tokens'], arguments,
+                {encoding: _b_.None, extra_tokens: false}, null, null)
+    return {
+        ob_type: TokenizerIter,
+        it: $.it,
+        encoding: $.encoding,
+        extra_tokens: $.extra_tokens
+    }
+}
+
+TokenizerIter.tp_new = function(cls, args, kw){
+    var [source] = $B.unpack_args('TokenizerIter', args, ['source'])
+    $B.check_expected_keywords('TokenizerIter', kw,
+        ['encoding', 'extra_tokens'])
+    var encoding = $B.str_dict_get(kw, 'encoding', _b_.None)
+    var extra_tokens = $B.str_dict_get(kw, 'extra_tokens', false)
+    return {
+        ob_type: cls,
+        it: source,
+        encoding,
+        extra_tokens
+    }
+}
+
+TokenizerIter.tp_iter = function(self){
     var js_iter = function*(){
         var line_num = 0
         var err
         while(true){
             try{
-                var line = self.it()
+                var line = $B.$call(self.it)
             }catch(err){
                 if(! $B.$isinstance(err, _b_.StopIteration)){
                     throw err
@@ -42,10 +56,10 @@ TokenizerIter.__iter__ = function(self){
                 break
             }else if(self.encoding !== _b_.None){
                 if(! $B.$isinstance(line, [_b_.bytes, _b_.bytearray])){
-                    $B.RAISE(_b_.TypeError, 
+                    $B.RAISE(_b_.TypeError,
                         'readline() returned a non-bytes object')
                 }
-                line = _b_.bytes.decode(line, self.encoding)
+                line = $B.bytes_decode(line, self.encoding)
             }
             line_num++
             for(var token of $B.tokenizer(line, 'test')){
@@ -71,11 +85,12 @@ TokenizerIter.__iter__ = function(self){
     return $B.generator.$factory(js_iter)()
 }
 
-TokenizerIter.__next__ = function*(self){
+TokenizerIter.tp_iternext = function*(self){
 
 }
 
 $B.set_func_names(TokenizerIter, '_tokenize')
+$B.finalize_type(TokenizerIter)
 
 $B.addToImported('_tokenize', {TokenizerIter})
 

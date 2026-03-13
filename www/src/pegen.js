@@ -589,7 +589,7 @@ $B._PyPegen.soft_keyword_token = function(p) {
     }
     var the_token;
     var size;
-    the_token = t.string; // _b_.bytes.decode(t.bytes, 'iso-8859-1');
+    the_token = t.string
     for (let keyword = p.soft_keywords; keyword != NULL; keyword++) {
         if (strncmp(keyword, the_token, size) == 0) {
             return $B._PyPegen.name_from_token(p, t);
@@ -611,11 +611,11 @@ function prepared_number_value(prepared){
                     num_str = prepared.value[1]
                 switch(base){
                     case 8:
-                        return $B.fast_long_int(BigInt('0x' + num_str))
+                        return BigInt('0x' + num_str)
                     case 10:
-                        return $B.fast_long_int(BigInt(num_str))
+                        return BigInt(num_str)
                     case 16:
-                        return $B.fast_long_int(BigInt('0x' + num_str))
+                        return BigInt('0x' + num_str)
                 }
             }
             return res

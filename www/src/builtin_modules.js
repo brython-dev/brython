@@ -26,7 +26,7 @@
             var options = $.options
             if(typeof options == "boolean"){
                 // ignore
-            }else if(options.__class__ === _b_.dict){
+            }else if($B.get_class(options) === _b_.dict){
                 var _options = {}
                 for(var key of _b_.dict.$keys_string(options)){
                     _options[key] = _b_.dict.$getitem_string(options, key)
@@ -49,23 +49,25 @@
                     return callback
                 }else if($B.$isinstance($.elt, $B.DOMNode)){
                     // DOM element
-                    $B.DOMNode.bind($.elt, $.evt, callback, options)
+                    $B.$call($B.$getattr($B.DOMNode, 'bind'), $.elt, $.evt, callback, options)
                     return callback
                 }else if($B.$isinstance($.elt, _b_.str)){
                     // string interpreted as a CSS selector
                     var items = document.querySelectorAll($.elt)
+                    var binder = $B.type_getattribute($B.DOMNode, 'bind')
                     for(var i = 0; i < items.length; i++){
-                        $B.DOMNode.bind($B.DOMNode.$factory(items[i]),
+                        $B.$call(binder, $B.DOMNode.$factory(items[i]),
                             $.evt, callback, options)
                     }
                     return callback
                 }
+                var binder = $B.type_getattribute($B.DOMNode, 'bind')
                 try{
                     var it = $B.$iter($.elt)
                     while(true){
                         try{
                             var elt = _b_.next(it)
-                            $B.DOMNode.bind(elt, $.evt, callback)
+                            $B.$call(binder, elt, $.evt, callback)
                         }catch(err){
                             if($B.$isinstance(err, _b_.StopIteration)){
                                 break
@@ -75,7 +77,7 @@
                     }
                 }catch(err){
                     if($B.$isinstance(err, _b_.AttributeError)){
-                        $B.DOMNode.bind($.elt, $.evt, callback)
+                        $B.$call(binder, $.elt, $.evt, callback)
                     }
                     throw err
                 }
@@ -197,16 +199,13 @@
             var _b_ = $B.builtins
             var TagSum = $B.TagSum
 
-            function makeTagDict(tagName){
-                // return the dictionary for the class associated with tagName
-                var dict = {
-                    __class__: _b_.type,
-                    __name__: tagName,
-                    __module__: "browser.html",
-                    __qualname__: tagName
-                }
+            function makeTagClass(tagName){
+                // return the the class associated with tagName
+                var cls = $B.make_builtin_class(tagName, [$B.DOMNode])
 
-                dict.__init__ = function(){
+                var cls_funcs = cls.tp_funcs = {}
+
+                cls.tp_init = function(){
                     var $ns = $B.args('__init__', 1, {self: null}, ['self'],
                         arguments, {}, 'args', 'kw'),
                         self = $ns['self'],
@@ -216,7 +215,7 @@
                         if($B.$isinstance(first,[_b_.str, _b_.int, _b_.float])){
                             // set "first" as HTML content (not text)
                             self.innerHTML = _b_.str.$factory(first)
-                        }else if(first.__class__ === TagSum){
+                        }else if($B.get_class(first) === TagSum){
                             for(var i = 0, len = first.children.length; i < len; i++){
                                 self.appendChild(first.children[i])
                             }
@@ -229,11 +228,11 @@
                                     // str, add the items
                                     var items = _b_.list.$factory(first)
                                     for(var item of items){
-                                        $B.DOMNode.__le__(self, item)
+                                        $B.DOMNode.tp_funcs.attach(self, item)
                                     }
                                 }catch(err){
                                     if($B.get_option('debug', err) > 1){
-                                        console.log(err, err.__class__, err.args)
+                                        console.log(err, $B.get_class(err), err.args)
                                         console.log("first", first)
                                         console.log(arguments)
                                     }
@@ -250,9 +249,9 @@
                             value = item.value
                         if(arg.toLowerCase().substr(0,2) == "on"){
                             // Event binding passed as argument "onclick", "onfocus"...
-                            $B.DOMNode.__setattr__(self, arg, value)
+                            $B.DOMNode.tp_setattro(self, arg, value)
                         }else if(arg.toLowerCase() == "style"){
-                            $B.DOMNode.set_style(self, value)
+                            $B.DOMNode.tp_setattro(self, "style", value)
                         }else{
                             if(value !== false){
                                 // option.selected = false sets it to true :-)
@@ -270,24 +269,22 @@
                     }
                 }
 
-                dict.__mro__ = [$B.DOMNode, $B.builtins.object]
-
-                dict.__new__ = function(cls){
+                cls.tp_new = function(cls){
                     // Only called for subclasses of the HTML tag
                     var res = document.createElement(tagName)
                     if(cls !== html[tagName]){
-                        // Only set __class__ if it is not browser.html.<tagName>
-                        res.__class__ = cls
+                        // Only set ob_type if it is not browser.html.<tagName>
+                        res.ob_type = cls
                     }
                     return res
                 }
 
-                dict.__rmul__ = function(self, num){
-                    return $B.DOMNode.__mul__(self, num)
+                cls_funcs.__rmul__ = function(self, num){
+                    return $B.DOMNode.nb_multiply(self, num)
                 }
 
-                $B.set_func_names(dict, "browser.html")
-                return dict
+                $B.set_func_names(cls, "browser.html")
+                return cls
             }
 
             function makeFactory(klass){
@@ -308,7 +305,7 @@
                             }
                         }
                         // apply __init__
-                        var init = $B.$getattr(k, "__init__", null)
+                        var init = k.tp_init
                         if(init !== null){
                             init(res, ...arguments)
                         }
@@ -361,7 +358,7 @@
                     $B.RAISE(_b_.ValueError, "cannot reset class for "
                         + tagName)
                 }
-                var klass = makeTagDict(tagName)
+                var klass = makeTagClass(tagName)
                 klass.$factory = makeFactory(klass, ComponentClass)
                 html[tagName] = klass
                 _b_.dict.$setitem(html.tags, tagName, html[tagName])
@@ -387,43 +384,66 @@
     modules['browser'] = browser
 
     // Class for Javascript "undefined"
-    $B.UndefinedType = $B.make_class("UndefinedType",
-        function(){return $B.Undefined}
-    )
-    $B.UndefinedType.__mro__ = [_b_.object]
-    $B.UndefinedType.__bool__ = function(){
+    $B.UndefinedType = $B.make_builtin_class("UndefinedType")
+
+    $B.UndefinedType.$factory = function(){
+        return $B.Undefined
+    }
+    $B.UndefinedType.nb_bool = function(){
         return false
     }
-    $B.UndefinedType.__repr__ = function(){
+    $B.UndefinedType.tp_repr = function(){
         return "<Javascript undefined>"
     }
-    $B.UndefinedType.__str__ = $B.UndefinedType.__repr__;
 
-    $B.Undefined = {__class__: $B.UndefinedType}
+    $B.Undefined = {
+        ob_type: $B.UndefinedType
+    }
 
     $B.set_func_names($B.UndefinedType, "javascript")
 
-    // Class used by javascript.super()
-    var super_class = $B.make_class("JavascriptSuper",
-        function(){
-            // Use Brython's super() to get a reference to self
-            var res = _b_.super.$factory()
-            var js_constr = res.__thisclass__.__bases__[0]
-            return function(){
-                var obj = new js_constr.$js_func(...arguments)
-                for(var attr in obj){
-                    res.__self_class__.__dict__[attr] = $B.jsobj2pyobj(obj[attr])
-                }
-                return obj
-            }
-        }
-    )
+    // class for Javascript "null"
+    var NullType = $B.make_builtin_class('NullType')
 
-    super_class.__getattribute__ = function(self, attr){
+    NullType.tp_richcompare = function(self, other, op){
+        switch(op){
+            case '__eq__':
+                // in Javascript, null == undefined is true...
+                return other === null || other === $B.Undefined
+            case '__ne__':
+                return other !== null && other !== $B.Undefined
+            default:
+                return _b_.NotImplemented
+        }
+    }
+
+    NullType.tp_repr = function(_self){
+        // in Javascript, null == undefined is true...
+        return '<Javascript null>'
+    }
+
+    $B.set_func_names(NullType, 'javascript')
+
+    // Class used by javascript.super()
+    var super_class = $B.make_builtin_class("JavascriptSuper")
+    super_class.$factory = function(){
+        // Use Brython's super() to get a reference to self
+        var res = _b_.super.$factory()
+        var js_constr = res.__thisclass__.tp_bases[0]
+        return function(){
+            var obj = new js_constr.$js_func(...arguments)
+            for(var attr in obj){
+                res.__self_class__.dict[attr] = $B.jsobj2pyobj(obj[attr])
+            }
+            return obj
+        }
+    }
+
+    super_class.tp_getattro = function(self, attr){
         if(attr == "__init__" || attr == "__call__"){
             return self.__init__
         }
-        return $B.$getattr(self.__self_class__, attr)
+        return $B.$getattr(self.__self_class__, attr, $B.NULL)
     }
 
     $B.set_func_names(super_class, "javascript")
@@ -436,7 +456,7 @@
             return $B.jsobj2pyobj($B.js_this)
         },
         Array: $B.js_array,
-        Date: self.Date && $B.jsobj2pyobj(self.Date),
+        Date: globalThis.Date, // && $B.jsobj2pyobj(self.Date),
         extends: function(js_constr){
             if((!js_constr.$js_func) ||
                     ! js_constr.$js_func.toString().startsWith('class ')){
@@ -444,9 +464,9 @@
                 $B.RAISE(_b_.TypeError,
                     'argument of extend must be a Javascript class')
             }
-            js_constr.__class__ = _b_.type
+            js_constr.ob_type = _b_.type
             return function(obj){
-                obj.__bases__.splice(0, 0, js_constr)
+                obj.tp_bases.splice(0, 0, js_constr)
                 obj.__mro__.splice(0, 0, js_constr)
                 return obj
             }
@@ -471,9 +491,10 @@
                         if(typeof $module !== 'undefined'){
                             result = $B.module.$factory(alias)
                             for(var key in $module){
-                                result[key] = $B.jsobj2pyobj($module[key])
+                                $B.module_setattr(result, key,
+                                    $B.jsobj2pyobj($module[key]))
                             }
-                            result.__file__ = url
+                            $B.module_setattr(result, '__file__', url)
                         }else{
                             console.log(this.responseText)
                             result = $B.EXC(_b_.ImportError, 'Javascript ' +
@@ -522,7 +543,7 @@
             }else{
                 import(refs[0]).then(function(module){
                     loaded.push(module)
-                    return $B.$call(callback).apply(null, loaded)
+                    return $B.$call(callback, ...loaded)
                 }).catch($B.show_error)
             }
         },
@@ -550,21 +571,13 @@
                 )
                 document.body.appendChild(script)
             }else{
-                return $B.$call(callback).apply(null, loaded)
+                return $B.$call(callback, ...loaded)
             }
         },
 
         JSObject: $B.JSObj,
         JSON: {
-            __class__: $B.make_class("JSON"),
-            parse: function(){
-                return $B.structuredclone2pyobj(
-                    JSON.parse.apply(this, arguments))
-            },
-            stringify: function(obj, replacer, space){
-                return JSON.stringify($B.pyobj2structuredclone(obj, false),
-                    $B.jsobj2pyobj(replacer), space)
-            }
+            ob_type: $B.make_builtin_class("JSON")
         },
         jsobj2pyobj:function(obj){
             return $B.jsobj2pyobj(obj)
@@ -580,7 +593,7 @@
         },
         Math: self.Math && $B.jsobj2pyobj(self.Math),
         NULL: null,
-        NullType: $B.make_class('NullType'),
+        NullType,
         Number: self.Number && $B.jsobj2pyobj(self.Number),
         py2js: function(src, module_name){
             if(module_name === undefined){
@@ -600,47 +613,56 @@
         UndefinedType: $B.UndefinedType
     }
 
-    modules.javascript.NullType.__module__ = 'javascript'
+    $B.assign_dict(modules.javascript.JSON,
+        {
+            parse: function(){
+                return $B.structuredclone2pyobj(
+                    JSON.parse.apply(this, arguments))
+            },
+            stringify: function(obj, replacer, space){
+                return JSON.stringify($B.pyobj2structuredclone(obj, false),
+                    $B.jsobj2pyobj(replacer), space)
+            }
+        }
+    )
 
-    modules.javascript.NullType.__eq__ = function(_self, other){
-        // in Javascript, null == undefined is true...
-        return other === null || other === $B.Undefined
-    }
-
-    modules.javascript.NullType.__repr__ = function(_self){
-        // in Javascript, null == undefined is true...
-        return '<Javascript null>'
-    }
-
-    $B.set_func_names(modules.javascript.NullType, 'javascript')
 
     modules.javascript.UndefinedType.__module__ = 'javascript'
 
     // Default standard output and error
     // Can be reset by sys.stdout or sys.stderr
-    var $io = $B.$io = $B.make_class("io",
-        function(out){
-            return {
-                __class__: $io,
-                __dict__: $B.empty_dict(),
-                out,
-                encoding: 'utf-8'
-            }
+    var $io = $B.$io = $B.make_builtin_class("io")
+    $io.$factory = function(out){
+        return {
+            ob_type: $io,
+            dict: $B.empty_dict(),
+            out,
+            encoding: 'utf-8'
         }
-    )
+    }
+    var $io_funcs = $io.tp_funcs = {}
 
-    $io.flush = function(self){
+    $io_funcs.encoding_get = function(self){
+        return 'utf-8'
+    }
+
+    $io_funcs.encoding_set = _b_.None
+
+    $io_funcs.flush = function(self){
         if(self.buf){
             // replace chr(0) by ' ' for printing
             var s = self.buf.join(''),
                 chr0 = String.fromCodePoint(0)
             s = s.replace(new RegExp(chr0, 'g'), ' ')
             console[self.out](s)
+            if(s.includes('__spec__')){
+                console.log(Error('trace').stack)
+            }
             self.buf = []
         }
     }
 
-    $io.write = function(self, msg){
+    $io_funcs.write = function(self, msg){
         // Default to printing to browser console
         if(self.buf === undefined){
             self.buf = []
@@ -652,6 +674,11 @@
         self.buf.push(msg)
         return _b_.None
     }
+
+    $io.tp_methods = ["flush", "write"]
+
+    $io.tp_getset = ["encoding"]
+
     // _sys module is at the core of Brython since it is paramount for
     // the import machinery.
     // see https://github.com/brython-dev/brython/issues/189
@@ -689,7 +716,7 @@
                 console.warn("cannot import breakpoint", hookname)
                 return _b_.None
             }
-            return $B.$call(hook).apply(null, arguments)
+            return $B.$call(hook, ...arguments)
         },
         exc_info: function(){
             var frame_obj = $B.frame_obj,
@@ -697,9 +724,9 @@
                 exc
             while(frame_obj !== null){
                 frame = frame_obj.frame
-                exc = frame[1].$current_exception
+                exc = frame.$current_exception
                 if(exc){
-                    return _b_.tuple.$factory([exc.__class__, exc,
+                    return _b_.tuple.$factory([$B.get_class(exc), exc,
                         $B.$getattr(exc, "__traceback__")])
                 }
                 frame_obj = frame_obj.prev
@@ -715,7 +742,7 @@
                 exc
             while(frame_obj !== null){
                 frame = frame_obj.frame
-                exc = frame[1].$current_exception
+                exc = frame.$current_exception
                 if(exc !== undefined){
                     return exc
                 }
@@ -749,14 +776,7 @@
                 $B.frame_obj.frame.$current_exception = value
             }
         ),
-        modules: _b_.property.$factory(
-            function(){
-                return $B.obj_dict($B.imported)
-            },
-            function(){
-                 $B.RAISE(_b_.TypeError, "Read only property 'sys.modules'")
-            }
-        ),
+        modules: $B.obj_dict($B.imported),
         path: _b_.property.$factory(
             function(){
                 var filename = $B.get_filename_for_import()
@@ -837,17 +857,21 @@
         )
     }
 
-    var WarningMessage = $B.make_class("WarningMessage",
-        function(){
-            var $ = $B.make_args("WarningMessage", 8,
-                {message: null, category: null, filename: null, lineno: null,
-                 file: null, line:null, source: null},
-                 ['message', 'category', 'filename', 'lineno', 'file',
-                  'line', 'source'],
-                 arguments, {file: _b_.None, line: _b_.None, source: _b_.None},
-                 null, null)
-            return {
-                __class__: WarningMessage,
+    var WarningMessage = $B.make_builtin_class("WarningMessage")
+    WarningMessage.$factory = function(){
+        var $ = $B.make_args("WarningMessage", 8,
+            {message: null, category: null, filename: null, lineno: null,
+             file: null, line:null, source: null},
+             ['message', 'category', 'filename', 'lineno', 'file',
+              'line', 'source'],
+             arguments,
+             {filename: _b_.None, file: _b_.None, line: _b_.None, source: _b_.None},
+             null, null)
+        var res = {
+            ob_type: WarningMessage
+        }
+        $B.assign_dict(res,
+            {
                 message: $.message,
                 category: $.category,
                 filename: $.filename,
@@ -858,14 +882,18 @@
                 _category_name: _b_.bool.$factory($.category) ?
                     $B.$getattr($.category, "__name__") : _b_.None
             }
-        }
-    )
+        )
+    }
+
     // _warnings provides basic warning filtering support.
     modules._warnings = {
+        _acquire_lock: function(){},
         _defaultaction: "default",
-        _filters_mutated: function(){
-        },
+        _filters_mutated: function(){},
+        _filters_mutated_lock_held: function(){},
         _onceregistry: $B.empty_dict(),
+        _release_lock: function(){},
+        _warnings_context: {},
         filters: $B.$list([
             $B.fast_tuple(['default', _b_.None, _b_.DeprecationWarning, '__main__', 0]),
             $B.fast_tuple(['ignore', _b_.None, _b_.DeprecationWarning, _b_.None, 0]),
@@ -888,9 +916,9 @@
             }
             var filters
             if($B.imported.warnings){
-                filters = $B.imported.warnings.filters
+                filters = $B.module_getattr($B.imported.warnings, 'filters')
             }else{
-                filters = modules._warnings.filters
+                filters = $B.module_getattr(modules._warnings, 'filters')
             }
             if(filters[0][0] == 'error'){
                 var syntax_error = $B.EXC(_b_.SyntaxError, message.args[0])
@@ -908,47 +936,58 @@
                 lineno,
                 line
             if(category === _b_.SyntaxWarning){
-                filename = message.filename,
-                lineno = message.lineno,
-                line = message.text
+                filename = $B.str_dict_get(message.dict, 'filename'),
+                lineno = $B.str_dict_get(message.dict, 'lineno'),
+                line = $B.str_dict_get(message.dict, 'text', '')
                 var src = $B.file_cache[file]
                 if(src){
                     var lines = src.split('\n'),
                         line = lines[lineno - 1]
                 }
                 warning_message = {
-                    __class__: WarningMessage,
-                    message: message,
-                    category,
-                    filename,
-                    lineno,
-                    file: _b_.None,
-                    line,
-                    source: _b_.None,
-                    _category_name: category.__name__
+                    ob_type: WarningMessage
                 }
+                $B.assign_dict(warning_message,
+                    {
+                        message: message,
+                        category,
+                        filename,
+                        lineno,
+                        file: _b_.None,
+                        line,
+                        source: _b_.None,
+                        _category_name: category.__name__
+                    }
+                )
             }else{
                 let frame_rank = Math.max(0, $B.count_frames() - stacklevel)
                 var frame = $B.get_frame_at(frame_rank)
                 file = frame.__file__
-                let f_code = $B._frame.f_code.__get__(frame),
+                let f_code = $B.$getattr(frame, 'f_code'),
                     src = $B.file_cache[file]
+                var co_filename = $B.$getattr(f_code, 'co_filename')
                 lineno = message.lineno || frame.$lineno
                 line = src ? src.split('\n')[lineno - 1] : null
                 warning_message = {
-                    __class__: WarningMessage,
-                    message: message,
-                    category,
-                    filename: message.filename || f_code.co_filename,
-                    lineno,
-                    file: _b_.None,
-                    line: line || _b_.None,
-                    source: _b_.None,
-                    _category_name: category.__name__
+                    ob_type: WarningMessage
                 }
+                $B.assign_dict(warning_message,
+                    {
+                        message: message,
+                        category,
+                        filename: message.filename || co_filename,
+                        lineno,
+                        file: _b_.None,
+                        line: line || _b_.None,
+                        source: _b_.None,
+                        _category_name: category.__name__
+                    }
+                )
             }
             if($B.imported.warnings){
-                $B.imported.warnings._showwarnmsg_impl(warning_message)
+                var showwarn = $B.module_getattr($B.imported.warnings,
+                    '_showwarnmsg_impl')
+                $B.$call(showwarn, warning_message)
             }else{
                 var trace = ''
                 if(file && lineno){
@@ -959,10 +998,10 @@
                     trace += '\n    ' + line.trim()
                 }
                 var stderr = $B.get_stderr()
-                $B.$getattr(stderr, 'write')(trace + '\n')
+                $B.$call($B.$getattr(stderr, 'write'), trace + '\n')
                 var flush = $B.$getattr(stderr, 'flush', _b_.None)
                 if(flush !== _b_.None){
-                    flush()
+                    $B.$call(flush)
                 }
             }
             return _b_.None
@@ -1113,7 +1152,7 @@
                         array[i] = params.source[i]
                     }
                 }else{
-                    if(params.__class__ !== _b_.dict){
+                    if($B.get_class(params) !== _b_.dict){
                         $B.RAISE(_b_.TypeError, "wrong type for data, " +
                             "expected dict, bytes or str, got " +
                             $B.class_name(params))
@@ -1146,9 +1185,11 @@
         return result
     }
 
-    var HTTPRequest = $B.make_class("Request")
+    var HTTPRequest = $B.make_builtin_class("HTTPRequest")
 
-    HTTPRequest.data = _b_.property.$factory(function(self){
+    var HTTPRequest_funcs = HTTPRequest.tp_funcs = {}
+
+    HTTPRequest_funcs.data_get = function(self){
         if(self.format == "binary"){
             var view = new Uint8Array(self.response)
             return _b_.bytes.$factory(Array.from(view))
@@ -1160,9 +1201,11 @@
             return "data:" + self.getResponseHeader("Content-Type") +
                 ";base64," + base64String
         }
-    })
+    }
 
-    HTTPRequest.response_headers = _b_.property.$factory(function(self){
+    HTTPRequest_funcs.data_set = _b_.None
+
+    HTTPRequest_funcs.response_headers_get = function(self){
         var headers = self.getAllResponseHeaders()
         if(headers === null){return _b_.None}
         var res = $B.empty_dict()
@@ -1179,21 +1222,26 @@
             })
         }
         return res
-    })
+    }
 
-    var Future = $B.make_class("Future",
-        function(){
-            var methods = {}
-            var promise = new Promise(function(resolve, reject){
-                methods.resolve = resolve
-                methods.reject = reject
-            })
-            promise._methods = methods
-            promise._done = false
-            promise.__class__ = Future
-            return promise
-        }
-    )
+    HTTPRequest_funcs.response_headers_set = _b_.None
+
+    HTTPRequest.tp_getset = [
+        "data", "response_header"
+    ]
+
+    var Future = $B.make_builtin_class("Future")
+    Future.$factory = function(){
+        var methods = {}
+        var promise = new Promise(function(resolve, reject){
+            methods.resolve = resolve
+            methods.reject = reject
+        })
+        promise._methods = methods
+        promise._done = false
+        promise.ob_type = Future
+        return promise
+    }
 
     Future.done = function(){
         var $ = $B.args('done', 1, {self:null},
@@ -1245,7 +1293,7 @@
                     xhr.responseType = responseType[args.format]
                     xhr.onreadystatechange = function(){
                         if(this.readyState == 4){
-                            this.__class__ = HTTPRequest
+                            this.ob_type = HTTPRequest
                             resolve(this)
                         }
                     }
@@ -1263,7 +1311,7 @@
             func.$function_infos = []
             func.$function_infos[$B.func_attrs.name] = `ajax_${method}`
             return {
-                __class__: $B.coroutine,
+                ob_type: $B.coroutine,
                 $args: [url, args],
                 $func: func
             }
@@ -1296,7 +1344,7 @@
             return $B.imported['browser.aio'].ajax.bind(null, "GET").apply(null, arguments)
         },
         iscoroutine: function(f){
-            return f.__class__ === $B.coroutine
+            return $B.get_class(f) === $B.coroutine
         },
         iscoroutinefunction: function(f){
             return (f.$function_infos[$B.func_attrs.flags] & 128) != 0
@@ -1319,12 +1367,12 @@
                 onerror = $.onerror
 
             var save_frame_obj = $B.frame_obj
-            $B.coroutine.send(coro).then(onsuccess).catch(onerror)
+            $B.$call($B.$getattr($B.coroutine, 'send'), coro).then(onsuccess).catch(onerror)
             $B.frame_obj = save_frame_obj
             return _b_.None
         },
         sleep: function(seconds){
-            if(seconds.__class__ === _b_.float){
+            if($B.get_class(seconds) === _b_.float){
                 seconds = seconds.value
             }else if(typeof seconds != "number"){
                 $B.RAISE(_b_.TypeError, "'sleep' argument must be " +
@@ -1340,7 +1388,7 @@
             func.$function_infos = []
             func.$function_infos[$B.func_attrs.name] = 'sleep'
             return {
-                __class__: $B.coroutine,
+                ob_type: $B.coroutine,
                 $args: [seconds],
                 $func: func
             }
@@ -1355,9 +1403,8 @@
 
     function load(name, module_obj){
         // add class and __str__
-        module_obj.__class__ = $B.module
-        //module_obj.__file__ = '<builtin>'
-        module_obj.__name__ = name
+        module_obj.ob_type = $B.module
+        module_obj.dict = $B.empty_dict()
         $B.imported[name] = module_obj
         // set attribute "name" of functions
         for(var attr in module_obj){
@@ -1375,7 +1422,10 @@
                     }
                 )
             }
+            $B.module_setattr(module_obj, attr, module_obj[attr])
         }
+        $B.module_setattr(module_obj, '__name__', name)
+        $B.module_setattr(module_obj, '__module__', 'builtins')
     }
 
     for(let attr in modules){
@@ -1391,92 +1441,27 @@
         'Python builtins')
 
     for(let attr in _b_){
-        _b_.__builtins__[attr] = _b_[attr]
+        $B.module_setattr(_b_.__builtins__, attr, _b_[attr])
         $B.builtins_scope.binding[attr] = true
-        if(_b_[attr].$is_class){
-            if(_b_[attr].__bases__){
-                _b_[attr].__bases__.__class__ = _b_.tuple
-            }else{
-                _b_[attr].__bases__ = $B.fast_tuple([_b_.object])
-            }
-        }
-    }
-    _b_.__builtins__.__setattr__ = function(attr, value){
-        _b_[attr] = value
-    }
-
-    $B.method_descriptor.__getattribute__ = $B.function.__getattribute__
-    $B.wrapper_descriptor.__getattribute__ = $B.function.__getattribute__
-
-    _b_.type.__dict__ = $B.mappingproxy.$factory(_b_.type.__dict__)
-
-    // Set type of methods of builtin classes
-    for(var name in _b_){
-        var builtin = _b_[name]
-        if(_b_[name].__class__ === _b_.type){
-            _b_[name].__qualname__ = _b_[name].__qualname__ ?? name
-            _b_[name].__module__ = 'builtins'
-            _b_[name].__name__ = _b_[name].__name__ ?? name
-            _b_[name].$is_builtin_class = true
-            $B.builtin_classes.push(_b_[name]) // defined in brython_builtins.js
-            for(var key in _b_[name]){
-                var value = _b_[name][key]
-                if(value === undefined || value.__class__ ||
-                        typeof value != 'function'){
-                    continue
-                }else if(key == "__new__"){
-                    value.__class__ = $B.builtin_function_or_method
-                }else if(key.startsWith("__")){
-                    value.__class__ = $B.wrapper_descriptor
-                }else{
-                    value.__class__ = $B.method_descriptor
-                }
-                value.__objclass__ = _b_[name]
-            }
-        }else if(typeof builtin == 'function'){
-            builtin.$infos = {
-                __name__: name,
-                __qualname__: name,
-                __dict__: $B.empty_dict()
-            }
-            $B.set_function_infos(builtin,
-                {
-                    __name__: name,
-                    __qualname__: name
-                }
-            )
-        }
     }
 
     // Attributes of __BRYTHON__ are Python lists
     for(let attr in $B){
         if(Array.isArray($B[attr])){
-            $B[attr].__class__ = _b_.list
+            $B[attr].ob_type = _b_.list
         }
     }
 
     // Cell objects, for free variables in functions
     // Must be defined after dict, because property uses it
-    $B.cell = $B.make_class("cell",
-        function(value){
-            return {
-                __class__: $B.cell,
-                $cell_contents: value
-            }
+    $B.cell = $B.make_builtin_class("cell")
+    $B.cell.$factory = function(value){
+        return {
+            ob_type: $B.cell,
+            $cell_contents: value
         }
-    )
+    }
 
-    $B.cell.cell_contents = $B.$call(_b_.property)(
-        function(self){
-            if(self.$cell_contents === null){
-                $B.RAISE(_b_.ValueError, "empty cell")
-            }
-            return self.$cell_contents
-        },
-        function(self, value){
-            self.$cell_contents = value
-        }
-    )
 
     var $comps = Object.values($B.$comps).concat(["eq", "ne"])
     $comps.forEach(function(comp){
@@ -1500,18 +1485,43 @@
         })(op)
     })
 
-    $B.set_func_names($B.cell, "builtins")
+    /* cell start */
+    $B.cell.tp_richcompare = function(self){
 
-    // Set __flags__ of internal classes, defined in py_flags.js
-    for(let flag in $B.builtin_class_flags.builtins){
-        for(let key of $B.builtin_class_flags.builtins[flag]){
-            if(_b_[key]){
-                _b_[key].__flags__ = parseInt(flag)
-            }else{
-                console.log('not in _b_', key)
-            }
-        }
     }
+
+    $B.cell.tp_repr = function(self){
+        return '<cell object>'
+    }
+
+    $B.cell.tp_hash = function(self){
+
+    }
+
+    $B.cell.tp_new = function(self){
+
+    }
+
+    var cell_funcs = $B.cell.tp_funcs = {}
+
+    cell_funcs.cell_contents_get = function(self){
+        if(self.$cell_contents === null){
+            $B.RAISE(_b_.ValueError, "empty cell")
+        }
+        return self.$cell_contents
+    }
+
+    cell_funcs.cell_contents_set = function(self){
+        self.$cell_contents = value
+    }
+
+    $B.cell.functions_or_methods = ["__new__"]
+
+    $B.cell.tp_getset = ["cell_contents"]
+
+    /* cell end */
+
+    $B.set_func_names($B.cell, "builtins")
 
     for(let flag in $B.builtin_class_flags.types){
         for(let key of $B.builtin_class_flags.types[flag]){
@@ -1521,69 +1531,64 @@
         }
     }
 
-    $B.AST = {
-        __class__: _b_.type,
-        __mro__: [_b_.object],
-        __name__: 'AST',
-        __qualname__: 'AST',
-        $is_class: true,
-        $convert: function(js_node){
-            if(js_node === undefined){
-                return _b_.None
+    $B.AST = $B.make_type('AST')
+    $B.AST.$convert = function(js_node){
+        if(js_node === undefined){
+            return _b_.None
+        }
+        var constr = js_node.constructor
+        if(constr && constr.$name){
+            $B.create_python_ast_classes()
+            return $B.python_ast_classes[constr.$name].$factory(js_node)
+        }else if(Array.isArray(js_node)){
+            return js_node.map($B.AST.$convert)
+        }else if(js_node.type){
+            // literal constant
+            switch(js_node.type){
+                case 'int':
+                    console.log('AST convert, js_node', js_node)
+                    var value = js_node.value[1],
+                        base = js_node.value[0]
+                    var res = parseInt(value, base)
+                    if(! Number.isSafeInteger(res)){
+                        res = BigInt(res)
+                    }
+                    return res
+                case 'float':
+                    return $B.fast_float(parseFloat(js_node.value))
+                case 'imaginary':
+                    return $B.make_complex(0,
+                        $B.AST.$convert(js_node.value))
+                case 'ellipsis':
+                    return _b_.Ellipsis
+                case 'str':
+                    if(js_node.is_bytes){
+                        return _b_.bytes.$factory(js_node.value, 'latin-1')
+                    }
+                    return js_node.value
+                case 'id':
+                    if(['False', 'None', 'True'].indexOf(js_node.value) > -1){
+                        return _b_[js_node.value]
+                    }
+                    break
             }
-            var constr = js_node.constructor
-            if(constr && constr.$name){
-                $B.create_python_ast_classes()
-                return $B.python_ast_classes[constr.$name].$factory(js_node)
-            }else if(Array.isArray(js_node)){
-                return js_node.map($B.AST.$convert)
-            }else if(js_node.type){
-                // literal constant
-                switch(js_node.type){
-                    case 'int':
-                        var value = js_node.value[1],
-                            base = js_node.value[0]
-                        var res = parseInt(value, base)
-                        if(! Number.isSafeInteger(res)){
-                            res = $B.long_int.$factory(value, base)
-                        }
-                        return res
-                    case 'float':
-                        return $B.fast_float(parseFloat(js_node.value))
-                    case 'imaginary':
-                        return $B.make_complex(0,
-                            $B.AST.$convert(js_node.value))
-                    case 'ellipsis':
-                        return _b_.Ellipsis
-                    case 'str':
-                        if(js_node.is_bytes){
-                            return _b_.bytes.$factory(js_node.value, 'latin-1')
-                        }
-                        return js_node.value
-                    case 'id':
-                        if(['False', 'None', 'True'].indexOf(js_node.value) > -1){
-                            return _b_[js_node.value]
-                        }
-                        break
-                }
-            }else if(['string', 'number'].indexOf(typeof js_node) > -1){
-                return js_node
-            }else if(js_node.$name){
-                // eg Store(), Load()...
-                return js_node.$name + '()'
-            }else if([_b_.None, _b_.True, _b_.False].indexOf(js_node) > -1){
-                return js_node
-            }else if(js_node.__class__){
-                return js_node
-            }else{
-                console.log('cannot handle', js_node)
-                return js_node
-            }
+        }else if(['string', 'number'].indexOf(typeof js_node) > -1){
+            return js_node
+        }else if(js_node.$name){
+            // eg Store(), Load()...
+            return js_node.$name + '()'
+        }else if([_b_.None, _b_.True, _b_.False].indexOf(js_node) > -1){
+            return js_node
+        }else if($B.get_class(js_node) !== $B.JSObj){
+            return js_node
+        }else{
+            console.log('cannot handle', js_node)
+            return js_node
         }
     }
 
 $B.stdin = {
-    __class__: $io,
+    ob_type: $io,
     __original__: true,
     closed: false,
     len: 1,
@@ -1602,7 +1607,55 @@ $B.__ARGV = $B.$list([])
 // set default trace function (cf. sys.settrace)
 $B.tracefunc = _b_.None
 
-// function dict
-$B.function.__dict__ = $B.obj_dict($B.function.__dict__)
+// make built-in module builtins
+var builtins_doc = "Built-in functions, types, exceptions, and other " +
+    "objects.\n\nThis module provides direct access to all 'built-in'" +
+    "\nidentifiers of Python; for example, builtins.len is\nthe full name" +
+    " for the built-in function len().\n\nThis module is not normally " +
+    "accessed explicitly by most\napplications, but can be useful in " +
+    "modules that provide\nobjects with the same name as a built-in value, " +
+    "but in\nwhich the built-in of that name is also needed."
+$B.imported.builtins = $B.module.tp_new($B.module)
+$B.module.tp_init($B.imported.builtins, 'builtins', builtins_doc)
+
+$B.imported.builtins.dict = $B.obj_dict(_b_)
+
+$B.module_setattr($B.imported.builtins, '__doc__', builtins_doc)
+//$B.module_setattr($B.imported.builtins, '__name__', 'builtins')
+
+$B.module_setattr($B.imported.builtins, '__package__', _b_.None)
+$B.module_setattr($B.imported.builtins, '__loader__', _b_.None)
+$B.module_setattr($B.imported.builtins, '__spec__',
+    $B.ModuleSpec.$factory(
+        {
+            name: 'builtins',
+            origin: 'built-in',
+            has_location: false,
+            loader: _b_.None,
+            submodule_search_locations: _b_.None
+        }
+    )
+)
+
+var copyright = `Copyright (c) 2001 Python Software Foundation.
+All Rights Reserved.
+
+Copyright (c) 2000 BeOpen.com.
+All Rights Reserved.
+
+Copyright (c) 1995-2001 Corporation for National Research Initiatives.
+All Rights Reserved.
+
+Copyright (c) 1991-1995 Stichting Mathematisch Centrum, Amsterdam.
+All Rights Reserved.
+`
+$B.module_setattr($B.imported.builtins, 'copyright', '')
+$B.module_setattr($B.imported.builtins, 'license', 'BSD 3')
+$B.module_setattr($B.imported.builtins, 'help', 'type help()')
+$B.module_setattr($B.imported.builtins, 'credits',
+`    Thanks to CWI, CNRI, BeOpen, Zope Corporation, the Python Software
+    Foundation, and a cast of thousands for supporting Python
+    development.  See www.python.org for more information.`
+)
 
 })(__BRYTHON__);

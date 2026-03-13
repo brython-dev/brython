@@ -3,9 +3,10 @@
 var _b_ = $B.builtins,
     _keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
 
-var error = $B.make_class("error", _b_.Exception.$factory)
-error.__bases__ = [_b_.Exception]
+var error = $B.make_type("error", [_b_.Exception])
+
 $B.set_func_names(error, "binascii")
+$B.finalize_type(error)
 
 function decode(bytes, altchars, validate){
     var output = [],
@@ -107,7 +108,7 @@ var module = {
                 arguments, {}, null, null),
             s = $.s
         if($B.$isinstance(s, _b_.bytes)){
-            s = _b_.bytes.decode(s, 'ascii')
+            s = $B.bytes_decode(s, 'ascii')
         }
         if(typeof s !== "string"){
             $B.RAISE(_b_.TypeError, "argument should be bytes, " +
@@ -164,7 +165,7 @@ var module = {
         return _b_.bytes.$factory(res)
     },
     b2a_uu: function(obj){
-        var string = _b_.bytes.decode(obj, 'ascii')
+        var string = $B.bytes_decode(obj, 'ascii')
         var len = string.length,
             res = String.fromCharCode((0x20 + len) & 0x3F)
         while(string.length > 0){
@@ -188,6 +189,7 @@ var module = {
 module.hexlify = module.b2a_hex
 module.unhexlify = module.a2b_hex
 
-$B.imported._binascii = module
+$B.addToImported('_binascii', module)
+
 }
 )(__BRYTHON__)

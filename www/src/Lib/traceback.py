@@ -1274,6 +1274,7 @@ class TracebackException:
             yield indent + "{}\n".format(_safe_string(self.__notes__, '__notes__', func=repr))
 
         if self.exceptions and show_group:
+            print('traceback 1277, show group, exceptions', self.exceptions)
             for ex in self.exceptions:
                 yield from ex.format_exception_only(show_group=show_group, _depth=_depth+1, colorize=colorize)
 

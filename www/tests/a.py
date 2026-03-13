@@ -2,7 +2,7 @@
 
 def f():
     print(__annotations__)
-
+print(type(__builtins__))
 __builtins__.open # cf. issue 2196
 
 try:

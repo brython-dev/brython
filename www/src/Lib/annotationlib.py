@@ -660,6 +660,7 @@ def call_annotate_function(annotate, format, *, owner=None, _is_evaluate=False):
     try:
         return annotate(format)
     except NotImplementedError:
+        print('NotImplementedError for format')
         pass
     if format == Format.STRING:
         # STRING is implemented by calling the annotate function in a special

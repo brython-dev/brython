@@ -10,21 +10,200 @@ and because Map is much slower than regular Javascript objects.
 
 A Python dictionary is implemented as a Javascript objects with these
 attributes:
+. $all_str: indicates if all the keys are strings. Common use case, optimized
+. $strings: a JS object mapping string keys to values, used for string keys
 . $version: an integer with an initial value of 0, incremented at each
   insertion
 . _keys: list of the keys
 . _values: list of the values
+. _hashes: list of the key hashes
 . table: a JS object with keys = hash of entries, value = list of indices in
   _keys and _values
 
 Lookup by keys:
-- compute hash(key)
-- if dict.table[hash] exists, it is a list of indices
-- for each index, if dict._keys[index] == key, return dict._values[index]
+- if the key is a string, use $strings[key]
+- otherwise:
+    - compute hash(key)
+    - if dict.table[hash] exists, it is a list of indices
+    - for each index, if dict._keys[index] == key, return dict._values[index]
 
 */
 
 var _b_ = $B.builtins
+
+$B.dict_proxy = function(dict){
+    // Given a dictionary dict, returns an object obj such that obj.x = y is
+    // the same as dict[x] = y
+    // Used for the namespace of user-defined classes
+    if($B.exact_type(dict, _b_.dict)){
+        // most usual case
+        return dict.$strings
+    }
+    var getitem = $B.type_getattribute($B.get_class(dict), '__getitem__')
+    var setitem = $B.type_getattribute($B.get_class(dict), '__setitem__')
+    return new Proxy(dict,
+        {
+            get(target, prop){
+                return $B.$call(getitem, target, prop)
+            },
+            set(target, prop, value){
+                return $B.$call(setitem, target, prop, value)
+            }
+        }
+    )
+}
+
+$B.assign_dict = function(pyobj, jsobj){
+    // assign the keys / values in jsonj to the pyobj dict
+    if(! Object.hasOwn(pyobj, 'dict')){
+        pyobj.dict = $B.empty_dict()
+        pyobj.dict.$strings = jsobj
+    }else{
+        Object.assign(pyobj.dict.$strings, jsobj)
+    }
+}
+
+function PyDictViewSet_Check(op){
+    return $B.$isinstance(op, [$B.dict_keys, $B.dict_items])
+}
+
+function _PyDictView_Intersect(self, other){
+    var dict_contains
+
+    /* Python interpreter swaps parameters when dict view
+       is on right side of & */
+    if(! PyDictViewSet_Check(self)){
+        [self, other] = [other, self]
+    }
+
+    var len_self = dictview_len(self)
+
+    /* if other is a set and self is smaller than other,
+       reuse set intersection logic */
+    if($B.exact_type(other, _b_.set) && len_self <= _b_.len(other)){
+        return $B.$call($B.$getattr(other, 'intersection'), self)
+    }
+
+    /* if other is another dict view, and it is bigger than self,
+       swap them */
+    if(PyDictViewSet_Check(other)){
+        var len_other = dictview_len(other)
+        if(len_other > len_self){
+            [self, other] = [other, self]
+        }
+    }
+
+    /* at this point, two things should be true
+       1. self is a dictview
+       2. if other is a dictview then it is smaller than self */
+    var result = _b_.set.tp_new(set, [], $B.empty_dict())
+    var it = $B.make_js_iterator(other)
+
+    if($B.$isinstance(self, $B.dict_keys)){
+        dict_contains = $B.dict_keys.sq_contains
+    }else{
+        dict_contains = dictitems_contains
+    }
+
+    while(true){
+        var item = it.next()
+        if(item.done){
+            break
+        }
+        var key = item.value
+        var rv = dict_contains(self, key);
+        if(rv){
+            $B.set_add(result, key)
+        }
+    }
+    return result
+}
+
+function all_contained_in(self, other){
+    var iter = $B.make_js_iterator(self)
+    var contains = $B.$getattr(other, '__contains__')
+    var ok = true
+    while(true){
+        var next = iter.next()
+        if(next.done){
+            break
+        }
+        ok = $B.$call(contains, next.value)
+        if(! ok){
+            break
+        }
+    }
+    return ok;
+}
+
+function dictview_len(self){
+    return _b_.dict.mp_length(self.dict_obj)
+}
+
+function dictview_richcompare(self, other, op){
+    if(! $B.$isinstance(other, [_b_.set, _b_.frozenset, $B.dict_keys])){
+        return _b_.NotImplemented
+    }
+    var len_self = $B.get_class(self).mp_length(self)
+    var len_other = _b_.len(other)
+
+    var ok = false
+    switch(op) {
+        case '__eq__':
+        case '__ne__':
+            if(len_self == len_other){
+                ok = all_contained_in(self, other)
+            }
+            if(op == '__ne__'){
+                ok = ! ok
+            }
+            break
+        case '__lt__':
+            if(len_self < len_other){
+                ok = all_contained_in(self, other)
+            }
+            break
+        case '__le__':
+            if(len_self <= len_other){
+                ok = all_contained_in(self, other)
+            }
+            break
+        case '__gt__':
+            if(len_self > len_other){
+                ok = all_contained_in(other, self)
+            }
+            break
+        case '__ge__':
+            if(len_self >= len_other){
+                ok = all_contained_in(other, self)
+            }
+            break
+    }
+    return ok
+}
+
+function dictviews_or(self, other){
+    var result = $B.$call(_b_.set, self)
+    _b_.set.tp_funcs.update(result, other)
+    return result
+}
+
+function dictviews_sub(self, other){
+    var result = $B.$call(_b_.set, self)
+    var method = $B.$getattr(result, 'difference_update')
+    $B.$call(method, other)
+    return result
+}
+
+function dictviews_xor(self, other){
+    if($B.$isinstance(self, $B.dict_items) &&
+            $B.$isinstance(other, $B.dict_items)){
+        return dictitems_xor(self, other)
+    }
+    var result = $B.$call(_b_.set, self)
+    $B.$call($B.$getattr(result, 'symmetric_difference_update'), other)
+    return result
+}
 
 var set_ops = ["eq", "le", "lt", "ge", "gt",
     "sub", "rsub", "and", "rand", "or", "ror", "xor", "rxor"]
@@ -103,40 +282,56 @@ const dict_view_op = {
 
 }
 
-function make_view_comparison_methods(klass){
-    for(var i = 0, len = set_ops.length; i < len; i++){
-        var op = "__" + set_ops[i] + "__"
-        klass[op] = (function(op){
-            return function(self, other){
-                // compare set of items to other
-                if(self.__class__.__name__ == 'dict_keys' ||
-                        (self.__class__.__name__ == 'dict_items'
-                         && dict.$set_like(self.dict))){
-                    return _b_.set[op](_b_.set.$factory(self),
-                        _b_.set.$factory(other))
-                }else{
-                    // Non-set like views can only be compared to
-                    // instances of the same class
-                    if(other.__class__ !== klass){
-                        return false
-                    }
-                    var other_items = _b_.list.$factory(other)
-                    return dict_view_op[op](self.items, other_items)
-                }
-            }
-        })(op)
+var dict = _b_.dict
+
+dict.$match_mapping_pattern = true // for pattern matching (PEP 634)
+
+$B.str_dict_get = function(d, key, _default){
+    if(d.$strings.hasOwnProperty(key)){
+        return d.$strings[key]
     }
+    return _default === undefined ? $B.NULL : _default
 }
 
-$B.str_dict = function(){}
+$B.str_dict_set = function(d, attr, value){
+    d.$strings[attr] = value
+}
 
-var dict = {
-    __class__: _b_.type,
-    __mro__: [_b_.object],
-    __qualname__: 'dict',
-    $is_class: true,
-    $native: true,
-    $match_mapping_pattern: true // for pattern matching (PEP 634)
+$B.str_dict_del = function(d, attr){
+    delete d.$strings[attr]
+}
+
+$B.str_dict_pop = function(d, attr){
+    if(! d.$strings.hasOwnProperty(attr)){
+        return $B.NULL
+    }
+    delete d.$strings[attr]
+}
+
+$B.str_dict_empty = function(d){
+    return Object.keys(d.$strings).length == 0
+}
+
+$B.str_dict_length = function(d){
+    return Object.keys(d.$strings).length
+}
+
+$B.hasOnlyStringKeys = function(d){
+    return d.$all_str
+}
+
+$B.dict2kwarg = function(d){
+    // create an internal kw argument from dictionary d
+    var kw = dict.$to_obj(d)
+    return {$kw: [kw]}
+}
+
+$B.dict_from_jsobj = function(obj){
+    var d = $B.empty_dict()
+    for(var key in obj){
+        $B.str_dict_set(d, key, obj[key])
+    }
+    return d
 }
 
 dict.$to_obj = function(d){
@@ -150,18 +345,6 @@ dict.$to_obj = function(d){
     return res
 }
 
-dict.$iter_keys_check = function*(d){
-    for(var entry of dict.$iter_items(d)){
-        yield entry.key
-    }
-}
-
-dict.$iter_values_check = function*(d){
-    for(var entry of dict.$iter_items(d)){
-        yield entry.value
-    }
-}
-
 dict.$set_like = function(self){
     // return true if all values are hashable
     for(var v of self._values){
@@ -171,9 +354,9 @@ dict.$set_like = function(self){
                 typeof v == 'number' ||
                 typeof v == 'boolean'){
             continue
-        }else if([_b_.tuple, _b_.float, _b_.complex].indexOf(v.__class__) > -1){
+        }else if([_b_.tuple, _b_.float, _b_.complex].includes($B.get_class(v))){
             continue
-        }else if(! _b_.hasattr(v.__class__, '__hash__')){
+        }else if(! _b_.hasattr($B.get_class(v), '__hash__')){
             return false
         }
     }
@@ -187,49 +370,22 @@ dict.$iter_items = function*(d){
                 yield {key, value: d.$strings[key]}
             }
         }
+        return
     }
-    if(d.$jsobj){
-        for(let key in d.$jsobj){
-            if(!d.$exclude || ! d.$exclude(key)){
-                yield {key, value: d.$jsobj[key]}
+    var version = d.$version
+    for(var i = 0, len = d._keys.length; i < len; i++){
+        if(d._keys[i] !== undefined){
+            yield {key: d._keys[i], value: d._values[i], hash: d._hashes[i]}
+            if(d.$version !== version){
+                $B.RAISE(_b_.RuntimeError, 'changed in iteration')
             }
         }
-    }else{
-        var version = d.$version
-        for(var i = 0, len = d._keys.length; i < len; i++){
-            if(d._keys[i] !== undefined){
-                yield {key: d._keys[i], value: d._values[i], hash: d._hashes[i]}
-                if(d.$version !== version){
-                    $B.RAISE(_b_.RuntimeError, 'changed in iteration')
-                }
-            }
-        }
-        if(d.$version !== version){
-            $B.RAISE(_b_.RuntimeError, 'changed in iteration')
-        }
+    }
+    if(d.$version !== version){
+        $B.RAISE(_b_.RuntimeError, 'changed in iteration')
     }
 }
 
-dict.$iter_items_check = function*(d){
-    if(d.$jsobj){
-        for(var key in d.$jsobj){
-            yield [key, d.$jsobj[key]]
-        }
-    }else{
-        var version = d.$version
-        for(var i = 0, len = d._keys.length; i < len; i++){
-            if(d._keys[i] !== undefined){
-                yield [d._keys[i], d._values[i]]
-                if(d.$version !== version){
-                    $B.RAISE(_b_.RuntimeError, 'changed in iteration')
-                }
-            }
-        }
-        if(d.$version !== version){
-            $B.RAISE(_b_.RuntimeError, 'changed in iteration')
-        }
-    }
-}
 
 var $copy_dict = function(left, right){
     // left and right are dicts
@@ -254,14 +410,6 @@ var $copy_dict = function(left, right){
         }
     }
 }
-
-dict.__bool__ = function () {
-    var $ = $B.args("__bool__", 1, {self: null}, ["self"],
-        arguments, {}, null, null)
-    return dict.__len__($.self) > 0
-}
-
-dict.__class_getitem__ = $B.$class_getitem
 
 dict.$lookup_by_key = function(d, key, hash){
     hash = hash === undefined ? _b_.hash(key) : hash
@@ -288,38 +436,22 @@ dict.$lookup_by_key = function(d, key, hash){
     return {found: false, hash}
 }
 
-dict.__contains__ = function(){
-    var $ = $B.args("__contains__", 2, {self: null, key: null},
-        ["self", "key"], arguments, {}, null, null),
-        self = $.self,
-        key = $.key
-    return _b_.dict.$contains(self, key)
-}
-
 dict.$contains = function(self, key){
     if(self.$all_str){
         if(typeof key == 'string'){
             return self.$strings.hasOwnProperty(key)
         }
         var hash = $B.$getattr($B.get_class(key), '__hash__')
-        if(hash === _b_.object.__hash__){
+        if(hash === $B.str_dict_get(_b_.object.dict, '__hash__')){
             return false
         }
         convert_all_str(self)
     }
 
-    if(self.$jsobj){
-        return self.$jsobj[key] !== undefined
-    }
-
     return dict.$lookup_by_key(self, key).found
 }
 
-dict.__delitem__ = function(){
-    var $ = $B.args("__eq__", 2, {self: null, key: null},
-        ["self", "key"], arguments, {}, null, null),
-        self = $.self,
-        key = $.key
+dict.$delitem  = function(self, key){
     if(self[$B.JSOBJ]){
         delete self[$B.JSOBJ][key]
     }
@@ -332,16 +464,9 @@ dict.__delitem__ = function(){
                 $B.RAISE(_b_.KeyError, key)
             }
         }
-        if(! dict.__contains__(self, key)){
+        if(! dict.sq_contains(self, key)){
             $B.RAISE(_b_.KeyError, _b_.str.$factory(key))
         }
-    }
-    if(self.$jsobj){
-        if(self.$jsobj[key] === undefined){
-            $B.RAISE(_b_.KeyError, key)
-        }
-        delete self.$jsobj[key]
-        return _b_.None
     }
 
     var lookup = dict.$lookup_by_key(self, key)
@@ -359,7 +484,9 @@ dict.__delitem__ = function(){
     $B.RAISE(_b_.KeyError, _b_.str.$factory(key))
 }
 
-dict.__eq__ = function(){
+$B.dict_delitem = dict.$delitem
+
+function dict_eq(){
     var $ = $B.args("__eq__", 2, {self: null, other: null},
         ["self", "other"], arguments, {}, null, null),
         self = $.self,
@@ -373,7 +500,7 @@ dict.$eq = function(self, other){
     }
 
     if(self.$all_str && other.$all_str){
-        if(dict.__len__(self) !== dict.__len__(other)){
+        if(dict.mp_length(self) !== dict.mp_length(other)){
             return false
         }
         for(let k in self.$strings){
@@ -387,40 +514,18 @@ dict.$eq = function(self, other){
         return true
     }
 
-    if(self.$jsobj && other.$jsobj){
-        if(dict.__len__(self) !== dict.__len__(other)){
-            return false
-        }
-        for(var k in self.$jsobj){
-            if(! other.$jsobj.hasOwnProperty(k)){
-                return false
-            }
-            if(! $B.is_or_equals(self.$jsobj[k], other.$jsobj[k])){
-                return false
-            }
-        }
-        return true
-    }
-
     if(self.$all_str){
-        let d = dict.copy(self)
+        let d = dict.tp_funcs.copy(self)
         convert_all_str(d)
         return dict.$eq(d, other)
     }
     if(other.$all_str){
-        let d = dict.copy(other)
+        let d = dict.tp_funcs.copy(other)
         convert_all_str(d)
         return dict.$eq(self, d)
     }
 
-    if(self.$jsobj){
-        return dict.$eq(jsobj2dict(self.$jsobj), other)
-    }
-    if(other.$jsobj){
-        return dict.$eq(self, jsobj2dict(other.$jsobj))
-    }
-
-    if(dict.__len__(self) != dict.__len__(other)){
+    if(dict.mp_length(self) != dict.mp_length(other)){
         return false
     }
 
@@ -456,21 +561,11 @@ dict.$eq = function(self, other){
     return true
 }
 
-dict.__getitem__ = function(){
-    var $ = $B.args("__getitem__", 2, {self: null, arg: null},
-        ["self", "arg"], arguments, {}, null, null),
-        self = $.self,
-        arg = $.arg
-    return dict.$getitem(self, arg)
-}
 
 dict.$contains_string = function(self, key){
     // Test if string "key" is in a dict where all keys are string
     if(self.$all_str){
         return self.$strings.hasOwnProperty(key)
-    }
-    if(self.$jsobj && self.$jsobj.hasOwnProperty(key)){
-        return true
     }
     if(self.table && self.table[_b_.hash(key)] !== undefined){
         return true
@@ -486,9 +581,7 @@ dict.$delete_string = function(self, key){
             delete self.$strings[key]
         }
     }
-    if(self.$jsobj){
-        delete self.$jsobj[key]
-    }
+
     if(self.table){
         delete self.table[_b_.hash(key)]
     }
@@ -501,10 +594,7 @@ dict.$get_string = function(self, key, _default){
     if(self.$all_str && self.$strings.hasOwnProperty(key)){
         return self.$strings[key]
     }
-    if(self.$jsobj && self.$jsobj.hasOwnProperty(key)){
-        return self.$jsobj[key]
-    }
-    if(self.table && dict.__len__(self)){
+    if(self.table && dict.mp_length(self)){
         var indices = self.table[_b_.hash(key)]
         if(indices !== undefined){
             return self._values[indices[0]]
@@ -517,9 +607,6 @@ dict.$getitem_string = function(self, key){
     // Used for dicts where all keys are strings
     if(self.$all_str && self.$strings.hasOwnProperty(key)){
         return self.$strings[key]
-    }
-    if(self.$jsobj && self.$jsobj.hasOwnProperty(key)){
-        return self.$jsobj[key]
     }
     if(self.table){
         var indices = self.table[_b_.hash(key)]
@@ -535,9 +622,6 @@ dict.$keys_string = function(self){
     var res = []
     if(self.$all_str){
         return Object.keys(self.$strings)
-    }
-    if(self.$jsobj){
-        res = res.concat(Object.keys(self.$jsobj))
     }
     if(self.table){
         res = res.concat(self._keys.filter((x) => x !== undefined))
@@ -575,23 +659,13 @@ dict.$getitem = function(self, key, ignore_missing){
             }
         }else{
             var hash_method = $B.$getattr($B.get_class(key), '__hash__')
-            if(hash_method !== _b_.object.__hash__){
+            if(hash_method !== $B.str_dict_get(_b_.object.dict, '__hash__')){
                 convert_all_str(self)
                 let lookup = dict.$lookup_by_key(self, key)
                 if(lookup.found){
                     return lookup.value
                 }
             }
-        }
-    }else if(self.$jsobj){
-        if(self.$exclude && self.$exclude(key)){
-            $B.RAISE(_b_.KeyError, key)
-        }
-        if(self.$jsobj.hasOwnProperty(key)){
-            return self.$jsobj[key]
-        }
-        if(! self.table){
-            $B.RAISE(_b_.KeyError, key)
         }
     }else{
         let lookup = dict.$lookup_by_key(self, key)
@@ -600,9 +674,10 @@ dict.$getitem = function(self, key, ignore_missing){
         }
     }
     if(! ignore_missing){
-        if(self.__class__ !== dict && ! ignore_missing){
+        var klass = $B.get_class(self)
+        if(klass !== dict && ! ignore_missing){
             try{
-                var missing_method = $B.$getattr(self.__class__,
+                var missing_method = $B.$getattr(klass,
                     "__missing__", _b_.None)
             }catch(err){
                 console.log(err)
@@ -616,7 +691,7 @@ dict.$getitem = function(self, key, ignore_missing){
     $B.RAISE(_b_.KeyError, key)
 }
 
-dict.__hash__ = _b_.None
+dict.tp_hash = _b_.None
 
 function init_from_list(self, args){
     var i = 0
@@ -632,7 +707,7 @@ function init_from_list(self, args){
 
 dict.$set_string_no_duplicate = function(d, keys, string, value){
     if(typeof string !== 'string'){
-        $B.RAISE(_b_.TypeError, 
+        $B.RAISE(_b_.TypeError,
             'keywords must be strings')
     }
     if(keys.has(string)){
@@ -660,188 +735,6 @@ function add_iterable(d, js_iterable){
         dict.$setitem(d, items[0], items[1])
         i++
     }
-}
-
-dict.__init__ = function(self, first, second){
-    if(first === undefined){
-        return _b_.None
-    }
-    if(second === undefined){
-        // single argument
-        if((! first.$kw) && $B.$isinstance(first, $B.JSObj)){
-            for(let key in first){
-                dict.$setitem(self, key, first[key])
-            }
-            return _b_.None
-        }else if(first.$kw){
-            var keys = new Set()
-            for(let item of first.$kw){
-                if($B.$isinstance(item, dict)){
-                    for(let subitem of dict.$iter_items(item)){
-                        dict.$set_string_no_duplicate(self, keys, subitem.key,
-                            subitem.value)
-                    }
-                }else{
-                    for(let key in item){
-                        dict.$set_string_no_duplicate(self, keys, key, item[key])
-                    }
-                }
-            }
-            return _b_.None
-        }else if(first[Symbol.iterator]){
-            init_from_list(self, first)
-            return _b_.None
-        }else if(first.__class__ === $B.generator){
-            init_from_list(self, first.js_gen)
-            return _b_.None
-        }
-    }
-
-    var $ = $B.args("dict", 1, {self:null}, ["self"],
-        arguments, {}, "first", "second")
-
-    var args = $.first
-    if(args.length > 1){
-        if($B._experimental_dict){
-            console.log('try dict(*args)')
-            for(var arg of args){
-                if(_b_.isinstance(arg, _b_.dict)){
-                    add_mapping(self, arg)
-                }else{
-                    try{
-                        var js_iterable = $B.make_js_iterator(arg)
-                    }catch(err){
-                        console.log(arg)
-                        console.log(err)
-                        $B.RAISE(_b_.TypeError, 'expected mapping or ' +
-                            `iterable, got ${$B.class_name(arg)}`)
-                    }
-                    add_iterable(self, js_iterable)
-                }
-            }
-        }else{
-            $B.RAISE(_b_.TypeError, "dict expected at most 1 argument" +
-                `, got ${args.length}`)
-        }
-    }else if(args.length == 1){
-        args = args[0]
-        if(args.__class__ === dict){
-            for(let entry of dict.$iter_items(args)){
-                dict.$setitem(self, entry.key, entry.value, entry.hash)
-            }
-        }else{
-            var keys = $B.$getattr(args, "keys", null)
-            if(keys !== null){
-                var gi = $B.$getattr(args, "__getitem__", null)
-                if(gi !== null){
-                    // has keys and __getitem__ : it's a mapping, iterate on
-                    // keys and values
-                    gi = $B.$call(gi)
-                    let kiter = _b_.iter($B.$call(keys)())
-                    while(true){
-                        try{
-                            let key = _b_.next(kiter),
-                                value = gi(key)
-                            dict.__setitem__(self, key, value)
-                        }catch(err){
-                            if(err.__class__ === _b_.StopIteration){
-                                break
-                            }
-                            throw err
-                        }
-                    }
-                }
-            }else{
-                if(! Array.isArray(args)){
-                    args = _b_.list.$factory(args)
-                }
-                init_from_list(self, args)
-            }
-        }
-    }
-
-    for(let item of _b_.dict.$iter_items($.second)){
-        dict.$setitem(self, item.key, item.value)
-    }
-    return _b_.None
-}
-
-dict.__iter__ = function(self){
-    return _b_.iter(dict.keys(self))
-}
-
-dict.__ior__ = function(self, other){
-    // PEP 584
-    dict.update(self, other)
-    return self
-}
-
-dict.__len__ = function(self) {
-    var _count = 0
-
-    if(self.$all_str){
-        return Object.keys(self.$strings).length
-    }
-    if(self.$jsobj){
-        for(var attr in self.$jsobj){
-            if(attr.charAt(0) != "$" &&
-                    ((! self.$exclude) || ! self.$exclude(attr))){
-                _count++
-            }
-        }
-        return _count
-    }
-
-    for(var d of self._keys){
-        if(d !== undefined){
-            _count++
-        }
-    }
-
-    return _count
-}
-
-dict.__ne__ = function(self, other){
-    var res = dict.__eq__(self, other)
-    return res === _b_.NotImplemented ? res : ! res
-}
-
-dict.__new__ = function(cls){
-    if(cls === undefined){
-        $B.RAISE(_b_.TypeError, "int.__new__(): not enough arguments")
-    }
-    var instance = $B.empty_dict()
-    instance.__class__ = cls
-    if(cls !== dict){
-        instance.__dict__ = $B.empty_dict()
-    }
-    return instance
-}
-
-dict.__or__ = function(self, other){
-    // PEP 584
-    if(! $B.$isinstance(other, dict)){
-        return _b_.NotImplemented
-    }
-    var res = dict.copy(self)
-    dict.update(res, other)
-    return res
-}
-
-dict.__repr__ = function(self){
-    $B.builtins_repr_check(dict, arguments) // in brython_builtins.js
-    if(self.$jsobj){ // wrapper around Javascript object
-        return dict.__repr__(jsobj2dict(self.$jsobj, self.$exclude))
-    }
-    if($B.repr.enter(self)){
-        return "{...}"
-    }
-    let res = []
-    for(let entry of dict.$iter_items(self)){
-        res.push(_b_.repr(entry.key) + ": " + _b_.repr(entry.value))
-    }
-    $B.repr.leave(self)
-    return "{" + res.join(", ") + "}"
 }
 
 dict.$iter_items_reversed = function*(d){
@@ -886,25 +779,25 @@ function make_reverse_iterator(name, iter_func){
     // in reverse order
     // iter_func is the Javascript function that returns the generator for
     // each specific iteration
-    var klass = $B.make_class(name,
-        function(d){
-            return {
-                __class__: klass,
-                d,
-                iter: iter_func(d),
-                make_iter:function(){
-                    return iter_func(d)
-                }
+    var klass = $B[name] // already created in init_builtin_types.js
+
+    klass.$factory = function(d){
+        return {
+            ob_type: klass,
+            d,
+            iter: iter_func(d),
+            make_iter:function(){
+                return iter_func(d)
             }
         }
-    )
+    }
 
-    klass.__iter__ = function(self){
+    klass.tp_iter = function(self){
         self[Symbol.iterator] = self.make_iter
         return self
     }
 
-    klass.__next__ = function(self){
+    klass.tp_iternext = function(self){
         var res = self.iter.next()
         if(res.done){
             $B.RAISE(_b_.StopIteration, '')
@@ -922,33 +815,17 @@ function make_reverse_iterator(name, iter_func){
     return klass
 }
 
-const dict_reversekeyiterator = make_reverse_iterator(
-    'dict_reversekeyiterator',
-    dict.$iter_keys_reversed)
-
-dict.__reversed__ = function(self){
-    return dict_reversekeyiterator.$factory(self)
-}
-
-dict.__ror__ = function(self, other){
-    // PEP 584
-    if(! $B.$isinstance(other, dict)){
-        return _b_.NotImplemented
-    }
-    var res = dict.copy(other)
-    dict.update(res, self)
-    return res
-}
-
-dict.__setitem__ = function(){
-    var $ = $B.args("__setitem__", 3, {self: null, key: null, value: null},
-        ["self", "key", "value"], arguments, {}, null, null)
-    return dict.$setitem($.self, $.key, $.value)
-}
 
 function convert_all_str(d){
     // convert dict with only str keys to regular dict
     d.$all_str = false
+
+    // add addtional fields
+    d.table = Object.create(null)
+    d._keys = []
+    d._values = []
+    d._hashes = []
+
     for(var key in d.$strings){
         dict.$setitem(d, key, d.$strings[key])
     }
@@ -960,6 +837,14 @@ dict.$setitem = function(self, key, value, $hash, from_setdefault){
         // Python dictionary is used in a Javascript object
         value = $B.pyobj2jsobj(value)
         self[$B.JSOBJ][key] = value
+    }
+    if(typeof key == 'string'){
+        // Even if dict is not all-string keys, update self.$strings.
+        // This is useful for class dicts: a mappingproxy wrapping the class
+        // dictionary only needs to use d.$strings (the class dictionary
+        // might have non-string keys if __prepare__ returns a dict with
+        // non-string keys)
+        self.$strings[key] = value
     }
     if(self.$all_str){
         if(typeof key == 'string'){
@@ -976,23 +861,7 @@ dict.$setitem = function(self, key, value, $hash, from_setdefault){
             convert_all_str(self)
         }
     }
-    if(self.$jsobj){
-        if(self.$from_js){
-            // dictionary created by method to_dict of JSObj instances
-            value = $B.pyobj2jsobj(value)
-        }
-        if(self.$jsobj.__class__ === _b_.type){
-            self.$jsobj[key] = value
-            if(key == "__init__" || key == "__new__"){
-                // If class attribute __init__ or __new__ are reset,
-                // the factory function has to change
-                self.$jsobj.$factory = $B.$instance_creator(self.$jsobj)
-            }
-        }else{
-            self.$jsobj[key] = value
-        }
-        return _b_.None
-    }
+
     if(key instanceof String){
         key = key.valueOf()
     }
@@ -1028,61 +897,307 @@ dict.$setitem = function(self, key, value, $hash, from_setdefault){
     return _b_.None
 }
 
-// add "reflected" methods
-$B.make_rmethods(dict)
 
-dict.clear = function(){
+dict.$literal = function(items){
+    var res = $B.empty_dict()
+    for(var item of items){
+        dict.$setitem(res, item[0], item[1], item[2])
+    }
+    return res
+}
+
+dict.$factory = function(){
+    var res = $B.empty_dict()
+    var args = [res]
+    for(var arg of arguments){
+        args.push(arg)
+    }
+    dict.tp_init.apply(null, args)
+    return res
+}
+
+dict.$from_array = function(arrays){
+    // used internally for annotations
+    var res = $B.empty_dict()
+    for(var item of arrays){
+        dict.$setitem(res, item[0], item[1])
+    }
+    return res
+}
+
+/* dict start */
+
+_b_.dict.tp_richcompare = function(self, other, op){
+    if(! $B.$isinstance(other, _b_.dict)){
+        return _b_.NotImplemented
+    }
+    var res
+    switch(op){
+        case '__eq__':
+            res = dict_eq(self, other)
+            break
+        case '__ne__':
+            res = ! dict_eq(self, other)
+            break
+        default:
+            res = _b_.NotImplemented
+            break
+    }
+    return res
+}
+
+_b_.dict.nb_or = function(self, other){
+    // PEP 584
+    if(! $B.$isinstance(self, dict) || ! $B.$isinstance(other, dict)){
+        return _b_.NotImplemented
+    }
+    var res = dict.tp_funcs.copy(self)
+    dict.tp_funcs.update(res, other)
+    return res
+}
+
+_b_.dict.tp_repr = function(self){
+    $B.builtins_repr_check(dict, arguments) // in brython_builtins.js
+    if($B.repr.enter(self)){
+        return "{...}"
+    }
+    let res = []
+    for(let entry of dict.$iter_items(self)){
+        res.push(_b_.repr(entry.key) + ": " + _b_.repr(entry.value))
+    }
+    $B.repr.leave(self)
+    return "{" + res.join(", ") + "}"
+}
+
+_b_.dict.tp_hash = _b_.None
+
+_b_.dict.tp_iter = function(self){
+    return {
+        ob_type: $B.dict_keyiterator,
+        it: _b_.dict.$iter_items(self),
+        dict_obj: self
+    }
+}
+
+_b_.dict.tp_init = function(self, first, second){
+    if(first === undefined){
+        return _b_.None
+    }
+    if(second === undefined){
+        // single argument
+        if((! first.$kw) && $B.$isinstance(first, $B.JSObj)){
+            for(let key in first){
+                dict.$setitem(self, key, first[key])
+            }
+            return _b_.None
+        }else if(first.$kw){
+            var keys = new Set()
+            for(let item of first.$kw){
+                if($B.$isinstance(item, dict)){
+                    for(let subitem of dict.$iter_items(item)){
+                        dict.$set_string_no_duplicate(self, keys, subitem.key,
+                            subitem.value)
+                    }
+                }else{
+                    for(let key in item){
+                        dict.$set_string_no_duplicate(self, keys, key, item[key])
+                    }
+                }
+            }
+            return _b_.None
+        }else if(first[Symbol.iterator]){
+            init_from_list(self, first)
+            return _b_.None
+        }else if($B.exact_type(first, $B.generator)){
+            init_from_list(self, first.js_gen)
+            return _b_.None
+        }
+    }
+
+    var $ = $B.args("dict", 1, {self:null}, ["self"], arguments, {}, "first",
+                "second")
+
+    var args = $.first
+    if(args.length > 1){
+        if($B._experimental_dict){
+            console.log('try dict(*args)')
+            for(var arg of args){
+                if(_b_.isinstance(arg, _b_.dict)){
+                    add_mapping(self, arg)
+                }else{
+                    try{
+                        var js_iterable = $B.make_js_iterator(arg)
+                    }catch(err){
+                        console.log(arg)
+                        console.log(err)
+                        $B.RAISE(_b_.TypeError, 'expected mapping or ' +
+                            `iterable, got ${$B.class_name(arg)}`)
+                    }
+                    add_iterable(self, js_iterable)
+                }
+            }
+        }else{
+            $B.RAISE(_b_.TypeError, "dict expected at most 1 argument" +
+                `, got ${args.length}`)
+        }
+    }else if(args.length == 1){
+        args = args[0]
+        if($B.exact_type(args, dict)){
+            for(let entry of dict.$iter_items(args)){
+                dict.$setitem(self, entry.key, entry.value, entry.hash)
+            }
+        }else{
+            var keys = $B.$getattr($B.get_class(args), "keys", $B.NULL)
+            if(keys !== $B.NULL){
+                var gi = $B.$getattr($B.get_class(args), "__getitem__", $B.NULL)
+                if(gi !== $B.NULL){
+                    // has keys and __getitem__ : it's a mapping, iterate on
+                    // keys and values
+                    for(var key of $B.make_js_iterator($B.$call(keys, args))){
+                        try{
+                            let value = $B.$call(gi, args, key)
+                            dict.$setitem(self, key, value)
+                        }catch(err){
+                            if($B.is_exc(err, _b_.StopIteration)){
+                                break
+                            }
+                            throw err
+                        }
+                    }
+                }
+            }else{
+                if(! Array.isArray(args)){
+                    args = _b_.list.$factory(args)
+                }
+                init_from_list(self, args)
+            }
+        }
+    }
+
+    for(let item of _b_.dict.$iter_items($.second)){
+        dict.$setitem(self, item.key, item.value)
+    }
+    return _b_.None
+}
+
+_b_.dict.nb_inplace_or = function(self, other){
+    // PEP 584
+    dict.tp_funcs.update(self, other)
+    return self
+}
+
+_b_.dict.mp_ass_subscript = function(self){
+    var $ = $B.args("__setitem__", 3, {self: null, key: null, value: null},
+        ["self", "key", "value"], arguments, {}, null, null)
+    var self = $.self,
+        key = $.key,
+        value = $.value
+    if(value === $B.NULL){
+        return dict.$delitem(self, key)
+    }
+    return dict.$setitem(self, key, value)
+}
+
+_b_.dict.mp_length = function(self){
+    var _count = 0
+
+    if(self.$all_str){
+        return Object.keys(self.$strings).length
+    }
+
+    for(var d of self._keys){
+        if(d !== undefined){
+            _count++
+        }
+    }
+
+    return _count
+}
+
+_b_.dict.mp_subscript = function(self){
+    var $ = $B.args("__getitem__", 2, {self: null, arg: null},
+        ["self", "arg"], arguments, {}, null, null),
+        self = $.self,
+        arg = $.arg
+    return dict.$getitem(self, arg)
+}
+
+_b_.dict.sq_contains = function(self){
+    var $ = $B.args("__contains__", 2, {self: null, key: null},
+        ["self", "key"], arguments, {}, null, null),
+        self = $.self,
+        key = $.key
+    return _b_.dict.$contains(self, key)
+}
+
+_b_.dict.tp_new = function(cls, args, kw){
+    if(cls === undefined){
+        $B.RAISE(_b_.TypeError, "int.__new__(): not enough arguments")
+    }
+    var instance = $B.empty_dict()
+    instance.ob_type = cls
+    if(cls !== dict){
+        instance.dict = $B.empty_dict()
+    }
+    return instance
+}
+
+var dict_funcs = _b_.dict.tp_funcs = {}
+
+
+dict_funcs.__class_getitem__ = $B.$class_getitem
+
+
+
+dict_funcs.__reversed__ = function(self){
+    return dict_reversekeyiterator.$factory(self)
+}
+
+dict_funcs.__sizeof__ = function(self){
+    return 48
+}
+
+dict_funcs.clear = function(self){
     // Remove all items from the dictionary.
     var $ = $B.args("clear", 1, {self: null}, ["self"], arguments, {},
         null, null),
         self = $.self
 
-    self.table = Object.create(null)
-
-    self._keys = []
-    self._values = []
-    self.$all_str = true
-    self.$strings = new $B.str_dict()
-
-    if(self.$jsobj){
-        for(var attr in self.$jsobj){
-            if(attr.charAt(0) !== "$" && attr !== "__class__"){
-                delete self.$jsobj[attr]
-            }
-        }
+    if(! self.all_str){
+        delete self.table
+        delete self._hashes
+        delete self._keys
+        delete self._values
     }
+    self.$all_str = true
+    self.$strings = {}
     self.$version++
     return _b_.None
 }
 
-dict.copy = function(){
+dict_funcs.copy = function(self){
     // Return a shallow copy of the dictionary
     var $ = $B.args("copy", 1, {self: null},["self"], arguments,{},
         null, null),
         self = $.self,
         res = $B.empty_dict()
 
-    if(self.__class__ === _b_.dict){
+    if($B.exact_type(self, _b_.dict)){
         $copy_dict(res, self)
         return res
-    }
-    var it = $B.make_js_iterator(self)
-    for(var k of it){
-        console.log('iteration yields key', k)
     }
     return res
 }
 
-dict.fromkeys = function(){
-
+dict_funcs.fromkeys = function(){
     var $ = $B.args("fromkeys", 3, {cls: null, keys: null, value: null},
         ["cls", "keys", "value"], arguments, {value: _b_.None}, null, null),
         keys = $.keys,
         value = $.value
 
     // class method
-    var cls = $.cls,
-        res = $B.$call(cls)(),
+    var cls = $.cls
+    var res = $B.$call(cls),
         klass = $B.get_class(res), // might not be cls
         keys_iter = $B.$iter(keys),
         setitem = klass === dict ? dict.$setitem : $B.$getattr(klass, '__setitem__')
@@ -1100,7 +1215,8 @@ dict.fromkeys = function(){
     }
 }
 
-dict.get = function(){
+
+dict_funcs.get = function(self){
     var $ = $B.args("get", 3, {self: null, key: null, _default: null},
         ["self", "key", "_default"], arguments, {_default: _b_.None}, null, null)
     try{
@@ -1115,182 +1231,48 @@ dict.get = function(){
     }
 }
 
-var dict_items = $B.make_class("dict_items",
-    function(d){
-        return {
-            __class__: dict_items,
-            dict: d,
-            make_iter: function*(){
-                for(var entry of dict.$iter_items(d)){
-                    yield $B.fast_tuple([entry.key, entry.value])
-                }
-            }
-        }
-    }
-)
-
-dict_items.__iter__ = function(self){
-    return dict_itemiterator.$factory(self.make_iter)
-}
-
-dict_items.__len__ = function(self){
-    return dict.__len__(self.dict)
-}
-
-dict_items.__reduce__ = function(self){
-    var items = $B.$list(Array.from(self.make_iter()))
-    return $B.fast_tuple([_b_.iter, $B.fast_tuple([items])])
-}
-
-dict_items.__repr__ = function(self){
-    var items = Array.from(self.make_iter())
-    items = items.map($B.fast_tuple)
-    return 'dict_items(' + _b_.repr(items) + ')'
-}
-
-const dict_reverseitemiterator = make_reverse_iterator(
-    'dict_reverseitemiterator',
-    dict.$iter_items_reversed)
-
-dict_items.__reversed__ = function(self){
-    return dict_reverseitemiterator.$factory(self.dict)
-}
-
-make_view_comparison_methods(dict_items)
-
-$B.set_func_names(dict_items, 'builtins')
-
-var dict_itemiterator = $B.make_class('dict_itemiterator',
-    function(make_iter){
-        return {
-            __class__: dict_itemiterator,
-            iter: make_iter(),
-            make_iter
-        }
-    }
-)
-
-dict_itemiterator.__iter__ = function(self){
-    self[Symbol.iterator] = function(){return self.iter}
-    return self
-}
-
-dict_itemiterator.__next__ = function(self){
-    var res = self.iter.next()
-    if(res.done){
-        $B.RAISE(_b_.StopIteration, '')
-    }
-    return $B.fast_tuple(res.value)
-}
-
-dict_itemiterator.__reduce_ex__ = function(self){
-    return $B.fast_tuple([_b_.iter,
-        $B.fast_tuple([$B.$list(Array.from(self.make_iter()))])])
-}
-
-$B.set_func_names(dict_itemiterator, 'builtins')
-
-dict.items = function(self){
+dict_funcs.items = function(self){
     $B.args('items', 1, {self: null}, ['self'], arguments, {}, null, null)
-    return dict_items.$factory(self)
-}
-
-var dict_keys = $B.make_class("dict_keys",
-    function(d){
-        return {
-            __class__: dict_keys,
-            dict: d,
-            make_iter: function(){return dict.$iter_keys_check(d)}
-        }
+    return {
+        ob_type: $B.dict_items,
+        dict_obj: self
     }
-)
-
-dict_keys.__iter__ = function(self){
-    return dict_keyiterator.$factory(self.make_iter)
 }
 
-dict_keys.__len__ = function(self){
-    return dict.__len__(self.dict)
-}
-
-dict_keys.__reduce__ = function(self){
-    var items = $B.$list(Array.from(self.make_iter()))
-    return $B.fast_tuple([_b_.iter, $B.fast_tuple([items])])
-}
-
-dict_keys.__repr__ = function(self){
-    var items = Array.from(self.make_iter())
-    return 'dict_keys(' + _b_.repr(items) + ')'
-}
-
-dict_keys.__reversed__ = function(self){
-    return dict_reversekeyiterator.$factory(self.dict)
-}
-
-make_view_comparison_methods(dict_keys)
-
-$B.set_func_names(dict_keys, 'builtins')
-
-var dict_keyiterator = $B.make_class('dict_keyiterator',
-    function(make_iter){
-        return {
-            __class__: dict_keyiterator,
-            iter: make_iter(),
-            make_iter
-        }
-    }
-)
-
-dict_keyiterator.__iter__ = function(self){
-    self[Symbol.iterator] = function(){return self.iter}
-    return self
-}
-
-dict_keyiterator.__next__ = function(self){
-    var res = self.iter.next()
-    if(res.done){
-        $B.RAISE(_b_.StopIteration, '')
-    }
-    return res.value
-}
-
-dict_keyiterator.__reduce_ex__ = function(self){
-    return $B.fast_tuple([_b_.iter,
-        $B.fast_tuple([$B.$list(Array.from(self.make_iter()))])])
-}
-
-$B.set_func_names(dict_keyiterator, 'builtins')
-
-dict.keys = function(self){
+dict_funcs.keys = function(self){
     $B.args('keys', 1, {self: null}, ['self'], arguments, {}, null, null)
-    return dict_keys.$factory(self)
+    return {
+        ob_type: $B.dict_keys,
+        dict_obj: self
+    }
 }
 
-dict.pop = function(){
-
+dict_funcs.pop = function(self){
     var missing = {},
         $ = $B.args("pop", 3, {self: null, key: null, _default: null},
-        ["self", "key", "_default"], arguments, {_default: missing}, null, null),
+        ["self", "key", "_default"], arguments, {_default: $B.NULL}, null, null),
         self = $.self,
         key = $.key,
         _default = $._default
 
     try{
-        var res = dict.__getitem__(self, key)
-        dict.__delitem__(self, key)
+        var res = dict.mp_subscript(self, key) // __getitem__
+        dict.mp_ass_subscript(self, key, $B.NULL)
         return res
     }catch(err){
-        if(err.__class__ === _b_.KeyError){
-            if(_default !== missing){return _default}
+        if($B.is_exc(err, _b_.KeyError)){
+            if(_default !== $B.NULL){
+                return _default
+            }
             throw err
         }
         throw err
     }
 }
 
-dict.popitem = function(self){
+dict_funcs.popitem = function(self){
     $B.check_nb_args_no_kw('popitem', 1, arguments)
-    if(dict.__len__(self) == 0){
+    if(dict.mp_length(self) == 0){
         $B.RAISE(_b_.KeyError, "'popitem(): dictionary is empty'")
     }
     if(self.$all_str){
@@ -1315,7 +1297,7 @@ dict.popitem = function(self){
     }
 }
 
-dict.setdefault = function(){
+dict_funcs.setdefault = function(self){
     var $ = $B.args("setdefault", 3, {self: null, key: null, _default: null},
             ["self", "key", "_default"], arguments, {_default: _b_.None}, null, null),
         self = $.self,
@@ -1335,13 +1317,6 @@ dict.setdefault = function(){
         }
     }
 
-    if(self.$jsobj){
-        if(! self.$jsobj.hasOwnProperty(key)){
-            self.$jsobj[key] = _default
-        }
-        return self.$jsobj[key]
-    }
-
     var lookup = dict.$lookup_by_key(self, key)
     if(lookup.found){
         return lookup.value
@@ -1351,7 +1326,7 @@ dict.setdefault = function(){
     return _default
 }
 
-dict.update = function(){
+dict_funcs.update = function(self){
     var $ = $B.args("update", 1, {"self": null}, ["self"], arguments,
             {}, "args", "kw"),
         self = $.self,
@@ -1360,25 +1335,28 @@ dict.update = function(){
     if(args.length > 0){
         var o = args[0]
         if($B.$isinstance(o, dict)){
-            if(o.$jsobj){
-                o = jsobj2dict(o.$jsobj)
-            }
             $copy_dict(self, o)
         }else if(_b_.hasattr(o, "keys")){
-            var _keys = _b_.list.$factory($B.$call($B.$getattr(o, "keys"))())
+            var _keys = _b_.list.$factory($B.$call($B.$getattr(o, "keys")))
             for(let i = 0, len = _keys.length; i < len; i++){
-                var _value = $B.$getattr(o, "__getitem__")(_keys[i])
-                dict.$setitem(self, _keys[i], _value)
+                var getitem = $B.$getattr(o, "__getitem__", $B.NULL)
+                if(getitem !== $B.NULL){
+                    var _value = $B.$call(getitem, _keys[i])
+                    dict.$setitem(self, _keys[i], _value)
+                }
             }
         }else{
             let it = _b_.iter(o),
                 i = 0,
                 key_value
+            console.log('o', o, 'it', it)
             while(true){
                 try{
                     var item = _b_.next(it)
                 }catch(err){
-                    if(err.__class__ === _b_.StopIteration){break}
+                    if($B.is_exc(err, _b_.StopIteration)){
+                        break
+                    }
                     throw err
                 }
                 try{
@@ -1401,125 +1379,394 @@ dict.update = function(){
     return _b_.None
 }
 
-var dict_values = $B.make_class("dict_values",
-    function(d){
-        return {
-            __class__: dict_values,
-            dict: d,
-            make_iter: function(){return dict.$iter_values_check(d)}
-        }
-    }
-)
-
-dict_values.__iter__ = function(self){
-    return dict_valueiterator.$factory(self.make_iter)
-}
-
-dict_values.__len__ = function(self){
-    return dict.__len__(self.dict)
-}
-
-dict_values.__reduce__ = function(self){
-    var items = $B.$list(Array.from(self.make_iter()))
-    return $B.fast_tuple([_b_.iter, $B.fast_tuple([items])])
-}
-
-dict_values.__repr__ = function(self){
-    var items = Array.from(self.make_iter())
-    return 'dict_values(' + _b_.repr(items) + ')'
-}
-
-const dict_reversevalueiterator = make_reverse_iterator(
-    'dict_reversevalueiterator',
-    dict.$iter_values_reversed)
-
-dict_values.__reversed__ = function(self){
-    return dict_reversevalueiterator.$factory(self.dict)
-}
-
-make_view_comparison_methods(dict_values)
-
-$B.set_func_names(dict_values, 'builtins')
-
-var dict_valueiterator = $B.make_class('dict_valueiterator',
-    function(make_iter){
-        return {
-            __class__: dict_valueiterator,
-            iter: make_iter(),
-            make_iter
-        }
-    }
-)
-
-dict_valueiterator.__iter__ = function(self){
-    self[Symbol.iterator] = function(){return self.iter}
-    return self
-}
-
-dict_valueiterator.__next__ = function(self){
-    var res = self.iter.next()
-    if(res.done){
-        $B.RAISE(_b_.StopIteration, '')
-    }
-    return res.value
-}
-
-dict_valueiterator.__reduce_ex__ = function(self){
-    return $B.fast_tuple([_b_.iter,
-        $B.fast_tuple([$B.$list(Array.from(self.make_iter()))])])
-}
-
-$B.set_func_names(dict_valueiterator, 'builtins')
-
-
-dict.values = function(self){
+dict_funcs.values = function(self){
     $B.args('values', 1, {self: null}, ['self'], arguments, {}, null, null)
-    return dict_values.$factory(self)
-}
-
-dict.$literal = function(items){
-    var res = $B.empty_dict()
-    for(var item of items){
-        dict.$setitem(res, item[0], item[1], item[2])
+    return {
+        ob_type: $B.dict_values,
+        dict_obj: self
     }
-    return res
 }
 
-dict.$factory = function(){
-    var res = $B.empty_dict()
-    var args = [res]
-    for(var arg of arguments){
-        args.push(arg)
-    }
-    dict.__init__.apply(null, args)
-    return res
-}
+_b_.dict.tp_methods = [
+    "__sizeof__", "get", "setdefault", "pop", "popitem", "keys", "items",
+    "values", "update", "clear", "copy", "__reversed__"
+]
 
-dict.$from_array = function(arrays){
-    // used internally for annotations
-    var res = $B.empty_dict()
-    for(var item of arrays){
-        dict.$setitem(res, item[0], item[1])
-    }
-    return res
-}
+_b_.dict.classmethods = [
+    "fromkeys", "__class_getitem__"
+]
 
-_b_.dict = dict
+/* dict end */
 
 $B.set_func_names(dict, "builtins")
 
-dict.__class_getitem__ = _b_.classmethod.$factory(dict.__class_getitem__)
+$B.dict_get = dict.tp_funcs.get
+
+
+/* dict_items start */
+$B.dict_items.tp_richcompare = function(self, other, op){
+    return dictview_richcompare(self, other, op)
+}
+
+$B.dict_items.nb_subtract = function(self, other){
+    return dictviews_sub(self, other)
+}
+
+$B.dict_items.nb_and = function(self){
+    return _PyDictView_Intersect(self, other)
+}
+
+$B.dict_items.nb_xor = function(self){
+    return dictviews_xor(self, other)
+}
+
+$B.dict_items.nb_or = function(self){
+    return dictviews_or(self, other)
+}
+
+$B.dict_items.tp_repr = function(self){
+    var items = Array.from(dict.$iter_items(self.dict_obj)).map(
+        x => $B.fast_tuple([x.key, x.value]))
+    items = $B.$list(items)
+    return 'dict_items(' + _b_.repr(items) + ')'
+}
+
+$B.dict_items.tp_hash = _b_.None
+
+$B.dict_items.tp_iter = function(self){
+    return {
+        ob_type: $B.dict_itemiterator,
+        it: _b_.dict.$iter_items(self.dict_obj),
+        dict_obj: self.dict_obj
+    }
+}
+
+$B.dict_items.mp_length = function(self){
+    return _b_.dict.mp_length(self.dict_obj)
+}
+
+$B.dict_items.sq_contains = function(self, obj){
+    if(! $B.$isinstance(obj, _b_.tuple) || obj.length != 2){
+        return false
+    }
+    var key = obj[0]
+    var value = obj[1]
+    try{
+        var result = _b_.dict.$getitem(self.dict_obj, key)
+    }catch(err){
+        $B.RAISE_IF_NOT(err, _b_.KeyError)
+        return false
+    }
+    return $B.is_or_equals(result, value)
+}
+
+var dict_items_funcs = $B.dict_items.tp_funcs = {}
+
+dict_items_funcs.__reversed__ = function(self){
+    return {
+        ob_type: $B.dict_reverseitemiterator,
+        it: dict.$iter_items_reversed(self.dict_obj),
+        dict_obj: self.dict_obj
+    }
+}
+
+dict_items_funcs.isdisjoint = function(self, other){
+    var items = Array.from(dict.$iter_items(self.dict_obj))
+        .map(x => $B.fast_tuple([x.key, x.value]))
+    var self_as_set = $B.$call(_b_.set, items)
+    return _b_.set.tp_funcs.isdisjoint(self_as_set, other)
+}
+
+dict_items_funcs.mapping_get = function(self){
+    return $B.mappingproxy.tp_new(self.dict_obj, [], $B.empty_dict())
+}
+
+dict_items_funcs.mapping_set = _b_.None
+
+$B.dict_items.tp_methods = ["isdisjoint", "__reversed__"]
+
+$B.dict_items.tp_getset = ["mapping"]
+
+/* dict_items end */
+
+
+/* dict_keys start */
+$B.dict_keys.tp_richcompare = function(self, other, op){
+    return dictview_richcompare(self, other, op)
+}
+
+$B.dict_keys.nb_subtract = function(self, other){
+    return dictviews_sub(self, other)
+}
+
+$B.dict_keys.nb_and = function(self, other){
+    return _PyDictView_Intersect(self, other)
+}
+
+$B.dict_keys.nb_xor = function(self, other){
+    return dictviews_xor(self, other)
+}
+
+$B.dict_keys.nb_or = function(self, other){
+    return dictviews_or(self, other)
+}
+
+$B.dict_keys.tp_repr = function(self){
+    var keys = Array.from(dict.$iter_items(self.dict_obj)).map(x => x.key)
+    return `dict_keys({${keys}])`
+}
+
+$B.dict_keys.tp_hash = _b_.None
+
+$B.dict_keys.tp_iter = function(self){
+    return {
+        ob_type: $B.dict_keyiterator,
+        it: dict.$iter_items(self.dict_obj),
+        dict_obj: self.dict_obj
+    }
+}
+
+$B.dict_keys.mp_length = function(self){
+    return dict.mp_length(self.dict_obj)
+}
+
+$B.dict_keys.sq_contains = function(self, value){
+    for(var item of dict.$iter_items(self.dict_obj)){
+        if($B.is_or_equals(item.key, value)){
+            return true
+        }
+    }
+    return false
+}
+
+var dict_keys_funcs = $B.dict_keys.tp_funcs = {}
+
+dict_keys_funcs.__reversed__ = function(self){
+    return {
+        ob_type: $B.dict_reversekeyiterator,
+        it: _b_.dict.$iter_items_reversed(self.dict_obj),
+        dict_obj: self.dict_obj
+    }
+}
+
+dict_keys_funcs.isdisjoint = function(self, other){
+    var keys = Array.from(dict.$iter_items(self.dict_obj)).map(x => x.key)
+    var self_as_set = $B.$call(_b_.set, keys)
+    return _b_.set.tp_funcs.isdisjoint(self_as_set, other)
+}
+
+dict_keys_funcs.mapping_get = function(self){
+    return $B.mappingproxy.tp_new(self.dict_obj, [], $B.empty_dict())
+}
+
+dict_keys_funcs.mapping_set = _b_.None
+
+$B.dict_keys.tp_methods = ["isdisjoint", "__reversed__"]
+
+$B.dict_keys.tp_getset = ["mapping"]
+
+/* dict_keys end */
+
+/* dict_values start */
+$B.dict_values.tp_repr = function(self){
+    var values = Array.from(dict.$iter_items(self.dict_obj)).map(x => x.value)
+    return `dict_values({${keys}])`
+}
+
+$B.dict_values.tp_iter = function(self){
+    return {
+        ob_type: $B.dict_valueiterator,
+        it: _b_.dict.$iter_items(self.dict_obj),
+        dict_obj: self.dict_obj
+    }
+}
+
+$B.dict_values.mp_length = function(self){
+    return _b_.dict.mp_length(self.dict_obj)
+}
+
+var dict_values_funcs = $B.dict_values.tp_funcs = {}
+
+dict_values_funcs.__reversed__ = function(self){
+    return {
+        ob_type: $B.dict_reversevalueiterator,
+        it: dict.$iter_items_reversed(self.dict_obj),
+        dict_obj: self.dict_obj
+    }
+}
+
+dict_values_funcs.mapping_get = function(self){
+    return $B.mappingproxy.tp_new(self.dict_obj, [], $B.empty_dict())
+}
+
+dict_values_funcs.mapping_set = _b_.None
+
+$B.dict_values.tp_methods = ["__reversed__"]
+
+$B.dict_values.tp_getset = ["mapping"]
+
+/* dict_values end */
+
+$B.set_func_names($B.dict_values, 'builtins')
+
+
+/* dict_keyiterator start */
+$B.dict_keyiterator.tp_iter = function(self){
+    return self
+}
+
+$B.dict_keyiterator.tp_iternext = function*(self){
+    for(var item of self.it){
+        yield item.key
+    }
+}
+
+var dict_keyiterator_funcs = $B.dict_keyiterator.tp_funcs = {}
+
+dict_keyiterator_funcs.__length_hint__ = function(self){
+    return _b_.dict.mp_length(self.dict_obj)
+}
+
+dict_keyiterator_funcs.__reduce__ = function(self){
+    var keys = $B.$list(Array.from($B.dict_keyiterator.tp_iternext(self)))
+    return $B.fast_tuple([_b_.iter, $B.fast_tuple([keys])])
+}
+
+$B.dict_keyiterator.tp_methods = ["__length_hint__", "__reduce__"]
+/* dict_keyiterator end */
+
+
+/* dict_reversekeyiterator start */
+$B.dict_reversekeyiterator.tp_iter = function(self){
+    return self
+}
+
+$B.dict_reversekeyiterator.tp_iternext = function*(self){
+    for(var entry of self.it){
+        yield entry[0]
+    }
+}
+
+var dict_reversekeyiterator_funcs = $B.dict_reversekeyiterator.tp_funcs = {}
+
+dict_reversekeyiterator_funcs.__length_hint__ = function(self){
+    return _b_.dict.mp_length(self.dict_obj)
+}
+
+dict_reversekeyiterator_funcs.__reduce__ = function(self){
+
+}
+
+$B.dict_reversekeyiterator.tp_methods = ["__length_hint__", "__reduce__"]
+
+/* dict_reversekeyiterator end */
+
+/* dict_valueiterator start */
+$B.dict_valueiterator.tp_iter = function(self){
+    return self
+}
+
+$B.dict_valueiterator.tp_iternext = function*(self){
+    for(var item of self.it){
+        yield item.value
+    }
+}
+
+var dict_valueiterator_funcs = $B.dict_valueiterator.tp_funcs = {}
+
+dict_valueiterator_funcs.__length_hint__ = function(self){
+    return _b_.dict.mp_length(self.dict_obj)
+}
+
+dict_valueiterator_funcs.__reduce__ = function(self){
+    return $B.fast_tuple([_b_.iter,
+        $B.fast_tuple([$B.$list(Array.from(dict_valueiterator.tp_iternext(self)))])])
+}
+
+$B.dict_valueiterator.tp_methods = ["__length_hint__", "__reduce__"]
+/* dict_valueiterator end */
+
+/* dict_reversevalueiterator start */
+$B.dict_reversevalueiterator.tp_iter = function(self){
+    return self
+}
+
+$B.dict_reversevalueiterator.tp_iternext = function*(self){
+    for(var item of self.it){
+        yield item[1]
+    }
+}
+
+var dict_reversevalueiterator_funcs = $B.dict_reversevalueiterator.tp_funcs = {}
+
+dict_reversevalueiterator_funcs.__length_hint__ = function(self){
+
+}
+
+dict_reversevalueiterator_funcs.__reduce__ = function(self){
+
+}
+
+$B.dict_reversevalueiterator.tp_methods = ["__length_hint__", "__reduce__"]
+
+/* dict_reversevalueiterator end */
+
+/* dict_itemiterator start */
+
+$B.dict_itemiterator.tp_iter = function(self){
+    return self
+}
+
+$B.dict_itemiterator.tp_iternext = function*(self){
+    for(var item of self.it){
+        yield $B.fast_tuple([item.key, item.value])
+    }
+}
+
+var dict_itemiterator_funcs = $B.dict_itemiterator.tp_funcs = {}
+
+dict_itemiterator_funcs.__length_hint__ = function(self){
+    return_b_.dict.mp_length(self.obj)
+}
+
+dict_itemiterator_funcs.__reduce__ = function(self){
+    return $B.fast_tuple([_b_.iter,
+        $B.fast_tuple([$B.$list(Array.from(dict_itemiterator.tp_iternext(self)))])])
+}
+
+$B.dict_itemiterator.tp_methods = ["__length_hint__", "__reduce__"]
+/* dict_itemiterator start */
+
+/* dict_reverseitemiterator start */
+$B.dict_reverseitemiterator.tp_iter = function(self){
+    return self
+}
+
+$B.dict_reverseitemiterator.tp_iternext = function*(self){
+    for(var item of self.it){
+        yield item
+    }
+}
+
+var dict_reverseitemiterator_funcs = $B.dict_reverseitemiterator.tp_funcs = {}
+
+dict_reverseitemiterator_funcs.__length_hint__ = function(self){
+    return _b_.dict.mp_length(self.dict_obj)
+}
+
+dict_reverseitemiterator_funcs.__reduce__ = function(self){
+
+}
+
+$B.dict_reverseitemiterator.tp_methods = ["__length_hint__", "__reduce__"]
+
+/* dict_reverseitemiterator end */
 
 $B.empty_dict = function(){
     return {
-        __class__: dict,
-        table: Object.create(null),
-        _keys: [],
-        _values: [],
-        _hashes: [],
-        $strings: new $B.str_dict(),
+        ob_type: dict,
+        $strings: {},
         $version: 0,
-        $order: 0,
         $all_str: true
     }
 }
@@ -1532,59 +1779,154 @@ dict.$from_js = function(jsobj){
     return res
 }
 
-// This must be done after set_func_names, otherwise dict.fromkeys doesn't
-// have the attribute $infos
-dict.fromkeys = _b_.classmethod.$factory(dict.fromkeys)
-
 // Class for attribute __dict__ of classes
-var mappingproxy = $B.mappingproxy = $B.make_class("mappingproxy",
-    function(obj){
-        var res
-        if($B.$isinstance(obj, dict)){
-            res = $B.obj_dict(dict.$to_obj(obj))
-        }else{
-            res = $B.obj_dict(obj)
-        }
-        res.__class__ = mappingproxy
-        res.$version = 0
-        return res
+var mappingproxy = $B.mappingproxy
+
+mappingproxy.$factory = function(obj){
+    var res
+    if($B.$isinstance(obj, dict)){
+        res = dict.$to_obj(obj)
+    }else{
+        res = obj
     }
-)
+    res.ob_type = mappingproxy
+    res.mapping = obj
+    res.$version = 0
+    return res
+}
 
 mappingproxy.$match_mapping_pattern = true // for pattern matching (PEP 634)
 
-mappingproxy.__repr__ = function(self){
-    var d = $B.empty_dict()
-    for(var key in self.$jsobj){
-        dict.$setitem(d, key, self.$jsobj[key])
-    }
-    return dict.__repr__(d)
+/* mappingproxy start */
+$B.mappingproxy.tp_richcompare = function(self){
+
 }
 
-mappingproxy.__setitem__ = function(){
-    $B.RAISE(_b_.TypeError, "'mappingproxy' object does not support " +
-        "item assignment")
+$B.mappingproxy.nb_or = function(self){
+
 }
 
-for(var attr in dict){
-    if(mappingproxy[attr] !== undefined ||
-            ["__class__", "__mro__", "__new__", "__init__", "__delitem__",
-             "clear", "fromkeys", "pop", "popitem", "setdefault",
-             "update"].indexOf(attr) > -1){
-        continue
+$B.mappingproxy.tp_repr = function(self){
+    return dict.tp_repr(self.mapping)
+}
+
+$B.mappingproxy.tp_hash = _b_.None
+
+$B.mappingproxy.tp_str = function(self){
+    return $B.mappingproxy.tp_repr(self)
+}
+
+$B.mappingproxy.tp_iter = function(self){
+    return {
+        ob_type: $B.dict_keyiterator,
+        it: mappingproxy_iter_items(self),
+        dict_obj: self.mapping
     }
-    if(typeof dict[attr] == "function"){
-        mappingproxy[attr] = (function(key){
-            return function(){
-                return dict[key].apply(null, arguments)
-            }
-        })(attr)
+}
+
+$B.mappingproxy.tp_new = function(cls, args, kw){
+    kw = kw ?? $B.empty_dict()
+    var nb_kwargs = $B.str_dict_length(kw)
+    var nb_args = args.length + nb_kwargs
+    var mapping
+    if(nb_args == 0){
+        $B.RAISE(_b_.TypeError,
+            "mappingproxy() missing required argument 'mapping' (pos 1)"
+        )
+    }else if(nb_args > 1){
+        $B.RAISE(_b_.TypeError,
+            `mappingproxy() takes at most 1 argument (${nb_args} given)`
+        )
+    }else if(args.length == 0){
+        $B.check_expected_keywords('mappingproxy', ['mapping'], kw)
+        if(nb_kwargs > 1){
+            $B.RAISE(_b_.TypeError,
+                `mappingproxy() takes at most 1 keyword argument ` +
+                `(${nb_kwargs} given)`
+            )
+        }
+        mapping = $B.str_dict_get(kw, 'mapping')
     }else{
-        mappingproxy[attr] = dict[attr]
+        mapping = args[0]
+    }
+    return {
+        ob_type: cls,
+        mapping
     }
 }
+
+$B.mappingproxy.nb_inplace_or = function(self){
+
+}
+
+$B.mappingproxy.mp_length = function(self){
+    return Object.keys(self.mapping).length
+}
+
+$B.mappingproxy.mp_subscript = function(self, key){
+    if(self.mapping.$strings.hasOwnProperty(key)){
+        return self.mapping.$strings[key]
+    }
+    $B.RAISE(_b_.KeyError, key)
+}
+
+$B.mappingproxy.sq_contains = function(self, key){
+    return self.mapping.$strings.hasOwnProperty(key)
+}
+
+var mappingproxy_funcs = $B.mappingproxy.tp_funcs = {}
+
+mappingproxy_funcs.__class_getitem__ = function(self){
+
+}
+
+mappingproxy_funcs.__reversed__ = function(self){
+
+}
+
+mappingproxy_funcs.copy = function(self){
+    var copy_func = $B.type_getattribute(_b_.dict, 'copy')
+    return $B.mappingproxy.tp_new($B.mappingproxy, [copy_func(self.mapping)])
+}
+
+mappingproxy_funcs.get = function(self, key, _default){
+    if(self.mapping.$strings.hasOwnProperty(key)){
+        return self.mapping.$strings[key]
+    }
+    return _default ?? _b_.None
+}
+
+mappingproxy_funcs.items = function(self){
+    return _b_.dict.tp_funcs.items(self.mapping)
+}
+
+mappingproxy_funcs.keys = function(self){
+    return {
+        ob_type: $B.dict_keyiterator,
+        it: mappingproxy_iter_items(self),
+        dict_obj: self.mapping
+    }
+}
+
+mappingproxy_funcs.values = function(self){
+    return _b_.dict.tp_funcs.value(self.mapping)
+}
+
+$B.mappingproxy.functions_or_methods = ["__new__"]
+
+$B.mappingproxy.tp_methods = ["get", "keys", "values", "items", "copy", "__reversed__"]
+
+$B.mappingproxy.classmethods = ["__class_getitem__"]
+
+/* mapping proxy end */
 
 $B.set_func_names(mappingproxy, "builtins")
+
+function* mappingproxy_iter_items(self){
+    for(var key in self.mapping.$strings){
+        yield {key, value: self.mapping.$strings[key]}
+    }
+}
 
 function jsobj2dict(x, exclude){
     exclude = exclude || function(){return false}
@@ -1595,27 +1937,12 @@ function jsobj2dict(x, exclude){
                 dict.$setitem(d, attr, _b_.None)
             }else if(x[attr] === undefined){
                 continue
-            }else if(x[attr].$jsobj === x){
-                dict.$setitem(d, attr, d)
             }else{
                 dict.$setitem(d, attr, $B.jsobj2pyobj(x[attr]))
             }
         }
     }
     return d
-}
-
-$B.obj_dict = function(obj, exclude){
-    var klass = obj.__class__ || $B.get_class(obj)
-    if(! (obj instanceof $B.str_dict) && klass !== undefined && klass.$native){
-        throw $B.attr_error("__dict__", obj)
-    }
-    var res = {
-        __class__: dict,
-        $jsobj: obj,
-        $exclude: exclude || function(){return false}
-    }
-    return res
 }
 
 })(__BRYTHON__);

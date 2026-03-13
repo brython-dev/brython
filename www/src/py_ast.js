@@ -63,22 +63,26 @@ $B.ast_js_to_py = function(obj){
         var class_name = obj.constructor.$name,
             py_class = $B.python_ast_classes[class_name],
             py_ast_obj = {
-                __class__: py_class
+                ob_type: py_class,
+                dict: $B.empty_dict()
             }
         if(py_class === undefined){
             return obj
         }
-        for(var field of py_class._fields){
-            py_ast_obj[field] = $B.ast_js_to_py(obj[field])
+        for(var field of $B.str_dict_get(py_class.dict, '_fields', [])){
+            $B.str_dict_set(py_ast_obj.dict, field,
+                $B.ast_js_to_py(obj[field]))
         }
-        py_ast_obj._attributes = $B.fast_tuple([])
+        var _attributes = $B.fast_tuple([])
         for(var loc of ['lineno', 'col_offset',
                         'end_lineno', 'end_col_offset']){
             if(obj[loc] !== undefined){
-                py_ast_obj[loc] = obj[loc]
-                py_ast_obj._attributes.push(loc)
+                $B.str_dict_set(py_ast_obj.dict, loc, obj[loc])
+                _attributes.push(loc)
             }
         }
+        $B.str_dict_set(py_ast_obj.dict, '_attributes', _attributes)
+        $B.str_dict_set(py_ast_obj.dict, '__module__', 'ast')
         return py_ast_obj
     }
 }
@@ -132,10 +136,11 @@ $B.create_python_ast_classes = function(){
                         x.substr(0, x.length - 1) : x)
                 }
             }
-            var cls = $B.make_class(kl),
+            var cls = $B.make_builtin_class(kl),
                 $defaults = {},
                 slots = {},
                 nb_args = 0
+            cls.dict = $B.empty_dict()
             if(raw_fields){
                 for(let i = 0, len = _fields.length; i < len; i++){
                     let f = _fields[i],
@@ -149,35 +154,47 @@ $B.create_python_ast_classes = function(){
                     }
                 }
             }
-            cls.__match_args__ = $B.fast_tuple(Object.keys(slots))
+            $B.str_dict_set(cls.dict, '__match_args__',
+                $B.fast_tuple(Object.keys(slots)))
+            $B.str_dict_set(cls.dict, '__module__', 'ast')
 
             cls.$factory = function(){
                 var $ = $B.args(klass, nb_args, $B.clone(slots), Object.keys(slots),
                         arguments, $B.clone($defaults), null, 'kw')
                 var res = {
-                    __class__: cls,
-                    _attributes: $B.fast_tuple([])
+                    ob_type: cls,
+                    dict: $B.empty_dict()
                 }
+                var _attributes = $B.fast_tuple()
                 for(let key in $){
                     if(key == 'kw'){
                         for(let item of _b_.dict.$iter_items($.kw)){
-                            res[item.key] = item.value
+                            $B.str_dict_set(res.dict, item.key, item.value)
                         }
                     }else{
-                        res[key] = $[key]
+                        $B.str_dict_set(res.dict, key, $[key])
                     }
                 }
                 if(klass == "Constant"){
-                    res.value = $B.AST.$convert($.value)
+                    $B.str_dict_set(res.dict, 'value',
+                        $B.AST.$convert($.value))
                 }
                 return res
             }
+
             if(_fields){
-                cls._fields = _fields
+                $B.str_dict_set(cls.dict, '_fields', _fields)
             }
-            cls.__mro__ = [$B.AST, _b_.object]
-            cls.__module__ = 'ast'
-            cls.__dict__ = $B.empty_dict()
+
+            cls.tp_new = function(cls, args, kw){
+                var _args = args.concat($B.dict2kwarg(kw))
+                var obj = cls.$factory(..._args)
+                obj.ob_type = cls
+                if(cls.tp_name === 'ast.Module'){
+                    console.log(obj)
+                }
+                return obj
+            }
 
             // For fields that end with "?", set class attribute to None
             // Used in ast.dump to skip printing the field
@@ -185,10 +202,12 @@ $B.create_python_ast_classes = function(){
                 for(let i=0, len=raw_fields.length; i < len; i++){
                     var raw_field = raw_fields[i]
                     if(raw_field.endsWith('?')){
-                        _b_.dict.$setitem(cls.__dict__, _fields[i], _b_.None)
+                        $B.str_dict_set(cls.dict, _fields[i], _b_.None)
                     }
                 }
             }
+
+            $B.finalize_type(cls)
 
             return cls
         })(klass)

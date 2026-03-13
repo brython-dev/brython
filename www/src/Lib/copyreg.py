@@ -68,6 +68,7 @@ def _reduce_ex(self, proto):
             break
     else:
         base = object # not really reachable
+    print('copyreg 71, base', base)
     if base is object:
         state = None
     else:

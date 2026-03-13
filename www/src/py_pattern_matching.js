@@ -25,15 +25,16 @@ $B.pattern_match = function(subject, pattern){
         }
         let Sequence
         if($B.imported['collections.abc']){
-            Sequence = $B.imported['collections.abc'].Sequence
+            Sequence = $B.module_getattr($B.imported['collections.abc'],
+                'Sequence')
         }
         let deque
         if($B.imported['collections']){
-            deque = $B.imported['collections'].deque
+            deque = $B.module_getattr($B.imported['collections'], 'deque')
         }
         let supported = false
-        let klass = subject.__class__ || $B.get_class(subject)
-        for(let base of [klass].concat(klass.__bases__ || [])){
+        let klass = $B.get_class(subject)
+        for(let base of [klass].concat(klass.tp_bases || [])){
             if(base.$match_sequence_pattern){
                 // set for builtin classes list, tuple, range, memoryview
                 // and for array.array
@@ -79,7 +80,7 @@ $B.pattern_match = function(subject, pattern){
         // Iterate on elements of subject and check that item i matches
         // pattern i
         let it = _b_.iter(subject),
-            nxt = $B.$getattr(it, '__next__'),
+            nxt = $B.$getattr($B.get_class(it), '__next__'),
             store_starred = [],
             nb_matched_in_subject = 0
         for(let i = 0, len = pattern.sequence.length; i < len; i++){
@@ -99,14 +100,14 @@ $B.pattern_match = function(subject, pattern){
                 let starred_match_length = subject_length -
                         nb_matched_in_subject - len + i + 1
                 for(let j = 0; j < starred_match_length; j++){
-                    store_starred.push(nxt())
+                    store_starred.push(nxt(it))
                 }
                 // bind capture name
-                locals[pattern.sequence[i].capture_starred] = 
+                locals[pattern.sequence[i].capture_starred] =
                     $B.$list(store_starred)
                 nb_matched_in_subject += starred_match_length
             }else{
-                let subject_item = nxt()
+                let subject_item = nxt(it)
                 let m = $B.pattern_match(subject_item, pattern.sequence[i])
                 if(! m){
                     return false
@@ -153,10 +154,11 @@ $B.pattern_match = function(subject, pattern){
         let supported = false
         let Mapping
         if($B.imported['collections.abc']){
-            Mapping = $B.imported['collections.abc'].Mapping
+            Mapping = $B.module_getattr($B.imported['collections.abc'],
+                'Mapping')
         }
-        let klass = subject.__class__ || $B.get_class(subject)
-        for(let base of [klass].concat(klass.__bases__ || [])){
+        let klass = $B.get_class(subject)
+        for(let base of [klass].concat(klass.tp_bases || [])){
             // $match_mapping_pattern is set for dict and mappingproxy
             if(base.$match_mapping_pattern || base === Mapping){
                 supported = true
@@ -185,7 +187,7 @@ $B.pattern_match = function(subject, pattern){
             }
             // Check that key is not already used. Use __contains__ to handle
             // corner cases like {0: _, False: _}
-            if(_b_.list.__contains__(keys, key)){
+            if(_b_.list.sq_contains(keys, key)){
                 $B.RAISE(_b_.ValueError, 'mapping pattern checks ' +
                     'duplicate key (' +
                     _b_.str.$factory(key) + ')')
@@ -193,16 +195,17 @@ $B.pattern_match = function(subject, pattern){
             keys.push(key)
 
             // create a dummy class to pass as default value for get()
-            let missing = $B.make_class('missing',
-                function(){
-                    return {
-                        __class__: missing
-                    }
+            let missing = $B.make_type('missing')
+
+            missing.$factory = function(){
+                return {
+                    ob_type: missing
                 }
-            )
+            }
+            $B.finalize_type(missing)
 
             try{
-                let v = $B.$call($B.$getattr(subject, "get"))(key, missing)
+                let v = $B.$call($B.$getattr(subject, "get"), key, missing)
                 if(v === missing){
                     // pattern key not in subject : return false
                     return false
@@ -232,8 +235,8 @@ $B.pattern_match = function(subject, pattern){
                     }
                     throw err
                 }
-                if(! _b_.list.__contains__(matched, next_key)){
-                    _b_.dict.__setitem__(rest, next_key,
+                if(! _b_.list.sq_contains(matched, next_key)){
+                    _b_.dict.mp_ass_subscript(rest, next_key,
                         $B.$getitem(subject, next_key))
                 }
             }
@@ -267,11 +270,11 @@ $B.pattern_match = function(subject, pattern){
                 let match_args = $B.$getattr(klass, '__match_args__',
                     $B.fast_tuple([]))
                 if(! $B.$isinstance(match_args, _b_.tuple)){
-                    $B.RAISE(_b_.TypeError, 
+                    $B.RAISE(_b_.TypeError,
                         '__match_args__() did not return a tuple')
                 }
                 if(pattern.args.length > match_args.length){
-                    $B.RAISE(_b_.TypeError, 
+                    $B.RAISE(_b_.TypeError,
                         '__match_args__() returns ' + match_args.length +
                         ' names but ' + pattern.args.length + ' positional ' +
                         'arguments were passed')

@@ -9,13 +9,13 @@ const INF = $B.fast_float(Number.POSITIVE_INFINITY),
 
 var float_check = function(x) {
     // Returns a Javascript number
-    if(x.__class__ === $B.long_int){
-        var res = parseInt(x.value)
+    if(typeof x == 'bigint'){
+        var res = parseInt(x)
         if(! isFinite(res)){
             $B.RAISE(_b_.OverflowError, 'int too big for float')
         }
         return res
-    }else if(x.__class__ === _b_.float){
+    }else if($B.exact_type(x, _b_.float)){
         return x.value
     }
     try{
@@ -69,8 +69,8 @@ function nextUp(x){
         }
         return _mod.inf
     }
-    if($B.$isinstance(x, $B.long_int)){
-        x = Number(x.value)
+    if(typeof x == "bigint"){
+        x = Number(x)
     }else if($B.$isinstance(x, _b_.float)){
         x = x.value
     }
@@ -278,6 +278,52 @@ function m_lgamma(x){
     return r;
 }
 
+// helpers for big integers
+
+var big_int = {
+    infos: function(self){
+        // return a JS object with bit length, power of 2 below self,
+        // rest = self - pow2, relative_rest = rst / pow2
+        var nbits = _b_.int.tp_funcs.bit_length(self),
+            pow2 = 2n ** BigInt(nbits - 1),
+            rest = self - pow2,
+            relative_rest = new Number(rest / pow2)
+        return {nbits, pow2, rest, relative_rest}
+    },
+    log2: function(x){
+        if(x.value < 0){
+            $B.RAISE(_b_.ValueError, 'math domain error')
+        }
+        // x = 2 ** (infos.nbits - 1) * ( 1 + infos.relative_rest)
+        var infos = big_int.infos(x)
+        return _b_.float.$factory(infos.nbits - 1 +
+            Math.log(1 + infos.relative_rest / Math.LN2))
+    },
+    log10: function(x){
+        if(x < 0){
+            $B.RAISE(_b_.ValueError, 'math domain error')
+        }
+        // x = mant * 10 ** exp
+        var x_string = x.toString(),
+            exp = x_string.length - 1,
+            mant = parseFloat(x_string[0] + '.' + x_string.substr(1))
+        return _b_.float.$factory(exp + Math.log10(mant))
+    },
+    mant_exp: function(value){
+        // Returns mantissa and exponent of a big integer
+        var exp = value.toString(2).length,
+            exp1 = exp,
+            nb = 0n
+        // 2 ** exp is infinite if n > 1023
+        var nb = Math.floor(exp / 1023),
+            exp1 = BigInt(exp - 1023 * nb)
+        nb = BigInt(nb)
+        var reduced_value = value / 2n ** (nb * 1023n)
+        var mant = Number(reduced_value) / Number(2n ** exp1)
+        return [mant, exp]
+    }
+}
+
 function acos(x){
     $B.check_nb_args('acos', 1, arguments)
     $B.check_no_kw('acos', x)
@@ -405,20 +451,20 @@ function ceil(x){
 
     if($B.$isinstance(x, _b_.float)){
         if(_b_.float.$funcs.isinf(x)){
-            $B.RAISE(_b_.OverflowError, 
+            $B.RAISE(_b_.OverflowError,
                 "cannot convert float infinity to integer")
         }else if(_mod.isnan(x)){
-            $B.RAISE(_b_.OverflowError, 
+            $B.RAISE(_b_.OverflowError,
                 "cannot convert float NaN to integer")
         }
     }
 
-    var klass = x.__class__ || $B.get_class(x)
+    var klass = $B.get_class(x)
 
     try{
         // Use attribute of the object's class, not of the object
         // itself (special method)
-        return $B.$call($B.$getattr(klass, '__ceil__'))(x)
+        return $B.$call($B.$getattr(klass, '__ceil__'), x)
     }catch(err){
         if(! $B.is_exc(err, [_b_.AttributeError])){
             throw err
@@ -426,7 +472,7 @@ function ceil(x){
     }
 
     try{
-        x = $B.$call($B.$getattr(klass, '__float__'))(x)
+        x = $B.$call($B.$getattr(klass, '__float__'), x)
     }catch(err){
         if(! $B.is_exc(err, [_b_.AttributeError])){
             throw err
@@ -671,15 +717,15 @@ function comb(n, k){
     n = $B.PyNumber_Index(n)
     k = $B.PyNumber_Index(k)
 
-    n = _b_.int.$to_bigint(n);
-    k = _b_.int.$to_bigint(k);
+    n = $B.to_bigint(n);
+    k = $B.to_bigint(k);
 
     if(n < 0){
-        $B.RAISE(_b_.ValueError, 
+        $B.RAISE(_b_.ValueError,
                         "n must be a non-negative integer");
     }
     if(k < 0){
-        $B.RAISE(_b_.ValueError, 
+        $B.RAISE(_b_.ValueError,
                         "k must be a non-negative integer");
     }
 
@@ -709,7 +755,7 @@ function comb(n, k){
 
         overflow = k > LLONG_MAX || k < LLONG_MIN
         if (overflow) {
-            $B.RAISE(_b_.OverflowError, 
+            $B.RAISE(_b_.OverflowError,
                          "min(n - k, k) must not exceed " +
                          LLONG_MAX);
         }
@@ -761,14 +807,14 @@ function dist(p, q){
     function test(x){
         if(typeof x === "number"){
             return x
-        }else if(x.__class__ === _b_.float){
+        }else if($B.exact_type(x, _b_.float)){
             return x.value
         }
         var y = $B.$getattr(x, '__float__', null)
         if(y === null){
             $B.RAISE(_b_.TypeError, 'not a float')
         }
-        return $B.$call(y)().value
+        return $B.$call(y).value
     }
 
     // build list of differences (as floats) between coordinates of p and q
@@ -798,14 +844,14 @@ function dist(p, q){
             try{
                 var next_p = _b_.next(itp)
             }catch(err){
-                if(err.__class__ === _b_.StopIteration){
+                if($B.is_exc(err, _b_.StopIteration)){
                     // check that the other iterator is also exhausted
                     try{
                         var next_q = _b_.next(itq)
                         $B.RAISE(_b_.ValueError, "both points must have " +
                             "the same number of dimensions")
                     }catch(err){
-                        if(err.__class__ === _b_.StopIteration){
+                        if($B.is_exc(err, _b_.StopIteration)){
                             break
                         }
                         throw err
@@ -817,7 +863,7 @@ function dist(p, q){
             try{
                 var next_q = _b_.next(itq)
             }catch(err){
-                if(err.__class__ === _b_.StopIteration){
+                if($B.is_exc(err, _b_.StopIteration)){
                     $B.RAISE(_b_.ValueError, "both points must have " +
                         "the same number of dimensions")
                 }
@@ -1149,14 +1195,14 @@ function factorial(arg){
         odd_part;
     // Check that arg can be converted to an integer, and transform it to
     // a bigint
-    x = _b_.int.$to_bigint($B.PyNumber_Index(arg))
+    x = $B.to_bigint($B.PyNumber_Index(arg))
     overflow = x > LONG_MAX || x < LONG_MIN
     if(x > LONG_MAX) {
-        $B.RAISE(_b_.OverflowError, 
+        $B.RAISE(_b_.OverflowError,
                      "factorial() argument should not exceed " +
                      LONG_MAX)
     }else if(x < 0) {
-        $B.RAISE(_b_.ValueError, 
+        $B.RAISE(_b_.ValueError,
                         "factorial() not defined for negative values");
     }
 
@@ -1174,16 +1220,16 @@ function factorial(arg){
 function floor(x){
     $B.check_nb_args_no_kw('floor', 1, arguments)
 
-    if(typeof x == "number" || x.__class__ === _b_.float){
+    if(typeof x == "number" || $B.exact_type(x, _b_.float)){
         return Math.floor(float_check(x))
     }
     var klass = $B.get_class(x)
     try{
-        return $B.$call($B.$getattr(klass, "__floor__"))(x)
+        return $B.$call($B.$getattr(klass, "__floor__"), x)
     }catch(err){
         if($B.is_exc(err, [_b_.AttributeError])){
             try{
-                var float = $B.$call($B.$getattr(klass, "__float__"))(x)
+                var float = $B.$call($B.$getattr(klass, "__float__"), x)
                 return floor(float)
             }catch(err){
                 if($B.is_exc(err, [_b_.AttributeError])){
@@ -1196,7 +1242,7 @@ function floor(x){
 }
 
 var _fma = (function () {
-    // copied from 
+    // copied from
     // https://gist.github.com/Yaffle/fb47de4c18b63147699e0b621f1031f7
 
   "use strict";
@@ -1633,12 +1679,12 @@ function gcd(x, y){
     }else if(args.length == 1){
         return _b_.abs(args[0])
     }
-    x = _b_.int.$to_bigint(args[0])
-    y = _b_.int.$to_bigint(args[1])
+    x = $B.to_bigint(args[0])
+    y = $B.to_bigint(args[1])
     var res = lxgcd(x, y)[0],
         i = 2
     while(i < args.length){
-        res = lxgcd(res, _b_.int.$to_bigint(args[i]))[0]
+        res = lxgcd(res, $B.to_bigint(args[i]))[0]
         i++
     }
     return _b_.int.$int_or_long(res)
@@ -1733,14 +1779,14 @@ function isqrt(x){
 
     x = $B.PyNumber_Index(x)
     if($B.rich_comp("__lt__", x, 0)){
-        $B.RAISE(_b_.ValueError, 
+        $B.RAISE(_b_.ValueError,
             "isqrt() argument must be nonnegative")
     }
     if(typeof x == "number"){
         return Math.floor(Math.sqrt(x))
     }else{ // big integer
         // adapted from code in mathmodule.c
-        var n = x.value,
+        var n = x,
             bit_length = n.toString(2).length,
             c = BigInt(Math.floor((bit_length - 1) / 2)),
             c_bit_length = c.toString(2).length,
@@ -1796,21 +1842,6 @@ function lgamma(x){
     return m_lgamma(x)
 }
 
-function longint_mant_exp(long_int){
-    // Returns mantissa and exponent of a long integer
-    var value = long_int.value,
-        exp = value.toString(2).length,
-        exp1 = exp,
-        nb = 0n
-    // 2 ** exp is infinite if n > 1023
-    var nb = Math.floor(exp / 1023),
-        exp1 = BigInt(exp - 1023 * nb)
-    nb = BigInt(nb)
-    var reduced_value = long_int.value / 2n ** (nb * 1023n)
-    var mant = Number(reduced_value) / Number(2n ** exp1)
-    return [mant, exp]
-}
-
 var log10_func = Math.log10 || (x => Math.log(x) / Math.log(10)),
     log2_func = Math.log2 || (x => Math.log(x) / Math.log(2))
 
@@ -1825,18 +1856,17 @@ function log(x, base){
         return log2(x)
     }
     var log
-    if($B.$isinstance(x, $B.long_int)){
-        if(x.value <= 0){
-            $B.RAISE(_b_.ValueError, 'math domain error')
-        }
-        var mant_exp = longint_mant_exp(x)
-        log = Math.log(mant_exp[0]) + Math.log(2) * mant_exp[1]
-    }else if($B.$isinstance(x, _b_.int)){
-        x = _b_.int.$int_value(x)
+    if($B.$isinstance(x, _b_.int)){
+        x = $B.int_value(x)
         if(x <= 0){
             $B.RAISE(_b_.ValueError, 'math domain error')
         }
-        log = Math.log(x)
+        if(typeof x == 'bigint'){
+            var mant_exp = big_int.mant_exp(x)
+            log = Math.log(mant_exp[0]) + Math.log(2) * mant_exp[1]
+        }else{
+            log = Math.log(x)
+        }
     }else{
         var x1 = float_check(x)
         if(x1 <= 0){
@@ -1860,13 +1890,16 @@ function log(x, base){
 function log1p(x){
     $B.check_nb_args('log1p', 1, arguments)
     $B.check_no_kw('log1p', x)
-    if($B.$isinstance(x, $B.long_int)){
-        if($B.long_int.bit_length(x) > 1024){
-            $B.RAISE(_b_.OverflowError, 
-                "int too large to convert to float")
+    if($B.$isinstance(x, _b_.int)){
+        x = $B.int_value(x)
+        if(typeof x == 'bigint'){
+            if(_b_.int.tp_funcs.bit_length(x) > 1024){
+                $B.RAISE(_b_.OverflowError,
+                    "int too large to convert to float")
+            }
+            x = big_int.log2(x + 1n).value
+            return $B.fast_float(Number(x) * Math.LN2)
         }
-        x = $B.long_int.$log2($B.fast_long_int(x.value + 1n))
-        return $B.fast_float(Number(x.value) * Math.LN2)
     }
     x = float_check(x)
     if(x + 1 <= 0){
@@ -1879,12 +1912,15 @@ function log2(x){
     $B.check_nb_args('log2', 1, arguments)
     $B.check_no_kw('log2', x)
     var log2_func = Math.log2 || (x => Math.log(x) / Math.LN2)
-    if($B.$isinstance(x, $B.long_int)){
-        if(x.value <= 0){
-            $B.RAISE(_b_.ValueError, 'math domain error')
+    if($B.$isinstance(x, _b_.int)){
+        x = $B.int_value(x)
+        if(typeof x == 'bigint'){
+            if(x <= 0n){
+                $B.RAISE(_b_.ValueError, 'math domain error')
+            }
+            var mant_exp = big_int.mant_exp(x)
+            return $B.fast_float(log2_func(mant_exp[0]) + mant_exp[1])
         }
-        var mant_exp = longint_mant_exp(x)
-        return $B.fast_float(log2_func(mant_exp[0]) + mant_exp[1])
     }
     if(_b_.float.$funcs.isninf(x)){
         $B.RAISE(_b_.ValueError, '')
@@ -1905,8 +1941,9 @@ function log2(x){
 function log10(x){
     $B.check_nb_args('log10', 1, arguments)
     $B.check_no_kw('log10', x)
-    if($B.$isinstance(x, $B.long_int)){
-        return $B.fast_float($B.long_int.$log10(x).value)
+    x = $B.int_value(x)
+    if(typeof x == "bigint"){
+        return $B.fast_float(big_int.log10(x).value)
     }
     x = float_check(x)
     if(x <= 0){
@@ -1998,11 +2035,7 @@ function byteArrayToDouble(bytearray) {
 
 function addSteps(array, steps){
     // convert to BigInt, avoids issue when steps >= 2 ** 32
-    if(steps.__class__ == $B.long_int){
-        steps = steps.value
-    }else{
-        steps = BigInt(steps)
-    }
+    steps = $B.to_bigint(steps)
     var positive = steps > 0n
     if(steps < 0n){
         steps = -steps
@@ -2063,7 +2096,7 @@ function nextafter(){
     }
     steps = $B.PyNumber_Index(steps);
     if(steps < 0) {
-        $B.RAISE(_b_.ValueError, 
+        $B.RAISE(_b_.ValueError,
                         "steps must be a non-negative integer");
     }
     if(steps == 0){
@@ -2108,8 +2141,8 @@ function perm(n, k){
     k = $B.PyNumber_Index(k)
 
     // transform to Javascript BigInt
-    var n1 = _b_.int.$to_bigint(n),
-        k1 = _b_.int.$to_bigint(k);
+    var n1 = $B.to_bigint(n),
+        k1 = $B.to_bigint(k);
 
     if(k1 < 0){
         $B.RAISE(_b_.ValueError, "k must be a non-negative integer")
@@ -2231,10 +2264,8 @@ function prod(){
             }
             res = $B.rich_op('__mul__', res, x)
         }catch(err){
-            if(err.__class__ === _b_.StopIteration){
-                return res
-            }
-            throw err
+            $B.RAISE_IF_NOT(err, _b_.StopIteration)
+            return res
         }
     }
 }
@@ -2248,7 +2279,7 @@ function radians(x){
 
 function is_finite(x){
     return typeof x == "number" ||
-               (x.__class__ === _b_.floar && isFinite(x.value)) ||
+               ($B.exact_type(x, _b_.float) && isFinite(x.value)) ||
                $B.$isinstance(x, _b_.int) ||
                ($B.$isinstance(x, _b_.float) && isFinite(x.value))
 }
@@ -2321,8 +2352,9 @@ function sinh(x) {
 }
 
 function sqrt(x){
-    $B.check_nb_args('sqrt ', 1, arguments)
-    $B.check_no_kw('sqrt ', x)
+    $B.check_nb_args_no_kw('sqrt ', 1, arguments)
+
+    float_check(x)
 
     if(_b_.float.$funcs.isninf(x)){
         value_error()
@@ -2417,7 +2449,7 @@ function long_add_would_overflow(a, b){
 }
 
 function PyLong_CheckExact(n){
-    return typeof n == 'number' || n.__class__ === $B.long_int
+    return typeof n == 'number' ||typeof n == "bigint"
 }
 
 /*
@@ -2524,13 +2556,13 @@ function sumprod(p, q){
                 var overflow;
                 var int_p, int_q, int_prod;
 
-                int_p = _b_.int.$to_bigint($B.PyNumber_Index(p_i))
+                int_p = $B.to_bigint($B.PyNumber_Index(p_i))
                 overflow = int_p > LONG_MAX || int_p < LONG_MIN
 
                 if (overflow) {
                     finalize_int_path()
                 }
-                int_q = _b_.int.$to_bigint($B.PyNumber_Index(q_i));
+                int_q = $B.to_bigint($B.PyNumber_Index(q_i));
                 overflow = int_q > LONG_MAX || int_q < LONG_MIN
                 if (overflow) {
                     finalize_int_path()
@@ -2571,8 +2603,8 @@ function sumprod(p, q){
 
             if (!finished) {
                 var flt_p, flt_q;
-                var p_type_float = p_i.__class__ === _b_.float;
-                var q_type_float = q_i.__class__ === _b_.float
+                var p_type_float = $B.exact_type(p_i, _b_.float)
+                var q_type_float = $B.exact_type(q_i, _b_.float)
                 if(p_type_float && q_type_float) {
                     flt_p = p_i;
                     flt_q = q_i;
@@ -2583,11 +2615,11 @@ function sumprod(p, q){
                        times quantity, measurements with integer weights, or
                        data selected by a vector of bools. */
                     flt_p = p_i
-                    flt_q = _b_.int.$int_value(q_i)
+                    flt_q = $B.int_value(q_i)
                 }else if(q_type_float && (PyLong_CheckExact(p_i) ||
                                           typeof p_i == 'boolean')) {
                     flt_q = q_i
-                    flt_p = _b_.int.$int_value(p_i)
+                    flt_p = $B.int_value(p_i)
                 }else{
                     finalize_flt_path()
                 }
@@ -2658,10 +2690,10 @@ function trunc(x) {
     $B.check_nb_args('trunc', 1, arguments)
     $B.check_no_kw('trunc', x)
 
-   try{
-       return $B.$getattr(x, '__trunc__')()
-   }catch(err){
-   }
+    var trunc_method = $B.$getattr($B.get_class(x), '__trunc__', $B.NULL)
+    if(trunc_method !== $B.NULL){
+       return $B.$call(trunc_method, x)
+    }
    var x1 = float_check(x)
    if(!isNaN(parseFloat(x1)) && isFinite(x1)){
       if(Math.trunc !== undefined){
@@ -2672,7 +2704,7 @@ function trunc(x) {
       }
       return _b_.int.$factory(Math.ceil(x1))  // x1 < 0
    }
-   $B.RAISE(_b_.ValueError, 
+   $B.RAISE(_b_.ValueError,
        'object is not a number and does not contain __trunc__')
 }
 
@@ -2686,20 +2718,21 @@ function ulp(){
             return _mod.nan
         }
     }
+    x = $B.int_value(x)
     if(typeof x == "number"){
         return x >= 0 ? $B.fast_float(nextUp(x) - x) :
                        $B.fast_float(x - (-nextUp(-x)))
-    }else if($B.$isinstance(x, $B.long_int)){
-        x = Number(_b_.int.$to_bigint(x))
+    }else if(typeof x == "bigint"){
+        x = Number(x)
         return x > 0 ? $B.fast_float(nextUp(x) - x) :
                        $B.fast_float(x - (-nextUp(-x)))
     }else{
         if($B.rich_comp('__ge__', x, 0)){
             return $B.rich_op('__sub__', $B.fast_float(nextUp(x.value)), x)
         }else{
-            var neg_x = $B.$call($B.$getattr(x, "__neg__"))()
+            var neg_x = $B.$call($B.$getattr(x, "__neg__"))
             return $B.rich_op('__sub__', x,
-                $B.$call($B.$getattr($B.fast_float(nextUp(neg_x.value)), '__neg__'))())
+                $B.$call($B.$getattr($B.fast_float(nextUp(neg_x.value)), '__neg__')))
         }
     }
 }
@@ -2771,7 +2804,7 @@ var _mod = {
 
 for(var $attr in _mod){
     if(typeof _mod[$attr] === 'function'){
-        _mod[$attr].__class__ = $B.builtin_function_or_method
+        _mod[$attr].ob_type = $B.builtin_function_or_method
     }
 }
 

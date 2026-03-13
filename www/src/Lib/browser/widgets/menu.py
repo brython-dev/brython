@@ -133,7 +133,7 @@ class Menu:
             # Next levels
             item = html.TR(Class="brython-menu-submenu-row")
             self.parent.submenu <= item
-            item <= html.TD(html.A(label, Class="brython-menu-submenu-link", 
+            item <= html.TD(html.A(label, Class="brython-menu-submenu-link",
                 href=href))
 
         return item

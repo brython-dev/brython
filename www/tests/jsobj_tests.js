@@ -118,7 +118,9 @@ window.make_js_list = function(){
 
 window.test = function(t, ix, value){
   if(t[ix] != value){
-    throw _b_.AssertionError.$factory(`at ${ix}, ${t[ix]} is not equal to ${value}`)
+      console.log(t, ix, value)
+    $B.RAISE(_b_.AssertionError,
+        `at ${ix}, ${t[ix]} is not equal to ${value}`)
   }
 }
 
@@ -234,7 +236,8 @@ window.test_py_func_from_javascript = function(){
 
 window.test_pyfunc_receives_js_number = function(){
     console.log('py module name', window.py_module_name)
-    __BRYTHON__.imported[window.py_module_name].pyfunc_receives_js_number(3.14)
+    var module = __BRYTHON__.imported[window.py_module_name]
+    _b_.getattr(module, 'pyfunc_receives_js_number')(3.14)
 }
 
 // consistency between function calls and reference

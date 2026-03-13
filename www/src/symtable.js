@@ -236,9 +236,9 @@ function _PyST_IsFunctionLike(ste){
 
 function PyErr_Format(exc_type, message, arg){
     if(arg){
-        message = _b_.str.__mod__(message, arg)
+        message = _b_.str.nb_remainder(message, arg)
     }
-    return exc_type.$factory(message)
+    return $B.$call(exc_type, message)
 }
 
 function PyErr_SetString(exc_type, message){
@@ -363,7 +363,7 @@ function inline_comprehension(ste, comp, scopes, comp_free, inlined_cells){
             if ((existing & SF.DEF_BOUND) &&
                     !is_free_in_any_child(comp, k) &&
                     ste.type !== ClassBlock) {
-                _b_.set.remove(comp_free, k)
+                _b_.set.tp_funcs.remove(comp_free, k)
             }
         }
     }

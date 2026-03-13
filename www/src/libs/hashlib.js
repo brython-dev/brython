@@ -49,7 +49,8 @@ function $get_CryptoJS_lib(alg){
     }
 
     var module = {__name__: 'CryptoJS', $is_package: false}
-    var res = $B.$download_module(module, $B.brython_path + 'libs/crypto_js/rollups/' + alg + '.js');
+    var res = $B.$download_module(module, 
+        $B.brython_path + 'libs/crypto_js/rollups/' + alg + '.js')
 
     try{
         eval(res + "; $B.CryptoJS = CryptoJS;")
@@ -76,37 +77,12 @@ function bytes2WordArray(obj){
     return {words: words, sigBytes: obj.source.length}
 }
 
-var hash = {
-    __class__: _b_.type,
-    __mro__: [_b_.object],
-    __qualname__: 'hash',
-    __name__: 'hash'
-}
-
-hash.update = function(self, msg){
-    self.hash.update(bytes2WordArray(msg))
-}
-
-hash.copy = function(self){
-    return self.hash.clone()
-}
-
-hash.digest = function(self){
-    var obj = self.hash.clone().finalize().toString(),
-        res = []
-    for(var i = 0; i < obj.length; i += 2){
-        res.push(parseInt(obj.substr(i, 2), 16))
-    }
-    return _b_.bytes.$factory(res)
-}
-
-hash.hexdigest = function(self) {
-    return self.hash.clone().finalize().toString()
-}
+var hash = $B.make_type('hash')
 
 hash.$factory = function(alg, obj) {
     var res = {
-        __class__: hash
+        ob_type: hash,
+        dict: $B.empty_dict()
     }
 
     switch(alg) {
@@ -118,20 +94,57 @@ hash.$factory = function(alg, obj) {
       case 'sha512':
         var ALG = alg.toUpperCase()
         if($B.Crypto === undefined ||
-            $B.CryptoJS.algo[ALG] === undefined){$get_CryptoJS_lib(alg)}
-
-        res.hash = $B.CryptoJS.algo[ALG].create()
-        if(obj !== undefined){
-            res.hash.update(bytes2WordArray(obj))
+                $B.CryptoJS.algo[ALG] === undefined){
+            $get_CryptoJS_lib(alg)
         }
+        var _hash = $B.CryptoJS.algo[ALG].create()
+        if(obj !== undefined){
+            _hash.update(bytes2WordArray(obj))
+        }
+        $B.str_dict_set(res.dict, 'hash', _hash)
         break
       default:
         $B.RAISE_ATTRIBUTE_ERROR('Invalid hash algorithm: ' + alg, obj, alg)
     }
-    res.digest_size = res.hash._hash.sigBytes
-    res.block_size = block_size[alg]
+    $B.str_dict_set(res.dict, 'digest_size', _hash._hash.sigBytes)
+    $B.str_dict_set(res.dict, 'block_size', block_size[alg])
     return res
 }
+
+hash.tp_new = function(cls, args, kw){
+    var obj = hash.$factory(...args)
+    obj.ob_type = cls
+    return obj
+}
+
+var hash_funcs = hash.tp_funcs = {}
+
+hash_funcs.update = function(self, msg){
+    $B.str_dict_get(self.dict, 'hash').update(bytes2WordArray(msg))
+}
+
+hash_funcs.copy = function(self){
+    return $B.str_dict_get(self.dict, 'hash').clone()
+}
+
+hash_funcs.digest = function(self){
+    var hash_value = $B.str_dict_get(self.dict, 'hash')
+    var obj = hash_value.clone().finalize().toString(),
+        res = []
+    for(var i = 0; i < obj.length; i += 2){
+        res.push(parseInt(obj.substr(i, 2), 16))
+    }
+    return _b_.bytes.$factory(res)
+}
+
+hash_funcs.hexdigest = function(self) {
+    return $B.str_dict_get(self.dict, 'hash').clone().finalize().toString()
+}
+
+
+hash.tp_methods = ["copy", "digest", "hexdigest", "update"]
+
+$B.finalize_type(hash)
 
 $B.addToImported('hashlib', $mod)
 

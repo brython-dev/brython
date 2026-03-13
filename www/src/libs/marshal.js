@@ -11,8 +11,8 @@ var module = {
     load: function(){
         var $ = $B.args('load', 1, {file:null}, ['file'], arguments, {},
             null, null)
-        var content = $B.$call($B.$getattr($.file, "read"))()
-        return $module.loads(_b_.bytes.decode(content, "latin-1"));
+        var content = $B.$call($B.$getattr($.file, "read"))
+        return $module.loads($B.bytes_decode(content, "latin-1"));
     },
     dump: function(){
         var $ = $B.args('dump', 2, {value:null, file: null},
@@ -21,7 +21,7 @@ var module = {
         $B.$getattr($.file, "write")(_b_.str.encode(s, 'latin-1'))
         var flush = $B.$getattr($.file, "flush", null)
         if(flush !== null){
-            $B.$call(flush)()
+            $B.$call(flush)
         }
         return _b_.None
     },

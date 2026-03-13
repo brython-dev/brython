@@ -5,59 +5,70 @@ disguised Unix interface).  Refer to the library manual and
 corresponding Unix manual entries for more information on calls.
 */
 "use strict";
-var $B = __BRYTHON__,
-    _b_ = $B.builtins
+(function($B){
+
+var _b_ = $B.builtins
 
 function _randint(a, b){
     return parseInt(Math.random() * (b - a + 1) + a)
 }
 
-var stat_result = $B.make_class("stat_result",
-    function(filename){
-        filename = _b_.str.$factory(filename)
-        if($B.file_cache && $B.file_cache.hasOwnProperty(filename)){
-            var f = $B.file_cache[filename],
-                res = {
-                    __class__: stat_result,
-                    st_atime: __BRYTHON__.timestamp,
-                    st_ctime: f.ctime,
-                    st_mtime: f.mtime,
-                    st_uid: -1,
-                    st_gid: -1,
-                    st_ino: -1,
-                    st_mode: 0,
-                    st_size: f.length
-                };
-                ["mtime", "ctime", "atime_ns", "mtime_ns", "ctime_ns"].
-                    forEach(function(item){
-                        res["st_" + item] = res.st_atime
-                    });
-            return res
-        }else if($B.files && $B.files.hasOwnProperty(filename)){
-            var f = $B.files[filename],
-                res = {
-                    __class__: stat_result,
-                    st_atime: __BRYTHON__.timestamp,
-                    st_ctime: f.ctime,
-                    st_mtime: f.mtime,
-                    st_uid: -1,
-                    st_gid: -1,
-                    st_ino: -1,
-                    st_mode: 0,
-                    st_size: f.content.length
-                };
-            for(var item of ["mtime", "ctime", "atime_ns", "mtime_ns", "ctime_ns"]){
-                res["st_" + item] = res.st_atime
-            }
-            return res
+var stat_result = $B.make_type("stat_result")
 
-        }else{
-            $B.RAISE(_b_.OSError, 'no information available for file ' +
-                filename)
+stat_result.$factory = function(filename){
+    filename = _b_.str.$factory(filename)
+    if($B.file_cache && $B.file_cache.hasOwnProperty(filename)){
+        var f = $B.file_cache[filename],
+            infos = {
+                st_atime: __BRYTHON__.timestamp,
+                st_ctime: f.ctime,
+                st_mtime: f.mtime,
+                st_uid: -1,
+                st_gid: -1,
+                st_ino: -1,
+                st_mode: 0,
+                st_size: f.length
+            };
+            ["mtime", "ctime", "atime_ns", "mtime_ns", "ctime_ns"].
+                forEach(function(item){
+                    infos["st_" + item] = infos.st_atime
+                });
+        var res = {
+            ob_type: stat_result,
+            dict: $B.empty_dict()
         }
+        $B.assign_dict(res, infos)
+        return res
+    }else if($B.files && $B.files.hasOwnProperty(filename)){
+        var f = $B.files[filename],
+            infos = {
+                st_atime: __BRYTHON__.timestamp,
+                st_ctime: f.ctime,
+                st_mtime: f.mtime,
+                st_uid: -1,
+                st_gid: -1,
+                st_ino: -1,
+                st_mode: 0,
+                st_size: f.content.length
+            };
+        for(var item of ["mtime", "ctime", "atime_ns", "mtime_ns", "ctime_ns"]){
+            infos["st_" + item] = infos.st_atime
+        }
+        var res = {
+            ob_type: stat_result,
+            dict: $B.empty_dict()
+        }
+        $B.assign_dict(res, infos)
+        return res
+
+    }else{
+        $B.RAISE(_b_.OSError, 'no information available for file ' +
+            filename)
     }
-)
+}
+
 $B.set_func_names(stat_result, "posix")
+$B.finalize_type(stat_result)
 
 var module = {
     F_OK: 0,
@@ -175,3 +186,5 @@ module.isatty = function(){
 }
 
 $B.addToImported('posix', module)
+
+})(__BRYTHON__)

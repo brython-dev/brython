@@ -7,18 +7,25 @@ var ELEMENT_NODE = 1,
     COMMENT_NODE =    8,
     DOCUMENT_TYPE_NODE =    10
 
-var HTMLNode = $B.make_class("HTMLNode",
-    function(){
-        return {
-            __class__: HTMLNode,
-            nodeType: TEXT_NODE,
-            text: ""
-        }
-    }
-)
+var HTMLNode = $B.make_type("HTMLNode")
 
-HTMLNode.__str__ = function(self){
+HTMLNode.$factory = function(){
+    return {
+        ob_type: HTMLNode,
+        nodeType: TEXT_NODE,
+        text: ""
+    }
+}
+
+HTMLNode.tp_repr = function(self){
     return self.text
+}
+
+HTMLNode.tp_getattro = function(self, attr){
+    if(Object.hasOwn(self, attr)){
+        return self[attr]
+    }
+    return _b_.object.tp_getattro(self, attr)
 }
 
 $B.set_func_names(HTMLNode, "_html_parser")

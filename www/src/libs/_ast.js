@@ -19,7 +19,7 @@ var Load = 'Load',
 //       set of non-recursive literals that have already been checked with
 //       validate_expr, so they don't accept the validator state
 function ensure_literal_number(exp, allow_real, allow_imaginary){
-    if(exp.__class__ !== mod.Constant){
+    if(! $B.exact_type(exp, mod.Constant)){
         return false
     }
     var value = exp.value
@@ -33,7 +33,7 @@ function ensure_literal_number(exp, allow_real, allow_imaginary){
 }
 
 function ensure_literal_negative(exp, allow_real, allow_imaginary){
-    if(exp.__class__ !== mod.UnaryOp){
+    if(! $B.exact_type(exp, mod.UnaryOp)){
         return false
     }
     // Must be negation ...
@@ -42,7 +42,7 @@ function ensure_literal_negative(exp, allow_real, allow_imaginary){
     }
     // ... of a constant ...
     var operand = exp.operand
-    if(operand.__class__ !== mod.Constant){
+    if(! $B.exact_type(operand, mod.Constant)){
         return false
     }
     // ... number
@@ -50,7 +50,7 @@ function ensure_literal_negative(exp, allow_real, allow_imaginary){
 }
 
 function ensure_literal_complex(exp){
-    if(exp.__class__ !== mod.BinOp){
+    if(! $B.exact_type(exp, mod.BinOp)){
         return false
     }
     var left = exp.left,
@@ -60,7 +60,7 @@ function ensure_literal_complex(exp){
         return false
     }
     // Check LHS is a real number (potentially signed)
-    switch(left.__class__){
+    switch(left.ob_type){
         case mod.Constant:
             if(!ensure_literal_number(left, true, false)){
                 return false
@@ -75,7 +75,7 @@ function ensure_literal_complex(exp){
             return false
     }
     // Check RHS is an imaginary number (no separate sign allowed)
-    switch(right.__class__){
+    switch(right.ob_type){
         case mod.Constant:
             if(!ensure_literal_number(right, false, true)){
                 return false
@@ -98,11 +98,11 @@ function validate_arguments(args){
         validate_expr(args.kwarg.annotation, Load)
     }
     if(args.defaults.length > args.posonlyargs.length + args.args.length){
-        $B.RAISE(_b_.ValueError, 
+        $B.RAISE(_b_.ValueError,
             "more positional defaults than args on arguments")
     }
     if(args.kw_defaults.length != args.kwonlyargs.length){
-        $B.RAISE(_b_.ValueError, 
+        $B.RAISE(_b_.ValueError,
             "length of kwonlyargs is not the same as " +
             "kw_defaults on arguments")
     }
@@ -112,7 +112,7 @@ function validate_arguments(args){
 
 function validate_pattern(p, star_ok){
     var ret = -1
-    switch(p.__class__) {
+    switch(p.ob_type) {
         case mod.MatchValue:
             validate_pattern_match_value(p.value)
             break;
@@ -127,7 +127,7 @@ function validate_pattern(p, star_ok){
             break;
         case mod.MatchMapping:
             if(p.keys.length != p.patterns.length){
-                $B.RAISE(_b_.ValueError, 
+                $B.RAISE(_b_.ValueError,
                     "MatchMapping doesn't have the same number of keys as patterns");
             }
             if(p.rest){
@@ -136,7 +136,7 @@ function validate_pattern(p, star_ok){
 
             var keys = p.keys;
             for(var key of keys){
-                if(key.__class__ === mod.Constant) {
+                if($B.exact_type(key, mod.Constant)){
                     var literal = key.value;
                     if([_b_.None, _b_.True, _b_.False].indexOf(literal) > -1){
                         /* validate_pattern_match_value will ensure the key
@@ -152,20 +152,20 @@ function validate_pattern(p, star_ok){
             break;
         case mod.MatchClass:
             if(p.kwd_attrs.length != p.kwd_patterns.length){
-                $B.RAISE(_b_.ValueError, 
+                $B.RAISE(_b_.ValueError,
                     "MatchClass doesn't have the same number of " +
                     "keyword attributes as patterns")
             }
             validate_expr(p.cls, Load)
             var cls = p.cls;
             while(true){
-                if(cls.__class__ === mod.Name){
+                if($B.exact_type(cls, mod.Name)){
                     break
-                }else if(cls.__class__ === mod.Attribute) {
+                }else if($B.exact_type(cls, mod.Attribute)){
                     cls = cls.value;
                     continue;
                 }else {
-                    $B.RAISE(_b_.ValueError, 
+                    $B.RAISE(_b_.ValueError,
                         "MatchClass cls field can only contain Name " +
                         "or Attribute nodes.")
                 }
@@ -193,7 +193,7 @@ function validate_pattern(p, star_ok){
             if(p.pattern == undefined){
                 ret = 1;
             }else if(p.name == undefined){
-                $B.RAISE(_b_.ValueError, 
+                $B.RAISE(_b_.ValueError,
                     "MatchAs must specify a target name if a pattern is given")
             }else{
                 validate_pattern(p.pattern, 0);
@@ -201,7 +201,7 @@ function validate_pattern(p, star_ok){
             break;
         case mod.MatchOr:
             if(p.patterns.length < 2){
-                $B.RAISE(_b_.ValueError, 
+                $B.RAISE(_b_.ValueError,
                     "MatchOr requires at least 2 patterns")
             }
             validate_patterns(p.patterns, 0)
@@ -224,7 +224,7 @@ function validate_patterns(patterns, star_ok){
 
 function validate_pattern_match_value(exp){
     validate_expr(exp, Load)
-    switch (exp.__class__){
+    switch (exp.ob_type){
         case mod.Constant:
             /* Ellipsis and immutable sequences are not allowed.
                For True, False and None, MatchSingleton() should
@@ -235,7 +235,7 @@ function validate_pattern_match_value(exp){
                     _b_.complex, _b_.str])){
                 return true
             }
-            $B.RAISE(_b_.ValueError, 
+            $B.RAISE(_b_.ValueError,
                 "unexpected constant inside of a literal pattern")
         case mod.Attribute:
             // Constants and attribute lookups are always permitted
@@ -260,7 +260,7 @@ function validate_pattern_match_value(exp){
         default:
             break;
     }
-    $B.RAISE(_b_.ValueError, 
+    $B.RAISE(_b_.ValueError,
         "patterns may only match literals and attribute lookups")
 }
 
@@ -330,7 +330,7 @@ function validate_exprs(exprs, ctx, null_ok){
         if(expr !== _b_.None){
             validate_expr(expr, ctx)
         }else if(!null_ok){
-            $B.RAISE(_b_.ValueError, 
+            $B.RAISE(_b_.ValueError,
                             "None disallowed in expression list")
         }
 
@@ -343,7 +343,7 @@ function validate_expr(exp, ctx){
         actual_ctx;
 
     /* First check expression context. */
-    switch (exp.__class__) {
+    switch (exp.ob_type) {
     case mod.Name:
         validate_name(exp.id)
         actual_ctx = exp.ctx
@@ -365,14 +365,14 @@ function validate_expr(exp, ctx){
         actual_ctx = 0;
     }
     actual_ctx = actual_ctx === 0 ? actual_ctx :
-                 actual_ctx.__class__.__name__
+                 $B.get_name($B.get_class(actual_ctx))
     if(check_ctx && actual_ctx != ctx){
         $B.RAISE(_b_.ValueError, `expression must have ` +
             `${ctx} context but has ${actual_ctx} instead`)
     }
 
     /* Now validate expression. */
-    switch (exp.__class__) {
+    switch (exp.ob_type) {
     case mod.BoolOp:
         if(exp.values.length < 2){
             $B.RAISE(_b_.ValueError, "BoolOp with less than 2 values")
@@ -397,7 +397,7 @@ function validate_expr(exp, ctx){
         break;
     case mod.Dict:
         if(exp.keys.length != exp.values.length){
-            $B.RAISE(_b_.ValueError, 
+            $B.RAISE(_b_.ValueError,
                 "Dict doesn't have the same number of keys as values");
         }
         /* null_ok=1 for keys expressions to allow dict unpacking to work in
@@ -534,7 +534,7 @@ function validate_stmts(seq){
 }
 
 function validate_stmt(stmt){
-    switch (stmt.__class__) {
+    switch (stmt.ob_type) {
     case mod.FunctionDef:
         validate_body(stmt.body, "FunctionDef")
         validate_arguments(stmt.args)
@@ -566,8 +566,8 @@ function validate_stmt(stmt){
             validate_expr(stmt.value, Load);
         break;
     case mod.AnnAssign:
-        if(stmt.target.__class__ != mod.Name && stmt.simple){
-            $B.RAISE(_b_.TypeError, 
+        if(! $B.exact_type(stmt.target, mod.Name) && stmt.simple){
+            $B.RAISE(_b_.TypeError,
                 "AnnAssign with simple non-Name target")
         }
         validate_expr(stmt.target, Store)
@@ -646,7 +646,7 @@ function validate_stmt(stmt){
                 "Try has neither except handlers nor finalbody");
         }
         if(stmt.handlers.length == 0 && stmt.orelse.length > 0){
-            $B.RAISE(_b_.ValueError, 
+            $B.RAISE(_b_.ValueError,
                 "Try has orelse but no except handlers");
         }
         for(var handler of stmt.handlers){
@@ -665,11 +665,11 @@ function validate_stmt(stmt){
     case mod.TryStar:
         validate_body(stmt.body, "TryStar")
         if(stmt.handlers.length + stmt.finalbody.length == 0){
-            $B.RAISE(_b_.ValueError, 
+            $B.RAISE(_b_.ValueError,
                 "TryStar has neither except handlers nor finalbody");
         }
         if(stmt.handlers.length == 0 && stmt.orelse.length > 0){
-            $B.RAISE(_b_.ValueError, 
+            $B.RAISE(_b_.ValueError,
                 "TryStar has orelse but no except handlers");
         }
         for(var handler of stm.handlers){
@@ -727,25 +727,28 @@ function validate_stmt(stmt){
 
 
 mod._validate = function(ast_obj){
-    switch (ast_obj.__class__) {
+    var js_ast = ast_obj.$js_ast
+    switch (ast_obj.ob_type) {
         case mod.Module:
-            validate_stmts(ast_obj.body);
-            break;
+            validate_stmts(js_ast.body)
+            break
         case mod.Interactive:
-            validate_stmts(ast_obj.body);
-            break;
+            validate_stmts(js_ast.body)
+            break
         case mod.Expression:
-            validate_expr(ast_obj.body, Load);
-            break;
+            validate_expr(js_ast.body, Load)
+            break
         case mod.FunctionType:
-            validate_exprs(ast_obj.argtypes, Load, 0) &&
-                  validate_expr(ast_obj.returns, Load);
-            break;
+            var argtypes = $B.$getattr(ast_obj, 'argtypes')
+            var returns = $B.$getattr(ast_obj, 'returns')
+            validate_exprs(argtypes, Load, 0) &&
+                  validate_expr(returns, Load)
+            break
         // No default case so compiler emits warning for unhandled cases
     }
 }
 
-$B.imported._ast = mod
+$B.addToImported('_ast', mod)
 
 }
 )(__BRYTHON__)

@@ -88,7 +88,7 @@ req.bind("complete", lambda req: show(req, "bébé"))
 req.send()
 
 def assert_type(f, _type):
-    if not check_status(req):
+    if not check_status(f):
         return
     data = f.read()
     async_tester.assertTrue(isinstance(data, _type))

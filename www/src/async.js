@@ -4,13 +4,97 @@
 
 var _b_ = $B.builtins
 
-var coroutine = $B.coroutine = $B.make_class("coroutine")
+var coroutine = $B.coroutine
 
-coroutine.close = function(self){
+
+/* coroutine start */
+coroutine.tp_repr = function(self){
+    if(self.$func.$function_infos){
+        return "<coroutine " + self.$func.$function_infos[$B.func_attrs.name] + ">"
+    }else{
+        return "<coroutine object>"
+    }
+}
+
+$B.coroutine.tp_finalize = function(self){
+
+}
+
+$B.coroutine.am_await = function(self){
+
+}
+
+var coroutine_funcs = $B.coroutine.tp_funcs = {}
+
+coroutine_funcs.__class_getitem__ = function(self){
+
+}
+
+coroutine_funcs.__name___get = function(self){
+
+}
+
+coroutine_funcs.__name___set = function(self){
+
+}
+
+coroutine_funcs.__qualname___get = function(self){
+
+}
+
+coroutine_funcs.__qualname___set = function(self){
+
+}
+
+coroutine_funcs.__sizeof__ = function(self){
+
+}
+
+coroutine_funcs.close = function(self){
     self.$sent = true // avoids RuntimeWarning
 }
 
-coroutine.send = function(self){
+coroutine_funcs.cr_await_get = function(self){
+
+}
+
+coroutine_funcs.cr_await_set = function(self){
+
+}
+
+coroutine_funcs.cr_code_get = function(self){
+
+}
+
+coroutine_funcs.cr_code_set = function(self){
+
+}
+
+coroutine_funcs.cr_frame_get = function(self){
+
+}
+
+coroutine_funcs.cr_frame_set = function(self){
+
+}
+
+coroutine_funcs.cr_running_get = function(self){
+
+}
+
+coroutine_funcs.cr_running_set = function(self){
+
+}
+
+coroutine_funcs.cr_suspended_get = function(self){
+
+}
+
+coroutine_funcs.cr_suspended_set = function(self){
+
+}
+
+coroutine_funcs.send = function(self){
     self.$sent = true
     if(! $B.$isinstance(self, coroutine)){
         var msg = "object is not a coroutine"
@@ -35,13 +119,22 @@ coroutine.send = function(self){
     return res
 }
 
-coroutine.__repr__ = coroutine.__str__ = function(self){
-    if(self.$func.$function_infos){
-        return "<coroutine " + self.$func.$function_infos[$B.func_attrs.name] + ">"
-    }else{
-        return "<coroutine object>"
-    }
+coroutine_funcs.throw = function(self){
+
 }
+
+$B.coroutine.tp_methods = ["send", "throw", "close", "__sizeof__"]
+
+$B.coroutine.classmethods = ["__class_getitem__"]
+
+$B.coroutine.tp_members = [
+    ["cr_origin", $B.TYPES.OBJECT, "cr_origin_or_finalizer", 1]
+]
+
+$B.coroutine.tp_getset = [
+    "__name__", "__qualname__", "cr_await", "cr_running", "cr_frame",
+    "cr_code", "cr_suspended"
+]
 
 $B.set_func_names(coroutine, "builtins")
 
@@ -52,7 +145,7 @@ $B.make_async = func => {
     var f = function(){
         var args = arguments
         var res = {
-            __class__: coroutine,
+            ob_type: coroutine,
             $args: args,
             $func: func
         }
@@ -67,17 +160,19 @@ $B.make_async = func => {
     f.$is_func = true
     f.$is_async = true
     f.$args_parser = func.$args_parser
+    f.ob_type = $B.function
+    f.dict = $B.empty_dict()
     return f
 }
 
 // "x = await coro" is translated into "x = await $B.promise(coro)"
 
 $B.promise = function(obj){
-    if(obj.__class__ === coroutine){
+    if($B.exact_type(obj, coroutine)){
         // store current frames stack, to be able to restore it when the
         // promise resolves
         obj.$frame_obj = $B.frame_obj
-        return coroutine.send(obj)
+        return coroutine.tp_funcs.send(obj)
     }
     if(typeof obj == "function"){
         return obj()
@@ -98,7 +193,7 @@ $B.promise = function(obj){
     var awaitable = $B.$getattr(obj, '__await__', null)
     if(awaitable !== null){
         // must be an iterator
-        awaitable = $B.$call(awaitable)()
+        awaitable = $B.$call(awaitable)
         if($B.$getattr(awaitable, '__next__', null) === null){
             $B.RAISE(_b_.TypeError, '__await__() returned non-iterator' +
                 ` of type '${$B.class_name(awaitable)}'`)

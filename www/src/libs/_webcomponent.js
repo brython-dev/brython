@@ -23,16 +23,15 @@ function define(tag_name, cls, options){
             // ignore
         }
     }else{
-        let stack = [...cls.__bases__];
+        let stack = [...cls.tp_bases];
         while(stack.length) {
             base = stack.pop();
-        if(base.__module__ === 'browser.html'){
-                _extends = base.__name__.toLowerCase()
-                break
+            if(base.__module__ === 'browser.html'){
+                    _extends = base.__name__.toLowerCase()
+                    break
+            }
+            stack.push(...base.tp_bases);
         }
-
-        stack.push(...base.__bases__);
-    }
     }
 
     if(_extends){
@@ -60,6 +59,8 @@ function define(tag_name, cls, options){
             "must be a class, not '" + $B.class_name(tag_name) + "'")
     }
     cls.$webcomponent = true
+    cls.tp_mro.splice(cls.tp_mro.length - 1, 0, $B.DOMNode)
+    $B.make_getattr(cls)
 
     // Create the Javascript class used for the component. It must have
     // the same name as the Python class
@@ -69,8 +70,9 @@ function define(tag_name, cls, options){
         super()
         var html = $B.imported['browser.html']
         // Create tag in module html
-        if(html['tag_name'] === undefined){
-            html.maketag('tag_name', WebComponent)
+        if($B.module_getattr(html, 'tag_name', $B.NULL) === $B.NULL){
+            var maketag = $B.module_getattr(html, 'maketag')
+            $B.$call(maketag, 'tag_name', WebComponent)
         }
         var init = $B.$getattr(cls, "__init__", _b_.None)
         if(init !== _b_.None){
@@ -80,9 +82,9 @@ function define(tag_name, cls, options){
                 for(var i = 0, len = _self.attributes.length; i < len; i++){
                     attrs_before_init.push(_self.attributes.item(i))
                 }
-                _self.__class__ = cls
-                _self.__dict__ = $B.empty_dict()
-                $B.$call(init)(_self)
+                _self.ob_type = cls
+                _self.dict = $B.empty_dict()
+                $B.$call(init, _self)
                 if(WebComponent.initialized){
                     // Check that init() did not introduce new attributes,
                     // which is illegal
@@ -107,7 +109,7 @@ function define(tag_name, cls, options){
                 return []
             }
             if($B.$isinstance(obs_attr, _b_.property)){ // issue 2454
-                obs_attr = obs_attr.fget(cls)
+                obs_attr = obs_attr.prop_get(cls)
             }
             if(obs_attr === null){
                 return []
@@ -117,66 +119,42 @@ function define(tag_name, cls, options){
                     "is deprecated. Set it as a class attribute.")
                 // module _warning is in builtin_modules.js
                 $B.imported._warnings.warn(warning)
-                return $B.$call(obs_attr)(this)
+                return $B.$call(obs_attr, this)
             }else if(Array.isArray(obs_attr)){
                 return obs_attr
             }else{
-                $B.RAISE(_b_.TypeError, 
+                $B.RAISE(_b_.TypeError,
                     "wrong type for observedAttributes: " +
                     $B.class_name(obs_attr))
             }
         }
     }
     `
-    var name = cls.__name__,
+    var name = cls.tp_name,
         code = src.replace(/WebComponent/g, name).
                    replace(/tag_name/g, tag_name).
                    replace(/HTMLElement/, extend_dom_name)
-    var src = eval(code)
+    eval(code)
     var webcomp = eval(name) // JS class for component
     webcomp.$cls = cls
 
-    // Override __getattribute__ to handle DOMNode attributes such as
-    // attachShadow
-    cls.__getattribute__ = function(self, attr){
-        try{
-            return $B.DOMNode.__getattribute__(self, attr)
-        }catch(err){
-            if($B.DOMNode[attr]){
-                if(typeof $B.DOMNode[attr] == 'function'){
-                    return function(){
-                        var args = [self]
-                        for(var i = 0, len = arguments.length; i < len; i++){
-                            args.push(arguments[i])
-                        }
-                        return $B.DOMNode[attr].apply(null, args)
-                    }
-                }else{
-                    return $B.DOMNode[attr]
-                }
-            }
-            throw err
-        }
-    }
-
-    var mro = [cls].concat(cls.__mro__).reverse()
-    for(var i = 0, len = mro.length; i < len; i++){
+    var mro = cls.tp_mro
+    for(var i = mro.length - 1; i >= 0; i--){
         var pcls = mro[i]
-        for(var key in pcls){
+        for(var entry of _b_.dict.$iter_items(pcls.dict)){
+            var key = entry.key,
+                value = entry.value
             if((! webcomp.hasOwnProperty(key)) &&
-                    typeof pcls[key] == "function" &&
-                    // don't set $factory (would make it a class)
-                    key !== '$factory'
-                    ){
-                webcomp.prototype[key] = (function(attr, klass){
+                    typeof value == "function"){
+                webcomp.prototype[key] = (function(attr, v){
                     return function(){
                         try{
-                            return $B.$call(klass[attr])($B.DOMNode.$factory(this), ...arguments)
+                            return $B.$call(v, $B.DOMNode.$factory(this), ...arguments)
                         }catch(err){
                             $B.show_error(err)
                         }
                     }
-                })(key, pcls)
+                })(key, value)
             }
         }
     }

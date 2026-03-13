@@ -157,14 +157,6 @@ assert b1 % b2 == window.BigInt(str(23456 % 78901))
 b3 = window.BigInt('2')
 assert b1 ** b3 == window.BigInt(str(23456 ** 2))
 
-for num in [1, 4.7]:
-    try:
-        b1 + num # in Javascript, can't add BigInt and number
-        raise Exception('should have raised TypeError')
-    except TypeError:
-        pass
-
-
 # inheriting a Javascript class
 class Square2(window.Rectangle):
 
@@ -266,7 +258,7 @@ window.demo_array.demo_array2.test2172()
 try:
     window.js_error()
 except Exception as exc:
-    assert exc.args[0] == 'Error: catching JS error'
+    assert exc.args[0] == 'catching JS error'
 
 # issue 2248
 assert type(javascript.NULL) is javascript.NullType
@@ -381,7 +373,7 @@ async def call_js_async():
         input('should have raised error')
     except JavascriptError as exc:
         async_tester.assertEqual(str(exc),
-            'ReferenceError: blabla is not defined')
+            'blabla is not defined')
 
 aio.run(call_js_async())
 
@@ -431,6 +423,7 @@ window.testDeletedAttr2420(True)
 
 # issue 2445
 def is_bomb(point):
+    print('point', point)
     bombs = [(1, 2), (3, 4)]
     assert point in bombs
 

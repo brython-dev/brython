@@ -409,16 +409,15 @@ var loop = $B.loop = function(){
     if(func == "execute"){
         let script = task[1],
             script_id = script.__name__.replace(/\./g, "_"),
-            module = $B.module.$factory(script.__name__)
+            module = $B.module.$factory(script.__name__, script.__doc__)
         module.__file__ = script.__file__
-        module.__doc__ = script.__doc__
         $B.imported[script_id] = module
         try{
             var modobj = new Function(script.js + `\nreturn locals`)()
             for(var key in modobj){
                 if(! key.startsWith('$')){
                     try{
-                        module[key] = modobj[key]
+                        $B.module.tp_setattro(module, key, modobj[key])
                     }catch(err){
                         // ignore; the name might have been removed by
                         // del globals()[name], then it becomes an accessor
@@ -431,12 +430,15 @@ var loop = $B.loop = function(){
         }catch(err){
             // If the error was not caught by the Python runtime, build an
             // instance of a Python exception
-            if(err.__class__ === undefined){
+            console.log('error in loaders', err)
+            console.log('frame obj', $B.frame_obj)
+            if(err.ob_type === undefined){
+                err.filename = script.filename
                 if(err.$py_exc){
                     err = err.$py_exc
                 }else{
-                    if($B.get_option('debug') > 2){
-                        console.log('JS error stack', err.stack)
+                    if($B.get_option('debug', err) > 2){
+                        console.log('JS error', err.stack)
                     }
                     var stack = err.$stack,
                         frame_obj = err.$frame_obj,

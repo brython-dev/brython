@@ -67,28 +67,32 @@ function scripts_to_load(debug_level){
     return brython_scripts
 }
 
-var wclass = $B.make_class("Worker",
-    function(worker){
-        return {
-            __class__: wclass,
-            worker
-        }
-    }
-)
+var wclass = $B.make_type("Worker")
 
-wclass.send = function(){
+wclass.$factory = function(worker){
+    return {
+        ob_type: wclass,
+        worker
+    }
+}
+
+var wclass_funcs = wclass.tp_funcs = {}
+
+wclass_funcs.send = function(){
     var $ = $B.args('send', 2, {self: null, message: null}, ['self', 'message'],
             arguments, {}, 'args', null)
     var message = $B.pyobj2structuredclone($.message)
     return $.self.worker.postMessage(message, ...$.args)
 }
 
-wclass.__mro__ = [$B.JSObj, _b_.object]
+wclass.tp_methods = ["send"]
 
 $B.set_func_names(wclass, "browser.worker")
+$B.finalize_type(wclass)
 
+var _Worker = $B.make_type("Worker")
 
-var _Worker = $B.make_class("Worker", function(id, onmessage, onerror){
+_Worker.$factory = function(id, onmessage, onerror){
     $B.warn(_b_.DeprecationWarning,
         "worker.Worker is deprecated in version 3.12. " +
         "Use worker.create_worker instead")
@@ -150,7 +154,7 @@ var _Worker = $B.make_class("Worker", function(id, onmessage, onerror){
         w = new Worker(url),
         res = wclass.$factory(w)
     return res
-})
+}
 
 function create_worker(){
     var $ = $B.args("__init__", 4,
@@ -160,9 +164,19 @@ function create_worker(){
                     null, null),
         id = $.id,
         worker_script = $B.webworkers[id],
-        onready = $.onready === _b_.None ? _b_.None : $B.$call($.onready),
-        onmessage = $.onmessage === _b_.None ? _b_.None : $B.$call($.onmessage),
-        onerror = $.onerror === _b_.None ? _b_.None : $B.$call($.onerror)
+        onready = $.onready === _b_.None ? _b_.None :
+            function(){
+                return $B.$call($.onready, ...arguments)
+            },
+        onmessage = $.onmessage === _b_.None ? _b_.None :
+            function(){
+                return $B.$call($.onmessage, ...arguments)
+            }
+        ,
+        onerror = $.onerror === _b_.None ? _b_.None :
+            function(){
+                return $B.$call($.onerror, ...arguments)
+            }
 
     if(worker_script === undefined){
         $B.RAISE(_b_.RuntimeError, `No webworker with id '${id}'`)
@@ -237,6 +251,7 @@ function create_worker(){
              `${js}\n` +
              `self.postMessage('${ok_token}')\n` +
          `}catch(err){\n` +
+             `console.log('worker error', err)\n` +
              `self.postMessage('${error_token}Error in worker "${id}"\\n'` +
              ` + $B.error_trace(err))\n` +
          `}\n})`

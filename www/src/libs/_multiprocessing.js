@@ -3,7 +3,7 @@
 
 var _b_ = $B.builtins
 
-var Process = $B.make_class('Process')
+var Process = $B.make_type('Process')
 
 var $convert_args=function(args) {
     var _list=[]
@@ -66,7 +66,7 @@ Process. $factory = function(){
     var worker = new Worker('/src/web_workers/multiprocessing.js')
 
     var res = {
-        __class__: Process,
+        ob_type: Process,
         $worker: worker,
         name: $ns['name'] || _b_.None,
         $target: target + '',
@@ -78,12 +78,12 @@ Process. $factory = function(){
 
 $B.set_func_names(Process, "multiprocessing")
 
-var Pool = $B.make_class("Pool")
+var Pool = $B.make_type("Pool")
 
 Pool.__enter__ = function(self){}
 Pool.__exit__ = function(self){}
 
-Pool.__str__ = Pool.toString = Pool.__repr__=function(self){
+Pool.tp_repr = function(self){
    return '<object Pool>'
 }
 
@@ -107,10 +107,8 @@ Pool.map = function(){
 
        try{
            arg = $B.$getattr(fargs, '__next__')()
-       }catch(err) {
-          if(err.__class__ !== _b_.StopIteration){
-              throw err
-          }
+       }catch(err){
+           $B.RAISE_IF_NOT(err, _b_.StopIteration)
        }
        console.log(arg)
        _workers[i].finished = false
@@ -129,9 +127,7 @@ Pool.map = function(){
                                             args: $convert_args([arg])})
                _pos++
            }catch(err){
-               if (err.__class__ !== _b_.StopIteration){
-                   throw err
-               }
+               $B.RAISE_IF_NOT(err, _b_.StopIteration)
                this.finished = true
            }
        }, false);
@@ -164,10 +160,8 @@ Pool.apply_async = function(){
 
        try{
            arg = $B.$getattr(fargs, '__next__')()
-       }catch(err) {
-          if (err.__class__ !== _b_.StopIteration){
-              throw err
-          }
+       }catch(err){
+           $B.RAISE_IF_NOT(err, _b_.StopIteration)
        }
        _workers[i].postMessage({target: func+'', pos: _pos,
                              args: $convert_args([arg])})
@@ -177,15 +171,13 @@ Pool.apply_async = function(){
            async_result.results[e.data.pos]=e.data.result
            //if (_results.length == args.length) return _results
 
-           try {
+           try{
                arg = $B.$getattr(fargs, '__next__')()
                e.currentTarget.postMessage({target: func+'', pos: _pos,
                                             args: $convert_args([arg])})
                _pos++
-           } catch(err) {
-               if (err.__class__ !== _b_.StopIteration){
-                   throw err
-               }
+           }catch(err){
+               $B.RAISE_IF_NOT(err, _b_.StopIteration)
                this.finished=true
            }
        }, false);
@@ -209,13 +201,14 @@ Pool.$factory = function(){
     }
 
     var res = {
-        __class__: Pool,
+        ob_type: Pool,
         $processes: processes
     }
     return res
 }
 
 $B.set_func_names(Pool, "multiprocessing")
+$B.finalize_type(Pool)
 
 $B.imported._multiprocessing = {Process, Pool}
 

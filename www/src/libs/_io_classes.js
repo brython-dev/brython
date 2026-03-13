@@ -1,41 +1,12 @@
-var _b_ = __BRYTHON__.builtins
+(function($B){
+
+var _b_ = $B.builtins
 
 function get_self(name, args){
     return $B.args(name, 1, {self: null}, ["self"], args, {}, null, null).self
 }
 
-var _IOBase = $B._IOBase //$B.make_class("_IOBase")
-_IOBase.__mro__ = [_b_.object]
-
-_IOBase.close = function(){
-    get_self("close", arguments).closed = true
-}
-
-_IOBase.flush = function(){
-    get_self("flush", arguments)
-    return _b_.None
-}
-
-$B.set_func_names(_IOBase, '_io')
-
-// Base class for binary streams that support some kind of buffering.
-var _BufferedIOBase = $B.make_class("_BufferedIOBase")
-_BufferedIOBase.__mro__ = [_IOBase, _b_.object]
-
-_BufferedIOBase.__enter__ = function(self){
-    return self
-}
-_BufferedIOBase.__exit__ = function(self, type, value, traceback){
-    try{
-        $B.$call($B.$getattr(self, 'close'))()
-        self.__closed = true
-        return true
-    }catch(err){
-        return false
-    }
-}
-
-$B.set_func_names(_BufferedIOBase, '_io')
+var _IOBase = $B._IOBase
 
 _RawIOBase = $B._RawIOBase
 
@@ -76,9 +47,24 @@ function get_newlines(text, newline){
     return newlines
 }
 
-var StringIO = $B.make_class("StringIO")
+function transform_newline(s, newline){
+    switch(newline){
+        case _b_.None:
+            s = s.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+            break
+        case '\r':
+            s = s.replace(/\n/g, '\r')
+            break
+        case '\r\n':
+            s = s.replace(/\n/g, '\r\n')
+            break
+    }
+    return s
+}
 
-StringIO.__init__ = function(){
+var StringIO = $B.make_type("StringIO", [$B._TextIOBase])
+
+StringIO.tp_init = function(){
     var $ = $B.args("StringIO", 3, {self: null, value: null, newline: null},
             ["self", "value", "newline"], arguments, {value: '', newline: "\n"},
             null, null),
@@ -116,14 +102,14 @@ StringIO.__init__ = function(){
     $.self.closed = false
 }
 
-StringIO.__mro__ = [$B._TextIOBase, $B._IOBase, _b_.object]
+var StringIO_funcs = StringIO.tp_funcs = {}
 
-StringIO.__getstate__ = function(_self){
+StringIO_funcs.__getstate__ = function(_self){
     check_closed(_self)
 
     var initvalue = StringIO.getvalue(_self)
 
-    var dict = _self.__dict__ ? _b_.dict.copy(_self.__dict__) : _b_.None
+    var dict = _self.dict ? _b_.dict.copy(_self.dict) : _b_.None
 
     var state = $B.fast_tuple([initvalue,
                           _self.$newline,
@@ -131,12 +117,12 @@ StringIO.__getstate__ = function(_self){
     return state
 }
 
-StringIO.__setstate__ = function(_self, state){
+StringIO_funcs.__setstate__ = function(_self, state){
     var [initvalue, readnl, pos, dict] = state
     _self.$text = initvalue
     _self.newlines = readnl
     if(dict !== _b_.None){
-        _self.__dict__ = dict
+        _self.dict = dict
     }
     _self.$text_pos = pos
     _self.$text_iterator = _self.$text[Symbol.iterator]()
@@ -145,22 +131,17 @@ StringIO.__setstate__ = function(_self, state){
     }
 }
 
-function transform_newline(s, newline){
-    switch(newline){
-        case _b_.None:
-            s = s.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
-            break
-        case '\r':
-            s = s.replace(/\n/g, '\r')
-            break
-        case '\r\n':
-            s = s.replace(/\n/g, '\r\n')
-            break
-    }
-    return s
+StringIO_funcs.close = function(self){
+    self.closed = true
 }
 
-StringIO.getvalue = function(){
+StringIO_funcs.closed = $B.getset_descriptor.$factory(
+    StringIO,
+    'closed',
+    [self => self.closed]
+)
+
+StringIO_funcs.getvalue = function(){
     var $ = $B.args("getvalue", 1, {self: null},
             ["self"], arguments, {}, null, null)
     var _self = $.self
@@ -172,23 +153,19 @@ StringIO.getvalue = function(){
     return transform_newline(res, _self.$newline)
 }
 
-StringIO.line_buffering = $B.getset_descriptor.$factory(
+StringIO_funcs.line_buffering = $B.getset_descriptor.$factory(
     StringIO,
     'line_buffering',
-    function(){
-        return false
-    }
+    [() => false]
 )
 
-StringIO.newlines = $B.getset_descriptor.$factory(
+StringIO_funcs.newlines = $B.getset_descriptor.$factory(
     StringIO,
     'newlines',
-    function(self){
-        return self.$newlines
-    }
+    [self => self.$newlines]
 )
 
-StringIO.read = function(){
+StringIO_funcs.read = function(){
     var $ = $B.args('read', 2, {self: null, size: null}, ['self', 'size'],
             arguments, {size: -1}, null, null),
         _self = $.self,
@@ -247,7 +224,11 @@ StringIO.read = function(){
     return transform_newline(res, _self.$newline)
 }
 
-StringIO.readline = function(){
+StringIO_funcs.readable = function(self){
+    return ! self.closed
+}
+
+StringIO_funcs.readline = function(){
     var $ = $B.args('readline', 2, {self: null, size: null}, ['self', 'size'],
             arguments, {size: -1}, null, null),
         _self = $.self,
@@ -324,7 +305,15 @@ StringIO.readline = function(){
     return $B.String(res)
 }
 
-StringIO.truncate = function(self, size){
+StringIO_funcs.seekable = function(self){
+    return ! self.closed
+}
+
+StringIO_funcs.tell = function(self){
+    return self.$text_pos
+}
+
+StringIO_funcs.truncate = function(self, size){
     var $ = $B.args('truncate', 2, {self: null, size: null}, ['self', 'size'],
             arguments, {size: _b_.None}, null, null),
         _self = $.self,
@@ -355,7 +344,7 @@ StringIO.truncate = function(self, size){
     return _self.$text_pos
 }
 
-StringIO.seek = function(self, pos, whence){
+StringIO_funcs.seek = function(self, pos, whence){
     var $ = $B.args('seek', 3, {self: null, pos: null, whence: null},
                 ['self', 'pos', 'whence'], arguments, {whence: 0}, null, null),
         _self = $.self,
@@ -395,7 +384,11 @@ StringIO.seek = function(self, pos, whence){
     return _self.$text_pos
 }
 
-StringIO.write = function(){
+StringIO_funcs.writable = function(self){
+    return ! self.closed
+}
+
+StringIO_funcs.write = function(){
     var $ = $B.args("write", 2, {self: null, data: null},
             ["self", "data"], arguments, {}, null, null)
             var _self = $.self,
@@ -417,18 +410,26 @@ StringIO.write = function(){
     return data.length
 }
 
+StringIO.tp_methods = [
+    "close", "getvalue", "read", "readline", "tell", "truncate", "seek",
+    "write", "seekable", "readable", "writable", "__getstate__",
+    "__setstate__"
+]
+
+StringIO.tp_getset = [
+    "closed", "newlines", "line_buffering"
+]
+
 $B.set_func_names(StringIO, "_io")
+$B.finalize_type(StringIO)
 
-var BytesIO = $B.make_class('BytesIO')
-
-BytesIO.__bases__ = [$B._BufferedIOBase]
-BytesIO.__mro__ = _b_.type.$mro(BytesIO)
+var BytesIO = $B.make_type('BytesIO', [$B._BufferedIOBase])
 
 // Initialize _buffer as soon as possible since it's used by __del__()
 // which calls close()
 BytesIO._buffer = _b_.None
 
-BytesIO.__init__ = function(){
+BytesIO.tp_init = function(){
     var $ = $B.args('__init__', 2, {self: null, initial_bytes: null},
             ['self', 'initial_bytes'], arguments, {initial_bytes: _b_.None},
             null, null)
@@ -436,15 +437,17 @@ BytesIO.__init__ = function(){
         initial_bytes = $.initial_bytes
     var buf = _b_.bytearray.$factory()
     if(initial_bytes !== _b_.None){
-        buf = _b_.bytearray.__add__(buf, initial_bytes)
+        buf = _b_.bytearray.sq_concat(buf, initial_bytes)
     }
     _self._buffer = buf
     _self._pos = 0
     _self.closed = false
-    _self.$exports = 0
+    _self.exports = 0
 }
 
-BytesIO.__getstate__ = function(_self){
+var BytesIO_funcs = BytesIO.tp_funcs = {}
+
+BytesIO_funcs.__getstate__ = function(_self){
     if(_self.closed){
         $B.RAISE(_b_.ValueError, "__getstate__ on closed file")
     }
@@ -455,7 +458,7 @@ BytesIO.__getstate__ = function(_self){
     return $B.fast_tuple([initvalue, _self._pos, dict])
 }
 
-BytesIO.__setstate__ = function(_self, state){
+BytesIO_funcs.__setstate__ = function(_self, state){
     if(_self.closed){
         $B.RAISE(_b_.ValueError, "__setstate__ on closed file")
     }
@@ -470,7 +473,7 @@ BytesIO.__setstate__ = function(_self, state){
             `should be 3-tuple, got tuple of size ${state.length}`)
     }
     var [initvalue, position, dict] = state
-    var obj = $B.$call(BytesIO)(initvalue)
+    var obj = $B.$call(BytesIO, initvalue)
 
     if(! $B.$isinstance(position, _b_.int)){
         $B.RAISE(_b_.TypeError, "second item of state must be an integer, " +
@@ -486,47 +489,43 @@ BytesIO.__setstate__ = function(_self, state){
             $B.RAISE(_b_.TypeError, "third item of state should be a dict, " +
                 `got a ${$B.class_name(dict)}`)
         }
-        if(_self.__dict__){
-            _b_.dict.update(_self.__dict__, dict)
-        }else{
-            _self.__dict__ = dict
-        }
+        _self.dict = dict
     }
 
     return _b_.None
 }
 
-BytesIO.getvalue = function(_self){
+BytesIO_funcs.getvalue = function(_self){
     if(_self.closed){
         $B.RAISE(_b_.ValueError, "getvalue on closed file")
     }
     return _b_.bytes.$factory(_self._buffer)
 }
 
-BytesIO.getbuffer = function(_self){
-    if(_self.closed){
+BytesIO_funcs.getbuffer = function(self){
+    if(self.closed){
         $B.RAISE(_b_.ValueError, "getbuffer on closed file")
     }
-    _self.$exports++
-    return _b_.memoryview.$factory(_self._buffer)
+    self.exports++
+    return _b_.memoryview.$factory(self._buffer)
 }
 
-BytesIO.isatty = function(_self){
+BytesIO_funcs.isatty = function(_self){
     if(_self.closed){
         $B.RAISE(_b_.ValueError, "isatty on closed file")
     }
     return false
 }
 
-BytesIO.close = function(_self){
+BytesIO_funcs.close = function(_self){
     if(_self._buffer !== _b_.None){
-        $B.$call($B.$getattr(_self._buffer, 'clear'))()
+        $B.$call($B.$getattr(_self._buffer, 'clear'))
     }
-    _self.$exports = 0
+    _self.exports = 0
     $B._BufferedIOBase.close(_self)
 }
 
-BytesIO.read = function(){
+BytesIO_funcs.read = function(){
     var $ = $B.args('read', 2, {self: null, size: null}, ['self', 'size'],
             arguments, {size: -1}, null, null)
     var _self = $.self,
@@ -548,7 +547,7 @@ BytesIO.read = function(){
             }
         }
         if(! failed){
-            size = $B.$call(size_index)()
+            size = $B.$call(size_index)
         }
     }
     if(size < 0){
@@ -558,19 +557,19 @@ BytesIO.read = function(){
         return _b_.bytes.$factory()
     }
     var newpos = Math.min(_b_.len(_self._buffer), _self._pos + size)
-    var b = _b_.bytes.__getitem__(_self._buffer,
+    var b = _b_.bytes.mp_subscript(_self._buffer,
         _b_.slice.$factory(_self._pos, newpos))
     _self._pos = newpos
     return b
 }
 
-BytesIO.read1 = function(_self, size=-1){
-    return BytesIO.read(_self, size)
+BytesIO_funcs.read1 = function(_self, size=-1){
+    return BytesIO.tp_funcs.read(_self, size)
 }
 
-BytesIO.readinto = function(_self, buffer){
+BytesIO_funcs.readinto = function(_self, buffer){
     check_closed(_self)
-    
+
     if(! $B.is_buffer(buffer)){
         $B.RAISE(_b_.TypeError, " readinto() argument must be " +
             `read-write bytes-like object, not ${$B.class_name(buffer)}`)
@@ -594,8 +593,55 @@ BytesIO.readinto = function(_self, buffer){
     return len
 }
 
+BytesIO_funcs.readline = function(){
+    var $ = $B.args('readline', 2, {self: null, size: null}, ['self', 'size'],
+            arguments, {size: -1}, null, null),
+        self = $.self,
+        size = $.size
+    var bytes = self._buffer.source
+    var len = bytes.length
+    if(size === _b_.None){
+        size = -1
+    }else{
+        size = $B.PyNumber_Index(size)
+    }
+    if(size < 0){
+        size = len
+    }
+    check_closed(self)
+    var nb = 0
+    var pos = self._pos
+    const EOL = '\n'.charCodeAt(0)
+    while(nb < size && pos + nb < len && bytes[pos + nb] !== EOL){
+        nb++
+    }
+    var res = $B.fast_bytes(bytes.slice(pos, pos + nb + 1))
+    self._pos += nb + 1
+    return res
+}
 
-BytesIO.write = function(_self, b){
+BytesIO_funcs.readlines = function(){
+    var $ = $B.args('readlines', 2, {self: null, hint: null},
+                ['self', 'hint'], arguments, {hint: -1}, null, null)
+    var self = $.self,
+        hint = $B.PyNumber_Index($.hint)
+    var lines = []
+    var size = 0
+    while(true){
+        var line = BytesIO.tp_funcs.readline(self)
+        if(line.source.length === 0){
+            break
+        }
+        lines.push(line)
+        size += line.source.length
+        if(hint > 0 && size > hint){
+            break
+        }
+    }
+    return lines
+}
+
+BytesIO_funcs.write = function(_self, b){
     if(_self.closed){
         $B.RAISE(_b_.ValueError, "write to closed file")
     }
@@ -604,21 +650,21 @@ BytesIO.write = function(_self, b){
     }
 
     var view = _b_.memoryview.$factory(b)
-    var n = _b_.memoryview.nbytes.getter(view)  // Size of any bytes-like object
+    var n = _b_.memoryview.tp_funcs.nbytes_get(view)  // Size of any bytes-like object
     if(n == 0){
         return 0
     }
     var pos = _self._pos
     if(pos > _b_.len(_self._buffer)){
         // Pad buffer to pos with null bytes.
-        $B.$call($B.$getattr(_self._buffer, 'resize'))(pos)
+        $B.$call($B.$getattr(_self._buffer, 'resize'), pos)
     }
-    _b_.bytearray.__setitem__(_self._buffer, _b_.slice.$factory(pos, pos + n), b)
+    _b_.bytearray.sq_ass_item(_self._buffer, _b_.slice.$factory(pos, pos + n), b)
     _self._pos += n
     return n
 }
 
-BytesIO.seek = function(_self, pos, whence=0){
+BytesIO_funcs.seek = function(_self, pos, whence=0){
     if(_self.closed){
         $B.RAISE(_b_.ValueError, "seek on closed file")
     }
@@ -632,7 +678,7 @@ BytesIO.seek = function(_self, pos, whence=0){
         }
     }
     if(! failed){
-        pos = $B.$call(pos_index)()
+        pos = $B.$call(pos_index)
     }
     if(whence == 0){
         if(pos < 0){
@@ -649,14 +695,14 @@ BytesIO.seek = function(_self, pos, whence=0){
     return _self._pos
 }
 
-BytesIO.tell = function(_self){
+BytesIO_funcs.tell = function(_self){
     if(_self.closed){
         $B.RAISE(_b_.ValueError, "tell on closed file")
     }
     return _self._pos
 }
 
-BytesIO.truncate = function(_self, pos=_b_.None){
+BytesIO_funcs.truncate = function(_self, pos=_b_.None){
     var $ = $B.args('truncate', 2, {self: null, pos: null}, ['self', 'pos'],
                 arguments, {pos: _b_.None}, null, null)
     var _self = $.self,
@@ -677,82 +723,105 @@ BytesIO.truncate = function(_self, pos=_b_.None){
             }
         }
         if(! failed){
-            pos = $B.$call(pos_index)()
+            pos = $B.$call(pos_index)
         }
         if(pos < 0){
             $B.RAISE(_b_.ValueError, `negative truncate position ${pos}`)
         }
     }
-    _b_.bytearray.resize(_self._buffer, pos)
+    _b_.bytearray.tp_funcs.resize(_self._buffer, pos)
     return pos
 }
 
-BytesIO.readable = function(_self){
+BytesIO_funcs.readable = function(_self){
     if(_self.closed){
         $B.RAISE(_b_.ValueError, "I/O operation on closed file.")
     }
     return true
 }
 
-BytesIO.writable = function(_self){
+BytesIO_funcs.writable = function(_self){
     if(_self.closed){
         $B.RAISE(_b_.ValueError, "I/O operation on closed file.")
     }
     return true
 }
 
-BytesIO.seekable = function(_self){
+BytesIO_funcs.seekable = function(_self){
     if(_self.closed){
         $B.RAISE(_b_.ValueError, "I/O operation on closed file.")
     }
     return true
 }
+
+BytesIO.tp_methods = [
+    "__getstate__", "__setstate__", "getvalue", "getbuffer", "isatty", "close",
+    "read", "read1", "readinto", "readline", "readlines", "write", "seek",
+    "tell", "truncate", "readable"
+]
 
 $B.set_func_names(BytesIO, '_io')
+$B.finalize_type(BytesIO)
 
-var BlockingIOError = $B.make_class('BlockingIOError')
-BlockingIOError.__bases__ = [_b_.OSError]
+var BlockingIOError = $B.make_type('BlockingIOError', [_b_.OSError])
 
 $B.set_func_names(BlockingIOError, '_io')
+$B.finalize_type(BlockingIOError)
 
 // generate $B._IOUnsupported if not defined yet
 $B.make_IOUnsupported()
 
-var $module = (function($B){
-    return {
-        _BufferedIOBase,
-        _IOBase,
-        _RawIOBase,
-        _TextIOBase: $B._TextIOBase,
-        BlockingIOError,
-        BytesIO: BytesIO,
-        FileIO: $B._FileIO,
-        StringIO: StringIO,
-        BufferedReader: $B._BufferedReader,
-        BufferedWriter: $B.make_class("_TextIOBase",
-            function(){
-                return "fileio"
-            }
-        ),
-        BufferedRWPair: $B.make_class("_TextIOBase",
-            function(){
-                return "fileio"
-            }
-        ),
-        BufferedRandom: $B.make_class("_TextIOBase",
-            function(){
-                return "fileio"
-            }
-        ),
-        IncrementalNewlineDecoder: $B.make_class("_TextIOBase",
-            function(){
-                return "fileio"
-            }
-        ),
-        UnsupportedOperation: $B._IOUnsupported,
-        TextIOWrapper: $B._TextIOWrapper
-    }
-})(__BRYTHON__)
-$module._IOBase.__doc__ = "_IOBase"
+var BufferedWriter = $B.make_type("BufferedWriter", [$B._TextIOBase])
 
-__BRYTHON__.imported._io_classes = $module
+BufferedWriter.$factory = function(){
+    return "fileio"
+}
+
+$B.finalize_type(BufferedWriter)
+
+var BufferedRWPair = $B.make_type("BufferedRWPair", [$B._TextIOBase])
+
+BufferedRWPair.$factory = function(){
+    return "fileio"
+}
+
+$B.finalize_type(BufferedRWPair)
+
+var BufferedRandom = $B.make_type("BufferedRandom", [$B._TextIOBase])
+
+BufferedRandom.$factory = function(){
+    return "fileio"
+}
+
+$B.finalize_type(BufferedRandom)
+
+var IncrementalNewlineDecoder = $B.make_type("IncrementalNewlineDecoder", [$B._TextIOBase])
+
+IncrementalNewlineDecoder.$factory = function(){
+    return "fileio"
+}
+
+$B.finalize_type(IncrementalNewlineDecoder)
+
+var module = {
+    _BufferedIOBase: $B._BufferedIOBase,
+    _IOBase,
+    _RawIOBase,
+    _TextIOBase: $B._TextIOBase,
+    BlockingIOError,
+    BytesIO: BytesIO,
+    FileIO: $B._FileIO,
+    StringIO: StringIO,
+    BufferedReader: $B._BufferedReader,
+    BufferedWriter,
+    BufferedRWPair,
+    BufferedRandom,
+    IncrementalNewlineDecoder,
+    UnsupportedOperation: $B._IOUnsupported,
+    TextIOWrapper: $B._TextIOWrapper
+}
+
+$B.addToImported('_io_classes', module)
+
+
+})(__BRYTHON__)
