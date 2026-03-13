@@ -55,9 +55,6 @@ def nameprep(label):
         if not RandAL[0] or not RandAL[-1]:
             raise UnicodeError("Violation of BIDI requirement 3")
 
-
-
-
     return label
 
 def ToASCII(label):
