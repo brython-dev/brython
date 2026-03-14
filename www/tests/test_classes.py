@@ -1246,4 +1246,11 @@ del A.__getattr__
 assert not hasattr(A(), 'h')
 assert not hasattr(B(), 'h')
 
+# issue 2665
+class A:
+    def __init__(self):
+        super().__init__(1)
+
+assert_raises(TypeError, A)
+
 print('passed all tests..')
