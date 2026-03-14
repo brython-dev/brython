@@ -773,7 +773,7 @@ _b_.float.nb_remainder = function(self, other) {
         $B.RAISE(_b_.ZeroDivisionError, "float modulo")
     }
     if($B.$isinstance(other, _b_.int)){
-        other = _b_.int.numerator_get(other)
+        other = _b_.int.tp_funcs.numerator_get(other)
         return fast_float((self.value % other + other) % other)
     }
 
