@@ -581,42 +581,6 @@ $B.JSObj = $B.make_builtin_class("JSObject")
 
 $B.JSObj.$factory = jsobj2pyobj
 
-// Operations are implemented only for BigInt objects (cf. issue 1417)
-/*
-function check_big_int(x, y){
-    if(typeof x != "bigint" || typeof y != "bigint"){
-        $B.RAISE(_b_.TypeError, "unsupported operand type(s) for - : '" +
-            $B.class_name(x) + "' and '" + $B.class_name(y) + "'")
-    }
-}
-
-var js_ops = {
-    __add__: function(_self, other){
-        check_big_int(_self, other)
-        return _self + other
-    },
-    __mod__: function(_self, other){
-        check_big_int(_self, other)
-        return _self % other
-    },
-    __mul__: function(_self, other){
-        check_big_int(_self, other)
-        return _self * other
-    },
-    __pow__: function(_self, other){
-        check_big_int(_self, other)
-        return _self ** other
-    },
-    __sub__: function(_self, other){
-        check_big_int(_self, other)
-        return _self - other
-    }
-}
-
-for(var js_op in js_ops){
-    $B.JSObj[js_op] = js_ops[js_op]
-}
-*/
 
 $B.JSObj.nb_bool = function(self){
     if(typeof self == 'object'){
@@ -877,7 +841,7 @@ JSObj_funcs.bind = function(_self, evt, func){
     // "bind" is an alias for "addEventListener"
     var js_func = function(ev) {
         try{
-            return func(jsobj2pyobj(ev))
+            return $B.$call(func, jsobj2pyobj(ev))
         }catch(err){
             if(err.ob_type !== undefined){
                 $B.handle_error(err)

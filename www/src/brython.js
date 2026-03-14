@@ -670,8 +670,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-03-14 08:33:18.144060"
-__BRYTHON__.timestamp=1773473598143
+__BRYTHON__.compiled_date="2026-03-14 08:38:05.163171"
+__BRYTHON__.timestamp=1773473885162
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -11715,7 +11715,7 @@ var res=jsobj2pyobj(js_attr)
 if(test){console.log('    res',res)}
 return res}}
 JSObj_funcs.bind=function(_self,evt,func){
-var js_func=function(ev){try{return func(jsobj2pyobj(ev))}catch(err){if(err.ob_type !==undefined){$B.handle_error(err)}else{try{$B.$getattr($B.get_stderr(),"write")(err)}catch(err1){console.log(err)}}}}
+var js_func=function(ev){try{return $B.$call(func,jsobj2pyobj(ev))}catch(err){if(err.ob_type !==undefined){$B.handle_error(err)}else{try{$B.$getattr($B.get_stderr(),"write")(err)}catch(err1){console.log(err)}}}}
 Object.defineProperty(_self,'$brython_events',{value:_self.$brython_events ||{},writable:true}
 )
 if(_self.$brython_events){_self.$brython_events[evt]=_self.$brython_events[evt]||[]
