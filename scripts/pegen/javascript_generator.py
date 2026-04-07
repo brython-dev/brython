@@ -31,6 +31,8 @@ from pegen.parser_generator import ParserGenerator
 from adapt_grammar_actions import transform_action
 
 EXTENSION_PREFIX = r"""
+(function($B){
+
 "use strict";
 function fprintf(dest, format){
     var args = Array.from(arguments).slice(2)
@@ -48,10 +50,6 @@ function D(x){
 
 function UNUSED(){
     // does nothing
-}
-
-function strcmp(x, y){
-   return x == y ? 0 : x < y ? -1 : 1
 }
 
 const MAXSTACK = 6000,
@@ -86,6 +84,8 @@ $B._PyPegen.parse = function(p){
             throw Error(`unknown parse mode: ${p.mode}`)
     }
 };
+
+})(__BRYTHON__)
 """
 
 

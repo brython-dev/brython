@@ -22,6 +22,10 @@ const ENDMARKER = 0,
       NUMBER = 2,
       STRING = 3
 
+function strcmp(x, y){
+   return x == y ? 0 : x < y ? -1 : 1
+}
+
 function strchr(s, char){
     return s.includes(char)
 }
@@ -56,6 +60,7 @@ const NSTATISTICS = 2000,
       ERRORTOKEN = 'ERRORTOKEN',
       NEWLINE = $B.py_tokens.NEWLINE,
       DEDENT = $B.py_tokens.DEDENT,
+      INDENT = $B.py_tokens.INDENT,
       Py_single_input = 'py_single_input',
       PyPARSE_ALLOW_INCOMPLETE_INPUT = 0x0100
 

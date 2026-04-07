@@ -977,7 +977,7 @@ function _io_open_impl(file, mode, buffering, encoding, errors, newline,
     var rawmode = '', m;
     var line_buffering, is_number, isatty = 0;
 
-    var raw, modeobj, buffer, wrapper, result, path_or_fd = NULL;
+    var raw, modeobj, buffer, wrapper, result, path_or_fd
 
     path_or_fd = file
 
