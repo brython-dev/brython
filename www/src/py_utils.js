@@ -1469,6 +1469,31 @@ $B.$is_member = function(item, _set){
     return $B.$call(contains, _set, item)
 }
 
+$B.nb_call_attr = 0
+
+$B.call_attr = function(obj, attr, inum, ...args){
+    // shortcut for obj.attr(...args)
+    // avoids having to explicitely get obj.attr in usual cases when it is a
+    // descriptor
+    var is_class = obj?.tp_name !== undefined
+    if(! is_class){
+        var klass = $B.get_class(obj)
+        var own_dict = $B.get_dict(obj)
+        if($B.get_class(klass) === _b_.type){
+            var in_klass_dict = $B.get_dict(klass)[attr]
+            if(in_klass_dict?.ob_type === $B.function){
+                $B.nb_call_attr++
+                if(own_dict && Object.hasOwn(own_dict, attr)){
+                    return $B.$call_with_position(own_dict[attr], inum, ...args)
+                }else{
+                    return in_klass_dict.bind(null, obj)(...args)
+                }
+            }
+        }
+    }
+    return $B.$call_with_position($B.$getattr(obj, attr), inum, ...args)
+}
+
 var counter = 0
 $B.$call_with_position = function(callable, inum, ...args){
     var test = false // inum == 7
@@ -1516,6 +1541,7 @@ $B.$call = function(callable, ...args){
             // for instance __call__ might be set to dict
             return $B.$call(call_method, ...args)
         }else{
+            console.log('not callable', callable)
             $B.RAISE(_b_.TypeError, "'" + $B.class_name(callable) +
                 "' object is not callable")
         }

@@ -786,6 +786,7 @@ $B.$getattr = function(obj, attr, _default){
     }
     var res
     if(obj === undefined || obj === null){
+        console.log(Error('trace').stack)
         $B.RAISE_ATTRIBUTE_ERROR("Javascript object '" + obj +
             "' has no attribute", obj, attr)
     }
@@ -819,6 +820,7 @@ $B.$getattr = function(obj, attr, _default){
     if(! is_class){
         var klass = $B.get_class(obj)
         if(klass.tp_funcs){
+            // built-in type
             var func = $B.get_from_dict(klass, attr, $B.NULL)
             if(func !== $B.NULL){
                 var res = $B.NULL
@@ -839,8 +841,61 @@ $B.$getattr = function(obj, attr, _default){
                 }
             }
         }
+        try{
+            var in_klass_dict = $B.get_dict(klass)[attr]
+            var own_dict = $B.get_dict(obj)
+            var in_own_dict = own_dict
+                ? own_dict.hasOwnProperty(attr)
+                    ? own_dict[attr]
+                    : $B.NULL
+                : $B.NULL
+            if(in_klass_dict && in_klass_dict.ob_type === $B.function &&
+                    in_own_dict === $B.NULL){
+                return $B.method.$factory(in_klass_dict, obj)
+            }
+        }catch(err){
+            console.log('error', err)
+            throw err
+        }
         var res =  $B.object_getattribute(obj, klass, attr)
     }else{
+        var in_dict = $B.get_dict(obj)[attr]
+        if(in_dict && $B.get_class(obj) === _b_.type){
+            var res = $B.NULL
+            switch($B.get_class(in_dict)){
+                case $B.function:
+                case $B.wrapper_descriptor:
+                case $B.method_descriptor:
+                case $B.builtin_function_or_method:
+                case $B.member_descriptor:
+                    res = in_dict
+                    break
+                case $B.getset_descriptor:
+                    if(_b_.type.tp_funcs.hasOwnProperty(attr + '_get')){
+                        res = _b_.type.tp_funcs[attr + '_get'](obj)
+                    }else{
+                        res = in_dict
+                    }
+                    break
+                case $B.classmethod_descriptor:
+                    res = in_dict.d_method.bind(null, in_dict.d_type)
+                    break
+                case _b_.classmethod:
+                    res = $B.$call($B.method, in_dict.cm_callable, obj)
+                    break
+                case _b_.staticmethod:
+                    res = in_dict.sm_callable
+                    break
+                case undefined:
+                    res = in_dict
+                default:
+                    //console.log('attr', attr, 'ob type', in_dict.ob_type)
+                    break
+            }
+            if(res !== $B.NULL){
+                return res
+            }
+        }
         var res = $B.type_getattribute(obj, attr)
     }
     if(res === $B.NULL){

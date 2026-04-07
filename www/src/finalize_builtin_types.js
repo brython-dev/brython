@@ -359,9 +359,6 @@ $B.finalize_type = function(cls){
                 }
             }
         }
-        if(slot == 'tp_new'){
-            cls.tp_newXXX = cls[slot]
-        }
     }
 
     $B.make_getattr(cls)

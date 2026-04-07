@@ -673,8 +673,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-04-06 08:09:19.784518"
-__BRYTHON__.timestamp=1775455759784
+__BRYTHON__.compiled_date="2026-04-07 07:39:30.361127"
+__BRYTHON__.timestamp=1775540370360
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1879,6 +1879,15 @@ if(contains===$B.NULL){$B.RAISE(_b_.TypeError,`argument of type '${$B.class_name
 'is not a container or iterable'
 )}
 return $B.$call(contains,_set,item)}
+$B.nb_call_attr=0
+$B.call_attr=function(obj,attr,inum,...args){
+var is_class=obj?.tp_name !==undefined
+if(! is_class){var klass=$B.get_class(obj)
+var own_dict=$B.get_dict(obj)
+if($B.get_class(klass)===_b_.type){var in_klass_dict=$B.get_dict(klass)[attr]
+if(in_klass_dict?.ob_type===$B.function){$B.nb_call_attr++
+if(own_dict && Object.hasOwn(own_dict,attr)){return $B.$call_with_position(own_dict[attr],inum,...args)}else{return in_klass_dict.bind(null,obj)(...args)}}}}
+return $B.$call_with_position($B.$getattr(obj,attr),inum,...args)}
 var counter=0
 $B.$call_with_position=function(callable,inum,...args){var test=false 
 if(test){console.log('call',callable,inum)}
@@ -1900,7 +1909,8 @@ if(test){console.log('call_method',call_method)}
 if(call_method===$B.NULL){$B.RAISE(_b_.TypeError,"'"+$B.class_name(callable)+
 "' object is not callable")}
 if(typeof call_method !=='function'){if($B.get_class(call_method).tp_call !==$B.NULL){
-return $B.$call(call_method,...args)}else{$B.RAISE(_b_.TypeError,"'"+$B.class_name(callable)+
+return $B.$call(call_method,...args)}else{console.log('not callable',callable)
+$B.RAISE(_b_.TypeError,"'"+$B.class_name(callable)+
 "' object is not callable")}}
 var t0=globalThis.performance.now()
 var res=call_method(callable,...args)
@@ -4488,7 +4498,7 @@ var creating=0,reading=0,writing=0,appending=0,updating=0;
 var text=0,binary=0;
 var rawmode='',m;
 var line_buffering,is_number,isatty=0;
-var raw,modeobj,buffer,wrapper,result,path_or_fd=NULL;
+var raw,modeobj,buffer,wrapper,result,path_or_fd
 path_or_fd=file
 if(! $B.$isinstance(path_or_fd,_b_.str)){$B.RAISE(_b_.TypeError,`invalid file: ${file}`)}
 if(encoding=='locale'){
@@ -4858,14 +4868,16 @@ var t0=globalThis.performance.now()
 var test=false 
 if(test){console.log('$getattr',obj,attr)}
 var res
-if(obj===undefined ||obj===null){$B.RAISE_ATTRIBUTE_ERROR("Javascript object '"+obj+
+if(obj===undefined ||obj===null){console.log(Error('trace').stack)
+$B.RAISE_ATTRIBUTE_ERROR("Javascript object '"+obj+
 "' has no attribute",obj,attr)}
 var rawname=attr
 if(obj===undefined){console.log("get attr",attr,"of undefined")}
 var is_class=Object.hasOwn(obj,'tp_name')
 if(test){console.log("attr",attr,"of",obj,"class",klass ?? $B.get_class(obj),"isclass",is_class)}
 if(! is_class){var klass=$B.get_class(obj)
-if(klass.tp_funcs){var func=$B.get_from_dict(klass,attr,$B.NULL)
+if(klass.tp_funcs){
+var func=$B.get_from_dict(klass,attr,$B.NULL)
 if(func !==$B.NULL){var res=$B.NULL
 if(test){console.log('built-in type',func.ob_type)}
 switch(func.ob_type){case $B.builtin_method:
@@ -4876,7 +4888,43 @@ case $B.getset_descriptor:
 return func.getter(obj)
 case $B.member_descriptor:
 return obj[func.d_member.attr]}}}
-var res=$B.object_getattribute(obj,klass,attr)}else{var res=$B.type_getattribute(obj,attr)}
+try{var in_klass_dict=$B.get_dict(klass)[attr]
+var own_dict=$B.get_dict(obj)
+var in_own_dict=own_dict
+? own_dict.hasOwnProperty(attr)
+? own_dict[attr]
+:$B.NULL
+:$B.NULL
+if(in_klass_dict && in_klass_dict.ob_type===$B.function &&
+in_own_dict===$B.NULL){return $B.method.$factory(in_klass_dict,obj)}}catch(err){console.log('error',err)
+throw err}
+var res=$B.object_getattribute(obj,klass,attr)}else{var in_dict=$B.get_dict(obj)[attr]
+if(in_dict && $B.get_class(obj)===_b_.type){var res=$B.NULL
+switch($B.get_class(in_dict)){case $B.function:
+case $B.wrapper_descriptor:
+case $B.method_descriptor:
+case $B.builtin_function_or_method:
+case $B.member_descriptor:
+res=in_dict
+break
+case $B.getset_descriptor:
+if(_b_.type.tp_funcs.hasOwnProperty(attr+'_get')){res=_b_.type.tp_funcs[attr+'_get'](obj)}else{res=in_dict}
+break
+case $B.classmethod_descriptor:
+res=in_dict.d_method.bind(null,in_dict.d_type)
+break
+case _b_.classmethod:
+res=$B.$call($B.method,in_dict.cm_callable,obj)
+break
+case _b_.staticmethod:
+res=in_dict.sm_callable
+break
+case undefined:
+res=in_dict
+default:
+break}
+if(res !==$B.NULL){return res}}
+var res=$B.type_getattribute(obj,attr)}
 if(res===$B.NULL){if(_default !==undefined){return _default}
 throw $B.attr_error(attr,obj)}
 $B.time_getattr+=globalThis.performance.now()-t0
@@ -14296,8 +14344,7 @@ if(cls.classmethods){for(var descr of cls.classmethods){$B.set_to_dict(cls,descr
 if(cls.staticmethods){for(var descr of cls.staticmethods){$B.set_to_dict(cls,descr,_b_.staticmethod.$factory(cls.tp_funcs[descr]))}}
 for(var slot in $B.wrapper_methods){if(cls[slot]){$B.wrapper_methods[slot](cls,slot)}else if(['tp_descr_get','tp_descr_set','tp_iter','tp_call','tp_new','tp_init'].includes(slot)){cls[slot]=$B.NULL
 if(cls.tp_mro){for(var kls of cls.tp_mro.slice(1)){if(Object.hasOwn(cls,slot)){cls[slot]=kls[slot]
-break}}}}
-if(slot=='tp_new'){cls.tp_newXXX=cls[slot]}}
+break}}}}}
 $B.make_getattr(cls)}
 for(var ns of[$B.builtin_types,$B.created_types]){for(var name in ns){var cls=ns[name]
 $B.finalize_type(cls)}}
@@ -15271,7 +15318,11 @@ js+=prefix+`break`
 return js}
 $B.ast.Call.prototype.to_js=function(scopes){compiler_check(this)
 var inum=add_to_positions(scopes,this)
-var func=$B.js_from_ast(this.func,scopes),js=`$B.$call_with_position(${func}, ${inum}, `
+var js
+if(this.func instanceof $B.ast.Attribute){var attr=mangle(scopes,last_scope(scopes),this.func.attr)
+js=`$B.call_attr(${$B.js_from_ast(this.func.value, scopes)}, `+
+`'${attr}', ${inum}, `}else{var func=$B.js_from_ast(this.func,scopes)
+js=`$B.$call_with_position(${func}, ${inum}, `}
 var args=make_args.bind(this)(scopes)
 return js+`${args})`}
 $B.ast.Call.prototype._check=function(){for(var kw of this.keywords){if(kw.arg=='__debug__'){compiler_error(this,"cannot assign to __debug__",kw)}}}
@@ -18409,6 +18460,7 @@ var _b_=__BRYTHON__.builtins
 const Load=new $B.ast.Load()
 const NULL=undefined;
 const ENDMARKER=0,NAME=1,NUMBER=2,STRING=3
+function strcmp(x,y){return x==y ? 0 :x < y ?-1 :1}
 function strchr(s,char){return s.includes(char)}
 function strlen(s){return s.length}
 function strncmp(a,b){return a < b ?-1 :a > b ? 1 :0}
@@ -18416,7 +18468,7 @@ function PyOS_strtol(s,end,base){return parseFloat(s)}
 function PyOS_strtoul(s,end,base){return parseFloat(s)}
 function PyOS_string_to_double(s,x,y){return parseFloat(s)}
 function PyFloat_FromDouble(x){return x}
-const NSTATISTICS=2000,memo_statistics={},TYPE_IGNORE='TYPE_IGNORE',ERRORTOKEN='ERRORTOKEN',NEWLINE=$B.py_tokens.NEWLINE,DEDENT=$B.py_tokens.DEDENT,Py_single_input='py_single_input',PyPARSE_ALLOW_INCOMPLETE_INPUT=0x0100
+const NSTATISTICS=2000,memo_statistics={},TYPE_IGNORE='TYPE_IGNORE',ERRORTOKEN='ERRORTOKEN',NEWLINE=$B.py_tokens.NEWLINE,DEDENT=$B.py_tokens.DEDENT,INDENT=$B.py_tokens.INDENT,Py_single_input='py_single_input',PyPARSE_ALLOW_INCOMPLETE_INPUT=0x0100
 function PyUnicode_IS_ASCII(char){return char.codePointAt(0)< 128}
 function set_position_from_token(ast_obj,token){for(var attr of['lineno','col_offset','end_lineno','end_col_offset']){ast_obj[attr]=token[attr]}}
 $B._PyPegen.interactive_exit=function(p){if(p.errcode){(p.errcode)=E_EOF;}
@@ -18787,13 +18839,12 @@ return result;}}
 $B.PyPegen={first_item:function(a,type){return a[0]},last_item:function(a,ptype){return a[a.length-1]}}})(__BRYTHON__);
 ;
 
-function fprintf(dest,format){var args=Array.from(arguments).slice(2)
+(function($B){function fprintf(dest,format){var args=Array.from(arguments).slice(2)
 for(var arg of args){format=format.replace(/%\*?[a-z]/,arg)}
 return format}
 const stderr=null
 function D(x){console.log(x)}
 function UNUSED(){}
-function strcmp(x,y){return x==y ? 0 :x < y ?-1 :1}
 const MAXSTACK=6000,NULL=undefined
 function NEW_TYPE_COMMENT(){}
 var $B=__BRYTHON__
@@ -37641,7 +37692,7 @@ case 'single':
 return interactive_rule(p)
 default:
 console.log('unknown mode',p.mode)
-throw Error(`unknown parse mode: ${p.mode}`)}};
+throw Error(`unknown parse mode: ${p.mode}`)}};})(__BRYTHON__)
 ;
 (function($B){$B.whenReady=new Promise(function(resolve,reject){resolve()})})(__BRYTHON__);
 ;

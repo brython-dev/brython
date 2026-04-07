@@ -1723,10 +1723,16 @@ $B.ast.Break.prototype.to_js = function(scopes){
 $B.ast.Call.prototype.to_js = function(scopes){
     compiler_check(this)
     var inum = add_to_positions(scopes, this)
-    var func =  $B.js_from_ast(this.func, scopes),
+    var js
+
+    if(this.func instanceof $B.ast.Attribute){
+        var attr = mangle(scopes, last_scope(scopes), this.func.attr)
+        js = `$B.call_attr(${$B.js_from_ast(this.func.value, scopes)}, ` +
+             `'${attr}', ${inum}, `
+    }else{
+        var func =  $B.js_from_ast(this.func, scopes)
         js = `$B.$call_with_position(${func}, ${inum}, `
-
-
+    }
     var args = make_args.bind(this)(scopes)
 
     return js + `${args})`
