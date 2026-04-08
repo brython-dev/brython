@@ -673,8 +673,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-04-07 07:39:30.361127"
-__BRYTHON__.timestamp=1775540370360
+__BRYTHON__.compiled_date="2026-04-08 08:05:04.014356"
+__BRYTHON__.timestamp=1775628304014
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -2190,6 +2190,7 @@ return $B.NULL}
 $B.object_getattribute=function(obj,klass,attr){var t0=globalThis.performance.now()
 var test=false 
 if(test){console.log('klass',klass,'attr',attr)}
+if(! klass.$getattribute){console.log('no $getattribute',klass)}
 var getattribute=klass.$getattribute ?? $B.search_slot(klass,'tp_getattro',$B.NULL)
 $B.time_search_slot+=globalThis.performance.now()-t0
 if(test){console.log('attr',attr,'of obj',obj,'klass',klass,'\n  getattribute',getattribute)}
@@ -2295,7 +2296,7 @@ var repr_func=$B.$getattr(klass,"__repr__",$B.NULL)
 return $B.$call(repr_func,self)}
 $B.time_object_tp_getattro=0
 _b_.object.tp_getattro=function(self,attr){var t0=globalThis.performance.now()
-var test=false 
+var test=attr=='__new__' && self.ob_type && self.ob_type.tp_name=='super'
 var klass=$B.get_class(self)
 if(klass.tp_name==='Acv78om'){return self[attr]}
 if(test){console.log('getattr',attr,'of self',self,klass)
@@ -4876,10 +4877,9 @@ if(obj===undefined){console.log("get attr",attr,"of undefined")}
 var is_class=Object.hasOwn(obj,'tp_name')
 if(test){console.log("attr",attr,"of",obj,"class",klass ?? $B.get_class(obj),"isclass",is_class)}
 if(! is_class){var klass=$B.get_class(obj)
-if(klass.tp_funcs){
+if(klass.tp_funcs && klass.$getattribute===_b_.object.tp_getattro){
 var func=$B.get_from_dict(klass,attr,$B.NULL)
 if(func !==$B.NULL){var res=$B.NULL
-if(test){console.log('built-in type',func.ob_type)}
 switch(func.ob_type){case $B.builtin_method:
 res=function(){return func(obj,...arguments)}
 res.ob_type=func.ob_type
@@ -4887,7 +4887,15 @@ return res
 case $B.getset_descriptor:
 return func.getter(obj)
 case $B.member_descriptor:
-return obj[func.d_member.attr]}}}
+return obj[func.d_member.attr]
+case $B.method_descriptor:
+case $B.wrapper_descriptor:
+return func.ob_type.tp_descr_get(func,obj,klass)
+case $B.builtin_function_or_method:
+case _b_.staticmethod:
+return func
+default:
+break}}}
 try{var in_klass_dict=$B.get_dict(klass)[attr]
 var own_dict=$B.get_dict(obj)
 var in_own_dict=own_dict
@@ -4895,8 +4903,10 @@ var in_own_dict=own_dict
 ? own_dict[attr]
 :$B.NULL
 :$B.NULL
-if(in_klass_dict && in_klass_dict.ob_type===$B.function &&
-in_own_dict===$B.NULL){return $B.method.$factory(in_klass_dict,obj)}}catch(err){console.log('error',err)
+if(in_klass_dict){switch(in_klass_dict.ob_type){case $B.function:
+if(in_own_dict===$B.NULL){return $B.method.$factory(in_klass_dict,obj)}
+case _b_.staticmethod:
+if(in_own_dict===$B.NULL){return in_klass_dict}}}}catch(err){console.log('error',err)
 throw err}
 var res=$B.object_getattribute(obj,klass,attr)}else{var in_dict=$B.get_dict(obj)[attr]
 if(in_dict && $B.get_class(obj)===_b_.type){var res=$B.NULL

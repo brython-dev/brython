@@ -819,14 +819,11 @@ $B.$getattr = function(obj, attr, _default){
 
     if(! is_class){
         var klass = $B.get_class(obj)
-        if(klass.tp_funcs){
+        if(klass.tp_funcs && klass.$getattribute === _b_.object.tp_getattro){
             // built-in type
             var func = $B.get_from_dict(klass, attr, $B.NULL)
             if(func !== $B.NULL){
                 var res = $B.NULL
-                if(test){
-                    console.log('built-in type', func.ob_type)
-                }
                 switch(func.ob_type){
                     case $B.builtin_method:
                         res = function(){
@@ -838,6 +835,15 @@ $B.$getattr = function(obj, attr, _default){
                         return func.getter(obj)
                     case $B.member_descriptor:
                         return obj[func.d_member.attr]
+                    case $B.method_descriptor:
+                    case $B.wrapper_descriptor:
+                        return func.ob_type.tp_descr_get(func, obj, klass)
+                    case $B.builtin_function_or_method:
+                    case _b_.staticmethod:
+                        return func
+                    default:
+                        // console.log('builtin type', func, func.ob_type)
+                        break
                 }
             }
         }
@@ -849,9 +855,17 @@ $B.$getattr = function(obj, attr, _default){
                     ? own_dict[attr]
                     : $B.NULL
                 : $B.NULL
-            if(in_klass_dict && in_klass_dict.ob_type === $B.function &&
-                    in_own_dict === $B.NULL){
-                return $B.method.$factory(in_klass_dict, obj)
+            if(in_klass_dict){
+                switch(in_klass_dict.ob_type){
+                    case $B.function:
+                        if(in_own_dict === $B.NULL){
+                            return $B.method.$factory(in_klass_dict, obj)
+                        }
+                    case _b_.staticmethod:
+                        if(in_own_dict === $B.NULL){
+                            return in_klass_dict
+                        }
+                }
             }
         }catch(err){
             console.log('error', err)

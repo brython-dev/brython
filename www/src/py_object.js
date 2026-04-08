@@ -106,6 +106,9 @@ $B.object_getattribute = function(obj, klass, attr){
     if(test){
         console.log('klass', klass, 'attr', attr)
     }
+    if(! klass.$getattribute){
+        console.log('no $getattribute', klass)
+    }
     var getattribute = klass.$getattribute ?? $B.search_slot(klass, 'tp_getattro', $B.NULL)
     $B.time_search_slot += globalThis.performance.now() - t0
     if(test){
@@ -350,7 +353,7 @@ $B.time_object_tp_getattro = 0
 
 _b_.object.tp_getattro = function(self, attr){
     var t0 = globalThis.performance.now()
-    var test = false // attr == '__dict__' // && self.ob_type && self.ob_type.tp_name == 'tuple'
+    var test = attr == '__new__' && self.ob_type && self.ob_type.tp_name == 'super'
     var klass = $B.get_class(self)
     if(klass.tp_name === 'Acv78om'){
         return self[attr]
@@ -379,7 +382,6 @@ _b_.object.tp_getattro = function(self, attr){
         $B.time_object_tp_getattro += globalThis.performance.now() - t0
         return $B.method.tp_new($B.method, [in_mro, self])
     }
-
     var getter = $B.NULL
     if(in_mro !== $B.NULL){
         var in_mro_class = $B.get_class(in_mro)
