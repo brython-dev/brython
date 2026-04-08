@@ -673,8 +673,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-04-08 08:05:04.014356"
-__BRYTHON__.timestamp=1775628304014
+__BRYTHON__.compiled_date="2026-04-08 08:10:58.004165"
+__BRYTHON__.timestamp=1775628658003
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -2187,17 +2187,14 @@ return in_mro}
 if(test){console.log('attr',attr,'not found on self',self)
 console.log('self[attr]',self[attr])}
 return $B.NULL}
-$B.object_getattribute=function(obj,klass,attr){var t0=globalThis.performance.now()
-var test=false 
+$B.object_getattribute=function(obj,klass,attr){var test=false 
 if(test){console.log('klass',klass,'attr',attr)}
 if(! klass.$getattribute){console.log('no $getattribute',klass)}
 var getattribute=klass.$getattribute ?? $B.search_slot(klass,'tp_getattro',$B.NULL)
-$B.time_search_slot+=globalThis.performance.now()-t0
 if(test){console.log('attr',attr,'of obj',obj,'klass',klass,'\n  getattribute',getattribute)}
 var res
 try{res=getattribute(obj,attr)}catch(err){$B.RAISE_IF_NOT(err,_b_.AttributeError)
 res=$B.NULL}
-$B.time_object_getattribute+=globalThis.performance.now()-t0
 return res}
 object.$new=function(cls){return function(){var $=$B.args('__new__',0,[],[],arguments,{},'args','kwargs')
 if($.args.length > 0 ||_b_.dict.mp_length($.kwargs)> 0){$B.RAISE(_b_.TypeError,"object() takes no parameters")}
@@ -2295,10 +2292,8 @@ return tp_repr(self)}
 var repr_func=$B.$getattr(klass,"__repr__",$B.NULL)
 return $B.$call(repr_func,self)}
 $B.time_object_tp_getattro=0
-_b_.object.tp_getattro=function(self,attr){var t0=globalThis.performance.now()
-var test=attr=='__new__' && self.ob_type && self.ob_type.tp_name=='super'
+_b_.object.tp_getattro=function(self,attr){var test=false 
 var klass=$B.get_class(self)
-if(klass.tp_name==='Acv78om'){return self[attr]}
 if(test){console.log('getattr',attr,'of self',self,klass)
 console.log(Error('trace').stack)
 if(self.jsobj){console.log('in jsobj',self.jsobj[attr])}
@@ -2308,8 +2303,7 @@ if(test){console.log('in mro',in_mro)
 if(in_mro !==$B.NULL){console.log('class of in_mro',$B.get_class(in_mro))}}
 if(in_mro !==$B.NULL &&
 $B.get_class(in_mro)===$B.function &&
-((! $B.get_dict(self))||$B.get_from_dict(self,attr,$B.NULL)===$B.NULL)){$B.time_object_tp_getattro+=globalThis.performance.now()-t0
-return $B.method.tp_new($B.method,[in_mro,self])}
+((! $B.get_dict(self))||$B.get_from_dict(self,attr,$B.NULL)===$B.NULL)){return $B.method.tp_new($B.method,[in_mro,self])}
 var getter=$B.NULL
 if(in_mro !==$B.NULL){var in_mro_class=$B.get_class(in_mro)
 var getter=in_mro_class.tp_descr_get
@@ -2319,21 +2313,17 @@ if(is_data_descr){if(test){console.log('data descriptor')
 console.log('call getter with',in_mro,self,klass)}
 var res=getter(in_mro,self,klass)
 if(test){console.log('res',res)}
-$B.time_object_tp_getattro+=globalThis.performance.now()-t0
 return res}}}
 var in_dict=$B.search_in_dict(self,attr,$B.NULL)
 if(test){console.log('in object dict',in_dict,'\n    type',$B.get_class(in_dict))}
-if(in_dict !==$B.NULL){$B.time_object_tp_getattro+=globalThis.performance.now()-t0
-return in_dict}else if(getter !==$B.NULL){
+if(in_dict !==$B.NULL){return in_dict}else if(getter !==$B.NULL){
 if(typeof getter !=='function'){console.log('not a function',getter)
 console.log('class of in_mro',in_mro_class)}
 if(test){console.log('call getter of non-data descr',in_mro,self,klass)}
 klass.$fast_attr=klass.$fast_attr ??{}
 klass.$fast_attr[attr]=function(self){return getter(in_mro,self,klass)}
 $B.nb_obj_ga++
-$B.time_object_tp_getattro+=globalThis.performance.now()-t0
 return getter(in_mro,self,klass)}else if(in_mro !==$B.NULL){if(test){console.log('return in_mro',in_mro)}
-$B.time_object_tp_getattro+=globalThis.performance.now()-t0
 return in_mro}
 if(test){console.log('attr',attr,'not found on self',self)
 console.log('self[attr]',self[attr])}
@@ -4865,7 +4855,6 @@ $B.time_getattr=0
 $B.time_obj_getattr=0
 $B.time_builtin_getattr=0
 $B.$getattr=function(obj,attr,_default){
-var t0=globalThis.performance.now()
 var test=false 
 if(test){console.log('$getattr',obj,attr)}
 var res
@@ -4937,7 +4926,6 @@ if(res !==$B.NULL){return res}}
 var res=$B.type_getattribute(obj,attr)}
 if(res===$B.NULL){if(_default !==undefined){return _default}
 throw $B.attr_error(attr,obj)}
-$B.time_getattr+=globalThis.performance.now()-t0
 return res}
 _b_.globals=function(){
 check_nb_args_no_kw('globals',0,arguments)

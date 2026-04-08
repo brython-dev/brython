@@ -779,7 +779,6 @@ $B.time_builtin_getattr = 0
 
 $B.$getattr = function(obj, attr, _default){
     // Used internally to avoid having to parse the arguments
-    var t0 = globalThis.performance.now()
     var test = false // attr == '__dict__'
     if(test){
         console.log('$getattr', obj, attr)
@@ -918,8 +917,7 @@ $B.$getattr = function(obj, attr, _default){
         }
         throw $B.attr_error(attr, obj)
     }
-    $B.time_getattr += globalThis.performance.now() - t0
-    return res
+   return res
 }
 
 // globals() (built in function)
