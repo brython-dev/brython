@@ -78,7 +78,7 @@ $B.structuredclone2pyobj = function(obj){
     if(obj === null){
         return _b_.None
     }else if(obj === undefined){
-        return $B.Undefined
+        return undefined
     }else if(typeof obj == "boolean"){
         return obj
     }else if(typeof obj == "string" || obj instanceof String){
@@ -154,16 +154,13 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
     if(jsobj === null){
         return null
     }else if(jsobj === undefined){
-        return $B.Undefined
+        return undefined
     }
 
     // Immutable types
     switch(typeof jsobj){
         case 'boolean':
             return jsobj
-
-        case 'undefined':
-            return $B.Undefined
 
         case 'number':
              // convert JS numbers with no decimal to a Python int
@@ -702,7 +699,7 @@ $B.JSObj.tp_getattro = function(_self, attr){
         if(typeof _self == 'object' && attr in _self){
             // attr is in _self properties (possibly inherited) and the value
             // is `undefined`
-            return $B.Undefined
+            return undefined
         }
         if(typeof _self.getNamedItem == 'function'){
             var res = _self.getNamedItem(attr)
@@ -847,7 +844,7 @@ JSObj_funcs.__getattr__ = function(self, attr){
         if(typeof self == 'object' && attr in self){
             // attr is in self properties (possibly inherited) and the value
             // is `undefined`
-            return $B.Undefined
+            return undefined
         }
         if(typeof self.getNamedItem == 'function'){
             var res = self.getNamedItem(attr)

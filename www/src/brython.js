@@ -673,8 +673,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-04-08 11:17:24.129518"
-__BRYTHON__.timestamp=1775639844129
+__BRYTHON__.compiled_date="2026-04-08 11:37:00.894845"
+__BRYTHON__.timestamp=1775641020894
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1852,10 +1852,12 @@ return res}else{var method1=$B.op2method.operations[op1]
 if(method1===undefined){method1=$B.op2method.binary[op1]}
 return $B.rich_op(`__${method1}__`,left,right)}}
 $B.$is=function(a,b){
-if((a===undefined ||a===$B.Undefined)&&
-(b===undefined ||b===$B.Undefined)){return true}
-if(a===null){return b===null}
-if(b===null){return a===null}
+switch(typeof a){case "null":
+case "undefined":
+case "string":
+case "number":
+case "boolean":
+return a===b}
 if($B.get_class(a)===_b_.float && $B.get_class(b)===_b_.float){if(isNaN(a.value)&& isNaN(b.value)){return true}
 return a.value==b.value}
 return a===b}
@@ -11593,7 +11595,7 @@ return res}else if($B.is_big_int(obj)){return $B.int_value(obj)}else if(Object.g
 for(var key in obj){res[key]=$B.pyobj2structuredclone(obj[key])}
 return res}else{return obj}
 $B.RAISE(_b_.TypeError,`cannot send '${$B.class_name(obj)}' object`)}
-$B.structuredclone2pyobj=function(obj){if(obj===null){return _b_.None}else if(obj===undefined){return $B.Undefined}else if(typeof obj=="boolean"){return obj}else if(typeof obj=="string" ||obj instanceof String){return $B.String(obj)}else if(typeof obj=="number" ||obj instanceof Number){obj+=0 
+$B.structuredclone2pyobj=function(obj){if(obj===null){return _b_.None}else if(obj===undefined){return undefined}else if(typeof obj=="boolean"){return obj}else if(typeof obj=="string" ||obj instanceof String){return $B.String(obj)}else if(typeof obj=="number" ||obj instanceof Number){obj+=0 
 return Number.isInteger(obj)?
 obj :
 {ob_type:_b_.float,value:obj}}else if(Array.isArray(obj)||$B.exact_type(obj,_b_.list)||
@@ -11617,11 +11619,9 @@ return res}
 JSGenerator.tp_iter=function(self){return self}
 JSGenerator.tp_iternext=function*(self){for(var item of self.js_gen){yield jsobj2pyobj(item)}}
 var jsobj2pyobj=$B.jsobj2pyobj=function(jsobj,_this){
-if(jsobj===null){return null}else if(jsobj===undefined){return $B.Undefined}
+if(jsobj===null){return null}else if(jsobj===undefined){return undefined}
 switch(typeof jsobj){case 'boolean':
 return jsobj
-case 'undefined':
-return $B.Undefined
 case 'number':
 if(jsobj % 1===0){if(! Number.isSafeInteger(jsobj)){return BigInt(jsobj.toString())}
 return jsobj}
@@ -11822,7 +11822,7 @@ if(js_attr==undefined && typeof _self=="function"){js_attr=_self.$js_func[attr]}
 if(test){console.log('js_attr',js_attr,typeof js_attr,'\n is JS class ?',js_attr===undefined ? false :
 js_attr.toString().startsWith('class '))}
 if(js_attr===undefined){if(typeof _self=='object' && attr in _self){
-return $B.Undefined}
+return undefined}
 if(typeof _self.getNamedItem=='function'){var res=_self.getNamedItem(attr)
 if(res !==undefined){return jsobj2pyobj(res)}}
 var klass=$B.get_class(_self),class_attr=$B.search_in_mro(klass,attr,$B.NULL)
@@ -11878,7 +11878,7 @@ if(js_attr==undefined && typeof self=="function"){js_attr=self.$js_func[attr]}
 if(test){console.log('js_attr',js_attr,typeof js_attr,'\n is JS class ?',js_attr===undefined ? false :
 js_attr.toString().startsWith('class '))}
 if(js_attr===undefined){if(typeof self=='object' && attr in self){
-return $B.Undefined}
+return undefined}
 if(typeof self.getNamedItem=='function'){var res=self.getNamedItem(attr)
 if(res !==undefined){return jsobj2pyobj(res)}}}
 if(js_attr !==null && js_attr !==undefined &&
@@ -13788,16 +13788,15 @@ html.attribute_mapper=function(attr){return attr.replace(/_/g,'-')}
 return html})(__BRYTHON__)}
 modules['browser']=browser
 $B.UndefinedType=$B.make_builtin_class("UndefinedType")
-$B.UndefinedType.$factory=function(){return $B.Undefined}
+$B.UndefinedType.$factory=function(){return undefined}
 $B.UndefinedType.nb_bool=function(){return false}
 $B.UndefinedType.tp_repr=function(){return "<Javascript undefined>"}
-$B.Undefined={ob_type:$B.UndefinedType}
 $B.set_func_names($B.UndefinedType,"javascript")
 var NullType=$B.NullType=$B.make_builtin_class('NullType')
 NullType.tp_richcompare=function(self,other,op){switch(op){case '__eq__':
-return other===null ||other===$B.Undefined
+return other===null ||other===undefined
 case '__ne__':
-return other !==null && other !==$B.Undefined
+return other !==null && other !==undefined
 default:
 return _b_.NotImplemented}}
 NullType.tp_repr=function(_self){

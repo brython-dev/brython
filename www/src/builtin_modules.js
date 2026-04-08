@@ -393,17 +393,13 @@
     $B.UndefinedType = $B.make_builtin_class("UndefinedType")
 
     $B.UndefinedType.$factory = function(){
-        return $B.Undefined
+        return undefined
     }
     $B.UndefinedType.nb_bool = function(){
         return false
     }
     $B.UndefinedType.tp_repr = function(){
         return "<Javascript undefined>"
-    }
-
-    $B.Undefined = {
-        ob_type: $B.UndefinedType
     }
 
     $B.set_func_names($B.UndefinedType, "javascript")
@@ -415,9 +411,9 @@
         switch(op){
             case '__eq__':
                 // in Javascript, null == undefined is true...
-                return other === null || other === $B.Undefined
+                return other === null || other === undefined
             case '__ne__':
-                return other !== null && other !== $B.Undefined
+                return other !== null && other !== undefined
             default:
                 return _b_.NotImplemented
         }
