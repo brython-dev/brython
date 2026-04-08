@@ -673,8 +673,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-04-08 08:10:58.004165"
-__BRYTHON__.timestamp=1775628658003
+__BRYTHON__.compiled_date="2026-04-08 11:17:24.129518"
+__BRYTHON__.timestamp=1775639844129
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1637,8 +1637,8 @@ args[i]=defaults[vars[i]]}}
 return args}
 $B.check_kw_empty=function(name,kw){if(kw && _b_.dict.mp_length(kw)> 0){$B.RAISE(_b_.TypeError,`${name}() takes no keyword arguments`)}}
 $B.get_class=function(obj){
-if(obj===null){return $B.module_getattr($B.imported.javascript,'NullType')}
-if(obj===undefined){return $B.module_getattr($B.imported.javascript,'UndefinedType')}
+if(obj===null){return $B.NullType }
+if(obj===undefined){return $B.UndefinedType }
 if(obj.ob_type){return obj.ob_type}
 if(obj[$B.OB_TYPE]){return obj[$B.OB_TYPE]}
 var klass
@@ -2023,11 +2023,9 @@ return{
 prev:$B.frame_obj,frame,count:count+1}}
 var reversed_op={"__lt__":"__gt__","__le__":"__ge__","__gt__":"__lt__","__ge__":"__le__"}
 var method2comp={"__lt__":"<","__le__":"<=","__gt__":">","__ge__":">="}
-$B.rich_comp=function(op,x,y){if(x===undefined){console.log(Error().stack)
-$B.RAISE(_b_.RuntimeError,'error in rich comp')}
-var x1=x !==null && x.valueOf ? x.valueOf():x,y1=y !==null && y.valueOf ? y.valueOf():y
+$B.rich_comp=function(op,x,y){var x1=x !==null && x?.valueOf ? x.valueOf():x,y1=y !==null && y?.valueOf ? y.valueOf():y
 if(typeof x1=="number" && typeof y1=="number" &&
-x.ob_type===undefined && y.ob_type===undefined){switch(op){case "__eq__":
+x?.ob_type===undefined && y?.ob_type===undefined){switch(op){case "__eq__":
 return x1==y1
 case "__ne__":
 return x1 !=y1
@@ -2044,7 +2042,7 @@ if(x !==null && $B.is_type(x)){if(op=="__eq__"){return(x===y)}else if(op=="__ne_
 "' not supported between instances of '"+$B.class_name(x)+
 "' and '"+$B.class_name(y)+"'")}}
 var rev_op=reversed_op[op]||op,y_rev_func
-if(x !==null && x.ob_type && y !==null && y.ob_type){
+if(x?.ob_type && y?.ob_type){
 if($B.get_mro(y.ob_type).indexOf(x.ob_type)>-1){y_rev_func=$B.$getattr($B.get_class(y),rev_op)
 res=$B.$call(y_rev_func,y,x)
 if(res !==_b_.NotImplemented){return res}}}
@@ -4936,7 +4934,7 @@ return true}catch(err){return false}}
 _b_.hash=function(obj){check_nb_args_no_kw('hash',1,arguments)
 return $B.$hash(obj)}
 $B.$hash=function(obj){if(obj.__hashvalue__ !==undefined){return obj.__hashvalue__}
-if(typeof obj==="boolean"){return obj ? 1 :0}
+if(typeof obj==="boolean"){return obj ? 1 :0}else if(typeof obj==="number"){return obj}
 var klass=$B.get_class(obj)
 var hash_func=$B.search_slot(klass,'tp_hash',$B.NULL)
 if(hash_func !==$B.NULL && hash_func !==_b_.None){var res=hash_func(obj)
@@ -10655,15 +10653,27 @@ right[VERSION]=right[VERSION]||0
 var right_version=right[VERSION]
 if(! right[KEYS]){if(! left[KEYS]){for(let key in right){left[key]=right[key]}}else{for(let key in right){dict.$setitem(left,key,right[key])}}}else{for(var entry of dict.$iter_items(right)){dict.$setitem(left,entry.key,entry.value,entry.hash)
 if(right[VERSION]!=right_version){$B.RAISE(_b_.RuntimeError,"dict mutated during update")}}}}
+function lookup_by_key(d,key,hash){hash=hash===undefined ? _b_.hash(key):hash
+var indices=d[TABLE][hash],index
+if(indices !==undefined){for(var index of indices){var v=d[KEYS][index]
+if(v===undefined){d[TABLE][hash].splice(i,1)
+if(d[TABLE][hash].length==0){delete d[TABLE][hash]
+return false}
+continue}
+if(v===key ||$B.is_or_equals(v,key)){return index}}}
+return false}
 dict.$lookup_by_key=function(d,key,hash){hash=hash===undefined ? _b_.hash(key):hash
 var indices=d[TABLE][hash],index
 if(indices !==undefined){for(var i=0,len=indices.length;i < len;i++){index=indices[i]
 if(d[KEYS][index]===undefined){d[TABLE][hash].splice(i,1)
 if(d[TABLE][hash].length==0){delete d[TABLE][hash]
-return{found:false,hash}}
+return{
+found:false,hash}}
 continue}
-if($B.is_or_equals(d[KEYS][index],key)){return{found:true,key:d[KEYS][index],value:d[VALUES][index],hash,rank:i,index}}}}
-return{found:false,hash}}
+if($B.is_or_equals(d[KEYS][index],key)){return{
+found:true,key:d[KEYS][index],value:d[VALUES][index],hash,rank:i,index}}}}
+return{
+found:false,hash}}
 dict.$contains=function(self,key){if(! self[KEYS]){if(typeof key=='string'){return self.hasOwnProperty(key)}
 var hash=$B.$getattr($B.get_class(key),'__hash__')
 if(hash===$B.str_dict_get($B.get_dict(_b_.object),'__hash__')){return false}
@@ -10797,6 +10807,7 @@ d[KEYS]=[]
 d[VALUES]=[]
 d[HASHES]=[]
 for(var key in d){dict.$setitem(d,key,d[key])}}
+$B.nb_fast_setitem=0
 dict.$setitem=function(self,key,value,$hash,from_setdefault){
 if(self[$B.JSOBJ]){
 value=$B.pyobj2jsobj(value)
@@ -10812,8 +10823,8 @@ var hash=$hash !==undefined ? $hash :$B.$hash(key)
 var index
 if(self[TABLE][hash]===undefined){index=self[KEYS].length
 self[TABLE][hash]=[index]}else{if(! from_setdefault){
-var lookup=dict.$lookup_by_key(self,key,hash)
-if(lookup.found){self[VALUES][lookup.index]=value
+var lookup=lookup_by_key(self,key,hash)
+if(lookup !==false){self[VALUES][lookup]=value
 return _b_.None}}
 index=self[KEYS].length
 if(self[TABLE][hash]===undefined){
@@ -10890,9 +10901,7 @@ return _b_.None}
 _b_.dict.nb_inplace_or=function(self,other){
 dict.tp_funcs.update(self,other)
 return self}
-_b_.dict.mp_ass_subscript=function(self){var $=$B.args("__setitem__",3,{self:null,key:null,value:null},["self","key","value"],arguments,{},null,null)
-var self=$.self,key=$.key,value=$.value
-if(value===$B.NULL){return dict.$delitem(self,key)}
+_b_.dict.mp_ass_subscript=function(self,key,value){if(value===$B.NULL){return dict.$delitem(self,key)}
 return dict.$setitem(self,key,value)}
 _b_.dict.mp_length=function(self){var count=Object.keys(self).length
 if(self[KEYS]){for(var d of self[KEYS]){if(d !==undefined){count++}}}
@@ -11395,8 +11404,7 @@ throw err1}
 throw err}}
 _b_.list.tp_richcompare=function(){return tp_richcompare.apply(this,arguments)}
 _b_.list.sq_repeat=function(){return sq_repeat.apply(null,arguments)}
-_b_.list.mp_ass_subscript=function(){var $=$B.args("__setitem__",3,{self:null,key:null,value:null},["self","key","value"],arguments,{},null,null),self=$.self,arg=$.key,value=$.value
-if(value===$B.NULL){return $B.list_delitem(self,arg)}else{return list.$setitem(self,arg,value)}}
+_b_.list.mp_ass_subscript=function(self,key,value){if(value===$B.NULL){return $B.list_delitem(self,key)}else{return list.$setitem(self,key,value)}}
 _b_.list.tp_repr=function(self){$B.builtins_repr_check(list,arguments)
 return _repr(self)}
 _b_.list.tp_hash=_b_.None
@@ -11660,7 +11668,7 @@ var pyobj2jsobj=$B.pyobj2jsobj=function(pyobj){
 switch(pyobj){case true:
 case false:
 return pyobj
-case $B.Undefined:
+case undefined:
 return undefined
 case null:
 return null}
@@ -13785,7 +13793,7 @@ $B.UndefinedType.nb_bool=function(){return false}
 $B.UndefinedType.tp_repr=function(){return "<Javascript undefined>"}
 $B.Undefined={ob_type:$B.UndefinedType}
 $B.set_func_names($B.UndefinedType,"javascript")
-var NullType=$B.make_builtin_class('NullType')
+var NullType=$B.NullType=$B.make_builtin_class('NullType')
 NullType.tp_richcompare=function(self,other,op){switch(op){case '__eq__':
 return other===null ||other===$B.Undefined
 case '__ne__':
@@ -13857,7 +13865,7 @@ var file_obj=$B.builtins.open(script_url)
 var content=$B.$getattr(file_obj,'read')()
 eval(content)},Math:self.Math && $B.jsobj2pyobj(self.Math),NULL:null,NullType,Number:self.Number && $B.jsobj2pyobj(self.Number),py2js:function(src,module_name){if(module_name===undefined){module_name='__main__'+$B.UUID()}
 var js=$B.py2js({src,filename:'<string>'},module_name,module_name,$B.builtins_scope).to_js()
-return $B.format_indent(js,0)},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},RegExp:self.RegExp && $B.jsobj2pyobj(self.RegExp),String:self.String && $B.jsobj2pyobj(self.String),"super":super_class,UNDEFINED:$B.Undefined,UndefinedType:$B.UndefinedType}
+return $B.format_indent(js,0)},pyobj2jsobj:function(obj){return $B.pyobj2jsobj(obj)},RegExp:self.RegExp && $B.jsobj2pyobj(self.RegExp),String:self.String && $B.jsobj2pyobj(self.String),"super":super_class,UNDEFINED:undefined,UndefinedType:$B.UndefinedType}
 $B.assign_dict(modules.javascript.JSON,{parse:function(){return $B.structuredclone2pyobj(
 JSON.parse.apply(this,arguments))},stringify:function(obj,replacer,space){return JSON.stringify($B.pyobj2structuredclone(obj,false),$B.jsobj2pyobj(replacer),space)}}
 )
@@ -14294,12 +14302,16 @@ $B.set_to_dict(cls,'__delete__',$B.wrapper_descriptor.$factory(
 cls,'__set__',(self,attr)=> set_func(self,attr,$B.NULL)
 ))}
 function make_setitem_delitem(cls){var setitem=cls.sq_ass_item ?? cls.mp_ass_subscript
+var setitem_func=function(){var $=$B.args("__setitem__",3,{self:null,key:null,value:null},["self","key","value"],arguments,{},null,null)
+return setitem($.self,$.key,$.value)}
 $B.set_to_dict(cls,'__setitem__',$B.wrapper_descriptor.$factory(
-cls,'__setitem__',setitem
+cls,'__setitem__',setitem_func
 )
 )
+var delitem_func=function(){var $=$B.args("__detitem__",2,{self:null,key:null},["self","key"],arguments,{},null,null)
+return setitem($.self,$.key,$B.NULL)}
 $B.set_to_dict(cls,'__delitem__',$B.wrapper_descriptor.$factory(
-cls,'__delitem__',(self,key)=> setitem(self,key,$B.NULL)
+cls,'__delitem__',delitem_func
 )
 )}
 function make_setattr_delattr(cls){var setattro=cls.tp_setattro

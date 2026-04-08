@@ -664,16 +664,11 @@ _b_.list.sq_repeat = function(){
     return sq_repeat.apply(null, arguments)
 }
 
-_b_.list.mp_ass_subscript = function(){
-    var $ = $B.args("__setitem__", 3, {self: null, key: null, value: null},
-        ["self", "key", "value"], arguments, {}, null, null),
-        self = $.self,
-        arg = $.key,
-        value = $.value
+_b_.list.mp_ass_subscript = function(self, key, value){
     if(value === $B.NULL){
-        return $B.list_delitem(self, arg)
+        return $B.list_delitem(self, key)
     }else{
-        return list.$setitem(self, arg, value)
+        return list.$setitem(self, key, value)
     }
 }
 

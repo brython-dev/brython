@@ -777,10 +777,10 @@ $B.get_class = function(obj){
     // but Javascript builtins used by Brython (functions, numbers, strings...)
     // don't have this attribute so we must return it
     if(obj === null){
-        return $B.module_getattr($B.imported.javascript, 'NullType') // in builtin_modules.js
+        return $B.NullType // in builtin_modules.js
     }
     if(obj === undefined){
-        return $B.module_getattr($B.imported.javascript, 'UndefinedType') // idem
+        return $B.UndefinedType // idem
     }
     if(obj.ob_type){
         return obj.ob_type
@@ -1826,14 +1826,10 @@ var method2comp = {"__lt__": "<", "__le__": "<=", "__gt__": ">",
     "__ge__": ">="}
 
 $B.rich_comp = function(op, x, y){
-    if(x === undefined){
-        console.log(Error().stack)
-        $B.RAISE(_b_.RuntimeError, 'error in rich comp')
-    }
-    var x1 = x !== null && x.valueOf ? x.valueOf() : x,
-        y1 = y !== null && y.valueOf ? y.valueOf() : y
+    var x1 = x !== null && x?.valueOf ? x.valueOf() : x,
+        y1 = y !== null && y?.valueOf ? y.valueOf() : y
     if(typeof x1 == "number" && typeof y1 == "number" &&
-            x.ob_type === undefined && y.ob_type === undefined){
+            x?.ob_type === undefined && y?.ob_type === undefined){
         switch(op){
             case "__eq__":
                 return x1 == y1
@@ -1864,7 +1860,7 @@ $B.rich_comp = function(op, x, y){
     }
     var rev_op = reversed_op[op] || op,
         y_rev_func
-    if(x !== null && x.ob_type && y !== null && y.ob_type){
+    if(x?.ob_type && y?.ob_type){
         // cf issue #600 and
         // https://docs.python.org/3/reference/datamodel.html :
         // "If the operands are of different types, and right operand's type

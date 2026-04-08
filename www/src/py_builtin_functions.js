@@ -949,6 +949,8 @@ $B.$hash = function(obj){
     }
     if(typeof obj === "boolean"){
         return obj ? 1 : 0
+    }else if(typeof obj === "number"){
+        return obj
     }
     var klass = $B.get_class(obj)
     var hash_func = $B.search_slot(klass, 'tp_hash', $B.NULL)

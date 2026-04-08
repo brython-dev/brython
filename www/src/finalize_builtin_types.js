@@ -219,18 +219,28 @@ function make_set_del(cls){
 
 function make_setitem_delitem(cls){
     var setitem = cls.sq_ass_item ?? cls.mp_ass_subscript
+    var setitem_func = function(){
+        var $ = $B.args("__setitem__", 3, {self: null, key: null, value: null},
+            ["self", "key", "value"], arguments, {}, null, null)
+        return setitem($.self, $.key, $.value)
+    }
     $B.set_to_dict(cls, '__setitem__',
         $B.wrapper_descriptor.$factory(
             cls,
             '__setitem__',
-            setitem
+            setitem_func
         )
     )
+    var delitem_func = function(){
+        var $ = $B.args("__detitem__", 2, {self: null, key: null},
+            ["self", "key"], arguments, {}, null, null)
+        return setitem($.self, $.key, $B.NULL)
+    }
     $B.set_to_dict(cls, '__delitem__',
         $B.wrapper_descriptor.$factory(
             cls,
             '__delitem__',
-            (self, key) => setitem(self, key, $B.NULL)
+            delitem_func
         )
     )
 }

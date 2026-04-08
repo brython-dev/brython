@@ -409,7 +409,7 @@
     $B.set_func_names($B.UndefinedType, "javascript")
 
     // class for Javascript "null"
-    var NullType = $B.make_builtin_class('NullType')
+    var NullType = $B.NullType = $B.make_builtin_class('NullType')
 
     NullType.tp_richcompare = function(self, other, op){
         switch(op){
@@ -619,7 +619,7 @@
         RegExp: self.RegExp && $B.jsobj2pyobj(self.RegExp),
         String: self.String && $B.jsobj2pyobj(self.String),
         "super": super_class,
-        UNDEFINED: $B.Undefined,
+        UNDEFINED: undefined,
         UndefinedType: $B.UndefinedType
     }
 

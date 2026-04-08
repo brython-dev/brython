@@ -418,6 +418,29 @@ var $copy_dict = function(left, right){
     }
 }
 
+function lookup_by_key(d, key, hash){
+    hash = hash === undefined ? _b_.hash(key) : hash
+    var indices = d[TABLE][hash],
+        index
+    if(indices !== undefined){
+        for(var index of indices){
+            var v = d[KEYS][index]
+            if(v === undefined){
+                d[TABLE][hash].splice(i, 1)
+                if(d[TABLE][hash].length == 0){
+                    delete d[TABLE][hash]
+                    return false
+                }
+                continue
+            }
+            if(v === key || $B.is_or_equals(v, key)){
+                return index
+            }
+        }
+    }
+    return false
+}
+
 dict.$lookup_by_key = function(d, key, hash){
     hash = hash === undefined ? _b_.hash(key) : hash
     var indices = d[TABLE][hash],
@@ -429,18 +452,29 @@ dict.$lookup_by_key = function(d, key, hash){
                 d[TABLE][hash].splice(i, 1)
                 if(d[TABLE][hash].length == 0){
                     delete d[TABLE][hash]
-                    return {found: false, hash}
+                    return {
+                        found: false,
+                        hash
+                    }
                 }
                 continue
             }
             if($B.is_or_equals(d[KEYS][index], key)){
-                return {found: true,
-                        key: d[KEYS][index], value: d[VALUES][index],
-                        hash, rank: i, index}
+                return {
+                    found: true,
+                    key: d[KEYS][index],
+                    value: d[VALUES][index],
+                    hash,
+                    rank: i,
+                    index
+                }
             }
         }
     }
-    return {found: false, hash}
+    return {
+        found: false,
+        hash
+    }
 }
 
 dict.$contains = function(self, key){
@@ -841,6 +875,8 @@ function convert_all_str(d){
     }
 }
 
+$B.nb_fast_setitem = 0
+
 dict.$setitem = function(self, key, value, $hash, from_setdefault){
     // Set a dictionary item mapping key and value.
     if(self[$B.JSOBJ]){
@@ -877,6 +913,7 @@ dict.$setitem = function(self, key, value, $hash, from_setdefault){
     }
 
     var hash = $hash !== undefined ? $hash : $B.$hash(key)
+
     var index
 
     if(self[TABLE][hash] === undefined){
@@ -886,9 +923,9 @@ dict.$setitem = function(self, key, value, $hash, from_setdefault){
         if(! from_setdefault){
             // If $setitem was called from setdefault, it's no use trying
             // another lookup
-            var lookup = dict.$lookup_by_key(self, key, hash)
-            if(lookup.found){
-                self[VALUES][lookup.index] = value
+            var lookup = lookup_by_key(self, key, hash)
+            if(lookup !== false){
+                self[VALUES][lookup] = value
                 return _b_.None
             }
         }
@@ -1096,12 +1133,7 @@ _b_.dict.nb_inplace_or = function(self, other){
     return self
 }
 
-_b_.dict.mp_ass_subscript = function(self){
-    var $ = $B.args("__setitem__", 3, {self: null, key: null, value: null},
-        ["self", "key", "value"], arguments, {}, null, null)
-    var self = $.self,
-        key = $.key,
-        value = $.value
+_b_.dict.mp_ass_subscript = function(self, key, value){
     if(value === $B.NULL){
         return dict.$delitem(self, key)
     }

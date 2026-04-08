@@ -307,7 +307,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj){
         case true:
         case false:
             return pyobj
-        case $B.Undefined:
+        case undefined:
             return undefined
         case null:
             // javascript.NULL
