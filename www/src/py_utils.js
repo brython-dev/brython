@@ -1382,15 +1382,13 @@ $B.augm_assign = function(left, op, right){
 $B.$is = function(a, b){
     // Used for Python "is". In most cases it's the same as Javascript ===,
     // Cf. issue 669
-    if((a === undefined || a === $B.Undefined) &&
-            (b === undefined || b === $B.Undefined)){
-        return true
-    }
-    if(a === null){
-        return b === null
-    }
-    if(b === null){
-        return a === null
+    switch(typeof a){
+        case "null":
+        case "undefined":
+        case "string":
+        case "number":
+        case "boolean":
+            return a === b
     }
     if($B.get_class(a) === _b_.float && $B.get_class(b) === _b_.float){
         if(isNaN(a.value) && isNaN(b.value)){
