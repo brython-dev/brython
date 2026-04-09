@@ -673,8 +673,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-04-08 11:37:00.894845"
-__BRYTHON__.timestamp=1775641020894
+__BRYTHON__.compiled_date="2026-04-09 07:23:07.372092"
+__BRYTHON__.timestamp=1775712187371
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -2260,7 +2260,7 @@ delete self[attr]
 return _b_.None}
 throw $B.attr_error(attr,self)}
 if(value===undefined){
-$B.RAISE(_b_.TypeError,"can't set attributes of built-in/extension type 'object'")}else if($B.get_class(self)===object){
+$B.RAISE(_b_.TypeError,"can't set attributes of built-in/extension type 'object'")}else if(klass===object){
 if(object[attr]===undefined){throw $B.attr_error(attr,self)}else{$B.RAISE_ATTRIBUTE_ERROR(
 "'object' object attribute '"+attr+"' is read-only",self,attr)}}
 if(in_mro !==$B.NULL){if(test){console.log(attr,'in class mro',in_mro,$B.get_class(in_mro))}
@@ -2271,7 +2271,7 @@ return setter(in_mro,self,value)}}
 var slots=$B.get_from_dict(klass,'__slots__',$B.NULL)
 if(slots !==$B.NULL){if(_b_.tuple.sq_contains(slots,attr)){self.slot_values[attr]=value}}
 var dict=$B.get_dict(self)
-if(dict){_b_.dict.$setitem(dict,attr,value)}else{var exc=$B.attr_error(attr,self)
+if(dict){$B.str_dict_set(dict,attr,value)}else{var exc=$B.attr_error(attr,self)
 exc.args[0]=`'${$B.get_name(klass)}' object has no attribute `+
 `'${attr}' and no __dict__ for setting new attributes`
 throw exc}
@@ -2765,6 +2765,16 @@ return}}}
 function reset_init(cls){$B.make_init(cls)
 if(cls.tp_subclasses===undefined){console.log('no subclasses',cls)}
 for(var kls of cls.tp_subclasses){reset_init(kls)}}
+$B.make_setattr=function(cls){cls.tp_setattro=$B.NULL
+var setattr=$B.get_from_dict(cls,'__setattr__',$B.NULL)
+if(setattr !==$B.NULL){cls.tp_setattro=setattr}else if(cls.tp_mro){for(var kls of cls.tp_mro){if(Object.hasOwn(kls,'tp_setattro')&&
+kls.tp_setattro !==$B.NULL &&
+(kls===_b_.object ||
+kls.tp_setattro !==_b_.object.tp_setattro)){cls.tp_setattro=kls.tp_setattro
+break}}}}
+function reset_setattr(cls){$B.make_setattr(cls)
+if(cls.tp_subclasses===undefined){console.log('no subclasses',cls)}
+for(var kls of cls.tp_subclasses){reset_setattr(kls)}}
 $B.FACTORY=Symbol('FACTORY')
 $B.make_factory=function(cls){cls[$B.FACTORY]=function(){var $=$B.args('__new__',0,{},[],arguments,{},'args','kw')
 this.ob_type=cls
@@ -2808,6 +2818,9 @@ reset_descr_get(kls)
 break
 case '__set__':
 reset_descr_set(kls)
+break
+case '__setattr__':
+reset_setattr(kls)
 break
 case '__init__':
 reset_init(kls)
@@ -2919,13 +2932,15 @@ return NULL;}
 if(res==1){return class_obj}
 if(res instanceof Object){if(test){console.log('type.tp_new returns',res.type)}
 class_obj=res.type
-$B.make_init(class_obj)}else{if(test){console.log('res in not Object')}
+$B.make_init(class_obj)
+$B.make_setattr(class_obj)}else{if(test){console.log('res in not Object')}
 set_slots(cl_dict,class_obj)
 $B.set_to_dict(class_obj,'__dict__',$B.getset_descriptor.$factory(
 class_obj,'__dict__',[object_get_dict,$B.set_dict]
 )
 )
 $B.make_init(class_obj)
+$B.make_setattr(class_obj)
 if(test){console.log('scan cl_dict')}
 for(var item of _b_.dict.$iter_items(cl_dict)){if(test){console.log('item in cl dict',item)}
 var key=item.key,v=item.value
@@ -4825,25 +4840,9 @@ var $=$B.args("getattr",3,{obj:null,attr:null,_default:null},["obj","attr","_def
 if(! $B.$isinstance($.attr,_b_.str)){$B.RAISE(_b_.TypeError,"attribute name must be string, "+
 `not '${$B.class_name($.attr)}'`)}
 return $B.$getattr($.obj,_b_.str.$to_string($.attr),$._default===missing ? undefined :$._default)}
-$B.search_in_mro=function(klass,attr,_default){var test=false 
-if(test){console.log('search',attr,'in mro of',klass)
-console.log(Error('trace').stack)
-console.log('default',_default)}
-var mro=$B.get_mro(klass)
-if(mro===undefined){console.log('no mro in class',klass,klass.tp_mro,klass.__mro__)
-mro=klass.tp_mro=$B.make_mro(klass)}
-for(var i=0,len=mro.length;i < len;i++){if(test){console.log('search',attr,'in',mro[i])}
-if(mro[i].hasOwnProperty && mro[i].hasOwnProperty(attr)){if(test){console.log('found attr',attr,'in mro',i,mro[i])
-console.log(mro[i][attr])}
-var dunder=$B.slot2dunder.hasOwnProperty(attr)?
-$B.slot2dunder[attr]:attr
-if(! $B.get_dict(mro[i])||
-$B.get_from_dict(mro[i],dunder,$B.NULL)===$B.NULL){console.log('attr',attr,'found in mro[i]',mro[i],'but absent in dict')
-console.log($B.frame_obj.frame.$lineno)
-console.log(Error('trace').stack)}}
-if($B.get_dict(mro[i])){var v=$B.get_from_dict(mro[i],attr,$B.NULL)
-if(v !==$B.NULL){if(test){console.log('found in dict of mro',i,v)}
-return v}}}
+$B.search_in_mro=function(klass,attr,_default){var mro=$B.get_mro(klass)
+for(var i=0,len=mro.length;i < len;i++){if($B.get_dict(mro[i])){var v=$B.get_from_dict(mro[i],attr,$B.NULL)
+if(v !==$B.NULL){return v}}}
 return _default}
 $B.search_in_dict=function(obj,attr,_default){if($B.get_dict(obj)){try{var v=$B.get_from_dict(obj,attr,$B.NULL)}catch(err){console.log('error',obj,attr)
 throw err}
@@ -5238,9 +5237,9 @@ $B.$setattr1=function(obj,attr,value,inum){try{$B.$setattr(obj,attr,value)}catch
 throw err}}
 $B.$setattr=function(obj,attr,value){
 var test=false 
-if(test){console.log("set attr",attr,"of",obj,"to",value)}
+if(test){console.log("set attr",attr,"of",obj,"klass",$B.get_class(obj),"to",value)}
 var klass=$B.get_class(obj)
-var setattr=$B.search_slot(klass,'tp_setattro',$B.NULL)
+var setattr=klass.tp_setattro
 if(test){console.log('seattr',obj,attr,value,'setattr func',setattr)}
 if(setattr===$B.NULL){$B.RAISE(_b_.AttributeError,'no setattr')}
 setattr(obj,attr,value)
@@ -11766,6 +11765,7 @@ $B.set_to_dict(cls,'__setattr__',function(self,attr,value){self.jsobj[attr]=pyob
 )
 $B.make_new(cls)
 $B.make_init(cls)
+$B.make_setattr(cls)
 return cls}
 var js_iterator=$B.make_builtin_class('js_iterator')
 js_iterator.tp_iternext=function*(self){for(var key of self.it){yield key}}
@@ -14351,7 +14351,7 @@ $B.set_to_dict(cls,name,{ob_type:$B.member_descriptor,d_member:{name,type,attr,f
 )}}
 if(cls.classmethods){for(var descr of cls.classmethods){$B.set_to_dict(cls,descr,{ob_type:$B.classmethod_descriptor,d_name:descr,d_type:cls,d_method:cls.tp_funcs[descr]})}}
 if(cls.staticmethods){for(var descr of cls.staticmethods){$B.set_to_dict(cls,descr,_b_.staticmethod.$factory(cls.tp_funcs[descr]))}}
-for(var slot in $B.wrapper_methods){if(cls[slot]){$B.wrapper_methods[slot](cls,slot)}else if(['tp_descr_get','tp_descr_set','tp_iter','tp_call','tp_new','tp_init'].includes(slot)){cls[slot]=$B.NULL
+for(var slot in $B.wrapper_methods){if(cls[slot]){$B.wrapper_methods[slot](cls,slot)}else if(['tp_descr_get','tp_descr_set','tp_iter','tp_call','tp_new','tp_init','tp_setattro'].includes(slot)){cls[slot]=$B.NULL
 if(cls.tp_mro){for(var kls of cls.tp_mro.slice(1)){if(Object.hasOwn(cls,slot)){cls[slot]=kls[slot]
 break}}}}}
 $B.make_getattr(cls)}

@@ -238,7 +238,7 @@ _b_.object.tp_richcompare = function(self, other, op){
 }
 
 _b_.object.tp_setattro = function(self, attr, value){
-    var test = false //attr == 'x' && value === $B.NULL
+    var test = false // attr == 'x' // && value === $B.NULL
     var klass = $B.get_class(self)
     var in_mro = $B.search_in_mro(klass, attr, $B.NULL)
     if(test){
@@ -266,7 +266,7 @@ _b_.object.tp_setattro = function(self, attr, value){
         // setting an attribute to 'object' type is not allowed
         $B.RAISE(_b_.TypeError,
             "can't set attributes of built-in/extension type 'object'")
-    }else if($B.get_class(self) === object){
+    }else if(klass === object){
         // setting an attribute to object() is not allowed
         if(object[attr] === undefined){
             throw $B.attr_error(attr, self)
@@ -299,7 +299,7 @@ _b_.object.tp_setattro = function(self, attr, value){
     }
     var dict = $B.get_dict(self)
     if(dict){
-        _b_.dict.$setitem(dict, attr, value)
+        $B.str_dict_set(dict, attr, value)
     }else{
         var exc = $B.attr_error(attr, self)
         exc.args[0] = `'${$B.get_name(klass)}' object has no attribute ` +

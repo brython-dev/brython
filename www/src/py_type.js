@@ -1004,6 +1004,34 @@ function reset_init(cls){
     }
 }
 
+$B.make_setattr = function(cls){
+    cls.tp_setattro = $B.NULL
+    var setattr = $B.get_from_dict(cls, '__setattr__', $B.NULL)
+    if(setattr !== $B.NULL){
+        cls.tp_setattro = setattr
+    }else if(cls.tp_mro){
+        for(var kls of cls.tp_mro){
+            if(Object.hasOwn(kls, 'tp_setattro') &&
+                    kls.tp_setattro !== $B.NULL &&
+                    (kls === _b_.object || 
+                        kls.tp_setattro !== _b_.object.tp_setattro)){
+                cls.tp_setattro = kls.tp_setattro
+                break
+            }
+        }
+    }
+}
+
+function reset_setattr(cls){
+    $B.make_setattr(cls)
+    if(cls.tp_subclasses === undefined){
+        console.log('no subclasses', cls)
+    }
+    for(var kls of cls.tp_subclasses){
+        reset_setattr(kls)
+    }
+}
+
 $B.FACTORY = Symbol('FACTORY')
 
 $B.make_factory = function(cls){
@@ -1106,6 +1134,9 @@ _b_.type.tp_setattro = function(kls, attr, value){
             break
         case '__set__':
             reset_descr_set(kls)
+            break
+        case '__setattr__':
+            reset_setattr(kls)
             break
         case '__init__':
             reset_init(kls)
@@ -1394,6 +1425,7 @@ _b_.type.tp_new = function(cls, args, kw){
         }
         class_obj = res.type
         $B.make_init(class_obj)
+        $B.make_setattr(class_obj)
     }else{
         if(test){
             console.log('res in not Object')
@@ -1408,6 +1440,7 @@ _b_.type.tp_new = function(cls, args, kw){
             )
         )
         $B.make_init(class_obj)
+        $B.make_setattr(class_obj)
         // set class attributes
         if(test){
             console.log('scan cl_dict')

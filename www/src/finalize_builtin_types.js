@@ -358,7 +358,7 @@ $B.finalize_type = function(cls){
         if(cls[slot]){
             $B.wrapper_methods[slot](cls, slot)
         }else if(['tp_descr_get', 'tp_descr_set', 'tp_iter', 'tp_call',
-                'tp_new', 'tp_init'].includes(slot)){
+                'tp_new', 'tp_init', 'tp_setattro'].includes(slot)){
             cls[slot] = $B.NULL
             if(cls.tp_mro){
                 for(var kls of cls.tp_mro.slice(1)){

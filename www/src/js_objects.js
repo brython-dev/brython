@@ -544,6 +544,7 @@ function jsclass2pyclass(js_class){
     )
     $B.make_new(cls)
     $B.make_init(cls)
+    $B.make_setattr(cls)
     return cls
 }
 
