@@ -2075,12 +2075,12 @@ $B.ast.Constant.prototype.to_js = function(){
         if(Number.isInteger(this.value)){
             return this.value
         }else{
-            return `({ob_type: _b_.float, value: ${this.value}})`
+            return `(new $B.Float(this.value))`
         }
     }else if(typeof this.value == "bigint"){
         return `${this.value}n`
     }else if(klass === _b_.float){
-        return `({ob_type: _b_.float, value: ${this.value.value}})`
+        return `(new $B.Float(${this.value.value}))`
     }else if(klass === _b_.complex){
         return `$B.make_complex(${this.value.real.value}, ${this.value.imag.value})`
     }else if(this.value === _b_.Ellipsis){

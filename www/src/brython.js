@@ -673,8 +673,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-04-10 08:49:06.990993"
-__BRYTHON__.timestamp=1775803746990
+__BRYTHON__.compiled_date="2026-04-10 09:17:51.596595"
+__BRYTHON__.timestamp=1775805471596
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -2025,9 +2025,12 @@ return{
 prev:$B.frame_obj,frame,count:count+1}}
 var reversed_op={"__lt__":"__gt__","__le__":"__ge__","__gt__":"__lt__","__ge__":"__le__"}
 var method2comp={"__lt__":"<","__le__":"<=","__gt__":">","__ge__":">="}
-$B.rich_comp=function(op,x,y){var x1=x !==null && x?.valueOf ? x.valueOf():x,y1=y !==null && y?.valueOf ? y.valueOf():y
-if(typeof x1=="number" && typeof y1=="number" &&
-x?.ob_type===undefined && y?.ob_type===undefined){switch(op){case "__eq__":
+$B.nb_short_comp=0
+$B.rich_comp=function(op,x,y){
+var x1=x?.valueOf ? x.valueOf():x,y1=y?.valueOf ? y.valueOf():y
+if((typeof x1=="number" ||typeof x1=="bigint")&& 
+(typeof y1=="number" ||typeof y1=="bigint")){$B.nb_short_comp++
+switch(op){case "__eq__":
 return x1==y1
 case "__ne__":
 return x1 !=y1
@@ -9925,8 +9928,10 @@ var arabic_digits="\u0660\u0661\u0662\u0663\u0664\u0665\u0666\u0667\u0668\u0669"
 for(var i=0;i < s.length;i++){var x=arabic_digits.indexOf(s[i])
 if(x >-1){res+=x}else{res+=s[i]}}
 return res}
-const fast_float=$B.fast_float=function(value){return{
-ob_type:_b_.float,value}}
+var Float=$B.Float=function(value){this.ob_type=_b_.float
+this.value=value}
+Float.prototype.valueOf=function(){return this.value}
+const fast_float=$B.fast_float=function(value){return new Float(value)}
 function conv_float(...objs){var res=[]
 for(var obj of objs){var x=$B.NULL
 if($B.$isinstance(obj,_b_.float)){x=obj}else if($B.$isinstance(obj,_b_.int)){x=_b_.int.nb_float(obj)}else{var float_method=$B.$getattr($B.get_class(obj),'__float__',$B.NULL)
@@ -15487,7 +15492,7 @@ if(this.value===true ||this.value===false){return this.value+''}else if(this.val
 if(srg.length==0){return `'${s}'`}
 return `$B.make_String('${s}', [${srg}])`}
 var klass=$B.get_class(this.value)
-if(klass===_b_.bytes){return `_b_.bytes.$factory([${this.value.source}])`}else if(typeof this.value=="number"){if(Number.isInteger(this.value)){return this.value}else{return `({ob_type: _b_.float, value: ${this.value}})`}}else if(typeof this.value=="bigint"){return `${this.value}n`}else if(klass===_b_.float){return `({ob_type: _b_.float, value: ${this.value.value}})`}else if(klass===_b_.complex){return `$B.make_complex(${this.value.real.value}, ${this.value.imag.value})`}else if(this.value===_b_.Ellipsis){return `_b_.Ellipsis`}else{console.log('invalid value',this.value)
+if(klass===_b_.bytes){return `_b_.bytes.$factory([${this.value.source}])`}else if(typeof this.value=="number"){if(Number.isInteger(this.value)){return this.value}else{return `(new $B.Float(this.value))`}}else if(typeof this.value=="bigint"){return `${this.value}n`}else if(klass===_b_.float){return `(new $B.Float(${this.value.value}))`}else if(klass===_b_.complex){return `$B.make_complex(${this.value.real.value}, ${this.value.imag.value})`}else if(this.value===_b_.Ellipsis){return `_b_.Ellipsis`}else{console.log('invalid value',this.value)
 console.log(Error('trace').stack)
 throw SyntaxError('bad value',this.value)}}
 $B.ast.Continue.prototype.to_js=function(scopes){if(! in_loop(scopes)){compiler_error(this,"'continue' not properly in loop")}

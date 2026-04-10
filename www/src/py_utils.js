@@ -1823,11 +1823,15 @@ var reversed_op = {"__lt__": "__gt__", "__le__":"__ge__",
 var method2comp = {"__lt__": "<", "__le__": "<=", "__gt__": ">",
     "__ge__": ">="}
 
+$B.nb_short_comp = 0
+
 $B.rich_comp = function(op, x, y){
-    var x1 = x !== null && x?.valueOf ? x.valueOf() : x,
-        y1 = y !== null && y?.valueOf ? y.valueOf() : y
-    if(typeof x1 == "number" && typeof y1 == "number" &&
-            x?.ob_type === undefined && y?.ob_type === undefined){
+    // short cut for ints and floats
+    var x1 = x?.valueOf ? x.valueOf() : x,
+        y1 = y?.valueOf ? y.valueOf() : y
+    if((typeof x1 == "number" || typeof x1 == "bigint") && 
+            (typeof y1 == "number" || typeof y1 == "bigint")){
+        $B.nb_short_comp++
         switch(op){
             case "__eq__":
                 return x1 == y1

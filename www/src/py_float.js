@@ -543,11 +543,17 @@ function to_digits(s){
     return res
 }
 
+var Float = $B.Float = function(value){
+    this.ob_type = _b_.float
+    this.value = value
+}
+
+Float.prototype.valueOf = function(){
+    return this.value
+}
+
 const fast_float = $B.fast_float  = function(value){
-    return {
-        ob_type: _b_.float,
-        value
-    }
+    return new Float(value)
 }
 
 function conv_float(...objs){
