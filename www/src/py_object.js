@@ -11,7 +11,6 @@ $B.time_getattribute = 0
 $B.time_search_slot = 0
 
 $B.builtin_object_getattro = function(self, klass, attr){
-    var t0 = globalThis.performance.now()
     var test = false // attr == '__dict__' // && self.ob_type && self.ob_type.tp_name == 'tuple'
     var klass = $B.get_class(self)
     if(test){
@@ -57,7 +56,6 @@ $B.builtin_object_getattro = function(self, klass, attr){
                 if(test){
                     console.log('res', res)
                 }
-                $B.time_object_tp_getattro += globalThis.performance.now() - t0
                 return res
             }
         }
@@ -68,7 +66,6 @@ $B.builtin_object_getattro = function(self, klass, attr){
         console.log('in object dict', in_dict, '\n    type', $B.get_class(in_dict))
     }
     if(in_dict !== $B.NULL){
-                $B.time_object_tp_getattro += globalThis.performance.now() - t0
         return in_dict
     }else if(getter !== $B.NULL){
         // non-data descriptor
@@ -84,13 +81,11 @@ $B.builtin_object_getattro = function(self, klass, attr){
             return getter(in_mro, self, klass)
         }
         $B.nb_obj_ga++
-                $B.time_object_tp_getattro += globalThis.performance.now() - t0
         return getter(in_mro, self, klass)
     }else if(in_mro !== $B.NULL){
         if(test){
             console.log('return in_mro', in_mro)
         }
-                $B.time_object_tp_getattro += globalThis.performance.now() - t0
         return in_mro
     }
     if(test){
@@ -200,7 +195,7 @@ object.$factory = function(){
             ob_type: object
         },
         args = [res]
-    object.__init__.apply(null, args)
+    object.tp_init.apply(null, args)
     return res
 }
 

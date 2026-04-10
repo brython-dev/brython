@@ -981,11 +981,12 @@ $B.offer_suggestions_for_unexpected_keyword_error = function(arg_names, key){
 // PEP 654
 
 _b_.BaseExceptionGroup.$factory = function(msg, excs){
-    return {
-        ob_type: _b_.BaseExceptionGroup,
-        msg,
-        excs: $B.fast_tuple(excs)
-    }
+    var res = _b_.BaseExceptionGroup.tp_new(
+        _b_.BaseExceptionGroup,
+        [msg, $B.fast_tuple(excs)],
+        $B.empty_dict()
+    )
+    return res
 }
 
 /* BaseExceptionGroup start */
@@ -1139,7 +1140,7 @@ _b_.BaseExceptionGroup.tp_members = [
 $B.set_func_names(_b_.BaseExceptionGroup, "builtins")
 
 
-_b_.ExceptionGroup.$factory = function(){
+_b_.ExceptionGroup.$factoryXXX = function(){
     var missing = {},
         $ = $B.args("ExceptionGroup", 2, {message: null, exceptions: null},
                     ['message', 'exceptions'], arguments, {exceptions: missing},

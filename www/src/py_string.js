@@ -1193,11 +1193,52 @@ $B.make_str = function(arg){
     }
 }
 
-str.$factory = function(arg, encoding, errors){
-    var res
+str.$factory = function(){
+    var [args, kw] = $B.parse_args_kw('str', arguments)
+    var [arg, encoding, errors] = args
+    if(args.length == 0){
+        return ''
+    }
+    var kw_len = _b_.dict.mp_length(kw)
+    if(args.length == 1 && kw_len == 0){
+        var res = $B.make_str(args[0])
+        if(typeof res == "string" || $B.$isinstance(res, str)){
+            return res
+        }
+        $B.RAISE(_b_.TypeError, "__str__ returned non-string " +
+            `(type ${$B.class_name(res)})`)
+    }
+    for(var entry of _b_.dict.$iter_items(kw)){
+        switch(entry.key){
+            case 'encoding':
+                if(encoding !== undefined){
+                    $B.RAISE(_b_.TypeError,
+                         `argument for str() given by name ('encoding') ` +
+                         'and position (2)'
+                    )
+                }
+                encoding = entry.value
+                break
+            case 'errors':
+                if(errors !== undefined){
+                    $B.RAISE(_b_.TypeError,
+                         `argument for str() given by name ('errors') ` +
+                         'and position (3)'
+                    )
+                }
+                errors = entry.value
+                break
+            default:
+                $B.RAISE(_b_.TypeError,
+                    `str() got an unexpected keyword: '${entry.key}'`
+                )
+        }
+    }
+
     if(arg === ''){
         return arg
     }
+    var res
     encoding = encoding ?? $B.NULL
     errors = errors ?? $B.NULL
     if(encoding === $B.NULL && errors === $B.NULL){
@@ -2874,7 +2915,6 @@ str_funcs.rstrip = function(){
 $B.time_string_split = 0
 
 str_funcs.split = function(){
-    var t0 = globalThis.performance.now()
     var $ = $B.args("split", 3, {self: null, sep: null, maxsplit: null},
         ["self", "sep", "maxsplit"], arguments,
         {sep: _b_.None, maxsplit: -1}, null, null),
@@ -2936,14 +2976,12 @@ str_funcs.split = function(){
             seplen = sep.length
         if(maxsplit == 0){
             res = $B.$list([$.self])
-            $B.time_string_split += globalThis.performance.now() - t0
             return res
         }else if(maxsplit == -1){
             res = _self.split(sep)
             if(_self.surrogates){
                 res = res.map($B.String)
             }
-            $B.time_string_split += globalThis.performance.now() - t0
             return $B.$list(res)
         }
         // can't use Javascript split(sep, maxsplit) because the part after

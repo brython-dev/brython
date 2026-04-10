@@ -511,14 +511,14 @@ enumerate.__mro__ = [_b_.object]
 enumerate.$factory = function(){
     var $ns = $B.args("enumerate", 2, {iterable: null, start: null},
         ['iterable', 'start'], arguments, {start: 0}, null, null),
-        _iter = iter($ns["iterable"]),
+        iterable = $ns["iterable"],
         start = $ns["start"]
     return {
         ob_type: enumerate,
         __name__: 'enumerate iterator',
         counter: start - 1,
-        iter: _iter,
-        start: start
+        it: $B.make_js_iterator(iterable),
+        counter: start
     }
 }
 
@@ -606,13 +606,14 @@ var filter = _b_.filter
 filter.$factory = function(func, iterable){
     check_nb_args_no_kw('filter', 2, arguments)
 
-    iterable = iter(iterable)
-    if(func === _b_.None){func = $B.$bool}
+    if(func === _b_.None){
+        func = $B.$bool
+    }
 
     return {
         ob_type: filter,
         func: func,
-        iterable: iterable
+        it: $B.make_js_iterator(iterable)
     }
 }
 
@@ -1644,10 +1645,9 @@ reversed.$factory = function(seq){
 
     var res = {
         ob_type: reversed,
-        $counter : _b_.len(seq),
-        getter: function(i){
-            return $B.$call(method, seq, i)
-        }
+        seq,
+        len : _b_.len(seq),
+        getitem: method
     }
     return res
 }

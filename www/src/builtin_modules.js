@@ -295,15 +295,15 @@
                 return (function(k){
                     return function(){
                         var res
-                        if(k.__name__ == 'SVG'){
+                        if(k.tp_name == 'SVG'){
                             res = $B.DOMNode.$factory(
                                 document.createElementNS("http://www.w3.org/2000/svg", "svg"), true)
                         }else{
                             try{
-                                res = document.createElement(k.__name__)
+                                res = document.createElement(k.tp_name)
                             }catch(err){
                                 console.log('error ' + err)
-                                console.log('creating element', k.__name__)
+                                console.log('creating element', k.tp_name)
                                 throw err
                             }
                         }
@@ -775,7 +775,7 @@
             // compliance with Python3.12
             return 0
         },
-        last_exc: _b_.property.$factory(
+        last_exc: $B.internal_property(
             function(){
                 return $B.module_getattr($B.imported._sys, 'exception')()
             },
@@ -784,7 +784,7 @@
             }
         ),
         modules: $B.obj_dict($B.imported),
-        path: _b_.property.$factory(
+        path: $B.internal_property(
             function(){
                 var filename = $B.get_filename_for_import()
                 return $B.$list($B.import_info[filename].path)
@@ -794,7 +794,7 @@
                 $B.import_info[filename].path = value
             }
         ),
-        meta_path: _b_.property.$factory(
+        meta_path: $B.internal_property(
             function(){
                 var filename = $B.get_filename()
                 return $B.$list($B.import_info[filename].meta_path)
@@ -804,7 +804,7 @@
                 $B.import_info[filename].meta_path = value
             }
         ),
-        path_hooks: _b_.property.$factory(
+        path_hooks: $B.internal_property(
             function(){
                 var filename = $B.get_filename()
                 return $B.$list($B.import_info[filename].path_hooks)
@@ -814,7 +814,7 @@
                 $B.import_info[filename].path_hooks = value
             }
         ),
-        path_importer_cache: _b_.property.$factory(
+        path_importer_cache: $B.internal_property(
             function(){
                 return _b_.dict.$factory($B.jsobj2pyobj($B.path_importer_cache))
             },
@@ -842,7 +842,7 @@
         stderr: console.error !== undefined ? $io.$factory("error") :
                     $io.$factory("log"),
         stdout: $io.$factory("log"),
-        stdin: _b_.property.$factory(
+        stdin: $B.internal_property(
             function(){
                 return $B.stdin
             },
@@ -850,7 +850,7 @@
                 $B.stdin = value
             }
         ),
-        vfs: _b_.property.$factory(
+        vfs: $B.internal_property(
             function(){
                 if($B.hasOwnProperty("VFS")){
                     return $B.obj_dict($B.VFS)

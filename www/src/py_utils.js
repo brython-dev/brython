@@ -101,7 +101,7 @@ function unexpected_keyword(fname, k, suggestion){
 
 $B.unexpected_keyword = unexpected_keyword
 
-var empty = {}
+var empty = {empty: true}
 
 
 // Original args0 used to construct error message when raising an exception.
@@ -628,8 +628,6 @@ $B.parse_args = function(args, fname, argcount, slots, arg_names, defaults,
     return slots
 }
 
-
-
 $B.parse_kwargs = function(kw_args, fname){
     var kwa = kw_args[0]
     for(var i = 1, len = kw_args.length; i < len; i++){
@@ -772,6 +770,17 @@ $B.check_kw_empty = function(name, kw){
     }
 }
 
+$B.parse_args_kw = function(fname, args){
+    var last = args[args.length - 1]
+    if(last?.$kw){
+        var kw = $B.parse_kwargs(last.$kw, fname)
+        args = Array.from(args)
+        args.pop()
+        return [args, kw]
+    }
+    return [args, $B.empty_dict()]
+}
+
 $B.get_class = function(obj){
     // generally we get the attribute __class__ of an object by obj.__class__
     // but Javascript builtins used by Brython (functions, numbers, strings...)
@@ -791,6 +800,10 @@ $B.get_class = function(obj){
 
     var klass
     switch(typeof obj){
+        case "null":
+            return $B.NullType
+        case "undefined":
+            return $B.UndefinedType
         case "number":
             if(Number.isInteger(obj)){
                 return _b_.int
@@ -824,6 +837,10 @@ $B.get_class = function(obj){
         return $B.get_jsobj_class(obj)
     }
     return klass
+}
+
+$B.set_type = function(obj, type){
+    obj.ob_type = type
 }
 
 $B.exact_type = function(obj, cls){
@@ -1509,7 +1526,7 @@ $B.$call_with_position = function(callable, inum, ...args){
 }
 
 $B.$call = function(callable, ...args){
-    var test = false //callable.d_name == '__str__' // && callable.$function_infos[1] == 'test_gen1'
+    var test = callable.d_name == 'property' // && callable.$function_infos[1] == 'test_gen1'
     if(typeof callable == 'function'){
         var res = callable(...args)
         if(callable.$in_js_module && res === undefined){
@@ -1517,10 +1534,9 @@ $B.$call = function(callable, ...args){
         }
         return res
     }
-    if(callable.tp_name == 'Acv78om'){
-        var res = new callable[$B.FACTORY](...args)
-        console.log('call Acv78om', res)
-        return res
+    if(callable.$factory){
+        //console.log('use $factory', callable)
+        return callable.$factory(...args)
     }
     var klass = $B.get_class(callable)
     if(test){
@@ -1539,12 +1555,10 @@ $B.$call = function(callable, ...args){
             // for instance __call__ might be set to dict
             return $B.$call(call_method, ...args)
         }else{
-            console.log('not callable', callable)
             $B.RAISE(_b_.TypeError, "'" + $B.class_name(callable) +
                 "' object is not callable")
         }
     }
-    var t0 = globalThis.performance.now()
     var res = call_method(callable, ...args)
     if(test){
         console.log('result of call1', res)
@@ -1823,15 +1837,13 @@ var reversed_op = {"__lt__": "__gt__", "__le__":"__ge__",
 var method2comp = {"__lt__": "<", "__le__": "<=", "__gt__": ">",
     "__ge__": ">="}
 
-$B.nb_short_comp = 0
 
 $B.rich_comp = function(op, x, y){
     // short cut for ints and floats
     var x1 = x?.valueOf ? x.valueOf() : x,
         y1 = y?.valueOf ? y.valueOf() : y
-    if((typeof x1 == "number" || typeof x1 == "bigint") && 
+    if((typeof x1 == "number" || typeof x1 == "bigint") &&
             (typeof y1 == "number" || typeof y1 == "bigint")){
-        $B.nb_short_comp++
         switch(op){
             case "__eq__":
                 return x1 == y1

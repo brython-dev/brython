@@ -154,24 +154,34 @@ function int_hash(x){
 }
 
 int.$factory = function(value, base){
-    /*
-    var missing = {},
-        $ = $B.args("int", 2, {x: null, base: null}, ["x", "base"],
-            arguments, {x: missing, base: _b_.None}, null, null, 1),
-            value = $.x,
-            base = $.base === undefined ? missing : $.base,
-            initial_value = value,
-            explicit_base = base !== _b_.None
-    */
-    // int() with no argument returns 0
-    /*
-    if(value === missing || value === undefined){
-        if(base !== missing){
-            $B.RAISE(_b_.TypeError, "int() missing string argument")
+    var [args, kw] = $B.parse_args_kw('int', arguments)
+    var base = _b_.None
+    for(var item of _b_.dict.$iter_items(kw)){
+        if(item.key == 'base'){
+            base = item.value
+        }else{
+            $B.RAISE(_b_.TypeError,
+                `int() got an unexpected keyword argument: '${item.key}'`
+            )
         }
-        return 0
     }
-    */
+    var value
+    switch(args.length){
+        case 0:
+            value = 0
+            break
+        case 1:
+            value = args[0]
+            break
+        case 2:
+            value = args[0]
+            base = args[1]
+            break
+        default:
+            $B.RAISE(_b_.TypeError,
+                `int expected at most 2 arguments, got ${args.length}`
+            )
+    }
     var initial_value = value
 
     if($B.$isinstance(value, [_b_.bytes, _b_.bytearray])){

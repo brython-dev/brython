@@ -2342,7 +2342,8 @@ function fast_bytes(t){
 $B.fast_bytes = fast_bytes
 
 bytes.$factory = function(){
-    return bytes.tp_new(bytes, Array.from(arguments), $B.empty_dict())
+    var $ = $B.args('bytes', 0, {}, [], arguments, {}, 'args', 'kw')
+    return bytes.tp_new(bytes, $.args, $.kw)
 }
 
 /* bytes start */

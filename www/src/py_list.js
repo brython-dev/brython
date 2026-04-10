@@ -612,14 +612,24 @@ $B.$list = function(t){
 }
 
 // constructor common to list and tuple (class is passed as "this")
-var factory = function(){
-    var klass = this // list or tuple
-    if(arguments.length == 0){
-        return $B.$list([])
+var factory = function(obj){
+    var $ = $B.args(this.tp_name, 0, {}, [], arguments, {}, 'args', 'kw')
+    var args = $.args,
+        kw = $.kw
+    if(_b_.dict.mp_length(kw)){
+        $B.RAISE(_b_.TypeError,
+            `${klass.tp_name}() takes no keyword arguments`
+        )
     }
-    var $ = $B.args(klass.__name__, 1, {obj: null}, ["obj"],
-        arguments, {}, null, null),
-        obj = $.obj
+    var klass = this // list or tuple
+    if(args.length == 0){
+        return $B.$list([])
+    }else if(args.length > 1){
+        $B.RAISE(_b_.TypeError,
+            `${this.tp_name} expected at most 1 argument, got ${args.length}`
+        )
+    }
+    var obj = args[0]
     if(Array.isArray(obj) && obj.ob_type){ // most simple case
         obj = obj.slice() // list(t) is not t
         obj.ob_type = klass

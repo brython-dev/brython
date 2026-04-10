@@ -543,33 +543,23 @@ function object_set_dict(obj, value){
 var type = _b_.type // defined in py_object.js
 
 type.$factory = function(){
-    var missing = {},
-        $ = $B.args('type', 3, {kls: null, bases: null, cl_dict: null},
-            ['kls', 'bases', 'cl_dict'], arguments,
-            {bases: missing, cl_dict: missing}, null, 'kw'),
-        kls = $.kls,
+    var $ = $B.args('type', 3, {first: null, bases: null, cl_dict: null},
+            ['first', 'bases', 'cl_dict'], arguments,
+            {bases: $B.NULL, cl_dict: $B.NULL}, null, 'kw'),
+        first = $.first,
         bases = $.bases,
         cl_dict = $.cl_dict,
         kw = $.kw
 
-    var kwarg = {}
-    for(var item of _b_.dict.$iter_items(kw)){
-        kwarg[item.key] = item.value
-    }
-    var kwargs = {$kw: [kwarg]}
-    if(cl_dict === missing){
-        if(bases !== missing){
+    if(cl_dict === $B.NULL){
+        if(bases !== $B.NULL){
             $B.RAISE(_b_.TypeError, 'type() takes 1 or 3 arguments')
         }
-        return $B.get_class(kls)
+        return $B.get_class(first)
     }else{
-        var module = $B.frame_obj.frame[2],
-            resolved_bases = $B.resolve_mro_entries(bases),
-            metaclass = $B.get_metaclass(kls, module, resolved_bases)
-        return type.__call__(metaclass, kls, resolved_bases, cl_dict, kwargs)
+        return type.tp_call(type, ...arguments)
     }
 }
-
 
 type.$call = function(klass, new_func, init_func){
     // return factory function for classes with __init__ method
@@ -734,7 +724,6 @@ $B.builtin_slot = function(cls, slot){
 $B.time_type_getattribute = 0
 
 $B.type_getattribute = function(klass, attr){
-    var t0 = globalThis.performance.now()
     var test = false // attr == 'spam'
     if(test){
         console.log('type getattribute', attr, klass)
@@ -743,7 +732,6 @@ $B.type_getattribute = function(klass, attr){
     var meta = $B.get_class(klass)
     if(meta === _b_.type){
         var res = meta.tp_getattro(klass, attr)
-        $B.time_type_getattribute += globalThis.performance.now() - t0
         return res
     }
     var getattro = $B.search_slot(meta, 'tp_getattro', $B.NULL)
@@ -1013,7 +1001,7 @@ $B.make_setattr = function(cls){
         for(var kls of cls.tp_mro){
             if(Object.hasOwn(kls, 'tp_setattro') &&
                     kls.tp_setattro !== $B.NULL &&
-                    (kls === _b_.object || 
+                    (kls === _b_.object ||
                         kls.tp_setattro !== _b_.object.tp_setattro)){
                 cls.tp_setattro = kls.tp_setattro
                 break
@@ -1177,10 +1165,10 @@ _b_.type.tp_repr = function(kls){
     return "<class '" + qualname + "'>"
 }
 
-$B.nb_call = 0
+$B.nb_type_call = 0
 
-_b_.type.tp_call = function(){
-    $B.nb_call++
+_b_.type.tp_call = function(cls){
+    $B.nb_type_call++
     var $ = $B.args('__call__', 1, {cls: null}, ['cls'], arguments, {}, 'args', 'kw'),
         cls = $.cls,
         args = $.args,
@@ -1200,7 +1188,10 @@ _b_.type.tp_call = function(){
             $B.RAISE(_b_.TypeError, 'type() takes 1 or 3 arguments')
         }
     }
-    var new_func = cls.tp_new ///$B.search_slot(cls, 'tp_new', $B.NULL)
+    var new_func = cls.tp_new
+    if(new_func === undefined){
+        console.log('no tp_new', cls, args, kw)
+    }
     if(test){
         console.log('new_func', new_func, 'is slot tp_new', new_func.$is_slot)
     }
@@ -1767,11 +1758,28 @@ $B.set_func_names(type, "builtins")
 
 // property (built in function)
 var property = _b_.property
+
+$B.internal_property = function(fget, fset){
+    for(var func of arguments){
+        if($B.get_class(func) === $B.JSFunction){
+            $B.set_type(func, $B.function)
+        }
+    }
+    return {
+        ob_type: property,
+        prop_get: fget,
+        prop_set: fset ?? _b_.None,
+        prop_del: _b_.None,
+        prop_doc: _b_.None
+    }
+}
+
 property.$factory = function(fget, fset, fdel, doc){
     var res = {
         ob_type: property
     }
-    property.tp_init(res, fget, fset, fdel, doc)
+    property.tp_init(res, fget, fset ?? _b_.None, fdel ?? _b_.None,
+        doc ?? _b_.None)
     return res
 }
 
@@ -1808,7 +1816,7 @@ _b_.property.tp_descr_get = function(self, obj, type){
 }
 
 _b_.property.tp_init = function(){
-    var $ = $B.args('__init__', 5,
+    var $ = $B.args('__initProp__', 5,
                 {self: null, fget: null, fset: null, fdel: null, doc: null},
                 ['self', 'fget', 'fset', 'fdel', 'doc'], arguments,
                 {fget: _b_.None, fset: _b_.None, fdel: _b_.None, doc: _b_.None},

@@ -337,13 +337,10 @@ $B.py2js = function(src, module, locals_id, parent_scope){
         locals_id = locals_id[0]
     }
 
-    var t0 = globalThis.performance.now()
-
     // generated PEG parser
     var parser = new $B.Parser(src, filename, 'file'),
         _ast = $B._PyPegen.run_parser(parser)
 
-    $B.parse_time += globalThis.performance.now() - t0
     var future = $B.future_features(_ast, filename)
     var symtable = $B._PySymtable_Build(_ast, filename, future)
     var js_obj = $B.js_from_root({ast: _ast,

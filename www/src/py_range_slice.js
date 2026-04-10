@@ -493,8 +493,37 @@ slice.$conv_for_seq = function(self, len){
     return {start, stop, step}
 }
 
-slice.$factory = function(start, stop){
-    return slice.$fast_slice(start, stop, 1)
+slice.$factory = function(start, stop, step){
+    var [args, kw] = $B.parse_args_kw('slice', arguments)
+    var start,
+        stop,
+        step
+    if(_b_.dict.mp_length(kw) > 0){
+        $B.RAISE(_b_.TypeError, 'slice() takes no keyword arguments')
+    }
+    switch(args.length){
+        case 0:
+            $B.RAISE(_b_.TypeError,
+                'slice expected at least 1 argument, got 0'
+            )
+        case 1:
+            start = _b_.None
+            stop = args[0]
+            step = _b_.None
+            break
+        case 2:
+            [start, stop] = args
+            step = _b_.None
+            break
+        case 3:
+            [start, stop, step] = args
+            break
+        default:
+            $B.RAISE(_b_.TypeError,
+                `slice expected at most 3 arguments, got ${args.length}`
+            )
+    }
+    return slice.$fast_slice(start, stop, step ?? $B.NULL)
 }
 
 slice.$fast_slice = function(start, stop, step){

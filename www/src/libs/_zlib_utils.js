@@ -676,7 +676,6 @@ function* lz_generator(text, size){
                       extra_dist]))
     }
 
-    var t0 = globalThis.performance.now()
     while(pos < text_length){
         if(pos > text_length - min_len){
             // Last items in text
