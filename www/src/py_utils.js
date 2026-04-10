@@ -1153,7 +1153,7 @@ $B.getitem_slice = function(obj, slice, inum){
         var res
         var klass = $B.get_class(obj)
         if(Array.isArray(obj) && klass === _b_.list){
-            res = _b_.list.mp_subscript(obj, slice)
+            res = _b_.list.$getitem_slice(obj, slice)
         }else if(typeof obj == "string"){
             res = _b_.str.mp_subscript(obj, slice)
         }else{

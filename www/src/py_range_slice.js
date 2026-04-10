@@ -490,7 +490,7 @@ slice.$conv_for_seq = function(self, len){
             stop = step_is_neg ? len_1 : len
         }
     }
-    return {start: start, stop: stop, step: step}
+    return {start, stop, step}
 }
 
 slice.$factory = function(start, stop){

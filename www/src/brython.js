@@ -673,8 +673,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-04-09 07:23:07.372092"
-__BRYTHON__.timestamp=1775712187371
+__BRYTHON__.compiled_date="2026-04-10 08:49:06.990993"
+__BRYTHON__.timestamp=1775803746990
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1777,7 +1777,7 @@ var exc=$B.EXC(_b_.TypeError,"'"+$B.class_name(obj)+
 throw exc}
 $B.getitem_slice=function(obj,slice,inum){try{var res
 var klass=$B.get_class(obj)
-if(Array.isArray(obj)&& klass===_b_.list){res=_b_.list.mp_subscript(obj,slice)}else if(typeof obj=="string"){res=_b_.str.mp_subscript(obj,slice)}else{res=$B.$call($B.$getattr(klass,"__getitem__"),obj,slice)}
+if(Array.isArray(obj)&& klass===_b_.list){res=_b_.list.$getitem_slice(obj,slice)}else if(typeof obj=="string"){res=_b_.str.mp_subscript(obj,slice)}else{res=$B.$call($B.$getattr(klass,"__getitem__"),obj,slice)}
 return res}catch(err){$B.set_inum(inum)
 throw err}}
 $B.$setitem=function(obj,item,value,inum){var klass=$B.get_class(obj)
@@ -6623,7 +6623,7 @@ if($B.rich_comp('__ge__',start,len)){start=step < 0 ? len_1 :len}}
 if(self.stop===None){stop=step_is_neg ?-1 :len}else{stop=$B.PyNumber_Index(self.stop)
 if($B.rich_comp('__gt__',0,stop)){stop=$B.rich_op('__add__',stop,len)}
 if($B.rich_comp('__ge__',stop,len)){stop=step_is_neg ? len_1 :len}}
-return{start:start,stop:stop,step:step}}
+return{start,stop,step}}
 slice.$factory=function(start,stop){return slice.$fast_slice(start,stop,1)}
 slice.$fast_slice=function(start,stop,step){if(stop===$B.NULL && step===$B.NULL){stop=start
 start=_b_.None
@@ -10659,10 +10659,10 @@ var indices=d[TABLE][hash],index
 if(indices !==undefined){for(var index of indices){var v=d[KEYS][index]
 if(v===undefined){d[TABLE][hash].splice(i,1)
 if(d[TABLE][hash].length==0){delete d[TABLE][hash]
-return false}
+return null}
 continue}
 if(v===key ||$B.is_or_equals(v,key)){return index}}}
-return false}
+return null}
 dict.$lookup_by_key=function(d,key,hash){hash=hash===undefined ? _b_.hash(key):hash
 var indices=d[TABLE][hash],index
 if(indices !==undefined){for(var i=0,len=indices.length;i < len;i++){index=indices[i]
@@ -10679,7 +10679,7 @@ dict.$contains=function(self,key){if(! self[KEYS]){if(typeof key=='string'){retu
 var hash=$B.$getattr($B.get_class(key),'__hash__')
 if(hash===$B.str_dict_get($B.get_dict(_b_.object),'__hash__')){return false}
 convert_all_str(self)}
-return dict.$lookup_by_key(self,key).found}
+return lookup_by_key(self,key)!==null}
 dict.$delitem=function(self,key){if(self[$B.JSOBJ]){delete self[$B.JSOBJ][key]}
 if(! self[KEYS]){if(typeof key=='string'){if(self.hasOwnProperty(key)){dict.$delete_string(self,key)
 return _b_.None}else{$B.RAISE(_b_.KeyError,key)}}
@@ -10757,9 +10757,9 @@ if(Object.hasOwn(self,$B.JSOBJ)){if(Object.hasOwn(self[$B.JSOBJ],key)){return se
 $B.RAISE(_b_.KeyError,key)}
 if(! self[TABLE]){if(typeof key=='string'){if(self.hasOwnProperty(key)){return self[key]}}else{var hash_method=$B.$getattr($B.get_class(key),'__hash__')
 if(hash_method !==$B.str_dict_get($B.get_dict(_b_.object),'__hash__')){convert_all_str(self)
-let lookup=dict.$lookup_by_key(self,key)
-if(lookup.found){return lookup.value}}}}else{let lookup=dict.$lookup_by_key(self,key)
-if(lookup.found){return lookup.value}}
+let index=lookup_by_key(self,key)
+if(index !==null){return self[VALUES][index]}}}}else{let index=lookup_by_key(self,key)
+if(index !==null){return self[VALUES][index]}}
 if(! ignore_missing){var klass=$B.get_class(self)
 if(klass !==dict && ! ignore_missing){try{var missing_method=$B.$getattr(klass,"__missing__",_b_.None)}catch(err){console.log(err)}
 if(missing_method !==_b_.None){return missing_method(self,key)}}}
@@ -10825,7 +10825,7 @@ var index
 if(self[TABLE][hash]===undefined){index=self[KEYS].length
 self[TABLE][hash]=[index]}else{if(! from_setdefault){
 var lookup=lookup_by_key(self,key,hash)
-if(lookup !==false){self[VALUES][lookup]=value
+if(lookup !==null){self[VALUES][lookup]=value
 return _b_.None}}
 index=self[KEYS].length
 if(self[TABLE][hash]===undefined){

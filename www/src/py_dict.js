@@ -429,7 +429,7 @@ function lookup_by_key(d, key, hash){
                 d[TABLE][hash].splice(i, 1)
                 if(d[TABLE][hash].length == 0){
                     delete d[TABLE][hash]
-                    return false
+                    return null
                 }
                 continue
             }
@@ -438,7 +438,7 @@ function lookup_by_key(d, key, hash){
             }
         }
     }
-    return false
+    return null
 }
 
 dict.$lookup_by_key = function(d, key, hash){
@@ -489,7 +489,7 @@ dict.$contains = function(self, key){
         convert_all_str(self)
     }
 
-    return dict.$lookup_by_key(self, key).found
+    return lookup_by_key(self, key) !== null
 }
 
 dict.$delitem  = function(self, key){
@@ -707,16 +707,16 @@ dict.$getitem = function(self, key, ignore_missing){
             var hash_method = $B.$getattr($B.get_class(key), '__hash__')
             if(hash_method !== $B.str_dict_get($B.get_dict(_b_.object), '__hash__')){
                 convert_all_str(self)
-                let lookup = dict.$lookup_by_key(self, key)
-                if(lookup.found){
-                    return lookup.value
+                let index = lookup_by_key(self, key)
+                if(index !== null){
+                    return self[VALUES][index]
                 }
             }
         }
     }else{
-        let lookup = dict.$lookup_by_key(self, key)
-        if(lookup.found){
-            return lookup.value
+        let index = lookup_by_key(self, key)
+        if(index !== null){
+            return self[VALUES][index]
         }
     }
     if(! ignore_missing){
@@ -924,7 +924,7 @@ dict.$setitem = function(self, key, value, $hash, from_setdefault){
             // If $setitem was called from setdefault, it's no use trying
             // another lookup
             var lookup = lookup_by_key(self, key, hash)
-            if(lookup !== false){
+            if(lookup !== null){
                 self[VALUES][lookup] = value
                 return _b_.None
             }
