@@ -117,7 +117,7 @@
                 args = $.args.map($B.pyobj2jsobj)
             self.postMessage(message, ...args)
         }
-        browser.document = _b_.property.$factory(
+        browser.document = $B.internal_property(
             function(){
                 $B.RAISE(_b_.ValueError,
                     "'document' is not available in Web Workers")

@@ -1493,6 +1493,13 @@ $B.call_attr = function(obj, attr, inum, ...args){
     var is_class = obj?.tp_name !== undefined
     if(! is_class){
         var klass = $B.get_class(obj)
+        if(klass.tp_funcs &&
+                Object.hasOwn(klass.tp_funcs, attr)){
+            var func = klass.tp_funcs[attr]
+            if($B.get_class(func) === $B.builtin_method){
+                return func(obj, ...args)
+            }
+        }
         var own_dict = $B.get_dict(obj)
         if($B.get_class(klass) === _b_.type){
             var in_klass_dict = $B.get_dict(klass)[attr]

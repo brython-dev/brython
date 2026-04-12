@@ -673,8 +673,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 ;
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-04-10 21:36:46.478230"
-__BRYTHON__.timestamp=1775849806477
+__BRYTHON__.compiled_date="2026-04-12 09:07:53.046831"
+__BRYTHON__.timestamp=1775977673046
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1896,6 +1896,9 @@ $B.nb_call_attr=0
 $B.call_attr=function(obj,attr,inum,...args){
 var is_class=obj?.tp_name !==undefined
 if(! is_class){var klass=$B.get_class(obj)
+if(klass.tp_funcs &&
+Object.hasOwn(klass.tp_funcs,attr)){var func=klass.tp_funcs[attr]
+if($B.get_class(func)===$B.builtin_method){return func(obj,...args)}}
 var own_dict=$B.get_dict(obj)
 if($B.get_class(klass)===_b_.type){var in_klass_dict=$B.get_dict(klass)[attr]
 if(in_klass_dict?.ob_type===$B.function){$B.nb_call_attr++
@@ -3052,9 +3055,10 @@ _b_.type.tp_getset=["__name__","__qualname__","__bases__","__mro__","__module__"
 ]
 $B.set_func_names(type,"builtins")
 var property=_b_.property
-$B.internal_property=function(fget,fset){for(var func of arguments){if($B.get_class(func)===$B.JSFunction){$B.set_type(func,$B.function)}}
+$B.internal_property=function(module,fget,fset){
+for(var func of[fget,fset]){if($B.get_class(func)===$B.JSFunction){$B.set_type(func,$B.function)}}
 return{
-ob_type:property,prop_get:fget,prop_set:fset ?? _b_.None,prop_del:_b_.None,prop_doc:_b_.None}}
+ob_type:_b_.property,prop_get:fget,prop_set:fset ?? _b_.None,prop_del:_b_.None,doc:_b_.None}}
 property.$factory=function(fget,fset,fdel,doc){var res={ob_type:property}
 property.tp_init(res,fget,fset ?? _b_.None,fdel ?? _b_.None,doc ?? _b_.None)
 return res}
@@ -4896,6 +4900,7 @@ if(in_klass_dict){switch(in_klass_dict.ob_type){case $B.function:
 if(in_own_dict===$B.NULL){return $B.method.$factory(in_klass_dict,obj)}
 case _b_.staticmethod:
 if(in_own_dict===$B.NULL){return in_klass_dict}}}}catch(err){console.log('error',err)
+console.log('obj',obj,'klass',klass)
 throw err}
 var res=$B.object_getattribute(obj,klass,attr)}else{var in_dict=$B.get_dict(obj)[attr]
 if(in_dict && $B.get_class(obj)===_b_.type){var res=$B.NULL
@@ -8936,7 +8941,8 @@ if(("a" <=char && char <="m")||("A" <=char && char <="M")){res+=String.fromCharC
 ("M" < char && char <="Z")){res+=String.fromCharCode(char.charCodeAt(0)-13)}else{res+=char}}
 return res}
 return _b_.bytes.tp_new(_b_.bytes,[$.self,$.encoding,$.errors],$B.empty_dict())}
-str_funcs.endswith=function(){
+str_funcs.endswith=function(self,suffix){
+if(arguments.length==2 && typeof suffix=='string'){return self.endsWith(suffix)}
 var $=$B.args("endswith",4,{self:null,suffix:null,start:null,end:null},["self","suffix","start","end"],arguments,{start:0,end:null},null,null),_self
 normalize_start_end($);
 _self=to_string($.self)
@@ -13777,7 +13783,7 @@ delete browser.window
 delete browser.win
 browser.self.send=function(){var $=$B.args('send',1,{message:null},['message'],arguments,{},'args',null),message=$B.pyobj2structuredclone($.message),args=$.args.map($B.pyobj2jsobj)
 self.postMessage(message,...args)}
-browser.document=_b_.property.$factory(
+browser.document=$B.internal_property(
 function(){$B.RAISE(_b_.ValueError,"'document' is not available in Web Workers")},function(self,value){browser.document=value}
 )}else{browser.is_webworker=false
 update(browser,{"alert":function(message){window.alert($B.builtins.str.$factory(message ||""))},confirm:$B.jsobj2pyobj(window.confirm),"document":$B.DOMNode.$factory(document),doc:$B.DOMNode.$factory(document),

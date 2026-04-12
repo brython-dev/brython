@@ -2085,11 +2085,14 @@ str_funcs.encode = function(){
         $B.empty_dict())
 }
 
-str_funcs.endswith = function(){
+str_funcs.endswith = function(self, suffix){
     // Return True if the string ends with the specified suffix, otherwise
     // return False. suffix can also be a tuple of suffixes to look for.
     // With optional start, test beginning at that position. With optional
     // end, stop comparing at that position.
+    if(arguments.length == 2 && typeof suffix == 'string'){
+        return self.endsWith(suffix)
+    }
     var $ = $B.args("endswith", 4,
             {self:null, suffix:null, start:null, end:null},
             ["self", "suffix", "start", "end"],

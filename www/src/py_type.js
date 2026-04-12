@@ -1759,18 +1759,19 @@ $B.set_func_names(type, "builtins")
 // property (built in function)
 var property = _b_.property
 
-$B.internal_property = function(fget, fset){
-    for(var func of arguments){
+$B.internal_property = function(module, fget, fset){
+    // used in built-in modules
+    for(var func of [fget, fset]){
         if($B.get_class(func) === $B.JSFunction){
             $B.set_type(func, $B.function)
         }
     }
     return {
-        ob_type: property,
+        ob_type: _b_.property,
         prop_get: fget,
         prop_set: fset ?? _b_.None,
         prop_del: _b_.None,
-        prop_doc: _b_.None
+        doc: _b_.None
     }
 }
 

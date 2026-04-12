@@ -836,6 +836,7 @@ $B.$getattr = function(obj, attr, _default){
             }
         }catch(err){
             console.log('error', err)
+            console.log('obj', obj, 'klass', klass)
             throw err
         }
         var res =  $B.object_getattribute(obj, klass, attr)
