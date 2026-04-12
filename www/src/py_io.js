@@ -132,7 +132,7 @@ _IOBase_funcs.readable = function(){
 }
 
 _IOBase_funcs.readline = function(_self, limit=-1){
-    var $ = $B.args1('readline', 2, {self: null, limit: null},
+    var $ = $B.args('readline', 2, {self: null, limit: null},
                 arguments, {limit: -1}),
         _self = $.self,
         limit = $.limit
@@ -202,7 +202,7 @@ _IOBase_funcs.readline = function(_self, limit=-1){
 }
 
 _IOBase_funcs.readlines = function(_self, hint){
-    var $ = $B.args1('readlines', 2, {self: null, hint: null}, arguments,
+    var $ = $B.args('readlines', 2, {self: null, hint: null}, arguments,
                 {hint: -1})
     var _self=  $.self,
         hint = $.hint
@@ -484,7 +484,7 @@ $B._BufferedReader.tp_init = function(_self, raw, buffer_size=DEFAULT_BUFFER_SIZ
 var _BufferedReader_funcs = $B._BufferedReader.tp_funcs = {}
 
 _BufferedReader_funcs.peek = function(_self, size){
-    var $ = $B.args1('peek', 2, {self: null, size: null}, arguments,
+    var $ = $B.args('peek', 2, {self: null, size: null}, arguments,
                 {size: 0})
     var _self = $.self,
         size = $.size
@@ -493,7 +493,7 @@ _BufferedReader_funcs.peek = function(_self, size){
 }
 
 _BufferedReader_funcs.seek = function(_self, offset, whence){
-    var $ = $B.args1('seek', 2, {self: null, offset: null, whence: null},
+    var $ = $B.args('seek', 2, {self: null, offset: null, whence: null},
                 arguments, {whence: 0})
     var _self = $.self,
         offset = $.offset,
@@ -588,7 +588,7 @@ $B._FileIO.tp_new = function(cls, args, kw){
 }
 
 $B._FileIO.tp_init = function(){
-    var $ = $B.args1('__init__', 5,
+    var $ = $B.args('__init__', 5,
                 {self: null, name: null, mode: null, closefd: null, opener: null},
                 arguments,
                 {mode: 'r', closefd: true, opener: _b_.None})
@@ -831,7 +831,7 @@ $BufferedReader.tp_methods = [
 $B._TextIOWrapper = $B.make_builtin_class('_io._TextIOWrapper', [$B._TextIOBase])
 
 $B._TextIOWrapper.$factory = function(){
-    var $ = $B.args1("TextIOWrapper", 6,
+    var $ = $B.args("TextIOWrapper", 6,
         {buffer: null, encoding: null, errors: null,
          newline: null, line_buffering: null, write_through:null},
          arguments,
@@ -868,7 +868,7 @@ _TextIOWrapper_funcs.fileno = function(_self){
 }
 
 _TextIOWrapper_funcs.read = function(){
-    var $ = $B.args1("read", 2, {self: null, size: null}, arguments,
+    var $ = $B.args("read", 2, {self: null, size: null}, arguments,
                 {size: -1})
     var _self = $.self,
         size = $B.PyNumber_Index($.size)
@@ -892,7 +892,7 @@ _TextIOWrapper_funcs.read = function(){
 }
 
 _TextIOWrapper_funcs.readline = function(){
-    var $ = $B.args1("read", 2, {self: null, size: null}, arguments,
+    var $ = $B.args("read", 2, {self: null, size: null}, arguments,
                 {size: -1})
     var _self = $.self,
         size = $B.PyNumber_Index($.size)
@@ -1121,7 +1121,7 @@ function _io_open_impl(file, mode, buffering, encoding, errors, newline,
 }
 
 _b_.open = function(){
-    var $ = $B.args1('open', 3,
+    var $ = $B.args('open', 3,
                 {file: null, mode: null, buffering: null, encoding: null,
                  errors: null, newline: null, closefd: null, opener: null},
                 arguments,

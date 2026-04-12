@@ -4,7 +4,7 @@
 var _b_ = $B.builtins
 
 function define(tag_name, cls, options){
-    var $ = $B.args1("define", 3, {tag_name: null, cls: null, options: null},
+    var $ = $B.args("define", 3, {tag_name: null, cls: null, options: null},
                 arguments, {options: _b_.None})
     var tag_name = $.tag_name,
         cls = $.cls,

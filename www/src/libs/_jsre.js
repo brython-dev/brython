@@ -170,7 +170,7 @@ obj.escape = function(string){
 }
 
 obj.findall = function(pattern, string, flags){
-    var $ = $B.args1('re.findall', 2, {pattern:null, string:null},
+    var $ = $B.args('re.findall', 2, {pattern:null, string:null},
                 arguments, null, 'args', 'kw')
     var args = $.args,
         _flags = 0;
@@ -189,7 +189,7 @@ obj.findall = function(pattern, string, flags){
 }
 
 obj.finditer = function(pattern, string, flags){
-    var $ = $B.args1('re.finditer', 2, {pattern:null, string:null}, arguments,
+    var $ = $B.args('re.finditer', 2, {pattern:null, string:null}, arguments,
                 null, 'args', 'kw')
     var args = $.args,
         _flags = 0;
@@ -235,7 +235,7 @@ obj.finditer = function(pattern, string, flags){
     return _list
 }
 obj.search = function(pattern, string){
-    var $ = $B.args1('re.search', 2, {pattern:null, string:null}, 
+    var $ = $B.args('re.search', 2, {pattern:null, string:null}, 
                   arguments, null, 'args', 'kw')
     var args = $.args
     if(args.length>0){var flags = args[0]}
@@ -247,7 +247,7 @@ obj.search = function(pattern, string){
     return MatchObject.$factory(jsmatch, string, pattern)
 }
 obj.sub = function(pattern, repl, string){
-    var $ns = $B.args1('re.search', 3,
+    var $ns = $B.args('re.search', 3,
         {pattern: null, repl: null, string: null},
         arguments, null, 'args', 'kw')
     for($var in $ns){

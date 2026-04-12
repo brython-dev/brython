@@ -23,7 +23,7 @@
         __BRYTHON__,
         bind:function(){
             // bind(element, event) is a decorator for callback function
-            var $ = $B.args1("bind", 3, {elt: null, evt: null, options: null},
+            var $ = $B.args("bind", 3, {elt: null, evt: null, options: null},
                         arguments, {options: _b_.None})
             var options = $.options
             if(typeof options == "boolean"){
@@ -88,7 +88,7 @@
         },
         console: self.console && $B.jsobj2pyobj(self.console),
         run_script: function(){
-            var $ = $B.args1("run_script", 2, {src: null, name: null},
+            var $ = $B.args("run_script", 2, {src: null, name: null},
                         arguments, {name: "script_" + $B.UUID()})
             $B.runPythonSource($.src, $.name)
         },
@@ -109,7 +109,7 @@
         delete browser.win
         // browser.send is an alias for postMessage
         browser.self.send = function(){
-            var $ = $B.args1('send', 1, {message: null}, arguments, null,
+            var $ = $B.args('send', 1, {message: null}, arguments, null,
                         'args', null)
             var message = $B.pyobj2structuredclone($.message),
                 args = $.args.map($B.pyobj2jsobj)
@@ -207,7 +207,7 @@
                 var cls_funcs = cls.tp_funcs = {}
 
                 cls.tp_init = function(){
-                    var $ = $B.args1('__init__', 1, {self: null}, arguments,
+                    var $ = $B.args('__init__', 1, {self: null}, arguments,
                                   null, 'args', 'kw')
                     var self = $.self,
                         args = $.args
@@ -475,7 +475,7 @@
             // load JS script at specified url
             // If it exposes a variable $module, use it as the namespace of imported
             // module named "name"
-            var $ = $B.args1('import_js', 2, {url: null, alias: null},
+            var $ = $B.args('import_js', 2, {url: null, alias: null},
                         arguments, {alias: _b_.None})
             var url = $.url,
                 alias = $.alias
@@ -690,7 +690,7 @@
     // see https://docs.python.org/3/reference/toplevel_components.html#programs
     modules['_sys'] = {
         _getframe : function(){
-            var $ = $B.args1("_getframe", 1, {depth: null}, arguments,
+            var $ = $B.args("_getframe", 1, {depth: null}, arguments,
                         {depth: 0})
             var depth = $.depth,
                 frame_obj = $B.frame_obj
@@ -825,7 +825,7 @@
             $B.recursion_limit = value
         },
         settrace: function(){
-            var $ = $B.args1("settrace", 1, {tracefunc: null}, arguments)
+            var $ = $B.args("settrace", 1, {tracefunc: null}, arguments)
             $B.tracefunc = $.tracefunc
             $B.frame_obj.frame.$f_trace = $B.tracefunc
             // settrace() does not activite the trace function on the current
@@ -907,7 +907,7 @@
         ]),
         warn: function(){
             // Issue a warning, or maybe ignore it or raise an exception.
-            var $ = $B.args1('warn', 4,
+            var $ = $B.args('warn', 4,
                         {message: null, category: null, stacklevel: null, source: null},
                         arguments,
                         {category: _b_.UserWarning, stacklevel: 1, source: _b_.None})
@@ -1254,19 +1254,19 @@
     }
 
     Future.done = function(){
-        var $ = $B.args1('done', 1, {self:null}, arguments)
+        var $ = $B.args('done', 1, {self:null}, arguments)
         return !! $.self._done
     }
 
     Future.set_result = function(){
-        var $ = $B.args1('set_result', 2, {self:null, value: null}, arguments)
+        var $ = $B.args('set_result', 2, {self:null, value: null}, arguments)
         $.self._done = true
         $.self._methods.resolve($.value)
         return _b_.None
     }
 
     Future.set_exception = function(){
-        var $ = $B.args1('set_exception', 2, {self:null, exception: null},
+        var $ = $B.args('set_exception', 2, {self:null, exception: null},
                     arguments)
         $.self._done = true
         $.self._methods.reject($.exception)
@@ -1277,7 +1277,7 @@
 
     modules['browser.aio'] = {
         ajax: function(){
-            var $ = $B.args1("ajax", 2, {method: null, url: null},
+            var $ = $B.args("ajax", 2, {method: null, url: null},
                     arguments, null, null, "kw")
             var method = $.method.toUpperCase(),
                 url = $.url,
@@ -1327,7 +1327,7 @@
             // event(element, *names) is a Promise on the events "names" happening on
             // the element. This promise always resolves (never rejects) with the
             // first triggered DOM event.
-            var $ = $B.args1("event", 1, {element: null}, arguments)
+            var $ = $B.args("event", 1, {element: null}, arguments)
             var element = $.element,
                 names = $.names
             return new Promise(function(resolve){
@@ -1366,7 +1366,7 @@
                 },
                 handle_error = $B.show_error
 
-            var $ = $B.args1("run", 3,
+            var $ = $B.args("run", 3,
                         {coro: null, onsuccess: null, onerror: null},
                         arguments,
                         {onsuccess: handle_success, onerror: handle_error})

@@ -86,7 +86,7 @@ _b_.all = function(obj){
 }
 
 _b_.anext = function(){
-    var $ = $B.args1('anext', 2, {async_iterator: null, _default: null},
+    var $ = $B.args('anext', 2, {async_iterator: null, _default: null},
                 arguments, {_default: $B.NULL}, null, null)
     var awaitable = $B.$call($B.$getattr($.async_iterator, '__anext__'))
     return awaitable.catch(
@@ -221,7 +221,7 @@ _b_.chr = function(i){
 
 //compile() (built in function)
 _b_.compile = function() {
-    var $ = $B.args1('compile', 7,
+    var $ = $B.args('compile', 7,
         {source:null, filename:null, mode:null, flags:null, dont_inherit:null,
          optimize:null, _feature_version:null},
          arguments,
@@ -505,7 +505,7 @@ var enumerate = _b_.enumerate
 enumerate.__mro__ = [_b_.object]
 
 enumerate.$factory = function(){
-    var $ns = $B.args1("enumerate", 2, {iterable: null, start: null},
+    var $ns = $B.args("enumerate", 2, {iterable: null, start: null},
                   arguments, {start: 0}, null, null)
     var iterable = $ns["iterable"],
         start = $ns["start"]
@@ -651,7 +651,7 @@ filter.tp_methods = ["__reduce__"]
 $B.set_func_names(filter, "builtins")
 
 _b_.format = function() {
-    var $ = $B.args1("format", 2, {value: null, format_spec: null},
+    var $ = $B.args("format", 2, {value: null, format_spec: null},
                 arguments, {format_spec: ''}, null, null)
     var value = $.value
     var klass = $B.get_class(value)
@@ -687,7 +687,7 @@ function attr_error(attr, obj){
 
 _b_.getattr = function(){
     var missing = {}
-    var $ = $B.args1("getattr", 3, {obj: null, attr: null, _default: null},
+    var $ = $B.args("getattr", 3, {obj: null, attr: null, _default: null},
                 arguments, {_default: missing}, null, null)
     if(! $B.$isinstance($.attr, _b_.str)){
         $B.RAISE(_b_.TypeError, "attribute name must be string, " +
@@ -1012,7 +1012,7 @@ _b_.id = function(obj){
 // The default __import__ function is a builtin
 _b_.__import__ = function(){
     // TODO : Install $B.$__import__ in builtins module to avoid nested call
-    var $ = $B.args1('__import__', 5,
+    var $ = $B.args('__import__', 5,
         {name: null, globals: null, locals: null, fromlist: null, level: null},
         arguments,
         {globals:None, locals:None, fromlist:_b_.tuple.$factory(), level:0},
@@ -1236,7 +1236,7 @@ $B.$iter = function(obj, sentinel){
 
 var iter = _b_.iter = function(){
     // Function exposed to Brython programs, with arguments control
-    var $ = $B.args1('iter', 1, {obj: null}, arguments, null, 'args', 'kw'),
+    var $ = $B.args('iter', 1, {obj: null}, arguments, null, 'args', 'kw'),
         sentinel
     if($.args.length > 0){
         sentinel = $.args[0]
@@ -1290,7 +1290,7 @@ _b_.locals = function(){
 var map = _b_.map
 
 map.$factory = function(){
-    var $ = $B.args1('map', 2, {func: null, it1:null}, arguments, null,
+    var $ = $B.args('map', 2, {func: null, it1:null}, arguments, null,
                 'args', null),
         func = $.func
     var iter_args = [$B.make_js_iterator($.it1)]
@@ -1463,7 +1463,7 @@ _b_.min = function(){
 var next = _b_.next = function(obj){
     check_no_kw('next', obj)
     var missing = {},
-        $ = $B.args1("next", 2, {obj: null, def: null}, arguments,
+        $ = $B.args("next", 2, {obj: null, def: null}, arguments,
                 {def: missing}, null, null)
     var klass = $B.get_class(obj),
         ga = $B.$getattr(klass, "__next__", $B.NULL)
@@ -1544,7 +1544,7 @@ var all_ints = () => $B.EXC(_b_.TypeError, 'pow() 3rd argument not ' +
     'allowed unless all arguments are integers')
 
 _b_.pow = function() {
-    var $ = $B.args1('pow', 3, {x: null, y: null, mod: null},
+    var $ = $B.args('pow', 3, {x: null, y: null, mod: null},
                 arguments, {mod: None}, null, null)
     var x = $.x,
         y = $.y,
@@ -1700,7 +1700,7 @@ _b_.reversed.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]
 $B.set_func_names(reversed, "builtins")
 
 _b_.round = function(){
-    var $ = $B.args1('round', 2, {number: null, ndigits: null},
+    var $ = $B.args('round', 2, {number: null, ndigits: null},
                 arguments, {ndigits: None}, null, null)
     var arg = $.number,
         n = $.ndigits === None ? 0 : $.ndigits
@@ -1759,7 +1759,7 @@ _b_.round = function(){
 }
 
 _b_.setattr = function(){
-    var $ = $B.args1('setattr', 3, {obj: null, attr: null, value: null},
+    var $ = $B.args('setattr', 3, {obj: null, attr: null, value: null},
                 arguments, null, null, null)
     var obj = $.obj,
         attr = $.attr,
@@ -1799,7 +1799,7 @@ $B.$setattr = function(obj, attr, value){
 }
 
 _b_.sorted = function(){
-    var $ = $B.args1('sorted', 1, {iterable: null}, arguments, null, null,
+    var $ = $B.args('sorted', 1, {iterable: null}, arguments, null, null,
                 'kw')
     var _list = _b_.list.$factory($.iterable)
     _b_.list.tp_funcs.sort(_list, $B.dict2kwarg($.kw))
@@ -1810,7 +1810,7 @@ _b_.sorted = function(){
 // str() defined in py_string.js
 
 _b_.sum = function(){
-    var $ = $B.args1('sum', 2, {iterable: null, start: null},
+    var $ = $B.args('sum', 2, {iterable: null, start: null},
                 arguments, {start: 0}, null, null)
     var iterable = $.iterable,
         start = $.start
@@ -2006,7 +2006,7 @@ _b_.super.tp_descr_get = function(self, instance){
 }
 
 _b_.super.tp_init = function(self, _type, object_or_type){
-    var $ = $B.args1('__init__', 3,
+    var $ = $B.args('__init__', 3,
                 {self: null, type: null, object_or_type: null},
                 arguments,
                 {type: _b_.None, object_or_type: _b_.None})
@@ -2068,7 +2068,7 @@ _b_.super.tp_members =  [
 $B.set_func_names($$super, "builtins")
 
 _b_.vars = function(){
-    var $ = $B.args1('vars', 1, {obj: null}, arguments, {obj: $B.NULL}, null, null)
+    var $ = $B.args('vars', 1, {obj: null}, arguments, {obj: $B.NULL}, null, null)
     var obj = $.obj
     if(obj === $B.NULL){
         return _b_.locals()

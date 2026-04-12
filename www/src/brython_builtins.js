@@ -692,7 +692,7 @@ $B.builtins_repr_check = function(builtin, args){
     // Called when entering method __repr__ of builtin classes, to check the
     // the number of arguments, and that the only argument is an instance of
     // the builtin class
-    var $ = $B.args1('__repr__', 1, {self: null}, args)
+    var $ = $B.args('__repr__', 1, {self: null}, args)
     var self = $.self
     if(! $B.$isinstance(self, builtin)){
         var _b_ = $B.builtins

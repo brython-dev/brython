@@ -12,7 +12,7 @@ function makeTagDict(tagName){
     var dict = $B.make_type(tagName, [$B.DOMNode])
 
     dict.tp_init = function(){
-        var $ = $B.args1('__init__', 1, {self: null}, arguments, null,
+        var $ = $B.args('__init__', 1, {self: null}, arguments, null,
                       'args', 'kw'),
             self = $.self,
             args = $.args

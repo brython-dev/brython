@@ -704,7 +704,7 @@ function perm_comb(n, k, iscomb){
 }
 
 function comb(n, k){
-    var $ = $B.args1('comb', 2, {n: null, k: null}, arguments)
+    var $ = $B.args('comb', 2, {n: null, k: null}, arguments)
     var n = $.n,
         k = $.k
 
@@ -1358,7 +1358,7 @@ var _fma = (function () {
 }());
 
 function fma(x, y, z){
-    var $ = $B.args1('fma', 3, {x: null, y: null, z: null}, arguments)
+    var $ = $B.args('fma', 3, {x: null, y: null, z: null}, arguments)
     var x = float_check($.x),
         y = float_check($.y),
         z = float_check($.z)
@@ -1670,7 +1670,7 @@ function lxgcd(x, y){
 }
 
 function gcd(x, y){
-    var $ = $B.args1("gcd", 0, {}, arguments, null, 'args')
+    var $ = $B.args("gcd", 0, {}, arguments, null, 'args')
     var args = $.args.map($B.PyNumber_Index)
     if(args.length == 0){
         return 0
@@ -1690,7 +1690,7 @@ function gcd(x, y){
 
 
 function hypot(x, y){
-    var $ = $B.args1("hypot", 0, {}, arguments, null, "args")
+    var $ = $B.args("hypot", 0, {}, arguments, null, "args")
     var args = []
     for(var arg of $.args){
         try{
@@ -1709,7 +1709,7 @@ function hypot(x, y){
 var inf = INF
 
 function isclose(){
-    var $ = $B.args1("isclose",
+    var $ = $B.args("isclose",
                       4,
                       {a: null, b: null, rel_tol: null, abs_tol: null},
                       arguments,
@@ -1800,7 +1800,7 @@ function isqrt(x){
 }
 
 function lcm(){
-    var $ = $B.args1("lcm", 0, {}, arguments, null, 'args')
+    var $ = $B.args("lcm", 0, {}, arguments, null, 'args')
     var product = 1
 
     var args = $.args.map($B.PyNumber_Index)
@@ -1841,7 +1841,7 @@ var log10_func = Math.log10 || (x => Math.log(x) / Math.log(10)),
     log2_func = Math.log2 || (x => Math.log(x) / Math.log(2))
 
 function log(x, base){
-    var $ = $B.args1("log", 2, {x: null, base: null}, arguments,
+    var $ = $B.args("log", 2, {x: null, base: null}, arguments,
                 {base: _b_.None})
     var x = $.x,
         base = $.base
@@ -2067,7 +2067,7 @@ function addSteps(array, steps){
 }
 
 function nextafter(){
-    var $ = $B.args1("nextafter", 3, {x: null, y: null, steps: null},
+    var $ = $B.args("nextafter", 3, {x: null, y: null, steps: null},
                 arguments, {steps: _b_.None})
     var x = $.x,
         y = $.y,
@@ -2122,7 +2122,7 @@ function nextafter(){
 }
 
 function perm(n, k){
-    var $ = $B.args1("perm", 2, {n: null, k: null}, arguments, {k: _b_.None})
+    var $ = $B.args("perm", 2, {n: null, k: null}, arguments, {k: _b_.None})
     var n = $.n,
         k = $.k
 
@@ -2165,7 +2165,7 @@ function perm(n, k){
 const pi = $B.fast_float(Math.PI)
 
 function pow(){
-    var $ = $B.args1("pow", 2, {base: null, exp: null}, arguments)
+    var $ = $B.args("pow", 2, {base: null, exp: null}, arguments)
     var x = $.base,
         y = $.exp
 
@@ -2241,7 +2241,7 @@ function pow(){
 }
 
 function prod(){
-    var $ = $B.args1("prod", 1, {iterable:null, start:null}, arguments,
+    var $ = $B.args("prod", 1, {iterable:null, start:null}, arguments,
                 {start: 1}, "*")
     var iterable = $.iterable,
         start = $.start
@@ -2501,7 +2501,7 @@ function tl_to_d(total){
 }
 
 function sumprod(p, q){
-    var $ = $B.args1('sumprod', 2, {p: null, q: null}, arguments)
+    var $ = $B.args('sumprod', 2, {p: null, q: null}, arguments)
     var p_i = NULL,
         q_i = NULL,
         term_i = NULL,
@@ -2700,7 +2700,7 @@ function trunc(x) {
 }
 
 function ulp(){
-    var $ = $B.args1("ulp", 1, {x: null}, arguments)
+    var $ = $B.args("ulp", 1, {x: null}, arguments)
     var x = $.x
     if($B.$isinstance(x, _b_.float)){
         if(_b_.float.$funcs.isinf(x)){

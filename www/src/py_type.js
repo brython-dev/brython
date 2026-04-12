@@ -543,7 +543,7 @@ function object_set_dict(obj, value){
 var type = _b_.type // defined in py_object.js
 
 type.$factory = function(){
-    var $ = $B.args1('type', 3, {first: null, bases: null, cl_dict: null},
+    var $ = $B.args('type', 3, {first: null, bases: null, cl_dict: null},
                 arguments, {bases: $B.NULL, cl_dict: $B.NULL}, null, 'kw')
     var first = $.first,
         bases = $.bases,
@@ -1112,7 +1112,7 @@ _b_.type.tp_setattro = function(kls, attr, value){
 }
 
 _b_.type.nb_or = function(){
-    var $ = $B.args1('__or__', 2, {cls: null, other: null},  arguments)
+    var $ = $B.args('__or__', 2, {cls: null, other: null},  arguments)
     var cls = $.cls,
         other = $.other
     if(other !== _b_.None && ! $B.$isinstance(other,
@@ -1136,7 +1136,7 @@ _b_.type.tp_repr = function(kls){
 }
 
 _b_.type.tp_call = function(cls){
-    var $ = $B.args1('__call__', 1, {cls: null}, arguments, null, 'args', 'kw'),
+    var $ = $B.args('__call__', 1, {cls: null}, arguments, null, 'args', 'kw'),
         cls = $.cls,
         args = $.args,
         kw = $.kw,
@@ -1563,7 +1563,7 @@ type_funcs.__bases___get = function(cls){
 }
 
 type_funcs.__bases___set = function(){
-    var $ = $B.args1('__bases__', 2, {cls: null, bases: null}, arguments)
+    var $ = $B.args('__bases__', 2, {cls: null, bases: null}, arguments)
     var cls = $.cls,
         bases = $.bases
     if(! $B.exact_type(bases, _b_.tuple)){
@@ -1782,7 +1782,7 @@ _b_.property.tp_descr_get = function(self, obj, type){
 }
 
 _b_.property.tp_init = function(){
-    var $ = $B.args1('__init__', 5,
+    var $ = $B.args('__init__', 5,
                 {self: null, fget: null, fset: null, fdel: null, doc: null},
                 arguments,
                 {fget: _b_.None, fset: _b_.None, fdel: _b_.None, doc: _b_.None}
@@ -2223,7 +2223,7 @@ $B.GenericAlias.tp_richcompare = function(self, other, op){
 }
 
 $B.GenericAlias.nb_or = function(){
-    var $ = $B.args1('__or__', 2, {self: null, other: null}, arguments)
+    var $ = $B.args('__or__', 2, {self: null, other: null}, arguments)
     return $B.UnionType.$factory([$.self, $.other])
 }
 

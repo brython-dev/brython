@@ -352,7 +352,7 @@ Random.tp_init = function(){
 var Random_funcs = Random.tp_funcs = {}
 
 Random_funcs.getrandbits = function(){
-    var $ = $B.args1("getrandbits", 2, {self: null, k:null}, arguments)
+    var $ = $B.args("getrandbits", 2, {self: null, k:null}, arguments)
     var self = $.self,
         k = $B.PyNumber_Index($.k)
 
@@ -380,19 +380,19 @@ Random_funcs.getrandbits = function(){
 }
 
 Random_funcs.getstate = function(){
-    var $ = $B.args1('getstate', 1, {self: null}, arguments)
+    var $ = $B.args('getstate', 1, {self: null}, arguments)
     var self = $.self
     return self._random.getstate()
 }
 
 Random_funcs.random = function(){
-    var $ = $B.args1('random', 1, {self: null}, arguments)
+    var $ = $B.args('random', 1, {self: null}, arguments)
     var self = $.self
     return $B.fast_float(self._random())
 }
 
 Random_funcs.seed = function(){
-    var $ = $B.args1('seed', 2, {self: null, n: null}, arguments)
+    var $ = $B.args('seed', 2, {self: null, n: null}, arguments)
     var self = $.self,
         n = $.n
 
@@ -404,7 +404,7 @@ Random_funcs.seed = function(){
 }
 
 Random_funcs.setstate = function(){
-    var $ = $B.args1('setstate', 2, {self: null, state:null}, arguments)
+    var $ = $B.args('setstate', 2, {self: null, state:null}, arguments)
     var self = $.self,
         state = $.state
     return self._random.setstate(state)

@@ -168,7 +168,7 @@ Attributes.$factory = function(elt){
 }
 
 Attributes.sq_contains = function(){
-    var $ = $B.args1("__getitem__", 2, {self: null, key:null}, arguments)
+    var $ = $B.args("__getitem__", 2, {self: null, key:null}, arguments)
     if($.self.elt instanceof SVGElement){
         return $.self.elt.hasAttributeNS(null, $.key)
     }else if(typeof $.self.elt.hasAttribute == "function"){
@@ -179,7 +179,7 @@ Attributes.sq_contains = function(){
 
 
 Attributes.mp_subscript = function(){
-    var $ = $B.args1("__getitem__", 2, {self: null, key:null}, arguments)
+    var $ = $B.args("__getitem__", 2, {self: null, key:null}, arguments)
     if($.self.elt instanceof SVGElement &&
             $.self.elt.hasAttributeNS(null, $.key)){
         return $.self.elt.getAttributeNS(null, $.key)
@@ -202,7 +202,7 @@ Attributes.tp_iternext = function*(self){
 }
 
 Attributes.mp_ass_subscript = function(){
-    var $ = $B.args1("__setitem__", 3, {self: null, key:null, value: null},
+    var $ = $B.args("__setitem__", 3, {self: null, key:null, value: null},
                 arguments)
     var self = $.self,
         key = $.key,
@@ -243,7 +243,7 @@ Attributes.tp_repr = function(self){
 var Attributes_funcs = Attributes.tp_funcs = {}
 
 Attributes_funcs.get = function(){
-    var $ = $B.args1("get", 3, {self: null, key:null, deflt: null},
+    var $ = $B.args("get", 3, {self: null, key:null, deflt: null},
                 arguments, {deflt: _b_.None})
     try{
         return Attributes.mp_subscript($.self, $.key)
@@ -261,7 +261,7 @@ Attributes_funcs.keys = function(){
 }
 
 Attributes_funcs.items = function(){
-    var $ = $B.args1("values", 1, {self: null}, arguments)
+    var $ = $B.args("values", 1, {self: null}, arguments)
     var attrs = $.self.elt.attributes,
         values = []
     for(var i = 0; i < attrs.length; i++){
@@ -271,7 +271,7 @@ Attributes_funcs.items = function(){
 }
 
 Attributes_funcs.values = function(){
-    var $ = $B.args1("values", 1, {self: null}, arguments)
+    var $ = $B.args("values", 1, {self: null}, arguments)
     var attrs = $.self.elt.attributes,
         values = []
     for(var i = 0; i < attrs.length; i++){
@@ -1026,7 +1026,7 @@ DOMNode_funcs.abs_top_set = _b_.None
 
 DOMNode_funcs.bind = function(){
     // bind functions to the event (event = "click", "mouseover" etc.)
-    var $ = $B.args1("bind", 4,
+    var $ = $B.args("bind", 4,
                 {self: null, event: null, func: null, options: null},
                 arguments, {func: _b_.None, options: _b_.None})
     var self = $.self,
@@ -1098,7 +1098,7 @@ DOMNode_funcs.child_nodes = function(self){
 
 DOMNode_funcs.clear = function(){
     // remove all children elements
-    var $ = $B.args1("clear", 1, {self: null}, arguments)
+    var $ = $B.args("clear", 1, {self: null}, arguments)
     var self = $.self
     if(self.nodeType == Node.DOCUMENT_NODE){
         self = self.body
@@ -1141,7 +1141,7 @@ DOMNode_funcs.clone = function(self){
 DOMNode_funcs.closest_get = function(){
     // Returns the first parent of self with specified CSS selector
     // Raises KeyError if not found
-    var $ = $B.args1("closest", 2, {self: null, selector: null},
+    var $ = $B.args("closest", 2, {self: null, selector: null},
                 arguments, {selector: $B.NULL})
     var self = $.self,
         selector = $.selector
@@ -1200,7 +1200,7 @@ DOMNode_funcs.get = function(self){
     for(var i = 1; i < arguments.length; i++){
         args.push(arguments[i])
     }
-    var $ns = $B.args1("get", 0, {}, args),
+    var $ns = $B.args("get", 0, {}, args),
         $dict = _b_.dict.$to_obj($ns.kw)
 
     if($dict["name"] !== undefined){

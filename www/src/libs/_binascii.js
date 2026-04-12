@@ -90,7 +90,7 @@ function make_alphabet(altchars){
 
 var module = {
     a2b_base64: function(){
-        var $ = $B.args1("a2b_base64", 2, {s: null, strict_mode: null},
+        var $ = $B.args("a2b_base64", 2, {s: null, strict_mode: null},
                     arguments, {strict_mode: false})
         var bytes
         if($B.$isinstance($.s, _b_.str)){
@@ -103,7 +103,7 @@ var module = {
         return decode(bytes)
     },
     a2b_hex: function(){
-        var $ = $B.args1("a2b_hex", 1, {s: null}, arguments)
+        var $ = $B.args("a2b_hex", 1, {s: null}, arguments)
         var s = $.s
         if($B.$isinstance(s, _b_.bytes)){
             s = $B.bytes_decode(s, 'ascii')
@@ -125,7 +125,7 @@ var module = {
         return _b_.bytes.$factory(res)
     },
     b2a_base64: function(){
-        var $ = $B.args1("b2a_base64", 1, {data: null}, arguments, null, null, 
+        var $ = $B.args("b2a_base64", 1, {data: null}, arguments, null, null, 
                     "kw")
         var newline = _b_.dict.$get_string($.kw, 'newline', false)
 

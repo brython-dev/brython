@@ -143,7 +143,7 @@ function handle_kwargs(self, kw, method){
 
 
 function _request_without_body(method){
-    var $ = $B.args1(method, 3, {method: null, url: null, blocking: null},
+    var $ = $B.args(method, 3, {method: null, url: null, blocking: null},
                 arguments, {blocking: false}, null, "kw")
     var method = $.method,
         url = $.url,
@@ -194,7 +194,7 @@ function _request_without_body(method){
 }
 
 function _request_with_body(method){
-    var $ = $B.args1(method, 3, {method: null, url: null, blocking: null},
+    var $ = $B.args(method, 3, {method: null, url: null, blocking: null},
                 arguments, {blocking: false}, null, "kw")
     var method = $.method,
         url = $.url,
@@ -231,7 +231,7 @@ function _request_with_body(method){
 }
 
 function form_data(form){
-    var $ = $B.args1('form_data', 1, {form: null}, arguments, {form: $B.NULL})
+    var $ = $B.args('form_data', 1, {form: null}, arguments, {form: $B.NULL})
     if($.form === $B.NULL){
         return new FormData()
     }else{
@@ -277,7 +277,7 @@ function trace(){
 
 function file_upload(){
     // ajax.file_upload(url, file, method="POST", **callbacks)
-    var $ = $B.args1("file_upload", 2, {url: null, "file": file},
+    var $ = $B.args("file_upload", 2, {url: null, "file": file},
                 arguments, null, null, "kw"),
         url = $.url,
         file = $.file,
@@ -418,7 +418,7 @@ ajax_funcs.bind = function(self, evt, func){
 }
 
 ajax_funcs.open = function(){
-    var $ = $B.args1('open', 4,
+    var $ = $B.args('open', 4,
                 {self: null, method: null, url: null, async: null}, arguments,
                 {async: true})
     var self = $.self,

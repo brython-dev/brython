@@ -788,7 +788,7 @@ int_funcs.denominator_get = function(self){
 int_funcs.denominator_set = _b_.None
 
 int_funcs.from_bytes = function(self){
-    var $ = $B.args1("from_bytes", 4,
+    var $ = $B.args("from_bytes", 4,
                 {cls: null, bytes:null, byteorder:null, signed:null},
                 arguments, {byteorder: 'big', signed: false})
 
@@ -855,7 +855,7 @@ int_funcs.real_get = function(self){
 int_funcs.real_set = _b_.None
 
 int_funcs.to_bytes = function(self){
-    var $ = $B.args1("to_bytes", 3,
+    var $ = $B.args("to_bytes", 3,
         {self: null, len: null, byteorder: null, signed: null},
         arguments, {len: 1, byteorder: 'big', signed: false})
     var self = $.self,
@@ -961,7 +961,7 @@ var bool = _b_.bool
 bool.$factory = function(){
     // Calls $B.$bool, which is used inside the generated JS code and skips
     // arguments control.
-    var $ = $B.args1("bool", 1, {x: null}, arguments, {x: false}, null, null, 1)
+    var $ = $B.args("bool", 1, {x: null}, arguments, {x: false}, null, null, 1)
     return $B.$bool($.x, true)
 }
 

@@ -120,7 +120,7 @@ $B.object_getattribute = function(obj, klass, attr){
 
 object.$new = function(cls){
     return function(){
-        var $ = $B.args1('__new__', 0, [], arguments, null, 'args', 'kwargs')
+        var $ = $B.args('__new__', 0, [], arguments, null, 'args', 'kwargs')
         if($.args.length > 0 || _b_.dict.mp_length($.kwargs) > 0){
             $B.RAISE(_b_.TypeError, "object() takes no parameters")
         }
@@ -544,7 +544,7 @@ object_funcs.__dir__ = function(self){
 }
 
 object_funcs.__format__ = function(){
-    var $ = $B.args1("__format__", 2, {self: null, spec: null}, arguments)
+    var $ = $B.args("__format__", 2, {self: null, spec: null}, arguments)
     var self = $.self,
         spec = $.spec
     if(spec !== ""){
@@ -563,7 +563,7 @@ object_funcs.__getstate__ = function(self){
 object_funcs.__init_subclass__ = function(self){
     // Default implementation only checks that no keyword arguments were passed
     // Defined as classmethod after set_func_names is called
-    var $ = $B.args1("__init_subclass__", 1, {cls: null}, arguments, null,
+    var $ = $B.args("__init_subclass__", 1, {cls: null}, arguments, null,
                 "args", "kwargs")
     if($.args.length > 0){
         var qualname = $B.$getattr($.cls, '__qualname__', '<type>')

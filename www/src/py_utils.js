@@ -430,32 +430,8 @@ function args0_NEW(fct, args) {
 $B.args0_old = args0;
 $B.args0 = args0_NEW;
 
-$B.args = function(fname, argcount, slots, var_names, args, $dobj,
-                   vararg, kwarg, nb_posonly){
-    // Called by built-in functions / methods
-    var nb_posonly = nb_posonly || 0,
-        nb_kwonly = var_names.length - argcount,
-        defaults  = [],
-        kwdefaults = $B.empty_dict()
-    for(var i = 0, len = var_names.length; i < len; i++){
-        var var_name = var_names[i]
-        if($dobj && $dobj.hasOwnProperty(var_name)){
-            if(i < argcount){
-                defaults.push($dobj[var_name])
-            }else{
-                $B.str_dict_set(kwdefaults, var_name, $dobj[var_name])
-            }
-        }
-    }
-    for(var k in slots){
-        slots[k] = empty
-    }
-    return $B.parse_args(args, fname, argcount, slots, var_names, defaults,
-                    kwdefaults, vararg, kwarg, nb_posonly, nb_kwonly)
-}
-
-$B.args1 = function(fname, argcount, slots, args, $dobj,
-                   vararg, kwarg, nb_posonly){
+$B.args = function(fname, argcount, slots, args, $dobj, vararg, kwarg, 
+        nb_posonly){
     // Called by built-in functions / methods
     var nb_posonly = nb_posonly || 0,
         var_names = Object.keys(slots),
@@ -483,7 +459,7 @@ $B.args1 = function(fname, argcount, slots, args, $dobj,
 $B.single_arg = function(fname, arg, args){
     var slots = {}
     slots[arg] = null
-    var $ = $B.args1(fname, 1, slots, args)
+    var $ = $B.args(fname, 1, slots, args)
     return $[arg]
 }
 

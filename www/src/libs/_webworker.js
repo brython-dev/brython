@@ -79,7 +79,7 @@ wclass.$factory = function(worker){
 var wclass_funcs = wclass.tp_funcs = {}
 
 wclass_funcs.send = function(){
-    var $ = $B.args1('send', 2, {self: null, message: null}, arguments, null,
+    var $ = $B.args('send', 2, {self: null, message: null}, arguments, null,
                 'args')
     var message = $B.pyobj2structuredclone($.message)
     return $.self.worker.postMessage(message, ...$.args)
@@ -96,7 +96,7 @@ _Worker.$factory = function(id, onmessage, onerror){
     $B.warn(_b_.DeprecationWarning,
         "worker.Worker is deprecated in version 3.12. " +
         "Use worker.create_worker instead")
-    var $ = $B.args1("__init__", 3, {id: null, onmessage: null, onerror: null},
+    var $ = $B.args("__init__", 3, {id: null, onmessage: null, onerror: null},
                 arguments, {onmessage: _b_.None, onerror: _b_.None})
     var id = $.id,
         worker_script = $B.webworkers[id]
@@ -156,7 +156,7 @@ _Worker.$factory = function(id, onmessage, onerror){
 }
 
 function create_worker(){
-    var $ = $B.args1("__init__", 4,
+    var $ = $B.args("__init__", 4,
                 {id: null, onready: null, onmessage: null, onerror: null},
                 arguments,
                 {onready: _b_.None, onmessage: _b_.None, onerror: _b_.None})

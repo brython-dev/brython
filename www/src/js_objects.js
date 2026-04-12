@@ -1213,7 +1213,7 @@ js_array_funcs.append = function(self, x){
 }
 
 js_array_funcs.extend = function(self){
-    var $ = $B.args1("extend", 2, {self: null, t: null}, arguments)
+    var $ = $B.args("extend", 2, {self: null, t: null}, arguments)
     var self = $.self,
         t = $.t
     for(var item of $B.make_js_iterator(t)){
