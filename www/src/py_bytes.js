@@ -109,13 +109,13 @@ function no_resizing(){
 }
 
 function self_arg(func_name, args){
-    var $ = $B.args(func_name, 1, {self: null}, ['self'], args, {}, null, null)
+    var $ = $B.args1(func_name, 1, {self: null}, args, null, null, null)
     return $.self
 }
 
 function self_other_args(func_name, args){
-    var $ = $B.args(func_name, 2, {self: null, other: null}, ['self', 'other'],
-                args, {}, null, null)
+    var $ = $B.args1(func_name, 2, {self: null, other: null}, args, null,
+                null, null)
     return [$.self, $.other]
 }
 
@@ -157,9 +157,8 @@ function capitalize(){
 }
 
 function center(){
-    var $ = $B.args('center', 3, {self: null, width: null, fillbyte: null},
-            ['self', 'width', 'fillbyte'], arguments,
-            {fillbyte: bytes.$factory([32])}, null, null)
+    var $ = $B.args1('center', 3, {self: null, width: null, fillbyte: null},
+                arguments, {fillbyte: bytes.$factory([32])}, null, null)
 
     var diff = $.width - $.self.source.length
     if(diff <= 0){
@@ -172,10 +171,9 @@ function center(){
 }
 
 function count(self){
-    var $ = $B.args('count', 4,
+    var $ = $B.args1('count', 4,
                 {self: null, sub: null, start: null, end: null},
-                ['self', 'sub', 'start', 'end'], arguments,
-                {start: 0, end: -1}, null, null)
+                arguments, {start: 0, end: -1}, null, null)
     var self = $.self,
         sub = $.sub,
         start = $.start,
@@ -213,9 +211,8 @@ function count(self){
 }
 
 function decode(self){
-    var $ = $B.args("decode", 3, {self: null, encoding: null, errors: null},
-            ["self", "encoding", "errors"], arguments,
-            {encoding: "utf-8", errors: "strict"}, null, null)
+    var $ = $B.args1("decode", 3, {self: null, encoding: null, errors: null},
+                arguments, {encoding: "utf-8", errors: "strict"}, null, null)
     switch ($.errors) {
       case 'strict':
       case 'ignore':
@@ -231,10 +228,9 @@ function decode(self){
 }
 
 function endswith(){
-    var $ = $B.args('endswith', 4,
-            {self: null, suffix: null, start: null, end: null},
-            ['self', 'suffix', 'start', 'end'], arguments,
-            {start: -1, end: -1}, null, null)
+    var $ = $B.args1('endswith', 4,
+                {self: null, suffix: null, start: null, end: null},
+                arguments, {start: -1, end: -1}, null, null)
     var self = $.self,
         suffix = $.suffix,
         start = $.start,
@@ -266,8 +262,8 @@ function endswith(){
 }
 
 function expandtabs(){
-    var $ = $B.args('expandtabs', 2, {self: null, tabsize: null},
-                ['self', 'tabsize'], arguments, {tabsize: 8}, null, null)
+    var $ = $B.args1('expandtabs', 2, {self: null, tabsize: null},
+                arguments, {tabsize: 8}, null, null)
     var self = $.self,
         tabsize = $.tabsize
     var tab_spaces = []
@@ -289,8 +285,8 @@ function expandtabs(){
 
 function find(){
     var func = this // 'find' or 'rfind'
-    var $ = $B.args(func, 4, {self: null, sub: null, start: null, end: null},
-                ['self', 'sub', 'start', 'end'], arguments,
+    var $ = $B.args1(func, 4, {self: null, sub: null, start: null, end: null},
+                arguments,
                 {start: _b_.None, end: _b_.None}, null, null)
     var self = $.self,
         sub = $.sub,
@@ -339,8 +335,8 @@ function find(){
 }
 
 function fromhex(){
-    var $ = $B.args('fromhex', 2, {cls: null, string: null},
-                ['cls', 'string'], arguments, {}, null, null)
+    var $ = $B.args1('fromhex', 2, {cls: null, string: null},
+                arguments, null, null, null)
     var cls = $.cls,
         string = $.string
     string = string.replace(/\s/g, '')
@@ -358,9 +354,8 @@ function fromhex(){
 function hex(){
     // Return a string which is hex representation of the instance
     // The hexstring can include a separator every specified number of bytes
-    var $ = $B.args('hex', 3, {self:null, sep:null, bytes_per_sep:null},
-                ['self','sep','bytes_per_sep'], arguments,
-                {sep: "", bytes_per_sep: 1}, null, null)
+    var $ = $B.args1('hex', 3, {self:null, sep:null, bytes_per_sep:null},
+                arguments, {sep: "", bytes_per_sep: 1}, null, null)
     var self = $.self,
         sep = $.sep,
         bytes_per_sep = $.bytes_per_sep,
@@ -525,8 +520,8 @@ function isupper(){
 }
 
 function join(){
-    var $ns = $B.args('join', 2, {self: null, iterable: null},
-            ['self', 'iterable'], arguments, {}),
+    var $ns = $B.args1('join', 2, {self: null, iterable: null},
+                  arguments),
         self = $ns['self'],
         iterable = $ns['iterable']
     var res = this.$factory(),
@@ -544,9 +539,8 @@ function join(){
 
 function ljust(){
     // "this" is bytearray or bytes
-    var $ = $B.args('ljust', 3, {self: null, width: null, fillbyte: null},
-        ['self', 'width', 'fillbyte'], arguments,
-        {fillbyte: bytes.$factory([32])}, null, null)
+    var $ = $B.args1('ljust', 3, {self: null, width: null, fillbyte: null},
+                arguments, {fillbyte: bytes.$factory([32])})
 
     var self = $.self,
         width = $.width,
@@ -572,8 +566,7 @@ function lower(self){
 }
 
 function maketrans(){
-    var $ = $B.args('maketrans', 2, {from:null, to: null}, ['from', 'to'],
-                arguments, {}, null, null)
+    var $ = $B.args1('maketrans', 2, {from:null, to: null}, arguments)
     var from = $.from,
         to = $.to
     var _t = []
@@ -624,8 +617,7 @@ function strip(self, cars, lr){
 }
 
 function nb_multiply(){
-    var $ = $B.args('__mul__', 2, {self: null, value: null}, ['self', 'value'],
-                arguments, {}, null, null)
+    var $ = $B.args1('__mul__', 2, {self: null, value: null}, arguments)
 
     var self = $.self,
         value = $.value
@@ -645,8 +637,7 @@ function nb_multiply(){
 
 function nb_remainder(){
     // PEP 461
-    var $ = $B.args('__mod__', 2, {self: null, args: null}, ['self', 'args'],
-                arguments, {}, null, null)
+    var $ = $B.args1('__mod__', 2, {self: null, args: null}, arguments)
     var self = $.self,
         args = $.args
     var s = decode(self, "latin-1", "strict"),
@@ -655,8 +646,7 @@ function nb_remainder(){
 }
 
 function partition(){
-    var $ = $B.args('partition', 2, {self:null, sep:null}, ['self', 'sep'],
-            arguments, {}, null, null)
+    var $ = $B.args1('partition', 2, {self:null, sep:null}, arguments)
     var self = $.self,
         sep = $.sep
     check_buffer(sep)
@@ -673,8 +663,7 @@ function partition(){
 }
 
 function removeprefix(self, prefix){
-    var $ = $B.args('removeprefix', 2, {self:null, prefix: null},
-                ['self', 'prefix'], arguments, {}, null, null)
+    var $ = $B.args1('removeprefix', 2, {self:null, prefix: null}, arguments)
     var self = $.self,
         prefix = $.prefix
     check_buffer(prefix)
@@ -696,8 +685,7 @@ function removeprefix(self, prefix){
 }
 
 function removesuffix(self, prefix){
-    var $ = $B.args('removesuffix', 2, {self:null, prefix: null},
-                ['self', 'prefix'], arguments, {}, null, null)
+    var $ = $B.args1('removesuffix', 2, {self:null, prefix: null}, arguments)
     var self = $.self,
         prefix = $.prefix
     check_buffer(prefix)
@@ -721,11 +709,10 @@ function removesuffix(self, prefix){
 }
 
 function replace(){
-    var $ = $B.args('replace', 4,
-        {self: null, old: null, new: null, count: null},
-        ['self', 'old', 'new', 'count'],
-        arguments, {count: -1}, null, null),
-        res = []
+    var $ = $B.args1('replace', 4,
+                {self: null, old: null, new: null, count: null},
+                arguments, {count: -1})
+    var res = []
     var self = $.self,
         src = self.source,
         len = src.length,
@@ -751,9 +738,8 @@ function replace(){
 }
 
 function rjust() {
-    var $ = $B.args('rjust', 3, {self: null, width: null, fillbyte: null},
-        ['self', 'width', 'fillbyte'], arguments,
-        {fillbyte: bytes.$factory([32])}, null, null)
+    var $ = $B.args1('rjust', 3, {self: null, width: null, fillbyte: null},
+                arguments, {fillbyte: bytes.$factory([32])})
 
     var self = $.self,
         width = $.width,
@@ -770,8 +756,7 @@ function rjust() {
 }
 
 function rpartition(){
-    var $ = $B.args('rpartition', 2, {self:null, sep:null}, ['self', 'sep'],
-            arguments, {}, null, null)
+    var $ = $B.args1('rpartition', 2, {self:null, sep:null}, arguments)
 
     var self = $.self,
         sep = $.sep
@@ -790,9 +775,8 @@ function rpartition(){
 }
 
 function rsplit(){
-    var $ = $B.args('rsplit', 3, {self:null, sep:null, maxsplit: null},
-                ['self', 'sep', 'maxsplit'], arguments,
-                {sep: _b_.None, maxsplit: -1}, null, null)
+    var $ = $B.args1('rsplit', 3, {self:null, sep:null, maxsplit: null},
+                arguments, {sep: _b_.None, maxsplit: -1})
     var self = $.self,
         sep = $.sep,
         maxsplit = $.maxsplit
@@ -854,9 +838,8 @@ function sq_contains(self, other){
 }
 
 function split(){
-    var $ = $B.args('split', 3, {self:null, sep:null, maxsplit: null},
-                ['self', 'sep', 'maxsplit'], arguments,
-                {sep: _b_.None, maxsplit: -1}, null, null)
+    var $ = $B.args1('split', 3, {self:null, sep:null, maxsplit: null},
+                arguments, {sep: _b_.None, maxsplit: -1})
     var self = $.self,
         sep = $.sep,
         maxsplit = $.maxsplit
@@ -882,9 +865,8 @@ function split(){
 }
 
 function splitlines(){
-    var $ = $B.args('splitlines', 2, {self: null, keepends: null},
-                    ['self', 'keepends'], arguments, {keepends: false},
-                    null, null)
+    var $ = $B.args1('splitlines', 2, {self: null, keepends: null},
+                arguments, {keepends: false})
     var self = $.self,
         keepends = $.keepends
 
@@ -921,9 +903,8 @@ function splitlines(){
 }
 
 function startswith(){
-    var $ = $B.args('startswith', 3, {self: null, prefix: null, start:null},
-        ['self', 'prefix', 'start'], arguments, {start:0}, null, null),
-        start = $.start
+    var $ = $B.args1('startswith', 3, {self: null, prefix: null, start:null},
+                arguments, {start:0})
     var self = $.self,
         prefix = $.prefix,
         start = $.start
@@ -1012,9 +993,8 @@ function title(){
 }
 
 function translate(){
-    var $ = $B.args('translate', 3, {self: null, table: null, _delete: null},
-                ['self', 'table', '_delete'], arguments, {_delete: $B.NULL},
-                null, null)
+    var $ = $B.args1('translate', 3, {self: null, table: null, _delete: null},
+                arguments, {_delete: $B.NULL})
     var self = $.self,
         table = $.table,
         _delete = $._delete
@@ -1041,8 +1021,7 @@ function translate(){
 }
 
 function zfill(){
-    var $ = $B.args('zfill', 2, {self: null, width: null}, ['self', 'width'],
-                arguments, {}, null, null)
+    var $ = $B.args1('zfill', 2, {self: null, width: null}, arguments)
     var self = $.self,
         width = $.width
     var cls = this // bytes or bytearray
@@ -1344,9 +1323,8 @@ bytearray_funcs.count = function(self){
 }
 
 bytearray_funcs.decode = function(self){
-    var $ = $B.args('decode', 3, {self: null, encoding: null, errors: null},
-                ['self', 'encoding', 'errors'], arguments,
-                {encoding: 'utf-8', errors: 'strict'}, null, null)
+    var $ = $B.args1('decode', 3, {self: null, encoding: null, errors: null},
+                arguments, {encoding: 'utf-8', errors: 'strict'})
     var self = $.self,
         encoding = $.encoding,
         errors = $.errors
@@ -1458,8 +1436,8 @@ bytearray_funcs.lower = function(self){
 }
 
 bytearray_funcs.lstrip = function(self){
-    var $ = $B.args('lstrip', 2, {self: null, cars: null}, ['self', 'cars'],
-                arguments, {cars: ws_cars}, null, null)
+    var $ = $B.args1('lstrip', 2, {self: null, cars: null},
+                arguments, {cars: ws_cars})
     var self = $.self,
         cars = $.cars
     return strip.call(_b_.bytearray, self, cars, 'l')
@@ -1474,8 +1452,8 @@ bytearray_funcs.partition = function(self){
 }
 
 bytearray_funcs.pop = function(self){
-    var $ = $B.args('pop', 2, {self:null, index:null}, ['self', 'index'],
-                arguments, {index: -1}, null, null)
+    var $ = $B.args1('pop', 2, {self:null, index:null},
+                arguments, {index: -1})
     var self = $.self,
         index = $.index
     check_exports(self)
@@ -1483,8 +1461,7 @@ bytearray_funcs.pop = function(self){
 }
 
 bytearray_funcs.remove = function(self){
-    var $ = $B.args('remove', 2, {self: null, value: null}, ['self', 'value'],
-                arguments, {}, null, null)
+    var $ = $B.args1('remove', 2, {self: null, value: null}, arguments)
     var self = $.self,
         value = $.value
     value = $B.PyNumber_Index(value)
@@ -1555,8 +1532,8 @@ bytearray_funcs.rsplit = function(self){
 }
 
 bytearray_funcs.rstrip = function(self){
-    var $ = $B.args('rstrip', 2, {self: null, cars: null}, ['self', 'cars'],
-                arguments, {cars: ws_cars}, null, null)
+    var $ = $B.args1('rstrip', 2, {self: null, cars: null},
+                arguments, {cars: ws_cars})
     var self = $.self,
         cars = $.cars
     return strip.call(_b_.bytearray, self, cars, 'r')
@@ -1575,8 +1552,8 @@ bytearray_funcs.startswith = function(self){
 }
 
 bytearray_funcs.strip = function(self){
-    var $ = $B.args('lstrip', 2, {self: null, cars: null}, ['self', 'cars'],
-                arguments, {cars: ws_cars}, null, null)
+    var $ = $B.args1('lstrip', 2, {self: null, cars: null},
+                arguments, {cars: ws_cars})
     var self = $.self,
         cars = $.cars
     var stripped_right = strip.call(_b_.bytearray, self, cars, 'r')
@@ -2222,10 +2199,9 @@ var decode = $B.decode = function(obj, encoding, errors){
 }
 
 var encode = $B.encode = function(){
-    var $ = $B.args("encode", 3, {s: null, encoding: null, errors: null},
-        ["s", "encoding", "errors"],
-        arguments, {encoding: "utf-8", errors:"strict"}, null, null),
-        s = $.s,
+    var $ = $B.args1("encode", 3, {s: null, encoding: null, errors: null},
+                arguments, {encoding: "utf-8", errors:"strict"})
+    var s = $.s,
         encoding = $.encoding,
         errors = $.errors
     var t = [],
@@ -2342,8 +2318,8 @@ function fast_bytes(t){
 $B.fast_bytes = fast_bytes
 
 bytes.$factory = function(){
-    var $ = $B.args('bytes', 0, {}, [], arguments, {}, 'args', 'kw')
-    return bytes.tp_new(bytes, $.args, $.kw)
+    var [args, kw] = $B.parse_args_kw('bytes', arguments)
+    return bytes.tp_new(bytes, Array.from(args), kw)
 }
 
 /* bytes start */
@@ -2356,9 +2332,8 @@ _b_.bytes.tp_richcompare = function(self, other, op){
 }
 
 _b_.bytes.nb_multiply = function(){
-    var $ = $B.args('__mul__', 2, {self: null, other: null}, ['self', 'other'],
-        arguments, {}, null, null),
-        other = $B.PyNumber_Index($.other)
+    var $ = $B.args1('__mul__', 2, {self: null, other: null}, arguments)
+    var other = $B.PyNumber_Index($.other)
     var t = [],
         source = $.self.source,
         slen = source.length
@@ -2476,6 +2451,7 @@ _b_.bytes.tp_new = function(cls, args, kw){
         return res
     }
     if(encoding !== $B.NULL){
+        console.log('encoding', encoding)
         $B.RAISE(_b_.TypeError, "encoding without a string argument")
     }
     if(typeof source == "number" || $B.$isinstance(source, _b_.int)){
@@ -2583,8 +2559,7 @@ _b_.bytes.mp_subscript = function(self, arg){
 }
 
 _b_.bytes.sq_concat = function(self, other){
-    var $ = $B.args('__add__', 2, {self: null, other: null}, ['self', 'other'],
-                arguments, {}, null, null)
+    var $ = $B.args1('__add__', 2, {self: null, other: null}, arguments)
     var self = $.self,
         other = $.other
     if(! is_bytes_like(other)){
@@ -2652,9 +2627,8 @@ bytes_funcs.count = function(self){
 }
 
 bytes_funcs.decode = function(self){
-    var $ = $B.args('decode', 3, {self: null, encoding: null, errors: null},
-                ['self', 'encoding', 'errors'], arguments,
-                {encoding: 'utf-8', errors: 'strict'}, null, null)
+    var $ = $B.args1('decode', 3, {self: null, encoding: null, errors: null},
+                arguments, {encoding: 'utf-8', errors: 'strict'})
     var self = $.self,
         encoding = $.encoding,
         errors = $.errors
@@ -2682,10 +2656,9 @@ bytes_funcs.hex = function(){
 }
 
 bytes_funcs.index = function(){
-    var $ = $B.args('index', 4,
+    var $ = $B.args1('index', 4,
         {self: null, sub: null, start: null, end: null},
-        ['self', 'sub', 'start', 'end'],
-        arguments, {start: 0, end: -1}, null, null)
+        arguments, {start: 0, end: -1})
     var index = bytes_funcs.find($.self, $.sub, $.start, $.end)
     if(index == -1){
         $B.RAISE(_b_.ValueError, "subsection not found")
@@ -2738,8 +2711,8 @@ bytes_funcs.lower = function(){
 }
 
 bytes_funcs.lstrip = function(self, cars){
-    var $ = $B.args('lstrip', 2, {self: null, cars: null}, ['self', 'cars'],
-                arguments, {cars: ws_cars}, null, null)
+    var $ = $B.args1('lstrip', 2, {self: null, cars: null},
+                arguments, {cars: ws_cars})
     var self = $.self,
         cars = $.cars
     return strip.call(_b_.bytes, self, cars, 'l')
@@ -2770,10 +2743,9 @@ bytes_funcs.rfind = function(){
 }
 
 bytes_funcs.rindex = function() {
-    var $ = $B.args('rfind', 4,
-        {self: null, sub: null, start: null, end: null},
-        ['self', 'sub', 'start', 'end'],
-        arguments, {start: 0, end: -1}, null, null)
+    var $ = $B.args1('rfind', 4,
+            {self: null, sub: null, start: null, end: null},
+            arguments, {start: 0, end: -1})
 
     var index = bytes_funcs.rfind($.self, $.sub, $.start, $.end)
     if(index == -1){
@@ -2795,8 +2767,8 @@ bytes_funcs.rsplit = function(){
 }
 
 bytes_funcs.rstrip = function(){
-    var $ = $B.args('lstrip', 2, {self: null, cars: null}, ['self', 'cars'],
-                arguments, {cars: ws_cars}, null, null)
+    var $ = $B.args1('lstrip', 2, {self: null, cars: null},
+                arguments, {cars: ws_cars})
     var self = $.self,
         cars = $.cars
     return strip.call(_b_.bytes, self, cars, 'r')
@@ -2815,8 +2787,8 @@ bytes_funcs.startswith = function(self){
 }
 
 bytes_funcs.strip = function(){
-    var $ = $B.args('lstrip', 2, {self: null, cars: null}, ['self', 'cars'],
-                arguments, {cars: ws_cars}, null, null)
+    var $ = $B.args1('lstrip', 2, {self: null, cars: null},
+                arguments, {cars: ws_cars})
     var self = $.self,
         cars = $.cars
     var stripped_right = strip.call(_b_.bytes, self, cars, 'r')

@@ -132,8 +132,8 @@ _IOBase_funcs.readable = function(){
 }
 
 _IOBase_funcs.readline = function(_self, limit=-1){
-    var $ = $B.args('readline', 2, {self: null, limit: null},
-                ['self', 'limit'], arguments, {limit: -1}, null, null),
+    var $ = $B.args1('readline', 2, {self: null, limit: null},
+                arguments, {limit: -1}),
         _self = $.self,
         limit = $.limit
     var old_size = -1
@@ -202,8 +202,8 @@ _IOBase_funcs.readline = function(_self, limit=-1){
 }
 
 _IOBase_funcs.readlines = function(_self, hint){
-    var $ = $B.args('readlines', 2, {self: null, hint: null}, ['self', 'hint'],
-            arguments, {hint: -1}, null, null)
+    var $ = $B.args1('readlines', 2, {self: null, hint: null}, arguments,
+                {hint: -1})
     var _self=  $.self,
         hint = $.hint
     var length = 0;
@@ -484,19 +484,18 @@ $B._BufferedReader.tp_init = function(_self, raw, buffer_size=DEFAULT_BUFFER_SIZ
 var _BufferedReader_funcs = $B._BufferedReader.tp_funcs = {}
 
 _BufferedReader_funcs.peek = function(_self, size){
-    var $ = $B.args('peek', 2, {self: null, size: null}, ['self', 'size'],
-                arguments, {size: 0}, null, null),
-        _self = $.self,
+    var $ = $B.args1('peek', 2, {self: null, size: null}, arguments,
+                {size: 0})
+    var _self = $.self,
         size = $.size
     var raw = _self.raw
     return $B.fast_bytes(raw.$bytes.slice(raw.$byte_pos, raw.$byte_pos + size))
 }
 
 _BufferedReader_funcs.seek = function(_self, offset, whence){
-    var $ = $B.args('seek', 2, {self: null, offset: null, whence: null},
-                ['self', 'offset', 'whence'],
-                arguments, {whence: 0}, null, null),
-        _self = $.self,
+    var $ = $B.args1('seek', 2, {self: null, offset: null, whence: null},
+                arguments, {whence: 0})
+    var _self = $.self,
         offset = $.offset,
         whence = $.whence
     if(_self.closed){
@@ -589,13 +588,11 @@ $B._FileIO.tp_new = function(cls, args, kw){
 }
 
 $B._FileIO.tp_init = function(){
-    var $ = $B.args('__init__', 5,
+    var $ = $B.args1('__init__', 5,
                 {self: null, name: null, mode: null, closefd: null, opener: null},
-                ['self', 'name', 'mode', 'closefd', 'opener'],
                 arguments,
-                {mode: 'r', closefd: true, opener: _b_.None},
-                null, null),
-        _self = $.self,
+                {mode: 'r', closefd: true, opener: _b_.None})
+    var _self = $.self,
         name = $.name,
         mode = $.mode,
         closefd = $.closefd,
@@ -834,15 +831,12 @@ $BufferedReader.tp_methods = [
 $B._TextIOWrapper = $B.make_builtin_class('_io._TextIOWrapper', [$B._TextIOBase])
 
 $B._TextIOWrapper.$factory = function(){
-    var $ = $B.args("TextIOWrapper", 6,
+    var $ = $B.args1("TextIOWrapper", 6,
         {buffer: null, encoding: null, errors: null,
          newline: null, line_buffering: null, write_through:null},
-        ["buffer", "encoding", "errors", "newline",
-         "line_buffering", "write_through"],
          arguments,
          {encoding: "utf-8", errors: _b_.None, newline: _b_.None,
-          line_buffering: _b_.False, write_through: _b_.False},
-          null, null)
+          line_buffering: _b_.False, write_through: _b_.False})
     if($.encoding === _b_.None){
         $.encoding = 'utf-8'
     }
@@ -874,10 +868,10 @@ _TextIOWrapper_funcs.fileno = function(_self){
 }
 
 _TextIOWrapper_funcs.read = function(){
-    var $ = $B.args("read", 2, {self: null, size: null},
-            ["self", "size"], arguments, {size: -1}, null, null),
-            _self = $.self,
-            size = $B.PyNumber_Index($.size)
+    var $ = $B.args1("read", 2, {self: null, size: null}, arguments,
+                {size: -1})
+    var _self = $.self,
+        size = $B.PyNumber_Index($.size)
     if(_self.closed === true){
         $B.RAISE(_b_.ValueError, 'I/O operation on closed file')
     }
@@ -898,10 +892,10 @@ _TextIOWrapper_funcs.read = function(){
 }
 
 _TextIOWrapper_funcs.readline = function(){
-    var $ = $B.args("read", 2, {self: null, size: null},
-            ["self", "size"], arguments, {size: -1}, null, null),
-            _self = $.self,
-            size = $B.PyNumber_Index($.size)
+    var $ = $B.args1("read", 2, {self: null, size: null}, arguments,
+                {size: -1})
+    var _self = $.self,
+        size = $B.PyNumber_Index($.size)
     if(_self.closed === true){
         $B.RAISE(_b_.ValueError, 'I/O operation on closed file')
     }
@@ -1127,14 +1121,13 @@ function _io_open_impl(file, mode, buffering, encoding, errors, newline,
 }
 
 _b_.open = function(){
-    var $ = $B.args('open', 3,
-        {file: null, mode: null, buffering: null, encoding: null,
-         errors: null, newline: null, closefd: null, opener: null},
-        ['file', 'mode', 'buffering', 'encoding','errors', 'newline',
-        'closefd', 'opener'], arguments,
-        {mode: 'r', buffering: -1, encoding: _b_.None, errors: _b_.None,
-        newline: _b_.None, closefd: true, opener: _b_.None}),
-        file = $.file,
+    var $ = $B.args1('open', 3,
+                {file: null, mode: null, buffering: null, encoding: null,
+                 errors: null, newline: null, closefd: null, opener: null},
+                arguments,
+                {mode: 'r', buffering: -1, encoding: _b_.None, errors: _b_.None,
+                newline: _b_.None, closefd: true, opener: _b_.None})
+    var file = $.file,
         mode = $.mode,
         encoding = $.encoding,
         result = {}

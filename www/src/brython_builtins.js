@@ -350,11 +350,6 @@ $B.make_type = function(tp_name, tp_bases){
 
 $B.obj_dict = function(obj, exclude){
     return obj
-    /*
-    var res = $B.empty_dict()
-    res.$strings = obj
-    return res
-    */
 }
 
 // Set attributes of klass methods
@@ -697,9 +692,8 @@ $B.builtins_repr_check = function(builtin, args){
     // Called when entering method __repr__ of builtin classes, to check the
     // the number of arguments, and that the only argument is an instance of
     // the builtin class
-    var $ = $B.args('__repr__', 1, {self: null}, ['self'], args,
-            {}, null, null),
-        self = $.self
+    var $ = $B.args1('__repr__', 1, {self: null}, args)
+    var self = $.self
     if(! $B.$isinstance(self, builtin)){
         var _b_ = $B.builtins
         console.log(Error().stack)

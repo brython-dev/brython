@@ -12,10 +12,10 @@ function makeTagDict(tagName){
     var dict = $B.make_type(tagName, [$B.DOMNode])
 
     dict.tp_init = function(){
-        var $ns = $B.args('__init__', 1, {self: null}, ['self'],
-            arguments, {}, 'args', 'kw'),
-            self = $ns['self'],
-            args = $ns['args']
+        var $ = $B.args1('__init__', 1, {self: null}, arguments, null,
+                      'args', 'kw'),
+            self = $.self,
+            args = $.args
         if(args.length == 1){
             var first = args[0]
             if($B.$isinstance(first, [_b_.str, _b_.int, _b_.float])){
@@ -25,13 +25,16 @@ function makeTagDict(tagName){
                     self.appendChild(first.children[i].elt)
                 }
             }else{ // argument is another DOMNode instance
-                try{self.appendChild(first.elt)}
-                catch(err){$B.RAISE(_b_.ValueError, 'wrong element ' + first)}
+                try{
+                    self.appendChild(first.elt)
+                }catch(err){
+                    $B.RAISE(_b_.ValueError, 'wrong element ' + first)
+                }
             }
         }
 
         // attributes
-        for(var item of _b_.dict.$iter_items($ns.kw)){
+        for(var item of _b_.dict.$iter_items($.kw)){
             // keyword arguments
             var arg = item.key,
                 value = $B.py_immutable_to_js(item.value)

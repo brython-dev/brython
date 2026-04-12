@@ -116,8 +116,7 @@ var module = {
         $B.RAISE(_b_.NotImplementedError, 'os.open is not implemented')
     },
     remove: function(path) {
-        var $ = $B.args("remove", 1, { path: null }, ["path"], arguments, {}, null, null)
-        console.log($)
+        var $ = $B.args1("remove", 1, { path: null }, arguments)
 
         var path = $.path
         var found_file = false

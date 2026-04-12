@@ -3,7 +3,7 @@
 var _b_ = $B.builtins
 
 function get_self(name, args){
-    return $B.args(name, 1, {self: null}, ["self"], args, {}, null, null).self
+    return $B.args1(name, 1, {self: null}, args).self
 }
 
 var _IOBase = $B._IOBase
@@ -65,10 +65,9 @@ function transform_newline(s, newline){
 var StringIO = $B.make_type("StringIO", [$B._TextIOBase])
 
 StringIO.tp_init = function(){
-    var $ = $B.args("StringIO", 3, {self: null, value: null, newline: null},
-            ["self", "value", "newline"], arguments, {value: '', newline: "\n"},
-            null, null),
-        value = $.value
+    var $ = $B.args1("StringIO", 3, {self: null, value: null, newline: null},
+                arguments, {value: '', newline: "\n"})
+    var value = $.value
     if(value === _b_.None){
         value = ''
     }else if(! $B.$isinstance(value, _b_.str)){
@@ -110,7 +109,7 @@ StringIO_funcs.__getstate__ = function(_self){
     var initvalue = StringIO.getvalue(_self)
 
     var dict = $B.get_dict(_self)
-        ? _b_.dict.copy($B.get_dict(_self)) 
+        ? _b_.dict.copy($B.get_dict(_self))
         : _b_.None
 
     var state = $B.fast_tuple([initvalue,
@@ -144,8 +143,7 @@ StringIO_funcs.closed = $B.getset_descriptor.$factory(
 )
 
 StringIO_funcs.getvalue = function(){
-    var $ = $B.args("getvalue", 1, {self: null},
-            ["self"], arguments, {}, null, null)
+    var $ = $B.args1("getvalue", 1, {self: null}, arguments)
     var _self = $.self
     check_closed(_self)
     var res = _self.$text.substr(0) // copy
@@ -168,9 +166,9 @@ StringIO_funcs.newlines = $B.getset_descriptor.$factory(
 )
 
 StringIO_funcs.read = function(){
-    var $ = $B.args('read', 2, {self: null, size: null}, ['self', 'size'],
-            arguments, {size: -1}, null, null),
-        _self = $.self,
+    var $ = $B.args1('read', 2, {self: null, size: null}, arguments,
+                {size: -1})
+    var _self = $.self,
         size = $.size
 
     check_closed(_self)
@@ -231,9 +229,9 @@ StringIO_funcs.readable = function(self){
 }
 
 StringIO_funcs.readline = function(){
-    var $ = $B.args('readline', 2, {self: null, size: null}, ['self', 'size'],
-            arguments, {size: -1}, null, null),
-        _self = $.self,
+    var $ = $B.args1('readline', 2, {self: null, size: null}, arguments,
+                {size: -1})
+    var _self = $.self,
         size = $.size
     if(size === _b_.None){
         size = -1
@@ -316,9 +314,9 @@ StringIO_funcs.tell = function(self){
 }
 
 StringIO_funcs.truncate = function(self, size){
-    var $ = $B.args('truncate', 2, {self: null, size: null}, ['self', 'size'],
-            arguments, {size: _b_.None}, null, null),
-        _self = $.self,
+    var $ = $B.args1('truncate', 2, {self: null, size: null}, arguments,
+                {size: _b_.None})
+    var _self = $.self,
         size = $.size
     check_closed(_self)
     if(size === _b_.None){
@@ -347,9 +345,9 @@ StringIO_funcs.truncate = function(self, size){
 }
 
 StringIO_funcs.seek = function(self, pos, whence){
-    var $ = $B.args('seek', 3, {self: null, pos: null, whence: null},
-                ['self', 'pos', 'whence'], arguments, {whence: 0}, null, null),
-        _self = $.self,
+    var $ = $B.args1('seek', 3, {self: null, pos: null, whence: null},
+                arguments, {whence: 0})
+    var _self = $.self,
         pos = $.pos
         whence = $.whence
 
@@ -391,8 +389,7 @@ StringIO_funcs.writable = function(self){
 }
 
 StringIO_funcs.write = function(){
-    var $ = $B.args("write", 2, {self: null, data: null},
-            ["self", "data"], arguments, {}, null, null)
+    var $ = $B.args1("write", 2, {self: null, data: null}, arguments)
             var _self = $.self,
                 data = $.data
     if(! $B.$isinstance(data, _b_.str)){
@@ -432,9 +429,8 @@ var BytesIO = $B.make_type('BytesIO', [$B._BufferedIOBase])
 BytesIO._buffer = _b_.None
 
 BytesIO.tp_init = function(){
-    var $ = $B.args('__init__', 2, {self: null, initial_bytes: null},
-            ['self', 'initial_bytes'], arguments, {initial_bytes: _b_.None},
-            null, null)
+    var $ = $B.args1('__init__', 2, {self: null, initial_bytes: null},
+                arguments, {initial_bytes: _b_.None})
     var _self = $.self,
         initial_bytes = $.initial_bytes
     var buf = _b_.bytearray.$factory()
@@ -528,8 +524,8 @@ BytesIO_funcs.close = function(_self){
 }
 
 BytesIO_funcs.read = function(){
-    var $ = $B.args('read', 2, {self: null, size: null}, ['self', 'size'],
-            arguments, {size: -1}, null, null)
+    var $ = $B.args1('read', 2, {self: null, size: null}, arguments,
+                {size: -1})
     var _self = $.self,
         size = $.size
 
@@ -596,9 +592,9 @@ BytesIO_funcs.readinto = function(_self, buffer){
 }
 
 BytesIO_funcs.readline = function(){
-    var $ = $B.args('readline', 2, {self: null, size: null}, ['self', 'size'],
-            arguments, {size: -1}, null, null),
-        self = $.self,
+    var $ = $B.args1('readline', 2, {self: null, size: null}, arguments,
+                {size: -1})
+    var self = $.self,
         size = $.size
     var bytes = self._buffer.source
     var len = bytes.length
@@ -623,8 +619,8 @@ BytesIO_funcs.readline = function(){
 }
 
 BytesIO_funcs.readlines = function(){
-    var $ = $B.args('readlines', 2, {self: null, hint: null},
-                ['self', 'hint'], arguments, {hint: -1}, null, null)
+    var $ = $B.args1('readlines', 2, {self: null, hint: null}, arguments,
+                {hint: -1})
     var self = $.self,
         hint = $B.PyNumber_Index($.hint)
     var lines = []
@@ -705,8 +701,8 @@ BytesIO_funcs.tell = function(_self){
 }
 
 BytesIO_funcs.truncate = function(_self, pos=_b_.None){
-    var $ = $B.args('truncate', 2, {self: null, pos: null}, ['self', 'pos'],
-                arguments, {pos: _b_.None}, null, null)
+    var $ = $B.args1('truncate', 2, {self: null, pos: null}, arguments, 
+                {pos: _b_.None})
     var _self = $.self,
         pos = $.pos
     if(_self.closed){

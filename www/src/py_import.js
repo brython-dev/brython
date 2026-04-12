@@ -75,9 +75,8 @@ $B.module.tp_getattro = function(self, attr){
 }
 
 $B.module.tp_init = function(self){
-    var $ = $B.args('__init__', 3, {self: null, name: null, doc: null},
-                ['self', 'name', 'doc'], arguments, {doc: _b_.None},
-                'args', 'kw')
+    var $ = $B.args1('__init__', 3, {self: null, name: null, doc: null},
+                arguments, {doc: _b_.None}, 'args', 'kw')
     var self = $.self
     $B.module_setattr(self, '__name__', $.name)
     $B.module_setattr(self, '__doc__', $.doc)

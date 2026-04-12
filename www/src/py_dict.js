@@ -528,9 +528,8 @@ dict.$delitem  = function(self, key){
 $B.dict_delitem = dict.$delitem
 
 function dict_eq(){
-    var $ = $B.args("__eq__", 2, {self: null, other: null},
-        ["self", "other"], arguments, {}, null, null),
-        self = $.self,
+    var $ = $B.args1("__eq__", 2, {self: null, other: null}, arguments)
+    var self = $.self,
         other = $.other
     return dict.$eq(self, other)
 }
@@ -1061,7 +1060,7 @@ _b_.dict.tp_init = function(self, first, second){
         }
     }
 
-    var $ = $B.args("dict", 1, {self:null}, ["self"], arguments, {}, "first",
+    var $ = $B.args1("dict", 1, {self:null}, arguments, null, "first",
                 "second")
 
     var args = $.first
@@ -1153,17 +1152,15 @@ _b_.dict.mp_length = function(self){
 }
 
 _b_.dict.mp_subscript = function(self){
-    var $ = $B.args("__getitem__", 2, {self: null, arg: null},
-        ["self", "arg"], arguments, {}, null, null),
-        self = $.self,
+    var $ = $B.args1("__getitem__", 2, {self: null, arg: null}, arguments)
+    var self = $.self,
         arg = $.arg
     return dict.$getitem(self, arg)
 }
 
 _b_.dict.sq_contains = function(self){
-    var $ = $B.args("__contains__", 2, {self: null, key: null},
-        ["self", "key"], arguments, {}, null, null),
-        self = $.self,
+    var $ = $B.args1("__contains__", 2, {self: null, key: null}, arguments)
+    var self = $.self,
         key = $.key
     return _b_.dict.$contains(self, key)
 }
@@ -1197,9 +1194,8 @@ dict_funcs.__sizeof__ = function(self){
 
 dict_funcs.clear = function(self){
     // Remove all items from the dictionary.
-    var $ = $B.args("clear", 1, {self: null}, ["self"], arguments, {},
-        null, null),
-        self = $.self
+    var $ = $B.args1("clear", 1, {self: null}, arguments)
+    var self = $.self
 
     if(self[TABLE]){
         delete self[TABLE]
@@ -1216,9 +1212,8 @@ dict_funcs.clear = function(self){
 
 dict_funcs.copy = function(self){
     // Return a shallow copy of the dictionary
-    var $ = $B.args("copy", 1, {self: null},["self"], arguments,{},
-        null, null),
-        self = $.self,
+    var $ = $B.args1("copy", 1, {self: null}, arguments)
+    var self = $.self,
         res = $B.empty_dict()
 
     if($B.exact_type(self, _b_.dict)){
@@ -1229,9 +1224,9 @@ dict_funcs.copy = function(self){
 }
 
 dict_funcs.fromkeys = function(){
-    var $ = $B.args("fromkeys", 3, {cls: null, keys: null, value: null},
-        ["cls", "keys", "value"], arguments, {value: _b_.None}, null, null),
-        keys = $.keys,
+    var $ = $B.args1("fromkeys", 3, {cls: null, keys: null, value: null},
+                arguments, {value: _b_.None})
+    var keys = $.keys,
         value = $.value
 
     // class method
@@ -1256,8 +1251,8 @@ dict_funcs.fromkeys = function(){
 
 
 dict_funcs.get = function(self){
-    var $ = $B.args("get", 3, {self: null, key: null, _default: null},
-        ["self", "key", "_default"], arguments, {_default: _b_.None}, null, null)
+    var $ = $B.args1("get", 3, {self: null, key: null, _default: null},
+                arguments, {_default: _b_.None})
     try{
         // call $getitem with ignore_missign set to true
         return dict.$getitem($.self, $.key, true)
@@ -1271,7 +1266,7 @@ dict_funcs.get = function(self){
 }
 
 dict_funcs.items = function(self){
-    $B.args('items', 1, {self: null}, ['self'], arguments, {}, null, null)
+    $B.args1('items', 1, {self: null}, arguments)
     return {
         ob_type: $B.dict_items,
         dict_obj: self
@@ -1279,7 +1274,7 @@ dict_funcs.items = function(self){
 }
 
 dict_funcs.keys = function(self){
-    $B.args('keys', 1, {self: null}, ['self'], arguments, {}, null, null)
+    $B.args1('keys', 1, {self: null}, arguments)
     return {
         ob_type: $B.dict_keys,
         dict_obj: self
@@ -1287,10 +1282,9 @@ dict_funcs.keys = function(self){
 }
 
 dict_funcs.pop = function(self){
-    var missing = {},
-        $ = $B.args("pop", 3, {self: null, key: null, _default: null},
-        ["self", "key", "_default"], arguments, {_default: $B.NULL}, null, null),
-        self = $.self,
+    var $ = $B.args1("pop", 3, {self: null, key: null, _default: null},
+                arguments, {_default: $B.NULL})
+    var self = $.self,
         key = $.key,
         _default = $._default
 
@@ -1337,9 +1331,9 @@ dict_funcs.popitem = function(self){
 }
 
 dict_funcs.setdefault = function(self){
-    var $ = $B.args("setdefault", 3, {self: null, key: null, _default: null},
-            ["self", "key", "_default"], arguments, {_default: _b_.None}, null, null),
-        self = $.self,
+    var $ = $B.args1("setdefault", 3, {self: null, key: null, _default: null},
+                arguments, {_default: _b_.None})
+    var self = $.self,
         key = $.key,
         _default = $._default
     _default = _default === undefined ? _b_.None : _default
@@ -1366,9 +1360,9 @@ dict_funcs.setdefault = function(self){
 }
 
 dict_funcs.update = function(self){
-    var $ = $B.args("update", 1, {"self": null}, ["self"], arguments,
-            {}, "args", "kw"),
-        self = $.self,
+    var $ = $B.args1("update", 1, {"self": null}, arguments, null, "args", 
+                "kw")
+    var self = $.self,
         args = $.args,
         kw = $.kw
     if(args.length > 0){
@@ -1419,7 +1413,7 @@ dict_funcs.update = function(self){
 }
 
 dict_funcs.values = function(self){
-    $B.args('values', 1, {self: null}, ['self'], arguments, {}, null, null)
+    $B.args1('values', 1, {self: null}, arguments)
     return {
         ob_type: $B.dict_values,
         dict_obj: self

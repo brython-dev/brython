@@ -36,8 +36,8 @@ function to_json(obj, level){
             check_circular:_b_.True, allow_nan:_b_.True, cls:_b_.None,
             indent:_b_.None, separators:_b_.None, "default":_b_.None,
             sort_keys:_b_.False},
-        $ = $B.args("to_json", 2, {obj: null, level: null}, ['obj', 'level'],
-                    arguments, {level: 1}, null, "kw")
+        $ = $B.args1("to_json", 2, {obj: null, level: null}, arguments, 
+                {level: 1}, null, "kw")
 
     var kw = _b_.dict.$to_obj($.kw)
     for(var key in $defaults){
@@ -589,8 +589,8 @@ var JSONDecoder = $B.make_type("JSONDecoder")
 JSONDecoder.$factory = function(){
     var $defaults = {cls: _b_.None, object_hook: _b_.None,
             parse_float: _b_.None, parse_int: _b_.None,
-            parse_constant: _b_.None, object_pairs_hook: _b_.None},
-        $ = $B.args("decode", 0, {}, [], arguments, {}, null, "kw")
+            parse_constant: _b_.None, object_pairs_hook: _b_.None}
+    var $ = $B.args1("decode", 0, {}, arguments, null, null, "kw")
     var kw = _b_.dict.$to_obj($.kw)
     for(var key in $defaults){
         if(kw[key] === undefined){

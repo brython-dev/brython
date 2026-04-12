@@ -1100,11 +1100,10 @@ var no_flag = {}
 var Scanner = $B.make_type("Scanner")
 
 Scanner.$factory = function(pattern, string, pos, endpos){
-    var $ = $B.args('__init__', 4,
+    var $ = $B.args1('__init__', 4,
                 {pattern: null, string: null, pos: null, endpos:null},
-                ['pattern', 'string', 'pos', 'endpos'],
-                arguments, {pos: 0, endpos: _b_.None}, null, null),
-        endpos = endpos === _b_.None ? $.string.length : endpos
+                arguments, {pos: 0, endpos: _b_.None})
+    var endpos = endpos === _b_.None ? $.string.length : endpos
     return {
         ob_type: Scanner,
         $string: $.string,
@@ -1300,10 +1299,10 @@ Pattern_funcs.findall = function(self){
 }
 
 Pattern_funcs.finditer = function(self){
-    var $ = $B.args("finditer", 4,
+    var $ = $B.args1("finditer", 4,
             {self: null, string: null, pos: null, endpos: null},
-            'self string pos endpos'.split(' '), arguments,
-            {pos: 0, endpos: _b_.None}, null, null)
+            arguments,
+            {pos: 0, endpos: _b_.None})
     var data = prepare({string: $.string})
     var endpos = $.endpos === _b_.None ? data.string.length : $.endpos
     return $B.generator.$factory(iterator)(self.$pattern, data.string,
@@ -1311,10 +1310,9 @@ Pattern_funcs.finditer = function(self){
 }
 
 Pattern_funcs.fullmatch = function(self, string){
-    var $ = $B.args("match", 4,
-                    {self: null, string: null, pos: null, endpos: null},
-                    ["self", "string", "pos", "endpos"], arguments,
-                    {pos: 0, endpos: _b_.None}, null, null)
+    var $ = $B.args1("match", 4,
+                {self: null, string: null, pos: null, endpos: null},
+                arguments, {pos: 0, endpos: _b_.None})
     if($.endpos === _b_.None){
         $.endpos = $.string.length
     }
@@ -1339,10 +1337,9 @@ Pattern_funcs.groupindex_get = function(self){
 Pattern_funcs.groupindex_set = _b_.None
 
 Pattern_funcs.match = function(self, string){
-    var $ = $B.args("match", 4,
-                    {self: null, string: null, pos: null, endpos: null},
-                    ["self", "string", "pos", "endpos"], arguments,
-                    {pos: 0, endpos: _b_.None}, null, null)
+    var $ = $B.args1("match", 4,
+                {self: null, string: null, pos: null, endpos: null},
+                arguments, {pos: 0, endpos: _b_.None})
     if($.endpos === _b_.None){
         $.endpos = $.string.length
     }
@@ -1361,10 +1358,9 @@ Pattern_funcs.scanner = function(self, string, pos, endpos){
 }
 
 Pattern_funcs.search = function(self, string){
-    var $ = $B.args("match", 4,
-                    {self: null, string: null, pos: null, endpos: null},
-                    ["self", "string", "pos", "endpos"], arguments,
-                    {pos: 0, endpos: _b_.None}, null, null)
+    var $ = $B.args1("match", 4,
+                {self: null, string: null, pos: null, endpos: null},
+                arguments, {pos: 0, endpos: _b_.None})
     var data = prepare({string: $.string})
     if(self.$pattern.type != data.string.type){
         $B.RAISE(_b_.TypeError, "not the same type for pattern " +
@@ -1390,10 +1386,9 @@ Pattern_funcs.split = function(){
 }
 
 Pattern_funcs.sub = function(){
-    var $ = $B.args("match", 4,
-                    {self: null, repl: null, string: null, count: null},
-                    "self repl string count".split(' '), arguments,
-                    {count: 0}, null, null)
+    var $ = $B.args1("match", 4,
+                {self: null, repl: null, string: null, count: null},
+                arguments, {count: 0})
     var data = prepare({string: $.string})
     if($.self.$pattern.type != data.string.type){
         $B.RAISE(_b_.TypeError, "not the same type for pattern " +
@@ -3355,9 +3350,8 @@ MatchObject.$factory = function(mo){
 }
 
 MatchObject.mp_subscript = function(){
-    var $ = $B.args("__getitem__", 2, {self: null, key: null},
-                ['self', 'key'], arguments, {}, null, null),
-        self = $.self,
+    var $ = $B.args1("__getitem__", 2, {self: null, key: null}, arguments)
+    var self = $.self,
         key = $.key
     if(Array.isArray(key)){
         $B.RAISE(_b_.IndexError, "no such group")
@@ -3400,8 +3394,8 @@ MatchObject_funcs.__deepcopy__ = function(self){
 }
 
 MatchObject_funcs.end = function(self){
-    var $ = $B.args('end', 2, {self: null, group: null}, ['self', 'group'],
-                arguments, {group: 0}, null, null)
+    var $ = $B.args1('end', 2, {self: null, group: null}, arguments, 
+                {group: 0})
     var group = MatchObject.tp_funcs.group(self, $.group)
     if(group === _b_.None){
         return -1
@@ -3413,8 +3407,7 @@ MatchObject_funcs.end = function(self){
 }
 
 MatchObject_funcs.expand = function(){
-    var $ = $B.args("expand", 2, {self: null, template: null},
-                ['self', 'template'], arguments, {}, null, null)
+    var $ = $B.args1("expand", 2, {self: null, template: null}, arguments)
     var data = {
         repl: new StringObj($.template),
     }
@@ -3427,10 +3420,9 @@ MatchObject_funcs.expand = function(){
 }
 
 MatchObject_funcs.group = function(self){
-    var $ = $B.args("group", 1, {self: null}, ['self'], arguments,
-                {}, 'args', null),
-            self = $.self,
-            args = $.args
+    var $ = $B.args1("group", 1, {self: null}, arguments, null, 'args', null)
+    var self = $.self,
+        args = $.args
     if(args.length == 0){
         args[0] = 0
     }
@@ -3467,10 +3459,9 @@ MatchObject_funcs.groupdict = function(){
     by the subgroup name. The default argument is used for groups that did not
     participate in the match; it defaults to None.
     */
-    var $ = $B.args("groupdict", 2, {self: null, default: null},
-                ['self', 'default'], arguments, {default: _b_.None},
-                null, null),
-        self = $.self,
+    var $ = $B.args1("groupdict", 2, {self: null, default: null},
+                arguments, {default: _b_.None})
+    var self = $.self,
         groupobj = $.self.mo.$groups,
         d = $B.empty_dict()
     for(var key in $.self.mo.node.$groups){
@@ -3487,11 +3478,10 @@ MatchObject_funcs.groupdict = function(){
 }
 
 MatchObject_funcs.groups = function(self){
-    var $ = $B.args("group", 2, {self: null, default: null},
-                ['self', 'default'], arguments,
-                {default: _b_.None}, null, null),
-            self = $.self,
-            _default = $.default
+    var $ = $B.args1("group", 2, {self: null, default: null}, arguments,
+                {default: _b_.None})
+    var self = $.self,
+        _default = $.default
     return self.mo.groups(_default)
 }
 
@@ -3546,11 +3536,10 @@ MatchObject_funcs.span = function(){
     that if group did not contribute to the match, this is (-1, -1). group
     defaults to zero, the entire match.
     */
-    var $ = $B.args("span", 2, {self: null, group: null},
-                ['self', 'group'], arguments,
-                {group: 0}, null, null),
-            self = $.self,
-            group = $.group
+    var $ = $B.args1("span", 2, {self: null, group: null}, arguments,
+                {group: 0})
+    var self = $.self,
+        group = $.group
     if(group == 0){
         return $B.fast_tuple([self.mo.start, self.mo.end])
     }
@@ -3562,8 +3551,8 @@ MatchObject_funcs.span = function(){
 }
 
 MatchObject_funcs.start = function(self){
-    var $ = $B.args('end', 2, {self: null, group: null}, ['self', 'group'],
-                arguments, {group: 0}, null, null)
+    var $ = $B.args1('end', 2, {self: null, group: null}, 
+                arguments, {group: 0})
     var group = MatchObject.tp_funcs.group(self, $.group)
     if(group === _b_.None){
         return -1
@@ -3853,9 +3842,8 @@ function match(pattern, string, pos, endpos, no_zero_width, groups){
 var module = {
     cache: cache,
     compile: function(){
-        var $ = $B.args("compile", 2, {pattern: null, flags: null},
-                    ['pattern', 'flags'], arguments, {flags: no_flag},
-                    null, null)
+        var $ = $B.args1("compile", 2, {pattern: null, flags: null},
+                    arguments, {flags: no_flag})
         if($.pattern && $B.exact_type($.pattern, Pattern)){
             if($.flags !== no_flag){
                 $B.RAISE(_b_.ValueError,
@@ -3873,9 +3861,8 @@ var module = {
     },
     error: error,
     escape: function(){
-        var $ = $B.args("escape", 1, {pattern: null}, ['pattern'], arguments,
-                    {}, null, null),
-            data = prepare({pattern: $.pattern}),
+        var $ = $B.args1("escape", 1, {pattern: null}, arguments)
+        var data = prepare({pattern: $.pattern}),
             pattern = data.pattern,
             res = []
         for(var cp of pattern.codepoints){
@@ -3898,14 +3885,13 @@ var module = {
            if the pattern has more than one group. Empty matches are included
            in the result.
         */
-        var $ = $B.args("findall", 3,
+        var $ = $B.args1("findall", 3,
                     {pattern: null, string: null, flags: null},
-                    ['pattern', 'string', 'flags'], arguments,
-                    {flags: no_flag}, null, null),
-                pattern = $.pattern,
-                string = $.string,
-                flags = $.flags,
-                data
+                    arguments, {flags: no_flag})
+        var pattern = $.pattern,
+            string = $.string,
+            flags = $.flags,
+            data
         pattern = check_pattern_flags(pattern, flags)
         if($B.exact_type(pattern, Pattern)){
             data = prepare({string})
@@ -3951,13 +3937,12 @@ var module = {
         console.log("end findall")
     },
     finditer: function(){
-        var $ = $B.args("finditer", 3,
+        var $ = $B.args1("finditer", 3,
                     {pattern: null, string: null, flags: null},
-                    ['pattern', 'string', 'flags'], arguments,
-                    {flags: no_flag}, null, null),
-                pattern = $.pattern,
-                string = $.string,
-                flags = $.flags
+                    arguments, {flags: no_flag})
+        var pattern = $.pattern,
+            string = $.string,
+            flags = $.flags
         if($B.$isinstance(string, [_b_.bytearray, _b_.memoryview])){
             string.in_iteration = true
         }
@@ -3978,12 +3963,11 @@ var module = {
             flags, original_string)
     },
     fullmatch: function(){
-        var $ = $B.args("fullmatch", 3, {pattern: null, string: null, flags: null},
-                    ['pattern', 'string', 'flags'], arguments,
-                    {flags: no_flag}, null, null),
-                pattern = $.pattern,
-                string = $.string,
-                flags = $.flags
+        var $ = $B.args1("fullmatch", 3, {pattern: null, string: null, flags: null},
+                    arguments, {flags: no_flag})
+        var pattern = $.pattern,
+            string = $.string,
+            flags = $.flags
         pattern = check_pattern_flags(pattern, flags)
         var data
         if($B.exact_type(pattern, Pattern)){
@@ -4010,12 +3994,11 @@ var module = {
     },
     Match: MatchObject,
     match: function(){
-        var $ = $B.args("match", 3, {pattern: null, string: null, flags: null},
-                    ['pattern', 'string', 'flags'], arguments,
-                    {flags: no_flag}, null, null),
-                pattern = $.pattern,
-                string = $.string,
-                flags = $.flags
+        var $ = $B.args1("match", 3, {pattern: null, string: null, flags: null},
+                    arguments, {flags: no_flag})
+        var pattern = $.pattern,
+            string = $.string,
+            flags = $.flags
         pattern = check_pattern_flags(pattern, flags)
         var data
         if($B.exact_type(pattern, Pattern)){
@@ -4030,20 +4013,19 @@ var module = {
     },
     Pattern,
     purge: function(){
-        var $ = $B.args("purge", 0, {}, [], arguments, {}, null, null)
+        var $ = $B.args1("purge", 0, {}, arguments)
         cache.clear()
         return _b_.None
     },
     _reconstructor,
     Scanner,
     search: function(){
-        var $ = $B.args("search", 3, {pattern: null, string: null, flags: null},
-                    ['pattern', 'string', 'flags'], arguments,
-                    {flags: no_flag}, null, null),
-                pattern = $.pattern,
-                string = $.string,
-                flags = $.flags,
-                data
+        var $ = $B.args1("search", 3, {pattern: null, string: null, flags: null},
+                    arguments, {flags: no_flag})
+        var pattern = $.pattern,
+            string = $.string,
+            flags = $.flags,
+            data
         pattern = check_pattern_flags(pattern, flags)
         if($B.exact_type(pattern, Pattern)){
             data = prepare({string})
@@ -4109,10 +4091,9 @@ var module = {
         _debug.value = value
     },
     split: function(){
-        var $ = $B.args("split", 4,
+        var $ = $B.args1("split", 4,
                     {pattern: null, string: null, maxsplit: null, flags: null},
-                    ['pattern', 'string', 'maxsplit', 'flags'],
-                    arguments, {maxsplit: 0, flags: no_flag}, null, null)
+                    arguments, {maxsplit: 0, flags: no_flag})
         var res = [],
             pattern = $.pattern,
             string = $.string,
@@ -4163,11 +4144,10 @@ var module = {
         return $B.$list(res)
     },
     sub: function(){
-        var $ = $B.args("sub", 5,
+        var $ = $B.args1("sub", 5,
                 {pattern: null, repl: null, string: null, count: null, flags: null},
-                ['pattern', 'repl', 'string', 'count', 'flags'],
-                arguments, {count: 0, flags: no_flag}, null, null),
-            pattern = $.pattern,
+                arguments, {count: 0, flags: no_flag})
+        var pattern = $.pattern,
             repl = $.repl,
             string = $.string,
             count = $.count,
@@ -4198,11 +4178,10 @@ var module = {
         return subn(pattern, data.repl, data.string, count, flags)[0]
     },
     subn: function(){
-        var $ = $B.args("sub", 5,
+        var $ = $B.args1("sub", 5,
                 {pattern: null, repl: null, string: null, count: null, flags: null},
-                ['pattern', 'repl', 'string', 'count', 'flags'],
-                arguments, {count: 0, flags: no_flag}, null, null),
-            pattern = $.pattern,
+                arguments, {count: 0, flags: no_flag})
+        var pattern = $.pattern,
             repl = $.repl,
             string = $.string,
             count = $.count,

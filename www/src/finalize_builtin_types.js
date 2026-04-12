@@ -6,8 +6,8 @@ function wrap(dunder, nb_args){
     return function(cls, attr){
         if(nb_args !== undefined){
             var func = function(){
-                var $ = $B.args(dunder, nb_args, {obj: null}, ['obj'],
-                            arguments, {}, 'args', 'kw')
+                var $ = $B.args1(dunder, nb_args, {obj: null}, arguments,
+                            null, 'args', 'kw')
                 var obj = $.obj,
                     args = $.args,
                     kw = $.kw
@@ -167,8 +167,8 @@ function make_getattribute(cls){
 
 function make_new(cls){
     function new_func(){
-        var $ = $B.args('__new__', 1, {cls: null}, ['cls'], arguments, {}, 'args',
-                'kw')
+        var $ = $B.args1('__new__', 1, {cls: null}, arguments, null, 'args',
+                    'kw')
         return cls.tp_new($.cls, $.args, $.kw)
     }
     new_func.ob_type = $B.builtin_function_or_method
@@ -220,8 +220,8 @@ function make_set_del(cls){
 function make_setitem_delitem(cls){
     var setitem = cls.sq_ass_item ?? cls.mp_ass_subscript
     var setitem_func = function(){
-        var $ = $B.args("__setitem__", 3, {self: null, key: null, value: null},
-            ["self", "key", "value"], arguments, {}, null, null)
+        var $ = $B.args1("__setitem__", 3, 
+                    {self: null, key: null, value: null}, arguments)
         return setitem($.self, $.key, $.value)
     }
     $B.set_to_dict(cls, '__setitem__',
@@ -232,8 +232,7 @@ function make_setitem_delitem(cls){
         )
     )
     var delitem_func = function(){
-        var $ = $B.args("__detitem__", 2, {self: null, key: null},
-            ["self", "key"], arguments, {}, null, null)
+        var $ = $B.args1("__detitem__", 2, {self: null, key: null}, arguments)
         return setitem($.self, $.key, $B.NULL)
     }
     $B.set_to_dict(cls, '__delitem__',

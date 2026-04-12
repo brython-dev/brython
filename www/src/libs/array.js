@@ -157,8 +157,7 @@ array.tp_new = function(cls, args, kw){
 }
 
 array.tp_repr = function(self){
-    $B.args("__repr__", 1, {self: null},
-        ["self"], arguments, {}, null, null)
+    $B.args1("__repr__", 1, {self: null}, arguments)
     var res = "array('" + self.typecode + "'"
     if(self.obj !== null){
         res += ", [" + self.obj.join(', ') + "]"
@@ -189,8 +188,7 @@ array_funcs.__sizeof__ = function(){
 }
 
 array_funcs.append = function(self, value){
-    $B.args("append", 2, {self: null, value: null},
-        ["self", "value"], arguments, {}, null, null)
+    $B.args1("append", 2, {self: null, value: null}, arguments)
     var pos = self.obj === null ? 0 : self.obj.length
     return array.insert(self, pos, value)
 }
@@ -210,8 +208,7 @@ array_funcs.clear = function(self){
 }
 
 array_funcs.count = function(self, x){
-    $B.args("count", 2, {self: null, x: null},
-        ["self", "x"], arguments, {}, null, null)
+    $B.args1("count", 2, {self: null, x: null}, arguments)
     if(self.obj === null){
         return 0
     }
@@ -219,8 +216,7 @@ array_funcs.count = function(self, x){
 }
 
 array_funcs.extend = function(self, iterable){
-    $B.args("extend", 2, {self: null, iterable: null},
-        ["self", "iterable"], arguments, {}, null, null)
+    $B.args1("extend", 2, {self: null, iterable: null}, arguments)
     if($B.exact_type(iterable, array)){
         if(iterable.typecode !== self.typecode){
             $B.RAISE(_b_.TypeError, "can only extend with array " +
@@ -251,8 +247,7 @@ array_funcs.extend = function(self, iterable){
 }
 
 array_funcs.frombytes = function(self, s){
-    $B.args("frombytes", 2, {self: null, s: null},
-        ["self", "s"], arguments, {}, null, null)
+    $B.args1("frombytes", 2, {self: null, s: null}, arguments)
     if(! $B.$isinstance(s, _b_.bytes)){
         $B.RAISE(_b_.TypeError, "a bytes-like object is required, " +
             "not '" + $B.class_name(s) + "'")
@@ -266,8 +261,7 @@ array_funcs.fromfile = function(){
 }
 
 array_funcs.fromlist = function(self, list){
-    $B.args("fromlist", 2, {self: null, list: null},
-        ["self", "list"], arguments, {}, null, null)
+    $B.args1("fromlist", 2, {self: null, list: null}, arguments)
     var it = _b_.iter(list)
     while(true){
         try{
@@ -290,8 +284,7 @@ array_funcs.fromlist = function(self, list){
 array_funcs.fromunicode = array_funcs.frombytes
 
 array_funcs.index = function(self, x){
-    $B.args("index", 2, {self: null, x: null},
-        ["self", "x"], arguments, {}, null, null)
+    $B.args1("index", 2, {self: null, x: null}, arguments)
     var res = self.obj.findIndex(function(item){return x == item})
     if(res == -1){
         $B.RAISE(_b_.ValueError, "array.index(x): x not in array")
@@ -300,8 +293,7 @@ array_funcs.index = function(self, x){
 }
 
 array_funcs.insert = function(self, i, value){
-    $B.args("insert", 3, {self: null, i: null, value: null},
-        ["self", "i", "value"], arguments, {}, null, null)
+    $B.args1("insert", 3, {self: null, i: null, value: null}, arguments)
     if(self.obj === null){
         self.obj = [value]
     }else{
@@ -317,8 +309,7 @@ array_funcs.itemsize_get = function(self){
 array_funcs.itemsize_set = _b_.None
 
 array_funcs.pop = function(self, i){
-    var $ = $B.args("count", 2, {self: null, i: null},
-        ["self", "i"], arguments, {i: -1}, null, null)
+    var $ = $B.args1("count", 2, {self: null, i: null}, arguments, {i: -1})
     i = $.i
     if(self.obj === null){
         $B.RAISE(_b_.IndexError, "pop from empty array")
@@ -343,8 +334,7 @@ array_funcs.pop = function(self, i){
 }
 
 array_funcs.remove = function(self, x){
-    $B.args("remove", 2, {self: null, x: null},
-        ["self", "x"], arguments, {}, null, null)
+    $B.args1("remove", 2, {self: null, x: null}, arguments)
     var res = self.obj.findIndex(function(item){return x == item})
     if(res == -1){
         $B.RAISE(_b_.ValueError, "array.remove(x): x not in array")
@@ -354,16 +344,14 @@ array_funcs.remove = function(self, x){
 }
 
 array_funcs.reverse = function(self){
-    $B.args("reverse", 1, {self: null},
-        ["self"], arguments, {}, null, null)
+    $B.args1("reverse", 1, {self: null}, arguments)
     if(self.obj === null){return _b_.None}
     self.obj.reverse()
     return _b_.None
 }
 
 array_funcs.tobytes = function(self){
-    $B.args("tobytes", 1, {self: null},
-        ["self"], arguments, {}, null, null)
+    $B.args1("tobytes", 1, {self: null}, arguments)
     var items = Array.prototype.slice.call(self.obj),
         res = []
     items.forEach(function(item){
@@ -381,8 +369,7 @@ array_funcs.tofile = function(){
 }
 
 array_funcs.tolist = function(self){
-    $B.args("tolist", 1, {self: null},
-        ["self"], arguments, {}, null, null)
+    $B.args1("tolist", 1, {self: null}, arguments)
     if(self.obj === null){
         return $B.$list([])
     }

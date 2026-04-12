@@ -650,8 +650,7 @@ set_funcs.copy = function(self){
 }
 
 set_funcs.difference = function(self){
-    var $ = $B.args("difference", 1, {self: null},
-        ["self"], arguments, {}, "args", null)
+    var $ = $B.args1("difference", 1, {self: null}, arguments, null, "args")
     if($.args.length == 0){
         return set_copy($.self)
     }
@@ -671,8 +670,8 @@ set_funcs.difference = function(self){
 }
 
 set_funcs.difference_update = function(self){
-    var $ = $B.args("difference_update", 1, {self: null}, ["self"],
-            arguments, {}, "args", null)
+    var $ = $B.args1("difference_update", 1, {self: null}, arguments, null,
+                "args", null)
     for(var arg of $.args){
         set_difference_update(self, arg)
     }
@@ -690,8 +689,8 @@ set_funcs.discard = function(self, item){
 }
 
 set_funcs.intersection = function(self){
-    var $ = $B.args("difference", 1, {self: null},
-        ["self"], arguments, {}, "args", null)
+    var $ = $B.args1("difference", 1, {self: null}, arguments, null, "args",
+                null)
     if($.args.length == 0){
         return set_copy($.self)
     }
@@ -700,9 +699,9 @@ set_funcs.intersection = function(self){
 
 set_funcs.intersection_update = function(self){
     // Update the set, keeping only elements found in it and all others.
-    var $ = $B.args("intersection_update", 1, {self: null}, ["self"],
-        arguments, {}, "args", null),
-        self = $.self,
+    var $ = $B.args1("intersection_update", 1, {self: null}, arguments, null,
+                "args", null)
+    var self = $.self,
         args = $.args
     var temp = set_intersection_multi(self, args)
     set_swap_bodies(self, temp)
@@ -806,8 +805,7 @@ set_funcs.symmetric_difference_update = function(self, s){
 }
 
 set_funcs.union = function(self){
-    var $ = $B.args("union", 1, {self: null},
-        ["self"], arguments, {}, "args", null)
+    var $ = $B.args1("union", 1, {self: null}, arguments, null, "args", null)
 
     let res = set_copy($.self)
     if($.args.length == 0){
@@ -834,8 +832,7 @@ set_funcs.union = function(self){
 
 set_funcs.update = function(self){
     // Update the set, adding elements from all others.
-    var $ = $B.args("update", 1, {self: null}, ["self"],
-        arguments, {}, "args", null)
+    var $ = $B.args1("update", 1, {self: null}, arguments, null, "args")
     for(var iterable of $.args){
         if(Array.isArray(iterable)){
             for(let i = 0; i < iterable.length; i++){

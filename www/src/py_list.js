@@ -29,8 +29,7 @@ _b_.list[$B.FAST_ITER] = _b_.tuple[$B.FAST_ITER] = function(t, set_lineno, frame
 }
 
 function count(self){
-    var $ = $B.args("count", 2, {self: null, x: null}, ["self", "x"],
-        arguments, {}, null, null)
+    var $ = $B.args1("count", 2, {self: null, x: null}, arguments)
     var res = 0
     for(var _item of $.self){
         if($B.is_or_equals(_item, $.x)){
@@ -82,10 +81,9 @@ function sq_repeat(self, other){
 
 function index(self){
     var missing = {},
-        $ = $B.args("index", 4, {self: null, x: null, start: null, stop: null},
-            ["self", "x", "start" ,"stop"], arguments,
-            {start: 0, stop: missing}, null, null),
-        self = $.self,
+        $ = $B.args1("index", 4, {self: null, x: null, start: null, stop: null},
+                arguments, {start: 0, stop: missing})
+    var self = $.self,
         start = $.start,
         stop = $.stop
     if($B.is_big_int(start)){
@@ -168,9 +166,8 @@ function sq_concat(self, other){
 }
 
 function sq_contains(self){
-    var $ = $B.args("__contains__", 2, {self: null, item: null},
-        ["self", "item"], arguments, {}, null, null),
-        self = $.self,
+    var $ = $B.args1("__contains__", 2, {self: null, item: null}, arguments)
+    var self = $.self,
         item = $.item
     for(var _item of self) {
         if($B.is_or_equals(_item, item)){
@@ -613,7 +610,7 @@ $B.$list = function(t){
 
 // constructor common to list and tuple (class is passed as "this")
 var factory = function(obj){
-    var $ = $B.args(this.tp_name, 0, {}, [], arguments, {}, 'args', 'kw')
+    var $ = $B.args1(this.tp_name, 0, {}, arguments, null, 'args', 'kw')
     var args = $.args,
         kw = $.kw
     if(_b_.dict.mp_length(kw)){
@@ -699,9 +696,8 @@ _b_.list.tp_iter = function(self){
 }
 
 _b_.list.tp_init = function(self){
-    var $ = $B.args('__init__', 1, {self: null}, ['self'], arguments, {},
-            'args', 'kw'),
-        self = $.self,
+    var $ = $B.args1('__init__', 1, {self: null}, arguments, null, 'args', 'kw')
+    var self = $.self,
         args = $.args,
         kw = $.kw
     if(args.length > 1){
@@ -740,8 +736,7 @@ _b_.list.tp_new = function(cls, args, kw){
 }
 
 _b_.list.nb_inplace_add = function(){
-    var $ = $B.args("__iadd__", 2, {self: null, x: null}, ["self", "x"],
-        arguments, {}, null, null)
+    var $ = $B.args1("__iadd__", 2, {self: null, x: null}, arguments)
     var x = list.$factory($.x)
     for(var i = 0; i < x.length; i++){
         $.self.push(x[i])
@@ -750,9 +745,8 @@ _b_.list.nb_inplace_add = function(){
 }
 
 _b_.list.nb_inplace_multiply = function(self){
-    var $ = $B.args("__imul__", 2, {self: null, x: null}, ["self", "x"],
-        arguments, {}, null, null),
-        len = $.self.length,
+    var $ = $B.args1("__imul__", 2, {self: null, x: null}, arguments)
+    var len = $.self.length,
         pos = len
     try{
         var x = $B.PyNumber_Index($.x)
@@ -816,8 +810,7 @@ list_funcs.append = function(self, x){
 }
 
 list_funcs.clear = function(){
-    var $ = $B.args("clear", 1, {self: null}, ["self"],
-        arguments, {}, null, null)
+    var $ = $B.args1("clear", 1, {self: null}, arguments)
     while($.self.length){
         $.self.pop()
     }
@@ -825,8 +818,7 @@ list_funcs.clear = function(){
 }
 
 list_funcs.copy = function(self){
-    var $ = $B.args("copy", 1, {self: null}, ["self"],
-        arguments, {}, null, null)
+    var $ = $B.args1("copy", 1, {self: null}, arguments)
     var res = $.self.slice()
     res.ob_type = $B.get_class($.self)
     return res
@@ -837,8 +829,7 @@ list_funcs.count = function(){
 }
 
 list_funcs.extend = function(self){
-    var $ = $B.args("extend", 2, {self: null, t: null}, ["self", "t"],
-        arguments, {}, null, null)
+    var $ = $B.args1("extend", 2, {self: null, t: null}, arguments)
     var self = $.self,
         t = $.t
     for(var item of $B.make_js_iterator(t)){
@@ -852,8 +843,8 @@ list_funcs.index = function(){
 }
 
 list_funcs.insert = function(self){
-    var $ = $B.args("insert", 3, {self: null, i: null, item: null},
-        ["self", "i", "item"], arguments, {}, null, null)
+    var $ = $B.args1("insert", 3, {self: null, i: null, item: null},
+                arguments)
     if(self.$is_js_array){
         $.self.splice($.i, 0, $B.pyobj2jsobj($.item))
     }else{
@@ -864,9 +855,9 @@ list_funcs.insert = function(self){
 
 list_funcs.pop = function(self){
     var missing = {}
-    var $ = $B.args("pop", 2, {self: null, pos: null}, ["self", "pos"],
-        arguments, {pos: missing}, null, null),
-        self = $.self,
+    var $ = $B.args1("pop", 2, {self: null, pos: null}, arguments, 
+                {pos: missing})
+    var self = $.self,
         pos = $.pos
     check_not_tuple(self, "pop")
     if(pos === missing){
@@ -885,8 +876,7 @@ list_funcs.pop = function(self){
 }
 
 list_funcs.remove = function(self){
-    var $ = $B.args("remove", 2, {self: null, x: null}, ["self", "x"],
-        arguments, {}, null, null)
+    var $ = $B.args1("remove", 2, {self: null, x: null}, arguments)
     for(var i = 0, len = $.self.length; i < len; i++){
         if($B.rich_comp("__eq__", $.self[i], $.x)){
             $.self.splice(i, 1)
@@ -897,9 +887,8 @@ list_funcs.remove = function(self){
 }
 
 list_funcs.reverse = function(self){
-    var $ = $B.args("reverse", 1, {self: null}, ["self"],
-        arguments, {}, null, null),
-        _len = $.self.length - 1,
+    var $ = $B.args1("reverse", 1, {self: null}, arguments)
+    var _len = $.self.length - 1,
         i = parseInt($.self.length / 2)
     while(i--){
         var buf = $.self[i]
@@ -910,8 +899,7 @@ list_funcs.reverse = function(self){
 }
 
 list_funcs.sort = function(self){
-    var $ = $B.args("sort", 1, {self: null}, ["self"],
-        arguments, {}, null, "kw")
+    var $ = $B.args1("sort", 1, {self: null}, arguments, null, null, "kw")
 
     check_not_tuple(self, "sort")
     var func = _b_.None,

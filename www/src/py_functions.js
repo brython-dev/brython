@@ -320,11 +320,8 @@ function globals_get(f){
 }
 
 $B.function.$factory = function(){
-    var $ = $B.args('FunctionType', 2,
-                {code: null, globals: null},
-                ['code', 'globals'],
-                arguments, {},
-                null, 'kw')
+    var $ = $B.args1('FunctionType', 2, {code: null, globals: null}, 
+                arguments, null, null, 'kw')
     var code = $.code
     var __name__ = $.name === _b_.None ? code.co_name : $.name
     var frame = $B.frame_obj.frame

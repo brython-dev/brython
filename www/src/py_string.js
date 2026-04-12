@@ -1996,8 +1996,7 @@ str_funcs.casefold = function(self){
 }
 
 str_funcs.center = function(){
-    var $ = $B.args("center", 3, {self: null, width: null, fillchar: null},
-            ["self", "width", "fillchar"],
+    var $ = $B.args1("center", 3, {self: null, width: null, fillchar: null},
             arguments, {fillchar:" "}, null, null),
         self = to_string($.self)
 
@@ -2015,9 +2014,8 @@ str_funcs.center = function(){
 }
 
 str_funcs.count = function(){
-    var $ = $B.args("count", 4, {self:null, sub:null, start:null, stop:null},
-            ["self", "sub", "start", "stop"], arguments, {start:null, stop:null},
-            null, null),
+    var $ = $B.args1("count", 4, {self:null, sub:null, start:null, stop:null},
+            arguments, {start:null, stop:null}, null, null),
         _self,
         sub
 
@@ -2063,9 +2061,8 @@ str_funcs.count = function(){
 }
 
 str_funcs.encode = function(){
-    var $ = $B.args("encode", 3, {self: null, encoding: null, errors: null},
-            ["self", "encoding", "errors"], arguments,
-            {encoding: "utf-8", errors: "strict"}, null, null),
+    var $ = $B.args1("encode", 3, {self: null, encoding: null, errors: null},
+                arguments, {encoding: "utf-8", errors: "strict"}, null, null),
         _self = to_string($.self)
     if($.encoding == "rot13" || $.encoding == "rot_13"){
         // Special case : returns a string
@@ -2093,9 +2090,8 @@ str_funcs.endswith = function(self, suffix){
     if(arguments.length == 2 && typeof suffix == 'string'){
         return self.endsWith(suffix)
     }
-    var $ = $B.args("endswith", 4,
+    var $ = $B.args1("endswith", 4,
             {self:null, suffix:null, start:null, end:null},
-            ["self", "suffix", "start", "end"],
             arguments, {start: 0, end: null}, null, null),
         _self
 
@@ -2126,8 +2122,8 @@ str_funcs.endswith = function(self, suffix){
 }
 
 str_funcs.expandtabs = function(self){
-    var $ = $B.args("expandtabs", 2, {self: null, tabsize: null},
-            ["self", "tabsize"], arguments, {tabsize: 8}, null, null),
+    var $ = $B.args1("expandtabs", 2, {self: null, tabsize: null},
+                arguments, {tabsize: 8}, null, null),
         _self = to_string($.self)
     var s = $B.PyNumber_Index($.tabsize),
         col = 0,
@@ -2166,9 +2162,8 @@ str_funcs.find = function(self){
     // such that sub is contained in the slice s[start:end]. Optional
     // arguments start and end are interpreted as in slice notation.
     // Return -1 if sub is not found.
-    var $ = $B.args("str.find", 4,
+    var $ = $B.args1("str.find", 4,
             {self: null, sub: null, start: null, end: null},
-            ["self", "sub", "start", "end"],
             arguments, {start: 0, end: null}, null, null),
         _self,
         sub
@@ -2214,11 +2209,9 @@ str_funcs.format = function(){
         for(let i = 0, len = arguments.length - 1; i < len; i++){
             args.push(arguments[i])
         }
-        $ = $B.args("format", 1, {self: null}, ["self"],
-                args, {}, "$args", null)
+        $ = $B.args1("format", 1, {self: null}, args, null, "$args", null)
     }else{
-        $ = $B.args("format", 1, {self: null}, ["self"],
-                arguments, {}, "$args", "$kw")
+        $ = $B.args1("format", 1, {self: null}, arguments, null, "$args", "$kw")
         mapping = $.$kw, // dictionary
         getitem = function(key){
             return _b_.dict.$getitem(mapping, key)
@@ -2569,9 +2562,8 @@ str_funcs.join = function(self, iterable){
 }
 
 str_funcs.ljust = function(self){
-    var $ = $B.args("ljust", 3, {self: null, width: null, fillchar:null},
-            ["self", "width", "fillchar"],
-            arguments, {fillchar: " "}, null, null),
+    var $ = $B.args1("ljust", 3, {self: null, width: null, fillchar:null},
+                arguments, {fillchar: " "}, null, null),
         _self = to_string($.self),
         len = str.mp_length(_self);
 
@@ -2588,8 +2580,8 @@ str_funcs.lower = function(self){
 }
 
 str_funcs.lstrip = function(self){
-    var $ = $B.args("lstrip", 2, {self: null, chars: null}, ["self", "chars"],
-            arguments, {chars: _b_.None}, null, null),
+    var $ = $B.args1("lstrip", 2, {self: null, chars: null},
+                arguments, {chars: _b_.None}, null, null),
         _self = $.self,
         chars = $.chars
     if(chars === _b_.None){
@@ -2613,8 +2605,8 @@ str_funcs.lstrip = function(self){
 }
 
 str_funcs.maketrans = function(){
-    var $ = $B.args("maketrans", 3, {x: null, y: null, z: null},
-            ["x", "y", "z"], arguments, {y: null, z: null}, null, null)
+    var $ = $B.args1("maketrans", 3, {x: null, y: null, z: null},
+                arguments, {y: null, z: null}, null, null)
 
     var _t = $B.empty_dict()
 
@@ -2728,9 +2720,8 @@ str_funcs.replace = function(){
     // Replaces occurrences of 'old' by '_new'. Count references
     // the number of times to replace. In CPython, negative or undefined
     // values of count means replace all.
-    var $ = $B.args("replace", 4,
+    var $ = $B.args1("replace", 4,
             {self: null, old: null, new: null, count: null},
-            ["self", "old", "new", "count"],
             arguments, {count: -1}, null, null),
         count = $.count,
         _self = $.self,
@@ -2801,9 +2792,8 @@ str_funcs.rfind = function(){
     // Return the highest index in the string where substring sub is found,
     // such that sub is contained within s[start:end]. Optional arguments
     // start and end are interpreted as in slice notation. Return -1 on failure.
-    var $ = $B.args("rfind", 4,
+    var $ = $B.args1("rfind", 4,
             {self: null, sub: null, start: null, end: null},
-            ["self", "sub", "start", "end"],
             arguments, {start: 0, end: null}, null, null),
         _self,
         sub
@@ -2844,10 +2834,8 @@ str_funcs.rindex = function(self){
 }
 
 str_funcs.rjust = function(){
-    var $ = $B.args("rjust",3,
-            {self: null, width: null, fillchar: null},
-            ["self", "width", "fillchar"],
-            arguments, {fillchar: " "}, null, null),
+    var $ = $B.args1("rjust", 3, {self: null, width: null, fillchar: null},
+                arguments, {fillchar: " "}, null, null),
         _self = to_string($.self)
     var len = str.mp_length(_self)
     if($.width <= len){
@@ -2869,9 +2857,8 @@ str_funcs.rpartition = function(self, sep) {
 }
 
 str_funcs.rsplit = function(){
-    var $ = $B.args("rsplit", 3, {self: null, sep: null, maxsplit: null},
-        ["self", "sep", "maxsplit"], arguments,
-        {sep: _b_.None, maxsplit: -1}, null, null),
+    var $ = $B.args1("rsplit", 3, {self: null, sep: null, maxsplit: null},
+                arguments, {sep: _b_.None, maxsplit: -1}, null, null),
         sep = $.sep,
         _self;
 
@@ -2891,9 +2878,9 @@ str_funcs.rsplit = function(){
 }
 
 str_funcs.rstrip = function(){
-    var $ = $B.args("rstrip", 2, {self: null, chars: null}, ["self", "chars"],
-            arguments, {chars: _b_.None}, null, null),
-        chars = $.chars,
+    var $ = $B.args1("rstrip", 2, {self: null, chars: null}, 
+                arguments, {chars: _b_.None}, null, null)
+    var chars = $.chars,
         _self = to_string($.self)
     if(chars === _b_.None){
         return _self.trimEnd()
@@ -2918,9 +2905,8 @@ str_funcs.rstrip = function(){
 $B.time_string_split = 0
 
 str_funcs.split = function(){
-    var $ = $B.args("split", 3, {self: null, sep: null, maxsplit: null},
-        ["self", "sep", "maxsplit"], arguments,
-        {sep: _b_.None, maxsplit: -1}, null, null),
+    var $ = $B.args1("split", 3, {self: null, sep: null, maxsplit: null},
+                arguments, {sep: _b_.None, maxsplit: -1}, null, null),
         maxsplit = $.maxsplit,
         sep = $.sep,
         pos = 0,
@@ -3011,9 +2997,8 @@ str_funcs.split = function(){
 }
 
 str_funcs.splitlines = function(){
-    var $ = $B.args('splitlines', 2, {self: null, keepends: null},
-                    ['self','keepends'], arguments, {keepends: false},
-                    null, null)
+    var $ = $B.args1('splitlines', 2, {self: null, keepends: null},
+                arguments, {keepends: false}, null, null)
     if(!$B.$isinstance($.keepends, [_b_.bool, _b_.int])){
         throw _b_.TypeError('integer argument expected, got '+
             $B.class_name($.keepends))
@@ -3048,10 +3033,9 @@ str_funcs.startswith = function(self){
     // prefix can also be a tuple of prefixes to look for. With optional
     // start, test string beginning at that position. With optional end,
     // stop comparing string at that position.
-    var $ = $B.args("startswith", 4,
-            {self: null, prefix: null, start: null, end: null},
-            ["self", "prefix", "start", "end"],
-            arguments, {start: 0, end: null}, null, null),
+    var $ = $B.args1("startswith", 4,
+                {self: null, prefix: null, start: null, end: null},
+                arguments, {start: 0, end: null}, null, null),
         _self
 
     normalize_start_end($)
@@ -3078,8 +3062,8 @@ str_funcs.startswith = function(self){
 }
 
 str_funcs.strip = function(){
-    var $ = $B.args("strip", 2, {self: null, chars: null}, ["self", "chars"],
-            arguments, {chars: _b_.None}, null, null)
+    var $ = $B.args1("strip", 2, {self: null, chars: null},
+                arguments, {chars: _b_.None}, null, null)
     var _self = to_string($.self)
     if($.chars === _b_.None){
         return _self.trim()

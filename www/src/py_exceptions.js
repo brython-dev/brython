@@ -558,7 +558,7 @@ _b_.BaseException.tp_str = function(self){
 }
 
 _b_.BaseException.tp_init = function(self, ...args){
-    var $ = $B.args('__init__', 1, {self: null}, ['self'], arguments, {}, 'args', 'kw')
+    var $ = $B.args1('__init__', 1, {self: null}, arguments, null, 'args', 'kw')
     check_no_keywords($.self, $.kw)
     self.args = $B.fast_tuple(args)
 }
@@ -711,7 +711,7 @@ _b_.BaseException.tp_getset = [
 $B.set_func_names(_b_.BaseException, 'builtins')
 
 _b_.StopIteration.tp_init = function(self){
-    var $ = $B.args("StopIteration", 1, {self: null}, ['self'], arguments, {},
+    var $ = $B.args1("StopIteration", 1, {self: null}, arguments, null,
                 'args', 'kw')
     var self = $.self,
         args = $.args,
@@ -732,8 +732,8 @@ _b_.StopIteration.tp_members = [
 $B.set_func_names(_b_.StopIteration, 'builtins')
 
 _b_.ImportError.tp_init = function(){
-    var $ = $B.args("ImportError", 1, {self: null},
-                ['self'], arguments, {}, 'args', 'kw')
+    var $ = $B.args1("ImportError", 1, {self: null},
+                arguments, null, 'args', 'kw')
     _b_.BaseException.tp_init($.self, ...$.args)
     $B.set_expected_kwargs($.self, ['name', 'path'], $.kw)
 }
@@ -741,8 +741,8 @@ _b_.ImportError.tp_init = function(){
 $B.set_func_names(_b_.ImportError, 'builtins')
 
 _b_.SyntaxError.tp_init = function(){
-    var $ = $B.args('SyntaxError', 1, {self: null},
-                ['self'], arguments, {}, 'args', 'kw')
+    var $ = $B.args1('SyntaxError', 1, {self: null}, arguments, null, 'args', 
+                'kw')
     var _self = $.self,
         args = $.args,
         kw = $.kw
@@ -831,8 +831,8 @@ $B.set_expected_kwargs = function(obj, expected, kwargs){
 // AttributeError supports keyword-only "name" and "obj" parameters
 
 _b_.AttributeError.tp_init = function(){
-    var $ = $B.args("AttributeError", 1, {self: null},
-                ['self'], arguments, {}, 'args', 'kw')
+    var $ = $B.args1("AttributeError", 1, {self: null},
+                arguments, null, 'args', 'kw')
     _b_.BaseException.tp_init($.self, ...$.args)
     $B.set_expected_kwargs($.self, ['name', 'obj'], $.kw)
 }
@@ -864,7 +864,7 @@ $B.attr_error = function(name, obj){
 
 /* NameError start */
 _b_.NameError.tp_init = function(){
-    var $ = $B.args('__init__', 1, {self: null}, ['self'], arguments, {}, 'args', 'kw')
+    var $ = $B.args1('__init__', 1, {self: null}, arguments, null, 'args', 'kw')
     _b_.BaseException.tp_init($.self, ...$.args)
     $B.set_expected_kwargs($.self, ['name'], $.kw)
 }
@@ -1142,9 +1142,8 @@ $B.set_func_names(_b_.BaseExceptionGroup, "builtins")
 
 _b_.ExceptionGroup.$factoryXXX = function(){
     var missing = {},
-        $ = $B.args("ExceptionGroup", 2, {message: null, exceptions: null},
-                    ['message', 'exceptions'], arguments, {exceptions: missing},
-                    null, null)
+        $ = $B.args1("ExceptionGroup", 2, {message: null, exceptions: null},
+                    arguments, {exceptions: missing})
     var err = Error()
     err.args = $B.fast_tuple(Array.from(arguments))
     err.ob_type = _b_.ExceptionGroup

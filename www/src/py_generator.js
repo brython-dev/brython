@@ -186,13 +186,11 @@ generator_funcs.send = function(self, value){
 }
 
 generator_funcs.throw = function(self){
-    var $ = $B.args('throw', 4,
+    var $ = $B.args1('throw', 4,
                     {self: null, type: null, value: null, traceback: null},
-                    ['self', 'type', 'value', 'traceback'],
                     arguments,
-                    {value: _b_.None, traceback: _b_.None},
-                    null, null),
-        self = $.self,
+                    {value: _b_.None, traceback: _b_.None})
+    var self = $.self,
         type = $.type,
         value = $.value,
         traceback = $.traceback

@@ -168,14 +168,17 @@ obj.escape = function(string){
     }
     return res
 }
+
 obj.findall = function(pattern, string, flags){
-    var $ns=$B.args('re.findall', 2,
-        {pattern:null, string:null}, ['pattern', 'string'],
-        arguments,{}, 'args', 'kw') ,
-        args = $ns['args'] ,
+    var $ = $B.args1('re.findall', 2, {pattern:null, string:null},
+                arguments, null, 'args', 'kw')
+    var args = $.args,
         _flags = 0;
-    if(args.length>0){var flags = args[0]}
-    else{var _flags = $B.$getattr($ns['kw'], 'get')('flags', 0)}
+    if(args.length>0){
+        var flags = args[0]
+    }else{
+        var _flags = $B.$getattr($.kw, 'get')('flags', 0)
+    }
 
     var flags = normflags()
     flags += 'gm'
@@ -184,14 +187,17 @@ obj.findall = function(pattern, string, flags){
     if(jsmatch === null){return []}
     return jsmatch
 }
+
 obj.finditer = function(pattern, string, flags){
-    var $ns=$B.args('re.finditer', 2,
-        {pattern:null, string:null}, ['pattern', 'string'],
-        arguments,{},'args','kw'),
-        args = $ns['args'],
+    var $ = $B.args1('re.finditer', 2, {pattern:null, string:null}, arguments,
+                null, 'args', 'kw')
+    var args = $.args,
         _flags = 0;
-    if(args.length>0){var flags=args[0]}
-    else{var _flags = $B.$getattr($ns['kw'], 'get')('flags', 0)}
+    if(args.length>0){
+        var flags = args[0]
+    }else{
+        var _flags = $B.$getattr($.kw, 'get')('flags', 0)
+    }
 
     var flags = normflags()
     flags += 'gm'
@@ -229,12 +235,11 @@ obj.finditer = function(pattern, string, flags){
     return _list
 }
 obj.search = function(pattern, string){
-    var $ns = $B.args('re.search', 2,
-        {pattern:null, string:null},['pattern', 'string'],
-        arguments, {}, 'args', 'kw')
-    var args = $ns['args']
+    var $ = $B.args1('re.search', 2, {pattern:null, string:null}, 
+                  arguments, null, 'args', 'kw')
+    var args = $.args
     if(args.length>0){var flags = args[0]}
-    else{var flags = $B.$getattr($ns['kw'], 'get')('flags', '')}
+    else{var flags = $B.$getattr($.kw, 'get')('flags', '')}
     flags = normflags(flags)
     var jsp = new RegExp(pattern, flags)
     var jsmatch = string.match(jsp)
@@ -242,10 +247,9 @@ obj.search = function(pattern, string){
     return MatchObject.$factory(jsmatch, string, pattern)
 }
 obj.sub = function(pattern, repl, string){
-    var $ns=$B.args('re.search', 3,
+    var $ns = $B.args1('re.search', 3,
         {pattern: null, repl: null, string: null},
-        ['pattern', 'repl', 'string'],
-        arguments,{}, 'args', 'kw')
+        arguments, null, 'args', 'kw')
     for($var in $ns){
         eval("var " + $var + "=$ns[$var]")
     }

@@ -884,9 +884,8 @@ var module = {
      },
 
     setlocale : function(){
-        var $ = $B.args("setlocale", 2, {category: null, locale: null},
-            ["category", "locale"], arguments, {locale: _b_.None},
-            null, null)
+        var $ = $B.args1("setlocale", 2, {category: null, locale: null},
+                    arguments, {locale: _b_.None})
         /// XXX category is currently ignored
         if($.locale == ""){
             // use browser language setting, if it is set

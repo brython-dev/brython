@@ -4,10 +4,9 @@
 var _b_ = $B.builtins
 
 function define(tag_name, cls, options){
-    var $ = $B.args("define", 3, {tag_name: null, cls: null, options: null},
-            ["tag_name", "cls", "options"], arguments, {options: _b_.None},
-            null, null),
-        tag_name = $.tag_name,
+    var $ = $B.args1("define", 3, {tag_name: null, cls: null, options: null},
+                arguments, {options: _b_.None})
+    var tag_name = $.tag_name,
         cls = $.cls,
         options = $.options,
         _extends,

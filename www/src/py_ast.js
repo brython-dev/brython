@@ -159,8 +159,8 @@ $B.create_python_ast_classes = function(){
             $B.set_to_dict(cls, '__module__', 'ast')
 
             cls.$factory = function(){
-                var $ = $B.args(klass, nb_args, $B.clone(slots), Object.keys(slots),
-                        arguments, $B.clone($defaults), null, 'kw')
+                var $ = $B.args1(klass, nb_args, $B.clone(slots), arguments, 
+                            $B.clone($defaults), null, 'kw')
                 var res = {
                     ob_type: cls
                 }

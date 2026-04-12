@@ -57,8 +57,8 @@ Process.terminate = function(self){
 Process. $factory = function(){
     //arguments group=None, target=None, name=None, args=(), kwargs=()
 
-    var $ns=$B.args('Process',0,{},[],arguments,{},null,'kw')
-    var kw=$ns['kw']
+    var $ns = $B.args1('Process', 0, {}, arguments, null, null, 'kw')
+    var kw = $ns['kw']
 
     var target=_b_.dict.get($ns['kw'],'target', _b_.None)
     var args=_b_.dict.get($ns['kw'],'args', _b_.tuple.$factory())
@@ -89,9 +89,8 @@ Pool.tp_repr = function(self){
 
 Pool.map = function(){
 
-   var $ns=$B.args('Pool.map', 3,
-       {self:null, func:null, fargs:null}, ['self', 'func', 'fargs'],
-       arguments,{},'args','kw')
+   var $ns = $B.args1('Pool.map', 3, {self:null, func:null, fargs:null},
+           arguments, null, 'args', 'kw')
    var func = $ns['func']
    var fargs = $ns['fargs']
 
@@ -187,8 +186,8 @@ Pool.apply_async = function(){
 }
 
 Pool.$factory = function(){
-    var $ns = $B.args('Pool',1,
-        {processes:null},['processes'],arguments,{},'args','kw')
+    var $ns = $B.args1('Pool', 1, {processes:null}, arguments, null,'args',
+                  'kw')
 
     var processes = $ns['processes']
 

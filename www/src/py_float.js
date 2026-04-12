@@ -1091,8 +1091,8 @@ float_funcs.__getnewargs__ = function(self){
 }
 
 float_funcs.__round__ = function(self){
-    var $ = $B.args('__round__', 2, {self: null, ndigits: null},
-            ['self', 'ndigits'], arguments, {ndigits: _b_.None}, null, null)
+    var $ = $B.args1('__round__', 2, {self: null, ndigits: null},
+                arguments, {ndigits: _b_.None})
     return float_round($.self, $.ndigits)
 }
 
@@ -1153,8 +1153,7 @@ float_funcs.conjugate = function(self){
 }
 
 float_funcs.from_number = function(self){
-    var $ = $B.args('from_number', 1, {number: null},
-                ['number'], arguments, {}, null, null)
+    var $ = $B.args1('from_number', 1, {number: null}, arguments)
     var number = $.number
     if($B.$isinstance(number, _b_.float)){
         return float_value(number) // ensure class is float

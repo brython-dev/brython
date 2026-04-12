@@ -361,9 +361,8 @@ range_funcs.count = function(self, ob){
 }
 
 range_funcs.index = function(self){
-    var $ = $B.args("index", 2, {self: null, other: null}, ["self", "other"],
-        arguments, {}, null, null),
-        self = $.self,
+    var $ = $B.args1("index", 2, {self: null, other: null}, arguments)
+    var self = $.self,
         other = $.other
     try{
         other = $B.int_or_bool(other)
@@ -614,8 +613,7 @@ slice_funcs.indices = function(){
     // integers; respectively these are the start and stop indices and the
     // step or stride length of the slice. Missing or out-of-bounds indices
     // are handled in a manner consistent with regular slices.
-    var $ = $B.args("indices", 2, {self: null, length: null},
-            ["self", "length"], arguments, {}, null, null)
+    var $ = $B.args1("indices", 2, {self: null, length: null}, arguments)
     var self = $.self,
         length = $.length
     var len = $B.PyNumber_Index(length)

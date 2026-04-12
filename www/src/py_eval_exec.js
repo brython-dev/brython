@@ -4,10 +4,10 @@ var _b_ = $B.builtins
 
 // eval() and exec() built-in functions
 var $$eval = _b_.eval = function(){
-    var $ = $B.args("eval", 4,
+    var $ = $B.args1("eval", 4,
             {src: null, globals: null, locals: null, mode: null} ,
-            ['src', 'globals', 'locals', 'mode'],
-            arguments, {globals: _b_.None, locals: _b_.None, mode: 'eval'},
+            arguments,
+            {globals: _b_.None, locals: _b_.None, mode: 'eval'},
             null, null, 4),
         src = $.src,
         _globals = $.globals,
@@ -278,10 +278,10 @@ var $$eval = _b_.eval = function(){
 $$eval.$is_func = true
 
 var exec = _b_.exec = function(){
-    var $ = $B.args("exec", 3, {src: null, globals: null, locals: null},
-        ["src", "globals", "locals"], arguments,
-        {globals: _b_.None, locals: _b_.None}, null, null, 1),
-        src = $.src,
+    var $ = $B.args1("exec", 3, {src: null, globals: null, locals: null},
+                arguments, {globals: _b_.None, locals: _b_.None}, null, null, 
+                1)
+    var src = $.src,
         globals = $.globals,
         locals = $.locals
     $$eval(src, globals, locals, "exec")

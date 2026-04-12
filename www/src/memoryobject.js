@@ -290,8 +290,7 @@ memoryview_funcs.contiguous_get = function(self){
 memoryview_funcs.contiguous_set = _b_.None
 
 memoryview_funcs.count = function(self){
-    var $ = $B.args('count', 2, {self: null, value: null}, ['self', 'value'],
-                arguments, {}, null, null)
+    var $ = $B.args1('count', 2, {self: null, value: null}, arguments)
     var self = $.self,
         value = $.value
     var iter = _b_.memoryview.tp_iter(self)
@@ -326,10 +325,9 @@ memoryview_funcs.hex = function(self){
 }
 
 memoryview_funcs.index = function(self){
-    var $ = $B.args('index', 4,
+    var $ = $B.args1('index', 4,
                 {self: null, value: null, start: null, stop: null},
-                ['self', 'value', 'start', 'stop'], arguments,
-                {start: 0, stop: $B.max_int}, null, null)
+                arguments, {start: 0, stop: $B.max_int})
     var self = $.self,
         value = $.value,
         start = $.start,
