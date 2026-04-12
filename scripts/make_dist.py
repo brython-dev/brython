@@ -55,10 +55,6 @@ def run():
         else:
             res_no_static += mini
 
-    # remove strict mode for brython.js - better to silently ignore than to
-    # get weird errors at runtime
-    res = re.sub('"use strict";\n', "", res)
-    res_no_static = re.sub('"use strict";\n', "", res_no_static)
 
     with open(os.path.join(src_dir, 'brython.js'), 'w', newline="\n") as out:
         out.write(res)

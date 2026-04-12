@@ -3,6 +3,7 @@
 // implementation [3, 14, 1, 'dev', 0]
 // version compiled from commented, indented source files at
 // github.com/brython-dev/brython
+"use strict";
 var __BRYTHON__=globalThis.__BRYTHON__ ||{}
 try{
 eval("async function* f(){}")}catch(err){console.warn("Your browser is not fully supported. If you are using "+
@@ -653,9 +654,11 @@ cls.tp_mro=$B.make_mro(cls)}
 $B.builtin_funcs=['__build_class__','__import__','abs','aiter','all','anext','any','ascii','bin','breakpoint','callable','chr','compile','delattr','dir','divmod','eval','exec','format','getattr','globals','hasattr','hash','hex','id','input','isinstance','issubclass','iter','len','locals','max','min','next','oct','open','ord','pow','print','repr','round','setattr','sorted','sum','vars']})(__BRYTHON__)
 ;
 
+"use strict";
 __BRYTHON__.ast_classes={Add:'',And:'',AnnAssign:'target,annotation,value?,simple',Assert:'test,msg?',Assign:'targets*,value,type_comment?',AsyncFor:'target,iter,body*,orelse*,type_comment?',AsyncFunctionDef:'name,args,body*,decorator_list*,returns?,type_comment?,type_params*',AsyncWith:'items*,body*,type_comment?',Attribute:'value,attr,ctx',AugAssign:'target,op,value',Await:'value',BinOp:'left,op,right',BitAnd:'',BitOr:'',BitXor:'',BoolOp:'op,values*',Break:'',Call:'func,args*,keywords*',ClassDef:'name,bases*,keywords*,body*,decorator_list*,type_params*',Compare:'left,ops*,comparators*',Constant:'value,kind?',Continue:'',Del:'',Delete:'targets*',Dict:'keys*,values*',DictComp:'key,value,generators*',Div:'',Eq:'',ExceptHandler:'type?,name?,body*',Expr:'value',Expression:'body',FloorDiv:'',For:'target,iter,body*,orelse*,type_comment?',FormattedValue:'value,conversion,format_spec?',FunctionDef:'name,args,body*,decorator_list*,returns?,type_comment?,type_params*',FunctionType:'argtypes*,returns',GeneratorExp:'elt,generators*',Global:'names*',Gt:'',GtE:'',If:'test,body*,orelse*',IfExp:'test,body,orelse',Import:'names*',ImportFrom:'module?,names*,level?',In:'',Interactive:'body*',Interpolation:'value,str,conversion,format_spec?',Invert:'',Is:'',IsNot:'',JoinedStr:'values*',LShift:'',Lambda:'args,body',List:'elts*,ctx',ListComp:'elt,generators*',Load:'',Lt:'',LtE:'',MatMult:'',Match:'subject,cases*',MatchAs:'pattern?,name?',MatchClass:'cls,patterns*,kwd_attrs*,kwd_patterns*',MatchMapping:'keys*,patterns*,rest?',MatchOr:'patterns*',MatchSequence:'patterns*',MatchSingleton:'value',MatchStar:'name?',MatchValue:'value',Mod:'',Module:'body*,type_ignores*',Mult:'',Name:'id,ctx',NamedExpr:'target,value',Nonlocal:'names*',Not:'',NotEq:'',NotIn:'',Or:'',ParamSpec:'name,default_value?',Pass:'',Pow:'',RShift:'',Raise:'exc?,cause?',Return:'value?',Set:'elts*',SetComp:'elt,generators*',Slice:'lower?,upper?,step?',Starred:'value,ctx',Store:'',Sub:'',Subscript:'value,slice,ctx',TemplateStr:'values*',Try:'body*,handlers*,orelse*,finalbody*',TryStar:'body*,handlers*,orelse*,finalbody*',Tuple:'elts*,ctx',TypeAlias:'name,type_params*,value',TypeIgnore:'lineno,tag',TypeVar:'name,bound?,default_value?',TypeVarTuple:'name,default_value?',UAdd:'',USub:'',UnaryOp:'op,operand',While:'test,body*,orelse*',With:'items*,body*,type_comment?',Yield:'value?',YieldFrom:'value',alias:'name,asname?',arg:'arg,annotation?,type_comment?',arguments:'posonlyargs*,args*,vararg?,kwonlyargs*,kw_defaults*,kwarg?,defaults*',boolop:['And','Or'],cmpop:['Eq','NotEq','Lt','LtE','Gt','GtE','Is','IsNot','In','NotIn'],comprehension:'target,iter,ifs*,is_async',excepthandler:['ExceptHandler'],expr:['BoolOp','NamedExpr','BinOp','UnaryOp','Lambda','IfExp','Dict','Set','ListComp','SetComp','DictComp','GeneratorExp','Await','Yield','YieldFrom','Compare','Call','FormattedValue','Interpolation','JoinedStr','TemplateStr','Constant','Attribute','Subscript','Starred','Name','List','Tuple','Slice'],expr_context:['Load','Store','Del'],keyword:'arg?,value',match_case:'pattern,guard?,body*',mod:['Module','Interactive','Expression','FunctionType'],operator:['Add','Sub','Mult','MatMult','Div','Mod','Pow','LShift','RShift','BitOr','BitXor','BitAnd','FloorDiv'],pattern:['MatchValue','MatchSingleton','MatchSequence','MatchMapping','MatchClass','MatchStar','MatchAs','MatchOr'],stmt:['FunctionDef','AsyncFunctionDef','ClassDef','Return','Delete','Assign','TypeAlias','AugAssign','AnnAssign','For','AsyncFor','While','If','With','AsyncWith','Match','Raise','Try','TryStar','Assert','Import','ImportFrom','Global','Nonlocal','Expr','Pass','Break','Continue'],type_ignore:['TypeIgnore'],type_param:['TypeVar','ParamSpec','TypeVarTuple'],unaryop:['Invert','Not','UAdd','USub'],withitem:'context_expr,optional_vars?'}
 ;
-;(function($B){$B.stdlib={}
+;"use strict";
+(function($B){$B.stdlib={}
 var pylist=['VFS_import','__future__','_aio','_ast_unparse','_codecs','_codecs_jp','_collections','_collections_abc','_colorize','_compat_pickle','_compression','_contextvars','_csv','_dummy_thread','_frozen_importlib','_functools','_imp','_io','_markupbase','_multibytecodec','_opcode','_operator','_py_abc','_py_warnings','_pydatetime','_pydecimal','_pyio','_queue','_signal','_socket','_sre','_strptime','_struct','_sysconfigdata','_sysconfigdata_0_brython_','_testcapi','_thread','_threading_local','_typing','_weakref','_weakrefset','abc','annotationlib','antigravity','argparse','ast','asyncio','atexit','base64','bdb','binascii','bisect','browser.ajax','browser.highlight','browser.idbcache','browser.indexed_db','browser.local_storage','browser.markdown','browser.object_storage','browser.session_storage','browser.svg','browser.template','browser.timer','browser.ui','browser.webcomponent','browser.websocket','browser.worker','calendar','cmath','cmd','code','codecs','codeop','colorsys','configparser','contextlib','contextvars','copy','copyreg','csv','dataclasses','datetime','decimal','difflib','doctest','enum','errno','external_import','faulthandler','fnmatch','formatter','fractions','functools','gc','genericpath','getopt','getpass','gettext','glob','gzip','heapq','hmac','imp','inspect','interpreter','io','ipaddress','itertools','keyword','linecache','locale','mimetypes','ntpath','numbers','opcode','operator','optparse','os','pathlib','pdb','pickle','pkgutil','platform','posixpath','pprint','profile','pwd','py_compile','pyclbr','pydoc','queue','quopri','random','re','re1','reprlib','rlcompleter','secrets','select','selectors','shlex','shutil','signal','site','site-packages.__future__','site-packages.docs','site-packages.header','site-packages.test_sp','socket','sre_compile','sre_constants','sre_parse','stat','statistics','string','stringprep','struct','subprocess','symtable','sys','sysconfig','tabnanny','tarfile','tb','tempfile','test.namespace_pkgs.module_and_namespace_package.a_test','textwrap','this','threading','time','timeit','token','tokenize','traceback','turtle','types','typing','uuid','warnings','weakref','webbrowser','zipfile','zipimport','zlib']
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
 var js=['_ajax','_ast','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_random','_sre','_sre_utils','_string','_svg','_symtable','_tokenize','_webcomponent','_webworker','_zlib_utils','aes','array','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','marshal','math','md5','modulefinder','pbkdf2','posix','pyexpat','python_re','rabbit','rabbit-legacy','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata','xml_helpers','xml_parser']
@@ -671,13 +674,15 @@ $B.digits_starts=[48,1632,1776,1984,2406,2534,2662,2790,2918,3046,3174,3302,3430
 $B.unicode_casefold={223:[115,115],304:[105,775],329:[700,110],496:[106,780],912:[953,776,769],944:[965,776,769],1415:[1381,1410],7830:[104,817],7831:[116,776],7832:[119,778],7833:[121,778],7834:[97,702],7838:[223],8016:[965,787],8018:[965,787,768],8020:[965,787,769],8022:[965,787,834],8064:[7936,953],8065:[7937,953],8066:[7938,953],8067:[7939,953],8068:[7940,953],8069:[7941,953],8070:[7942,953],8071:[7943,953],8072:[8064],8073:[8065],8074:[8066],8075:[8067],8076:[8068],8077:[8069],8078:[8070],8079:[8071],8080:[7968,953],8081:[7969,953],8082:[7970,953],8083:[7971,953],8084:[7972,953],8085:[7973,953],8086:[7974,953],8087:[7975,953],8088:[8080],8089:[8081],8090:[8082],8091:[8083],8092:[8084],8093:[8085],8094:[8086],8095:[8087],8096:[8032,953],8097:[8033,953],8098:[8034,953],8099:[8035,953],8100:[8036,953],8101:[8037,953],8102:[8038,953],8103:[8039,953],8104:[8096],8105:[8097],8106:[8098],8107:[8099],8108:[8100],8109:[8101],8110:[8102],8111:[8103],8114:[8048,953],8115:[945,953],8116:[940,953],8118:[945,834],8119:[945,834,953],8124:[8115],8130:[8052,953],8131:[951,953],8132:[942,953],8134:[951,834],8135:[951,834,953],8140:[8131],8146:[953,776,768],8147:[912],8150:[953,834],8151:[953,776,834],8162:[965,776,768],8163:[944],8164:[961,787],8166:[965,834],8167:[965,776,834],8178:[8060,953],8179:[969,953],8180:[974,953],8182:[969,834],8183:[969,834,953],8188:[8179],64256:[102,102],64257:[102,105],64258:[102,108],64259:[102,102,105],64260:[102,102,108],64261:[64262],64262:[115,116],64275:[1396,1398],64276:[1396,1381],64277:[1396,1387],64278:[1406,1398],64279:[1396,1389]}
 $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194,8195,8196,8197,8198,8199,8200,8201,8202,8232,8233,8287,12288]
 ;
+"use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-04-12 09:07:53.046831"
-__BRYTHON__.timestamp=1775977673046
+__BRYTHON__.compiled_date="2026-04-12 12:04:31.721843"
+__BRYTHON__.timestamp=1775988271721
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
+"use strict";
 (function($B){const tokens=['ENDMARKER','NAME','NUMBER','STRING','NEWLINE','INDENT','DEDENT','LPAR','RPAR','LSQB','RSQB','COLON','COMMA','SEMI','PLUS','MINUS','STAR','SLASH','VBAR','AMPER','LESS','GREATER','EQUAL','DOT','PERCENT','LBRACE','RBRACE','EQEQUAL','NOTEQUAL','LESSEQUAL','GREATEREQUAL','TILDE','CIRCUMFLEX','LEFTSHIFT','RIGHTSHIFT','DOUBLESTAR','PLUSEQUAL','MINEQUAL','STAREQUAL','SLASHEQUAL','PERCENTEQUAL','AMPEREQUAL','VBAREQUAL','CIRCUMFLEXEQUAL','LEFTSHIFTEQUAL','RIGHTSHIFTEQUAL','DOUBLESTAREQUAL','DOUBLESLASH','DOUBLESLASHEQUAL','AT','ATEQUAL','RARROW','ELLIPSIS','COLONEQUAL','EXCLAMATION','OP','TYPE_IGNORE','TYPE_COMMENT','SOFT_KEYWORD','FSTRING_START','FSTRING_MIDDLE','FSTRING_END','TSTRING_START','TSTRING_MIDDLE','TSTRING_END','COMMENT','NL',
 'ERRORTOKEN','ENCODING','N_TOKENS'
 ]
@@ -690,6 +695,7 @@ function ISTERMINAL(x){return x < NT_OFFSET}
 function ISNONTERMINAL(x){return x >=NT_OFFSET}
 function ISEOF(x){return x==ENDMARKER}})(__BRYTHON__);
 ;
+"use strict";
 (function($B){var _b_=$B.builtins
 function is_whitespace(char){return ' \n\r\t\f'.includes(char)}
 var unprintable_re=/\p{Cc}|\p{Cf}|\p{Co}|\p{Cs}|\p{Zl}|\p{Zp}|\p{Zs}/u
@@ -1161,6 +1167,7 @@ t.push(Token('DEDENT','',line_num,0,line_num,0,''))}
 t.push(Token('ENDMARKER','',line_num,0,line_num,0,''))
 return t}})(__BRYTHON__);
 ;
+"use strict";
 (function($B){
 var binary_ops={'+':'Add','-':'Sub','*':'Mult','/':'Div','//':'FloorDiv','%':'Mod','**':'Pow','<<':'LShift','>>':'RShift','|':'BitOr','^':'BitXor','&':'BitAnd','@':'MatMult'}
 var boolean_ops={'and':'And','or':'Or'}
@@ -1231,6 +1238,7 @@ var op2ast_class=$B.op2ast_class={},ast_types=[ast.BinOp,ast.BoolOp,ast.Compare,
 for(var i=0;i < 4;i++){for(var op in op_types[i]){op2ast_class[op]=[ast_types[i],ast[op_types[i][op]]]}}})(__BRYTHON__);
 ;
 
+"use strict";
 (function($B){var _b_=$B.builtins
 if($B.VFS_timestamp && $B.VFS_timestamp > $B.timestamp){
 $B.timestamp=$B.VFS_timestamp}
@@ -1385,6 +1393,7 @@ try{func.apply(null,args)}catch(err){$B.handle_error(err)}}}
 $B.tasks=[]
 $B.has_indexedDB=self.indexedDB !==undefined})(__BRYTHON__);
 ;
+"use strict";
 ;(function($B){var _b_=$B.builtins,_window=globalThis,isWebWorker=('undefined' !==typeof WorkerGlobalScope)&&
 ("function"===typeof importScripts)&&
 (navigator instanceof WorkerNavigator)
@@ -2152,6 +2161,7 @@ if(repr_stack.size > $B.recursion_limit){repr_stack.clear()
 $B.RAISE(_b_.RecursionError,"maximum recursion depth "+
 "exceeded while getting the repr of an object")}}},leave:function(obj){repr_stack.delete(_b_.id(obj))}}})(__BRYTHON__);
 ;
+"use strict";
 (function($B){var _b_=$B.builtins
 _b_[$B.OB_TYPE]=_b_.dict
 var object=_b_.object
@@ -2454,6 +2464,7 @@ _b_.object.classmethods=["__init_subclass__"]
 _b_.object.tp_getset=["__class__"]
 $B.set_func_names(object,"builtins")})(__BRYTHON__);
 ;
+"use strict";
 (function($B){var _b_=$B.builtins
 const TPFLAGS=$B.TPFLAGS 
 $B.$class_constructor=function(class_name,dict,metaclass,resolved_bases,bases,extra_kwargs){var test=false 
@@ -3510,6 +3521,7 @@ $B.wrapper_descriptor.tp_members=[["__objclass__",$B.TYPES.OBJECT,"d_type",1],["
 $B.wrapper_descriptor.tp_getset=["__qualname__","__text_signature__"]
 $B.set_func_names(wrapper_descriptor,"builtins")})(__BRYTHON__)
 ;
+"use strict";
 (function($B){var _b_=$B.builtins
 var classmethod=_b_.classmethod
 classmethod.$factory=function(func){$B.check_nb_args_no_kw('classmethod',1,arguments)
@@ -4145,7 +4157,8 @@ return locals}
 return parser}})(__BRYTHON__);
 ;
 
-(function($B){var _b_=$B.builtins
+(function($B){"use strict";
+var _b_=$B.builtins
 function make_lines(self){
 if(self.$lines===undefined){if(! self.$binary){self.$lines=self.$content.split("\n")
 if($B.last(self.$lines)==''){self.$lines.pop()}
@@ -4575,7 +4588,8 @@ _b_.open=function(){var $=$B.args('open',3,{file:null,mode:null,buffering:null,e
 return _io_open_impl($.file,$.mode,$.buffering,$.encoding,$.errors,$.newline,$.closefd,$.opener)}})(__BRYTHON__)
 ;
 
-(function($B){var _b_=$B.builtins
+(function($B){"use strict";
+var _b_=$B.builtins
 _b_.__debug__=false
 $B.$comps={'>':'gt','>=':'ge','<':'lt','<=':'le'}
 $B.$inv_comps={'>':'lt','>=':'le','<':'gt','<=':'ge'}
@@ -5530,6 +5544,7 @@ var exec=_b_.exec=function(){var $=$B.args("exec",3,{src:null,globals:null,local
 $$eval(src,globals,locals,"exec")
 return _b_.None}})(__BRYTHON__)
 ;
+"use strict";
 ;(function($B){var _b_=$B.builtins
 var DEFAULT_MIN_MERGE=32
 var DEFAULT_MIN_GALLOPING=7
@@ -5812,6 +5827,7 @@ throw e;}}}
 $B.$TimSort=tim_sort_safe
 $B.$AlphabeticalCompare=alphabeticalCompare})(__BRYTHON__);
 ;
+"use strict";
 (function($B){var _b_=$B.builtins
 $B.del_exc=function(frame){delete frame.$current_exception}
 $B.set_exc=function(exc,frame){exc.__traceback__=exc.__traceback__===_b_.None ? make_tb():exc.__traceback__
@@ -6468,6 +6484,7 @@ err.$handled=true
 $B.show_error(err)
 throw err}})(__BRYTHON__);
 ;
+"use strict";
 (function($B){var _b_=$B.builtins,None=_b_.None,range=_b_.range
 range.$match_sequence_pattern=true 
 range.$is_sequence=true
@@ -6712,6 +6729,7 @@ _b_.slice.tp_members=[["start",$B.TYPES.OBJECT,"start",1],["stop",$B.TYPES.OBJEC
 ]
 $B.set_func_names(slice,"builtins")})(__BRYTHON__);
 ;
+"use strict";
 (function($B){var _b_=$B.builtins
 var from_unicode={},to_unicode={}
 function bytes_value(obj){return $B.get_class(obj)===bytes ? obj :fast_bytes(obj.source)}
@@ -7827,6 +7845,7 @@ _b_.memoryview.classmethods=["_from_flags","__class_getitem__"]
 _b_.memoryview.tp_getset=["obj","nbytes","readonly","itemsize","format","ndim","shape","strides","suboffsets","c_contiguous","f_contiguous","contiguous"]
 $B.set_func_names(memoryview,"builtins")})(__BRYTHON__)
 ;
+"use strict";
 (function($B){var _b_=$B.builtins,$N=_b_.None
 function make_new_set(type){var res={ob_type:type,$store:Object.create(null),$version:0,$used:0}
 res[Symbol.iterator]=function*(){var version=res.$version
@@ -8175,6 +8194,7 @@ _b_.frozenset.classmethods=["__class_getitem__"]
 for(var tp_method of _b_.frozenset.tp_methods){_b_.frozenset.tp_funcs[tp_method]=_b_.set.tp_funcs[tp_method]}
 $B.set_func_names(frozenset,"builtins")})(__BRYTHON__);
 ;
+"use strict";
 (function($B){var _b_=$B.builtins
 var escape2cp=$B.escape2cp={b:'\b',f:'\f',n:'\n',r:'\r',t:'\t',v:'\v'}
 $B.surrogates=function(s){var s1='',escaped=false
@@ -9394,6 +9414,7 @@ $B.Template.tp_members=[["strings",$B.TYPES.OBJECT,"strings",1],["interpolations
 Template.tp_getset=["values"]
 $B.set_func_names(Template,'builtins')})(__BRYTHON__);
 ;
+"use strict";
 (function($B){var _b_=$B.builtins
 var int=_b_.int
 var NULL=$B.NULL
@@ -9805,6 +9826,7 @@ var bool_funcs=_b_.bool.tp_funcs={}
 _b_.bool.functions_or_methods=["__new__"]
 $B.set_func_names(bool,"builtins")})(__BRYTHON__);
 ;
+"use strict";
 (function($B){var _b_=$B.builtins
 function conv_num(x){if(typeof x=='number'){return x}else if(typeof x=='bigint'){return Number(x)}else if($B.$isinstance(x,_b_.int)){
 return conv_num(x.value)}else if(x.ob_type===_b_.float){return x.value}else if($B.$isinstance(x,_b_.float)){return x.value}
@@ -10349,6 +10371,7 @@ $B.MAX_VALUE=fast_float(Number.MAX_VALUE)
 $B.MIN_VALUE=fast_float(2.2250738585072014e-308)
 const NINF=fast_float(Number.NEGATIVE_INFINITY),INF=fast_float(Number.POSITIVE_INFINITY),NAN=fast_float(Number.NaN),ZERO=fast_float(0)})(__BRYTHON__);
 ;
+"use strict";
 (function($B){var _b_=$B.builtins
 function conv_complex(...objs){var res=[]
 for(var obj of objs){if($B.$isinstance(obj,_b_.float)){res.push($B.make_complex(obj))}else if($B.$isinstance(obj,_b_.int)){res.push($B.make_complex(obj))}else{var complex_method=$B.$getattr($B.get_class(obj),'__complex__',$B.NULL)
@@ -10590,6 +10613,7 @@ _b_.complex.tp_members=[["real",$B.TYPES.DOUBLE,"real",1],["imag",$B.TYPES.DOUBL
 ]
 $B.set_func_names(complex,"builtins")})(__BRYTHON__);
 ;
+"use strict";
 (function($B){
 var _b_=$B.builtins
 const VERSION=Symbol('VERSION')
@@ -11241,6 +11265,7 @@ var d=$B.empty_dict()
 for(var attr in x){if(attr.charAt(0)!="$" && ! exclude(attr)){if(x[attr]===null){dict.$setitem(d,attr,_b_.None)}else if(x[attr]===undefined){continue}else{dict.$setitem(d,attr,$B.jsobj2pyobj(x[attr]))}}}
 return d}})(__BRYTHON__);
 ;
+"use strict";
 (function($B){var _b_=$B.builtins,isinstance=$B.$isinstance
 function check_not_tuple(self,attr){if($B.exact_type(self,tuple)){throw $B.attr_error(attr,self)}}
 _b_.list[$B.FAST_ITER]=_b_.tuple[$B.FAST_ITER]=function(t,set_lineno,frame,lineno){var obj={ix:-1,stop:t.length}
@@ -11642,6 +11667,7 @@ _b_.tuple.tp_methods=["__getnewargs__","index","count"]
 _b_.tuple.classmethods=["__class_getitem__"]
 $B.set_func_names(tuple,"builtins")})(__BRYTHON__);
 ;
+"use strict";
 (function($B){var _b_=$B.builtins
 function to_simple(value){switch(typeof value){case 'string':
 case 'number':
@@ -12170,6 +12196,7 @@ new_func.__name__='new'
 return new_func}
 $B.JSFunction.tp_methods=["__getattr__","new"]})(__BRYTHON__);
 ;
+"use strict";
 (function($B){
 var _b_=$B.builtins
 var $GeneratorReturn={}
@@ -12312,6 +12339,7 @@ $B.async_generator.tp_getset=["__name__","__qualname__","ag_await","ag_frame","a
 ]
 $B.set_func_names($B.async_generator,"builtins")})(__BRYTHON__);
 ;
+"use strict";
 (function($B){var _b_=$B.builtins,object=_b_.object,_window=globalThis
 function convertDomValue(v){if(v===null ||v===undefined){return _b_.None}
 return $B.jsobj2pyobj(v)}
@@ -12925,7 +12953,8 @@ $B.set_func_names(TagSum,"<dom>")
 $B.TagSum=TagSum 
 $B.DOMNode=DOMNode})(__BRYTHON__);
 ;
-(function($B){$B.pattern_match=function(subject,pattern){var _b_=$B.builtins,frame=$B.frame_obj.frame,locals=frame[1]
+(function($B){"use strict";
+$B.pattern_match=function(subject,pattern){var _b_=$B.builtins,frame=$B.frame_obj.frame,locals=frame[1]
 function bind(pattern,subject){if(pattern.alias){locals[pattern.alias]=subject}}
 if(pattern.sequence){
 if($B.$isinstance(subject,[_b_.str,_b_.bytes,_b_.bytearray])){
@@ -13048,7 +13077,8 @@ return false}else if(pattern.hasOwnProperty('value')){if($B.rich_comp('__eq__',s
 return true}}else if(subject==pattern){return true}
 return false}})(__BRYTHON__);
 ;
-;(function($B){var _b_=$B.builtins
+;(function($B){"use strict";
+var _b_=$B.builtins
 var coroutine=$B.coroutine
 coroutine.tp_repr=function(self){if(self.$func.$function_infos){return "<coroutine "+self.$func.$function_infos[$B.func_attrs.name]+">"}else{return "<coroutine object>"}}
 $B.coroutine.tp_finalize=function(self){}
@@ -13122,6 +13152,7 @@ $B.RAISE(_b_.TypeError,`object ${$B.class_name(obj)} `+
 `can't be used in 'await' expression`)}})(__BRYTHON__);
 ;
 
+"use strict";
 (function($B){var _b_=$B.builtins,_window=globalThis
 $B.namespace=function(module_name){
 var res=$B.imported.hasOwnProperty(module_name)
@@ -13746,6 +13777,7 @@ $B.imported["_importlib"]=_importlib_module})(__BRYTHON__);
 
 (function($B){$B.builtin_class_flags={builtins:{1073763586:['ModuleNotFoundError','WindowsError','AttributeError','PendingDeprecationWarning','StopAsyncIteration','SystemExit','ResourceWarning','KeyboardInterrupt','FloatingPointError','ChildProcessError','RuntimeWarning','Warning','SystemError','RecursionError','ArithmeticError','PythonFinalizationError','EncodingWarning','TypeError','UnboundLocalError','SyntaxError','UserWarning','AssertionError','ImportError','Exception','RuntimeError','StopIteration','ConnectionRefusedError','ValueError','SyntaxWarning','DeprecationWarning','ConnectionError','OverflowError','BaseException','FileExistsError','EnvironmentError','ImportWarning','InterruptedError','NotImplementedError','ZeroDivisionError','EOFError','PermissionError','MemoryError','ConnectionAbortedError','IndexError','BrokenPipeError','BufferError','KeyError','UnicodeError','UnicodeDecodeError','ReferenceError','FutureWarning','IsADirectoryError','BlockingIOError','OSError','NotADirectoryError','UnicodeTranslateError','ProcessLookupError','FileNotFoundError','GeneratorExit','ConnectionResetError','BaseExceptionGroup','UnicodeWarning','LookupError','NameError','TabError','_IncompleteInputError','IOError','IndentationError','UnicodeEncodeError','TimeoutError','BytesWarning'],1073763848:['ExceptionGroup'],20975874:['bool'],4199682:['bytearray','float'],138417410:['bytes'],21762:['zip','filter','enumerate','property','reversed','map','staticmethod','super','classmethod'],5378:['complex','object'],541087042:['dict'],4216066:['set','frozenset'],20976898:['int'],37770530:['list'],20770:['memoryview'],4386:['range'],20738:['slice'],272635138:['str'],71324962:['tuple'],2155896066:['type'],},types:{20866:['PyCapsule','member_descriptor','getset_descriptor','coroutine','generator','frame','async_generator','classmethod_descriptor','method-wrapper'],22914:['builtin_function_or_method'],20738:['traceback','cell'],4354:['code','NotImplementedType','NoneType','ellipsis'],153858:['function'],20802:['mappingproxy'],153986:['method_descriptor'],22786:['method'],21762:['module'],151938:['wrapper_descriptor'],}}})(__BRYTHON__);
 ;
+"use strict";
 (function($B){var _b_=$B.builtins
 $B.imported[$B.OB_TYPE]=_b_.dict
 var update=$B.update_obj=function(mod,data){for(let attr in data){mod[attr]=data[attr]}}
@@ -14437,7 +14469,8 @@ _b_[builtin_func].m_module='builtins'
 _b_[builtin_func].$function_infos=['builtins',builtin_func,builtin_func]}else{console.log('missing builtin function',builtin_func)}}})(__BRYTHON__)
 ;
 
-(function($B){var _b_=$B.builtins
+(function($B){"use strict";
+var _b_=$B.builtins
 var _window
 if($B.isNode){_window={location:{href:'',origin:'',pathname:''}}}else{
 _window=self}
@@ -14717,6 +14750,7 @@ globalThis.brython=__BRYTHON__.brython
 if(__BRYTHON__.isNode){global.__BRYTHON__=__BRYTHON__
 module.exports={__BRYTHON__ }}
 ;
+"use strict";
 (function($B){var _b_=$B.builtins
 function ast_dump(tree,indent){var attr,value
 indent=indent ||0
@@ -16751,6 +16785,7 @@ return ast.to_js(scopes)}
 console.log("unhandled",ast.constructor.$name,ast,typeof ast)
 return '// unhandled class ast.'+ast.constructor.$name}})(__BRYTHON__);
 ;
+"use strict";
 (function($B){var _b_=$B.builtins
 var GLOBAL_PARAM="name '%s' is parameter and global",NONLOCAL_PARAM="name '%s' is parameter and nonlocal",GLOBAL_AFTER_ASSIGN="name '%s' is assigned to before global declaration",NONLOCAL_AFTER_ASSIGN="name '%s' is assigned to before nonlocal declaration",GLOBAL_AFTER_USE="name '%s' is used prior to global declaration",NONLOCAL_AFTER_USE="name '%s' is used prior to nonlocal declaration",GLOBAL_ANNOT="annotated name '%s' can't be global",NONLOCAL_ANNOT="annotated name '%s' can't be nonlocal",IMPORT_STAR_WARNING="import * only allowed at module level",NAMED_EXPR_COMP_IN_CLASS=
 "assignment expression within a comprehension cannot be used in a class body",NAMED_EXPR_COMP_CONFLICT=
@@ -17670,7 +17705,8 @@ set_exc_info(exc,st.filename,e.lineno,e.col_offset,e.end_lineno,e.end_col_offset
 throw exc}})(__BRYTHON__);
 ;
 
-(function($B){var _b_=$B.builtins,NULL=undefined,DOT='.',ELLIPSIS='...'
+(function($B){"use strict";
+var _b_=$B.builtins,NULL=undefined,DOT='.',ELLIPSIS='...'
 const STAR_TARGETS=1,DEL_TARGETS=2,FOR_TARGETS=3
 function make_string_for_ast_value(value){value=value.replace(/\n/g,'\\n\\\n')
 value=value.replace(/\r/g,'\\r\\\r')
@@ -18249,6 +18285,7 @@ return NULL;
 default:
 return e;}}})(__BRYTHON__);
 ;
+"use strict";
 (function($B){var _b_=$B.builtins
 var s_escaped='abfnrtvxuU"0123456789'+"'"+'\\',is_escaped={}
 for(var i=0;i < s_escaped.length;i++){is_escaped[s_escaped.charAt(i)]=true}
@@ -18377,6 +18414,7 @@ result.bytes=to_bytes(string)}else if(fstring){result.value=elts}else{result.val
 context.raw=raw;
 return result}})(__BRYTHON__);
 ;
+"use strict";
 (function($B){function test_num(num_lit){var len=num_lit.length,pos=0,char,elt=null,subtypes={b:'binary',o:'octal',x:'hexadecimal'},digits_re=/[_\d]/
 function error(message){throw SyntaxError(message)}
 function check(elt){if(elt.value.length==0){var t=subtypes[elt.subtype]||'decimal'
@@ -18429,7 +18467,8 @@ type:'imaginary',value:$B.prepare_number(num.value)}}else{return{
 type:'int',value:[10,num.value]}}}}}})(__BRYTHON__);
 ;
 
-(function($B){var _b_=$B.builtins,debug=0
+(function($B){"use strict";
+var _b_=$B.builtins,debug=0
 var p={feature_version:$B.version_info[1]}
 $B.parser_constants={Store:new $B.ast.Store(),Load:new $B.ast.Load(),Del:new $B.ast.Del(),NULL:undefined,alias_ty:$B.ast.alias,keyword_ty:$B.ast.keyword,arguments_ty:$B.ast.arguments,expr_ty:$B.ast.expr,asdl_stmt_seq:Array,asdl_int_seq:Array,asdl_expr_seq:Array,asdl_keyword_seq:Array,asdl_identifier_seq:Array,asdl_pattern_seq:Array,asdl_type_param_seq:Array,AugOperator:$B.ast.AugAssign,IsNot:$B.ast.IsNot,Py_Ellipsis:_b_.Ellipsis,Py_False:false,Py_True:true,Py_None:_b_.None,PyExc_SyntaxError:_b_.SyntaxError,STAR_TARGETS:1,DEL_TARGETS:2,FOR_TARGETS:3,PyBytes_AS_STRING:(b)=> b}
 for(var op_type of $B.op_types){for(var key in op_type){var klass_name=op_type[key]
@@ -18537,6 +18576,7 @@ if(value.$error_token){$B.raise_error_known_location(...value)}else if(value.$er
 this.tokens[this.tokens.length]=value
 return value}}else{throw Error('tokenizer exhausted')}}}})(__BRYTHON__);
 ;
+"use strict";
 (function($B){
 var _b_=__BRYTHON__.builtins
 const Load=new $B.ast.Load()
@@ -18921,7 +18961,8 @@ return result;}}
 $B.PyPegen={first_item:function(a,type){return a[0]},last_item:function(a,ptype){return a[a.length-1]}}})(__BRYTHON__);
 ;
 
-(function($B){function fprintf(dest,format){var args=Array.from(arguments).slice(2)
+(function($B){"use strict";
+function fprintf(dest,format){var args=Array.from(arguments).slice(2)
 for(var arg of args){format=format.replace(/%\*?[a-z]/,arg)}
 return format}
 const stderr=null
@@ -37776,5 +37817,6 @@ default:
 console.log('unknown mode',p.mode)
 throw Error(`unknown parse mode: ${p.mode}`)}};})(__BRYTHON__)
 ;
+"use strict";
 (function($B){$B.whenReady=new Promise(function(resolve,reject){resolve()})})(__BRYTHON__);
 ;
