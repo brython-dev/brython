@@ -678,8 +678,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-04-12 19:00:08.638776"
-__BRYTHON__.timestamp=1776013208638
+__BRYTHON__.compiled_date="2026-04-13 15:39:29.795712"
+__BRYTHON__.timestamp=1776087569795
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1552,8 +1552,8 @@ $B.args0_old=args0;
 $B.args0=args0_NEW;
 $B.args=function(fname,argcount,slots,args,$dobj,vararg,kwarg,nb_posonly){
 var nb_posonly=nb_posonly ||0,var_names=Object.keys(slots),nb_kwonly=var_names.length-argcount,defaults=[],kwdefaults=$B.empty_dict()
-for(var i=0,len=var_names.length;i < len;i++){var var_name=var_names[i]
-if($dobj && $dobj.hasOwnProperty(var_name)){if(i < argcount){defaults.push($dobj[var_name])}else{$B.str_dict_set(kwdefaults,var_name,$dobj[var_name])}}}
+if($dobj){for(var i=0,len=var_names.length;i < len;i++){var var_name=var_names[i]
+if(Object.hasOwn($dobj,var_name)){if(i < argcount){defaults.push($dobj[var_name])}else{$B.str_dict_set(kwdefaults,var_name,$dobj[var_name])}}}}
 for(var k in slots){slots[k]=empty}
 return $B.parse_args(args,fname,argcount,slots,var_names,defaults,kwdefaults,vararg,kwarg,nb_posonly,nb_kwonly)}
 $B.single_arg=function(fname,arg,args){var slots={}
@@ -1562,14 +1562,15 @@ var $=$B.args(fname,1,slots,args)
 return $[arg]}
 $B.parse_args=function(args,fname,argcount,slots,arg_names,defaults,kwdefaults,vararg,kwarg,nb_posonly,nb_kwonly){
 var nb_passed=args.length,nb_passed_pos=nb_passed,
-nb_expected=arg_names.length,nb_pos_or_kw=nb_expected-nb_kwonly,posonly_set={},nb_def=defaults.length,varargs=[],extra_kw={},kw
+nb_expected=arg_names.length,nb_pos_or_kw=nb_expected-nb_kwonly,posonly_set,nb_def=defaults.length,varargs=vararg ?[]:undefined,extra_kw=kwarg ?{}:undefined,kw
 for(var i=0;i < nb_passed;i++){var arg=args[i]
 if(arg && $B.get_class(arg)===$B.generator){slots.$has_generators=true}
 if(arg && arg.$kw){
 nb_passed_pos--
 kw=$B.parse_kwargs(arg.$kw,fname)}else{var arg_name=arg_names[i]
 if(arg_name !==undefined){if(i >=nb_pos_or_kw){if(vararg){varargs.push(arg)}else{throw too_many_pos_args(
-fname,kwarg,arg_names,nb_kwonly,defaults,args,slots)}}else{if(i < nb_posonly){posonly_set[arg_name]=true}
+fname,kwarg,arg_names,nb_kwonly,defaults,args,slots)}}else{if(i < nb_posonly){posonly_set=posonly_set ??{}
+posonly_set[arg_name]=true}
 slots[arg_name]=arg}}else if(vararg){varargs.push(arg)}else{throw too_many_pos_args(
 fname,kwarg,arg_names,nb_kwonly,defaults,args,slots)}}}
 for(var j=nb_passed_pos;j < nb_pos_or_kw;j++){var arg_name=arg_names[j]
@@ -1584,17 +1585,18 @@ if(j < nb_posonly){
 if(kw && kw.hasOwnProperty(arg_name)&& kwarg){extra_kw[arg_name]=kw[arg_name]
 kw[arg_name]=empty}}}else{var missing_pos=arg_names.slice(j,nb_pos_or_kw-nb_def)
 throw missing_required_pos(fname,missing_pos)}}}
-var missing_kwonly=[]
+var missing_kwonly
 for(var i=nb_pos_or_kw;i < nb_expected;i++){var arg_name=arg_names[i]
 if(kw && kw.hasOwnProperty(arg_name)){slots[arg_name]=kw[arg_name]
 kw[arg_name]=empty}else{var kw_def=_b_.dict.$get_string(kwdefaults,arg_name)
-if(kw_def !==_b_.dict.$missing){slots[arg_name]=kw_def}else{missing_kwonly.push(arg_name)}}}
-if(missing_kwonly.length > 0){throw missing_required_kwonly(fname,missing_kwonly)}
+if(kw_def !==_b_.dict.$missing){slots[arg_name]=kw_def}else{missing_kwonly=missing_kwonly ??[]
+missing_kwonly.push(arg_name)}}}
+if(missing_kwonly){throw missing_required_kwonly(fname,missing_kwonly)}
 if(! kwarg){for(var k in kw){if(! slots.hasOwnProperty(k)){var suggestion=$B.offer_suggestions_for_unexpected_keyword_error(
 arg_names,k)
 throw unexpected_keyword(fname,k,suggestion)}}}
 for(var k in kw){if(kw[k]===empty){continue}
-if(! slots.hasOwnProperty(k)){if(kwarg){extra_kw[k]=kw[k]}}else if(slots[k]!==empty){if(posonly_set[k]&& kwarg){
+if(! slots.hasOwnProperty(k)){if(kwarg){extra_kw[k]=kw[k]}}else if(slots[k]!==empty){if(posonly_set && posonly_set[k]&& kwarg){
 extra_kw[k]=kw[k]}else{throw multiple_values(fname,k)}}else{slots[k]=kw[k]}}
 if(kwarg){slots[kwarg]=_b_.dict.$from_js(extra_kw)}
 if(vararg){slots[vararg]=$B.fast_tuple(varargs)}

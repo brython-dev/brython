@@ -430,7 +430,7 @@ function args0_NEW(fct, args) {
 $B.args0_old = args0;
 $B.args0 = args0_NEW;
 
-$B.args = function(fname, argcount, slots, args, $dobj, vararg, kwarg, 
+$B.args = function(fname, argcount, slots, args, $dobj, vararg, kwarg,
         nb_posonly){
     // Called by built-in functions / methods
     var nb_posonly = nb_posonly || 0,
@@ -439,13 +439,15 @@ $B.args = function(fname, argcount, slots, args, $dobj, vararg, kwarg,
         defaults  = [],
         kwdefaults = $B.empty_dict()
 
-    for(var i = 0, len = var_names.length; i < len; i++){
-        var var_name = var_names[i]
-        if($dobj && $dobj.hasOwnProperty(var_name)){
-            if(i < argcount){
-                defaults.push($dobj[var_name])
-            }else{
-                $B.str_dict_set(kwdefaults, var_name, $dobj[var_name])
+    if($dobj){
+        for(var i = 0, len = var_names.length; i < len; i++){
+            var var_name = var_names[i]
+            if(Object.hasOwn($dobj, var_name)){
+                if(i < argcount){
+                    defaults.push($dobj[var_name])
+                }else{
+                    $B.str_dict_set(kwdefaults, var_name, $dobj[var_name])
+                }
             }
         }
     }
@@ -476,10 +478,10 @@ $B.parse_args = function(args, fname, argcount, slots, arg_names, defaults,
         nb_passed_pos = nb_passed, // nb_passed - 1 if there are keyword args
         nb_expected = arg_names.length,
         nb_pos_or_kw = nb_expected - nb_kwonly,
-        posonly_set = {},
+        posonly_set,
         nb_def = defaults.length,
-        varargs = [],
-        extra_kw = {},
+        varargs = vararg ? [] : undefined,
+        extra_kw = kwarg ? {} : undefined,
         kw
 
     // Handle arguments passed to the function
@@ -505,6 +507,7 @@ $B.parse_args = function(args, fname, argcount, slots, arg_names, defaults,
                     }
                 }else{
                     if(i < nb_posonly){
+                        posonly_set = posonly_set ?? {}
                         posonly_set[arg_name] = true
                     }
                     slots[arg_name] = arg
@@ -567,7 +570,7 @@ $B.parse_args = function(args, fname, argcount, slots, arg_names, defaults,
     }
 
     // expected kw-only parameters
-    var missing_kwonly = []
+    var missing_kwonly
     for(var i = nb_pos_or_kw; i < nb_expected; i++){
         var arg_name = arg_names[i]
         if(kw && kw.hasOwnProperty(arg_name)){
@@ -578,12 +581,13 @@ $B.parse_args = function(args, fname, argcount, slots, arg_names, defaults,
             if(kw_def !== _b_.dict.$missing){
                 slots[arg_name] = kw_def
             }else{
+                missing_kwonly = missing_kwonly ?? []
                 missing_kwonly.push(arg_name)
             }
         }
     }
 
-    if(missing_kwonly.length > 0){
+    if(missing_kwonly){
         throw missing_required_kwonly(fname, missing_kwonly)
     }
 
@@ -607,7 +611,7 @@ $B.parse_args = function(args, fname, argcount, slots, arg_names, defaults,
                 extra_kw[k] = kw[k]
             }
         }else if(slots[k] !== empty){
-            if(posonly_set[k] && kwarg){
+            if(posonly_set && posonly_set[k] && kwarg){
                 // a keyword arg has the same name as a posonly arg and
                 // function has **kwarg: put key/value in kwarg
                 // Cf. issue 2167
