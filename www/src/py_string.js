@@ -2904,88 +2904,128 @@ str_funcs.rstrip = function(){
 
 $B.time_string_split = 0
 
-str_funcs.split = function(self, sep, maxsplit){
-    var locals
-    if(arguments.length == 3 && ! maxsplit.$kw){
-        _self = to_string(self)
-    }else if(arguments.length == 2 && ! sep.$kw){
-        _self = to_string(self)
-        maxsplit = -1
-    }else if(arguments.length == 1 && ! self.$kw){
-        _self = to_string(self)
-        sep = _b_.None
-        maxsplit = -1
-    }else{
-        var $ = $B.args("split", 3, {self: null, sep: null, maxsplit: null},
-                    arguments, {sep: _b_.None, maxsplit: -1}, null, null),
-            maxsplit = $.maxsplit,
-            sep = $.sep,
-            _self = to_string($.self)
-    }
-    var pos = 0
+str_funcs.split = function(){
+    var $ = $B.args("split", 3, {self: null, sep: null, maxsplit: null},
+                arguments, {sep: _b_.None, maxsplit: -1}, null, null),
+        maxsplit = $.maxsplit,
+        sep = $.sep,
+        pos = 0,
+        _self = to_string($.self)
     if($B.is_big_int(maxsplit)){
         maxsplit = Number($B.int_value(maxsplit))
     }
     if(sep == ""){
         $B.RAISE(_b_.ValueError, "empty separator")
     }
+
     if(sep === _b_.None){
-        sep = /\s/
-    }
-    var res = $B.$list([])
-    if(maxsplit == -1){
-        res = _self.split(sep)
-    }else{
-        while(res.length < maxsplit){
-            let new_pos = _self.indexOf(sep, pos)
-            if(new_pos == -1){
-                break
+        let res = []
+        while(pos < _self.length && _self.charAt(pos).search(/\s/) > -1){
+            pos++
+        }
+        if(pos === _self.length - 1){
+            return $B.$list([_self])
+        }
+        let name = ""
+        while(1){
+            if(_self.charAt(pos).search(/\s/) == -1){
+                if(name == ""){
+                    name = _self.charAt(pos)
+                }else{
+                    name += _self.charAt(pos)
+                }
             }else{
-                res.push(_self.substring(pos, new_pos))
-                pos = new_pos + 1
+                if(name !== ""){
+                    res.push(name)
+                    if(maxsplit !== -1 && res.length == maxsplit + 1){
+                        res.pop()
+                        res.push(name + _self.substr(pos))
+                        return $B.$list(res.map($B.String))
+                    }
+                    name = ""
+                }
+            }
+            pos++
+            if(pos > _self.length - 1){
+                if(name){
+                    res.push(name)
+                }
+                break
             }
         }
-        if(pos < _self.length){
-            res.push(_self.substr(pos))
-        }
         return $B.$list(res.map($B.String))
+    }else{
+        if(! $B.$isinstance(sep, _b_.str)){
+            $B.RAISE(_b_.TypeError, 'must be str or None, not ' +
+                $B.class_name(sep))
+        }
+        sep = to_string(sep)
+        let res,
+            s = "",
+            seplen = sep.length
+        if(maxsplit == 0){
+            res = $B.$list([$.self])
+            return res
+        }else if(maxsplit == -1){
+            res = _self.split(sep)
+            if(_self.surrogates){
+                res = res.map($B.String)
+            }
+            return $B.$list(res)
+        }
+        // can't use Javascript split(sep, maxsplit) because the part after
+        // maxplit is lost
+        res = []
+        while(pos < _self.length){
+            var ix = _self.indexOf(sep, pos)
+            if(ix == -1){
+                res.push(_self.substr(pos))
+                break
+            }
+            res.push(_self.substring(pos, ix))
+            pos = ix + seplen
+            if(maxsplit > -1 && res.length >= maxsplit){
+                res.push(_self.substr(pos))
+                break
+            }
+        }
+        if(_self.surrogates){
+            res = res.map($B.String)
+        }
+        return $B.$list(res)
     }
-    if(self instanceof String){
-        res = res.map($B.String)
-    }
-    return res
 }
 
-str_funcs.splitlines = function(self, keepends){
-    var args_length = arguments.length
-    if(args_length == 1 && ! self.$kw){
-        keepends = false
-    }else if(args_length == 2 && ! keepends.$kw){
-        //
-    }else{
-        var $ = $B.args('splitlines', 2, {self: null, keepends: null},
-                    arguments, {keepends: false}, null, null)
-        self = $.self
-        keepends = $.keepends
+str_funcs.splitlines = function(){
+    var $ = $B.args('splitlines', 2, {self: null, keepends: null},
+                arguments, {keepends: false}, null, null)
+    if(!$B.$isinstance($.keepends, [_b_.bool, _b_.int])){
+        throw _b_.TypeError('integer argument expected, got '+
+            $B.class_name($.keepends))
     }
-    keepends = $B.$bool(keepends)
-    self = to_string(self)
-    var res = $B.$list([])
-    if(! self.length){
+    var keepends = $B.int_value($.keepends),
+        res = $B.$list([]),
+        start = 0,
+        pos = 0,
+        _self = to_string($.self)
+    if(! _self.length){
         return res
     }
-    res = self.split(line_seps_re)
-    if(self instanceof String){
-        res = res.map($B.String)
-    }
-    if(keepends){
-        var i = 0
-        for(var mo of self.matchAll(line_seps_re)){
-            res[i] += mo[0]
-            i++
+    while(pos < _self.length){
+        if(_self.substr(pos, 2) == '\r\n'){
+            res.push(_self.slice(start, keepends ? pos + 2 : pos))
+            start = pos = pos+2
+        }else if(_self[pos] == '\r' || _self[pos] == '\n'){
+            res.push(_self.slice(start, keepends ? pos+1 : pos))
+            start = pos = pos+1
+        }else{
+            pos++
         }
     }
-    return $B.$list(res)
+    if(start < _self.length){
+        res.push(_self.slice(start))
+    }
+    return $B.$list(res.map($B.String))
 }
 
 str_funcs.startswith = function(self){
@@ -3278,4 +3318,5 @@ Template.tp_getset = ["values"]
 $B.set_func_names(Template, 'builtins')
 
 })(__BRYTHON__);
+
 
