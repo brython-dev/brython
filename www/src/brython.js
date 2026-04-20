@@ -678,8 +678,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-04-13 15:39:29.795712"
-__BRYTHON__.timestamp=1776087569795
+__BRYTHON__.compiled_date="2026-04-20 22:37:43.755253"
+__BRYTHON__.timestamp=1776717463754
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -9273,49 +9273,37 @@ break}}
 if(! flag){return _self.surrogates ? $B.String(_self):_self}}
 return ''}
 $B.time_string_split=0
-str_funcs.split=function(){var $=$B.args("split",3,{self:null,sep:null,maxsplit:null},arguments,{sep:_b_.None,maxsplit:-1},null,null),maxsplit=$.maxsplit,sep=$.sep,pos=0,_self=to_string($.self)
+str_funcs.split=function(self,sep,maxsplit){var locals
+if(arguments.length==3 && ! maxsplit.$kw){_self=to_string(self)}else if(arguments.length==2 && ! sep.$kw){_self=to_string(self)
+maxsplit=-1}else if(arguments.length==1 && ! self.$kw){_self=to_string(self)
+sep=_b_.None
+maxsplit=-1}else{var $=$B.args("split",3,{self:null,sep:null,maxsplit:null},arguments,{sep:_b_.None,maxsplit:-1},null,null),maxsplit=$.maxsplit,sep=$.sep,_self=to_string($.self)}
+var pos=0
 if($B.is_big_int(maxsplit)){maxsplit=Number($B.int_value(maxsplit))}
 if(sep==""){$B.RAISE(_b_.ValueError,"empty separator")}
-if(sep===_b_.None){let res=[]
-while(pos < _self.length && _self.charAt(pos).search(/\s/)>-1){pos++}
-if(pos===_self.length-1){return $B.$list([_self])}
-let name=""
-while(1){if(_self.charAt(pos).search(/\s/)==-1){if(name==""){name=_self.charAt(pos)}else{name+=_self.charAt(pos)}}else{if(name !==""){res.push(name)
-if(maxsplit !==-1 && res.length==maxsplit+1){res.pop()
-res.push(name+_self.substr(pos))
+if(sep===_b_.None){sep=/\s/}
+var res=$B.$list([])
+if(maxsplit==-1){res=_self.split(sep)}else{while(res.length < maxsplit){let new_pos=_self.indexOf(sep,pos)
+if(new_pos==-1){break}else{res.push(_self.substring(pos,new_pos))
+pos=new_pos+1}}
+if(pos < _self.length){res.push(_self.substr(pos))}
 return $B.$list(res.map($B.String))}
-name=""}}
-pos++
-if(pos > _self.length-1){if(name){res.push(name)}
-break}}
-return $B.$list(res.map($B.String))}else{if(! $B.$isinstance(sep,_b_.str)){$B.RAISE(_b_.TypeError,'must be str or None, not '+
-$B.class_name(sep))}
-sep=to_string(sep)
-let res,s="",seplen=sep.length
-if(maxsplit==0){res=$B.$list([$.self])
-return res}else if(maxsplit==-1){res=_self.split(sep)
-if(_self.surrogates){res=res.map($B.String)}
+if(self instanceof String){res=res.map($B.String)}
+return res}
+str_funcs.splitlines=function(self,keepends){var args_length=arguments.length
+if(args_length==1 && ! self.$kw){keepends=false}else if(args_length==2 && ! keepends.$kw){}else{var $=$B.args('splitlines',2,{self:null,keepends:null},arguments,{keepends:false},null,null)
+self=$.self
+keepends=$.keepends}
+keepends=$B.$bool(keepends)
+self=to_string(self)
+var res=$B.$list([])
+if(! self.length){return res}
+res=self.split(line_seps_re)
+if(self instanceof String){res=res.map($B.String)}
+if(keepends){var i=0
+for(var mo of self.matchAll(line_seps_re)){res[i]+=mo[0]
+i++}}
 return $B.$list(res)}
-res=[]
-while(pos < _self.length){var ix=_self.indexOf(sep,pos)
-if(ix==-1){res.push(_self.substr(pos))
-break}
-res.push(_self.substring(pos,ix))
-pos=ix+seplen
-if(maxsplit >-1 && res.length >=maxsplit){res.push(_self.substr(pos))
-break}}
-if(_self.surrogates){res=res.map($B.String)}
-return $B.$list(res)}}
-str_funcs.splitlines=function(){var $=$B.args('splitlines',2,{self:null,keepends:null},arguments,{keepends:false},null,null)
-if(!$B.$isinstance($.keepends,[_b_.bool,_b_.int])){throw _b_.TypeError('integer argument expected, got '+
-$B.class_name($.keepends))}
-var keepends=$B.int_value($.keepends),res=$B.$list([]),start=0,pos=0,_self=to_string($.self)
-if(! _self.length){return res}
-while(pos < _self.length){if(_self.substr(pos,2)=='\r\n'){res.push(_self.slice(start,keepends ? pos+2 :pos))
-start=pos=pos+2}else if(_self[pos]=='\r' ||_self[pos]=='\n'){res.push(_self.slice(start,keepends ? pos+1 :pos))
-start=pos=pos+1}else{pos++}}
-if(start < _self.length){res.push(_self.slice(start))}
-return $B.$list(res.map($B.String))}
 str_funcs.startswith=function(self){
 var $=$B.args("startswith",4,{self:null,prefix:null,start:null,end:null},arguments,{start:0,end:null},null,null),_self
 normalize_start_end($)
