@@ -61,7 +61,7 @@ function check_buffer(arg){
 }
 
 function check_buffer_or_int(arg){
-    if(! $B.$isinstance(arg, _b_.int) && ! is_bytes_like(arg)){
+    if(! $B.is_int(arg) && ! is_bytes_like(arg)){
         $B.RAISE(_b_.TypeError,
             `argument should be integer or bytes-like object, ` +
             `not '${$B.class_name(sub)}'`
@@ -294,7 +294,7 @@ function find(){
         end = $.end
     check_buffer_or_int(sub)
     var seq
-    if($B.$isinstance(sub, _b_.int)){
+    if($B.is_int(sub)){
         seq = [$B.PyNumber_Index(sub)]
     }else{
         seq = get_list_from_bytes_like(sub)
@@ -782,7 +782,7 @@ function rsplit(){
         maxsplit = $.maxsplit
     var cls = this
     var reversed_self = $B.fast_bytes(self.source.toReversed())
-    if(! $B.$isinstance(maxsplit, _b_.int)){
+    if(! $B.is_int(maxsplit)){
         $B.RAISE(_b_.ValueError,
             `maxsplit should be int, not ${$B.class_name(maxsplit)}`
         )
@@ -844,7 +844,7 @@ function split(){
         sep = $.sep,
         maxsplit = $.maxsplit
     var cls = this // bytes or bytearray
-    if(! $B.$isinstance(maxsplit, _b_.int)){
+    if(! $B.is_int(maxsplit)){
         $B.RAISE(_b_.ValueError,
             `maxsplit should be int, not ${$B.class_name(maxsplit)}`
         )
@@ -1122,8 +1122,8 @@ _b_.bytearray.sq_ass_item = function(self, arg, value){
     if(value === $B.NULL){
         return bytearray_delitem(self, arg)
     }
-    if($B.$isinstance(arg, _b_.int)){
-        if(! $B.$isinstance(value, _b_.int)){
+    if($B.is_int(arg)){
+        if(! $B.is_int(value)){
             $B.RAISE(_b_.TypeError, 'an integer is required')
         }else if(value > 255){
             $B.RAISE(_b_.ValueError, "byte must be in range(0, 256)")
@@ -1164,7 +1164,7 @@ _b_.bytearray.sq_ass_item = function(self, arg, value){
             check_exports(self)
         }
         for(var i = $temp.length - 1; i >= 0; i--){
-            if(! $B.$isinstance($temp[i], _b_.int)){
+            if(! $B.is_int($temp[i])){
                 $B.RAISE(_b_.TypeError, 'an integer is required')
             }else if($temp[i] > 255){
                 $B.RAISE(_b_.ValueError, "byte must be in range(0, 256)")
@@ -1289,7 +1289,7 @@ bytearray_funcs.append = function(self, b){
         "append takes exactly one argument (" + (arguments.length - 1) +
         " given)")
     }
-    if(! $B.$isinstance(b, _b_.int)){
+    if(! $B.is_int(b)){
         $B.RAISE(_b_.TypeError, "an integer is required")
     }
     if(b > 255){
@@ -1382,7 +1382,7 @@ bytearray_funcs.insert = function(self, pos, b){
             "insert takes exactly 2 arguments (" + (arguments.length - 1) +
             " given)")
     }
-    if(! $B.$isinstance(b, _b_.int)){
+    if(! $B.is_int(b)){
         $B.RAISE(_b_.TypeError, "an integer is required")
     }
     if(b > 255){
@@ -1749,13 +1749,13 @@ bytes.$new = function(cls, source, encoding, errors){
         pos = 0
     if(source === undefined){
         // empty list
-    }else if(typeof source == "number" || $B.$isinstance(source, _b_.int)){
+    }else if(typeof source == "number" || $B.is_int(source)){
         let i = source
         while(i--){
             int_list[pos++] = 0
         }
     }else{
-        if(typeof source == "string" || $B.$isinstance(source, _b_.str)){
+        if(typeof source == "string" || $B.is_str(source)){
             if(encoding === undefined){
                 $B.RAISE(_b_.TypeError, "string argument without an encoding")
             }
@@ -2437,7 +2437,7 @@ _b_.bytes.tp_new = function(cls, args, kw){
         errors = kw_errors === $B.NULL ? 'strict' : kw_errors
     }
 
-    if(typeof source == "string" || $B.$isinstance(source, _b_.str)){
+    if(typeof source == "string" || $B.is_str(source)){
         if(encoding === $B.NULL){
              $B.RAISE(_b_.TypeError, 'string argument without an encoding')
         }
@@ -2454,7 +2454,7 @@ _b_.bytes.tp_new = function(cls, args, kw){
         console.log('encoding', encoding)
         $B.RAISE(_b_.TypeError, "encoding without a string argument")
     }
-    if(typeof source == "number" || $B.$isinstance(source, _b_.int)){
+    if(typeof source == "number" || $B.is_int(source)){
         var size = $B.PyNumber_Index(source)
         source = []
         for(var i = 0; i < size; i++){
@@ -2517,7 +2517,7 @@ _b_.bytes.mp_length = function(self){
 }
 
 _b_.bytes.mp_subscript = function(self, arg){
-    if($B.$isinstance(arg, _b_.int)){
+    if($B.is_int(arg)){
         arg = $B.int_value(arg)
         let pos = arg
         if(arg < 0){

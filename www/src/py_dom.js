@@ -20,7 +20,7 @@ function convertDomValue(v){
 var py_immutable_to_js = $B.py_immutable_to_js = function(pyobj){
     if($B.$isinstance(pyobj, _b_.float)){
         return pyobj.value
-    }else if($B.$isinstance(pyobj, _b_.int) && typeof pyobj !== "boolean"){
+    }else if($B.is_int(pyobj) && typeof pyobj !== "boolean"){
         return Number($B.int_value(pyobj))
     }
     return $B.pyobj2jsobj(pyobj)
@@ -802,7 +802,7 @@ DOMNode.sq_length = function(self){
 }
 
 DOMNode.nb_multiply = function(self,other){
-    if($B.$isinstance(other, _b_.int) && other.valueOf() > 0){
+    if($B.is_int(other) && other.valueOf() > 0){
         var res = TagSum.$factory()
         var pos = res.children.length
         for(var i = 0; i < other.valueOf(); i++){
@@ -1398,7 +1398,7 @@ DOMNode_funcs.style_set = function(self, style){ // style is a dict
                 case "width":
                 case "height":
                 case "borderWidth":
-                    if($B.$isinstance(value,_b_.int)){value = value + "px"}
+                    if($B.is_int(value)){value = value + "px"}
             }
             self.style[key] = value
         }

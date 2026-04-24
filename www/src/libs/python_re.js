@@ -2887,7 +2887,7 @@ function show(node, indent){
 
 function to_codepoint_list(s){
     var items = []
-    if(typeof s == "string" || $B.$isinstance(s, _b_.str)){
+    if(typeof s == "string" || $B.is_str(s)){
         if(typeof s != "string"){
             s = s.valueOf()
         }
@@ -2975,7 +2975,7 @@ function StringObj(obj){
         this.codepoints = obj.codepoints
         this.index_map = obj.index_map
         this.length = $B.str_len(obj)
-    }else if($B.$isinstance(obj, _b_.str)){ // str subclass
+    }else if($B.is_str(obj)){ // str subclass
         var so = new StringObj(_b_.str.$factory(obj))
         this.string = so.string
         this.codepoints = so.codepoints
@@ -3872,7 +3872,7 @@ var module = {
             res.push(cp)
         }
         res = from_codepoint_list(res, data.type)
-        if(data.type == "bytes" && $B.$isinstance(res, _b_.str)){
+        if(data.type == "bytes" && $B.is_str(res)){
             res = _b_.str.encode(res, 'latin1')
         }
         return res

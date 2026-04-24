@@ -130,7 +130,7 @@ function normalize_start_end($){
         $.end = Math.max(0, $.end)
     }
 
-    if(! $B.$isinstance($.start, _b_.int) || ! $B.$isinstance($.end, _b_.int)){
+    if(! $B.is_int($.start) || ! $B.is_int($.end)){
         $B.RAISE(_b_.TypeError, "slice indices must be integers " +
             "or None or have an __index__ method")
     }
@@ -355,7 +355,7 @@ var num_format = function(val, flags) {
     number_check(val, flags)
     if($B.$isinstance(val, _b_.float)){
         val = parseInt(val.value)
-    }else if(! $B.$isinstance(val, _b_.int)){
+    }else if(! $B.is_int(val)){
         val = parseInt(val)
     }else if ($B.$isinstance(val, _b_.bool)) {
         val = val ? 1 : 0
@@ -407,7 +407,7 @@ var _float_helper = function(val, flags){
         flags.precision = parseInt(flags.precision, 10)
         validate_precision(flags.precision)
     }
-    return $B.$isinstance(val, _b_.int) ? val : val.value
+    return $B.is_int(val) ? val : val.value
 }
 
 var validate_precision = function(precision) {
@@ -605,7 +605,7 @@ $B.formatters = {
 
 var signed_hex_format = function(val, upper, flags){
     var ret
-    if(! $B.$isinstance(val, _b_.int)){
+    if(! $B.is_int(val)){
         $B.RAISE(_b_.TypeError,
             `%X format: an integer is required, not ${$B.class_name(val)}`)
     } else if ($B.$isinstance(val, _b_.bool)) {
@@ -705,7 +705,7 @@ function series_of_bytes(val, flags){
 
 var single_char_format = function(val, flags, type){
     if(type == 'bytes'){
-        if($B.$isinstance(val, _b_.int)){
+        if($B.is_int(val)){
             if($B.is_big_int(val) || val < 0 || val > 255){
                 $B.RAISE(_b_.OverflowError, "%c arg not in range(256)")
             }
@@ -717,12 +717,12 @@ var single_char_format = function(val, flags, type){
             val = val.source[0]
         }
     }else{
-        if($B.$isinstance(val, _b_.str)){
+        if($B.is_str(val)){
             if(_b_.str.mp_length(val) == 1){
                 return val
             }
             $B.RAISE(_b_.TypeError, "%c requires int or char")
-        }else if(! $B.$isinstance(val, _b_.int)){
+        }else if(! $B.is_int(val)){
             $B.RAISE(_b_.TypeError, "%c requires int or char")
         }
         if($B.is_big_int(val)){
@@ -1739,7 +1739,7 @@ _b_.str.tp_richcompare = function(self, other, op){
 _b_.str.sq_repeat = function(self, other){
     $B.check_nb_args_no_kw('str.__mul__', 2, arguments)
     var _self = to_string(self)
-    if(! $B.$isinstance(other, _b_.int)){
+    if(! $B.is_int(other)){
         $B.RAISE(_b_.TypeError,
         "Can't multiply sequence by non-int of type '" +
             $B.class_name(other) + "'")
@@ -1905,7 +1905,7 @@ _b_.str.mp_length = function(self){
 
 _b_.str.mp_subscript = function(self, arg){
     self = to_string(self)
-    if($B.$isinstance(arg, _b_.int)){
+    if($B.is_int(arg)){
         var len = str.mp_length(self)
         var pos = arg
         if(arg < 0){
@@ -2635,8 +2635,8 @@ str_funcs.maketrans = function(){
         for(let i = 0, len = items.length; i < len; i++){
             let k = items[i][0],
                 v = items[i][1]
-            if(! $B.$isinstance(k, _b_.int)){
-                if($B.$isinstance(k, _b_.str) && k.length == 1){
+            if(! $B.is_int(k)){
+                if($B.is_str(k) && k.length == 1){
                     k = _b_.ord(k)
                 }else{$B.RAISE(_b_.TypeError, "dictionary key " + k +
                     " is not int or 1-char string")}
@@ -2652,7 +2652,7 @@ str_funcs.maketrans = function(){
         // If there are two arguments, they must be strings of equal length,
         // and in the resulting dictionary, each character in x will be mapped
         // to the character at the same position in y
-        if(! ($B.$isinstance($.x, _b_.str) && $B.$isinstance($.y, _b_.str))){
+        if(! ($B.is_str($.x) && $B.is_str($.y))){
             $B.RAISE(_b_.TypeError, "maketrans arguments must be strings")
         }else if($.x.length !== $.y.length){
             $B.RAISE(_b_.TypeError,
@@ -2662,7 +2662,7 @@ str_funcs.maketrans = function(){
             if($.z !== null){
                 // If there is a third argument, it must be a string, whose
                 // characters will be mapped to None in the result
-                if(! $B.$isinstance($.z, _b_.str)){
+                if(! $B.is_str($.z)){
                     $B.RAISE(_b_.TypeError,
                         "maketrans third argument must be a string")
                 }

@@ -53,7 +53,7 @@
                     // DOM element
                     $B.$call($B.$getattr($B.DOMNode, 'bind'), $.elt, $.evt, callback, options)
                     return callback
-                }else if($B.$isinstance($.elt, _b_.str)){
+                }else if($B.is_str($.elt)){
                     // string interpreted as a CSS selector
                     var items = document.querySelectorAll($.elt)
                     var binder = $B.type_getattribute($B.DOMNode, 'bind')

@@ -8,7 +8,7 @@ function conv_complex(...objs){
     for(var obj of objs){
         if($B.$isinstance(obj, _b_.float)){
             res.push($B.make_complex(obj))
-        }else if($B.$isinstance(obj, _b_.int)){
+        }else if($B.is_int(obj)){
             res.push($B.make_complex(obj))
         }else{
             var complex_method = $B.$getattr($B.get_class(obj), '__complex__',
@@ -30,7 +30,7 @@ function complex_eq(self, other){
         return self.real.value == other.real.value &&
             self.imag.value == other.imag.value
     }
-    if($B.$isinstance(other, _b_.int)){
+    if($B.is_int(other)){
         if(self.imag.value != 0){return false}
         return self.real.value == other.valueOf()
     }
@@ -288,7 +288,7 @@ _b_.complex.nb_power = function(self, other, mod){
     }
     var exp = complex2expo(x),
         angle = exp.angle
-    if($B.$isinstance(other, _b_.int)){
+    if($B.is_int(other)){
         var res = Math.pow(exp.norm, other)
         return make_complex(res * Math.cos(angle * other),
             res * Math.sin(angle * other))

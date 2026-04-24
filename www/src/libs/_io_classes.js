@@ -70,13 +70,13 @@ StringIO.tp_init = function(){
     var value = $.value
     if(value === _b_.None){
         value = ''
-    }else if(! $B.$isinstance(value, _b_.str)){
+    }else if(! $B.is_str(value)){
         $B.RAISE(_b_.TypeError,
             `initial_value must be str or None, not ${$B.class_name(value)}`)
     }
     var newline = $.newline
     if(newline !== _b_.None){
-        if(! $B.$isinstance(newline, _b_.str)){
+        if(! $B.is_str(newline)){
             $B.RAISE(_b_.TypeError,
                 `newline must be str or None, not ${$B.class_name(newline)}`)
         }
@@ -392,7 +392,7 @@ StringIO_funcs.write = function(){
     var $ = $B.args("write", 2, {self: null, data: null}, arguments)
             var _self = $.self,
                 data = $.data
-    if(! $B.$isinstance(data, _b_.str)){
+    if(! $B.is_str(data)){
         $B.RAISE(_b_.TypeError, 'string argument expected, got ' +
             `'${$B.class_name(data)}'`)
     }
@@ -473,7 +473,7 @@ BytesIO_funcs.__setstate__ = function(_self, state){
     var [initvalue, position, dict] = state
     var obj = $B.$call(BytesIO, initvalue)
 
-    if(! $B.$isinstance(position, _b_.int)){
+    if(! $B.is_int(position)){
         $B.RAISE(_b_.TypeError, "second item of state must be an integer, " +
             `not ${$B.class_name(position)}`)
     }
@@ -643,7 +643,7 @@ BytesIO_funcs.write = function(_self, b){
     if(_self.closed){
         $B.RAISE(_b_.ValueError, "write to closed file")
     }
-    if($B.$isinstance(b, _b_.str)){
+    if($B.is_str(b)){
         $B.RAISE(_b_.TypeError, "can't write str to binary stream")
     }
 

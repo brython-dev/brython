@@ -158,7 +158,7 @@ function $builtin_base_convert_helper(obj, base) {
 function bin_hex_oct(base, obj){
     // Used by built-in function bin, hex and oct
     // base is respectively 2, 16 and 8
-    if($B.$isinstance(obj, _b_.int)){
+    if($B.is_int(obj)){
         return $builtin_base_convert_helper(obj, base)
     }else{
         try{
@@ -689,7 +689,7 @@ _b_.getattr = function(){
     var missing = {}
     var $ = $B.args("getattr", 3, {obj: null, attr: null, _default: null},
                 arguments, {_default: missing}, null, null)
-    if(! $B.$isinstance($.attr, _b_.str)){
+    if(! $B.is_str($.attr)){
         $B.RAISE(_b_.TypeError, "attribute name must be string, " +
             `not '${$B.class_name($.attr)}'`)
     }
@@ -920,7 +920,7 @@ $B.$hash = function(obj){
     var hash_func = $B.search_slot(klass, 'tp_hash', $B.NULL)
     if(hash_func !== $B.NULL && hash_func !== _b_.None){
         var res = hash_func(obj)
-        if(! $B.$isinstance(res, _b_.int)){
+        if(! $B.is_int(res)){
             $B.RAISE(_b_.TypeError, '__hash__ method should return an integer')
         }
         return res
@@ -1260,7 +1260,7 @@ var len = _b_.len = function(obj){
         console.log('call', method, 'with obj', obj, 'returns undef')
     }
 
-    if (!$B.$isinstance(res, _b_.int)){
+    if (!$B.is_int(res)){
         $B.RAISE(_b_.TypeError,
             `'${$B.class_name(res)}' object cannot be interpreted as an integer`
         )
@@ -1552,15 +1552,15 @@ _b_.pow = function() {
     if(z === _b_.None){
         return $B.rich_op('__pow__', x, y)
     }else{
-        if($B.$isinstance(x, _b_.int)){
+        if($B.is_int(x)){
             if($B.$isinstance(y, _b_.float)){
                 throw all_ints()
             }else if($B.$isinstance(y, _b_.complex)){
                 throw complex_modulo()
-            }else if($B.$isinstance(y, _b_.int)){
+            }else if($B.is_int(y)){
                 if($B.$isinstance(z, _b_.complex)){
                     throw complex_modulo()
-                }else if(! $B.$isinstance(z, _b_.int)){
+                }else if(! $B.is_int(z)){
                     throw all_ints()
                 }
             }
@@ -1721,7 +1721,7 @@ _b_.round = function(){
         }
     }
 
-    if(! $B.$isinstance(n, _b_.int)){
+    if(! $B.is_int(n)){
         $B.RAISE(_b_.TypeError, "'" + $B.class_name(n) +
             "' object cannot be interpreted as an integer")
     }

@@ -93,7 +93,7 @@ var module = {
         var $ = $B.args("a2b_base64", 2, {s: null, strict_mode: null},
                     arguments, {strict_mode: false})
         var bytes
-        if($B.$isinstance($.s, _b_.str)){
+        if($B.is_str($.s)){
             bytes = _b_.str.encode($.s, 'ascii')
         }else if($B.$isinstance($.s, [_b_.bytes, _b_.bytearray])){
             bytes = $.s

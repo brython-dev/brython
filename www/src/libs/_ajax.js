@@ -468,7 +468,7 @@ ajax_funcs.send = function(self, params){
         self.js.send()
         return _b_.None
     }
-    if($B.$isinstance(params, _b_.str)){
+    if($B.is_str(params)){
         res = params
     }else if($B.$isinstance(params, _b_.dict)){
         if(content_type == 'multipart/form-data'){

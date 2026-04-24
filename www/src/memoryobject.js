@@ -180,7 +180,7 @@ _b_.memoryview.mp_length = function(self){
 
 _b_.memoryview.mp_subscript = function(self, key){
     var res
-    if($B.$isinstance(key, _b_.int)){
+    if($B.is_int(key)){
         var start = key * self.itemsize
         if(self.format == "I"){
             res = self.obj.source[start]
@@ -256,7 +256,7 @@ memoryview_funcs.cast = function(self, format, shape){
         }
         var nb = 1
         for(var item of shape){
-            if(! $B.$isinstance(item, _b_.int)){
+            if(! $B.is_int(item)){
                 $B.RAISE(_b_.TypeError,
                     'memoryview.cast(): elements of shape must be integers')
             }

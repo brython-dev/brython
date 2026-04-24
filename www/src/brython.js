@@ -110,6 +110,10 @@ if(mro[0]!==cls){console.log('bizarre',cls,mro)}
 return mro}
 $B.is_type=function(obj){var klass=$B.get_class(obj)
 return klass.tp_mro.includes(_b_.type)}
+$B.is_int=function(obj){return typeof obj=='number' ||
+typeof obj=='bigint' ||
+typeof obj=='boolean' ||
+obj?.ob_type?.tp_flags & $B.TPFLAGS.LONG_SUBCLASS}
 $B.is_str=function(obj){return typeof obj=='string' ||
 obj?.ob_type?.tp_flags & $B.TPFLAGS.UNICODE_SUBCLASS}
 $B.is_tuple=function(obj){return obj?.ob_type?.tp_flags & $B.TPFLAGS.TUPLE_SUBCLASS}
@@ -681,8 +685,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-04-24 12:04:59.494043"
-__BRYTHON__.timestamp=1777025099493
+__BRYTHON__.compiled_date="2026-04-24 17:54:57.729980"
+__BRYTHON__.timestamp=1777046097729
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1696,7 +1700,7 @@ if(klass===$B.JSObj){return 'Javascript '+obj.constructor.name}else{return klass
 $B.get_mro=function(klass){return klass.tp_mro ?? klass.__mro__}
 $B.get_name=function(klass){return klass.tp_name ?? klass.__name__}
 $B.unpack_mapping=function(func,obj){var items=[]
-if($B.$isinstance(obj,_b_.dict)){for(var item of _b_.dict.$iter_items(obj)){if(! $B.$isinstance(item.key,_b_.str)){$B.RAISE(_b_.TypeError,'keywords must be strings')}
+if($B.$isinstance(obj,_b_.dict)){for(var item of _b_.dict.$iter_items(obj)){if(! $B.is_str(item.key)){$B.RAISE(_b_.TypeError,'keywords must be strings')}
 items.push(item)}
 return items}
 var klass=$B.get_class(obj)
@@ -1708,7 +1712,7 @@ if(key_func===null){var f=`${func.$infos.__module__}.${func.$infos.__name__}`
 $B.RAISE(_b_.TypeError,`${f}() argument after **`+
 ` must be a mapping, not ${$B.class_name(obj)}`)}
 var keys=$B.$call($B.$getattr(klass,'keys'),obj)
-for(var key of $B.make_js_iterator(keys)){if(! $B.$isinstance(key,_b_.str)){$B.RAISE(_b_.TypeError,'keywords must be strings')}
+for(var key of $B.make_js_iterator(keys)){if(! $B.is_str(key)){$B.RAISE(_b_.TypeError,'keywords must be strings')}
 items.push({key,value:$B.$call(getitem,obj,key)})}
 return items}
 $B.make_js_iterator_no_trace=function(iterator){if(Array.isArray(iterator)){if(iterator.ob_type){return iterator[Symbol.iterator]()}else{return iterator.map($B.jsobj2pyobj)[Symbol.iterator]()}}
@@ -1967,7 +1971,7 @@ case "number":
 case "bigint":
 return item
 case "object":
-if($B.$isinstance(item,_b_.int)){
+if($B.is_int(item)){
 return item.value}
 var method=$B.$getattr(item,"__index__",_b_.None)
 if(method !==_b_.None){method=typeof method=="function" ?
@@ -2084,7 +2088,8 @@ res=$B.$call(comp_func,y)}else{if(typeof in_mro !=='function'){var call_in_mro=$
 if(call_in_mro){res=call_in_mro(in_mro,x,y)}else{$B.RAISE(_b_.TypeError,`not callable {op}`)}}else{try{res=in_mro(x,y)}catch(err){console.log('error, in_mro',in_mro,'x',x,'y',y)
 throw err}}}
 var test=false 
-if(test){console.log('rich comp',x,y,op,'res',res)}
+if(test){console.log('rich comp',x,y,op,'res',res)
+console.log('in mro',in_mro)}
 if(res !==_b_.NotImplemented){return res}
 if(y_rev_func===undefined){
 y_rev_func=$B.$getattr($B.get_class(y),rev_op)
@@ -2616,7 +2621,7 @@ $B.init_dict(__annotate_func__)
 $B.str_dict_set(dict,'__annotate_func__',__annotate_func__)
 $B.set_function_infos(__annotate_func__,{__defaults__:_b_.None,__doc__:_b_.None,__globals__:$B.frame_obj.frame,__kwdefaults__:_b_.None,__name__:'__annotate__',__module__:class_frame[2],__qualname__:class_frame[0]+'.__annotate__',__file__:class_frame.__file__}
 )}
-$B.check_annotate_format=function(format){if(! $B.$isinstance(format,_b_.int)){$B.RAISE(_b_.TypeError,'__annotate__ argument should be '+
+$B.check_annotate_format=function(format){if(! $B.is_int(format)){$B.RAISE(_b_.TypeError,'__annotate__ argument should be '+
 `int, not ${$B.class_name(format)}`)}
 format=$B.int_value(format)
 if(format !=1 && format !=2){$B.RAISE(_b_.NotImplementedError,'')}}
@@ -3613,12 +3618,12 @@ f.$infos.__module__=value}
 function name_get(f){$B.check_infos(f)
 return f.$infos.__name__}
 function name_set(f,value){$B.check_infos(f)
-if(! $B.$isinstance(value,_b_.str)){$B.RAISE(_b_.TypeError,'__name__ must be set to a string object')}
+if(! $B.is_str(value)){$B.RAISE(_b_.TypeError,'__name__ must be set to a string object')}
 f.$infos.__name__=value}
 function qualname_get(f){$B.check_infos(f)
 return f.$infos.__qualname__}
 function qualname_set(f,value){$B.check_infos(f)
-if(! $B.$isinstance(value,_b_.str)){$B.RAISE(_b_.TypeError,'__qualname__ must be set to a string object')}
+if(! $B.is_str(value)){$B.RAISE(_b_.TypeError,'__qualname__ must be set to a string object')}
 f.$infos.__qualname__=value}
 function type_params_get(f){$B.check_infos(f)
 return f.$infos.__type_params__}
@@ -4530,7 +4535,7 @@ var rawmode='',m;
 var line_buffering,is_number,isatty=0;
 var raw,modeobj,buffer,wrapper,result,path_or_fd
 path_or_fd=file
-if(! $B.$isinstance(path_or_fd,_b_.str)){$B.RAISE(_b_.TypeError,`invalid file: ${file}`)}
+if(! $B.is_str(path_or_fd)){$B.RAISE(_b_.TypeError,`invalid file: ${file}`)}
 if(encoding=='locale'){
 encoding='utf-8'}
 for(var i=0,len=mode.length;i < len;i++){var c=mode[i]
@@ -4655,7 +4660,7 @@ $B.RAISE(_b_.TypeError,'Error, argument must be an integer or'+
 if(value >=0){return prefix+value.toString(base)}
 return '-'+prefix+(-value).toString(base)}
 function bin_hex_oct(base,obj){
-if($B.$isinstance(obj,_b_.int)){return $builtin_base_convert_helper(obj,base)}else{try{var klass=$B.get_class(obj),method=$B.$getattr(klass,'__index__')}catch(err){if($B.is_exc(err,[_b_.AttributeError])){$B.RAISE(_b_.TypeError,"'"+$B.class_name(obj)+
+if($B.is_int(obj)){return $builtin_base_convert_helper(obj,base)}else{try{var klass=$B.get_class(obj),method=$B.$getattr(klass,'__index__')}catch(err){if($B.is_exc(err,[_b_.AttributeError])){$B.RAISE(_b_.TypeError,"'"+$B.class_name(obj)+
 "' object cannot be interpreted as an integer")}
 throw err}
 var res=$B.$call(method,obj)
@@ -4864,7 +4869,7 @@ default:
 throw $B.attr_error(attr,obj)}}
 _b_.getattr=function(){var missing={}
 var $=$B.args("getattr",3,{obj:null,attr:null,_default:null},arguments,{_default:missing},null,null)
-if(! $B.$isinstance($.attr,_b_.str)){$B.RAISE(_b_.TypeError,"attribute name must be string, "+
+if(! $B.is_str($.attr)){$B.RAISE(_b_.TypeError,"attribute name must be string, "+
 `not '${$B.class_name($.attr)}'`)}
 return $B.$getattr($.obj,_b_.str.$to_string($.attr),$._default===missing ? undefined :$._default)}
 $B.search_in_mro=function(klass,attr,_default){var mro=$B.get_mro(klass)
@@ -4967,7 +4972,7 @@ if(typeof obj==="boolean"){return obj ? 1 :0}else if(typeof obj==="number"){retu
 var klass=$B.get_class(obj)
 var hash_func=$B.search_slot(klass,'tp_hash',$B.NULL)
 if(hash_func !==$B.NULL && hash_func !==_b_.None){var res=hash_func(obj)
-if(! $B.$isinstance(res,_b_.int)){$B.RAISE(_b_.TypeError,'__hash__ method should return an integer')}
+if(! $B.is_int(res)){$B.RAISE(_b_.TypeError,'__hash__ method should return an integer')}
 return res}
 $B.RAISE(_b_.TypeError,"unhashable type: '"+
 _b_.str.$factory($B.jsobj2pyobj(obj))+"'"
@@ -5086,7 +5091,7 @@ if(method===null){$B.RAISE(_b_.TypeError,"object of type '"+
 $B.class_name(obj)+"' has no len() VVV")}
 let res=$B.$call(method,obj)
 if(res===undefined){console.log('call',method,'with obj',obj,'returns undef')}
-if(!$B.$isinstance(res,_b_.int)){$B.RAISE(_b_.TypeError,`'${$B.class_name(res)}' object cannot be interpreted as an integer`
+if(!$B.is_int(res)){$B.RAISE(_b_.TypeError,`'${$B.class_name(res)}' object cannot be interpreted as an integer`
 )}
 if(!$B.rich_comp('__ge__',res,0)){$B.RAISE(_b_.ValueError,'ValueError: __len__() should return >= 0')}
 return res}
@@ -5197,7 +5202,7 @@ var all_ints=()=> $B.EXC(_b_.TypeError,'pow() 3rd argument not '+
 'allowed unless all arguments are integers')
 _b_.pow=function(){var $=$B.args('pow',3,{x:null,y:null,mod:null},arguments,{mod:None},null,null)
 var x=$.x,y=$.y,z=$.mod
-if(z===_b_.None){return $B.rich_op('__pow__',x,y)}else{if($B.$isinstance(x,_b_.int)){if($B.$isinstance(y,_b_.float)){throw all_ints()}else if($B.$isinstance(y,_b_.complex)){throw complex_modulo()}else if($B.$isinstance(y,_b_.int)){if($B.$isinstance(z,_b_.complex)){throw complex_modulo()}else if(! $B.$isinstance(z,_b_.int)){throw all_ints()}}
+if(z===_b_.None){return $B.rich_op('__pow__',x,y)}else{if($B.is_int(x)){if($B.$isinstance(y,_b_.float)){throw all_ints()}else if($B.$isinstance(y,_b_.complex)){throw complex_modulo()}else if($B.is_int(y)){if($B.$isinstance(z,_b_.complex)){throw complex_modulo()}else if(! $B.is_int(z)){throw all_ints()}}
 return _b_.int.nb_power(x,y,z)}else if($B.$isinstance(x,_b_.float)){throw all_ints()}else if($B.$isinstance(x,_b_.complex)){throw complex_modulo()}}}
 var $print=_b_.print=function(){var[args,kw]=$B.parse_args_kw('print',arguments)
 var end=$B.str_dict_get(kw,'end','\n'),sep=$B.str_dict_get(kw,'sep',' '),file=$B.str_dict_get(kw,'file',$B.get_stdout())
@@ -5248,7 +5253,7 @@ var klass
 if(! $B.$isinstance(arg,[_b_.int,_b_.float])){klass=$B.get_class(arg)
 try{return $B.$call($B.$getattr(klass,"__round__"),...arguments)}catch(err){if($B.is_exc(err,[_b_.AttributeError])){$B.RAISE(_b_.TypeError,"type "+$B.class_name(arg)+
 " doesn't define __round__ method")}else{throw err}}}
-if(! $B.$isinstance(n,_b_.int)){$B.RAISE(_b_.TypeError,"'"+$B.class_name(n)+
+if(! $B.is_int(n)){$B.RAISE(_b_.TypeError,"'"+$B.class_name(n)+
 "' object cannot be interpreted as an integer")}
 klass=$B.get_class(arg)
 if($B.$isinstance(arg,_b_.float)){return _b_.float.tp_funcs.__round__(arg,$.ndigits)}
@@ -6074,7 +6079,7 @@ BaseException_funcs.__traceback___get=function(self){return self.__traceback__ ?
 BaseException_funcs.__traceback___set=function(self,value){if(value===$B.NULL){$B.RAISE(_b_.TypeError,"__traceback__ may not be deleted")}
 if($B.exact_type(value,$B.traceback)){self.__traceback__=value}else if(value===_b_.None){delete self.__traceback__}else{$B.RAISE(_b_.TypeError,"__traceback__ must be a traceback or None")}}
 BaseException_funcs.add_note=function(self,note){
-if(! $B.$isinstance(note,_b_.str)){$B.RAISE(_b_.TypeError,'note must be a str, not '+
+if(! $B.is_str(note)){$B.RAISE(_b_.TypeError,'note must be a str, not '+
 `'${$B.class_name(note)}'`)}
 var notes=$B.get_from_dict(self,'__notes__',$B.NULL)
 if(notes !==$B.NULL){notes.push(note)}else{$B.set_to_dict(self,'__notes__',$B.$list([note]))}}
@@ -6762,7 +6767,7 @@ if(! $B.exact_type(buf,_b_.memoryview)){$B.RAISE(_b_.TypeError,`__buffer__ shoul
 return _b_.memoryview.tp_funcs.tolist(buf)}
 function check_buffer(arg){if(! is_bytes_like(arg)){$B.RAISE(_b_.TypeError,"a bytes-like object is required, "+
 "not '"+$B.class_name(arg)+"'")}}
-function check_buffer_or_int(arg){if(! $B.$isinstance(arg,_b_.int)&& ! is_bytes_like(arg)){$B.RAISE(_b_.TypeError,`argument should be integer or bytes-like object, `+
+function check_buffer_or_int(arg){if(! $B.is_int(arg)&& ! is_bytes_like(arg)){$B.RAISE(_b_.TypeError,`argument should be integer or bytes-like object, `+
 `not '${$B.class_name(sub)}'`
 )}}
 $B.bytearray_iterator.tp_iter=function(self){return self}
@@ -6848,7 +6853,7 @@ var $=$B.args(func,4,{self:null,sub:null,start:null,end:null},arguments,{start:_
 var self=$.self,sub=$.sub,start=$.start,end=$.end
 check_buffer_or_int(sub)
 var seq
-if($B.$isinstance(sub,_b_.int)){seq=[$B.PyNumber_Index(sub)]}else{seq=get_list_from_bytes_like(sub)}
+if($B.is_int(sub)){seq=[$B.PyNumber_Index(sub)]}else{seq=get_list_from_bytes_like(sub)}
 var boundaries=_b_.slice.$conv_for_seq({start,stop:end,step:1},self.source.length)
 start=boundaries.start
 end=boundaries.stop
@@ -7032,7 +7037,7 @@ function rsplit(){var $=$B.args('rsplit',3,{self:null,sep:null,maxsplit:null},ar
 var self=$.self,sep=$.sep,maxsplit=$.maxsplit
 var cls=this
 var reversed_self=$B.fast_bytes(self.source.toReversed())
-if(! $B.$isinstance(maxsplit,_b_.int)){$B.RAISE(_b_.ValueError,`maxsplit should be int, not ${$B.class_name(maxsplit)}`
+if(! $B.is_int(maxsplit)){$B.RAISE(_b_.ValueError,`maxsplit should be int, not ${$B.class_name(maxsplit)}`
 )}
 var parts=[]
 if(sep===_b_.None){parts=bytes_split_with_whitespace(cls,self,maxsplit)}else{if($B.$getattr(sep,'__buffer__',$B.NULL)===$B.NULL){$B.RAISE(_b_.TypeError,`a bytes-like object is required, not '${$B.class_name(sep)}'`
@@ -7058,7 +7063,7 @@ return false}
 function split(){var $=$B.args('split',3,{self:null,sep:null,maxsplit:null},arguments,{sep:_b_.None,maxsplit:-1})
 var self=$.self,sep=$.sep,maxsplit=$.maxsplit
 var cls=this 
-if(! $B.$isinstance(maxsplit,_b_.int)){$B.RAISE(_b_.ValueError,`maxsplit should be int, not ${$B.class_name(maxsplit)}`
+if(! $B.is_int(maxsplit)){$B.RAISE(_b_.ValueError,`maxsplit should be int, not ${$B.class_name(maxsplit)}`
 )}
 var parts=[]
 if(sep===_b_.None){parts=bytes_split_with_whitespace(cls,self,maxsplit)}else{if($B.$getattr(sep,'__buffer__',$B.NULL)===$B.NULL){$B.RAISE(_b_.TypeError,`a bytes-like object is required, not '${$B.class_name(sep)}'`
@@ -7148,7 +7153,7 @@ _b_.bytearray.nb_remainder=function(){var res=nb_remainder.apply(null,arguments)
 res.ob_type=$B.get_class(self)
 return res}
 _b_.bytearray.sq_ass_item=function(self,arg,value){if(value===$B.NULL){return bytearray_delitem(self,arg)}
-if($B.$isinstance(arg,_b_.int)){if(! $B.$isinstance(value,_b_.int)){$B.RAISE(_b_.TypeError,'an integer is required')}else if(value > 255){$B.RAISE(_b_.ValueError,"byte must be in range(0, 256)")}
+if($B.is_int(arg)){if(! $B.is_int(value)){$B.RAISE(_b_.TypeError,'an integer is required')}else if(value > 255){$B.RAISE(_b_.ValueError,"byte must be in range(0, 256)")}
 var pos=arg
 if(arg < 0){pos=self.source.length+pos}
 if(pos >=0 && pos < self.source.length){self.source[pos]=value}else{$B.RAISE(_b_.IndexError,'list index out of range')}}else if($B.$isinstance(arg,_b_.slice)){var start=arg.start===_b_.None ? 0 :arg.start
@@ -7159,7 +7164,7 @@ if(stop > self.source.length){check_exports(self)}
 self.source.splice(start,stop-start)
 try{var $temp=_b_.list.$factory(value)}catch(err){$B.RAISE(_b_.TypeError,"can only assign an iterable")}
 if($temp.length !=stop-start){check_exports(self)}
-for(var i=$temp.length-1;i >=0;i--){if(! $B.$isinstance($temp[i],_b_.int)){$B.RAISE(_b_.TypeError,'an integer is required')}else if($temp[i]> 255){$B.RAISE(_b_.ValueError,"byte must be in range(0, 256)")}
+for(var i=$temp.length-1;i >=0;i--){if(! $B.is_int($temp[i])){$B.RAISE(_b_.TypeError,'an integer is required')}else if($temp[i]> 255){$B.RAISE(_b_.ValueError,"byte must be in range(0, 256)")}
 self.source.splice(start,0,$temp[i])}}else{$B.RAISE(_b_.TypeError,'list indices must be integer, not '+
 $B.class_name(arg))}}
 _b_.bytearray.tp_repr=function(self){var b=_b_.bytes.tp_repr(self)
@@ -7199,7 +7204,7 @@ bytearray_funcs.__sizeof__=function(self){return 60}
 bytearray_funcs.append=function(self,b){check_exports(self)
 if(arguments.length !=2){$B.RAISE(_b_.TypeError,"append takes exactly one argument ("+(arguments.length-1)+
 " given)")}
-if(! $B.$isinstance(b,_b_.int)){$B.RAISE(_b_.TypeError,"an integer is required")}
+if(! $B.is_int(b)){$B.RAISE(_b_.TypeError,"an integer is required")}
 if(b > 255){$B.RAISE(_b_.ValueError,"byte must be in range(0, 256)")}
 self.source[self.source.length]=b}
 bytearray_funcs.capitalize=function(){return capitalize.apply(null,arguments)}
@@ -7230,7 +7235,7 @@ return res}
 bytearray_funcs.insert=function(self,pos,b){check_exports(self)
 if(arguments.length !=3){$B.RAISE(_b_.TypeError,"insert takes exactly 2 arguments ("+(arguments.length-1)+
 " given)")}
-if(! $B.$isinstance(b,_b_.int)){$B.RAISE(_b_.TypeError,"an integer is required")}
+if(! $B.is_int(b)){$B.RAISE(_b_.TypeError,"an integer is required")}
 if(b > 255){$B.RAISE(_b_.ValueError,"byte must be in range(0, 256)")}
 _b_.list.tp_funcs.insert(self.source,pos,b)}
 bytearray_funcs.isalnum=function(){return isalnum.apply(null,arguments)}
@@ -7354,8 +7359,8 @@ $B.set_func_names(bytes_iterator,'builtins')
 bytes.$getnewargs=function(self){return $B.fast_tuple([bytes_value(self)])}
 bytes.$new=function(cls,source,encoding,errors){
 var self={ob_type:cls},int_list=[],pos=0
-if(source===undefined){}else if(typeof source=="number" ||$B.$isinstance(source,_b_.int)){let i=source
-while(i--){int_list[pos++]=0}}else{if(typeof source=="string" ||$B.$isinstance(source,_b_.str)){if(encoding===undefined){$B.RAISE(_b_.TypeError,"string argument without an encoding")}
+if(source===undefined){}else if(typeof source=="number" ||$B.is_int(source)){let i=source
+while(i--){int_list[pos++]=0}}else{if(typeof source=="string" ||$B.is_str(source)){if(encoding===undefined){$B.RAISE(_b_.TypeError,"string argument without an encoding")}
 int_list=encode(source,encoding ||"utf-8",errors ||"strict")}else{if(encoding !==undefined){console.log('encoding',encoding)
 $B.RAISE(_b_.TypeError,"encoding without a string argument")}
 if(Array.isArray(source)){int_list=source}else{try{int_list=_b_.list.$factory(source)}catch(err){var bytes_method=$B.$getattr(source,'__bytes__',_b_.None)
@@ -7579,7 +7584,7 @@ var kw_errors=$B.str_dict_get(kw,'errors',$B.NULL)
 if(errors !==$B.NULL){if(kw_errors !==$B.NULL){$B.RAISE(_b_.TypeError,`argument for bytes() given by name ('errors') `+
 `and position (3)`
 )}}else{errors=kw_errors===$B.NULL ? 'strict' :kw_errors}
-if(typeof source=="string" ||$B.$isinstance(source,_b_.str)){if(encoding===$B.NULL){$B.RAISE(_b_.TypeError,'string argument without an encoding')}
+if(typeof source=="string" ||$B.is_str(source)){if(encoding===$B.NULL){$B.RAISE(_b_.TypeError,'string argument without an encoding')}
 let res=encode(source,encoding,errors)
 if(! $B.$isinstance(res,bytes)){$B.RAISE(_b_.TypeError,`'${encoding}' codec returns `+
 `${$B.class_name(res)}, not bytes`)}
@@ -7587,7 +7592,7 @@ res.ob_type=cls
 return res}
 if(encoding !==$B.NULL){console.log('encoding',encoding)
 $B.RAISE(_b_.TypeError,"encoding without a string argument")}
-if(typeof source=="number" ||$B.$isinstance(source,_b_.int)){var size=$B.PyNumber_Index(source)
+if(typeof source=="number" ||$B.is_int(source)){var size=$B.PyNumber_Index(source)
 source=[]
 for(var i=0;i < size;i++){source[i]=0}}else if($B.$isinstance(source,[_b_.bytes,_b_.bytearray])){source=source.source}else if($B.$isinstance(source,_b_.memoryview)){source=source.obj.source}else if($B.imported.array &&
 $B.$isinstance(source,$B.module_getattr($B.imported.array,'array'))){var array=$B.module_getattr($B.imported.array,'array')
@@ -7607,7 +7612,7 @@ if(source===undefined){console.log('bytes.__new__, no source',source)}
 return{
 ob_type:cls,source}}
 _b_.bytes.mp_length=function(self){return self.source.length}
-_b_.bytes.mp_subscript=function(self,arg){if($B.$isinstance(arg,_b_.int)){arg=$B.int_value(arg)
+_b_.bytes.mp_subscript=function(self,arg){if($B.is_int(arg)){arg=$B.int_value(arg)
 let pos=arg
 if(arg < 0){pos=self.source.length+pos}
 if(pos >=0 && pos < self.source.length){return self.source[pos]}
@@ -7761,7 +7766,7 @@ return res}else{$B.RAISE(_b_.TypeError,"memoryview: a bytes-like object "+
 "is required, not '"+$B.class_name(obj)+"'")}}
 _b_.memoryview.mp_length=function(self){return _b_.len(self.obj)/self.itemsize}
 _b_.memoryview.mp_subscript=function(self,key){var res
-if($B.$isinstance(key,_b_.int)){var start=key*self.itemsize
+if($B.is_int(key)){var start=key*self.itemsize
 if(self.format=="I"){res=self.obj.source[start]
 var coef=256
 for(var i=1;i < 4;i++){res+=self.obj.source[start+i]*coef
@@ -7786,7 +7791,7 @@ memoryview_funcs.cast=function(self,format,shape){if(! struct_format.hasOwnPrope
 var new_itemsize=struct_format[format].size
 if(shape===undefined){shape=_b_.len(self)}else{if(! $B.$isinstance(shape,[_b_.list,_b_.tuple])){$B.RAISE(_b_.TypeError,'shape must be a list or a tuple')}
 var nb=1
-for(var item of shape){if(! $B.$isinstance(item,_b_.int)){$B.RAISE(_b_.TypeError,'memoryview.cast(): elements of shape must be integers')}
+for(var item of shape){if(! $B.is_int(item)){$B.RAISE(_b_.TypeError,'memoryview.cast(): elements of shape must be integers')}
 nb*=item}
 if(nb*new_itemsize !=_b_.len(self)){$B.RAISE(_b_.TypeError,'memoryview: product(shape) * itemsize != buffer size')}}
 switch(format){case "B":
@@ -8257,7 +8262,7 @@ if($.start===null ||$.start===_b_.None){$.start=0}else if($.start < 0){$.start+=
 $.start=Math.max(0,$.start)}
 if($.end===null ||$.end===_b_.None){$.end=len}else if($.end < 0){$.end+=len
 $.end=Math.max(0,$.end)}
-if(! $B.$isinstance($.start,_b_.int)||! $B.$isinstance($.end,_b_.int)){$B.RAISE(_b_.TypeError,"slice indices must be integers "+
+if(! $B.is_int($.start)||! $B.is_int($.end)){$B.RAISE(_b_.TypeError,"slice indices must be integers "+
 "or None or have an __index__ method")}
 if($.self.surrogates){$.js_start=pypos2jspos($.self,$.start)
 $.js_end=pypos2jspos($.self,$.end)}}
@@ -8327,7 +8332,7 @@ var str_format=function(val,flags){
 flags.pad_char=" " 
 return format_padding(str.$factory(val),flags)}
 var num_format=function(val,flags){number_check(val,flags)
-if($B.$isinstance(val,_b_.float)){val=parseInt(val.value)}else if(! $B.$isinstance(val,_b_.int)){val=parseInt(val)}else if($B.$isinstance(val,_b_.bool)){val=val ? 1 :0}
+if($B.$isinstance(val,_b_.float)){val=parseInt(val.value)}else if(! $B.is_int(val)){val=parseInt(val)}else if($B.$isinstance(val,_b_.bool)){val=val ? 1 :0}
 var s=format_int_precision(val,flags)
 if(flags.pad_char==="0"){if(val < 0){s=s.substring(1)
 return "-"+format_padding(s,flags,true)}
@@ -8345,7 +8350,7 @@ return format_padding(ascii,flags)}
 var _float_helper=function(val,flags){number_check(val,flags)
 if(flags.precision===undefined){if(! flags.decimal_point){flags.precision=6}else{flags.precision=0}}else{flags.precision=parseInt(flags.precision,10)
 validate_precision(flags.precision)}
-return $B.$isinstance(val,_b_.int)? val :val.value}
+return $B.is_int(val)? val :val.value}
 var validate_precision=function(precision){
 if(precision > 20){precision=20}}
 function handle_special_values(value,upper){var special
@@ -8417,7 +8422,7 @@ return format_padding(format_sign(val,flags)+
 format_float_precision(val,upper,flags,_floating_exp_helper),flags)}
 $B.formatters={floating_point_format,floating_point_decimal_format,floating_point_exponential_format}
 var signed_hex_format=function(val,upper,flags){var ret
-if(! $B.$isinstance(val,_b_.int)){$B.RAISE(_b_.TypeError,`%X format: an integer is required, not ${$B.class_name(val)}`)}else if($B.$isinstance(val,_b_.bool)){val=val ? 1 :0}
+if(! $B.is_int(val)){$B.RAISE(_b_.TypeError,`%X format: an integer is required, not ${$B.class_name(val)}`)}else if($B.$isinstance(val,_b_.bool)){val=val ? 1 :0}
 if($B.is_big_int(val)){ret=$B.int_value(val).toString(16)}else{ret=parseInt(val)
 ret=ret.toString(16)}
 ret=format_int_precision(ret,flags)
@@ -8449,9 +8454,9 @@ throw err}}}else{try{var bytes_obj=$B.$getattr(val,"__bytes__")()
 return format_padding($B.bytes_decode(bytes_obj),flags)}catch(err){if($B.is_exc(err,_b_.AttributeError)){$B.RAISE(_b_.TypeError,"%b does not accept '"+
 $B.class_name(val)+"'")}
 throw err}}}
-var single_char_format=function(val,flags,type){if(type=='bytes'){if($B.$isinstance(val,_b_.int)){if($B.is_big_int(val)||val < 0 ||val > 255){$B.RAISE(_b_.OverflowError,"%c arg not in range(256)")}}else if($B.$isinstance(val,[_b_.bytes,_b_.bytearray])){if(val.source.length > 1){$B.RAISE(_b_.TypeError,"%c requires an integer in range(256) or a single byte")}
-val=val.source[0]}}else{if($B.$isinstance(val,_b_.str)){if(_b_.str.mp_length(val)==1){return val}
-$B.RAISE(_b_.TypeError,"%c requires int or char")}else if(! $B.$isinstance(val,_b_.int)){$B.RAISE(_b_.TypeError,"%c requires int or char")}
+var single_char_format=function(val,flags,type){if(type=='bytes'){if($B.is_int(val)){if($B.is_big_int(val)||val < 0 ||val > 255){$B.RAISE(_b_.OverflowError,"%c arg not in range(256)")}}else if($B.$isinstance(val,[_b_.bytes,_b_.bytearray])){if(val.source.length > 1){$B.RAISE(_b_.TypeError,"%c requires an integer in range(256) or a single byte")}
+val=val.source[0]}}else{if($B.is_str(val)){if(_b_.str.mp_length(val)==1){return val}
+$B.RAISE(_b_.TypeError,"%c requires int or char")}else if(! $B.is_int(val)){$B.RAISE(_b_.TypeError,"%c requires int or char")}
 if($B.is_big_int(val)){val=$B.int_value(val)
 if((val < 0 ||val >=0x110000)||
 (val < 0 ||val >=0x110000)){$B.RAISE(_b_.OverflowError,'%c arg not in range(0x110000)')}}}
@@ -8847,7 +8852,7 @@ default:
 return _b_.NotImplemented}}
 _b_.str.sq_repeat=function(self,other){$B.check_nb_args_no_kw('str.__mul__',2,arguments)
 var _self=to_string(self)
-if(! $B.$isinstance(other,_b_.int)){$B.RAISE(_b_.TypeError,"Can't multiply sequence by non-int of type '"+
+if(! $B.is_int(other)){$B.RAISE(_b_.TypeError,"Can't multiply sequence by non-int of type '"+
 $B.class_name(other)+"'")}
 return _self.repeat(other < 0 ? 0 :other)}
 _b_.str.nb_remainder=function(self,args){self=to_string(self)
@@ -8916,7 +8921,7 @@ if(self.len !==undefined){return self.len}
 var len=self.len=self.length-self.surrogates.length
 return len}
 _b_.str.mp_subscript=function(self,arg){self=to_string(self)
-if($B.$isinstance(arg,_b_.int)){var len=str.mp_length(self)
+if($B.is_int(arg)){var len=str.mp_length(self)
 var pos=arg
 if(arg < 0){pos+=len}
 if(pos >=0 && pos < len){var jspos=pypos2jspos(self,pos)
@@ -9177,15 +9182,15 @@ if($.y===null && $.z===null){
 if(! $B.$isinstance($.x,_b_.dict)){$B.RAISE(_b_.TypeError,"maketrans only argument must be a dict")}
 var items=_b_.list.$factory(_b_.dict.tp_funcs.items($.x))
 for(let i=0,len=items.length;i < len;i++){let k=items[i][0],v=items[i][1]
-if(! $B.$isinstance(k,_b_.int)){if($B.$isinstance(k,_b_.str)&& k.length==1){k=_b_.ord(k)}else{$B.RAISE(_b_.TypeError,"dictionary key "+k+
+if(! $B.is_int(k)){if($B.is_str(k)&& k.length==1){k=_b_.ord(k)}else{$B.RAISE(_b_.TypeError,"dictionary key "+k+
 " is not int or 1-char string")}}
 if(v !==_b_.None && ! $B.$isinstance(v,[_b_.int,_b_.str])){$B.RAISE(_b_.TypeError,"dictionary value "+v+
 " is not None, integer or string")}
 _b_.dict.$setitem(_t,k,v)}
 return _t}else{
-if(!($B.$isinstance($.x,_b_.str)&& $B.$isinstance($.y,_b_.str))){$B.RAISE(_b_.TypeError,"maketrans arguments must be strings")}else if($.x.length !==$.y.length){$B.RAISE(_b_.TypeError,"maketrans arguments must be strings or same length")}else{var toNone={}
+if(!($B.is_str($.x)&& $B.is_str($.y))){$B.RAISE(_b_.TypeError,"maketrans arguments must be strings")}else if($.x.length !==$.y.length){$B.RAISE(_b_.TypeError,"maketrans arguments must be strings or same length")}else{var toNone={}
 if($.z !==null){
-if(! $B.$isinstance($.z,_b_.str)){$B.RAISE(_b_.TypeError,"maketrans third argument must be a string")}
+if(! $B.is_str($.z)){$B.RAISE(_b_.TypeError,"maketrans third argument must be a string")}
 for(let i=0,len=$.z.length;i < len;i++){toNone[_b_.ord($.z.charAt(i))]=true}}
 for(let i=0,len=$.x.length;i < len;i++){var key=_b_.ord($.x.charAt(i)),value=$.y.charCodeAt(i)
 _b_.dict.$setitem(_t,key,value)}
@@ -9481,7 +9486,7 @@ $B.max_printable=10n**BigInt($B.int_max_str_digits)
 function $err(op,other){var msg="unsupported operand type(s) for "+op+
 " : 'int' and '"+$B.class_name(other)+"'"
 $B.RAISE(_b_.TypeError,msg)}
-function toBigInt(x){if(typeof x=='number'){return BigInt(x)}else if(typeof x=='bigint'){return x}else if(typeof x=='boolean'){return x ? 1n :0n}else if($B.$isinstance(x,_b_.int)){return toBigInt(x.value)}else{return $B.NULL}}
+function toBigInt(x){if(typeof x=='number'){return BigInt(x)}else if(typeof x=='bigint'){return x}else if(typeof x=='boolean'){return x ? 1n :0n}else if($B.is_int(x)){return toBigInt(x.value)}else{return $B.NULL}}
 var int_value=$B.int_value=function(obj){
 var res=obj.value ?? obj
 if(typeof res=="boolean"){return res ? 1 :0}
@@ -9565,7 +9570,7 @@ $B.RAISE(_b_.TypeError,`int expected at most 2 arguments, got ${args.length}`
 var initial_value=value
 if($B.$isinstance(value,[_b_.bytes,_b_.bytearray])){
 value=$B.$getattr(value,'decode')('latin-1')}else if($B.$isinstance(value,_b_.memoryview)){value=$B.$getattr(_b_.memoryview.tp_funcs.tobytes(value),'decode')('latin-1')}
-if(! $B.$isinstance(value,_b_.str)){if(base !==_b_.None){console.log('value',value,'base',base)
+if(! $B.is_str(value)){if(base !==_b_.None){console.log('value',value,'base',base)
 console.log(Error('trace').stack)
 $B.RAISE(_b_.TypeError,"int() can't convert non-string with explicit base")}else{
 for(let special_method of['__int__','__index__','__trunc__']){let num_value=$B.$getattr($B.get_class(value),special_method,_b_.None)
@@ -9575,7 +9580,7 @@ let index_method=$B.$getattr($B.get_class(res),'__index__',null)
 if(index_method===null){$B.RAISE(_b_.TypeError,'__trunc__ returned'+
 ` non-Integral (type ${$B.class_name(res)})`)}
 res=$B.$call(index_method,res)}
-if($B.$isinstance(res,_b_.int)){if(typeof res !=="number" && typeof res !='bigint'){$B.warn(_b_.DeprecationWarning,special_method+
+if($B.is_int(res)){if(typeof res !=="number" && typeof res !='bigint'){$B.warn(_b_.DeprecationWarning,special_method+
 ' returned non-int (type '+$B.class_name(res)+
 ').  The ability to return an instance of a '+
 'strict subclass of int is deprecated, and may '+
@@ -9642,7 +9647,7 @@ if(sign=='-'){res=-res}
 return int_or_long(res)}
 $B.set_func_names(int,"builtins")
 _b_.int.tp_richcompare=function(a,b,op){
-if(! $B.$isinstance(b,_b_.int)){return _b_.NotImplemented}
+if(! $B.is_int(b)){return _b_.NotImplemented}
 var res
 a=int_value(a)
 b=int_value(b)
@@ -9827,7 +9832,7 @@ int_funcs.real_get=function(self){return int_value(self)}
 int_funcs.real_set=_b_.None
 int_funcs.to_bytes=function(self){var $=$B.args("to_bytes",3,{self:null,len:null,byteorder:null,signed:null},arguments,{len:1,byteorder:'big',signed:false})
 var self=$.self,len=$.len,byteorder=$.byteorder,signed=$.signed
-if(! $B.$isinstance(len,_b_.int)){$B.RAISE(_b_.TypeError,"integer argument expected, got "+
+if(! $B.is_int(len)){$B.RAISE(_b_.TypeError,"integer argument expected, got "+
 $B.class_name(len))}
 if(["little","big"].indexOf(byteorder)==-1){$B.RAISE(_b_.ValueError,"byteorder must be either 'little' or 'big'")}
 var x=toBigInt(self)
@@ -9888,7 +9893,7 @@ $B.set_func_names(bool,"builtins")})(__BRYTHON__);
 ;
 "use strict";
 (function($B){var _b_=$B.builtins
-function conv_num(x){if(typeof x=='number'){return x}else if(typeof x=='bigint'){return Number(x)}else if($B.$isinstance(x,_b_.int)){
+function conv_num(x){if(typeof x=='number'){return x}else if(typeof x=='bigint'){return Number(x)}else if($B.is_int(x)){
 return conv_num(x.value)}else if(x.ob_type===_b_.float){return x.value}else if($B.$isinstance(x,_b_.float)){return x.value}
 return $B.NULL}
 function conv_number(...objs){var res=[]
@@ -10019,7 +10024,7 @@ function frexp(x){
 var x1=x
 if($B.$isinstance(x,float)){
 if(isnan(x)||isinf(x)){return[x,0]}
-x1=float_value(x).value}else if($B.$isinstance(x,_b_.int)){x=$B.int_value(x)
+x1=float_value(x).value}else if($B.is_int(x)){x=$B.int_value(x)
 if(typeof x=="bigint"){var exp=x.toString(2).length,power=2n**BigInt(exp)
 return[$B.fast_float(Number(x)/Number(power)),exp]}}
 if(x1==0){return[0,0]}
@@ -10081,7 +10086,7 @@ Float.prototype.valueOf=function(){return this.value}
 const fast_float=$B.fast_float=function(value){return new Float(value)}
 function conv_float(...objs){var res=[]
 for(var obj of objs){var x=$B.NULL
-if($B.$isinstance(obj,_b_.float)){x=obj}else if($B.$isinstance(obj,_b_.int)){x=_b_.int.nb_float(obj)}else{var float_method=$B.$getattr($B.get_class(obj),'__float__',$B.NULL)
+if($B.$isinstance(obj,_b_.float)){x=obj}else if($B.is_int(obj)){x=_b_.int.nb_float(obj)}else{var float_method=$B.$getattr($B.get_class(obj),'__float__',$B.NULL)
 if(float_method !==$B.NULL){x=$B.$call(float_method,obj)}}
 res.push(x)}
 return res}
@@ -10190,7 +10195,7 @@ _b_.float.nb_remainder=function(self,other){
 self=conv_float(self)[0]
 if(self===$B.NULL){return _b_.NotImplemented}
 if(other==0){$B.RAISE(_b_.ZeroDivisionError,"float modulo")}
-if($B.$isinstance(other,_b_.int)){other=_b_.int.tp_funcs.numerator_get(other)
+if($B.is_int(other)){other=_b_.int.tp_funcs.numerator_get(other)
 return fast_float((self.value % other+other)% other)}
 if($B.$isinstance(other,float)){
 var q=Math.floor(self.value/other.value),r=self.value-other.value*q
@@ -10279,7 +10284,7 @@ var divmod=_float_div_mod(x.value,y.value)
 return $B.fast_float(divmod.floordiv)}
 _b_.float.nb_true_divide=function(self,other){self=conv_float(self)[0]
 if(self===$B.NULL){return _b_.NotImplemented}
-if($B.$isinstance(other,_b_.int)){if(other.valueOf()==0){$B.RAISE(_b_.ZeroDivisionError,"division by zero")}else if($B.is_big_int(other)){return float.$factory(self.value/Number($B.int_value(other)))}
+if($B.is_int(other)){if(other.valueOf()==0){$B.RAISE(_b_.ZeroDivisionError,"division by zero")}else if($B.is_big_int(other)){return float.$factory(self.value/Number($B.int_value(other)))}
 return float.$factory(self.value/other)}else if($B.$isinstance(other,float)){if(other.value==0){$B.RAISE(_b_.ZeroDivisionError,"division by zero")}
 return float.$factory(self.value/other.value)}
 return _b_.NotImplemented}
@@ -10326,7 +10331,7 @@ var __float__=$B.search_in_mro(klass,'__float__')
 if(__float__){return __float__(number)}
 var __index__=$B.search_in_mro(klass,'__index__')
 if(__index__){var res=__index__(number)
-if($B.$isinstance(res,_b_.int)){return fast_float(res)}
+if($B.is_int(res)){return fast_float(res)}
 $B.RAISE(_b_.TypeError,'__index__ returned non-int of type '+
 $B.class_name(res))}
 $B.RAISE(_b_.TypeError,'TypeError: must be real number, not '+
@@ -10434,13 +10439,13 @@ const NINF=fast_float(Number.NEGATIVE_INFINITY),INF=fast_float(Number.POSITIVE_I
 "use strict";
 (function($B){var _b_=$B.builtins
 function conv_complex(...objs){var res=[]
-for(var obj of objs){if($B.$isinstance(obj,_b_.float)){res.push($B.make_complex(obj))}else if($B.$isinstance(obj,_b_.int)){res.push($B.make_complex(obj))}else{var complex_method=$B.$getattr($B.get_class(obj),'__complex__',$B.NULL)
+for(var obj of objs){if($B.$isinstance(obj,_b_.float)){res.push($B.make_complex(obj))}else if($B.is_int(obj)){res.push($B.make_complex(obj))}else{var complex_method=$B.$getattr($B.get_class(obj),'__complex__',$B.NULL)
 if(complex_method !==$B.NULL){res.push($B.$call(complex_method,obj))}else{res.push($B.NULL)}}}
 return res}
 var complex=_b_.complex
 function complex_eq(self,other){if($B.$isinstance(other,complex)){return self.real.value==other.real.value &&
 self.imag.value==other.imag.value}
-if($B.$isinstance(other,_b_.int)){if(self.imag.value !=0){return false}
+if($B.is_int(other)){if(self.imag.value !=0){return false}
 return self.real.value==other.valueOf()}
 if($B.$isinstance(other,_b_.float)){if(! $B.rich_comp('__eq__',0,self.imag)){return false}
 return self.real.value==other.value}
@@ -10531,7 +10536,7 @@ if($B.$isinstance(other,_b_.float)){other=_b_.float.$to_js_number(other)}
 if(x.real.value==0 && x.imag.value==0){if(y.imag.value !=0 ||y.real.value < 0){$B.RAISE(_b_.ZeroDivisionError,'0.0 to a negative or complex power')}
 return $B.make_complex(0,0)}
 var exp=complex2expo(x),angle=exp.angle
-if($B.$isinstance(other,_b_.int)){var res=Math.pow(exp.norm,other)
+if($B.is_int(other)){var res=Math.pow(exp.norm,other)
 return make_complex(res*Math.cos(angle*other),res*Math.sin(angle*other))}else if($B.$isinstance(other,_b_.float)){var res=Math.pow(exp.norm,other)
 return make_complex(res*Math.cos(angle*other.value),res*Math.sin(angle*other.value))}else if($B.$isinstance(other,complex)){
 var x=other.real.value,y=other.imag.value
@@ -12419,7 +12424,7 @@ $B.set_func_names($B.async_generator,"builtins")})(__BRYTHON__);
 (function($B){var _b_=$B.builtins,object=_b_.object,_window=globalThis
 function convertDomValue(v){if(v===null ||v===undefined){return _b_.None}
 return $B.jsobj2pyobj(v)}
-var py_immutable_to_js=$B.py_immutable_to_js=function(pyobj){if($B.$isinstance(pyobj,_b_.float)){return pyobj.value}else if($B.$isinstance(pyobj,_b_.int)&& typeof pyobj !=="boolean"){return Number($B.int_value(pyobj))}
+var py_immutable_to_js=$B.py_immutable_to_js=function(pyobj){if($B.$isinstance(pyobj,_b_.float)){return pyobj.value}else if($B.is_int(pyobj)&& typeof pyobj !=="boolean"){return Number($B.int_value(pyobj))}
 return $B.pyobj2jsobj(pyobj)}
 function $getPosition(e){var left=0,top=0,width=e.width ||e.offsetWidth,height=e.height ||e.offsetHeight
 while(e.offsetParent){left+=e.offsetLeft
@@ -12719,7 +12724,7 @@ var items=[]
 if(self.length !==undefined && typeof self.item=="function"){for(let i=0,len=self.length;i < len;i++){items.push(DOMNode.$factory(self.item(i)))}}else if(self.childNodes !==undefined){for(let child of self.childNodes){items.push(DOMNode.$factory(child))}}
 return $B.$iter(items)}
 DOMNode.sq_length=function(self){return self.childNodes.length}
-DOMNode.nb_multiply=function(self,other){if($B.$isinstance(other,_b_.int)&& other.valueOf()> 0){var res=TagSum.$factory()
+DOMNode.nb_multiply=function(self,other){if($B.is_int(other)&& other.valueOf()> 0){var res=TagSum.$factory()
 var pos=res.children.length
 for(var i=0;i < other.valueOf();i++){res.children[pos++]=DOMNode.tp_funcs.clone(self)}
 return res}
@@ -12943,7 +12948,7 @@ case "left":
 case "width":
 case "height":
 case "borderWidth":
-if($B.$isinstance(value,_b_.int)){value=value+"px"}}
+if($B.is_int(value)){value=value+"px"}}
 self.style[key]=value}}}
 DOMNode_funcs.top_get=function(self){return dimension_get(self,'top')}
 DOMNode_funcs.top_set=function(self,value){return dimension_set(self,'top',value)}
@@ -13876,7 +13881,7 @@ function f(ev){try{return callback($B.jsobj2pyobj(ev))}catch(err){$B.handle_erro
 $.elt.addEventListener($.evt,f,options)
 return callback}else if($B.$isinstance($.elt,$B.DOMNode)){
 $B.$call($B.$getattr($B.DOMNode,'bind'),$.elt,$.evt,callback,options)
-return callback}else if($B.$isinstance($.elt,_b_.str)){
+return callback}else if($B.is_str($.elt)){
 var items=document.querySelectorAll($.elt)
 var binder=$B.type_getattribute($B.DOMNode,'bind')
 for(var i=0;i < items.length;i++){$B.$call(binder,$B.DOMNode.$factory(items[i]),$.evt,callback,options)}

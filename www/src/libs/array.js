@@ -99,7 +99,7 @@ array.sq_length = function(self){
 }
 
 array.sq_repeat = function(self, nb){
-    if(typeof nb == "number" || $B.$isinstance(nb, _b_.int)){
+    if(typeof nb == "number" || $B.is_int(nb)){
         var t = [],
             copy = self.obj.slice()
         for(var i = 0; i < nb; i++){
@@ -120,7 +120,7 @@ array.bf_release_buffer = function(_self, buffer){
 }
 
 array.mp_ass_subscript = function(_self, index, value){
-    if($B.$isinstance(index, _b_.int)){
+    if($B.is_int(index)){
         if(_self.obj[index] === undefined){
             $B.RAISE(_b_.IndexError, "array index out of range")
         }

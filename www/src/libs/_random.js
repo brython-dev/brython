@@ -278,7 +278,7 @@ function RandomStream(seed) {
             return
         }
 
-        if(!$B.$isinstance(seed, _b_.int)){
+        if(!$B.is_int(seed)){
             seed = _b_.hash(seed)
         }
 

@@ -27,7 +27,7 @@ var float_check = function(x) {
 }
 
 function check_int(x){
-    if(! $B.$isinstance(x, _b_.int)){
+    if(! $B.is_int(x)){
         $B.RAISE(_b_.TypeError, "'" + $B.class_name(x) +
             "' object cannot be interpreted as an integer")
     }
@@ -35,7 +35,7 @@ function check_int(x){
 
 function check_int_or_round_float(x){
     return ($B.$isinstance(x, _b_.float) && Number.isInteger(x.value)) ||
-            $B.$isinstance(x, _b_.int)
+            $B.is_int(x)
 }
 
 var isWholeNumber = function(x){return (x * 10) % 10 == 0}
@@ -1456,7 +1456,7 @@ function gamma(x){
     /* special cases */
     if($B.$isinstance(x, _b_.float)){
         x_as_number = x.value
-    }else if(! $B.$isinstance(x, _b_.int)){
+    }else if(! $B.is_int(x)){
         $B.RAISE(_b_.TypeError, "must be real number, not " +
             $B.class_name(x))
     }
@@ -1851,7 +1851,7 @@ function log(x, base){
         return log2(x)
     }
     var log
-    if($B.$isinstance(x, _b_.int)){
+    if($B.is_int(x)){
         x = $B.int_value(x)
         if(x <= 0){
             $B.RAISE(_b_.ValueError, 'math domain error')
@@ -1885,7 +1885,7 @@ function log(x, base){
 function log1p(x){
     $B.check_nb_args('log1p', 1, arguments)
     $B.check_no_kw('log1p', x)
-    if($B.$isinstance(x, _b_.int)){
+    if($B.is_int(x)){
         x = $B.int_value(x)
         if(typeof x == 'bigint'){
             if(_b_.int.tp_funcs.bit_length(x) > 1024){
@@ -1907,7 +1907,7 @@ function log2(x){
     $B.check_nb_args('log2', 1, arguments)
     $B.check_no_kw('log2', x)
     var log2_func = Math.log2 || (x => Math.log(x) / Math.LN2)
-    if($B.$isinstance(x, _b_.int)){
+    if($B.is_int(x)){
         x = $B.int_value(x)
         if(typeof x == 'bigint'){
             if(x <= 0n){
@@ -2272,7 +2272,7 @@ function radians(x){
 function is_finite(x){
     return typeof x == "number" ||
                ($B.exact_type(x, _b_.float) && isFinite(x.value)) ||
-               $B.$isinstance(x, _b_.int) ||
+               $B.is_int(x) ||
                ($B.$isinstance(x, _b_.float) && isFinite(x.value))
 }
 

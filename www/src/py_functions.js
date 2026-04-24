@@ -280,7 +280,7 @@ function name_get(f){
 
 function name_set(f, value){
     $B.check_infos(f)
-    if(! $B.$isinstance(value, _b_.str)){
+    if(! $B.is_str(value)){
         $B.RAISE(_b_.TypeError,
             '__name__ must be set to a string object')
     }
@@ -294,7 +294,7 @@ function qualname_get(f){
 
 function qualname_set(f, value){
     $B.check_infos(f)
-    if(! $B.$isinstance(value, _b_.str)){
+    if(! $B.is_str(value)){
         $B.RAISE(_b_.TypeError,
             '__qualname__ must be set to a string object')
     }

@@ -285,6 +285,13 @@ $B.is_type = function(obj){
     return klass.tp_mro.includes(_b_.type)
 }
 
+$B.is_int = function(obj){
+    return typeof obj == 'number' ||
+           typeof obj == 'bigint' ||
+           typeof obj == 'boolean' ||
+           obj?.ob_type?.tp_flags & $B.TPFLAGS.LONG_SUBCLASS
+}
+
 $B.is_str = function(obj){
     return typeof obj == 'string' ||
         obj?.ob_type?.tp_flags & $B.TPFLAGS.UNICODE_SUBCLASS

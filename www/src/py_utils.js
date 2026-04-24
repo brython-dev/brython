@@ -884,7 +884,7 @@ $B.unpack_mapping = function(func, obj){
     var items = []
     if($B.$isinstance(obj, _b_.dict)){
         for(var item of _b_.dict.$iter_items(obj)){
-            if(! $B.$isinstance(item.key, _b_.str)){
+            if(! $B.is_str(item.key)){
                 $B.RAISE(_b_.TypeError, 'keywords must be strings')
             }
             items.push(item)
@@ -905,7 +905,7 @@ $B.unpack_mapping = function(func, obj){
     }
     var keys = $B.$call($B.$getattr(klass, 'keys'), obj)
     for(var key of $B.make_js_iterator(keys)){
-        if(! $B.$isinstance(key, _b_.str)){
+        if(! $B.is_str(key)){
             $B.RAISE(_b_.TypeError, 'keywords must be strings')
         }
         items.push({key, value: $B.$call(getitem, obj, key)})
@@ -1646,7 +1646,7 @@ $B.PyNumber_Index = function(item){
         case "bigint":
             return item
         case "object":
-            if($B.$isinstance(item, _b_.int)){
+            if($B.is_int(item)){
                 // int subclass
                 return item.value
             }
@@ -1929,9 +1929,10 @@ $B.rich_comp = function(op, x, y){
             }
         }
     }
-    var test = false // y === _b_.None && op == '__gt__'
+    var test = false // x === true && y === true // y === _b_.None && op == '__gt__'
     if(test){
         console.log('rich comp', x, y, op, 'res', res)
+        console.log('in mro', in_mro)
     }
     if(res !== _b_.NotImplemented){
         return res

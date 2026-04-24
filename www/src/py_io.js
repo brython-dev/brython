@@ -975,7 +975,7 @@ function _io_open_impl(file, mode, buffering, encoding, errors, newline,
 
     path_or_fd = file
 
-    if (! $B.$isinstance(path_or_fd, _b_.str)){
+    if (! $B.is_str(path_or_fd)){
         $B.RAISE(_b_.TypeError, `invalid file: ${file}`)
     }
 

@@ -444,7 +444,7 @@ $B.make_annotate_func = function(dict, annotations, class_frame){
 }
 
 $B.check_annotate_format = function(format){
-    if(! $B.$isinstance(format, _b_.int)){
+    if(! $B.is_int(format)){
         $B.RAISE(_b_.TypeError, '__annotate__ argument should be ' +
             `int, not ${$B.class_name(format)}`)
     }

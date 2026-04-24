@@ -664,7 +664,7 @@ BaseException_funcs.__traceback___set = function(self, value){
 
 BaseException_funcs.add_note = function(self, note){
     // PEP 678
-    if(! $B.$isinstance(note, _b_.str)){
+    if(! $B.is_str(note)){
         $B.RAISE(_b_.TypeError, 'note must be a str, not ' +
             `'${$B.class_name(note)}'`)
     }

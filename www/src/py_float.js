@@ -8,7 +8,7 @@ function conv_num(x){
         return x
     }else if(typeof x == 'bigint'){
         return Number(x)
-    }else if($B.$isinstance(x, _b_.int)){
+    }else if($B.is_int(x)){
         // int subclass
         return conv_num(x.value)
     }else if(x.ob_type === _b_.float){
@@ -370,7 +370,7 @@ function frexp(x){
             return [x, 0]
         }
         x1 = float_value(x).value
-    }else if($B.$isinstance(x, _b_.int)){
+    }else if($B.is_int(x)){
         x = $B.int_value(x)
         if(typeof x == "bigint"){
             var exp = x.toString(2).length,
@@ -562,7 +562,7 @@ function conv_float(...objs){
         var x = $B.NULL
         if($B.$isinstance(obj, _b_.float)){
             x = obj
-        }else if($B.$isinstance(obj, _b_.int)){
+        }else if($B.is_int(obj)){
             x = _b_.int.nb_float(obj)
         }else{
             var float_method = $B.$getattr($B.get_class(obj), '__float__', $B.NULL)
@@ -778,7 +778,7 @@ _b_.float.nb_remainder = function(self, other) {
     if(other == 0){
         $B.RAISE(_b_.ZeroDivisionError, "float modulo")
     }
-    if($B.$isinstance(other, _b_.int)){
+    if($B.is_int(other)){
         other = _b_.int.tp_funcs.numerator_get(other)
         return fast_float((self.value % other + other) % other)
     }
@@ -1029,7 +1029,7 @@ _b_.float.nb_true_divide = function(self, other){
     if(self === $B.NULL){
         return _b_.NotImplemented
     }
-    if($B.$isinstance(other, _b_.int)){
+    if($B.is_int(other)){
         if(other.valueOf() == 0){
             $B.RAISE(_b_.ZeroDivisionError, "division by zero")
         }else if($B.is_big_int(other)){
@@ -1166,7 +1166,7 @@ float_funcs.from_number = function(self){
     var __index__ = $B.search_in_mro(klass, '__index__')
     if(__index__){
         var res = __index__(number)
-        if($B.$isinstance(res, _b_.int)){
+        if($B.is_int(res)){
             return fast_float(res)
         }
         $B.RAISE(_b_.TypeError, '__index__ returned non-int of type ' +

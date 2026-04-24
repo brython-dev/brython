@@ -80,7 +80,7 @@ obj._is_valid = function(pattern) {
     if ($B.$options.re == 'jsre'){return true}   //force use of brythons re module
     // FIXME: Improve
 
-    if(! $B.$isinstance(pattern, _b_.str)){
+    if(! $B.is_str(pattern)){
        // this is probably a SRE_PATTERN, so return false, and let
        // python's re module handle this.
        return false

@@ -21,7 +21,7 @@ function toBigInt(x){
         return x
     }else if(typeof x == 'boolean'){
         return x ? 1n : 0n
-    }else if($B.$isinstance(x, _b_.int)){
+    }else if($B.is_int(x)){
         return toBigInt(x.value)
     }else{
         return $B.NULL
@@ -191,7 +191,7 @@ int.$factory = function(value, base){
         value = $B.$getattr(_b_.memoryview.tp_funcs.tobytes(value), 'decode')('latin-1')
     }
 
-    if(! $B.$isinstance(value, _b_.str)){
+    if(! $B.is_str(value)){
         if(base !== _b_.None){
             console.log('value', value, 'base', base)
             console.log(Error('trace').stack)
@@ -214,7 +214,7 @@ int.$factory = function(value, base){
                         }
                         res = $B.$call(index_method, res)
                     }
-                    if($B.$isinstance(res, _b_.int)){
+                    if($B.is_int(res)){
                         if(typeof res !== "number" && typeof res != 'bigint'){
                             $B.warn(_b_.DeprecationWarning, special_method +
                             ' returned non-int (type ' + $B.class_name(res) +
@@ -400,7 +400,7 @@ _b_.int.tp_richcompare = function(a, b, op){
     /* if a < b, return a negative number
        if a == b, return 0
        if a > b, return a positive number */
-    if(! $B.$isinstance(b, _b_.int)){
+    if(! $B.is_int(b)){
         return _b_.NotImplemented
     }
     var res
@@ -862,7 +862,7 @@ int_funcs.to_bytes = function(self){
         len = $.len,
         byteorder = $.byteorder,
         signed = $.signed
-    if(! $B.$isinstance(len, _b_.int)){
+    if(! $B.is_int(len)){
         $B.RAISE(_b_.TypeError, "integer argument expected, got " +
             $B.class_name(len))
     }
