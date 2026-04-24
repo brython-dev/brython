@@ -110,6 +110,9 @@ if(mro[0]!==cls){console.log('bizarre',cls,mro)}
 return mro}
 $B.is_type=function(obj){var klass=$B.get_class(obj)
 return klass.tp_mro.includes(_b_.type)}
+$B.is_str=function(obj){return typeof obj=='string' ||
+obj?.ob_type?.tp_flags & $B.TPFLAGS.UNICODE_SUBCLASS}
+$B.is_tuple=function(obj){return obj?.ob_type?.tp_flags & $B.TPFLAGS.TUPLE_SUBCLASS}
 $B.is_builtin_type=function(cls){return !(cls.tp_flags & $B.TPFLAGS.HEAPTYPE)}
 $B.is_big_int=function(obj){return typeof $B.int_value(obj)==='bigint'}
 $B.is_sequence=function(obj){var type=$B.get_class(obj)
@@ -678,8 +681,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-04-24 11:42:56.890616"
-__BRYTHON__.timestamp=1777023776890
+__BRYTHON__.compiled_date="2026-04-24 12:04:59.494043"
+__BRYTHON__.timestamp=1777025099493
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -8270,6 +8273,7 @@ function preformat(_self,fmt){if(fmt.empty){return _b_.str.$factory(_self)}
 if(fmt.type && fmt.type !="s"){$B.RAISE(_b_.ValueError,"Unknown format code '"+fmt.type+
 "' for object of type 'str'")}
 return _self}
+function startswith(self,prefix,start,end){if(end===null){return self.startsWith(prefix,start)}else if(end < start){return false}else if(prefix.length > end-start){return false}else{return self.startsWith(prefix,start)}}
 str.$getitem_slice=function(_self,slice){var len=str.mp_length(_self),s=_b_.slice.$conv_for_seq(slice,len),start=pypos2jspos(_self,s.start),stop=pypos2jspos(_self,s.stop),step=s.step
 var res=""
 if(step > 0){if(stop <=start){return ""}
@@ -9353,6 +9357,24 @@ $B.RAISE(_b_.TypeError,"endswith first arg must be str "+
 "or a tuple of str, not int")}
 if(s.substr(0,prefix.length)==prefix){return true}}
 return false}
+str_funcs.startswith=function(self,prefix,start,end){var args_length=arguments.length
+if(args_length==2 && ! prefix.$kw){start=0
+end=null}else if(args_length==3 && ! start.$kw){end=null}else if(args_length==4 && ! end.$kw){}else{var $=$B.args("startswith",4,{self:null,prefix:null,start:null,end:null},arguments,{start:0,end:null},null,null)
+self=$.self
+prefix=$.prefix
+start=$.start
+end=$.end}
+if(start !==0){start=$B.PyNumber_Index(start)
+if(start < 0){start+=self.length}}
+if(end !==null){end=$B.PyNumber_Index(end)
+if(end < 0){end+=self.length}}
+if($B.is_str(prefix)){return startswith(self,prefix,start,end)}else if($B.is_tuple(prefix)){for(var p of prefix){if(! $B.is_str(p)){$B.RAISE(_b_.TypeError,`TypeError: tuple for startswith must only contain `+
+`str, not ${$B.class_name(p)}`
+)}
+if(startswith(self,p,start,end)){return true}}
+return false}else{$B.RAISE(_b_.TypeError,`startswith first arg must be str or a tuple `+
+`of str, not ${$B.class_name(prefix)}`
+)}}
 str_funcs.strip=function(){var $=$B.args("strip",2,{self:null,chars:null},arguments,{chars:_b_.None},null,null)
 var _self=to_string($.self)
 if($.chars===_b_.None){return _self.trim()}

@@ -285,6 +285,15 @@ $B.is_type = function(obj){
     return klass.tp_mro.includes(_b_.type)
 }
 
+$B.is_str = function(obj){
+    return typeof obj == 'string' ||
+        obj?.ob_type?.tp_flags & $B.TPFLAGS.UNICODE_SUBCLASS
+}
+
+$B.is_tuple = function(obj){
+    return obj?.ob_type?.tp_flags & $B.TPFLAGS.TUPLE_SUBCLASS
+}
+
 $B.is_builtin_type = function(cls){
     return ! (cls.tp_flags & $B.TPFLAGS.HEAPTYPE)
 }

@@ -173,6 +173,18 @@ function preformat(_self, fmt){
     return _self
 }
 
+function startswith(self, prefix, start, end){
+    if(end === null){
+        return self.startsWith(prefix, start)
+    }else if(end < start){
+        return false
+    }else if(prefix.length > end - start){
+        return false
+    }else{
+        return self.startsWith(prefix, start)
+    }
+}
+
 str.$getitem_slice = function(_self, slice){
     var len = str.mp_length(_self),
         s = _b_.slice.$conv_for_seq(slice, len),
@@ -2978,7 +2990,7 @@ str_funcs.splitlines = function(self, keepends){
     }
     keepends = $B.$bool(keepends)
     self = to_string(self)
-    
+
     var res = $B.$list([])
 
     if(! self.length){
@@ -3061,6 +3073,59 @@ str_funcs.startswith = function(self){
         }
     }
     return false
+}
+
+str_funcs.startswith = function(self, prefix, start, end){
+    var args_length = arguments.length
+    if(args_length == 2 && ! prefix.$kw){
+        start = 0
+        end = null
+    }else if(args_length == 3 && ! start.$kw){
+        end = null
+    }else if(args_length == 4 && ! end.$kw){
+        //
+    }else{
+        var $ = $B.args("startswith", 4,
+                    {self: null, prefix: null, start: null, end: null},
+                    arguments, {start: 0, end: null}, null, null)
+        self = $.self
+        prefix = $.prefix
+        start = $.start
+        end = $.end
+    }
+    if(start !== 0){
+        start = $B.PyNumber_Index(start)
+        if(start < 0){
+            start += self.length
+        }
+    }
+    if(end !== null){
+        end = $B.PyNumber_Index(end)
+        if(end < 0){
+            end += self.length
+        }
+    }
+    if($B.is_str(prefix)){
+        return startswith(self, prefix, start, end)
+    }else if($B.is_tuple(prefix)){
+        for(var p of prefix){
+            if(! $B.is_str(p)){
+                $B.RAISE(_b_.TypeError,
+                    `TypeError: tuple for startswith must only contain ` +
+                    `str, not ${$B.class_name(p)}`
+                )
+            }
+            if(startswith(self, p, start, end)){
+                return true
+            }
+        }
+        return false
+    }else{
+        $B.RAISE(_b_.TypeError,
+            `startswith first arg must be str or a tuple ` +
+            `of str, not ${$B.class_name(prefix)}`
+        )
+    }
 }
 
 str_funcs.strip = function(){
