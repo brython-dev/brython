@@ -99,7 +99,7 @@ function conv_str(obj){
         return obj
     }else if(obj.ob_type == str){
         return obj
-    }else if($B.$isinstance(obj, str)){
+    }else if($B.is_str(obj)){
         return obj.$brython_value
     }
     return $B.NULL
@@ -149,7 +149,7 @@ function check_str(obj, prefix){
     if(obj instanceof String || typeof obj == "string"){
         return
     }
-    if(! $B.$isinstance(obj, str)){
+    if(! $B.is_str(obj)){
         $B.RAISE(_b_.TypeError, (prefix || '') +
             "must be str, not " + $B.class_name(obj))
     }
@@ -1266,17 +1266,17 @@ str.$factory = function(){
         // default values
         encoding = encoding === $B.NULL ? 'utf-8' : encoding
         errors = errors === $B.NULL ? 'strict' : errors
-        if(! $B.$isinstance(encoding, str)){
+        if(! $B.is_str(encoding)){
             $B.RAISE(_b_.TypeError,
                 `str() argument 'encoding' must be str, not ${$B.class_name(encoding)}`)
         }
-        if(! $B.$isinstance(errors, str)){
+        if(! $B.is_str(errors)){
             $B.RAISE(_b_.TypeError,
                 `str() argument 'errors' must be str, not ${$B.class_name(errors)}`)
         }
         res = $B.bytes_decode(arg, encoding, errors)
     }
-    if(typeof res == "string" || $B.$isinstance(res, str)){
+    if($B.is_str(res)){
         return res
     }
     $B.RAISE(_b_.TypeError, "__str__ returned non-string " +
@@ -1712,7 +1712,7 @@ $B.jsstring2codepoint = function(c){
 
 /* str start */
 _b_.str.tp_richcompare = function(self, other, op){
-    if(! $B.$isinstance(other, str)){
+    if(! $B.is_str(other)){
         return _b_.NotImplemented
     }
     [self, other] = to_string(self, other)
@@ -1931,7 +1931,7 @@ _b_.str.mp_subscript = function(self, arg){
 }
 
 _b_.str.sq_concat = function(self, other){
-    if(! $B.$isinstance(other, str)){
+    if(! $B.is_str(other)){
         return _b_.NotImplemented
     }
     [self, other] = to_string(self, other)
@@ -1942,7 +1942,7 @@ _b_.str.sq_concat = function(self, other){
 }
 
 _b_.str.sq_contains = function(self, item){
-    if(! $B.$isinstance(item, str)){
+    if(! $B.is_str(item)){
         $B.RAISE(_b_.TypeError, "'in <string>' requires " +
             "string as left operand, not " + $B.class_name(item))
     }
@@ -2031,7 +2031,7 @@ str_funcs.count = function(){
         _self,
         sub
 
-    if(! $B.$isinstance($.sub, str)){
+    if(! $B.is_str($.sub)){
         $B.RAISE(_b_.TypeError, "Can't convert '" + $B.class_name($.sub) +
             "' object to str implicitly")
     }
@@ -2120,7 +2120,7 @@ str_funcs.endswith = function(self, suffix){
         s = chars.slice($.start, $.end)
     for(var i = 0, len = suffixes.length; i < len; i++){
         var suffix = suffixes[i]
-        if(! $B.$isinstance(suffix, str)){
+        if(! $B.is_str(suffix)){
             $B.RAISE(_b_.TypeError,
                 "endswith first arg must be str or a tuple of str, not int")
         }
@@ -2553,7 +2553,7 @@ str_funcs.join = function(self, iterable){
     while(1){
         try{
             var obj2 = _b_.next(iterable)
-            if(! $B.$isinstance(obj2, str)){
+            if(! $B.is_str(obj2)){
                 console.log('str join', arguments)
 
                 $B.RAISE(_b_.TypeError, "sequence item " + count +
@@ -2703,7 +2703,7 @@ str_funcs.partition = function(self, sep) {
 str_funcs.removeprefix = function(self, prefix){
     $B.check_nb_args_no_kw('str.removeprefix', 2, arguments)
     var _self
-    if(!$B.$isinstance(prefix, str)){
+    if(! $B.is_str(prefix)){
         $B.RAISE(_b_.ValueError, "prefix should be str, not " +
             `'${$B.class_name(prefix)}'`)
     }
@@ -2717,7 +2717,7 @@ str_funcs.removeprefix = function(self, prefix){
 str_funcs.removesuffix = function(self, suffix){
     $B.check_nb_args_no_kw('str.removesuffix', 2, arguments)
     var _self
-    if(!$B.$isinstance(suffix, str)){
+    if(! $B.is_str(suffix)){
         $B.RAISE(_b_.ValueError, "suffix should be str, not " +
             `'${$B.class_name(suffix)}'`)
     }
@@ -3063,8 +3063,7 @@ str_funcs.startswith = function(self){
     prefixes = Array.isArray(prefixes) ? prefixes : [prefixes]
     var s = _self.substring($.start, $.end)
     for(var prefix of prefixes){
-        if(! $B.$isinstance(prefix, str)){
-            console.log($.prefix, 'prefix', prefix)
+        if(! $B.is_str(prefix)){
             $B.RAISE(_b_.TypeError, "endswith first arg must be str " +
                 "or a tuple of str, not int")
         }

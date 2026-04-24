@@ -688,8 +688,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-04-24 18:16:51.410225"
-__BRYTHON__.timestamp=1777047411409
+__BRYTHON__.compiled_date="2026-04-24 18:25:59.213786"
+__BRYTHON__.timestamp=1777047959213
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -8260,7 +8260,7 @@ function to_string(...args){if(args.length==1){return conv_str(args[0])}
 var res=[]
 for(var arg of args){res.push(conv_str(arg))}
 return res}
-function conv_str(obj){if(typeof obj=='string'){return obj}else if(obj.ob_type==str){return obj}else if($B.$isinstance(obj,str)){return obj.$brython_value}
+function conv_str(obj){if(typeof obj=='string'){return obj}else if(obj.ob_type==str){return obj}else if($B.is_str(obj)){return obj.$brython_value}
 return $B.NULL}
 var str=_b_.str
 str.$is_sequence=true
@@ -8278,7 +8278,7 @@ $.js_end=pypos2jspos($.self,$.end)}}
 function reverse(s){
 return s.split("").reverse().join("")}
 function check_str(obj,prefix){if(obj instanceof String ||typeof obj=="string"){return}
-if(! $B.$isinstance(obj,str)){$B.RAISE(_b_.TypeError,(prefix ||'')+
+if(! $B.is_str(obj)){$B.RAISE(_b_.TypeError,(prefix ||'')+
 "must be str, not "+$B.class_name(obj))}}
 function to_chars(s){
 s=to_string(s)
@@ -8653,10 +8653,10 @@ $B.RAISE(_b_.TypeError,`decoding to str: need a bytes-like object, `+
 )}
 encoding=encoding===$B.NULL ? 'utf-8' :encoding
 errors=errors===$B.NULL ? 'strict' :errors
-if(! $B.$isinstance(encoding,str)){$B.RAISE(_b_.TypeError,`str() argument 'encoding' must be str, not ${$B.class_name(encoding)}`)}
-if(! $B.$isinstance(errors,str)){$B.RAISE(_b_.TypeError,`str() argument 'errors' must be str, not ${$B.class_name(errors)}`)}
+if(! $B.is_str(encoding)){$B.RAISE(_b_.TypeError,`str() argument 'encoding' must be str, not ${$B.class_name(encoding)}`)}
+if(! $B.is_str(errors)){$B.RAISE(_b_.TypeError,`str() argument 'errors' must be str, not ${$B.class_name(errors)}`)}
 res=$B.bytes_decode(arg,encoding,errors)}
-if(typeof res=="string" ||$B.$isinstance(res,str)){return res}
+if($B.is_str(res)){return res}
 $B.RAISE(_b_.TypeError,"__str__ returned non-string "+
 `(type ${$B.class_name(res)})`)}
 $B.parse_format_spec=function(spec,obj){if(spec==""){this.empty=true}else{var pos=0,aligns="<>=^",digits="0123456789",types="bcdeEfFgGnosxX%",align_pos=aligns.indexOf(spec.charAt(0))
@@ -8841,7 +8841,7 @@ var code=0x10000
 code+=(c.charCodeAt(0)& 0x03FF)<< 10
 code+=(c.charCodeAt(1)& 0x03FF)
 return code}
-_b_.str.tp_richcompare=function(self,other,op){if(! $B.$isinstance(other,str)){return _b_.NotImplemented}
+_b_.str.tp_richcompare=function(self,other,op){if(! $B.is_str(other)){return _b_.NotImplemented}
 [self,other]=to_string(self,other)
 self+=''
 other+=''
@@ -8939,11 +8939,11 @@ $B.RAISE(_b_.IndexError,"string index out of range")}
 if($B.$isinstance(arg,_b_.slice)){return _b_.str.$getitem_slice(self,arg)}
 if($B.$isinstance(arg,_b_.bool)){return self.__getitem__(_b_.int.$factory(arg))}
 $B.RAISE(_b_.TypeError,"string indices must be integers")}
-_b_.str.sq_concat=function(self,other){if(! $B.$isinstance(other,str)){return _b_.NotImplemented}
+_b_.str.sq_concat=function(self,other){if(! $B.is_str(other)){return _b_.NotImplemented}
 [self,other]=to_string(self,other)
 if(typeof self=='string' && typeof other=='string'){return self+other}
 return $B.String(self+other)}
-_b_.str.sq_contains=function(self,item){if(! $B.$isinstance(item,str)){$B.RAISE(_b_.TypeError,"'in <string>' requires "+
+_b_.str.sq_contains=function(self,item){if(! $B.is_str(item)){$B.RAISE(_b_.TypeError,"'in <string>' requires "+
 "string as left operand, not "+$B.class_name(item))}
 [self,item]=to_string(self,item)
 return self.includes(item)}
@@ -8973,7 +8973,7 @@ res+=self+res
 if(res.length < $.width){res+=$.fillchar}
 return res}
 str_funcs.count=function(){var $=$B.args("count",4,{self:null,sub:null,start:null,stop:null},arguments,{start:null,stop:null},null,null),_self,sub
-if(! $B.$isinstance($.sub,str)){$B.RAISE(_b_.TypeError,"Can't convert '"+$B.class_name($.sub)+
+if(! $B.is_str($.sub)){$B.RAISE(_b_.TypeError,"Can't convert '"+$B.class_name($.sub)+
 "' object to str implicitly")}
 [_self,sub]=to_string($.self,$.sub)
 var substr=_self
@@ -9004,7 +9004,7 @@ var suffixes=$.suffix
 if(! $B.is_tuple(suffixes)){suffixes=[suffixes]}
 var chars=to_chars(_self),s=chars.slice($.start,$.end)
 for(var i=0,len=suffixes.length;i < len;i++){var suffix=suffixes[i]
-if(! $B.$isinstance(suffix,str)){$B.RAISE(_b_.TypeError,"endswith first arg must be str or a tuple of str, not int")}
+if(! $B.is_str(suffix)){$B.RAISE(_b_.TypeError,"endswith first arg must be str or a tuple of str, not int")}
 suffix=suffix.ob_type ? suffix.$brython_value :suffix
 if(suffix.length <=s.length &&
 s.slice(s.length-suffix.length).join('')==suffix){return true}}
@@ -9163,7 +9163,7 @@ var _self=to_string(self)
 iterable=_b_.iter(iterable)
 var res=[],count=0
 while(1){try{var obj2=_b_.next(iterable)
-if(! $B.$isinstance(obj2,str)){console.log('str join',arguments)
+if(! $B.is_str(obj2)){console.log('str join',arguments)
 $B.RAISE(_b_.TypeError,"sequence item "+count+
 ": expected str instance, "+$B.class_name(obj2)+
 " found")}
@@ -9215,14 +9215,14 @@ if(i==-1){return _b_.tuple.$factory([_self,"",""])}
 return _b_.tuple.$factory([chars.slice(0,i).join(''),sep,chars.slice(i+sep.length).join('')])}
 str_funcs.removeprefix=function(self,prefix){$B.check_nb_args_no_kw('str.removeprefix',2,arguments)
 var _self
-if(!$B.$isinstance(prefix,str)){$B.RAISE(_b_.ValueError,"prefix should be str, not "+
+if(! $B.is_str(prefix)){$B.RAISE(_b_.ValueError,"prefix should be str, not "+
 `'${$B.class_name(prefix)}'`)}
 [_self,prefix]=to_string(self,prefix)
 if(str.tp_funcs.startswith(_self,prefix)){return _self.substr(prefix.length)}
 return _self.substr(0)}
 str_funcs.removesuffix=function(self,suffix){$B.check_nb_args_no_kw('str.removesuffix',2,arguments)
 var _self
-if(!$B.$isinstance(suffix,str)){$B.RAISE(_b_.ValueError,"suffix should be str, not "+
+if(! $B.is_str(suffix)){$B.RAISE(_b_.ValueError,"suffix should be str, not "+
 `'${$B.class_name(suffix)}'`)}
 [_self,suffix]=to_string(self,suffix)
 if(suffix.length > 0 && str.tp_funcs.endswith(_self,suffix)){return _self.substr(0,_self.length-suffix.length)}
@@ -9366,8 +9366,7 @@ if(! $B.is_tuple(prefixes)){prefixes=[prefixes]}
 prefixes=to_string(...prefixes)
 prefixes=Array.isArray(prefixes)? prefixes :[prefixes]
 var s=_self.substring($.start,$.end)
-for(var prefix of prefixes){if(! $B.$isinstance(prefix,str)){console.log($.prefix,'prefix',prefix)
-$B.RAISE(_b_.TypeError,"endswith first arg must be str "+
+for(var prefix of prefixes){if(! $B.is_str(prefix)){$B.RAISE(_b_.TypeError,"endswith first arg must be str "+
 "or a tuple of str, not int")}
 if(s.substr(0,prefix.length)==prefix){return true}}
 return false}
