@@ -2878,7 +2878,7 @@ str_funcs.rsplit = function(){
 }
 
 str_funcs.rstrip = function(){
-    var $ = $B.args("rstrip", 2, {self: null, chars: null}, 
+    var $ = $B.args("rstrip", 2, {self: null, chars: null},
                 arguments, {chars: _b_.None}, null, null)
     var chars = $.chars,
         _self = to_string($.self)
@@ -2902,130 +2902,132 @@ str_funcs.rstrip = function(){
     return ''
 }
 
-$B.time_string_split = 0
-
-str_funcs.split = function(){
-    var $ = $B.args("split", 3, {self: null, sep: null, maxsplit: null},
-                arguments, {sep: _b_.None, maxsplit: -1}, null, null),
-        maxsplit = $.maxsplit,
-        sep = $.sep,
-        pos = 0,
-        _self = to_string($.self)
+str_funcs.split = function(self, sep, maxsplit){
+    var locals
+    if(arguments.length == 3 && ! maxsplit.$kw){
+        self = to_string(self)
+    }else if(arguments.length == 2 && ! sep.$kw){
+        self = to_string(self)
+        maxsplit = -1
+    }else if(arguments.length == 1 && ! self.$kw){
+        self = to_string(self)
+        sep = _b_.None
+        maxsplit = -1
+    }else{
+        var $ = $B.args("split", 3, {self: null, sep: null, maxsplit: null},
+                    arguments, {sep: _b_.None, maxsplit: -1}, null, null),
+            maxsplit = $.maxsplit,
+            sep = $.sep,
+            self = to_string($.self)
+    }
+    var pos = 0
     if($B.is_big_int(maxsplit)){
         maxsplit = Number($B.int_value(maxsplit))
     }
     if(sep == ""){
         $B.RAISE(_b_.ValueError, "empty separator")
     }
-
     if(sep === _b_.None){
-        let res = []
-        while(pos < _self.length && _self.charAt(pos).search(/\s/) > -1){
-            pos++
-        }
-        if(pos === _self.length - 1){
-            return $B.$list([_self])
-        }
-        let name = ""
-        while(1){
-            if(_self.charAt(pos).search(/\s/) == -1){
-                if(name == ""){
-                    name = _self.charAt(pos)
-                }else{
-                    name += _self.charAt(pos)
-                }
-            }else{
-                if(name !== ""){
-                    res.push(name)
-                    if(maxsplit !== -1 && res.length == maxsplit + 1){
-                        res.pop()
-                        res.push(name + _self.substr(pos))
-                        return $B.$list(res.map($B.String))
-                    }
-                    name = ""
-                }
-            }
-            pos++
-            if(pos > _self.length - 1){
-                if(name){
-                    res.push(name)
-                }
-                break
-            }
-        }
-        return $B.$list(res.map($B.String))
-    }else{
-        if(! $B.$isinstance(sep, _b_.str)){
-            $B.RAISE(_b_.TypeError, 'must be str or None, not ' +
-                $B.class_name(sep))
-        }
-        sep = to_string(sep)
-        let res,
-            s = "",
-            seplen = sep.length
         if(maxsplit == 0){
-            res = $B.$list([$.self])
-            return res
-        }else if(maxsplit == -1){
-            res = _self.split(sep)
-            if(_self.surrogates){
-                res = res.map($B.String)
-            }
-            return $B.$list(res)
+            return $B.$list([self.trimLeft()])
         }
-        // can't use Javascript split(sep, maxsplit) because the part after
-        // maxplit is lost
-        res = []
-        while(pos < _self.length){
-            var ix = _self.indexOf(sep, pos)
-            if(ix == -1){
-                res.push(_self.substr(pos))
-                break
-            }
-            res.push(_self.substring(pos, ix))
-            pos = ix + seplen
-            if(maxsplit > -1 && res.length >= maxsplit){
-                res.push(_self.substr(pos))
-                break
-            }
+        sep = /\s+/g
+        if(maxsplit == -1){
+            return $B.$list(self.trim().split(sep))
         }
-        if(_self.surrogates){
-            res = res.map($B.String)
-        }
-        return $B.$list(res)
+        self = self.trimLeft()
     }
+
+    var res = self.split(sep, maxsplit)
+    if(maxsplit != -1){
+        // get the part after the last split
+        var nb_split = 0
+        var re = sep instanceof RegExp ? sep :
+                     new RegExp(RegExp.escape(sep), 'g')
+        var mo
+        for(mo of self.matchAll(re)){
+            nb_split++
+            if(nb_split == maxsplit){
+                break
+            }
+        }
+        if(mo){
+            var pos = mo.index + mo[0].length
+            if(pos < self.length){
+                res.push(self.substr(pos))
+            }
+        }
+    }
+    if(self instanceof String){
+        res = res.map($B.String)
+    }
+    return $B.$list(res)
 }
 
-str_funcs.splitlines = function(){
-    var $ = $B.args('splitlines', 2, {self: null, keepends: null},
-                arguments, {keepends: false}, null, null)
-    if(!$B.$isinstance($.keepends, [_b_.bool, _b_.int])){
-        throw _b_.TypeError('integer argument expected, got '+
-            $B.class_name($.keepends))
+str_funcs.splitlines = function(self, keepends){
+    var args_length = arguments.length
+    if(args_length == 1 && ! self.$kw){
+        keepends = false
+    }else if(args_length == 2 && ! keepends.$kw){
+        //
+    }else{
+        var $ = $B.args('splitlines', 2, {self: null, keepends: null},
+                    arguments, {keepends: false}, null, null)
+        self = $.self
+        keepends = $.keepends
     }
-    var keepends = $B.int_value($.keepends),
-        res = $B.$list([]),
-        start = 0,
-        pos = 0,
-        _self = to_string($.self)
-    if(! _self.length){
+    keepends = $B.$bool(keepends)
+    self = to_string(self)
+    
+    var res = $B.$list([])
+
+    if(! self.length){
         return res
     }
-    while(pos < _self.length){
-        if(_self.substr(pos, 2) == '\r\n'){
-            res.push(_self.slice(start, keepends ? pos + 2 : pos))
-            start = pos = pos+2
-        }else if(_self[pos] == '\r' || _self[pos] == '\n'){
-            res.push(_self.slice(start, keepends ? pos+1 : pos))
-            start = pos = pos+1
-        }else{
-            pos++
+    var buf = ''
+    var pos = 0
+    var it = self[Symbol.iterator]()
+    for(var char of it){
+        switch(char){
+            case '\r':
+                if(self[pos + 1] == '\n'){
+                    res.push(buf + (keepends ? '\r\n' : ''))
+                    it.next()
+                    pos++
+                }else{
+                    res.push(buf + (keepends ? '\r' : ''))
+                }
+                buf = ''
+                pos++
+                break
+            case '\n': // Line Feed
+            case '\r': // Carriage Return,
+            case '\v':
+            case '\x0b': // Line Tabulation
+            case '\f':
+            case '\x0c': // Form Feed,
+            case '\x1c': // File Separator
+            case '\x1d': // Group Separator,
+            case '\x1e': // Record Separator,
+            case '\x85': // Next Line (C1 Control Code)
+            case '\u2028': // Line Separator
+            case '\u2029': // Paragraph Separator
+                res.push(buf + (keepends ? char : ''))
+                buf = ''
+                pos++
+                break
+            default:
+                buf += char
+                pos++
         }
     }
-    if(start < _self.length){
-        res.push(_self.slice(start))
+    if(buf != ''){
+        res.push(buf)
     }
-    return $B.$list(res.map($B.String))
+    if(res instanceof String){
+        res = res.map($B.String)
+    }
+    return res
 }
 
 str_funcs.startswith = function(self){
