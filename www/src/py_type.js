@@ -1348,6 +1348,11 @@ _b_.type.tp_new = function(cls, args, kw){
         tp_flags: $B.TPFLAGS.DEFAULT | $B.TPFLAGS.HEAPTYPE |
                    $B.TPFLAGS.BASETYPE | $B.TPFLAGS.HAVE_GC
     }
+    for(var base of bases){
+        class_obj.tp_flags |= base.tp_flags & $B.TPFLAGS.UNICODE_SUBCLASS
+        class_obj.tp_flags |= base.tp_flags & $B.TPFLAGS.LONG_SUBCLASS
+        class_obj.tp_flags |= base.tp_flags & $B.TPFLAGS.TUPLE_SUBCLASS
+    }        
     $B.set_dict(class_obj, cl_dict)
     class_obj.tp_mro = $B.make_mro(class_obj)
     class_obj.tp_subclasses = []
