@@ -460,7 +460,7 @@ BytesIO_funcs.__setstate__ = function(_self, state){
     if(_self.closed){
         $B.RAISE(_b_.ValueError, "__setstate__ on closed file")
     }
-    if(! $B.$isinstance(state, _b_.tuple)){
+    if(! $B.is_tuple(state)){
         $B.RAISE(_b_.TypeError,
             `${$B.class_name(_self)}.__setstate__ argument ` +
             `should be 3-tuple, got ${$B.class_name(state)}`)
@@ -483,7 +483,7 @@ BytesIO_funcs.__setstate__ = function(_self, state){
     obj._pos = position
 
     if(dict != _b_.None){
-        if(! $B.$isinstance(dict, _b_.dict)){
+        if(! $B.is_dict(dict)){
             $B.RAISE(_b_.TypeError, "third item of state should be a dict, " +
                 `got a ${$B.class_name(dict)}`)
         }

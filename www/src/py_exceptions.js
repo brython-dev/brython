@@ -635,7 +635,7 @@ BaseException_funcs.__reduce__ = function(self){
 
 BaseException_funcs.__setstate__ = function(self, state){
     if(state != _b_.None){
-        if(! $B.$isinstance(state, _b_.dict)){
+        if(! $B.is_dict(state)){
             $B.RAISE(_b_.TypeError, "state is not a dictionary")
         }
         for(var entry of _b_.dict.$iter_items(state)){

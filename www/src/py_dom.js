@@ -1381,7 +1381,7 @@ DOMNode_funcs.style_set = function(self, style){ // style is a dict
     if(typeof style === 'string'){
         self.style = style
         return
-    }else if(!$B.$isinstance(style, _b_.dict)){
+    }else if(!$B.is_dict(style)){
         $B.RAISE(_b_.TypeError, "style must be str or dict, not " +
             $B.class_name(style))
     }

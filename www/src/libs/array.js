@@ -51,7 +51,7 @@ function make_array(args, kw){
     if(initializer !== $B.NULL){
         if(Array.isArray(initializer)){
             array_funcs.fromlist(res, initializer)
-        }else if($B.$isinstance(initializer, _b_.bytes)){
+        }else if($B.is_bytes(initializer)){
             array_funcs.frombytes(res, initializer)
         }else{
             array_funcs.extend(res, initializer)
@@ -248,7 +248,7 @@ array_funcs.extend = function(self, iterable){
 
 array_funcs.frombytes = function(self, s){
     $B.args("frombytes", 2, {self: null, s: null}, arguments)
-    if(! $B.$isinstance(s, _b_.bytes)){
+    if(! $B.is_bytes(s)){
         $B.RAISE(_b_.TypeError, "a bytes-like object is required, " +
             "not '" + $B.class_name(s) + "'")
     }

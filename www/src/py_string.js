@@ -915,7 +915,7 @@ $B.printf_format = function(s, type, args){
     // args are the arguments passed to %
     var argpos = null,
         getitem
-    if($B.$isinstance(args, _b_.tuple)){
+    if($B.is_tuple(args)){
         argpos = 0
     }else{
         getitem = $B.$getattr(args, "__getitem__", _b_.None)
@@ -939,7 +939,7 @@ $B.printf_format = function(s, type, args){
             nbph++
             if(nbph > 1){
                 // issue 2184
-                if((! $B.$isinstance(args, _b_.tuple)) &&
+                if((! $B.is_tuple(args)) &&
                         ! is_mapping(args)){
                     $B.RAISE(_b_.TypeError,
                         "not enough arguments for format string")
@@ -2112,7 +2112,7 @@ str_funcs.endswith = function(self, suffix){
     _self = to_string($.self)
 
     var suffixes = $.suffix
-    if(! $B.$isinstance(suffixes, _b_.tuple)){
+    if(! $B.is_tuple(suffixes)){
         suffixes = [suffixes]
     }
 
@@ -2627,7 +2627,7 @@ str_funcs.maketrans = function(){
         // Unicode ordinals (integers) or characters (strings of length 1) to
         // Unicode ordinals, strings (of arbitrary lengths) or None. Character
         // keys will then be converted to ordinals.
-        if(! $B.$isinstance($.x, _b_.dict)){
+        if(! $B.is_dict($.x)){
             $B.RAISE(_b_.TypeError,
                 "maketrans only argument must be a dict")
         }
@@ -3056,7 +3056,7 @@ str_funcs.startswith = function(self){
     _self = to_string($.self)
 
     var prefixes = $.prefix
-    if(! $B.$isinstance(prefixes, _b_.tuple)){
+    if(! $B.is_tuple(prefixes)){
         prefixes = [prefixes]
     }
     prefixes = to_string(...prefixes)

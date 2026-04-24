@@ -40,7 +40,7 @@ function count(self){
 }
 
 function sq_repeat(self, other){
-    var cls = $B.$isinstance(self, _b_.list) ? _b_.list : _b_.tuple
+    var cls = $B.is_list(self) ? _b_.list : _b_.tuple
     if($B.$isinstance(other, [_b_.float, _b_.complex])){
         $B.RAISE(_b_.TypeError, "'" + $B.class_name(other) +
                 "' object cannot be interpreted as an integer")
@@ -178,7 +178,7 @@ function sq_contains(self){
 }
 
 function tp_richcompare(self, other, op){
-    var cls = $B.$isinstance(self, _b_.list) ? _b_.list : _b_.tuple
+    var cls = $B.is_list(self) ? _b_.list : _b_.tuple
     if(! $B.$isinstance(other, cls)){
         return _b_.NotImplemented
     }

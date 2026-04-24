@@ -4135,7 +4135,7 @@ var module = {
         if(data.type === "bytes"){
             res = res.map(
                 function(x){
-                    return $B.$isinstance(x, _b_.bytes) ?
+                    return $B.is_bytes(x) ?
                                x :
                                _b_.str.encode(x, "latin-1")
                 }

@@ -285,11 +285,23 @@ $B.is_type = function(obj){
     return klass.tp_mro.includes(_b_.type)
 }
 
+$B.is_bytes = function(obj){
+    return obj?.ob_type?.tp_flags & $B.TPFLAGS.BYTES_SUBCLASS
+}
+
+$B.is_dict = function(obj){
+    return obj && obj[$B.OB_TYPE]?.tp_flags & $B.TPFLAGS.DICT_SUBCLASS
+}
+
 $B.is_int = function(obj){
     return typeof obj == 'number' ||
            typeof obj == 'bigint' ||
            typeof obj == 'boolean' ||
            obj?.ob_type?.tp_flags & $B.TPFLAGS.LONG_SUBCLASS
+}
+
+$B.is_list = function(obj){
+    return obj?.ob_type?.tp_flags & $B.TPFLAGS.LIST_SUBCLASS
 }
 
 $B.is_str = function(obj){

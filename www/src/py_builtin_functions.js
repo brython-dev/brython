@@ -248,7 +248,7 @@ _b_.compile = function() {
         // $B.RAISE(_b_.NotImplementedError, 'Brython does not currently support parsing of type comments')
     }
 
-    if($B.$isinstance($.source, _b_.bytes)){
+    if($B.is_bytes($.source)){
         var encoding = 'utf-8',
             lfpos = $.source.source.indexOf(10),
             first_line,
@@ -1098,7 +1098,7 @@ $B.$isinstance = function(obj, cls){
 
 var issubclass = _b_.issubclass = function(klass, classinfo){
     check_nb_args_no_kw('issubclass', 2, arguments)
-    if($B.$isinstance(classinfo, _b_.tuple)){
+    if($B.is_tuple(classinfo)){
         for(var i = 0; i < classinfo.length; i++){
            if(issubclass(klass, classinfo[i])){return true}
         }

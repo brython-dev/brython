@@ -76,7 +76,7 @@ function set_difference(so, other){
 
     if($B.$isinstance(other, [set, frozenset])){
         other_size = set.mp_length(other)
-    }else if($B.$isinstance(other, _b_.dict)){
+    }else if($B.is_dict(other)){
         other_size = _b_.dict.mp_length(other)
         other_is_dict = true
     }else{
@@ -119,7 +119,7 @@ function set_difference_update(so, other){
         for(let entry of set_iter_with_hash(other)){
             set_discard_entry(so, entry.item, entry.hash)
         }
-    }else if($B.$isinstance(other, _b_.dict)){
+    }else if($B.is_dict(other)){
         for(let entry of _b_.dict.$iter_items(other)){
             set_discard_entry(so, entry.key, entry.hash)
         }
@@ -196,7 +196,7 @@ function set_intersection(so, other){
                 set_add(result, entry.item, entry.hash)
             }
         }
-    }else if($B.$isinstance(other, _b_.dict)){
+    }else if($B.is_dict(other)){
         for(let entry of _b_.dict.$iter_items(other)){
             if(set_contains(so, entry.key, entry.hash)){
                 set_add(result, entry.key, entry.hash)
@@ -271,7 +271,7 @@ function set_symmetric_difference_update(so, other){
     if(so == other){
         return set.tp_funcs.clear(so)
     }
-    if($B.$isinstance(other, _b_.dict)){
+    if($B.is_dict(other)){
         for(let entry of _b_.dict.$iter_items(other)){
             let rv = set_discard_entry(so, entry.key, entry.hash)
             if(rv == DISCARD_NOTFOUND){
@@ -730,7 +730,7 @@ set_funcs.issubset = function(self, other){
             }
         }
         return true
-    }else if($B.$isinstance(other, _b_.dict)){
+    }else if($B.is_dict(other)){
         for(let entry of _b_.dict.$iter_items(self)){
             if(! set_lookkey(other, entry.key, entry.hash)){
                 return false
@@ -842,7 +842,7 @@ set_funcs.update = function(self){
             for(let entry of set_iter_with_hash(iterable)){
                 set_add(self, entry.item, entry.hash)
             }
-        }else if($B.$isinstance(iterable, _b_.dict)){
+        }else if($B.is_dict(iterable)){
             for(let entry of _b_.dict.$iter_items(iterable)){
                 set_add(self, entry.key, entry.hash)
             }

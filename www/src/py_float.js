@@ -601,7 +601,7 @@ float.$factory = function(value){
         value = _b_.memoryview.tp_funcs.tobytes(value)
     }
 
-    if($B.$isinstance(value, _b_.bytes)){
+    if($B.is_bytes(value)){
         try{
             value = $B.$getattr(value, "decode")("utf-8")
         }catch(err){

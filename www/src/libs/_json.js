@@ -165,7 +165,7 @@ function to_json(obj, level){
         return $B.int_value(obj).toString()
     }else if(obj === _b_.None){
         return "null"
-    }else if($B.$isinstance(obj, _b_.dict)){
+    }else if($B.is_dict(obj)){
         var res = [],
             items = Array.from($B.make_js_iterator(_b_.dict.tp_funcs.items(obj)))
         if(sort_keys){

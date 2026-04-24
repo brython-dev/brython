@@ -1148,7 +1148,7 @@
                 var params = value
                 if(typeof params == "string"  || params instanceof FormData){
                     result.body = params
-                }else if($B.$isinstance(params, _b_.bytes)){
+                }else if($B.is_bytes(params)){
                     result.body = new ArrayBuffer(params.source.length)
                     var array = new Int8Array(data)
                     for(let i = 0, len = params.source.length; i < len; i++){
@@ -1168,7 +1168,7 @@
                     result.body = items.join("&")
                 }
             }else if(key == "headers"){
-                if(! $B.$isinstance(value, _b_.dict)){
+                if(! $B.is_dict(value)){
                     $B.RAISE(_b_.ValueError,
                         "headers must be a dict, not " + $B.class_name(value))
                 }

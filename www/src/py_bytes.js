@@ -248,7 +248,7 @@ function endswith(){
             res = self.source[end - seq_len + i] == seq[i]
         }
         return res
-    }else if($B.$isinstance(suffix, _b_.tuple)){
+    }else if($B.is_tuple(suffix)){
         for(let sub of suffix){
             if(endswith(self, sub, start, end)){
                 return true
@@ -628,7 +628,7 @@ function nb_multiply(){
             source[source.length] = item
         }
     }
-    var cls = $B.$isinstance(self, _b_.bytes) ? _b_.bytes : _b_.bytearray
+    var cls = $B.is_bytes(self) ? _b_.bytes : _b_.bytearray
     return {
         ob_type: cls,
         source
@@ -917,7 +917,7 @@ function startswith(){
             res = self.source[start + i] == prefix.source[i]
         }
         return res
-    }else if($B.$isinstance(prefix, _b_.tuple)){
+    }else if($B.is_tuple(prefix)){
         let items = []
         for(let i = 0; i < prefix.length; i++){
             if($B.$isinstance(prefix[i], [bytes, bytearray])){
@@ -1778,7 +1778,7 @@ bytes.$new = function(cls, source, encoding, errors){
                             `'${$B.class_name(source)}' object to bytes`)
                     }
                     var res = $B.$call(bytes_method)
-                    if(! $B.$isinstance(res, _b_.bytes)){
+                    if(! $B.is_bytes(res)){
                         $B.RAISE(_b_.TypeError, `__bytes__ returned ` +
                             `non-bytes (type ${$B.class_name(res)})`)
                     }
@@ -2324,7 +2324,7 @@ bytes.$factory = function(){
 
 /* bytes start */
 _b_.bytes.tp_richcompare = function(self, other, op){
-    if(! $B.$isinstance(other, _b_.bytes)){
+    if(! $B.is_bytes(other)){
         return _b_.NotImplemented
     }
     return _b_.list.tp_richcompare(
@@ -2482,7 +2482,7 @@ _b_.bytes.tp_new = function(cls, args, kw){
                         `'${$B.class_name(source)}' object to bytes`)
                 }
                 let res = $B.$call(bytes_method)
-                if(! $B.$isinstance(res, _b_.bytes)){
+                if(! $B.is_bytes(res)){
                     $B.RAISE(_b_.TypeError, `__bytes__ returned ` +
                         `non-bytes (type ${$B.class_name(res)})`)
                 }

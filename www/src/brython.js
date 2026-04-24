@@ -110,10 +110,13 @@ if(mro[0]!==cls){console.log('bizarre',cls,mro)}
 return mro}
 $B.is_type=function(obj){var klass=$B.get_class(obj)
 return klass.tp_mro.includes(_b_.type)}
+$B.is_bytes=function(obj){return obj?.ob_type?.tp_flags & $B.TPFLAGS.BYTES_SUBCLASS}
+$B.is_dict=function(obj){return obj && obj[$B.OB_TYPE]?.tp_flags & $B.TPFLAGS.DICT_SUBCLASS}
 $B.is_int=function(obj){return typeof obj=='number' ||
 typeof obj=='bigint' ||
 typeof obj=='boolean' ||
 obj?.ob_type?.tp_flags & $B.TPFLAGS.LONG_SUBCLASS}
+$B.is_list=function(obj){return obj?.ob_type?.tp_flags & $B.TPFLAGS.LIST_SUBCLASS}
 $B.is_str=function(obj){return typeof obj=='string' ||
 obj?.ob_type?.tp_flags & $B.TPFLAGS.UNICODE_SUBCLASS}
 $B.is_tuple=function(obj){return obj?.ob_type?.tp_flags & $B.TPFLAGS.TUPLE_SUBCLASS}
@@ -685,8 +688,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-04-24 17:54:57.729980"
-__BRYTHON__.timestamp=1777046097729
+__BRYTHON__.compiled_date="2026-04-24 18:16:51.410225"
+__BRYTHON__.timestamp=1777047411409
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1700,7 +1703,7 @@ if(klass===$B.JSObj){return 'Javascript '+obj.constructor.name}else{return klass
 $B.get_mro=function(klass){return klass.tp_mro ?? klass.__mro__}
 $B.get_name=function(klass){return klass.tp_name ?? klass.__name__}
 $B.unpack_mapping=function(func,obj){var items=[]
-if($B.$isinstance(obj,_b_.dict)){for(var item of _b_.dict.$iter_items(obj)){if(! $B.is_str(item.key)){$B.RAISE(_b_.TypeError,'keywords must be strings')}
+if($B.is_dict(obj)){for(var item of _b_.dict.$iter_items(obj)){if(! $B.is_str(item.key)){$B.RAISE(_b_.TypeError,'keywords must be strings')}
 items.push(item)}
 return items}
 var klass=$B.get_class(obj)
@@ -1826,7 +1829,7 @@ $B.set_inum=function(inum){if(inum !==undefined && $B.frame_obj){$B.frame_obj.fr
 $B.$delitem=function(obj,item,inum){var klass=$B.get_class(obj)
 if(Array.isArray(obj)&& klass===_b_.list &&
 typeof item=="number" &&
-!$B.$isinstance(obj,_b_.tuple)){if(item < 0){item+=obj.length}
+!$B.is_tuple(obj)){if(item < 0){item+=obj.length}
 if(obj[item]===undefined){$B.set_inum(inum)
 $B.RAISE(_b_.IndexError,"list deletion index out of range")}
 obj.splice(item,1)
@@ -2283,7 +2286,7 @@ if(value===$B.NULL){
 if(test){console.log('in mro',in_mro,'has delete',_b_.hasattr(in_mro,'__delete__'))}
 if(in_mro !==$B.NULL && _b_.hasattr(in_mro,'__delete__')){return $B.$call($B.$getattr(in_mro,'__delete__'),self)}
 var dict=$B.get_dict(self)
-if(dict && $B.$isinstance(dict,_b_.dict)&&
+if(dict && $B.is_dict(dict)&&
 _b_.dict.$contains_string(dict,attr)){_b_.dict.$delete_string(dict,attr)
 delete self[attr]
 return _b_.None}
@@ -2402,7 +2405,7 @@ var dict
 var itsclass
 dict=$B.get_dict(self)
 var temp
-if(dict==undefined){temp=$B.empty_dict()}else if(! $B.$isinstance(dict,_b_.dict)){temp=$B.empty_dict()}else{
+if(dict==undefined){temp=$B.empty_dict()}else if(! $B.is_dict(dict)){temp=$B.empty_dict()}else{
 var temp=_b_.dict.tp_funcs.copy(dict)}
 if(temp==undefined){$B.RAISE(_b_.ValueError,'no __dir__')}
 itsclass=$B.get_class(self)
@@ -2463,7 +2466,7 @@ if($B.$getattr(klass,'append',null)!==null &&
 $B.$getattr(klass,'extend',null)!==null){list_like_iterator=_b_.iter(self)}
 res.push(list_like_iterator)
 var key_value_iterator=_b_.None
-if($B.$isinstance(self,_b_.dict)){key_value_iterator=_b_.dict.tp_funcs.items(self)}
+if($B.is_dict(self)){key_value_iterator=_b_.dict.tp_funcs.items(self)}
 res.push(key_value_iterator)
 return $B.fast_tuple(res)}
 object_funcs.__sizeof__=function(self){}
@@ -2601,7 +2604,8 @@ $B.make_class_namespace=function(metaclass,class_name,qualname,orig_bases,bases)
 var prepare=$B.$getattr(metaclass,"__prepare__",$B.NULL)
 if(prepare===$B.NULL){$B.RAISE(_b_.TypeError,'metaclass has no __prepare__')}
 var class_dict=$B.$call(prepare,class_name,bases)
-if(! $B.$isinstance(class_dict,_b_.dict)){$B.RAISE(_b_.TypeError,`${$B.get_name(metaclass)}.__prepare__() must return a mapping, `+
+if(! $B.is_dict(class_dict)){console.log('class dict',class_dict)
+$B.RAISE(_b_.TypeError,`${$B.get_name(metaclass)}.__prepare__() must return a mapping, `+
 `not ${$B.class_name(class_dict)}`)}
 if(orig_bases !==bases){$B.str_dict_set(class_dict,'__orig_bases__',orig_bases)}
 if(! $B.hasOnlyStringKeys(class_dict)){$B.warn(_b_.RuntimeWarning,`non-string key in the __dict__ of class ${class_name}`)}
@@ -2932,7 +2936,12 @@ var class_obj={ob_type:metatype,tp_bases:bases,tp_name:name,tp_flags:$B.TPFLAGS.
 $B.TPFLAGS.BASETYPE |$B.TPFLAGS.HAVE_GC}
 for(var base of bases){class_obj.tp_flags |=base.tp_flags & $B.TPFLAGS.UNICODE_SUBCLASS
 class_obj.tp_flags |=base.tp_flags & $B.TPFLAGS.LONG_SUBCLASS
-class_obj.tp_flags |=base.tp_flags & $B.TPFLAGS.TUPLE_SUBCLASS}
+class_obj.tp_flags |=base.tp_flags & $B.TPFLAGS.TUPLE_SUBCLASS
+class_obj.tp_flags |=base.tp_flags & $B.TPFLAGS.LIST_SUBCLASS
+class_obj.tp_flags |=base.tp_flags & $B.TPFLAGS.DICT_SUBCLASS
+class_obj.tp_flags |=base.tp_flags & $B.TPFLAGS.BYTES_SUBCLASS
+class_obj.tp_flags |=base.tp_flags & $B.TPFLAGS.BASE_EXC_SUBCLASS
+class_obj.tp_flags |=base.tp_flags & $B.TPFLAGS.TYPE_SUBCLASS}
 $B.set_dict(class_obj,cl_dict)
 class_obj.tp_mro=$B.make_mro(class_obj)
 class_obj.tp_subclasses=[]
@@ -3140,7 +3149,7 @@ return item}}
 $B.RAISE(_b_.StopIteration,"StopIteration")},__reduce_ex__:function(self){return $B.fast_tuple([_b_.iter,_b_.tuple.$factory([self.items])])}}
 $B.set_func_names(klass,"builtins")
 return klass}
-function _Py_make_parameters(args){var is_args_list=$B.$isinstance(args,_b_.list)
+function _Py_make_parameters(args){var is_args_list=$B.is_list(args)
 var tuple_args
 if(is_args_list){args=tuple_args=$B.fast_tuple(args)}
 var nargs=args.length
@@ -3155,7 +3164,7 @@ iparam++}else{var subparams=$B.$getattr(t,'__parameters__',$B.NULL)
 if(subparams===$B.NULL &&
 $B.$isinstance(t,[_b_.tuple,_b_.list])){
 subparams=_Py_make_parameters(t)}
-if(subparams && $B.$isinstance(subparams,_b_.tuple)){var len2=subparams.length
+if(subparams && $B.is_tuple(subparams)){var len2=subparams.length
 var needed=len2-1-(iarg-iparam)
 if(needed > 0){len+=needed;
 _PyTuple_Resize(parameters,len)}
@@ -3172,12 +3181,12 @@ if(result !==$B.NULL){if(result===_b_.None){return $B.NULL}
 return result}
 return $B.NULL}
 function _unpack_args(item){var newargs=[]
-var is_tuple=$B.$isinstance(item,_b_.tuple)
+var is_tuple=$B.is_tuple(item)
 var nitems=is_tuple ? item.length :1
 var argitems=is_tuple ? item[0]:item
 for(let item of argitems){if(! $B.is_type(item)){var subargs=_unpacked_tuple_args(item)
 if(subargs !==$B.NULL &&
-$B.$isinstance(subargs,_b_.tuple)&&
+$B.is_tuple(subargs)&&
 !(subargs.length > 0 &&
 subargs[subargs.length-1]===$B.ellipsis)){newargs=newargs.concat(subargs)
 continue}}
@@ -3192,7 +3201,7 @@ return res}
 function subs_tvars(obj,params,argitems,nargs){var subparams
 var subparams=$B.$getattr(obj,'__parameters__',$B.NULL)
 if(subparams !==$B.NULL &&
-$B.$isinstance(subparams,_b_.tuple)&&
+$B.is_tuple(subparams)&&
 subparams.length > 0){var nparams=params.length
 var nsubargs=subparams.length
 var subargs=$B.fast_tuple()
@@ -3200,7 +3209,7 @@ var j=0
 for(let arg of subparams){var iparam=tuple_index(params,nparams,arg)
 if(iparam >=0){var param=params[iparam]
 arg=argitems[iparam]
-if($B.get_class(param).tp_iter && $B.$isinstance(arg,_b_.tuple)){
+if($B.get_class(param).tp_iter && $B.is_tuple(arg)){
 j=tuple_extend(subargs,j,arg[0],arg.length)
 continue}}
 subargs[j]=arg
@@ -3215,14 +3224,14 @@ for(let param of parameters){var tmp
 var prepare=$B.$getattr(param,'__typing_prepare_subst__',$B.NULL)
 if(prepare !==$B.NULL && prepare !=_b_.None){tmp=$B.$call(prepare,self,item)
 item=tmp}}
-var is_tuple=$B.$isinstance(item,_b_.tuple)
+var is_tuple=$B.is_tuple(item)
 var nitems=is_tuple ? item.length :1
 var argitems=is_tuple ? item[0]:item
 if(nitems !=nparams){var qualif=nitems > nparams ? "many" :"few"
 $B.RAISE(_b_.TypeError,`Too ${qualif} arguments for ${_b_.repr(self)}; `+
 `actual ${nitems}, expected ${nparams}`
 )}
-var is_args_list=$B.$isinstance(args,_b_.list)
+var is_args_list=$B.is_list(args)
 var tuple_args
 if(is_args_list){args=tuple_args=$B.fats_tuple(args)}
 var nargs=args.length
@@ -3232,7 +3241,7 @@ if($B.is_type(arg)){newargs[jarg]=arg
 jarg++
 continue}
 if($B.$isinstance(arg,[_b_.tuple,_b_.list])){var subargs=_Py_subs_parameters(self,arg,parameters,item)
-if($B.$isinstance(arg,_b_.tuple)){newargs[jarg]=subargs}else{
+if($B.is_tuple(arg)){newargs[jarg]=subargs}else{
 newargs[jarg]=$B.$list(subargs)}
 jarg++
 continue}
@@ -3240,7 +3249,7 @@ var unpack=_is_unpacked_typevartuple(arg);
 var subst=$B.$getattr(arg,'__typing_subst__',$B.NULL)
 if(subst !==$B.NULL){var iparam=tuple_index(parameters,nparams,arg);
 arg=$B.$call(subst,argitems[iparam])}else{arg=subs_tvars(arg,parameters,argitems,nitems);}
-if(unpack){if(! $B.$isinstance(arg,_b_.tuple)){var original=args[iarg]
+if(unpack){if(! $B.is_tuple(arg)){var original=args[iarg]
 $B.RAISE(_b_.TypeError,`expected __typing_subst__ of ${_b_.repr(original)} `+
 `objects to return a tuple, not ${_b_.repr(arg)}`
 )}
@@ -3328,7 +3337,7 @@ $B.UnionType.nb_or=function(self,other){var items=self.args.slice()
 if(! items.includes(other)){items.push(other)}
 return $B.UnionType.$factory(items)}
 var UnionType_funcs=$B.UnionType.tp_funcs={}
-UnionType_funcs.__class_getitem__=function(cls,items){if($B.$isinstance(items,_b_.tuple)){return $B.UnionType.$factory(items)}else{return items}}
+UnionType_funcs.__class_getitem__=function(cls,items){if($B.is_tuple(items)){return $B.UnionType.$factory(items)}else{return items}}
 UnionType_funcs.__parameters___get=function(self){return $B.fast_tuple([])}
 UnionType_funcs.__parameters___set=_b_.None
 $B.UnionType.tp_members=[["__args__",$B.TYPES.OBJECT,"args",1]
@@ -3628,7 +3637,7 @@ f.$infos.__qualname__=value}
 function type_params_get(f){$B.check_infos(f)
 return f.$infos.__type_params__}
 function type_params_set(f,value){$B.check_infos(f)
-if(! $B.$isinstance(value,_b_.tuple)){$B.RAISE(_b_.TypeError,'TypeError: __type_params__ must be set to a tuple')}
+if(! $B.is_tuple(value)){$B.RAISE(_b_.TypeError,'TypeError: __type_params__ must be set to a tuple')}
 f.$infos.__type_params__=value}
 function globals_get(f){$B.check_infos(f)
 return $B.obj_dict($B.imported[f.$infos.__module__])}
@@ -3659,7 +3668,7 @@ function_funcs.__annotate___set=function(self,value){self.__annotate__=value}
 function_funcs.__annotations___get=function(self){$B.check_infos(self)
 if(self.__annotations__ !==undefined){return self.__annotations__}else{return self.__annotations__=self.__annotate__(1)}}
 function_funcs.__annotations___set=function(self,value){$B.check_infos(self)
-if(! $B.$isinstance(value,_b_.dict)){$B.RAISE(_b_.TypeError,'__annotations__ must be set to a dict object')}
+if(! $B.is_dict(value)){$B.RAISE(_b_.TypeError,'__annotations__ must be set to a dict object')}
 self.__annotations__=value}
 function_funcs.__builtins___get=function(self){$B.check_infos(self)
 if(self.$infos && self.$infos.__globals__){return _b_.dict.$getitem(self.$infos.__globals__,'__builtins__')}
@@ -3686,13 +3695,13 @@ self.$infos.__code__=value}
 function_funcs.__defaults___get=function(self){$B.check_infos(self)
 return self.$infos.__defaults__}
 function_funcs.__defaults___set=function(self,value){$B.check_infos(self)
-if(value===_b_.None){value=[]}else if(! $B.$isinstance(value,_b_.tuple)){$B.RAISE(_b_.TypeError,"__defaults__ must be set to a tuple object")}
+if(value===_b_.None){value=[]}else if(! $B.is_tuple(value)){$B.RAISE(_b_.TypeError,"__defaults__ must be set to a tuple object")}
 self.$infos.__defaults__=value
 self.$function_infos[$B.func_attrs.__defaults__]=value
 $B.make_args_parser(self)}
 function_funcs.__dict___get=function(self){return $B.get_dict(self)}
 function_funcs.__dict___set=function(self,value){if(value===$B.NULL){$B.RAISE(_b_.TypeError,"cannot delete __dict__")}
-if(! $B.$isinstance(value,_b_.dict)){$B.RAISE(_b_.TypeError,`__dict__ must be set to a dictionary, not a `+
+if(! $B.is_dict(value)){$B.RAISE(_b_.TypeError,`__dict__ must be set to a dictionary, not a `+
 `'${$B.class_name(value)}'`
 )}
 $B.set_dict(self,value)}
@@ -3704,7 +3713,7 @@ function_funcs.__globals___set=_b_.None
 function_funcs.__kwdefaults___get=function(self){$B.check_infos(self)
 return self.$infos.__kwdefaults__}
 function_funcs.__kwdefaults___set=function(self,value){$B.check_infos(self)
-if(value==_b_.None){value=$B.empty_dict()}else if(! $B.$isinstance(value,_b_.dict)){$B.RAISE(_b_.TypeError,'__kwdefaults__ must be set to a dict object')}
+if(value==_b_.None){value=$B.empty_dict()}else if(! $B.is_dict(value)){$B.RAISE(_b_.TypeError,'__kwdefaults__ must be set to a dict object')}
 self.$infos.__kwdefaults__=value
 var kwd={}
 for(var item of _b_.dict.$iter_items(value)){kwd[item.key]=item.value}
@@ -4212,7 +4221,7 @@ limit=$B.PyNumber_Index(limit)
 while(limit < 0 ||_b_.len(buffer)< limit){var nreadahead=1
 var b
 if(peek !=null){var readahead=peek(1)
-if(! $B.$isinstance(readahead,_b_.bytes)){$B.RAISE(_b_.OSError,"peek() should have returned a bytes object, "+
+if(! $B.is_bytes(readahead)){$B.RAISE(_b_.OSError,"peek() should have returned a bytes object, "+
 `not '${$B.class_name(readahead)}'`)}
 if(readahead.length > 0){var n=0
 var buf=_b_.bytes.$decode(readahead,'latin-1')
@@ -4222,7 +4231,7 @@ if($B.$getitem(buffer,n++)=='\n'){break}}}
 nreadahead=n}}
 var read=$B.search_in_mro($B.get_class(_self),"read")
 b=$B.$call(read,_self,nreadahead)
-if(! $B.$isinstance(b,_b_.bytes)){$B.RAISE(_b_.OSError,"read() should have returned a bytes object, "+
+if(! $B.is_bytes(b)){$B.RAISE(_b_.OSError,"read() should have returned a bytes object, "+
 `not '${$B.class_name(b)}'`)}
 if(_b_.len(b)==0){break;}
 _b_.bytearray.tp_funcs.extend(buffer,b)
@@ -4275,7 +4284,7 @@ var result
 while(1){var data=$B.$call($B.$getattr(_self,"read"),DEFAULT_BUFFER_SIZE)
 if(data===_b_.None){if(chunks.length==0){return data}
 break}
-if(! $B.$isinstance(data,_b_.bytes)){$B.RAISE(_b_.TypeError,"read() should return bytes")}
+if(! $B.is_bytes(data)){$B.RAISE(_b_.TypeError,"read() should return bytes")}
 if(_b_.len(data)==0){break}
 chunks.push(data)}
 result=_b_.bytes.tp_funcs.join(_b_.bytes.$fast_bytes([]),chunks)
@@ -4294,7 +4303,7 @@ if(! $B.is_buffer(buffer)){$B.RAISE(_b_.TypeError," readinto() argument must be 
 `read-write bytes-like object, not ${$B.class_name(buffer)}`)}
 var attr=readinto1 ? "read1" :"read"
 data=$B.$call($B.$getattr(_self,attr),_b_.len(buffer))
-if(! $B.$isinstance(data,_b_.bytes)){$B.RAISE(_b_.TypeError,"read() should return bytes")}
+if(! $B.is_bytes(data)){$B.RAISE(_b_.TypeError,"read() should return bytes")}
 len=_b_.bytes.mp_length(data)
 if(len > _b_.len(buffer)){$B.RAISE(_b_.ValueError,"read() returned too much data: "
 `${_b_.len(buffer)} bytes requested, ${len} returned`)}
@@ -4690,7 +4699,7 @@ var interactive=$.mode=="single" &&($.flags & 0x200)
 $B.file_cache[filename]=$.source
 $B.url2name[filename]=module_name
 if($.flags & $B.PyCF_TYPE_COMMENTS){}
-if($B.$isinstance($.source,_b_.bytes)){var encoding='utf-8',lfpos=$.source.source.indexOf(10),first_line,second_line
+if($B.is_bytes($.source)){var encoding='utf-8',lfpos=$.source.source.indexOf(10),first_line,second_line
 if(lfpos==-1){first_line=$.source}else{first_line=_b_.bytes.$factory($.source.source.slice(0,lfpos))}
 first_line=$B.bytes_decode(first_line,'latin-1')
 var encoding_re=/^[\t\f]*#.*?coding[:=][\t]*([-_.a-zA-Z0-9]+)/
@@ -5032,7 +5041,7 @@ var instancecheck=$B.type_getattribute($B.get_class(cls),'__instancecheck__',$B.
 if(instancecheck !==$B.NULL){if(instancecheck.method !==_b_.type.tp_funcs.__instancecheck__){return $B.$call(instancecheck,cls,obj)}}
 return false}
 var issubclass=_b_.issubclass=function(klass,classinfo){check_nb_args_no_kw('issubclass',2,arguments)
-if($B.$isinstance(classinfo,_b_.tuple)){for(var i=0;i < classinfo.length;i++){if(issubclass(klass,classinfo[i])){return true}}
+if($B.is_tuple(classinfo)){for(var i=0;i < classinfo.length;i++){if(issubclass(klass,classinfo[i])){return true}}
 return false}
 if($B.get_class(classinfo)===$B.GenericAlias){$B.RAISE(_b_.TypeError,'issubclass() arg 2 cannot be a parameterized generic')}
 var mro=$B.get_mro(klass)
@@ -6072,7 +6081,7 @@ BaseException_funcs.__dict___get=function(self){return $B.get_dict(self)}
 BaseException_funcs.__dict___set=function(self,value){$B.set_dict(self,value)}
 BaseException_funcs.__reduce__=function(self){var dict=$B.get_dict(self)
 if(self.args && dict && ! $B.str_dict_empty(dict)){return $B.fast_tuple([$B.get_class(self),$B.fast_tuple(self.args),dict])}else{return $B.fast_tuple([$B.get_class(self),$B.fast_tuple(self.args)])}}
-BaseException_funcs.__setstate__=function(self,state){if(state !=_b_.None){if(! $B.$isinstance(state,_b_.dict)){$B.RAISE(_b_.TypeError,"state is not a dictionary")}
+BaseException_funcs.__setstate__=function(self,state){if(state !=_b_.None){if(! $B.is_dict(state)){$B.RAISE(_b_.TypeError,"state is not a dictionary")}
 for(var entry of _b_.dict.$iter_items(state)){_b_.object.tp_setattro(self,entry.key,entry.value)}}
 return _b_.None}
 BaseException_funcs.__traceback___get=function(self){return self.__traceback__ ?? _b_.None}
@@ -6835,7 +6844,7 @@ var res=true
 var seq_len=seq.length
 if(seq_len > end-start){return false}
 for(let i=0;i < seq_len && res;i++){res=self.source[end-seq_len+i]==seq[i]}
-return res}else if($B.$isinstance(suffix,_b_.tuple)){for(let sub of suffix){if(endswith(self,sub,start,end)){return true}}
+return res}else if($B.is_tuple(suffix)){for(let sub of suffix){if(endswith(self,sub,start,end)){return true}}
 return false}else{$B.RAISE(_b_.TypeError,"endswith first arg must be bytes-like "+
 "or a tuple of bytes-like, not "+$B.class_name($.suffix))}}
 function expandtabs(){var $=$B.args('expandtabs',2,{self:null,tabsize:null},arguments,{tabsize:8},null,null)
@@ -6976,7 +6985,7 @@ var self=$.self,value=$.value
 var v=$B.PyNumber_Index(value)
 var source=self.source.slice()
 for(var i=0;i < v;i++){for(var item of self.source){source[source.length]=item}}
-var cls=$B.$isinstance(self,_b_.bytes)? _b_.bytes :_b_.bytearray
+var cls=$B.is_bytes(self)? _b_.bytes :_b_.bytearray
 return{
 ob_type:cls,source}}
 function nb_remainder(){
@@ -7089,7 +7098,7 @@ var self=$.self,prefix=$.prefix,start=$.start
 var cls=this 
 if($B.$isinstance($.prefix,[bytes,bytearray])){let res=true
 for(let i=0;i < prefix.source.length && res;i++){res=self.source[start+i]==prefix.source[i]}
-return res}else if($B.$isinstance(prefix,_b_.tuple)){let items=[]
+return res}else if($B.is_tuple(prefix)){let items=[]
 for(let i=0;i < prefix.length;i++){if($B.$isinstance(prefix[i],[bytes,bytearray])){items=items.concat(prefix[i].source)}else{$B.RAISE(_b_.TypeError,"startswith first arg must be "+
 "bytes or a tuple of bytes, not "+
 $B.class_name(prefix))}}
@@ -7367,7 +7376,7 @@ if(Array.isArray(source)){int_list=source}else{try{int_list=_b_.list.$factory(so
 if(bytes_method===_b_.None){$B.RAISE(_b_.TypeError,"cannot convert "+
 `'${$B.class_name(source)}' object to bytes`)}
 var res=$B.$call(bytes_method)
-if(! $B.$isinstance(res,_b_.bytes)){$B.RAISE(_b_.TypeError,`__bytes__ returned `+
+if(! $B.is_bytes(res)){$B.RAISE(_b_.TypeError,`__bytes__ returned `+
 `non-bytes (type ${$B.class_name(res)})`)}
 return res}
 for(let i=0;i < int_list.length;i++){try{var item=_b_.int.$factory(int_list[i])}catch(err){$B.RAISE(_b_.TypeError,"'"+
@@ -7547,7 +7556,7 @@ ob_type:_b_.bytes,source:t ??[]}}
 $B.fast_bytes=fast_bytes
 bytes.$factory=function(){var[args,kw]=$B.parse_args_kw('bytes',arguments)
 return bytes.tp_new(bytes,Array.from(args),kw)}
-_b_.bytes.tp_richcompare=function(self,other,op){if(! $B.$isinstance(other,_b_.bytes)){return _b_.NotImplemented}
+_b_.bytes.tp_richcompare=function(self,other,op){if(! $B.is_bytes(other)){return _b_.NotImplemented}
 return _b_.list.tp_richcompare(
 $B.$list(self.source),$B.$list(other.source),op)}
 _b_.bytes.nb_multiply=function(){var $=$B.args('__mul__',2,{self:null,other:null},arguments)
@@ -7601,7 +7610,7 @@ if(Array.isArray(source)){int_list=source}else{try{int_list=_b_.list.$factory(so
 if(bytes_method===_b_.None){$B.RAISE(_b_.TypeError,"cannot convert "+
 `'${$B.class_name(source)}' object to bytes`)}
 let res=$B.$call(bytes_method)
-if(! $B.$isinstance(res,_b_.bytes)){$B.RAISE(_b_.TypeError,`__bytes__ returned `+
+if(! $B.is_bytes(res)){$B.RAISE(_b_.TypeError,`__bytes__ returned `+
 `non-bytes (type ${$B.class_name(res)})`)}
 if(res.source===undefined){console.log('!!!!!!!',source)}
 return res}}
@@ -7841,7 +7850,7 @@ memoryview_funcs.ndim_get=function(self){return self.ndim}
 memoryview_funcs.ndim_set=_b_.None
 memoryview_funcs.obj_get=function(self){return self.obj}
 memoryview_funcs.obj_set=_b_.None
-memoryview_funcs.readonly_get=function(self){return $B.$isinstance(self.obj,_b_.bytes)}
+memoryview_funcs.readonly_get=function(self){return $B.is_bytes(self.obj)}
 memoryview_funcs.readonly_set=_b_.None
 memoryview_funcs.release=function(self){if(self.$released){return}
 self.$released=true
@@ -7896,7 +7905,7 @@ function set_copy_and_difference(so,other){var result=set_copy(so)
 set_difference_update(result,other)
 return result}
 function set_difference(so,other){var other_size,other_is_dict
-if($B.$isinstance(other,[set,frozenset])){other_size=set.mp_length(other)}else if($B.$isinstance(other,_b_.dict)){other_size=_b_.dict.mp_length(other)
+if($B.$isinstance(other,[set,frozenset])){other_size=set.mp_length(other)}else if($B.is_dict(other)){other_size=_b_.dict.mp_length(other)
 other_is_dict=true}else{return set_copy_and_difference(so,other)}
 if(set.mp_length(so)>> 2 > other_size){return set_copy_and_difference(so,other);}
 var result=make_new_set()
@@ -7906,7 +7915,7 @@ for(let entry of set_iter_with_hash(so)){if(! set_contains(other,entry.item,entr
 result.ob_type=$B.get_class(so)
 return result}
 function set_difference_update(so,other){if(so===other){return set.tp_funcs.clear(so);}
-if($B.$isinstance(other,[set,frozenset])){for(let entry of set_iter_with_hash(other)){set_discard_entry(so,entry.item,entry.hash)}}else if($B.$isinstance(other,_b_.dict)){for(let entry of _b_.dict.$iter_items(other)){set_discard_entry(so,entry.key,entry.hash)}}else{var iterator=$B.make_js_iterator(other)
+if($B.$isinstance(other,[set,frozenset])){for(let entry of set_iter_with_hash(other)){set_discard_entry(so,entry.item,entry.hash)}}else if($B.is_dict(other)){for(let entry of _b_.dict.$iter_items(other)){set_discard_entry(so,entry.key,entry.hash)}}else{var iterator=$B.make_js_iterator(other)
 for(let key of iterator){set_discard_key(so,key)}}}
 const DISCARD_NOTFOUND=0
 function set_discard_entry(so,key,hash){var entry=set_lookkey(so,key,hash)
@@ -7926,7 +7935,7 @@ var result=make_new_set_base_type(so)
 if($B.$isinstance(other,[set,frozenset])){if(other.$used > so.$used){var tmp=so
 so=other
 other=tmp}
-for(let entry of set_iter_with_hash(other)){if(set_contains(so,entry.item,entry.hash)){set_add(result,entry.item,entry.hash)}}}else if($B.$isinstance(other,_b_.dict)){for(let entry of _b_.dict.$iter_items(other)){if(set_contains(so,entry.key,entry.hash)){set_add(result,entry.key,entry.hash)}}}else{let iterator=$B.make_js_iterator(other)
+for(let entry of set_iter_with_hash(other)){if(set_contains(so,entry.item,entry.hash)){set_add(result,entry.item,entry.hash)}}}else if($B.is_dict(other)){for(let entry of _b_.dict.$iter_items(other)){if(set_contains(so,entry.key,entry.hash)){set_add(result,entry.key,entry.hash)}}}else{let iterator=$B.make_js_iterator(other)
 for(var other_item of iterator){var test=set_contains(so,other_item)
 if(test){set_add(result,other_item)}}}
 return result}
@@ -7949,7 +7958,7 @@ a.$store=b.$store
 b.$used=temp.$used
 b.$store=temp.$store}
 function set_symmetric_difference_update(so,other){if(so==other){return set.tp_funcs.clear(so)}
-if($B.$isinstance(other,_b_.dict)){for(let entry of _b_.dict.$iter_items(other)){let rv=set_discard_entry(so,entry.key,entry.hash)
+if($B.is_dict(other)){for(let entry of _b_.dict.$iter_items(other)){let rv=set_discard_entry(so,entry.key,entry.hash)
 if(rv==DISCARD_NOTFOUND){set_add(so,entry.key,entry.hash)}}}else if($B.$isinstance(other,[set,frozenset])){for(let entry of set_iter_with_hash(other)){let rv=set_discard_entry(so,entry.item,entry.hash)
 if(rv==DISCARD_NOTFOUND){set_add(so,entry.item,entry.hash)}}}else{return set_symmetric_difference_update(so,set.$factory(other))}
 return _b_.None}
@@ -8128,7 +8137,7 @@ set_funcs.issubset=function(self,other){
 $B.check_nb_args_no_kw('set.issubset',2,arguments)
 if($B.$isinstance(other,[set,frozenset])){if(set.mp_length(self)> set.mp_length(other)){return false}
 for(let entry of set_iter_with_hash(self)){if(! set_lookkey(other,entry.item,entry.hash)){return false}}
-return true}else if($B.$isinstance(other,_b_.dict)){for(let entry of _b_.dict.$iter_items(self)){if(! set_lookkey(other,entry.key,entry.hash)){return false}}
+return true}else if($B.is_dict(other)){for(let entry of _b_.dict.$iter_items(self)){if(! set_lookkey(other,entry.key,entry.hash)){return false}}
 return true}else{var member_func=$B.member_func(other)
 for(let entry of set_iter_with_hash(self)){if(! member_func(entry.item)){return false}}
 return true}}
@@ -8168,7 +8177,7 @@ res=set.tp_funcs.union(res,other)}}
 return res}
 set_funcs.update=function(self){
 var $=$B.args("update",1,{self:null},arguments,null,"args")
-for(var iterable of $.args){if(Array.isArray(iterable)){for(let i=0;i < iterable.length;i++){set_add(self,iterable[i])}}else if($B.$isinstance(iterable,[set,frozenset])){for(let entry of set_iter_with_hash(iterable)){set_add(self,entry.item,entry.hash)}}else if($B.$isinstance(iterable,_b_.dict)){for(let entry of _b_.dict.$iter_items(iterable)){set_add(self,entry.key,entry.hash)}}else{var iterator=$B.make_js_iterator(iterable)
+for(var iterable of $.args){if(Array.isArray(iterable)){for(let i=0;i < iterable.length;i++){set_add(self,iterable[i])}}else if($B.$isinstance(iterable,[set,frozenset])){for(let entry of set_iter_with_hash(iterable)){set_add(self,entry.item,entry.hash)}}else if($B.is_dict(iterable)){for(let entry of _b_.dict.$iter_items(iterable)){set_add(self,entry.key,entry.hash)}}else{var iterator=$B.make_js_iterator(iterable)
 for(let item of iterator){set_add(self,item)}}}
 self.$version++
 return _b_.None}
@@ -8501,7 +8510,7 @@ $B.RAISE(_b_.ValueError,'invalid format')}
 function is_mapping(obj){return _b_.hasattr(obj,'keys')&& _b_.hasattr(obj,'__getitem__')}
 $B.printf_format=function(s,type,args){
 var argpos=null,getitem
-if($B.$isinstance(args,_b_.tuple)){argpos=0}else{getitem=$B.$getattr(args,"__getitem__",_b_.None)}
+if($B.is_tuple(args)){argpos=0}else{getitem=$B.$getattr(args,"__getitem__",_b_.None)}
 var ret='',
 nbph=0,
 pos=0,
@@ -8514,7 +8523,7 @@ pos=fmtpos
 if(s[pos+1]=='%'){ret+='%'
 pos+=2}else{nbph++
 if(nbph > 1){
-if((! $B.$isinstance(args,_b_.tuple))&&
+if((! $B.is_tuple(args))&&
 ! is_mapping(args)){$B.RAISE(_b_.TypeError,"not enough arguments for format string")}}
 var fmt=parse_mod_format(s,type,pos)
 pos=fmt.end+1
@@ -8992,7 +9001,7 @@ var $=$B.args("endswith",4,{self:null,suffix:null,start:null,end:null},arguments
 normalize_start_end($);
 _self=to_string($.self)
 var suffixes=$.suffix
-if(! $B.$isinstance(suffixes,_b_.tuple)){suffixes=[suffixes]}
+if(! $B.is_tuple(suffixes)){suffixes=[suffixes]}
 var chars=to_chars(_self),s=chars.slice($.start,$.end)
 for(var i=0,len=suffixes.length;i < len;i++){var suffix=suffixes[i]
 if(! $B.$isinstance(suffix,str)){$B.RAISE(_b_.TypeError,"endswith first arg must be str or a tuple of str, not int")}
@@ -9179,7 +9188,7 @@ return ''}
 str_funcs.maketrans=function(){var $=$B.args("maketrans",3,{x:null,y:null,z:null},arguments,{y:null,z:null},null,null)
 var _t=$B.empty_dict()
 if($.y===null && $.z===null){
-if(! $B.$isinstance($.x,_b_.dict)){$B.RAISE(_b_.TypeError,"maketrans only argument must be a dict")}
+if(! $B.is_dict($.x)){$B.RAISE(_b_.TypeError,"maketrans only argument must be a dict")}
 var items=_b_.list.$factory(_b_.dict.tp_funcs.items($.x))
 for(let i=0,len=items.length;i < len;i++){let k=items[i][0],v=items[i][1]
 if(! $B.is_int(k)){if($B.is_str(k)&& k.length==1){k=_b_.ord(k)}else{$B.RAISE(_b_.TypeError,"dictionary key "+k+
@@ -9353,7 +9362,7 @@ var $=$B.args("startswith",4,{self:null,prefix:null,start:null,end:null},argumen
 normalize_start_end($)
 _self=to_string($.self)
 var prefixes=$.prefix
-if(! $B.$isinstance(prefixes,_b_.tuple)){prefixes=[prefixes]}
+if(! $B.is_tuple(prefixes)){prefixes=[prefixes]}
 prefixes=to_string(...prefixes)
 prefixes=Array.isArray(prefixes)? prefixes :[prefixes]
 var s=_self.substring($.start,$.end)
@@ -9683,7 +9692,7 @@ _b_.int.nb_multiply=function(self,other){var[x,y]=[self,other].map(toBigInt)
 if(x===$B.NULL ||y===$B.NULL){return _b_.NotImplemented}
 return int_or_long(x*y)}
 _b_.int.nb_remainder=function(self,other){
-if($B.$isinstance(other,_b_.tuple)&& other.length==1){other=other[0]}
+if($B.is_tuple(other)&& other.length==1){other=other[0]}
 var y=toBigInt(other)
 if(y===$B.NULL){return _b_.NotImplemented}
 if(y==0n){$B.RAISE(_b_.ZeroDivisionError,"integer division or modulo by zero")}
@@ -10100,7 +10109,7 @@ var original_value=value
 if(typeof value=="number"){return fast_float(value)}
 if($B.$isinstance(value,float)){return $B.float_value(value)}
 if($B.$isinstance(value,_b_.memoryview)){value=_b_.memoryview.tp_funcs.tobytes(value)}
-if($B.$isinstance(value,_b_.bytes)){try{value=$B.$getattr(value,"decode")("utf-8")}catch(err){$B.RAISE(_b_.ValueError,"could not convert string to float: "+
+if($B.is_bytes(value)){try{value=$B.$getattr(value,"decode")("utf-8")}catch(err){$B.RAISE(_b_.ValueError,"could not convert string to float: "+
 _b_.repr(original_value))}}
 if(typeof value=="string"){if(value.trim().length==0){$B.RAISE(_b_.ValueError,`could not convert string to float: ${_b_.repr(value)}`)}
 value=value.trim()
@@ -11007,7 +11016,7 @@ dict.$from_array=function(arrays){
 var res=$B.empty_dict()
 for(var item of arrays){dict.$setitem(res,item[0],item[1])}
 return res}
-_b_.dict.tp_richcompare=function(self,other,op){if(! $B.$isinstance(other,_b_.dict)){return _b_.NotImplemented}
+_b_.dict.tp_richcompare=function(self,other,op){if(! $B.is_dict(other)){return _b_.NotImplemented}
 var res
 switch(op){case '__eq__':
 res=dict_eq(self,other)
@@ -11188,7 +11197,7 @@ $B.dict_items.tp_hash=_b_.None
 $B.dict_items.tp_iter=function(self){return{
 ob_type:$B.dict_itemiterator,it:_b_.dict.$iter_items(self.dict_obj),dict_obj:self.dict_obj}}
 $B.dict_items.mp_length=function(self){return _b_.dict.mp_length(self.dict_obj)}
-$B.dict_items.sq_contains=function(self,obj){if(! $B.$isinstance(obj,_b_.tuple)||obj.length !=2){return false}
+$B.dict_items.sq_contains=function(self,obj){if(! $B.is_tuple(obj)||obj.length !=2){return false}
 var key=obj[0]
 var value=obj[1]
 try{var result=_b_.dict.$getitem(self.dict_obj,key)}catch(err){$B.RAISE_IF_NOT(err,_b_.KeyError)
@@ -11353,7 +11362,7 @@ function count(self){var $=$B.args("count",2,{self:null,x:null},arguments)
 var res=0
 for(var _item of $.self){if($B.is_or_equals(_item,$.x)){res++}}
 return res}
-function sq_repeat(self,other){var cls=$B.$isinstance(self,_b_.list)? _b_.list :_b_.tuple
+function sq_repeat(self,other){var cls=$B.is_list(self)? _b_.list :_b_.tuple
 if($B.$isinstance(other,[_b_.float,_b_.complex])){$B.RAISE(_b_.TypeError,"'"+$B.class_name(other)+
 "' object cannot be interpreted as an integer")}
 if(self.length==0){return cls.tp_new(cls)}
@@ -11398,7 +11407,7 @@ function sq_contains(self){var $=$B.args("__contains__",2,{self:null,item:null},
 var self=$.self,item=$.item
 for(var _item of self){if($B.is_or_equals(_item,item)){return true}}
 return false}
-function tp_richcompare(self,other,op){var cls=$B.$isinstance(self,_b_.list)? _b_.list :_b_.tuple
+function tp_richcompare(self,other,op){var cls=$B.is_list(self)? _b_.list :_b_.tuple
 if(! $B.$isinstance(other,cls)){return _b_.NotImplemented}
 var res
 switch(op){case '__eq__':
@@ -11767,7 +11776,7 @@ typeof obj=="string" ||obj instanceof String){return obj}else if($B.exact_type(o
 $B.exact_type(obj,_b_.tuple)||
 $B.exact_type(obj,js_array)){let res=new Array(obj.length);
 for(var i=0,len=obj.length;i < len;++i){res[i]=$B.pyobj2structuredclone(obj[i]);}
-return res}else if($B.$isinstance(obj,_b_.dict)){if(strict){for(var entry of _b_.dict.$iter_items(obj)){if(typeof entry.key !=='string'){$B.RAISE(_b_.TypeError,"a dictionary with non-string "+
+return res}else if($B.is_dict(obj)){if(strict){for(var entry of _b_.dict.$iter_items(obj)){if(typeof entry.key !=='string'){$B.RAISE(_b_.TypeError,"a dictionary with non-string "+
 "keys does not support structured clone")}}}
 let res={}
 for(var entry of _b_.dict.$iter_items(obj)){res[to_simple(entry.key)]=$B.pyobj2structuredclone(entry.value)}
@@ -11956,9 +11965,9 @@ for(var entry of _b_.dict.$iter_items(d)){if(typeof entry.key !=='string'){retur
 res[entry.key]=pyobj2jsobj(entry.value)}
 return res}
 function JSObj_eq(self,other){if(typeof self !=='object'){return false}
-if($B.$isinstance(self,_b_.dict)){self=dict_to_js(self)
+if($B.is_dict(self)){self=dict_to_js(self)
 if(self===$B.NULL){return false}}
-if($B.$isinstance(other,_b_.dict)){other=dict_to_js(other)
+if($B.is_dict(other)){other=dict_to_js(other)
 if(other===$B.NULL){return false}}
 if(Object.keys(self).length !==Object.keys(other).length){return false}
 for(var key in self){if(! Object.hasOwn(other,key)||other[key]!==self[key]){return false}}
@@ -12939,7 +12948,7 @@ range.select()}})(this)}}
 DOMNode_funcs.style_get=function(self){return self.style}
 DOMNode_funcs.style_set=function(self,style){
 if(typeof style==='string'){self.style=style
-return}else if(!$B.$isinstance(style,_b_.dict)){$B.RAISE(_b_.TypeError,"style must be str or dict, not "+
+return}else if(!$B.is_dict(style)){$B.RAISE(_b_.TypeError,"style must be str or dict, not "+
 $B.class_name(style))}
 for(var item of _b_.dict.$iter_items(style)){var key=item.key,value=item.value
 if(key.toLowerCase()=="float"){self.style.cssFloat=value
@@ -13133,7 +13142,7 @@ $B.class_name(subject)+', a single positional '+
 'subpattern is accepted')}
 return $B.pattern_match(subject,pattern.args[0])}else{
 let match_args=$B.$getattr(klass,'__match_args__',$B.fast_tuple([]))
-if(! $B.$isinstance(match_args,_b_.tuple)){$B.RAISE(_b_.TypeError,'__match_args__() did not return a tuple')}
+if(! $B.is_tuple(match_args)){$B.RAISE(_b_.TypeError,'__match_args__() did not return a tuple')}
 if(pattern.args.length > match_args.length){$B.RAISE(_b_.TypeError,'__match_args__() returns '+match_args.length+
 ' names but '+pattern.args.length+' positional '+
 'arguments were passed')}
@@ -14233,7 +14242,7 @@ var responseType={"text":"text","binary":"arraybuffer","dataURL":"arraybuffer"}
 function handle_kwargs(kw,method){var result={cache:false,format:'text',mode:'text',headers:{}}
 for(let item of _b_.dict.$iter_items(kw)){let key=item.key,value=item.value
 if(key=="data"){var params=value
-if(typeof params=="string" ||params instanceof FormData){result.body=params}else if($B.$isinstance(params,_b_.bytes)){result.body=new ArrayBuffer(params.source.length)
+if(typeof params=="string" ||params instanceof FormData){result.body=params}else if($B.is_bytes(params)){result.body=new ArrayBuffer(params.source.length)
 var array=new Int8Array(data)
 for(let i=0,len=params.source.length;i < len;i++){array[i]=params.source[i]}}else{if($B.get_class(params)!==_b_.dict){$B.RAISE(_b_.TypeError,"wrong type for data, "+
 "expected dict, bytes or str, got "+
@@ -14241,7 +14250,7 @@ $B.class_name(params))}
 var items=[]
 for(let subitem of _b_.dict.$iter_items(params)){items.push(encodeURIComponent(subitem.key)+"="+
 encodeURIComponent($B.pyobj2jsobj(subitem.value)))}
-result.body=items.join("&")}}else if(key=="headers"){if(! $B.$isinstance(value,_b_.dict)){$B.RAISE(_b_.ValueError,"headers must be a dict, not "+$B.class_name(value))}
+result.body=items.join("&")}}else if(key=="headers"){if(! $B.is_dict(value)){$B.RAISE(_b_.ValueError,"headers must be a dict, not "+$B.class_name(value))}
 for(let subitem of _b_.dict.$iter_items(value)){result.headers[subitem.key.toLowerCase()]=subitem.value}}else if(["cache","format","mode"].includes(key)){result[key]=value}}
 if(method=="post"){
 if(! result.headers.hasOwnProperty("content-type")){result.headers["Content-Type"]="application/x-www-form-urlencoded"}}

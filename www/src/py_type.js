@@ -382,7 +382,8 @@ $B.make_class_namespace = function(metaclass, class_name, qualname,
         $B.RAISE(_b_.TypeError, 'metaclass has no __prepare__')
     }
     var class_dict = $B.$call(prepare, class_name, bases) // dict or dict-like
-    if(! $B.$isinstance(class_dict, _b_.dict)){
+    if(! $B.is_dict(class_dict)){
+        console.log('class dict', class_dict)
         $B.RAISE(_b_.TypeError,
             `${$B.get_name(metaclass)}.__prepare__() must return a mapping, ` +
             `not ${$B.class_name(class_dict)}`)
@@ -1352,7 +1353,12 @@ _b_.type.tp_new = function(cls, args, kw){
         class_obj.tp_flags |= base.tp_flags & $B.TPFLAGS.UNICODE_SUBCLASS
         class_obj.tp_flags |= base.tp_flags & $B.TPFLAGS.LONG_SUBCLASS
         class_obj.tp_flags |= base.tp_flags & $B.TPFLAGS.TUPLE_SUBCLASS
-    }        
+        class_obj.tp_flags |= base.tp_flags & $B.TPFLAGS.LIST_SUBCLASS
+        class_obj.tp_flags |= base.tp_flags & $B.TPFLAGS.DICT_SUBCLASS
+        class_obj.tp_flags |= base.tp_flags & $B.TPFLAGS.BYTES_SUBCLASS
+        class_obj.tp_flags |= base.tp_flags & $B.TPFLAGS.BASE_EXC_SUBCLASS
+        class_obj.tp_flags |= base.tp_flags & $B.TPFLAGS.TYPE_SUBCLASS
+    }
     $B.set_dict(class_obj, cl_dict)
     class_obj.tp_mro = $B.make_mro(class_obj)
     class_obj.tp_subclasses = []
@@ -1958,7 +1964,7 @@ $B.make_iterator_class = function(name, reverse){
 
 // PEP 585
 function _Py_make_parameters(args){
-    var is_args_list = $B.$isinstance(args, _b_.list)
+    var is_args_list = $B.is_list(args)
     var tuple_args
     if(is_args_list){
         args = tuple_args = $B.fast_tuple(args)
@@ -1985,7 +1991,7 @@ function _Py_make_parameters(args){
                 // add the results to the current parameters.
                 subparams = _Py_make_parameters(t)
             }
-            if(subparams && $B.$isinstance(subparams, _b_.tuple)){
+            if(subparams && $B.is_tuple(subparams)){
                 var len2 = subparams.length
                 var needed = len2 - 1 - (iarg - iparam)
                 if(needed > 0){
@@ -2026,14 +2032,14 @@ function _unpacked_tuple_args(arg){
 
 function _unpack_args(item){
     var newargs = []
-    var is_tuple = $B.$isinstance(item, _b_.tuple)
+    var is_tuple = $B.is_tuple(item)
     var nitems = is_tuple ? item.length : 1
     var argitems = is_tuple ? item[0] : item
     for(let item of argitems){
         if(! $B.is_type(item)){
             var subargs = _unpacked_tuple_args(item)
             if (subargs !== $B.NULL &&
-                    $B.$isinstance(subargs, _b_.tuple) &&
+                    $B.is_tuple(subargs) &&
                     ! (subargs.length > 0 &&
                         subargs[subargs.length - 1] === $B.ellipsis)){
                 newargs = newargs.concat(subargs)
@@ -2061,7 +2067,7 @@ function subs_tvars(obj, params, argitems, nargs){
     var subparams
     var subparams = $B.$getattr(obj, '__parameters__', $B.NULL)
     if(subparams !== $B.NULL &&
-            $B.$isinstance(subparams, _b_.tuple) &&
+            $B.is_tuple(subparams) &&
             subparams.length > 0){
         var nparams = params.length
         var nsubargs = subparams.length
@@ -2072,7 +2078,7 @@ function subs_tvars(obj, params, argitems, nargs){
             if(iparam >= 0){
                 var param = params[iparam]
                 arg = argitems[iparam]
-                if($B.get_class(param).tp_iter && $B.$isinstance(arg, _b_.tuple)){  // TypeVarTuple
+                if($B.get_class(param).tp_iter && $B.is_tuple(arg)){  // TypeVarTuple
                     j = tuple_extend(subargs, j,
                                     arg[0],
                                     arg.length)
@@ -2103,7 +2109,7 @@ function _Py_subs_parameters(self, args, parameters, item){
             item = tmp
         }
     }
-    var is_tuple = $B.$isinstance(item, _b_.tuple)
+    var is_tuple = $B.is_tuple(item)
     var nitems = is_tuple ? item.length : 1
     var argitems = is_tuple ? item[0] : item
     if(nitems != nparams){
@@ -2120,7 +2126,7 @@ function _Py_subs_parameters(self, args, parameters, item){
         t = dict[T, list[S]]; t[str, int] -> newargs = [str, list[int]]
         t = list[[T]];        t[str]      -> newargs = [[str]]
      */
-    var is_args_list = $B.$isinstance(args, _b_.list)
+    var is_args_list = $B.is_list(args)
     var tuple_args
     if(is_args_list){
         args = tuple_args = $B.fats_tuple(args)
@@ -2137,7 +2143,7 @@ function _Py_subs_parameters(self, args, parameters, item){
         // Recursively substitute params in lists/tuples.
         if($B.$isinstance(arg, [_b_.tuple, _b_.list])){
             var subargs = _Py_subs_parameters(self, arg, parameters, item)
-            if($B.$isinstance(arg, _b_.tuple)){
+            if($B.is_tuple(arg)){
                 newargs[jarg] = subargs
             }else{
                 // _Py_subs_parameters returns a tuple. If the original arg was a list,
@@ -2156,7 +2162,7 @@ function _Py_subs_parameters(self, args, parameters, item){
             arg = subs_tvars(arg, parameters, argitems, nitems);
         }
         if(unpack){
-            if(! $B.$isinstance(arg, _b_.tuple)){
+            if(! $B.is_tuple(arg)){
                 var original = args[iarg]
                 $B.RAISE(_b_.TypeError,
                     `expected __typing_subst__ of ${_b_.repr(original)} ` +
@@ -2428,7 +2434,7 @@ $B.UnionType.nb_or = function(self, other){
 var UnionType_funcs = $B.UnionType.tp_funcs = {}
 
 UnionType_funcs.__class_getitem__ = function(cls, items){
-    if($B.$isinstance(items, _b_.tuple)){
+    if($B.is_tuple(items)){
         return $B.UnionType.$factory(items)
     }else{
         return items

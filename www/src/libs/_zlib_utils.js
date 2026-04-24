@@ -417,7 +417,7 @@ function pprint(x){
 
 function _decompresser(codelengths){
     let lengths = []
-    if($B.$isinstance(codelengths, _b_.dict)){
+    if($B.is_dict(codelengths)){
         for(var entry of _b_.dict.$iter_items(codelengths)){
             lengths.push([entry.key, entry.value])
         }

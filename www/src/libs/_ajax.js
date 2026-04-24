@@ -6,7 +6,7 @@ var $N = $B.builtins.None,
     _b_ = $B.builtins
 
 var add_to_res = function(res, key, val) {
-    if($B.$isinstance(val, _b_.list)){
+    if($B.is_list(val)){
         for (j = 0; j < val.length; j++) {
             add_to_res(res, key, val[j])
         }
@@ -105,7 +105,7 @@ function handle_kwargs(self, kw, method){
             encoding = item.value
         }else if(key == "headers"){
             var value = item.value
-            if(! $B.$isinstance(value, _b_.dict)){
+            if(! $B.is_dict(value)){
                 $B.RAISE(_b_.ValueError,
                     "headers must be a dict, not " + $B.class_name(value))
             }
@@ -207,7 +207,7 @@ function _request_with_body(method){
     var items = handle_kwargs(self, kw, method), // common with browser.aio
         data = items.data
 
-    if($B.$isinstance(data, _b_.dict)){
+    if($B.is_dict(data)){
         data = stringify(data)
     }
     for(var key in items.headers){
@@ -315,7 +315,7 @@ function file_upload(){
             for(var d of rawdata){
                 formdata.append(d[0], d[1])
             }
-        }else if($B.$isinstance(rawdata, _b_.dict)){
+        }else if($B.is_dict(rawdata)){
             for(var item of _b_.dict.$iter_items(rawdata)){
                 formdata.append(item.key, item.value)
             }
@@ -470,7 +470,7 @@ ajax_funcs.send = function(self, params){
     }
     if($B.is_str(params)){
         res = params
-    }else if($B.$isinstance(params, _b_.dict)){
+    }else if($B.is_dict(params)){
         if(content_type == 'multipart/form-data'){
             // The FormData object serializes the data in the 'multipart/form-data'
             // content-type so we may as well override that header if it was set
@@ -488,7 +488,7 @@ ajax_funcs.send = function(self, params){
             }
             for(var item of _b_.dict.$iter_items(params)){ //i = 0, len = items.length; i < len; i++){
                 var key = encodeURIComponent(_b_.str.$factory(item.key));
-                if($B.$isinstance(item.value, _b_.list)){
+                if($B.is_list(item.value)){
                     for(var elt of item.value){
                         res += key +'=' +
                             encodeURIComponent(_b_.str.$factory(elt)) + '&'

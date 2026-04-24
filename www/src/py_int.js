@@ -459,7 +459,7 @@ _b_.int.nb_multiply = function(self, other){
 
 _b_.int.nb_remainder = function(self, other){
     // can't use Javascript % because it works differently for negative numbers
-    if($B.$isinstance(other,_b_.tuple) && other.length == 1){
+    if($B.is_tuple(other) && other.length == 1){
         other = other[0]
     }
     var y = toBigInt(other)

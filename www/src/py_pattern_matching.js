@@ -269,7 +269,7 @@ $B.pattern_match = function(subject, pattern){
                 // Get attribute __match_args__ of class
                 let match_args = $B.$getattr(klass, '__match_args__',
                     $B.fast_tuple([]))
-                if(! $B.$isinstance(match_args, _b_.tuple)){
+                if(! $B.is_tuple(match_args)){
                     $B.RAISE(_b_.TypeError,
                         '__match_args__() did not return a tuple')
                 }

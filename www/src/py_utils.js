@@ -882,7 +882,7 @@ $B.get_name = function(klass){
 
 $B.unpack_mapping = function(func, obj){
     var items = []
-    if($B.$isinstance(obj, _b_.dict)){
+    if($B.is_dict(obj)){
         for(var item of _b_.dict.$iter_items(obj)){
             if(! $B.is_str(item.key)){
                 $B.RAISE(_b_.TypeError, 'keywords must be strings')
@@ -1233,7 +1233,7 @@ $B.$delitem = function(obj, item, inum){
     var klass = $B.get_class(obj)
     if(Array.isArray(obj) && klass === _b_.list &&
             typeof item == "number" &&
-            !$B.$isinstance(obj, _b_.tuple)){
+            !$B.is_tuple(obj)){
         if(item < 0){
             item += obj.length
         }

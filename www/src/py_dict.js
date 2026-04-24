@@ -974,7 +974,7 @@ dict.$from_array = function(arrays){
 /* dict start */
 
 _b_.dict.tp_richcompare = function(self, other, op){
-    if(! $B.$isinstance(other, _b_.dict)){
+    if(! $B.is_dict(other)){
         return _b_.NotImplemented
     }
     var res
@@ -1479,7 +1479,7 @@ $B.dict_items.mp_length = function(self){
 }
 
 $B.dict_items.sq_contains = function(self, obj){
-    if(! $B.$isinstance(obj, _b_.tuple) || obj.length != 2){
+    if(! $B.is_tuple(obj) || obj.length != 2){
         return false
     }
     var key = obj[0]

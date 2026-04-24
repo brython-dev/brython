@@ -150,7 +150,7 @@ _IOBase_funcs.readline = function(_self, limit=-1){
 
         if(peek != null){
             var readahead = peek(1)
-            if (! $B.$isinstance(readahead, _b_.bytes)) {
+            if (! $B.is_bytes(readahead)) {
                 $B.RAISE(_b_.OSError,
                      "peek() should have returned a bytes object, " +
                      `not '${$B.class_name(readahead)}'`)
@@ -183,7 +183,7 @@ _IOBase_funcs.readline = function(_self, limit=-1){
 
         var read = $B.search_in_mro($B.get_class(_self), "read")
         b = $B.$call(read, _self, nreadahead)
-        if(! $B.$isinstance(b, _b_.bytes)) {
+        if(! $B.is_bytes(b)) {
             $B.RAISE(_b_.OSError,
                 "read() should have returned a bytes object, " +
                 `not '${$B.class_name(b)}'`)
@@ -323,7 +323,7 @@ _RawIOBase_funcs.readall = function(_self){
             }
             break
         }
-        if(! $B.$isinstance(data, _b_.bytes)){
+        if(! $B.is_bytes(data)){
             $B.RAISE(_b_.TypeError, "read() should return bytes")
         }
         if(_b_.len(data) == 0){
@@ -374,7 +374,7 @@ function _bufferediobase_readinto_generic(_self, buffer, readinto1){
     var attr = readinto1 ? "read1" : "read"
     data = $B.$call($B.$getattr(_self, attr), _b_.len(buffer))
 
-    if(! $B.$isinstance(data, _b_.bytes)) {
+    if(! $B.is_bytes(data)) {
         $B.RAISE(_b_.TypeError, "read() should return bytes")
     }
 

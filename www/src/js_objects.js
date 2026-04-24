@@ -46,7 +46,7 @@ $B.pyobj2structuredclone = function(obj, strict){
             res[i] = $B.pyobj2structuredclone(obj[i]);
         }
         return res
-    }else if($B.$isinstance(obj, _b_.dict)){
+    }else if($B.is_dict(obj)){
         if(strict){
             for(var entry of _b_.dict.$iter_items(obj)){
                 if(typeof entry.key !== 'string'){
@@ -575,13 +575,13 @@ function JSObj_eq(self, other){
         return false
     }
     // a JS object can compare to another JS object or a Python dictionary
-    if($B.$isinstance(self, _b_.dict)){
+    if($B.is_dict(self)){
         self = dict_to_js(self)
         if(self === $B.NULL){
             return false
         }
     }
-    if($B.$isinstance(other, _b_.dict)){
+    if($B.is_dict(other)){
         other = dict_to_js(other)
         if(other === $B.NULL){
             return false

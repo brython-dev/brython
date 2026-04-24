@@ -105,7 +105,7 @@ var module = {
     a2b_hex: function(){
         var $ = $B.args("a2b_hex", 1, {s: null}, arguments)
         var s = $.s
-        if($B.$isinstance(s, _b_.bytes)){
+        if($B.is_bytes(s)){
             s = $B.bytes_decode(s, 'ascii')
         }
         if(typeof s !== "string"){

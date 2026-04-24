@@ -249,7 +249,7 @@ _b_.object.tp_setattro = function(self, attr, value){
         }
         // No data descriptor, delete from instance __dict__
         var dict = $B.get_dict(self)
-        if(dict && $B.$isinstance(dict, _b_.dict) &&
+        if(dict && $B.is_dict(dict) &&
                 _b_.dict.$contains_string(dict, attr)){
             _b_.dict.$delete_string(dict, attr)
             delete self[attr]
@@ -523,7 +523,7 @@ object_funcs.__dir__ = function(self){
     var temp
     if(dict == undefined){
         temp = $B.empty_dict()
-    }else if(! $B.$isinstance(dict, _b_.dict)){
+    }else if(! $B.is_dict(dict)){
         temp = $B.empty_dict()
     }else{
         /* Copy __dict__ to avoid mutating it. */
@@ -664,7 +664,7 @@ object_funcs.__reduce_ex__ = function(self, protocol){
     }
     res.push(list_like_iterator)
     var key_value_iterator = _b_.None
-    if($B.$isinstance(self, _b_.dict)){
+    if($B.is_dict(self)){
         key_value_iterator = _b_.dict.tp_funcs.items(self)
     }
     res.push(key_value_iterator)

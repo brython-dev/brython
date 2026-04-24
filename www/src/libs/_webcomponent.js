@@ -12,7 +12,7 @@ function define(tag_name, cls, options){
         _extends,
         extend_dom_name = 'HTMLElement'
     if(options !== _b_.None){
-        if(! $B.$isinstance(options, _b_.dict)){
+        if(! $B.is_dict(options)){
             $B.RAISE(_b_.TypeError, 'options can only be None or a ' +
                 `dict, not '${$B.class_name(options)}'`)
         }

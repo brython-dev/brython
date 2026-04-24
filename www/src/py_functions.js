@@ -307,7 +307,7 @@ function type_params_get(f){
 }
 function type_params_set(f, value){
     $B.check_infos(f)
-    if(! $B.$isinstance(value, _b_.tuple)){
+    if(! $B.is_tuple(value)){
         $B.RAISE(_b_.TypeError,
             'TypeError: __type_params__ must be set to a tuple')
     }
@@ -394,7 +394,7 @@ function_funcs.__annotations___get = function(self){
 
 function_funcs.__annotations___set = function(self, value){
     $B.check_infos(self)
-    if(! $B.$isinstance(value, _b_.dict)){
+    if(! $B.is_dict(value)){
         $B.RAISE(_b_.TypeError,
             '__annotations__ must be set to a dict object')
     }
@@ -463,7 +463,7 @@ function_funcs.__defaults___set = function(self, value){
     $B.check_infos(self)
     if(value === _b_.None){
         value = []
-    }else if(! $B.$isinstance(value, _b_.tuple)){
+    }else if(! $B.is_tuple(value)){
         $B.RAISE(_b_.TypeError,
             "__defaults__ must be set to a tuple object")
     }
@@ -481,7 +481,7 @@ function_funcs.__dict___set = function(self, value){
     if(value === $B.NULL){
         $B.RAISE(_b_.TypeError, "cannot delete __dict__")
     }
-    if(! $B.$isinstance(value, _b_.dict)){
+    if(! $B.is_dict(value)){
         $B.RAISE(_b_.TypeError,
             `__dict__ must be set to a dictionary, not a ` +
             `'${$B.class_name(value)}'`
@@ -514,7 +514,7 @@ function_funcs.__kwdefaults___set = function(self, value){
     $B.check_infos(self)
     if(value == _b_.None){
         value = $B.empty_dict()
-    }else if(! $B.$isinstance(value, _b_.dict)){
+    }else if(! $B.is_dict(value)){
         $B.RAISE(_b_.TypeError,
             '__kwdefaults__ must be set to a dict object')
     }
