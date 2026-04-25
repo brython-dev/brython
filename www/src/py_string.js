@@ -146,9 +146,6 @@ function reverse(s){
 }
 
 function check_str(obj, prefix){
-    if(obj instanceof String || typeof obj == "string"){
-        return
-    }
     if(! $B.is_str(obj)){
         $B.RAISE(_b_.TypeError, (prefix || '') +
             "must be str, not " + $B.class_name(obj))
@@ -2169,40 +2166,66 @@ str_funcs.expandtabs = function(self){
     return res
 }
 
-str_funcs.find = function(self){
+str_funcs.find = function(self, sub, start, end){
     // Return the lowest index in the string where substring sub is found,
     // such that sub is contained in the slice s[start:end]. Optional
     // arguments start and end are interpreted as in slice notation.
     // Return -1 if sub is not found.
-    var $ = $B.args("str.find", 4,
-            {self: null, sub: null, start: null, end: null},
-            arguments, {start: 0, end: null}, null, null),
-        _self,
-        sub
-    check_str($.sub)
-    normalize_start_end($);
-
-    [_self, sub] = to_string($.self, $.sub);
-
-    var len = str.mp_length(_self),
-        sub_len = str.mp_length(sub)
-
-    if(sub_len == 0 && $.start == len){
-        return len
+    var args_length = arguments.length
+    if(args_length == 2 && ! sub.$kw){
+        start = 0
+        end = _b_.None
+    }else if(args_length == 3 && ! start.$kw){
+        end = _b_.None
+    }else if(args_length == 4 && ! end.$kw){
+        //
+    }else{
+        var $ = $B.args("str.find", 4,
+                {self: null, sub: null, start: null, end: null},
+                arguments, {start: 0, end: _b_.None}, null, null)
+        self = $.self
+        sub = $.sub
+        start = $.start
+        end = $.end
     }
-    if(len + sub_len == 0){
-        return -1
+    check_str(sub)
+    var res
+    try{
+        start = $B.PyNumber_Index(start)
+    }catch(err){
+        $B.RAISE(_b_.TypeError,
+            'slice indices must be integers or None or have an __index__ ' +
+            'method')
     }
-    // Use .indexOf(), not .search(), to avoid conversion to reg exp
-    // Also use .slice() instead of .substring() because substring swaps
-    // arguments if start > end...
-    var js_start = pypos2jspos(_self, $.start),
-        js_end = pypos2jspos(_self, $.end),
-        ix = _self.slice(js_start, js_end).indexOf(sub)
-    if(ix == -1){
-        return -1
+    res = self.indexOf(sub, start)
+    if(end !== _b_.None){
+        try{
+            end = $B.PyNumber_Index(end)
+        }catch(err){
+            $B.RAISE(_b_.TypeError,
+                'slice indices must be integers or None or have an __index__ ' +
+                'method')
+        }
+        if(end < 0){
+            end += str.mp_length(self)
+        }
+        if(str.mp_length(sub) > end - start){
+            res = -1
+        }
     }
-    return jspos2pypos(_self, js_start + ix)
+    var len = str.mp_length(self)
+
+    if(sub == ''){
+        if(self == ''){
+            res == -1
+        }else if(start == len){
+            res = len
+        }
+    }
+    if(res == -1){
+        return res
+    }
+    return jspos2pypos(self, res)
 }
 
 str_funcs.format = function(){

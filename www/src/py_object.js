@@ -344,11 +344,10 @@ _b_.object.tp_str = function(self){
 $B.time_object_tp_getattro = 0
 
 _b_.object.tp_getattro = function(self, attr){
-    var test = false // attr == '__new__' && self.ob_type && self.ob_type.tp_name == 'super'
+    var test = false // attr == 'pattern' // && self.ob_type && self.ob_type.tp_name == 'super'
     var klass = $B.get_class(self)
     if(test){
         console.log('getattr', attr, 'of self', self, klass)
-        console.log(Error('trace').stack)
         if(self.jsobj){
             console.log('in jsobj', self.jsobj[attr])
         }

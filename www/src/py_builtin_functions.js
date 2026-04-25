@@ -742,13 +742,13 @@ $B.time_builtin_getattr = 0
 
 $B.$getattr = function(obj, attr, _default){
     // Used internally to avoid having to parse the arguments
-    var test = false // attr == '__dict__'
+    var test = false // attr == '__getformat__'
     if(test){
         console.log('$getattr', obj, attr)
     }
     var res
     if(obj === undefined || obj === null){
-        console.log(Error('trace').stack)
+        console.log('getting attribute', attr)
         $B.RAISE_ATTRIBUTE_ERROR("Javascript object '" + obj +
             "' has no attribute", obj, attr)
     }
@@ -781,6 +781,9 @@ $B.$getattr = function(obj, attr, _default){
 
     if(! is_class){
         var klass = $B.get_class(obj)
+        if(test){
+            console.log('klass', klass)
+        }
         if(klass.tp_funcs && klass.$getattribute === _b_.object.tp_getattro){
             // built-in type
             var func = $B.get_from_dict(klass, attr, $B.NULL)
@@ -818,15 +821,20 @@ $B.$getattr = function(obj, attr, _default){
                     : $B.NULL
                 : $B.NULL
             if(in_klass_dict){
+                if(attr == 'path'){
+                    console.log('attr', attr, 'of obj', obj, 'in klass dict', in_klass_dict)
+                }
                 switch(in_klass_dict.ob_type){
                     case $B.function:
                         if(in_own_dict === $B.NULL){
                             return $B.method.$factory(in_klass_dict, obj)
                         }
+                        break
                     case _b_.staticmethod:
                         if(in_own_dict === $B.NULL){
                             return in_klass_dict
                         }
+                        break
                 }
             }
         }catch(err){
@@ -855,7 +863,7 @@ $B.$getattr = function(obj, attr, _default){
                     }
                     break
                 case $B.classmethod_descriptor:
-                    res = in_dict.d_method.bind(null, in_dict.d_type)
+                    res = $B.classmethod_descriptor.tp_descr_get(in_dict, $B.NULL, obj)
                     break
                 case _b_.classmethod:
                     res = $B.$call($B.method, in_dict.cm_callable, obj)

@@ -688,8 +688,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-04-24 18:25:59.213786"
-__BRYTHON__.timestamp=1777047959213
+__BRYTHON__.compiled_date="2026-04-25 14:26:50.845414"
+__BRYTHON__.timestamp=1777120010845
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1449,117 +1449,6 @@ if(suggestion !==_b_.None){msg+=`. Did you mean: '${suggestion}'?`}
 return $B.EXC(_b_.TypeError,msg)}
 $B.unexpected_keyword=unexpected_keyword
 var empty={empty:true}
-function args0(f,args){
-var arg_names=f.$infos.arg_names,code=f.$infos.__code__,slots={}
-for(var arg_name of arg_names){slots[arg_name]=empty}
-return $B.parse_args(
-args,f.$infos.__name__,code.co_argcount,slots,arg_names,f.$infos.__defaults__,f.$infos.__kwdefaults__,f.$infos.vararg,f.$infos.kwarg,code.co_posonlyargcount,code.co_kwonlyargcount)}
-function args0_NEW(fct,args){
-const LAST_ARGS=args[args.length-1];
-const HAS_KW=LAST_ARGS !==undefined && LAST_ARGS !==null && LAST_ARGS.$kw !==undefined;
-let ARGS_POS_COUNT=args.length,ARGS_NAMED=null;
-if(HAS_KW){--ARGS_POS_COUNT
-ARGS_NAMED=LAST_ARGS.$kw}
-const result={}
-const $INFOS=fct.$infos,$CODE=$INFOS.__code__,PARAMS_NAMES=$INFOS.arg_names,PARAMS_POS_COUNT=$CODE.co_argcount,PARAMS_NAMED_COUNT=$CODE.co_kwonlyargcount,PARAMS_VARARGS_NAME=$INFOS.vararg,PARAMS_KWARGS_NAME=$INFOS.kwarg,PARAMS_POS_DEFAULTS=$INFOS.__defaults__,PARAMS_POS_DEFAULTS_COUNT=PARAMS_POS_DEFAULTS.length,PARAMS_POS_DEFAULTS_OFFSET=PARAMS_POS_COUNT-PARAMS_POS_DEFAULTS_COUNT
-const min=Math.min(ARGS_POS_COUNT,PARAMS_POS_COUNT)
-let offset=0
-for(;offset < min;++offset){result[PARAMS_NAMES[offset]]=args[offset]}
-if(PARAMS_VARARGS_NAME !==null ){
-result[PARAMS_VARARGS_NAME]=$B.fast_tuple(
-Array.prototype.slice.call(args,PARAMS_POS_COUNT,ARGS_POS_COUNT ));}else if(ARGS_POS_COUNT > PARAMS_POS_COUNT){args0(fct,args)
-throw new Error('Too much positional arguments given (args0 should have raised an error) !')}
-if(ARGS_NAMED===null){
-if(offset < PARAMS_POS_DEFAULTS_OFFSET){args0(fct,args)
-throw new Error('Not enough positional arguments given (args0 should have raised an error) !')}
-for(let i=offset-PARAMS_POS_DEFAULTS_OFFSET;
-i < PARAMS_POS_DEFAULTS_COUNT;
-++i){result[PARAMS_NAMES[offset++]]=PARAMS_POS_DEFAULTS[i]}
-if(PARAMS_KWARGS_NAME !==null){result[PARAMS_KWARGS_NAME]=$B.empty_dict()}
-if(PARAMS_NAMED_COUNT===0 ){return result}
-const kwargs_defaults_values=fct.$kwdefaults_values;
-const nb_named_defaults=kwargs_defaults_values.length;
-if(nb_named_defaults < PARAMS_NAMED_COUNT){args0(fct,args)
-throw new Error('Named argument expected (args0 should have raised an error) !')}
-for(let i=0;i < nb_named_defaults;++i){result[PARAMS_NAMES[offset++]]=kwargs_defaults_values[i]}
-return result}
-const kwargs_defaults=fct.$kwdefaults;
-const PARAMS_POSONLY_COUNT=$CODE.co_posonlyargcount;
-if(offset < PARAMS_POSONLY_COUNT){if(offset < PARAMS_POS_DEFAULTS_OFFSET){args0(fct,args)
-throw new Error('Not enough positional parameters given (args0 should have raised an error) !')}
-const max=PARAMS_POS_DEFAULTS_COUNT-
-(PARAMS_POS_COUNT-PARAMS_POSONLY_COUNT)
-for(let i=offset-PARAMS_POS_DEFAULTS_OFFSET;
-i < max;
-++i){result[PARAMS_NAMES[offset++]]=PARAMS_POS_DEFAULTS[i]}}
-if(PARAMS_KWARGS_NAME===null){let nb_named_args=0;
-let kargs=ARGS_NAMED[0];
-for(let argname in kargs){result[argname ]=kargs[argname]
-++nb_named_args}
-for(let id=1,len=ARGS_NAMED.length;id < len;++id){kargs=ARGS_NAMED[id];
-for(let argname of $B.make_js_iterator($B.$getattr($B.get_class(kargs),"keys")(kargs))){if(typeof argname !=="string"){$B.args0_old(fct,args);
-throw new Error('Non string key passed in **kargs');}
-result[argname ]=$B.$getitem(kargs,argname);
-++nb_named_args}}
-let found=0
-let ioffset=offset
-for(;ioffset < PARAMS_POS_DEFAULTS_OFFSET;++ioffset){const key=PARAMS_NAMES[ioffset]
-if(key in result ){
-continue}
-args0(fct,args)
-throw new Error('Missing a named arguments (args0 should have raised an error) !')}
-for(;ioffset < PARAMS_POS_COUNT;++ioffset){const key=PARAMS_NAMES[ioffset]
-if(key in result){continue}
-result[key]=PARAMS_POS_DEFAULTS[ioffset-PARAMS_POS_DEFAULTS_OFFSET]
-++found}
-for(;ioffset < PARAMS_NAMES.length;++ioffset){const key=PARAMS_NAMES[ioffset]
-if(key in result ){continue}
-if(! kwargs_defaults.has(key)){args0(fct,args)
-throw new Error('Missing a named arguments (args0 should have raised an error) !');}
-result[key]=kwargs_defaults.get(key)
-++found}
-if(found+nb_named_args !==PARAMS_NAMES.length-offset){args0(fct,args)
-throw new Error('Inexistant or duplicate named arguments (args0 should have raised an error) !')}
-return result}
-const extra={};
-const HAS_PARAMS=fct.$hasParams;
-let nb_named_args=0
-let nb_extra_args=0
-let kargs=ARGS_NAMED[0];
-for(let argname in kargs){if(HAS_PARAMS.has(argname)){result[argname ]=kargs[argname]
-++nb_named_args}else{extra[argname ]=kargs[argname]
-++nb_extra_args}}
-for(let id=1,len=ARGS_NAMED.length;id < len;++id){kargs=ARGS_NAMED[id];
-for(let argname of $B.make_js_iterator($B.$getattr($B.get_class(kargs),"keys")(kargs))){if(typeof argname !=="string"){$B.args0_old(fct,args);
-throw new Error('Non string key passed in **kargs');}
-if(HAS_PARAMS.has(argname)){result[argname ]=$B.$getitem(kargs,argname);
-++nb_named_args}else{extra[argname ]=$B.$getitem(kargs,argname);
-++nb_extra_args}}}
-let found=0
-let ioffset=offset
-for(;ioffset < PARAMS_POS_DEFAULTS_OFFSET;++ioffset){const key=PARAMS_NAMES[ioffset]
-if(key in result){
-continue}
-args0(fct,args)
-throw new Error('Missing a named arguments (args0 should have raised an error) !')}
-for(;ioffset < PARAMS_POS_COUNT;++ioffset){const key=PARAMS_NAMES[ioffset]
-if(key in result){continue}
-result[key]=PARAMS_POS_DEFAULTS[ioffset-PARAMS_POS_DEFAULTS_OFFSET]
-++found}
-for(;ioffset < PARAMS_NAMES.length;++ioffset){const key=PARAMS_NAMES[ioffset]
-if(key in result ){continue}
-if(! kwargs_defaults.has(key)){args0(fct,args)
-throw new Error('Missing a named arguments (args0 should have raised an error) !')}
-result[key]=kwargs_defaults.get(key)
-++found}
-if(found+nb_named_args !==PARAMS_NAMES.length-offset){args0(fct,args)
-throw new Error('Inexistant or duplicate named arguments (args0 should have raised an error) !')}
-if(Object.keys(extra).length !==nb_extra_args){args0(fct,args)
-throw new Error('Duplicate name given to **kargs parameter (args0 should have raised an error) !')}
-result[PARAMS_KWARGS_NAME]=_b_.dict.$from_js(extra)
-return result}
-$B.args0_old=args0;
-$B.args0=args0_NEW;
 $B.args=function(fname,argcount,slots,args,$dobj,vararg,kwarg,nb_posonly){
 var nb_posonly=nb_posonly ||0,var_names=Object.keys(slots),nb_kwonly=var_names.length-argcount,defaults=[],kwdefaults=$B.empty_dict()
 if($dobj){for(var i=0,len=var_names.length;i < len;i++){var var_name=var_names[i]
@@ -2327,7 +2216,6 @@ $B.time_object_tp_getattro=0
 _b_.object.tp_getattro=function(self,attr){var test=false 
 var klass=$B.get_class(self)
 if(test){console.log('getattr',attr,'of self',self,klass)
-console.log(Error('trace').stack)
 if(self.jsobj){console.log('in jsobj',self.jsobj[attr])}
 if(klass.js_class){console.log('in js_class',klass.js_class.prototype[attr])}}
 var in_mro=$B.search_in_mro(klass,attr,$B.NULL)
@@ -3698,7 +3586,7 @@ function_funcs.__defaults___set=function(self,value){$B.check_infos(self)
 if(value===_b_.None){value=[]}else if(! $B.is_tuple(value)){$B.RAISE(_b_.TypeError,"__defaults__ must be set to a tuple object")}
 self.$infos.__defaults__=value
 self.$function_infos[$B.func_attrs.__defaults__]=value
-$B.make_args_parser(self)}
+reset_args_parser(self)}
 function_funcs.__dict___get=function(self){return $B.get_dict(self)}
 function_funcs.__dict___set=function(self,value){if(value===$B.NULL){$B.RAISE(_b_.TypeError,"cannot delete __dict__")}
 if(! $B.is_dict(value)){$B.RAISE(_b_.TypeError,`__dict__ must be set to a dictionary, not a `+
@@ -3718,7 +3606,7 @@ self.$infos.__kwdefaults__=value
 var kwd={}
 for(var item of _b_.dict.$iter_items(value)){kwd[item.key]=item.value}
 self.$function_infos[$B.func_attrs.__kwdefaults__]=kwd
-$B.make_args_parser(self)}
+reset_args_parser(self)}
 function_funcs.__module___get=function(self){return self.$function_infos[$B.func_attrs.__module__]}
 function_funcs.__module___set=function(self,value){self.$function_infos[$B.func_attrs.__module__]=value}
 function_funcs.__name___get=function(self){return self.$function_infos[$B.func_attrs.__name__]}
@@ -3757,313 +3645,6 @@ f.$infos.__code__={co_argcount,co_filename,co_firstlineno,co_flags,co_freevars,c
 f.$infos.__code__.co_positions=()=> $B.$list([])
 f.$infos.__code__.co_positions.ob_type=$B.function
 $B.init_dict(f.$infos)}
-$B.make_args_parser_and_parse=function make_args_parser_and_parse(fct,args){return $B.make_args_parser(fct)(fct,args);}
-$B.make_args_parser=function(f){if((! f.$infos)&& f.$function_infos){$B.make_function_infos(f,...f.$function_infos)}
-if(f.$infos===undefined ||f.$infos.__code__===undefined){console.log('f',f)
-$B.RAISE_ATTRIBUTE_ERROR(`cannot set defauts to ${_b_.str.$factory(f)}`,f,'defaults')}
-const varnames=f.$infos.__code__.co_varnames,value=f.$infos.__defaults__,offset=f.$infos.__code__.co_argcount-value.length,$kwdefaults=new Map()
-var nb_kw_defaults=f.$infos.__kwdefaults__===_b_.None ? 0 :
-_b_.len(f.$infos.__kwdefaults__)
-if(f.$infos.__kwdefaults__ !==_b_.None){const kwdef=f.$infos.__kwdefaults__
-for(let kw of $B.make_js_iterator(kwdef)){$kwdefaults.set(kw,$B.$getitem(kwdef,kw))}}
-f.$kwdefaults=$kwdefaults
-f.$kwdefaults_values=[...$kwdefaults.values()]
-f.$hasParams=new Set()
-var nb_args=f.$infos.__code__.co_argcount+
-f.$infos.__code__.co_kwonlyargcount+
-(f.$infos.kwargs ? 1 :0)
-for(let i=0 ;i < nb_args;++i){f.$hasParams.add(varnames[i])}
-const $INFOS=f.$infos,$CODE=$INFOS.__code__,DEFAULTS=$B.getArgs0.DEFAULTS
-const PARAMS_NAMED_COUNT=$CODE.co_kwonlyargcount,PARAMS_NAMED_DEFAULTS_COUNT=nb_kw_defaults
-let named_defaults=DEFAULTS.NONE;
-if(PARAMS_NAMED_DEFAULTS_COUNT > 0){named_defaults=PARAMS_NAMED_DEFAULTS_COUNT >=PARAMS_NAMED_COUNT ?
-DEFAULTS.ALL :DEFAULTS.SOME}
-const PARAMS_POSONLY_COUNT=$CODE.co_posonlyargcount
-const PARAMS_POS_COUNT=$CODE.co_argcount-PARAMS_POSONLY_COUNT
-let pos_defaults=DEFAULTS.NONE
-if(PARAMS_POS_COUNT !==0 && value.length > 0){pos_defaults=value.length >=PARAMS_POS_COUNT ? DEFAULTS.ALL :
-DEFAULTS.SOME;}
-let posonly_defaults=DEFAULTS.NONE
-if(value.length > PARAMS_POS_COUNT){posonly_defaults=value.length >=$CODE.co_argcount ? DEFAULTS.ALL :
-DEFAULTS.SOME;}
-f.$args_parser=f.$infos.args_parser=$B.getArgs0(
-PARAMS_POSONLY_COUNT !==0,posonly_defaults,PARAMS_POS_COUNT !==0,pos_defaults,$INFOS.vararg !==null,PARAMS_NAMED_COUNT !==0,named_defaults,$INFOS.kwarg !==null
-)
-return f.$args_parser}
-const args0_fcts=$B.args_parsers=[];
-function getArgs0(hasPosOnly,posOnlyDefaults,hasPos,posDefaults,hasVargars,hasNamedOnly,namedOnlyDefaults,hasKWargs){const IDX=hasPosOnly
-|posOnlyDefaults << 1
-|hasPos << 3
-|posDefaults << 4
-|hasVargars << 6
-|hasNamedOnly << 7
-|namedOnlyDefaults << 8
-|hasKWargs << 10;
-const args0=args0_fcts[IDX];
-if(args0 !==undefined)
-return args0;
-const fct=args0_fcts[IDX]=generate_args0(hasPosOnly,posOnlyDefaults,hasPos,posDefaults,hasVargars,hasNamedOnly,namedOnlyDefaults,hasKWargs);
-fct.id=IDX;
-return fct;}
-$B.getArgs0=getArgs0;
-const DEFAULTS=getArgs0.DEFAULTS={NONE:0,SOME:1,ALL :3}
-function generate_args0(...args){return new Function('fct','args',generate_args0_str(...args));}
-function generate_args0_str(hasPosOnly,posOnlyDefaults,hasPos,posDefaults,hasVargars,hasNamedOnly,namedOnlyDefaults,hasKWargs){let fct=
-`
-    const LAST_ARGS = args[args.length-1];
-    const HAS_KW = LAST_ARGS !== undefined && LAST_ARGS !== null && LAST_ARGS.$kw !== undefined;
-    let ARGS_POS_COUNT        = args.length;
-    let ARGS_NAMED            = null;
-    if( HAS_KW ) {
-        --ARGS_POS_COUNT;
-        ARGS_NAMED = LAST_ARGS.$kw;
-    }
-    const result = $B.empty_dict();
-    // using const should enable the browser to perform some optimisation.
-    const $INFOS = fct.$infos;
-    const $CODE  = $INFOS.__code__;
-`;
-if(hasPos ||hasPosOnly ||hasNamedOnly )
-fct+=`
-    const PARAMS_NAMES        = $INFOS.arg_names;
-`;
-let PARAMS_POS_COUNT="0";
-if(hasPos ||hasPosOnly ){PARAMS_POS_COUNT="PARAMS_POS_COUNT";
-fct+=`
-    const PARAMS_POS_COUNT    = $CODE.co_argcount;
-`;}
-let PARAMS_POS_DEFAULTS_OFFSET=PARAMS_POS_COUNT;
-let PARAMS_POS_DEFAULTS_COUNT="0";
-if(posOnlyDefaults !==DEFAULTS.NONE ||posDefaults !==DEFAULTS.NONE ){PARAMS_POS_DEFAULTS_OFFSET="PARAMS_POS_DEFAULTS_OFFSET";
-PARAMS_POS_DEFAULTS_COUNT="PARAMS_POS_DEFAULTS_COUNT";
-fct+=`
-    const PARAMS_POS_DEFAULTS = $INFOS.__defaults__;
-    const PARAMS_POS_DEFAULTS_COUNT = PARAMS_POS_DEFAULTS.length;
-    const PARAMS_POS_DEFAULTS_OFFSET= ${PARAMS_POS_COUNT} - PARAMS_POS_DEFAULTS_COUNT;
-`;}
-fct+=`
-    let offset = 0;
-`;
-if(hasVargars ){fct+=
-`
-    result[$INFOS.vararg] = $B.fast_tuple( Array.prototype.slice.call(args, ${PARAMS_POS_COUNT}, ARGS_POS_COUNT ) ); //TODO: opti, better way to construct tuple from subarray ?
-`
-if(hasPosOnly ||hasPos ){fct+=
-`
-    const min = Math.min( ARGS_POS_COUNT, ${PARAMS_POS_COUNT} );
-    for( ; offset < min ; ++offset)
-        result[ PARAMS_NAMES[offset] ] = args[offset];
-`}}else{
-fct+=
-`
-    if( ARGS_POS_COUNT > ${PARAMS_POS_COUNT} ) {
-        $B.args0_old(fct, args);
-        throw new Error('Too much positional arguments given (args0 should have raised an error) !');
-    }
-`
-if(hasPosOnly ||hasPos ){fct+=
-`
-    for( ; offset < ARGS_POS_COUNT ; ++offset)
-        result[ PARAMS_NAMES[offset] ] = args[offset];
-`}}
-if(! hasPos && ! hasNamedOnly && ! hasKWargs ){fct+=`
-    if( HAS_KW === true ) {
-        for(let argname in ARGS_NAMED[0] ) {
-            $B.args0_old(fct, args);
-            throw new Error('No named arguments expected !!!');
-        }
-        for(let id = 1; id < ARGS_NAMED.length; ++id ) {
-            const kargs = ARGS_NAMED[id];
-            for(let argname of $B.unpack_mapping( fct, kargs) ) { //TODO: not optimal
-                $B.args0_old(fct, args);
-                throw new Error('No named arguments expected !!!');
-            }
-        }
-    }
-`;}else{
-fct+=`
-    if( HAS_KW === false ) {
-    `;}
-if(hasPos ||hasPosOnly ){if(posOnlyDefaults !==DEFAULTS.ALL && posDefaults !==DEFAULTS.ALL ){fct+=`
-        if( offset < ${PARAMS_POS_DEFAULTS_OFFSET} ) {
-            $B.args0_old(fct, args);
-            throw new Error('Not enough positional arguments given (args0 should have raised an error) !');
-        }
-`}
-if(posOnlyDefaults !==DEFAULTS.NONE ||posDefaults !==DEFAULTS.NONE){fct+=`
-        for(let i = offset - PARAMS_POS_DEFAULTS_OFFSET;
-            i < PARAMS_POS_DEFAULTS_COUNT;
-            ++i)
-            result[ PARAMS_NAMES[offset++] ] = PARAMS_POS_DEFAULTS[i];`}}
-if(hasKWargs ){fct+=`
-        result[$INFOS.kwarg] = __BRYTHON__.empty_dict();`}
-if(hasNamedOnly && namedOnlyDefaults !==DEFAULTS.ALL){fct+=`
-        $B.args0_old(fct, args);
-        throw new Error('Named argument expected (args0 should have raised an error) !');
-`}else if(namedOnlyDefaults !==DEFAULTS.NONE ){fct+=`
-        const kwargs_defaults_values = fct.$kwdefaults_values;
-        for(let i = 0; i < kwargs_defaults_values.length; ++i )
-                result[ PARAMS_NAMES[offset++] ] = kwargs_defaults_values[i];
-`}
-fct+=`
-        return result;
-`
-if(! hasPos && ! hasNamedOnly && ! hasKWargs ){return fct;}else{
-fct+=`
-    }
-`;}
-if(namedOnlyDefaults !==DEFAULTS.NONE){fct+=`
-    const kwargs_defaults = fct.$kwdefaults;
-`}
-if(hasPosOnly ){fct+=`
-    const PARAMS_POSONLY_COUNT         = $CODE.co_posonlyargcount;
-    if( offset < PARAMS_POSONLY_COUNT ) {
-        `;
-if(posOnlyDefaults !==DEFAULTS.SOME){fct+=`
-        if( offset < ${PARAMS_POS_DEFAULTS_OFFSET} ) {
-            $B.args0_old(fct, args);
-            throw new Error('Not enough positional parameters given (args0 should have raised an error) !');
-        }
-`}
-if(posOnlyDefaults===DEFAULTS.NONE){fct+=`
-        $B.args0_old(fct, args);
-        throw new Error('Not enough positional parameters given (args0 should have raised an error) !');
-`;}
-fct+=`
-        const max = ${PARAMS_POS_DEFAULTS_COUNT} - (${PARAMS_POS_COUNT} - PARAMS_POSONLY_COUNT);
-        // default parameters
-        for(let i = offset - ${PARAMS_POS_DEFAULTS_OFFSET};
-                i < max;
-                ++i)
-            result[ PARAMS_NAMES[offset++] ] = PARAMS_POS_DEFAULTS[i];
-    }
-`}
-if(hasKWargs){fct+=`
-    const extra = {};
-    let nb_extra_args = 0;
-`
-if(hasPos ||hasNamedOnly ){fct+=`
-    const HAS_PARAMS = fct.$hasParams;
-`;}}
-fct+=`
-    let nb_named_args = 0;
-    const kargs = ARGS_NAMED[0];
-    for(let argname in kargs) {
-        `;
-if(! hasKWargs ){fct+=`
-        result[ argname ] = kargs[argname];
-        ++nb_named_args;
-`;}
-if(hasKWargs ){if(! hasNamedOnly && ! hasPos ){fct+=`
-        extra[ argname ] = kargs[argname];
-        ++nb_extra_args;
-`}else{
-fct+=`
-        if( HAS_PARAMS.has(argname) ) {
-            result[ argname ] = kargs[argname];
-            ++nb_named_args;
-        } else {
-            extra[ argname ] = kargs[argname];
-            ++nb_extra_args;
-        }
-`}}
-fct+=`
-    }
-    for(let id = 1; id < ARGS_NAMED.length; ++id ) {
-        const kargs = ARGS_NAMED[id];
-        for(let item of $B.unpack_mapping(fct, kargs) ) {
-            let argname = item.key
-            if( typeof argname !== "string") {
-                $B.args0_old(fct, args);
-                throw new Error('Non string key passed in **kargs');
-            }
-            `;
-if(! hasKWargs ){fct+=`
-            result[ argname ] = item.value;
-            ++nb_named_args;
-`;}
-if(hasKWargs ){if(! hasNamedOnly && ! hasPos ){fct+=`
-            extra[ argname ] = $B.$getitem(kargs, argname);
-            ++nb_extra_args;
-`}else{
-fct+=`
-            if( HAS_PARAMS.has(argname) ) {
-                result[ argname ] = $B.$getitem(kargs, argname);
-                ++nb_named_args;
-            } else {
-                extra[ argname ] = $B.$getitem(kargs, argname);
-                ++nb_extra_args;
-            }
-`}}
-fct+=`
-        }
-    }
-`
-fct+=`
-    let found = 0;
-    let ioffset = offset;
-`;
-if((hasPosOnly ||hasPos)
-&&(! hasPosOnly ||posOnlyDefaults !==DEFAULTS.ALL)
-&&(! hasPos ||posDefaults !==DEFAULTS.ALL)){fct+=`
-    for( ; ioffset < ${PARAMS_POS_DEFAULTS_OFFSET}; ++ioffset) {
-        const key = PARAMS_NAMES[ioffset];
-        if( key in result ) // maybe could be speed up using "!(key in result)"
-            continue;
-        $B.args0_old(fct, args);
-        throw new Error('Missing a named arguments (args0 should have raised an error) !');
-    }
-`}
-if((hasPosOnly && posOnlyDefaults !==DEFAULTS.NONE)||(hasPos && posDefaults !==DEFAULTS.NONE)){fct+=`
-    for( ; ioffset < PARAMS_POS_COUNT; ++ioffset) {
-        const key = PARAMS_NAMES[ioffset];
-        if( key in result )
-            continue;
-        result[key] = PARAMS_POS_DEFAULTS[ioffset - ${PARAMS_POS_DEFAULTS_OFFSET}];
-    ++found;
-    }
-`}
-if(hasNamedOnly ){fct+=`
-        for( ; ioffset < PARAMS_NAMES.length; ++ioffset) {
-            const key = PARAMS_NAMES[ioffset];
-            if( key in result )
-                continue;
-`
-if(namedOnlyDefaults===DEFAULTS.SOME){fct+=`
-            if( ! kwargs_defaults.has(key) ) {
-                $B.args0_old(fct, args);
-                throw new Error('Missing a named arguments (args0 should have raised an error) !');
-            }
-`}
-if(namedOnlyDefaults===DEFAULTS.NONE ){fct+=`
-            $B.args0_old(fct, args);
-            throw new Error('Missing a named arguments (args0 should have raised an error) !');
-`}
-if(namedOnlyDefaults !==DEFAULTS.NONE){fct+=`
-            result[key] = kwargs_defaults.get(key);
-            ++found;
-`;}
-fct+=`
-        }
-`;}
-if(hasNamedOnly ||hasPos )
-fct+=`
-        if( found + nb_named_args !== PARAMS_NAMES.length - offset) {
-            $B.args0_old(fct, args);
-            throw new Error('Inexistant or duplicate named arguments (args0 should have raised an error) !');
-        }
-`;
-if(hasKWargs ){fct+=`
-    if( Object.keys(extra).length !== nb_extra_args ) {
-        $B.args0_old(fct, args);
-        throw new Error('Duplicate name given to **kargs parameter (args0 should have raised an error) !');
-    }
-    result[$INFOS.kwarg] = __BRYTHON__.builtins.dict.$from_js(extra);
-`}
-fct+=`
-    return result
-    `;
-return fct;}
 function missing_names(missing){var len=missing.length
 var plural=len==1 ? '' :'s'
 var report
@@ -4079,11 +3660,9 @@ report=`${missing.slice(0, len - 1).join(', ')}, and `+
 break}
 return report}
 function add_to_kwargs(kw_dict,key,value){$B.str_dict_set(kw_dict,key,value)}
+function reset_args_parser(self){self.$arguments_parser=make_arguments_parser(self)}
 $B.args_parser=function(f,args){if(! f.$arguments_parser){f.$arguments_parser=make_arguments_parser(f)}
 return f.$arguments_parser(f,args)}
-$B.has_kw=function(args){var last_arg=args[args.length-1]
-return last_arg && last_arg.$kw}
-var empty={}
 function make_arguments_parser(f){
 var infos=f.$function_infos
 var name=infos[$B.func_attrs.__name__]
@@ -4094,13 +3673,30 @@ var vararg=infos[$B.func_attrs.args_vararg]
 var kwarg=infos[$B.func_attrs.args_kwarg]
 var defaults=infos[$B.func_attrs.__defaults__]
 var posonly_length=infos[$B.func_attrs.posonlyargs_length]
-var kwonly_defs=[$B.func_attrs.__kwdefaults__]
+var kwonly_defs=infos[$B.func_attrs.__kwdefaults__]
 var nb_formal=positional_length+kwonly_length
-var def_obj={}
-if(defaults !==_b_.None){var start_defs=positional_length-defaults.length
+var parser=function(f,args){var def_obj
+if(defaults !==_b_.None){def_obj={}
+var start_defs=positional_length-defaults.length
 for(var i=start_defs;i < positional_length;i++){def_obj[arg_names[i]]=defaults[i-start_defs]}}
-if(kwonly_defs !==_b_.None){for(var key in kwonly_defs){def_obj[key]=kwonly_defs[key]}}
-var parser=function(f,args){function add_key(key,value){var index=arg_names.indexOf(key)
+if(kwonly_defs !==_b_.None){def_obj=def_obj ??{}
+for(var key in kwonly_defs){def_obj[key]=kwonly_defs[key]}}
+var too_many_pos=0
+var posonly_as_keywords
+const locals=$B.empty_dict()
+var filled_pos=0
+var vargs
+if(kwarg !==null){locals[kwarg]=$B.empty_dict()}
+const args_length=args.length
+const last_arg=args[args_length-1]
+const has_kw=last_arg?.$kw
+const nb_pos=has_kw ? args_length-1 :args_length
+if(vararg !==null){locals[vararg]=vargs=$B.fast_tuple()}
+if(nb_pos <=positional_length){for(let iarg=0;iarg < nb_pos;iarg++){locals[arg_names[iarg]]=args[iarg]}
+filled_pos=nb_pos}else{for(let iarg=0;iarg < positional_length;iarg++){locals[arg_names[iarg]]=args[iarg]}
+filled_pos=positional_length
+if(vararg !==null){for(let j=positional_length;j < nb_pos;j++){vargs.push(args[j])}}else{too_many_pos=nb_pos-positional_length}}
+if(has_kw){function add_key(key,value){var index=arg_names.indexOf(key)
 if(index==-1){if(kwarg){add_to_kwargs(locals[kwarg],key,value)
 return}else{$B.RAISE(_b_.TypeError,name+
 `() got an unexpected keyword argument '${key}'`)}}
@@ -4110,24 +3706,10 @@ $B.RAISE(_b_.TypeError,name+
 `() got multiple values for argument '${key}'`)}
 if(index < posonly_length){if(defaults===_b_.None ||
 index <=positional_length-defaults.length){
-if(kwarg){_b_.dict.$setitem_string(locals[kwarg],key,value)}else{posonly_as_keywords.push(key)}}}else{locals[key]=value
+if(kwarg){_b_.dict.$setitem_string(locals[kwarg],key,value)}else{posonly_as_keywords=posonly_as_keywords ??[]
+posonly_as_keywords.push(key)}}}else{locals[key]=value
 filled_pos++}}
-var too_many_pos=0
-var posonly_as_keywords=[]
-const locals={}
-var filled_pos=0
-var vargs
-if(kwarg !==null){locals[kwarg]=$B.empty_dict()}
-const args_length=args.length
-const last_arg=args[args_length-1]
-const has_kw=last_arg && last_arg.$kw
-const nb_pos=has_kw ? args_length-1 :args_length
-if(vararg !==null){locals[vararg]=vargs=[]}
-if(nb_pos <=positional_length){for(let iarg=0;iarg < nb_pos;iarg++){locals[arg_names[iarg]]=args[iarg]}
-filled_pos=nb_pos}else{for(let iarg=0;iarg < positional_length;iarg++){locals[arg_names[iarg]]=args[iarg]}
-filled_pos=positional_length
-if(vararg !==null){for(let j=positional_length;j < nb_pos;j++){vargs[vargs.length]=args[j]}}else{too_many_pos=nb_pos-positional_length}}
-if(has_kw){var elt=last_arg
+var elt=last_arg
 for(let key in elt.$kw[0]){add_key(key,elt.$kw[0][key])}
 for(let i=1;i< elt.$kw.length;i++){if($B.get_class(elt.$kw[i])===_b_.dict){for(let item of _b_.dict.$iter_items(elt.$kw[i])){add_key(item.key,item.value)}}else{let klass=$B.get_class(elt.$kw[i])
 let keys_method=$B.$getattr(klass,'keys',null)
@@ -4135,9 +3717,6 @@ let getitem=$B.$getattr(klass,'__getitem__',null)
 if(keys_method===null ||getitem===null){$B.RAISE(_b_.TypeError,`${name} argument after ** must be a mapping, `+
 `not ${$B.class_name(elt.$kw[i])}`)}
 for(let key of $B.make_js_iterator(keys_method(elt.$kw[i]))){add_key(key,getitem(elt.$kw[i],key))}}}}
-if(vararg !==null){locals[vararg]=$B.fast_tuple(locals[vararg])}
-if(nb_formal==0){
-return locals}
 if(too_many_pos > 0){var plural=positional_length==1 ? '' :'s'
 var nb=positional_length+too_many_pos
 var report=positional_length
@@ -4145,9 +3724,11 @@ if(defaults.length){var nb_min=positional_length-defaults.length
 report=`from ${nb_min} to ${positional_length}`
 plural='s'}
 $B.RAISE(_b_.TypeError,`${name}() takes ${report} positional argument`+
-`${plural} but ${nb} were given`)}
-if(posonly_as_keywords.length > 0){$B.RAISE(_b_.TypeError,`${name}() got some positional-only arguments passed as keyword `+
+`${plural} but ${nb} ${nb == 1 ? 'was' : 'were'} given`)}
+if(posonly_as_keywords){$B.RAISE(_b_.TypeError,`${name}() got some positional-only arguments passed as keyword `+
 `arguments: '${posonly_as_keywords.join(', ')}'`)}
+if(nb_formal==0){
+return locals}
 if(filled_pos < nb_formal){for(let key in def_obj){if(! locals.hasOwnProperty(key)){locals[key]=def_obj[key]
 filled_pos++}}
 if(filled_pos < nb_formal){
@@ -4898,7 +4479,7 @@ $B.$getattr=function(obj,attr,_default){
 var test=false 
 if(test){console.log('$getattr',obj,attr)}
 var res
-if(obj===undefined ||obj===null){console.log(Error('trace').stack)
+if(obj===undefined ||obj===null){console.log('getting attribute',attr)
 $B.RAISE_ATTRIBUTE_ERROR("Javascript object '"+obj+
 "' has no attribute",obj,attr)}
 var rawname=attr
@@ -4906,6 +4487,7 @@ if(obj===undefined){console.log("get attr",attr,"of undefined")}
 var is_class=Object.hasOwn(obj,'tp_name')
 if(test){console.log("attr",attr,"of",obj,"class",klass ?? $B.get_class(obj),"isclass",is_class)}
 if(! is_class){var klass=$B.get_class(obj)
+if(test){console.log('klass',klass)}
 if(klass.tp_funcs && klass.$getattribute===_b_.object.tp_getattro){
 var func=$B.get_from_dict(klass,attr,$B.NULL)
 if(func !==$B.NULL){var res=$B.NULL
@@ -4932,10 +4514,13 @@ var in_own_dict=own_dict
 ? own_dict[attr]
 :$B.NULL
 :$B.NULL
-if(in_klass_dict){switch(in_klass_dict.ob_type){case $B.function:
+if(in_klass_dict){if(attr=='path'){console.log('attr',attr,'of obj',obj,'in klass dict',in_klass_dict)}
+switch(in_klass_dict.ob_type){case $B.function:
 if(in_own_dict===$B.NULL){return $B.method.$factory(in_klass_dict,obj)}
+break
 case _b_.staticmethod:
-if(in_own_dict===$B.NULL){return in_klass_dict}}}}catch(err){console.log('error',err)
+if(in_own_dict===$B.NULL){return in_klass_dict}
+break}}}catch(err){console.log('error',err)
 console.log('obj',obj,'klass',klass)
 throw err}
 var res=$B.object_getattribute(obj,klass,attr)}else{var in_dict=$B.get_dict(obj)[attr]
@@ -4951,7 +4536,7 @@ case $B.getset_descriptor:
 if(_b_.type.tp_funcs.hasOwnProperty(attr+'_get')){res=_b_.type.tp_funcs[attr+'_get'](obj)}else{res=in_dict}
 break
 case $B.classmethod_descriptor:
-res=in_dict.d_method.bind(null,in_dict.d_type)
+res=$B.classmethod_descriptor.tp_descr_get(in_dict,$B.NULL,obj)
 break
 case _b_.classmethod:
 res=$B.$call($B.method,in_dict.cm_callable,obj)
@@ -5462,7 +5047,7 @@ code_funcs.co_lnotab_set=_b_.None
 code_funcs.co_positions=function(self){return self.co_positions()}
 code_funcs.co_varnames_get=function(self){return self.co_varnames}
 code_funcs.co_varnames_set=_b_.None
-code_funcs.replace=function(self){var $=$B.args('replace',1,{self:null},arguments)
+code_funcs.replace=function(self){var $=$B.args('replace',1,{self:null},arguments,null,null,'kw')
 var self=$.self
 var expected=['co_argcount','co_branches','co_cellvars','co_code','co_consts','co_exceptiontable','co_filename','co_firstlineno','co_flags','co_freevars','co_kwonlyargcount','co_lines','co_linetable','co_lnotab','co_name','co_names','co_nlocals','co_positions','co_posonlyargcount','co_qualname','co_stacksize','co_varnames']
 $B.set_expected_kwargs(self,expected,$.kw)
@@ -5860,6 +5445,7 @@ $B.del_exc=function(frame){delete frame.$current_exception}
 $B.set_exc=function(exc,frame){exc.__traceback__=exc.__traceback__===_b_.None ? make_tb():exc.__traceback__
 if(exc.ob_type===undefined){}
 exc.ob_type=exc.ob_type ?? _b_.JavascriptError
+exc.suppress_context=exc.suppress_context ?? false
 exc.args=exc.args ??[exc.message]
 if(frame===undefined){var msg='Internal error: no frame for exception '+_b_.repr(exc)
 console.error(['Traceback (most recent call last):',$B.print_stack(exc.$frame_obj),msg].join('\n'))
@@ -8277,8 +7863,7 @@ if($.self.surrogates){$.js_start=pypos2jspos($.self,$.start)
 $.js_end=pypos2jspos($.self,$.end)}}
 function reverse(s){
 return s.split("").reverse().join("")}
-function check_str(obj,prefix){if(obj instanceof String ||typeof obj=="string"){return}
-if(! $B.is_str(obj)){$B.RAISE(_b_.TypeError,(prefix ||'')+
+function check_str(obj,prefix){if(! $B.is_str(obj)){$B.RAISE(_b_.TypeError,(prefix ||'')+
 "must be str, not "+$B.class_name(obj))}}
 function to_chars(s){
 s=to_string(s)
@@ -9028,17 +8613,27 @@ col++
 break}
 pos++}
 return res}
-str_funcs.find=function(self){
-var $=$B.args("str.find",4,{self:null,sub:null,start:null,end:null},arguments,{start:0,end:null},null,null),_self,sub
-check_str($.sub)
-normalize_start_end($);
-[_self,sub]=to_string($.self,$.sub);
-var len=str.mp_length(_self),sub_len=str.mp_length(sub)
-if(sub_len==0 && $.start==len){return len}
-if(len+sub_len==0){return-1}
-var js_start=pypos2jspos(_self,$.start),js_end=pypos2jspos(_self,$.end),ix=_self.slice(js_start,js_end).indexOf(sub)
-if(ix==-1){return-1}
-return jspos2pypos(_self,js_start+ix)}
+str_funcs.find=function(self,sub,start,end){
+var args_length=arguments.length
+if(args_length==2 && ! sub.$kw){start=0
+end=_b_.None}else if(args_length==3 && ! start.$kw){end=_b_.None}else if(args_length==4 && ! end.$kw){}else{var $=$B.args("str.find",4,{self:null,sub:null,start:null,end:null},arguments,{start:0,end:_b_.None},null,null)
+self=$.self
+sub=$.sub
+start=$.start
+end=$.end}
+check_str(sub)
+var res
+try{start=$B.PyNumber_Index(start)}catch(err){$B.RAISE(_b_.TypeError,'slice indices must be integers or None or have an __index__ '+
+'method')}
+res=self.indexOf(sub,start)
+if(end !==_b_.None){try{end=$B.PyNumber_Index(end)}catch(err){$B.RAISE(_b_.TypeError,'slice indices must be integers or None or have an __index__ '+
+'method')}
+if(end < 0){end+=str.mp_length(self)}
+if(str.mp_length(sub)> end-start){res=-1}}
+var len=str.mp_length(self)
+if(sub==''){if(self==''){res==-1}else if(start==len){res=len}}
+if(res==-1){return res}
+return jspos2pypos(self,res)}
 str_funcs.format=function(){
 var last_arg=$B.last(arguments),$,mapping,getitem
 if(last_arg.$nat=="mapping"){mapping=last_arg.mapping
@@ -10306,9 +9901,9 @@ return Math.floor(self.value)}
 float_funcs.__format__=function(self,format_spec){check_self_is_float(self,'__format__')
 var fmt=new $B.parse_format_spec(format_spec,self)
 return float.$format(self,fmt)}
-float_funcs.__getformat__=function(self){if(self=="double" ||self=="float"){return "IEEE, little-endian"}
-if(typeof self !=='string'){$B.RAISE(_b_.TypeError," __getformat__() argument must be str, not "+
-$B.class_name(self))}
+float_funcs.__getformat__=function(cls,arg){if(arg=="double" ||arg=="float"){return "IEEE, little-endian"}
+if(typeof arg !=='string'){$B.RAISE(_b_.TypeError," __getformat__() argument must be str, not "+
+$B.class_name(arg))}
 $B.RAISE(_b_.ValueError,"__getformat__() argument 1 must be "+
 "'double' or 'float'")}
 float_funcs.__getnewargs__=function(self){return float.$getnewargs($B.single_arg('__getnewargs__','self',arguments))}
@@ -10436,7 +10031,8 @@ float_funcs.is_integer=function(self){return Number.isInteger(self.value)}
 float_funcs.real_get=function(self){return self}
 float_funcs.real_set=_b_.None
 _b_.float.classmethods=["from_number","fromhex","__getformat__"]
-_b_.float.tp_methods=["conjugate","__trunc__","__floor__","__ceil__","__round__","as_integer_ratio","hex","is_integer","__getnewargs__","__format__"]
+_b_.float.tp_methods=["conjugate","__trunc__","__floor__","__ceil__","__round__","as_integer_ratio","hex","is_integer","__getnewargs__","__format__"
+]
 _b_.float.tp_getset=["real","imag"]
 7
 $B.set_func_names(float,"builtins")
@@ -12121,6 +11717,7 @@ $B.set_func_names($B.IterableJSObj,'builtins')
 var js_array_iterator=$B.make_builtin_class('JSArray_iterator')
 js_array_iterator.$factory=function(obj){return{
 ob_type:js_array_iterator,it:obj[Symbol.iterator]()}}
+js_array_iterator.tp_iter=function(self){return self}
 js_array_iterator.tp_iternext=function*(self){for(var item of self.it){yield jsobj2pyobj(item)}}
 $B.set_func_names(js_array_iterator,'builtins')
 function make_conv(array){if($B.$isinstance(array,[_b_.list,_b_.tuple])){return x=> x}else{return x=> jsobj2pyobj(x)}}
@@ -13269,6 +12866,7 @@ return `<module '${name}' ${file}>`}
 $B.module.tp_getattro=function(self,attr){var test=false 
 var res=_b_.object.tp_getattro(self,attr)
 if(res !==$B.NULL){if(test){console.log('res',res,$B.get_class(res).tp_name)}
+if(res?.__get__){return res.__get__()}
 return res}
 var getattr=$B.get_from_dict(self,'__getattr__',$B.NULL)
 if(getattr !==$B.NULL){return $B.$call(getattr,attr)}
@@ -13280,6 +12878,11 @@ $B.module_setattr(self,'__doc__',$.doc)}
 $B.module.tp_new=function(cls,args,kw){var res={ob_type:cls}
 $B.init_dict(res)
 return res}
+$B.module.tp_setattro=function(self,attr,value){var test=false 
+var res=_b_.object.tp_getattro(self,attr)
+if(res !==$B.NULL){if(test){console.log('res',res,$B.get_class(res).tp_name)}
+if(res.__set__){return res.__set__(value)}}
+_b_.object.tp_setattro(self,attr,value)}
 var module_funcs=$B.module.tp_funcs={}
 module_funcs.__annotate___get=function(self){}
 module_funcs.__annotate___set=function(self){}
@@ -13910,9 +13513,7 @@ delete browser.win
 browser.self.send=function(){var $=$B.args('send',1,{message:null},arguments,null,'args',null)
 var message=$B.pyobj2structuredclone($.message),args=$.args.map($B.pyobj2jsobj)
 self.postMessage(message,...args)}
-browser.document=$B.internal_property(
-function(){$B.RAISE(_b_.ValueError,"'document' is not available in Web Workers")},function(self,value){browser.document=value}
-)}else{browser.is_webworker=false
+browser.document={__get__:function(self){$B.RAISE(_b_.ValueError,"'document' is not available in Web Workers")},__set__:function(self,value){browser.document=value}}}else{browser.is_webworker=false
 update(browser,{"alert":function(message){window.alert($B.builtins.str.$factory(message ||""))},confirm:$B.jsobj2pyobj(window.confirm),"document":$B.DOMNode.$factory(document),doc:$B.DOMNode.$factory(document),
 DOMEvent:$B.DOMEvent,DOMNode:$B.DOMNode,load:function(script_url){
 var file_obj=$B.builtins.open(script_url)
@@ -14117,33 +13718,19 @@ exc=frame.$current_exception
 if(exc !==undefined){return exc}
 frame_obj=frame_obj.prev}
 return _b_.None},executable:$B.strip_host($B.brython_path+'brython.js'),float_repr_style:'short',getdefaultencoding:function(){return 'utf-8'},getrecursionlimit:function(){return $B.recursion_limit},getrefcount:function(){return 0},gettrace:function(){return $B.tracefunc ||_b_.None},getunicodeinternedsize:function(){
-return 0},last_exc:$B.internal_property(
-function(){return $B.module_getattr($B.imported._sys,'exception')()},function(value){$B.frame_obj.frame.$current_exception=value}
-),modules:$B.obj_dict($B.imported),path:$B.internal_property(
-function(){var filename=$B.get_filename_for_import()
-return $B.$list($B.import_info[filename].path)},function(self,value){var filename=$B.get_filename_for_import()
-$B.import_info[filename].path=value}
-),meta_path:$B.internal_property(
-function(){var filename=$B.get_filename()
-return $B.$list($B.import_info[filename].meta_path)},function(self,value){var filename=$B.get_filename()
-$B.import_info[filename].meta_path=value}
-),path_hooks:$B.internal_property(
-function(){var filename=$B.get_filename()
-return $B.$list($B.import_info[filename].path_hooks)},function(self,value){var filename=$B.get_filename()
-$B.import_info[filename].path_hooks=value}
-),path_importer_cache:$B.internal_property(
-function(){return _b_.dict.$factory($B.jsobj2pyobj($B.path_importer_cache))},function(){$B.RAISE(_b_.TypeError,"Read only property"+
-" 'sys.path_importer_cache'")}
-),setrecursionlimit:function(value){$B.recursion_limit=value},settrace:function(){var $=$B.args("settrace",1,{tracefunc:null},arguments)
+return 0},last_exc:{__get__:function(){return $B.module_getattr($B.imported._sys,'exception')()},__set__:function(value){$B.frame_obj.frame.$current_exception=value}},modules:$B.obj_dict($B.imported),path:{__get__:function(){var filename=$B.get_filename_for_import()
+return $B.$list($B.import_info[filename].path)},__set__:function(value){var filename=$B.get_filename_for_import()
+$B.import_info[filename].path=value}},meta_path:{__get__:function(){var filename=$B.get_filename()
+return $B.$list($B.import_info[filename].meta_path)},__set__:function(self,value){var filename=$B.get_filename()
+$B.import_info[filename].meta_path=value}},path_hooks:{__get__:function(){var filename=$B.get_filename()
+return $B.$list($B.import_info[filename].path_hooks)},__set__:function(self,value){var filename=$B.get_filename()
+$B.import_info[filename].path_hooks=value}},path_importer_cache:{__get__:function(){return _b_.dict.$factory($B.jsobj2pyobj($B.path_importer_cache))},__set__:function(){$B.RAISE(_b_.TypeError,"Read only property"+
+" 'sys.path_importer_cache'")}},setrecursionlimit:function(value){$B.recursion_limit=value},settrace:function(){var $=$B.args("settrace",1,{tracefunc:null},arguments)
 $B.tracefunc=$.tracefunc
 $B.frame_obj.frame.$f_trace=$B.tracefunc
 $B.tracefunc.$current_frame_id=$B.frame_obj.frame[0]
 return _b_.None},stderr:console.error !==undefined ? $io.$factory("error"):
-$io.$factory("log"),stdout:$io.$factory("log"),stdin:$B.internal_property(
-function(){return $B.stdin},function(self,value){$B.stdin=value}
-),vfs:$B.internal_property(
-function(){if($B.hasOwnProperty("VFS")){return $B.obj_dict($B.VFS)}else{return _b_.None}},function(){$B.RAISE(_b_.TypeError,"Read only property 'sys.vfs'")}
-)}
+$io.$factory("log"),stdout:$io.$factory("log"),stdin:{__get__:function(){return $B.stdin},__set__:function(value){$B.stdin=value}},vfs:{__get__:function(){if($B.hasOwnProperty("VFS")){return $B.obj_dict($B.VFS)}else{return _b_.None}},__set__:function(){$B.RAISE(_b_.TypeError,"Read only property 'sys.vfs'")}}}
 var WarningMessage=$B.make_builtin_class("WarningMessage")
 WarningMessage.$factory=function(){var $=$B.make_args("WarningMessage",8,{message:null,category:null,filename:null,lineno:null,file:null,line:null,source:null},['message','category','filename','lineno','file','line','source'],arguments,{filename:_b_.None,file:_b_.None,line:_b_.None,source:_b_.None},null,null)
 var res={ob_type:WarningMessage}
@@ -15909,9 +15496,8 @@ if(positional.length==0 && slots.length==0 &&
 this.args.vararg===undefined &&
 this.args.kwarg===undefined){js+=prefix+`var ${locals_name} = locals = $B.empty_dict();\n`
 js+=prefix+`if(arguments.length !== 0){\n`+
-prefix+tab+`${name2}.$args_parser(${parse_args.join(', ')})\n`+
-prefix+`}\n`}else if(this.name=='fxd51jy'){js+=prefix+`var ${locals_name} = locals = `+
-`$B.args_parser(${name2}, arguments)\n`}else if(this.args.vararg===undefined &&
+prefix+tab+`$B.args_parser(${name2}, arguments)\n`+
+prefix+`}\n`}else if(this.args.vararg===undefined &&
 this.args.kwarg===undefined &&
 this.args.posonlyargs.length==0 &&
 defaults==='_b_.None' &&
@@ -15921,9 +15507,9 @@ prefix+tab+`var ${locals_name} = locals = `+
 `{${positional.map(x => x.arg + ': _' + x.arg).join(', ')}}\n`+
 prefix+`}else{\n`+
 prefix+tab+`var ${locals_name} = locals = `+
-`${name2}.$args_parser(${parse_args.join(', ')})\n`+
+`$B.args_parser(${name2}, arguments)\n`+
 prefix+`}\n`}else{js+=prefix+`var ${locals_name} = locals = `+
-`${name2}.$args_parser(${parse_args.join(', ')})\n`}
+`$B.args_parser(${name2}, arguments)\n`}
 js+=prefix+`var frame = ["${this.$is_lambda ? '<lambda>': this.name}", `+
 `locals, "${gname}", ${globals_name}, ${name2}]\n`+
 prefix+`$B.enter_frame(frame, __file__, ${this.lineno})\n`
@@ -16024,7 +15610,6 @@ prefix+tab+`${positional.length}, `+
 `${annotations}, `+
 `${has_type_params ? 'type_params' : '[]'}, frame]\n`;
 js+=prefix+`${name2}.ob_type = $B.function\n`+
-prefix+`${name2}.$args_parser = $B.make_args_parser_and_parse\n`+
 prefix+`$B.init_dict(${name2})\n`
 if(anns && ! postponed){
 var inum=add_to_positions(scopes,this)

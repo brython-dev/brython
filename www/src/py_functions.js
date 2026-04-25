@@ -320,7 +320,7 @@ function globals_get(f){
 }
 
 $B.function.$factory = function(){
-    var $ = $B.args('FunctionType', 2, {code: null, globals: null}, 
+    var $ = $B.args('FunctionType', 2, {code: null, globals: null},
                 arguments, null, null, 'kw')
     var code = $.code
     var __name__ = $.name === _b_.None ? code.co_name : $.name
@@ -470,7 +470,7 @@ function_funcs.__defaults___set = function(self, value){
     self.$infos.__defaults__ = value
     self.$function_infos[$B.func_attrs.__defaults__] = value
     // Make a new version of arguments parser
-    $B.make_args_parser(self)
+    reset_args_parser(self)
 }
 
 function_funcs.__dict___get = function(self){
@@ -525,7 +525,7 @@ function_funcs.__kwdefaults___set = function(self, value){
     }
     self.$function_infos[$B.func_attrs.__kwdefaults__] = kwd
     // Make a new version of arguments parser
-    $B.make_args_parser(self)
+    reset_args_parser(self)
 }
 
 function_funcs.__module___get = function(self){
@@ -626,537 +626,6 @@ $B.make_function_infos = function(f, __module__, co_name, co_qualname,
     $B.init_dict(f.$infos)
 }
 
-$B.make_args_parser_and_parse = function make_args_parser_and_parse(fct, args){
-    return $B.make_args_parser(fct)(fct, args);
-}
-
-$B.make_args_parser = function(f){
-    if((! f.$infos) && f.$function_infos){
-        $B.make_function_infos(f, ...f.$function_infos)
-    }
-    if(f.$infos === undefined || f.$infos.__code__ === undefined){
-        console.log('f', f)
-        $B.RAISE_ATTRIBUTE_ERROR(`cannot set defauts to ${_b_.str.$factory(f)}`,
-            f, 'defaults')
-    }
-    const varnames = f.$infos.__code__.co_varnames,
-          value = f.$infos.__defaults__,
-          offset   = f.$infos.__code__.co_argcount - value.length,
-          $kwdefaults = new Map()
-
-    var nb_kw_defaults = f.$infos.__kwdefaults__ === _b_.None ? 0 :
-                         _b_.len(f.$infos.__kwdefaults__)
-    if(f.$infos.__kwdefaults__ !== _b_.None){
-        const kwdef = f.$infos.__kwdefaults__
-        for(let kw of $B.make_js_iterator(kwdef)){
-            $kwdefaults.set(kw, $B.$getitem(kwdef, kw))
-        }
-    }
-    f.$kwdefaults = $kwdefaults
-    f.$kwdefaults_values = [...$kwdefaults.values()]
-
-    f.$hasParams = new Set()
-
-    var nb_args = f.$infos.__code__.co_argcount +
-                  f.$infos.__code__.co_kwonlyargcount +
-                  (f.$infos.kwargs ? 1 : 0)
-    for(let i = 0 ; i < nb_args; ++i){
-        f.$hasParams.add(varnames[i])
-    }
-
-    const $INFOS = f.$infos,
-          $CODE  = $INFOS.__code__,
-          DEFAULTS = $B.getArgs0.DEFAULTS
-
-    const PARAMS_NAMED_COUNT  = $CODE.co_kwonlyargcount,
-          PARAMS_NAMED_DEFAULTS_COUNT = nb_kw_defaults
-    let named_defaults = DEFAULTS.NONE;
-    if(PARAMS_NAMED_DEFAULTS_COUNT > 0){
-        named_defaults = PARAMS_NAMED_DEFAULTS_COUNT >= PARAMS_NAMED_COUNT ?
-                         DEFAULTS.ALL : DEFAULTS.SOME
-    }
-    const PARAMS_POSONLY_COUNT = $CODE.co_posonlyargcount
-    const PARAMS_POS_COUNT = $CODE.co_argcount - PARAMS_POSONLY_COUNT
-
-    let pos_defaults = DEFAULTS.NONE
-    if(PARAMS_POS_COUNT !== 0 && value.length > 0){
-        pos_defaults = value.length >= PARAMS_POS_COUNT ? DEFAULTS.ALL :
-                       DEFAULTS.SOME;
-    }
-    let posonly_defaults = DEFAULTS.NONE
-    if(value.length > PARAMS_POS_COUNT){
-        posonly_defaults = value.length >= $CODE.co_argcount ? DEFAULTS.ALL :
-                           DEFAULTS.SOME;
-    }
-
-    f.$args_parser = f.$infos.args_parser = $B.getArgs0(
-        PARAMS_POSONLY_COUNT !== 0,
-        posonly_defaults,
-        PARAMS_POS_COUNT !== 0,
-        pos_defaults,
-        $INFOS.vararg !== null,
-        PARAMS_NAMED_COUNT !== 0,
-        named_defaults,
-        $INFOS.kwarg !== null
-    )
-
-    return f.$args_parser
-}
-
-// Code for function arguments parsing
-// mostly written by Denis Migdal
-
-const args0_fcts = $B.args_parsers = [];
-
-function getArgs0(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, hasVargars, hasNamedOnly, namedOnlyDefaults, hasKWargs) {
-
-    const IDX =      hasPosOnly
-            | posOnlyDefaults    << 1
-            | hasPos        << 3
-            | posDefaults        << 4
-            | hasVargars        << 6
-            | hasNamedOnly        << 7
-            | namedOnlyDefaults    << 8
-            | hasKWargs        << 10;
-
-    const args0 = args0_fcts[IDX];
-
-    if(args0 !== undefined)
-        return args0;
-
-    const fct = args0_fcts[IDX] = generate_args0(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, hasVargars, hasNamedOnly, namedOnlyDefaults, hasKWargs);
-
-    fct.id = IDX;
-
-    return fct;
-}
-
-$B.getArgs0 = getArgs0;
-
-const DEFAULTS = getArgs0.DEFAULTS = {
-    NONE: 0,
-    SOME: 1,
-    ALL : 3
-}
-
-
-// deno run generator.js
-// hasPos / posDefaults are pos parameters excluding posOnly parameters.
-function generate_args0(...args) {
-    return new Function('fct', 'args',  generate_args0_str(...args) );
-}
-
-
-function generate_args0_str(hasPosOnly, posOnlyDefaults, hasPos, posDefaults, hasVargars, hasNamedOnly, namedOnlyDefaults, hasKWargs) {
-
-    let fct =
-//`function args0_NEW(fct, args) {
-`
-    const LAST_ARGS = args[args.length-1];
-    const HAS_KW = LAST_ARGS !== undefined && LAST_ARGS !== null && LAST_ARGS.$kw !== undefined;
-
-    let ARGS_POS_COUNT        = args.length;
-    let ARGS_NAMED            = null;
-
-    if( HAS_KW ) {
-        --ARGS_POS_COUNT;
-        ARGS_NAMED = LAST_ARGS.$kw;
-    }
-
-
-    const result = $B.empty_dict();
-
-    // using const should enable the browser to perform some optimisation.
-    const $INFOS = fct.$infos;
-    const $CODE  = $INFOS.__code__;
-`;
-
-    if( hasPos || hasPosOnly || hasNamedOnly )
-        fct += `
-    const PARAMS_NAMES        = $INFOS.arg_names;
-`;
-
-    let PARAMS_POS_COUNT = "0";
-    if( hasPos || hasPosOnly ) {
-        PARAMS_POS_COUNT = "PARAMS_POS_COUNT";
-        fct += `
-    const PARAMS_POS_COUNT    = $CODE.co_argcount;
-`;
-    }
-
-    let PARAMS_POS_DEFAULTS_OFFSET = PARAMS_POS_COUNT;
-    let PARAMS_POS_DEFAULTS_COUNT = "0";
-
-    if( posOnlyDefaults !== DEFAULTS.NONE || posDefaults !== DEFAULTS.NONE ) {
-
-        PARAMS_POS_DEFAULTS_OFFSET = "PARAMS_POS_DEFAULTS_OFFSET";
-        PARAMS_POS_DEFAULTS_COUNT  = "PARAMS_POS_DEFAULTS_COUNT";
-
-        fct += `
-    const PARAMS_POS_DEFAULTS = $INFOS.__defaults__;
-    const PARAMS_POS_DEFAULTS_COUNT = PARAMS_POS_DEFAULTS.length;
-
-    const PARAMS_POS_DEFAULTS_OFFSET= ${PARAMS_POS_COUNT} - PARAMS_POS_DEFAULTS_COUNT;
-
-`;
-    }
-
-    fct += `
-    let offset = 0;
-`;
-
-    if( hasVargars ) {
-        fct +=
-`
-    result[$INFOS.vararg] = $B.fast_tuple( Array.prototype.slice.call(args, ${PARAMS_POS_COUNT}, ARGS_POS_COUNT ) ); //TODO: opti, better way to construct tuple from subarray ?
-`
-
-        if( hasPosOnly || hasPos ) {
-
-            fct +=
-`
-    const min = Math.min( ARGS_POS_COUNT, ${PARAMS_POS_COUNT} );
-    for( ; offset < min ; ++offset)
-        result[ PARAMS_NAMES[offset] ] = args[offset];
-`
-        }
-    } else {
-        fct +=
-`
-    if( ARGS_POS_COUNT > ${PARAMS_POS_COUNT} ) {
-        $B.args0_old(fct, args);
-        throw new Error('Too much positional arguments given (args0 should have raised an error) !');
-    }
-`
-        if( hasPosOnly || hasPos ) {
-
-            fct +=
-`
-    for( ; offset < ARGS_POS_COUNT ; ++offset)
-        result[ PARAMS_NAMES[offset] ] = args[offset];
-`
-        }
-    }
-
-
-
-    // verify if it truly has no kw arguments.
-    if( ! hasPos && ! hasNamedOnly && ! hasKWargs ) {
-        fct += `
-    if( HAS_KW === true ) {
-
-        for(let argname in ARGS_NAMED[0] ) {
-            $B.args0_old(fct, args);
-            throw new Error('No named arguments expected !!!');
-        }
-
-        for(let id = 1; id < ARGS_NAMED.length; ++id ) {
-
-            const kargs = ARGS_NAMED[id];
-            for(let argname of $B.unpack_mapping( fct, kargs) ) { //TODO: not optimal
-                $B.args0_old(fct, args);
-                throw new Error('No named arguments expected !!!');
-            }
-        }
-    }
-`;
-    } else {
-        fct += `
-    if( HAS_KW === false ) {
-    `;
-    }
-
-    if( hasPos || hasPosOnly ) {
-
-        if( posOnlyDefaults !== DEFAULTS.ALL && posDefaults !== DEFAULTS.ALL ) {
-
-            fct += `
-        if( offset < ${PARAMS_POS_DEFAULTS_OFFSET} ) {
-            $B.args0_old(fct, args);
-            throw new Error('Not enough positional arguments given (args0 should have raised an error) !');
-        }
-`
-        }
-
-        if( posOnlyDefaults !== DEFAULTS.NONE || posDefaults !== DEFAULTS.NONE) {
-            fct += `
-        for(let i = offset - PARAMS_POS_DEFAULTS_OFFSET;
-            i < PARAMS_POS_DEFAULTS_COUNT;
-            ++i)
-            result[ PARAMS_NAMES[offset++] ] = PARAMS_POS_DEFAULTS[i];`
-        }
-    }
-
-    if( hasKWargs ) {
-        fct += `
-        result[$INFOS.kwarg] = __BRYTHON__.empty_dict();`
-    }
-
-    if( hasNamedOnly && namedOnlyDefaults !== DEFAULTS.ALL) {
-        fct += `
-        $B.args0_old(fct, args);
-        throw new Error('Named argument expected (args0 should have raised an error) !');
-`
-    } else if( namedOnlyDefaults !== DEFAULTS.NONE ) {
-        fct += `
-        const kwargs_defaults_values = fct.$kwdefaults_values;
-
-        for(let i = 0; i < kwargs_defaults_values.length; ++i )
-                result[ PARAMS_NAMES[offset++] ] = kwargs_defaults_values[i];
-`
-    }
-
-    fct += `
-        return result;
-`
-
-    // verify if it truly has no kw arguments.
-    if( ! hasPos && ! hasNamedOnly && ! hasKWargs ) {
-        return fct;
-    } else {
-        fct += `
-    }
-`;
-    }
-
-    if( namedOnlyDefaults !== DEFAULTS.NONE) {
-        fct += `
-    const kwargs_defaults = fct.$kwdefaults;
-`
-    }
-
-    if( hasPosOnly ) {
-
-        fct += `
-    const PARAMS_POSONLY_COUNT         = $CODE.co_posonlyargcount;
-
-    if( offset < PARAMS_POSONLY_COUNT ) {
-
-        `;
-        if( posOnlyDefaults !== DEFAULTS.SOME) {
-            fct += `
-        if( offset < ${PARAMS_POS_DEFAULTS_OFFSET} ) {
-            $B.args0_old(fct, args);
-            throw new Error('Not enough positional parameters given (args0 should have raised an error) !');
-        }
-`
-        }
-        if( posOnlyDefaults === DEFAULTS.NONE) {
-            fct += `
-        $B.args0_old(fct, args);
-        throw new Error('Not enough positional parameters given (args0 should have raised an error) !');
-`;
-        }
-
-        fct += `
-        const max = ${PARAMS_POS_DEFAULTS_COUNT} - (${PARAMS_POS_COUNT} - PARAMS_POSONLY_COUNT);
-
-        // default parameters
-        for(let i = offset - ${PARAMS_POS_DEFAULTS_OFFSET};
-                i < max;
-                ++i)
-            result[ PARAMS_NAMES[offset++] ] = PARAMS_POS_DEFAULTS[i];
-    }
-`
-    }
-
-    if( hasKWargs) {
-
-        fct += `
-    const extra = {};
-
-    let nb_extra_args = 0;
-`
-
-        if(hasPos || hasNamedOnly ) {
-            fct += `
-    const HAS_PARAMS = fct.$hasParams;
-`;
-        }
-    }
-
-    fct += `
-
-    let nb_named_args = 0;
-
-
-    const kargs = ARGS_NAMED[0];
-
-    for(let argname in kargs) {
-        `;
-
-        if( ! hasKWargs ) {
-            fct += `
-        result[ argname ] = kargs[argname];
-        ++nb_named_args;
-`;
-        }
-
-        if( hasKWargs ) {
-            if( ! hasNamedOnly && ! hasPos ) {
-                fct += `
-        extra[ argname ] = kargs[argname];
-        ++nb_extra_args;
-`
-            } else {
-                fct += `
-        if( HAS_PARAMS.has(argname) ) {
-            result[ argname ] = kargs[argname];
-            ++nb_named_args;
-        } else {
-            extra[ argname ] = kargs[argname];
-            ++nb_extra_args;
-        }
-`
-            }
-        }
-
-        fct += `
-    }
-
-    for(let id = 1; id < ARGS_NAMED.length; ++id ) {
-
-        const kargs = ARGS_NAMED[id];
-
-        for(let item of $B.unpack_mapping(fct, kargs) ) {
-            let argname = item.key
-            if( typeof argname !== "string") {
-                $B.args0_old(fct, args);
-                throw new Error('Non string key passed in **kargs');
-            }
-            `;
-
-            if( ! hasKWargs ) {
-                fct += `
-            result[ argname ] = item.value;
-            ++nb_named_args;
-`;
-            }
-
-            if( hasKWargs ) {
-                if( ! hasNamedOnly && ! hasPos ) {
-
-                    fct += `
-            extra[ argname ] = $B.$getitem(kargs, argname);
-            ++nb_extra_args;
-`
-                } else {
-                    fct += `
-            if( HAS_PARAMS.has(argname) ) {
-                result[ argname ] = $B.$getitem(kargs, argname);
-                ++nb_named_args;
-            } else {
-                extra[ argname ] = $B.$getitem(kargs, argname);
-                ++nb_extra_args;
-            }
-`
-                }
-            }
-
-            fct += `
-        }
-    }
-`
-
-    fct += `
-    let found = 0;
-    let ioffset = offset;
-`;
-
-    if(    (hasPosOnly || hasPos)
-        && (! hasPosOnly || posOnlyDefaults !== DEFAULTS.ALL)
-        && (! hasPos     || posDefaults !== DEFAULTS.ALL) ) {
-        fct += `
-    for( ; ioffset < ${PARAMS_POS_DEFAULTS_OFFSET}; ++ioffset) {
-
-        const key = PARAMS_NAMES[ioffset];
-        if( key in result ) // maybe could be speed up using "!(key in result)"
-            continue;
-
-        $B.args0_old(fct, args);
-        throw new Error('Missing a named arguments (args0 should have raised an error) !');
-    }
-`
-    }
-    if( (hasPosOnly && posOnlyDefaults !== DEFAULTS.NONE) || (hasPos && posDefaults !== DEFAULTS.NONE) ) {
-        fct += `
-    for( ; ioffset < PARAMS_POS_COUNT; ++ioffset) {
-
-        const key = PARAMS_NAMES[ioffset];
-        if( key in result )
-            continue;
-
-        result[key] = PARAMS_POS_DEFAULTS[ioffset - ${PARAMS_POS_DEFAULTS_OFFSET}];
-    ++found;
-    }
-`
-    }
-
-    if( hasNamedOnly ) {
-
-        fct += `
-        for( ; ioffset < PARAMS_NAMES.length; ++ioffset) {
-
-            const key = PARAMS_NAMES[ioffset];
-            if( key in result )
-                continue;
-`
-        if( namedOnlyDefaults === DEFAULTS.SOME) {
-            fct += `
-            if( ! kwargs_defaults.has(key) ) {
-                $B.args0_old(fct, args);
-
-                throw new Error('Missing a named arguments (args0 should have raised an error) !');
-            }
-`
-        }
-        if( namedOnlyDefaults === DEFAULTS.NONE ) {
-            fct += `
-            $B.args0_old(fct, args);
-
-            throw new Error('Missing a named arguments (args0 should have raised an error) !');
-`
-        }
-
-        if( namedOnlyDefaults !== DEFAULTS.NONE) {
-            fct += `
-
-            result[key] = kwargs_defaults.get(key);
-            ++found;
-`;
-        }
-
-        fct += `
-        }
-`;
-    }
-
-    if( hasNamedOnly || hasPos )
-        fct += `
-        if( found + nb_named_args !== PARAMS_NAMES.length - offset) {
-            $B.args0_old(fct, args);
-            throw new Error('Inexistant or duplicate named arguments (args0 should have raised an error) !');
-        }
-`;
-
-    if( hasKWargs ) {
-        fct += `
-    if( Object.keys(extra).length !== nb_extra_args ) {
-        $B.args0_old(fct, args);
-        throw new Error('Duplicate name given to **kargs parameter (args0 should have raised an error) !');
-    }
-    result[$INFOS.kwarg] = __BRYTHON__.builtins.dict.$from_js(extra);
-`
-    }
-
-    fct += `
-    return result
-    `;
-
-    //fct += `}`;
-    return fct;
-}
-
 function missing_names(missing){
     var len = missing.length
     var plural = len == 1 ? '' : 's'
@@ -1180,19 +649,16 @@ function add_to_kwargs(kw_dict, key, value){
     $B.str_dict_set(kw_dict, key, value)
 }
 
+function reset_args_parser(self){
+    self.$arguments_parser = make_arguments_parser(self)
+}
+
 $B.args_parser = function(f, args){
     if(! f.$arguments_parser){
         f.$arguments_parser = make_arguments_parser(f)
     }
     return f.$arguments_parser(f, args)
 }
-
-$B.has_kw = function(args){
-    var last_arg = args[args.length - 1]
-    return last_arg && last_arg.$kw
-}
-
-var empty = {}
 
 function make_arguments_parser(f){
     /*
@@ -1213,67 +679,32 @@ function make_arguments_parser(f){
     var kwarg = infos[$B.func_attrs.args_kwarg]
     var defaults = infos[$B.func_attrs.__defaults__]
     var posonly_length = infos[$B.func_attrs.posonlyargs_length]
-    var kwonly_defs = [$B.func_attrs.__kwdefaults__]
-
+    var kwonly_defs = infos[$B.func_attrs.__kwdefaults__]
     var nb_formal = positional_length + kwonly_length
 
-    var def_obj = {}
-    if(defaults !== _b_.None){
-        var start_defs = positional_length - defaults.length
-        for(var i = start_defs; i < positional_length; i++){
-            def_obj[arg_names[i]] = defaults[i - start_defs]
-        }
-    }
-    if(kwonly_defs !== _b_.None){
-        for(var key in kwonly_defs){
-            def_obj[key] = kwonly_defs[key]
-        }
-    }
-
     var parser = function(f, args){
-
-        function add_key(key, value){
-            var index = arg_names.indexOf(key)
-            if(index == -1){
-                if(kwarg){
-                    add_to_kwargs(locals[kwarg], key, value)
-                    return
-                }else{
-                    $B.RAISE(_b_.TypeError, name +
-                        `() got an unexpected keyword argument '${key}'`)
-                }
+        
+        var def_obj
+        if(defaults !== _b_.None){
+            def_obj = {}
+            var start_defs = positional_length - defaults.length
+            for(var i = start_defs; i < positional_length; i++){
+                def_obj[arg_names[i]] = defaults[i - start_defs]
             }
-            if(locals.hasOwnProperty(key)){
-                if(kwarg && index < posonly_length){
-                    _b_.dict.$setitem_string(locals[kwarg], key, value)
-                    return
-                }
-                $B.RAISE(_b_.TypeError, name +
-                    `() got multiple values for argument '${key}'`)
-            }
-            if(index < posonly_length){
-                if(defaults === _b_.None ||
-                        index <= positional_length - defaults.length){
-                    // no default value for key as positional
-                    if(kwarg){
-                        _b_.dict.$setitem_string(locals[kwarg], key, value)
-                    }else{
-                        posonly_as_keywords.push(key)
-                    }
-                }
-            }else{
-                locals[key] = value
-                filled_pos++
+        }
+        if(kwonly_defs !== _b_.None){
+            def_obj = def_obj ?? {}
+            for(var key in kwonly_defs){
+                def_obj[key] = kwonly_defs[key]
             }
         }
 
         var too_many_pos = 0
-        var posonly_as_keywords = []
+        var posonly_as_keywords
 
-        const locals = {}
+        const locals = $B.empty_dict()
         var filled_pos = 0
         var vargs
-
 
         if(kwarg !== null){
             locals[kwarg] = $B.empty_dict()
@@ -1281,12 +712,12 @@ function make_arguments_parser(f){
 
         const args_length = args.length
         const last_arg = args[args_length - 1]
-        const has_kw = last_arg && last_arg.$kw
+        const has_kw = last_arg?.$kw
 
         const nb_pos = has_kw ? args_length - 1 : args_length
 
         if(vararg !== null){
-            locals[vararg] = vargs = []
+            locals[vararg] = vargs = $B.fast_tuple()
         }
 
         if(nb_pos <= positional_length){
@@ -1301,7 +732,7 @@ function make_arguments_parser(f){
             filled_pos = positional_length
             if(vararg !== null){
                 for(let j = positional_length; j < nb_pos; j++){
-                    vargs[vargs.length] = args[j]
+                    vargs.push(args[j])
                 }
             }else{
                 too_many_pos = nb_pos - positional_length
@@ -1309,6 +740,43 @@ function make_arguments_parser(f){
         }
 
         if(has_kw){
+
+            function add_key(key, value){
+                var index = arg_names.indexOf(key)
+                if(index == -1){
+                    if(kwarg){
+                        add_to_kwargs(locals[kwarg], key, value)
+                        return
+                    }else{
+                        $B.RAISE(_b_.TypeError, name +
+                            `() got an unexpected keyword argument '${key}'`)
+                    }
+                }
+                if(locals.hasOwnProperty(key)){
+                    if(kwarg && index < posonly_length){
+                        _b_.dict.$setitem_string(locals[kwarg], key, value)
+                        return
+                    }
+                    $B.RAISE(_b_.TypeError, name +
+                        `() got multiple values for argument '${key}'`)
+                }
+                if(index < posonly_length){
+                    if(defaults === _b_.None ||
+                            index <= positional_length - defaults.length){
+                        // no default value for key as positional
+                        if(kwarg){
+                            _b_.dict.$setitem_string(locals[kwarg], key, value)
+                        }else{
+                            posonly_as_keywords = posonly_as_keywords ?? []
+                            posonly_as_keywords.push(key)
+                        }
+                    }
+                }else{
+                    locals[key] = value
+                    filled_pos++
+                }
+            }
+
             var elt = last_arg
             for(let key in elt.$kw[0]){
                 add_key(key, elt.$kw[0][key])
@@ -1334,15 +802,6 @@ function make_arguments_parser(f){
             }
         }
 
-        if(vararg !== null){
-            locals[vararg] = $B.fast_tuple(locals[vararg])
-        }
-
-        if(nb_formal == 0){
-            // form f(*args, **kw): ...
-            return locals
-        }
-
         if(too_many_pos > 0){
             var plural = positional_length == 1 ? '' : 's'
             var nb = positional_length + too_many_pos
@@ -1354,13 +813,18 @@ function make_arguments_parser(f){
             }
             $B.RAISE(_b_.TypeError,
                 `${name}() takes ${report} positional argument` +
-                `${plural} but ${nb} were given`)
+                `${plural} but ${nb} ${nb == 1 ? 'was' : 'were'} given`)
         }
 
-        if(posonly_as_keywords.length > 0){
+        if(posonly_as_keywords){
             $B.RAISE(_b_.TypeError,
                 `${name}() got some positional-only arguments passed as keyword ` +
                 `arguments: '${posonly_as_keywords.join(', ')}'`)
+        }
+
+        if(nb_formal == 0){
+            // form f(*args, **kw): ...
+            return locals
         }
 
         // use default values

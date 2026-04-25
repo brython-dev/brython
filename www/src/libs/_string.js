@@ -13,7 +13,7 @@ function parts(format_string){
 
 function Tuple(){
     var args = []
-    for(var i=0, len=arguments.length; i < len; i++){
+    for(var i = 0, len = arguments.length; i < len; i++){
         args.push(arguments[i])
     }
     return _b_.tuple.$factory(args)
@@ -25,8 +25,10 @@ $B.addToImported('_string',
             // Split the argument as a field name
             var parsed = $B.parse_format(fieldname),
                 first = parsed.name,
-                rest = []
-            if(first.match(/\d+/)){first = parseInt(first)}
+                rest = $B.$list([])
+            if(first.match(/\d+/)){
+                first = parseInt(first)
+            }
             parsed.name_ext.forEach(function(ext){
                 if(ext.startsWith("[")){
                     var item = ext.substr(1, ext.length - 2)

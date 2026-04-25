@@ -1203,7 +1203,7 @@ _b_.type.tp_call = function(cls){
 }
 
 _b_.type.tp_getattro = function(obj, name){
-    var test = false // name == 'name' // && obj.tp_name == 'Mapping'
+    var test = false // name == '__getformat__' // && obj.tp_name == 'Mapping'
     if(test){
         console.log('class_getattr', obj, name)
         console.log('frame obj', $B.frame_obj)

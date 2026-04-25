@@ -2539,11 +2539,8 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         js += prefix + `var ${locals_name} = locals = $B.empty_dict();\n`
         // generate error message
         js += prefix + `if(arguments.length !== 0){\n` +
-              prefix + tab + `${name2}.$args_parser(${parse_args.join(', ')})\n` +
+              prefix + tab + `$B.args_parser(${name2}, arguments)\n` +
               prefix + `}\n`
-    }else if(this.name == 'fxd51jy'){
-        js += prefix + `var ${locals_name} = locals = ` +
-              `$B.args_parser(${name2}, arguments)\n`
     }else if(this.args.vararg === undefined &&
              this.args.kwarg === undefined &&
              this.args.posonlyargs.length == 0 &&
@@ -2555,11 +2552,11 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
                    `{${positional.map(x => x.arg + ': _' + x.arg).join(', ')}}\n` +
                prefix + `}else{\n` +
                prefix + tab + `var ${locals_name} = locals = ` +
-                   `${name2}.$args_parser(${parse_args.join(', ')})\n` +
+                   `$B.args_parser(${name2}, arguments)\n` +
                prefix + `}\n`
     }else{
         js += prefix + `var ${locals_name} = locals = ` +
-              `${name2}.$args_parser(${parse_args.join(', ')})\n`
+              `$B.args_parser(${name2}, arguments)\n`
     }
 
     js += prefix + `var frame = ["${this.$is_lambda ? '<lambda>': this.name}", ` +
@@ -2763,7 +2760,6 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `${annotations}, ` +
         `${has_type_params ? 'type_params' : '[]'}, frame]\n`;
     js += prefix + `${name2}.ob_type = $B.function\n` +
-          prefix + `${name2}.$args_parser = $B.make_args_parser_and_parse\n` +
           prefix + `$B.init_dict(${name2})\n`
 
     if(anns && ! postponed){

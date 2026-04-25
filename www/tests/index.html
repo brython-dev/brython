@@ -205,7 +205,7 @@ doc['files'].bind('change', editor.load_script)
 </script>
 
 <script type="text/python3" id="translations">
-from browser import document as doc
+from browser import document, console
 import header
 
 qs_lang, language = header.show()
@@ -225,8 +225,8 @@ trans = {
 
 
 for key in trans:
-    if key in doc:
-        doc[key].html = trans[key][language]
+    if key in document:
+        document[key].html = trans[key][language]
 </script>
 
 <!-- Needed in sys.path init tests , see test_import.py -->
