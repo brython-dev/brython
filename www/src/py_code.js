@@ -129,7 +129,7 @@ code_funcs.co_varnames_get = function(self){
 code_funcs.co_varnames_set = _b_.None
 
 code_funcs.replace = function(self){
-    var $ = $B.args('replace', 1, {self: null}, arguments)
+    var $ = $B.args('replace', 1, {self: null}, arguments, null, null, 'kw')
     var self = $.self
     var expected = ['co_argcount', 'co_branches', 'co_cellvars', 'co_code',
         'co_consts', 'co_exceptiontable', 'co_filename', 'co_firstlineno',
