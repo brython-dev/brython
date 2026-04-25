@@ -13,6 +13,7 @@ $B.set_exc = function(exc, frame){
         // console.log('no class', exc)
     }
     exc.ob_type = exc.ob_type ?? _b_.JavascriptError
+    exc.suppress_context = exc.suppress_context ?? false
     exc.args = exc.args ?? [exc.message]
     if(frame === undefined){
         var msg = 'Internal error: no frame for exception ' + _b_.repr(exc)
@@ -741,7 +742,7 @@ _b_.ImportError.tp_init = function(){
 $B.set_func_names(_b_.ImportError, 'builtins')
 
 _b_.SyntaxError.tp_init = function(){
-    var $ = $B.args('SyntaxError', 1, {self: null}, arguments, null, 'args', 
+    var $ = $B.args('SyntaxError', 1, {self: null}, arguments, null, 'args',
                 'kw')
     var _self = $.self,
         args = $.args,
