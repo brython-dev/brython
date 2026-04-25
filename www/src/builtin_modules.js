@@ -115,15 +115,15 @@
                 args = $.args.map($B.pyobj2jsobj)
             self.postMessage(message, ...args)
         }
-        browser.document = $B.internal_property(
-            function(){
+        browser.document = {
+            __get__: function(self){
                 $B.RAISE(_b_.ValueError,
                     "'document' is not available in Web Workers")
             },
-            function(self, value){
+            __set__: function(self, value){
                 browser.document = value
             }
-        )
+        }
     }else{
         browser.is_webworker = false
         update(browser, {
@@ -773,54 +773,54 @@
             // compliance with Python3.12
             return 0
         },
-        last_exc: $B.internal_property(
-            function(){
+        last_exc: {
+            __get__: function(){
                 return $B.module_getattr($B.imported._sys, 'exception')()
             },
-            function(value){
+            __set__: function(value){
                 $B.frame_obj.frame.$current_exception = value
             }
-        ),
+        },
         modules: $B.obj_dict($B.imported),
-        path: $B.internal_property(
-            function(){
+        path: {
+            __get__: function(){
                 var filename = $B.get_filename_for_import()
                 return $B.$list($B.import_info[filename].path)
             },
-            function(self, value){
+            __set__: function(value){
                 var filename = $B.get_filename_for_import()
                 $B.import_info[filename].path = value
             }
-        ),
-        meta_path: $B.internal_property(
-            function(){
+        },
+        meta_path: {
+            __get__: function(){
                 var filename = $B.get_filename()
                 return $B.$list($B.import_info[filename].meta_path)
             },
-            function(self, value){
+            __set__: function(self, value){
                 var filename = $B.get_filename()
                 $B.import_info[filename].meta_path = value
             }
-        ),
-        path_hooks: $B.internal_property(
-            function(){
+        },
+        path_hooks: {
+            __get__: function(){
                 var filename = $B.get_filename()
                 return $B.$list($B.import_info[filename].path_hooks)
             },
-            function(self, value){
+            __set__: function(self, value){
                 var filename = $B.get_filename()
                 $B.import_info[filename].path_hooks = value
             }
-        ),
-        path_importer_cache: $B.internal_property(
-            function(){
+        },
+        path_importer_cache: {
+            __get__: function(){
                 return _b_.dict.$factory($B.jsobj2pyobj($B.path_importer_cache))
             },
-            function(){
+            __set__: function(){
                 $B.RAISE(_b_.TypeError, "Read only property" +
                     " 'sys.path_importer_cache'")
             }
-        ),
+        },
         setrecursionlimit: function(value){
             $B.recursion_limit = value
         },
@@ -839,26 +839,26 @@
         stderr: console.error !== undefined ? $io.$factory("error") :
                     $io.$factory("log"),
         stdout: $io.$factory("log"),
-        stdin: $B.internal_property(
-            function(){
+        stdin: {
+            __get__: function(){
                 return $B.stdin
             },
-            function(self, value){
+            __set__: function(value){
                 $B.stdin = value
             }
-        ),
-        vfs: $B.internal_property(
-            function(){
+        },
+        vfs: {
+            __get__: function(){
                 if($B.hasOwnProperty("VFS")){
                     return $B.obj_dict($B.VFS)
                 }else{
                     return _b_.None
                 }
             },
-            function(){
+            __set__: function(){
                 $B.RAISE(_b_.TypeError, "Read only property 'sys.vfs'")
             }
-        )
+        }
     }
 
     var WarningMessage = $B.make_builtin_class("WarningMessage")

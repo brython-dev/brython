@@ -58,11 +58,14 @@ $B.module.tp_repr = function(self){
 }
 
 $B.module.tp_getattro = function(self, attr){
-    var test = false // attr == '__dict__'
+    var test = false // attr == 'path'
     var res = _b_.object.tp_getattro(self, attr)
     if(res !== $B.NULL){
         if(test){
             console.log('res', res, $B.get_class(res).tp_name)
+        }
+        if(res?.__get__){
+            return res.__get__()
         }
         return res
     }
@@ -88,6 +91,20 @@ $B.module.tp_new = function(cls, args, kw){
     }
     $B.init_dict(res)
     return res
+}
+
+$B.module.tp_setattro = function(self, attr, value){
+    var test = false // attr == 'path'
+    var res = _b_.object.tp_getattro(self, attr)
+    if(res !== $B.NULL){
+        if(test){
+            console.log('res', res, $B.get_class(res).tp_name)
+        }
+        if(res.__set__){
+            return res.__set__(value)
+        }
+    }
+    _b_.object.tp_setattro(self, attr, value)
 }
 
 var module_funcs = $B.module.tp_funcs = {}
