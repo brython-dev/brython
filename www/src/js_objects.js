@@ -1020,6 +1020,10 @@ js_array_iterator.$factory = function(obj){
     }
 }
 
+js_array_iterator.tp_iter = function(self){
+    return self
+}
+
 js_array_iterator.tp_iternext = function*(self){
     for(var item of self.it){
         yield jsobj2pyobj(item)
