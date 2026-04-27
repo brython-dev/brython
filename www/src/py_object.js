@@ -427,7 +427,7 @@ _b_.object.tp_getattro = function(self, attr){
 
 _b_.object.tp_init = function(){
     var [args, kw] = $B.parse_args_kw('__init__', arguments)
-    
+
     if(args.length == 0){
         $B.RAISE(_b_.TypeError, "descriptor '__init__' of 'object' " +
             "object needs an argument")

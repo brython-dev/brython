@@ -22,7 +22,8 @@ $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
         if(base.tp_flags !== undefined &&
                  ! (base.tp_flags & TPFLAGS.BASETYPE)){
             $B.RAISE(_b_.TypeError,
-                `type '${$B.$getattr(base, '__qualname__')}' is not an acceptable base type`)
+                `type '${$B.$getattr(base, '__qualname__')}' ` +
+                `is not an acceptable base type`)
         }
     }
 
@@ -615,26 +616,29 @@ $B.merge_class_dict = function(dict, klass){
     }
 }
 
-var dict_name = Symbol('DICT')
+var dict_name = $B.DICT = Symbol('DICT')
 
 $B.get_dict = function(cls){
-    return cls[dict_name]
+    return cls[dict_name] ??
+        (cls.ob_type === $B.function
+            ? (cls[dict_name] = $B.empty_dict())
+            : undefined)
 }
 
 $B.init_dict = function(cls){
     cls[dict_name] = $B.empty_dict()
 }
 
-$B.set_dict= function(cls, value){
+$B.set_dict = function(cls, value){
     cls[dict_name] = value
 }
 
 $B.get_from_dict = function(cls, attr, _default){
-    return $B.str_dict_get(cls[dict_name], attr, _default)
+    return $B.str_dict_get($B.get_dict(cls), attr, _default)
 }
 
 $B.set_to_dict = function(cls, attr, value){
-    $B.str_dict_set(cls[dict_name], attr, value)
+    $B.str_dict_set($B.get_dict(cls), attr, value)
 }
 
 var NULL = {NULL:true}
@@ -660,6 +664,14 @@ $B.slot2dunder = {
 $B.dunder2slot = {}
 for(var key in $B.slot2dunder){
     $B.dunder2slot[$B.slot2dunder[key]] = key
+}
+
+function where_is(cls, attr){
+    for(var kls of cls.tp_mro){
+        if($B.get_from_dict(kls, attr, $B.NULL) !== $B.NULL){
+            return kls
+        }
+    }
 }
 
 $B.search_own_slot = function(cls, slot, _default){
@@ -1319,7 +1331,7 @@ _b_.type.tp_new = function(cls, args, kw){
     var extra_kwargs = kwds
     var [name, bases, cl_dict] = args
 
-    var test = false // name == 'FlagBoundary'
+    var test = false // name == 'A'
     if(test){
         console.log('type.tp_new', name, 'metatype', metatype,
             'extrakw', kwds)
@@ -1359,6 +1371,7 @@ _b_.type.tp_new = function(cls, args, kw){
         class_obj.tp_flags |= base.tp_flags & $B.TPFLAGS.BASE_EXC_SUBCLASS
         class_obj.tp_flags |= base.tp_flags & $B.TPFLAGS.TYPE_SUBCLASS
     }
+
     $B.set_dict(class_obj, cl_dict)
     class_obj.tp_mro = $B.make_mro(class_obj)
     class_obj.tp_subclasses = []
@@ -1423,7 +1436,9 @@ _b_.type.tp_new = function(cls, args, kw){
             if(test){
                 // console.log('check __set_name__ for', key, v)
             }
-            if(['__module__', '__class__', '__name__', '__qualname__'].includes(key)){
+            if(['__module__', '__doc__', '__dict__', '__qualname__',
+                    '__first_lineno__', '__static_attributes__',
+                    '__annotate_func__'].includes(key)){
                 continue
             }
             if(key == '__class_getitem__'){
@@ -1455,29 +1470,30 @@ _b_.type.tp_new = function(cls, args, kw){
         if(test){
             console.log('class obj', class_obj)
         }
-        var sup =
-            {
-                ob_type: _b_.super,
-                type: class_obj,
-                obj: class_obj,
-                obj_type: class_obj
-            }
-        var init_subclass = _b_.super.tp_getattro(sup, "__init_subclass__")
         if(test){
             console.log('call init subclass', init_subclass)
             console.log('extra_kwargs', extra_kwargs)
         }
-        try{
+        if(where_is(class_obj, '__init_subclass__') === _b_.object &&
+                _b_.dict.mp_length(extra_kwargs) == 0){
+            // no use calling object.__init_subclass__
+        }else{
+            var sup =
+                {
+                    ob_type: _b_.super,
+                    type: class_obj,
+                    obj: class_obj,
+                    obj_type: class_obj
+                }
+
+            var init_subclass = _b_.super.tp_getattro(sup, "__init_subclass__")
             $B.$call(init_subclass, $B.dict2kwarg(extra_kwargs))
-        }catch(err){
-            throw err
         }
         class_obj.tp_flags |= $B.TPFLAGS.READY
     }
     if(test){
         console.log('$getattribute is set for', class_obj)
     }
-
     $B.make_new(class_obj)
     $B.make_descr_get(class_obj)
     $B.make_descr_set(class_obj)

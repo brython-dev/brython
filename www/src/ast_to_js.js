@@ -2759,8 +2759,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         `[${varnames}], ` +
         `${annotations}, ` +
         `${has_type_params ? 'type_params' : '[]'}, frame]\n`;
-    js += prefix + `${name2}.ob_type = $B.function\n` +
-          prefix + `$B.init_dict(${name2})\n`
+    js += prefix + `${name2}.ob_type = $B.function\n`
 
     if(anns && ! postponed){
         //var annotate_scope = new Scope('__annotate__', 'def', this)

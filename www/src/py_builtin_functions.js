@@ -1989,9 +1989,6 @@ _b_.super.tp_getattro = function(self, attr){
             console.log('call getter', getter)
             console.log('args', self.obj, self.obj_type)
         }
-        if(typeof getter != 'function'){
-            console.log('not a function', getter, f_cls)
-        }
         res = getter(f, self.obj, self.obj_type)
     }else{
         res = f

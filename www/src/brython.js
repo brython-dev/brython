@@ -688,8 +688,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-04-25 14:26:50.845414"
-__BRYTHON__.timestamp=1777120010845
+__BRYTHON__.compiled_date="2026-04-27 10:19:44.352387"
+__BRYTHON__.timestamp=1777277984352
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -2374,7 +2374,8 @@ if(test){console.log('class constructor',class_name,'dict',dict)
 console.log('metaclass',metaclass)}
 if(metaclass.tp_mro===undefined){console.log('no mro in metaclass',metaclass)}
 for(var base of bases){if(base.tp_flags !==undefined &&
-!(base.tp_flags & TPFLAGS.BASETYPE)){$B.RAISE(_b_.TypeError,`type '${$B.$getattr(base, '__qualname__')}' is not an acceptable base type`)}}
+!(base.tp_flags & TPFLAGS.BASETYPE)){$B.RAISE(_b_.TypeError,`type '${$B.$getattr(base, '__qualname__')}' `+
+`is not an acceptable base type`)}}
 delete extra_kwargs.metaclass
 var classdef_frame=$B.frame_obj.prev.frame
 var module=classdef_frame[2]
@@ -2569,17 +2570,21 @@ if(classdict !==null){$B.$call($B.type_getattribute(_b_.dict,'update'),dict,clas
 bases=klass.tp_bases
 if(bases===undefined){return}
 for(var base of bases){$B.merge_class_dict(dict,base)}}
-var dict_name=Symbol('DICT')
-$B.get_dict=function(cls){return cls[dict_name]}
+var dict_name=$B.DICT=Symbol('DICT')
+$B.get_dict=function(cls){return cls[dict_name]??
+(cls.ob_type===$B.function
+?(cls[dict_name]=$B.empty_dict())
+:undefined)}
 $B.init_dict=function(cls){cls[dict_name]=$B.empty_dict()}
 $B.set_dict=function(cls,value){cls[dict_name]=value}
-$B.get_from_dict=function(cls,attr,_default){return $B.str_dict_get(cls[dict_name],attr,_default)}
-$B.set_to_dict=function(cls,attr,value){$B.str_dict_set(cls[dict_name],attr,value)}
+$B.get_from_dict=function(cls,attr,_default){return $B.str_dict_get($B.get_dict(cls),attr,_default)}
+$B.set_to_dict=function(cls,attr,value){$B.str_dict_set($B.get_dict(cls),attr,value)}
 var NULL={NULL:true}
 var counter=0
 $B.slot2dunder={tp_call:'__call__',tp_descr_get:'__get__',tp_descr_set:'__set__',tp_getattro:'__getattribute__',tp_getbuffer:'__buffer__',tp_hash:'__hash__',tp_init:'__init__',tp_iter:'__iter__',tp_iternext:'__next__',tp_new:'__new__',tp_repr:'__repr__',tp_setattro:'__setattr__',tp_str:'__str__'}
 $B.dunder2slot={}
 for(var key in $B.slot2dunder){$B.dunder2slot[$B.slot2dunder[key]]=key}
+function where_is(cls,attr){for(var kls of cls.tp_mro){if($B.get_from_dict(kls,attr,$B.NULL)!==$B.NULL){return kls}}}
 $B.search_own_slot=function(cls,slot,_default){var dunder=$B.slot2dunder[slot]
 if(cls.hasOwnProperty(slot)){return cls[slot]}
 if(dunder){var v=$B.get_from_dict(cls,dunder,$B.NULL)
@@ -2859,7 +2864,7 @@ if(test){console.log('scan cl_dict')}
 for(var item of _b_.dict.$iter_items(cl_dict)){if(test){console.log('item in cl dict',item)}
 var key=item.key,v=item.value
 if(test){}
-if(['__module__','__class__','__name__','__qualname__'].includes(key)){continue}
+if(['__module__','__doc__','__dict__','__qualname__','__first_lineno__','__static_attributes__','__annotate_func__'].includes(key)){continue}
 if(key=='__class_getitem__'){
 if($B.get_class(v)!==_b_.classmethod){var v1=$B.$call(_b_.classmethod,v)
 $B.str_dict_set(cl_dict,key,v1)}}
@@ -2870,12 +2875,13 @@ if(v.$infos){v.$infos.__qualname__=name+'.'+v.$infos.__name__}}else{v.$function_
 v.$function_infos[$B.func_attrs.__qualname__]=name+'.'+
 v.$function_infos[$B.func_attrs.__name__]}}}
 if(test){console.log('class obj',class_obj)}
-var sup=
-{ob_type:_b_.super,type:class_obj,obj:class_obj,obj_type:class_obj}
-var init_subclass=_b_.super.tp_getattro(sup,"__init_subclass__")
 if(test){console.log('call init subclass',init_subclass)
 console.log('extra_kwargs',extra_kwargs)}
-try{$B.$call(init_subclass,$B.dict2kwarg(extra_kwargs))}catch(err){throw err}
+if(where_is(class_obj,'__init_subclass__')===_b_.object &&
+_b_.dict.mp_length(extra_kwargs)==0){}else{var sup=
+{ob_type:_b_.super,type:class_obj,obj:class_obj,obj_type:class_obj}
+var init_subclass=_b_.super.tp_getattro(sup,"__init_subclass__")
+$B.$call(init_subclass,$B.dict2kwarg(extra_kwargs))}
 class_obj.tp_flags |=$B.TPFLAGS.READY}
 if(test){console.log('$getattribute is set for',class_obj)}
 $B.make_new(class_obj)
@@ -4933,7 +4939,6 @@ var getter=f_cls.tp_descr_get
 var res
 if(getter !==$B.NULL){if($test){console.log('call getter',getter)
 console.log('args',self.obj,self.obj_type)}
-if(typeof getter !='function'){console.log('not a function',getter,f_cls)}
 res=getter(f,self.obj,self.obj_type)}else{res=f}
 if($test){console.log('result of super.tp_getattro',attr,res)}
 if(res===$B.NULL){return _b_.object.tp_getattro(self,attr)}
@@ -15609,8 +15614,7 @@ prefix+tab+`${positional.length}, `+
 `[${varnames}], `+
 `${annotations}, `+
 `${has_type_params ? 'type_params' : '[]'}, frame]\n`;
-js+=prefix+`${name2}.ob_type = $B.function\n`+
-prefix+`$B.init_dict(${name2})\n`
+js+=prefix+`${name2}.ob_type = $B.function\n`
 if(anns && ! postponed){
 var inum=add_to_positions(scopes,this)
 js+=prefix+`${name2}.__annotate__ = function(format){\n`
