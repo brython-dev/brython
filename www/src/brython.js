@@ -688,8 +688,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-04-27 10:19:44.352387"
-__BRYTHON__.timestamp=1777277984352
+__BRYTHON__.compiled_date="2026-04-28 13:46:33.265966"
+__BRYTHON__.timestamp=1777376793265
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -2651,25 +2651,30 @@ if(cls.tp_subclasses===undefined){console.log('no subclasses',cls)}
 for(var kls of cls.tp_subclasses){reset_call(kls)}}
 $B.make_descr_get=function(cls){cls.tp_descr_get=$B.NULL
 var get=$B.get_from_dict(cls,'__get__',$B.NULL)
-if(get !==$B.NULL){cls.tp_descr_get=get}else if(cls.tp_base){cls.tp_descr_get=cls.tp_base.tp_descr_get}else{console.log('no tp_base',cls)}}
+if(get !==$B.NULL){cls.tp_descr_get=get}else if(cls.tp_base){cls.tp_descr_get=cls.tp_base.tp_descr_get ??
+(cls.tp_base.tp_descr_get=$B.make_descr_get(cls.tp_base))}
+return cls.tp_descr_get}
 function reset_descr_get(cls){$B.make_descr_get(cls)
 for(var kls of cls.tp_subclasses){reset_descr_get(kls)}}
 $B.make_descr_set=function(cls){cls.tp_descr_set=$B.NULL
 var _set=$B.get_from_dict(cls,'__set__',$B.NULL)
-if(_set !==$B.NULL){cls.tp_descr_set=_set}else if(cls.tp_base){cls.tp_descr_set=cls.tp_base.tp_descr_set}else{console.log('no tp_base',cls)}}
+if(_set !==$B.NULL){cls.tp_descr_set=_set}else if(cls.tp_base){cls.tp_descr_set=cls.tp_base.tp_descr_set ??
+(cls.tp_base.tp_descr_set=$B.make_descr_set(cls.tp_base))}
+return cls.tp_descr_set}
 function reset_descr_set(cls){$B.make_descr_set(cls)
 for(var kls of cls.tp_subclasses){reset_descr_set(kls)}}
 $B.make_iter=function(cls){cls.tp_iter=$B.NULL
 var iter=$B.get_from_dict(cls,'__iter__',$B.NULL)
-if(iter !==$B.NULL){cls.tp_iter=iter}else if(cls.tp_base){cls.tp_iter=cls.tp_base.tp_iter}else{console.log('no tp_base',cls)}}
+if(iter !==$B.NULL){cls.tp_iter=iter}else if(cls.tp_base){cls.tp_iter=cls.tp_base.tp_iter ??
+(cls.tp_base.tp_iter=$B.make_iter(cls.tp_base))}
+return cls.tp_iter}
 function reset_iter(cls){$B.make_iter(cls)
 if(cls.tp_subclasses===undefined){console.log('no subclasses',cls)}
 for(var kls of cls.tp_subclasses){reset_iter(kls)}}
 $B.make_fast_iter=function(cls){if(cls.tp_base &&
 cls.tp_base[$B.FAST_ITER]&&
 $B.get_from_dict(cls,'__iter__',$B.NULL)===$B.NULL){cls[$B.FAST_ITER]=cls.tp_base[$B.FAST_ITER]}}
-$B.make_new=function(cls){
-cls.tp_new=$B.NULL
+$B.make_new=function(cls){cls.tp_new=$B.NULL
 for(var kls of cls.tp_mro){if(kls.tp_flags & $B.TPFLAGS.HEAPTYPE){var _new=$B.get_from_dict(kls,'__new__',$B.NULL)
 if(_new !==$B.NULL){if($B.get_class(_new)===_b_.staticmethod){_new=_new.sm_callable}
 cls.tp_new=_new
@@ -2849,11 +2854,10 @@ if(test){console.log('result of type_new_get_bases',res)}
 if(res < 0){assert(PyErr_Occurred());
 return NULL;}
 if(res==1){return class_obj}
-if(res instanceof Object){if(test){console.log('type.tp_new returns',res.type)}
+if(res instanceof Object){
 class_obj=res.type
 $B.make_init(class_obj)
-$B.make_setattr(class_obj)}else{if(test){console.log('res in not Object')}
-set_slots(cl_dict,class_obj)
+$B.make_setattr(class_obj)}else{set_slots(cl_dict,class_obj)
 $B.set_to_dict(class_obj,'__dict__',$B.getset_descriptor.$factory(
 class_obj,'__dict__',[object_get_dict,$B.set_dict]
 )
@@ -2864,10 +2868,11 @@ if(test){console.log('scan cl_dict')}
 for(var item of _b_.dict.$iter_items(cl_dict)){if(test){console.log('item in cl dict',item)}
 var key=item.key,v=item.value
 if(test){}
-if(['__module__','__doc__','__dict__','__qualname__','__first_lineno__','__static_attributes__','__annotate_func__'].includes(key)){continue}
+if(['__module__','__doc__','__dict__','__qualname__','__firstlineno__','__static_attributes__','__annotate_func__'].includes(key)){continue}
 if(key=='__class_getitem__'){
 if($B.get_class(v)!==_b_.classmethod){var v1=$B.$call(_b_.classmethod,v)
 $B.str_dict_set(cl_dict,key,v1)}}
+if(test){console.log('set name',item)}
 var set_name=$B.type_getattribute($B.get_class(v),"__set_name__")
 if(set_name !==$B.NULL){$B.$call(set_name,v,class_obj,key)}
 if(typeof v=="function"){if(v.$function_infos===undefined){
@@ -2887,7 +2892,6 @@ if(test){console.log('$getattribute is set for',class_obj)}
 $B.make_new(class_obj)
 $B.make_descr_get(class_obj)
 $B.make_descr_set(class_obj)
-$B.make_iter(class_obj)
 $B.make_call(class_obj)
 return class_obj}
 var type_funcs=_b_.type.tp_funcs={}
@@ -4663,12 +4667,12 @@ $B.$iter=function(obj,sentinel){
 var test=false 
 if(test){console.log('iter',obj)}
 if(sentinel===undefined){var klass=$B.get_class(obj)
-var iter_func=klass.tp_iter
+var iter_func=klass.tp_iter ?? $B.make_iter(klass)
 if(test){console.log('iter func',iter_func)}
 if(iter_func !==$B.NULL){var getter=$B.get_class(iter_func).tp_descr_get
 if(getter===$B.NULL){var in_dict=$B.search_in_dict(obj,'__iter__',$B.NULL)
 if(in_dict===iter_func){var res=$B.$call(in_dict)}}else{var res=$B.$call(iter_func,obj)}
-if($B.search_slot($B.get_class(res),'tp_iternext',$B.NULL)===$B.NULL){console.log('iter, obj',obj,'result of iter func',res)
+if($B.search_slot($B.get_class(res),'tp_iternext',$B.NULL)===$B.NULL){console.log('iter, obj',obj,'\nklass',klass,'\n  getter',getter,'\n iter func',iter_func,'\nresult of iter func',res)
 console.log('no tp_iternext in',$B.get_class(res))
 $B.RAISE(_b_.TypeError,`iter() returned non-iterable of type '${$B.class_name(res)}'`)}
 return res}

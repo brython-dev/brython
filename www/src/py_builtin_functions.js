@@ -1199,7 +1199,7 @@ $B.$iter = function(obj, sentinel){
     }
     if(sentinel === undefined){
         var klass = $B.get_class(obj)
-        var iter_func = klass.tp_iter
+        var iter_func = klass.tp_iter ?? $B.make_iter(klass)
         if(test){
             console.log('iter func', iter_func)
         }
@@ -1214,7 +1214,11 @@ $B.$iter = function(obj, sentinel){
                 var res = $B.$call(iter_func, obj)
             }
             if($B.search_slot($B.get_class(res), 'tp_iternext', $B.NULL) === $B.NULL){
-                console.log('iter, obj', obj, 'result of iter func', res)
+                console.log('iter, obj', obj,
+                    '\nklass', klass,
+                    '\n  getter', getter,
+                    '\n iter func', iter_func,
+                    '\nresult of iter func', res)
                 console.log('no tp_iternext in', $B.get_class(res))
                 $B.RAISE(_b_.TypeError,
                     `iter() returned non-iterable of type '${$B.class_name(res)}'`)

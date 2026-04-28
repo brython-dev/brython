@@ -886,10 +886,10 @@ $B.make_descr_get = function(cls){
     if(get !== $B.NULL){
         cls.tp_descr_get = get
     }else if(cls.tp_base){
-        cls.tp_descr_get = cls.tp_base.tp_descr_get
-    }else{
-        console.log('no tp_base', cls)
+        cls.tp_descr_get = cls.tp_base.tp_descr_get ??
+            (cls.tp_base.tp_descr_get = $B.make_descr_get(cls.tp_base))
     }
+    return cls.tp_descr_get
 }
 
 function reset_descr_get(cls){
@@ -905,10 +905,10 @@ $B.make_descr_set = function(cls){
     if(_set !== $B.NULL){
         cls.tp_descr_set = _set
     }else if(cls.tp_base){
-        cls.tp_descr_set = cls.tp_base.tp_descr_set
-    }else{
-        console.log('no tp_base', cls)
+        cls.tp_descr_set = cls.tp_base.tp_descr_set ??
+            (cls.tp_base.tp_descr_set = $B.make_descr_set(cls.tp_base))
     }
+    return cls.tp_descr_set
 }
 
 function reset_descr_set(cls){
@@ -924,10 +924,10 @@ $B.make_iter = function(cls){
     if(iter !== $B.NULL){
         cls.tp_iter = iter
     }else if(cls.tp_base){
-        cls.tp_iter = cls.tp_base.tp_iter
-    }else{
-        console.log('no tp_base', cls)
+        cls.tp_iter = cls.tp_base.tp_iter ??
+            (cls.tp_base.tp_iter = $B.make_iter(cls.tp_base))
     }
+    return cls.tp_iter
 }
 
 function reset_iter(cls){
@@ -949,7 +949,6 @@ $B.make_fast_iter = function(cls){
 }
 
 $B.make_new = function(cls){
-    //cls.tp_newXXX = $B.search_slot(cls, 'tp_new', $B.NULL)
     cls.tp_new = $B.NULL
     for(var kls of cls.tp_mro){
         if(kls.tp_flags & $B.TPFLAGS.HEAPTYPE){
@@ -1402,20 +1401,15 @@ _b_.type.tp_new = function(cls, args, kw){
         return class_obj
     }
     if(res instanceof Object){
-        if(test){
-            console.log('type.tp_new returns', res.type)
-        }
+        // res.type is the result of tp_new on the classe's metaclass
         class_obj = res.type
         $B.make_init(class_obj)
         $B.make_setattr(class_obj)
     }else{
-        if(test){
-            console.log('res in not Object')
-        }
         set_slots(cl_dict, class_obj)
 
         $B.set_to_dict(class_obj, '__dict__',
-                $B.getset_descriptor.$factory(
+            $B.getset_descriptor.$factory(
                 class_obj,
                 '__dict__',
                 [object_get_dict, $B.set_dict]
@@ -1423,7 +1417,6 @@ _b_.type.tp_new = function(cls, args, kw){
         )
         $B.make_init(class_obj)
         $B.make_setattr(class_obj)
-        // set class attributes
         if(test){
             console.log('scan cl_dict')
         }
@@ -1437,7 +1430,7 @@ _b_.type.tp_new = function(cls, args, kw){
                 // console.log('check __set_name__ for', key, v)
             }
             if(['__module__', '__doc__', '__dict__', '__qualname__',
-                    '__first_lineno__', '__static_attributes__',
+                    '__firstlineno__', '__static_attributes__',
                     '__annotate_func__'].includes(key)){
                 continue
             }
@@ -1450,6 +1443,9 @@ _b_.type.tp_new = function(cls, args, kw){
             }
 
             // cf PEP 487 and issue #1178
+            if(test){
+                console.log('set name', item)
+            }
             var set_name = $B.type_getattribute($B.get_class(v), "__set_name__")
             if(set_name !== $B.NULL){
                 $B.$call(set_name, v, class_obj, key)
@@ -1497,7 +1493,7 @@ _b_.type.tp_new = function(cls, args, kw){
     $B.make_new(class_obj)
     $B.make_descr_get(class_obj)
     $B.make_descr_set(class_obj)
-    $B.make_iter(class_obj)
+    //$B.make_iter(class_obj)
     $B.make_call(class_obj)
     return class_obj
 }
