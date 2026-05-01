@@ -688,8 +688,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-04-28 13:46:33.265966"
-__BRYTHON__.timestamp=1777376793265
+__BRYTHON__.compiled_date="2026-05-01 07:50:10.181501"
+__BRYTHON__.timestamp=1777614610181
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -11440,7 +11440,8 @@ if(arg !==null && arg.constructor===Object && arg.$kw){console.log(Error().stack
 $B.RAISE(_b_.TypeError,'keyword arguments are not supported for '+
 'Javascript functions')}
 args[i]=pyobj2jsobj(arg)}
-try{return jsobj2pyobj(jsobj.apply(_this,args))}catch(err){throw $B.exception(err)}}
+try{if(args[0]==="===================="){console.log(Error().stack)}
+return jsobj2pyobj(jsobj.apply(_this,args))}catch(err){throw $B.exception(err)}}
 if(_this===null){jsobj[PYOBJFCT]=res;}else if(_this[PYOBJFCTS]!==undefined){_this[PYOBJFCTS].set(jsobj,res)}
 res[JSOBJ]=jsobj
 Object.defineProperty(res,'$js_func',{value:jsobj})
@@ -12249,7 +12250,11 @@ for(let header of headers){if(header.strip().length==0){continue}
 let pos=header.search(":")
 res.__setitem__(header.substr(0,pos),header.substr(pos+1).lstrip())}
 return res}
-break}
+break
+case "addEventListener":
+return DOMNode.tp_getattro(self,"bind")
+case "removeEventListener":
+return DOMNode.tp_getattro(self,"unbind")}
 if(attr=="select" && self.nodeType==1 &&
 ["INPUT","TEXTAREA"].indexOf(self.tagName.toUpperCase())>-1){return function(selector){if(selector===undefined){self.select()
 return _b_.None}
@@ -12299,12 +12304,7 @@ return res.bind(self)}}
 if(res.$function_infos){
 return res}
 var func=(function(f,elt){return function(){var args=[]
-for(var i=0;i < arguments.length;i++){var arg=arguments[i]
-if(typeof arg=="function"){
-var f1
-if(arg.$cache){f1=arg.$cache}else{f1=function(dest_fn){return function(){try{return dest_fn.apply(null,arguments)}catch(err){$B.handle_error(err)}}}(arg)
-arg.$cache=f1}
-args.push(f1)}else{args.push($B.pyobj2jsobj(arg))}}
+for(var i=0;i < arguments.length;i++){args.push($B.pyobj2jsobj(arguments[i]))}
 var result=f.apply(elt,args)
 return convertDomValue(result)}})(res,self)
 func.$infos={__name__ :attr,__qualname__:attr}
@@ -12595,7 +12595,7 @@ self.removeEventListener(event,_callback,false)
 events.splice(j,1)
 flag=true
 break}}
-if(! flag){$B.RAISE(_b_.KeyError,'missing callback for event '+event)}}}
+if(! flag){$B.RAISE(_b_.TypeError,'missing callback for event '+event)}}}
 DOMNode_funcs.width_get=function(self){return dimension_get(self,'width')}
 DOMNode_funcs.width_set=function(self,value){return dimension_set(self,'width',value)}
 DOMNode.tp_getset=["abs_left","abs_top","class_name","closest","html","scrolled_left","scrolled_top","style","text","height","left","top","width","parent"

@@ -544,6 +544,10 @@ DOMNode.tp_getattro = function(self, attr){
               return res
           }
           break
+        case "addEventListener":
+          return DOMNode.tp_getattro(self, "bind")
+        case "removeEventListener":
+          return DOMNode.tp_getattro(self, "unbind")
     }
 
     // Special case for attribute "select" of INPUT or TEXTAREA tags :
@@ -680,36 +684,7 @@ DOMNode.tp_getattro = function(self, attr){
                 return function(){
                     var args = []
                     for(var i = 0; i < arguments.length; i++){
-                        var arg = arguments[i]
-                        if(typeof arg == "function"){
-                            // Conversion of function arguments into functions
-                            // that handle exceptions. The converted function
-                            // is cached, so that for instance in this code :
-                            //
-                            // element.addEventListener("click", f)
-                            // element.removeEventListener("click", f)
-                            //
-                            // it is the same function "f" that is added and
-                            // then removed (cf. issue #1157)
-                            var f1
-                            if(arg.$cache){
-                                f1 = arg.$cache
-                            }else{
-                                f1 = function(dest_fn){
-                                    return function(){
-                                        try{
-                                            return dest_fn.apply(null, arguments)
-                                        }catch(err){
-                                            $B.handle_error(err)
-                                        }
-                                    }
-                                }(arg)
-                                arg.$cache = f1
-                            }
-                            args.push(f1)
-                        }else{
-                            args.push($B.pyobj2jsobj(arg))
-                        }
+                         args.push($B.pyobj2jsobj(arguments[i]))
                     }
                     var result = f.apply(elt, args)
                     return convertDomValue(result)
@@ -1488,7 +1463,7 @@ DOMNode_funcs.unbind = function(self, event){
         }
         // The indicated func was not found, error is thrown
         if(! flag){
-            $B.RAISE(_b_.KeyError, 'missing callback for event ' + event)
+            $B.RAISE(_b_.TypeError, 'missing callback for event ' + event)
         }
     }
 }

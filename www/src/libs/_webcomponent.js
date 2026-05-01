@@ -58,7 +58,9 @@ function define(tag_name, cls, options){
             "must be a class, not '" + $B.class_name(tag_name) + "'")
     }
     cls.$webcomponent = true
-    cls.tp_mro.splice(cls.tp_mro.length - 1, 0, $B.DOMNode)
+    if(! cls.tp_mro.includes($B.DOMNode)){
+        cls.tp_mro.splice(cls.tp_mro.length - 1, 0, $B.DOMNode)
+    }
     $B.make_getattr(cls)
     $B.make_setattr(cls)
 

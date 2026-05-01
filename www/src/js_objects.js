@@ -241,6 +241,9 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
                 args[i] = pyobj2jsobj(arg)
             }
             try{
+                if(args[0] === "===================="){
+                    console.log(Error().stack)
+                }
                 return jsobj2pyobj(jsobj.apply(_this, args))
             }catch(err){
                 throw $B.exception(err)

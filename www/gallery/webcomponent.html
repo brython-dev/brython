@@ -119,6 +119,37 @@ a.sort_link{
 <p style="margin-top: 5em;">Change attribute value <button id="change_data">change</button>
 
 <ui-page></ui-page>
+
+<p>
+
+<ui-window style="background-color: lightblue;">
+    ui-window<br>
+    bind and unbind used<br>
+    should not trigger when clicked
+</ui-window>
+
+<p>
+
+<ui-window1 style="background-color: lightblue;">
+    ui-window1<br>
+    bind used<br>
+    should trigger when clicked
+</ui-window1>
+
+<p>
+<ui-window2 style="background-color: lightgreen;">
+    ui-window2<br>
+    addEventListener and removeEventListener used<br>
+    should not trigger when clicked
+</ui-window2>
+
+<p>
+<ui-window3 style="background-color: lightgreen;">
+    ui-window3<br>
+    addEventListener used<br>
+    should trigger when clicked
+</ui-window3>
+
 <div id="trace"></div>
 
 </td>
@@ -127,7 +158,7 @@ a.sort_link{
 
 
 <script type="text/python">
-from browser import bind, console, document, window, aio, html, webcomponent
+from browser import bind, console, document, window, aio, html, webcomponent, alert
 import javascript
 
 style_str = """
@@ -351,9 +382,68 @@ class IssueDemo2:
             console.error(f"404: {url} not found!")
         elif req.status == 500:
             console.error(f"500: {url} internal server error!")
-        console.debug("="*20)
 
 webcomponent.define("issue-demo2", IssueDemo2)
+
+class Window:
+
+    tag: str = "ui-window"
+
+    def __init__(self):
+        self.shadow = self.attachShadow({'mode': 'open'})
+        self.shadow.appendChild(document.createElement("slot"))
+
+    def __bind__(self):
+        console.debug(f"{self.tag}: called __bind__")
+        self.bind("mousedown", self._init_resize)
+        # does not work as expected and results in an exception
+        self.unbind("mousedown", self._init_resize)
+
+    def _init_resize(self, evt):
+        alert(f'{self.tag} resize')
+
+    def connectedCallback(self):
+        self.__bind__()
+
+webcomponent.define(Window.tag, Window)
+
+class Window1(Window):
+
+    tag: str = "ui-window1"
+
+    def __bind__(self):
+        console.debug(f"{self.tag}: called __bind__")
+        # bind
+        self.bind("mousedown", self._init_resize)
+
+webcomponent.define(Window1.tag, Window1)
+
+class Window2:
+
+    tag: str = "ui-window2"
+
+    def __bind__(self):
+        console.debug(f"{self.tag}: called __bind__")
+        self.addEventListener("mousedown", self._init_resize)
+        self.removeEventListener("mousedown", self._init_resize)
+
+    def _init_resize(self, evt):
+        alert(f'{self.tag} resize')
+
+    def connectedCallback(self):
+        self.__bind__()
+        
+webcomponent.define(Window2.tag, Window2)
+
+class Window3(Window):
+
+    tag: str = "ui-window3"
+
+    def __bind__(self):
+        console.debug(f"{self.tag}: called __bind__")
+        self.addEventListener("mousedown", self._init_resize)
+
+webcomponent.define(Window3.tag, Window3)
 </script>
 
 

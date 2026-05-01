@@ -96,7 +96,7 @@ $B.builtin_object_getattro = function(self, klass, attr){
 }
 
 $B.object_getattribute = function(obj, klass, attr){
-    var test = false //klass.tp_name === 'A'
+    var test = false // attr === 'addEventListener'
     if(test){
         console.log('klass', klass, 'attr', attr)
     }
