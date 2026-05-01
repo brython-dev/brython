@@ -142,7 +142,7 @@ class Trace:
 
     def __init__(self, exc):
         self.buf = ""
-        self.is_syntax_error = exc.__name__ in ['SyntaxError',
+        self.is_syntax_error = type(exc).__name__ in ['SyntaxError',
                                                 'IndentationError']
 
     def write(self, data):
