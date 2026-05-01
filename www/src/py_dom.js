@@ -1171,49 +1171,46 @@ DOMNode_funcs.get = function(self){
     // for document : doc.get(key1=value1[,key2=value2...]) returns a list of the elements
     // with specified keys/values
     // key can be 'id','name' or 'selector'
-    var args = []
-    for(var i = 1; i < arguments.length; i++){
-        args.push(arguments[i])
-    }
-    var $ns = $B.args("get", 0, {}, args),
-        $dict = _b_.dict.$to_obj($ns.kw)
+    var $ = $B.args('get', 1, {self: null}, arguments, null, null, 'kw')
+    var self = $.self,
+        kw = $.kw
 
-    if($dict["name"] !== undefined){
+    if(kw.name !== undefined){
         if(self.getElementsByName === undefined){
             $B.RAISE(_b_.TypeError, "DOMNode object doesn't support " +
                 "selection by name")
         }
-        return make_list(self.getElementsByName($dict['name']))
+        return make_list(self.getElementsByName(kw.name))
     }
-    if($dict["tag"] !== undefined){
+    if(kw.tag !== undefined){
         if(self.getElementsByTagName === undefined){
             $B.RAISE(_b_.TypeError, "DOMNode object doesn't support " +
                 "selection by tag name")
         }
-        return make_list(self.getElementsByTagName($dict["tag"]))
+        return make_list(self.getElementsByTagName(kw.tag))
     }
-    if($dict["classname"] !== undefined){
+    if(kw.classname !== undefined){
         if(self.getElementsByClassName === undefined){
             $B.RAISE(_b_.TypeError, "DOMNode object doesn't support " +
                 "selection by class name")
         }
-        return make_list(self.getElementsByClassName($dict['classname']))
+        return make_list(self.getElementsByClassName(kw.classname))
     }
-    if($dict["id"] !== undefined){
+    if(kw.id !== undefined){
         if(self.getElementById === undefined){
             $B.RAISE(_b_.TypeError, "DOMNode object doesn't support " +
                 "selection by id")
         }
-        var id_res = document.getElementById($dict['id'])
+        var id_res = document.getElementById(kw.id)
         if(! id_res){return []}
         return $B.$list([DOMNode.$factory(id_res)])
     }
-    if($dict["selector"] !== undefined){
+    if(kw.selector !== undefined){
         if(self.querySelectorAll === undefined){
             $B.RAISE(_b_.TypeError, "DOMNode object doesn't support " +
                 "selection by selector")
         }
-        return make_list(self.querySelectorAll($dict['selector']))
+        return make_list(self.querySelectorAll(kw.selector))
     }
     return $B.$list([])
 }

@@ -520,7 +520,7 @@ ajax_funcs.set_timeout = function(self, seconds, func){
     self.js.$requestTimer = setTimeout(
         function() {
             self.js.abort()
-            func()
+            $B.$call(func)
         },
         seconds * 1000)
 }

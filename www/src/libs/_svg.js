@@ -45,10 +45,10 @@ function makeTagDict(tagName){
                                 arg.toLowerCase().substr(2),
                                 value)
             }else if(arg.toLowerCase() == "style"){
-                $B.$setattr(self, 'style', value)
+                $B.$setattr(self, 'style', item.value)
             }else if(arg.toLowerCase().indexOf("href") !== -1){ // xlink:href
                 self.setAttributeNS( "http://www.w3.org/1999/xlink",
-                    "href",value)
+                    "href", value)
             }else{
                 if(value !== false){
                     // option.selected=false sets it to true :-)

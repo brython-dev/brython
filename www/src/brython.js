@@ -688,8 +688,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-05-01 13:37:02.843301"
-__BRYTHON__.timestamp=1777635422843
+__BRYTHON__.compiled_date="2026-05-01 16:02:14.879421"
+__BRYTHON__.timestamp=1777644134879
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -12485,26 +12485,25 @@ function make_list(node_list){var res=[]
 for(var i=0;i < node_list.length;i++){res.push(DOMNode.$factory(node_list[i]))}
 return $B.$list(res)}
 DOMNode_funcs.get=function(self){
-var args=[]
-for(var i=1;i < arguments.length;i++){args.push(arguments[i])}
-var $ns=$B.args("get",0,{},args),$dict=_b_.dict.$to_obj($ns.kw)
-if($dict["name"]!==undefined){if(self.getElementsByName===undefined){$B.RAISE(_b_.TypeError,"DOMNode object doesn't support "+
+var $=$B.args('get',1,{self:null},arguments,null,null,'kw')
+var self=$.self,kw=$.kw
+if(kw.name !==undefined){if(self.getElementsByName===undefined){$B.RAISE(_b_.TypeError,"DOMNode object doesn't support "+
 "selection by name")}
-return make_list(self.getElementsByName($dict['name']))}
-if($dict["tag"]!==undefined){if(self.getElementsByTagName===undefined){$B.RAISE(_b_.TypeError,"DOMNode object doesn't support "+
+return make_list(self.getElementsByName(kw.name))}
+if(kw.tag !==undefined){if(self.getElementsByTagName===undefined){$B.RAISE(_b_.TypeError,"DOMNode object doesn't support "+
 "selection by tag name")}
-return make_list(self.getElementsByTagName($dict["tag"]))}
-if($dict["classname"]!==undefined){if(self.getElementsByClassName===undefined){$B.RAISE(_b_.TypeError,"DOMNode object doesn't support "+
+return make_list(self.getElementsByTagName(kw.tag))}
+if(kw.classname !==undefined){if(self.getElementsByClassName===undefined){$B.RAISE(_b_.TypeError,"DOMNode object doesn't support "+
 "selection by class name")}
-return make_list(self.getElementsByClassName($dict['classname']))}
-if($dict["id"]!==undefined){if(self.getElementById===undefined){$B.RAISE(_b_.TypeError,"DOMNode object doesn't support "+
+return make_list(self.getElementsByClassName(kw.classname))}
+if(kw.id !==undefined){if(self.getElementById===undefined){$B.RAISE(_b_.TypeError,"DOMNode object doesn't support "+
 "selection by id")}
-var id_res=document.getElementById($dict['id'])
+var id_res=document.getElementById(kw.id)
 if(! id_res){return[]}
 return $B.$list([DOMNode.$factory(id_res)])}
-if($dict["selector"]!==undefined){if(self.querySelectorAll===undefined){$B.RAISE(_b_.TypeError,"DOMNode object doesn't support "+
+if(kw.selector !==undefined){if(self.querySelectorAll===undefined){$B.RAISE(_b_.TypeError,"DOMNode object doesn't support "+
 "selection by selector")}
-return make_list(self.querySelectorAll($dict['selector']))}
+return make_list(self.querySelectorAll(kw.selector))}
 return $B.$list([])}
 DOMNode_funcs.height_get=function(self){return dimension_get(self,'height')}
 DOMNode_funcs.height_set=function(self,value){return dimension_set(self,'height',value)}
