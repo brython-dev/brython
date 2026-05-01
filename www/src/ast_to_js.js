@@ -1629,7 +1629,7 @@ $B.ast.Await.prototype.to_js = function(scopes){
     }
     if(scopes[ix].ast instanceof $B.ast.AsyncFunctionDef){
         scopes[ix].has_await = true
-        return prefix + `await $B.promise(${$B.js_from_ast(this.value, scopes)})`
+        return `await $B.promise(${$B.js_from_ast(this.value, scopes)})`
     }else if(scopes[ix].ast instanceof $B.ast.FunctionDef){
         compiler_error(this, "'await' outside async function", this.value)
     }else{
@@ -2219,13 +2219,10 @@ $B.ast.For.prototype.to_js = function(scopes){
               prefix + tab + tab + `iter_${id} = ${iter},\n` +
               prefix + tab + tab + `type_${id} = _b_.type.$factory(iter_${id})\n` +
               prefix + `iter_${id} = $B.$call($B.$getattr(type_${id}, "__aiter__"), iter_${id})\n` +
-              prefix + `type_${id} = _b_.type.$factory(iter_${id})\n` +
-              prefix + `var next_func_${id} = $B.$call(` +
-                  `$B.$getattr(type_${id}, '__anext__'))\n` +
               prefix + `while(true){\n`
         indent()
         js += prefix + `try{\n`+
-              prefix + tab + `var next_${id} = await $B.promise(next_func_${id}(iter_${id}))\n` +
+              prefix + tab + `var next_${id} = await $B.promise($B.$call(_b_.anext, iter_${id}))\n` +
               prefix + `}catch(err){\n`+
               prefix + tab + `if($B.is_exc(err, [_b_.StopAsyncIteration])){\n` +
               prefix + tab + tab + `break\n` +

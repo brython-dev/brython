@@ -1198,7 +1198,7 @@ $B.call_attr = function(obj, attr, inum, ...args){
 
 var counter = 0
 $B.$call_with_position = function(callable, inum, ...args){
-    var test = false // inum == 7
+    var test = false // callable.ob_type === $B.coroutine
     if(test){
         console.log('call', callable, inum)
     }
@@ -1213,7 +1213,7 @@ $B.$call_with_position = function(callable, inum, ...args){
 }
 
 $B.$call = function(callable, ...args){
-    var test = callable.d_name == 'property' // && callable.$function_infos[1] == 'test_gen1'
+    var test = false // callable.ob_type === $B.coroutine // && callable.$function_infos[1] == 'test_gen1'
     if(typeof callable == 'function'){
         var res = callable(...args)
         if(callable.$in_js_module && res === undefined){

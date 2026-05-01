@@ -1153,7 +1153,7 @@ _b_.type.tp_call = function(cls){
         args = $.args,
         kw = $.kw,
         kw_len = _b_.dict.mp_length(kw)
-    var test = false // cls.tp_name === 'version_info'
+    var test = false // cls.tp_name === 'AIter'
     if(test){
         console.log('type.tp_call', cls, args)
         console.log(Error('trace').stack)
@@ -1209,6 +1209,9 @@ _b_.type.tp_call = function(cls){
                 throw err
             }
         }
+    }
+    if(test){
+        console.log('type.tp_call returns instance', instance)
     }
     return instance
 }

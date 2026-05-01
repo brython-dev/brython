@@ -688,8 +688,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-05-01 10:28:43.517073"
-__BRYTHON__.timestamp=1777624123516
+__BRYTHON__.compiled_date="2026-05-01 13:37:02.843301"
+__BRYTHON__.timestamp=1777635422843
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1823,7 +1823,7 @@ var original=callable
 try{var res=$B.$call(callable,...args)
 return res}catch(err){$B.set_inum(inum)
 throw err}}
-$B.$call=function(callable,...args){var test=callable.d_name=='property' 
+$B.$call=function(callable,...args){var test=false 
 if(typeof callable=='function'){var res=callable(...args)
 if(callable.$in_js_module && res===undefined){return _b_.None}
 return res}
@@ -2780,6 +2780,7 @@ if(init_func !==$B.NULL && init_func !==_b_.object.tp_init){
 if(typeof init_func !='function'){console.log('init func',init_func,'instance',instance)}
 try{if(kw_len > 0){var kwarg=$B.dict2kwarg(kw)
 init_func.call(null,instance,...$.args,kwarg)}else{init_func.call(null,instance,...$.args)}}catch(err){throw err}}}
+if(test){console.log('type.tp_call returns instance',instance)}
 return instance}
 _b_.type.tp_getattro=function(obj,name){var test=false 
 if(test){console.log('class_getattr',obj,name)
@@ -4228,7 +4229,7 @@ while(1){try{var elt=next(iterable)
 if(!$B.$bool(elt)){return false}}catch(err){return true}}}
 _b_.anext=function(){var $=$B.args('anext',2,{async_iterator:null,_default:null},arguments,{_default:$B.NULL},null,null)
 var awaitable=$B.$call($B.$getattr($.async_iterator,'__anext__'))
-return awaitable.catch(
+return $B.promise(awaitable).catch(
 function(err){if($B.is_exc(err,[_b_.StopAsyncIteration])){if($._default !==$B.NULL){return $._default}}
 throw err}
 )}
@@ -15102,7 +15103,7 @@ scopes[ix].ast instanceof $B.ast.SetComp ||
 scopes[ix].ast instanceof $B.ast.GeneratorExp){scopes[ix].has_await=true
 ix--}
 if(scopes[ix].ast instanceof $B.ast.AsyncFunctionDef){scopes[ix].has_await=true
-return prefix+`await $B.promise(${$B.js_from_ast(this.value, scopes)})`}else if(scopes[ix].ast instanceof $B.ast.FunctionDef){compiler_error(this,"'await' outside async function",this.value)}else{compiler_error(this,"'await' outside function",this.value)}}
+return `await $B.promise(${$B.js_from_ast(this.value, scopes)})`}else if(scopes[ix].ast instanceof $B.ast.FunctionDef){compiler_error(this,"'await' outside async function",this.value)}else{compiler_error(this,"'await' outside function",this.value)}}
 $B.ast.BinOp.prototype.to_js=function(scopes){var res
 var inum=add_to_positions(scopes,this)
 var name=this.op.constructor.$name
@@ -15351,13 +15352,10 @@ if(this instanceof $B.ast.AsyncFor){js+=prefix+`var no_break_${id} = true,\n`+
 prefix+tab+tab+`iter_${id} = ${iter},\n`+
 prefix+tab+tab+`type_${id} = _b_.type.$factory(iter_${id})\n`+
 prefix+`iter_${id} = $B.$call($B.$getattr(type_${id}, "__aiter__"), iter_${id})\n`+
-prefix+`type_${id} = _b_.type.$factory(iter_${id})\n`+
-prefix+`var next_func_${id} = $B.$call(`+
-`$B.$getattr(type_${id}, '__anext__'))\n`+
 prefix+`while(true){\n`
 indent()
 js+=prefix+`try{\n`+
-prefix+tab+`var next_${id} = await $B.promise(next_func_${id}(iter_${id}))\n`+
+prefix+tab+`var next_${id} = await $B.promise($B.$call(_b_.anext, iter_${id}))\n`+
 prefix+`}catch(err){\n`+
 prefix+tab+`if($B.is_exc(err, [_b_.StopAsyncIteration])){\n`+
 prefix+tab+tab+`break\n`+
