@@ -18,6 +18,7 @@ a.sort_link{
     text-decoration:none;
 }
 
+
 </style>
 
 <!-- brython start -->
@@ -118,6 +119,8 @@ a.sort_link{
 
 <p style="margin-top: 5em;">Change attribute value <button id="change_data">change</button>
 
+<div id="trace"></div>
+
 <ui-page></ui-page>
 
 <p>
@@ -150,7 +153,13 @@ a.sort_link{
     should trigger when clicked
 </ui-window3>
 
-<div id="trace"></div>
+<p>
+
+<div id="windows2677">
+<ui-window2677 style="background-color:lightgrey;">
+original ui-window2677
+</ui-window2677>
+</div>
 
 </td>
 </tr>
@@ -432,7 +441,7 @@ class Window2:
 
     def connectedCallback(self):
         self.__bind__()
-        
+
 webcomponent.define(Window2.tag, Window2)
 
 class Window3(Window):
@@ -444,6 +453,29 @@ class Window3(Window):
         self.addEventListener("mousedown", self._init_resize)
 
 webcomponent.define(Window3.tag, Window3)
+
+counter2677 = 0
+
+class Window2677:
+
+    tag: str = "ui-window2677"
+
+    def __init__(self):
+        pass #self.shadow = self.attachShadow({'mode': 'open'})
+
+    def connectedCallback(self):
+        global counter2677
+        counter2677 += 1
+        if counter2677 == 2:
+            self.innerHTML = '<br>second ui-window2677'
+            self.style.backgroundColor = 'grey'
+
+webcomponent.define(Window2677.tag, Window2677)
+
+ui_window2677 = document.createElement("ui-window2677")
+document['windows2677'].appendChild(ui_window2677)
+
+
 </script>
 
 

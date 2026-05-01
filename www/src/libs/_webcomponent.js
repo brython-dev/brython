@@ -71,8 +71,9 @@ function define(tag_name, cls, options){
         // Always call super first in constructor
         super()
         var html = $B.imported['browser.html']
+        var tags = $B.module_getattr(html, 'tags')
         // Create tag in module html
-        if($B.module_getattr(html, 'tag_name', $B.NULL) === $B.NULL){
+        if($B.str_dict_get(tags, 'tag_name', $B.NULL) === $B.NULL){
             var maketag = $B.module_getattr(html, 'maketag')
             $B.$call(maketag, 'tag_name', WebComponent)
         }

@@ -962,6 +962,8 @@ $B.offer_suggestions_for_name_error = function(exc, frame){
     }
     if(frame[4] && frame[4].$is_method){
         // new in 3.12
+        console.log('frame', frame)
+        $B.check_infos(frame[4])
         var instance_name = frame[4].$infos.__code__.co_varnames[0],
             instance = frame[1][instance_name]
         if(_b_.hasattr(instance, name)){

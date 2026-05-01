@@ -688,8 +688,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-05-01 07:50:10.181501"
-__BRYTHON__.timestamp=1777614610181
+__BRYTHON__.compiled_date="2026-05-01 10:28:43.517073"
+__BRYTHON__.timestamp=1777624123516
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -5793,6 +5793,8 @@ if(frame[2]!=frame[0]){var globals=Object.keys(frame[3]).filter(x=> !(x.startsWi
 suggestion=calculate_suggestions(globals,name)
 if(suggestion){return suggestion}}
 if(frame[4]&& frame[4].$is_method){
+console.log('frame',frame)
+$B.check_infos(frame[4])
 var instance_name=frame[4].$infos.__code__.co_varnames[0],instance=frame[1][instance_name]
 if(_b_.hasattr(instance,name)){return `self.${name}`}}
 return _b_.None}
@@ -13587,15 +13589,19 @@ var html={}
 html.tags=$B.empty_dict()
 function maketag(tagName,ComponentClass){
 if(!(typeof tagName=='string')){$B.RAISE(_b_.TypeError,"html.maketag expects a string as argument")}
-if(html[tagName]!==undefined){$B.RAISE(_b_.ValueError,"cannot reset class for "
+var html_module=$B.imported['browser.html']
+if($B.module_getattr(html_module,tagName,$B.NULL)!==$B.NULL){$B.RAISE(_b_.ValueError,"cannot reset class for "
 +tagName)}
 var klass=makeTagClass(tagName)
 klass.$factory=makeFactory(klass,ComponentClass)
-html[tagName]=klass
-var tags=html.tags ?? $B.module_getattr(html,'tags')
-_b_.dict.$setitem(tags,tagName,html[tagName])
+$B.module_setattr(html_module,tagName,klass)
+var tags=$B.module_getattr(html_module,'tags')
+_b_.dict.$setitem(tags,tagName,klass)
 return klass}
-for(var tagName of tags){maketag(tagName)}
+for(var tagName of tags){var klass=makeTagClass(tagName)
+klass.$factory=makeFactory(klass)
+html[tagName]=klass
+$B.str_dict_set(html.tags,tagName,klass)}
 html.maketag=maketag
 html.attribute_mapper=function(attr){return attr.replace(/_/g,'-')}
 return html})(__BRYTHON__)}

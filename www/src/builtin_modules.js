@@ -355,22 +355,24 @@
                 if(!(typeof tagName == 'string')){
                     $B.RAISE(_b_.TypeError, "html.maketag expects a string as argument")
                 }
-                if(html[tagName] !== undefined){
+                var html_module = $B.imported['browser.html']
+                if($B.module_getattr(html_module, tagName, $B.NULL) !== $B.NULL){
                     $B.RAISE(_b_.ValueError, "cannot reset class for "
                         + tagName)
                 }
                 var klass = makeTagClass(tagName)
                 klass.$factory = makeFactory(klass, ComponentClass)
-                html[tagName] = klass
-                // after running load() below, html.tags is replaced by
-                // html.__dict__['tags']
-                var tags = html.tags ?? $B.module_getattr(html, 'tags')
-                _b_.dict.$setitem(tags, tagName, html[tagName])
+                $B.module_setattr(html_module, tagName, klass)
+                var tags = $B.module_getattr(html_module, 'tags')
+                _b_.dict.$setitem(tags, tagName, klass)
                 return klass
             }
 
             for(var tagName of tags){
-                maketag(tagName)
+                var klass = makeTagClass(tagName)
+                klass.$factory = makeFactory(klass)
+                html[tagName] = klass
+                $B.str_dict_set(html.tags, tagName, klass)
             }
 
             // expose function maketag to generate arbitrary tags (issue #624)
