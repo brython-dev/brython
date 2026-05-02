@@ -22,6 +22,10 @@ import make_unicode_file      # generates /src/unicode.txt
 # generate html files that compare Brython and CPython distributions
 import make_stdlib_list
 
+# generate /src/init_builtin_types.js
+import get_info_from_cpython
+get_info_from_cpython.generate_scripts()
+
 from make_dist import run, vname, vname1, vname2
 from directories import root_dir, src_dir
 

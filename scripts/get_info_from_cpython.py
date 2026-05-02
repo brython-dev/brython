@@ -1,5 +1,14 @@
-"""Scan CPython files in /Objects to get the information on type
-getset, methods and members"""
+"""Get information on builtin types to generate 2 scripts
+- init_builtin_types.js: create the JS objects for all the Python types whose
+  attribute __module__ is "builtins". Includes types directly available by
+  their name (int, map, zip, etc.) and those only available in module types
+  (list_iterator, FunctionType, etc.). This script is included in
+  brython.js
+- builtin_types_infos.js: for each of the builtin types, create an empty
+  Javascript function for slots (tp_init, tp_call etc.) and methods. This
+  script is an internal tool used as a guide for the implementation of the
+  types in individual Brython scripts
+"""
 
 import os
 import builtins
@@ -256,7 +265,11 @@ def get_builtins(head, classes=None):
 
 
 all_builtins = get_builtins(object)
-all_builtins = {x for x in all_builtins if x.__module__ == 'builtins'}
+for x in all_builtins:
+    if not hasattr(x, '__module__'):
+        print(x, 'has no __module__')
+all_builtins = {x for x in all_builtins if hasattr(x, '__module__')
+    and x.__module__ == 'builtins'}
 
 def make_sets():
     builtin_names = dir(builtins)
@@ -301,10 +314,7 @@ def make_sets():
 
     return sets
 
-
-
-if __name__ == '__main__':
-
+def generate_scripts():
     init_path = os.path.join(src_dir, 'init_builtin_types.js')
 
     with open(init_path, 'w', encoding='utf-8') as out:
@@ -393,3 +403,5 @@ if __name__ == '__main__':
                 out.write(defs.getvalue())
                 out.write(f'/* {name} end */\n\n')
 
+if __name__ == '__main__':
+    generate_scripts()
