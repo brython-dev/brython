@@ -475,9 +475,15 @@ raise a ValueError.
    [('a', 0, 0), ('b', 1, 1), ('c', 2, 2)]`,[_b_.object],])
 init_type($B,"EncodingMap",["EncodingMap",64,0,4482,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"FrameLocalsProxy",["FrameLocalsProxy",24,0,20802,0,_b_.object,0,$B.NULL,[_b_.object],])
+init_type($B,"Generic",["Generic",16,0,5504,0,_b_.object,0,$B.NULL,[_b_.object],])
+init_type($B,"GenericAlias",["GenericAlias",24,0,5504,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"InstructionSequence",["InstructionSequence",72,0,20738,0,_b_.object,0,`InstructionSequenceType()
 --
 Create a new InstructionSequence object.`,[_b_.object],])
+init_type($B,"MethClass",["MethClass",16,0,4352,0,_b_.object,0,`Class with class methods to test calling conventions`,[_b_.object],])
+init_type($B,"MethInstance",["MethInstance",16,0,4352,0,_b_.object,0,`Class with normal (instance) methods to test calling conventions`,[_b_.object],])
+init_type($B,"MethStatic",["MethStatic",16,0,4352,0,_b_.object,0,`Class with static methods to test calling conventions`,[_b_.object],])
+init_type($B,"MethodDescriptorBase",["MethodDescriptorBase",24,0,138496,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"NoDefaultType",["NoDefaultType",16,0,4354,0,_b_.object,0,`The type of the NoDefault singleton.`,[_b_.object],])
 init_type($B,"NoneType",["NoneType",16,0,4354,0,_b_.object,0,`The type of the None singleton.`,[_b_.object],])
 init_type($B,"NotImplementedType",["NotImplementedType",16,0,4354,0,_b_.object,0,`The type of the NotImplemented singleton.`,[_b_.object],])
@@ -495,6 +501,7 @@ init_type($B,"async_generator",["async_generator",152,8,20866,16,_b_.object,0,$B
 init_type($B,"async_generator_asend",["async_generator_asend",40,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"async_generator_athrow",["async_generator_athrow",40,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"async_generator_wrapped_value",["async_generator_wrapped_value",24,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
+init_type($B,"awaitType",["awaitType",24,0,4352,0,_b_.object,0,`C level type with tp_as_async`,[_b_.object],])
 init_type($B,"builtin_function_or_method",["builtin_function_or_method",56,0,22914,40,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"bytearray_iterator",["bytearray_iterator",32,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"bytes_iterator",["bytes_iterator",32,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
@@ -542,7 +549,9 @@ init_type($B,"hamt",["hamt",40,0,20738,24,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"hamt_array_node",["hamt_array_node",280,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"hamt_bitmap_node",["hamt_bitmap_node",32,8,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"hamt_collision_node",["hamt_collision_node",32,8,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
+init_type($B,"hashinheritancetester",["hashinheritancetester",16,0,4352,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"instancemethod",["instancemethod",24,0,20738,0,_b_.object,0,`Bind a function to a class.`,[_b_.object],])
+init_type($B,"ipowType",["ipowType",16,0,4352,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"items",["items",168,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"iterator",["iterator",32,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"keys",["keys",168,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
@@ -552,6 +561,7 @@ init_type($B,"list_reverseiterator",["list_reverseiterator",32,0,20866,0,_b_.obj
 init_type($B,"longrange_iterator",["longrange_iterator",40,0,4482,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"managedbuffer",["managedbuffer",112,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"mappingproxy",["mappingproxy",24,0,20802,0,_b_.object,0,`Read-only proxy of a mapping.`,[_b_.object],])
+init_type($B,"matmulType",["matmulType",16,0,4352,0,_b_.object,0,`C level type with matrix operations defined`,[_b_.object],])
 init_type($B,"member_descriptor",["member_descriptor",48,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"memory_iterator",["memory_iterator",48,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"method",["method",48,0,22786,32,_b_.object,0,`Create a bound instance method object.`,[_b_.object],])
@@ -568,6 +578,8 @@ init_type($B,"stderrprinter",["stderrprinter",24,0,4482,0,_b_.object,0,$B.NULL,[
 init_type($B,"str_ascii_iterator",["str_ascii_iterator",32,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"str_iterator",["str_iterator",32,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"symtable_entry",["symtable entry",144,0,4482,0,_b_.object,0,$B.NULL,[_b_.object],])
+init_type($B,"testBufType",["testBufType",32,0,20736,0,_b_.object,0,$B.NULL,[_b_.object],])
+init_type($B,"test_structmembersType_OldAPI",["test_structmembersType_OldAPI",96,0,4352,0,_b_.object,0,`Type containing all structmember types`,[_b_.object],])
 init_type($B,"traceback",["traceback",40,0,20738,0,_b_.object,0,`Create a new traceback object.`,[_b_.object],])
 init_type($B,"tuple_iterator",["tuple_iterator",32,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"uop_executor",["uop_executor",128,1,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
@@ -581,6 +593,10 @@ init_type(_b_,"SystemExit",["SystemExit",80,0,1073763586,0,_b_.BaseException,16,
 init_type(_b_,"bool",["bool",24,4,20975874,0,_b_.int,0,`Returns True when the argument is true, False otherwise.
 The builtins True and False are the only two instances of the class bool.
 The class bool is a subclass of the class int, and cannot be subclassed.`,[_b_.int],])
+init_type($B,"MethodDescriptor2",["MethodDescriptor2",32,0,138496,0,$B.MethodDescriptorBase,0,$B.NULL,[$B.MethodDescriptorBase],])
+init_type($B,"MethodDescriptorDerived",["MethodDescriptorDerived",24,0,138496,0,$B.MethodDescriptorBase,0,$B.NULL,[$B.MethodDescriptorBase],])
+init_type($B,"MethodDescriptorNopGet",["MethodDescriptorNopGet",24,0,5376,0,$B.MethodDescriptorBase,0,$B.NULL,[$B.MethodDescriptorBase],])
+init_type($B,"MyList",["MyList",48,0,37770528,0,_b_.list,0,$B.NULL,[_b_.list],])
 init_type($B,"UnraisableHookArgs",["UnraisableHookArgs",32,8,71323938,0,_b_.tuple,0,`UnraisableHookArgs
 Type used to pass arguments to sys.unraisablehook.`,[_b_.tuple],])
 init_type($B,"asyncgen_hooks",["asyncgen_hooks",32,8,71323938,0,_b_.tuple,0,`asyncgen_hooks
@@ -612,6 +628,7 @@ the Python version, and the hardware/OS platform and version.`,[_b_.Exception],]
 init_type(_b_,"TypeError",["TypeError",72,0,1073763586,0,_b_.Exception,16,`Inappropriate argument type.`,[_b_.Exception],])
 init_type(_b_,"ValueError",["ValueError",72,0,1073763586,0,_b_.Exception,16,`Inappropriate argument value (of correct type).`,[_b_.Exception],])
 init_type(_b_,"Warning",["Warning",72,0,1073763586,0,_b_.Exception,16,`Base class for warning categories.`,[_b_.Exception],])
+init_type($B,"RecursingInfinitelyError",["RecursingInfinitelyError",72,0,1073763584,0,_b_.Exception,16,`Instantiating this exception starts infinite recursion.`,[_b_.Exception],])
 init_type(_b_,"BlockingIOError",["BlockingIOError",120,0,1073763586,0,_b_.OSError,16,`I/O operation would block.`,[_b_.OSError],])
 init_type(_b_,"BytesWarning",["BytesWarning",72,0,1073763586,0,_b_.Warning,16,`Base class for warnings about bytes and buffer related problems, mostly
 related to conversion from str or comparing to str.`,[_b_.Warning],])
@@ -688,8 +705,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-05-01 16:02:14.879421"
-__BRYTHON__.timestamp=1777644134879
+__BRYTHON__.compiled_date="2026-05-02 07:48:35.831385"
+__BRYTHON__.timestamp=1777700915831
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -13483,7 +13500,7 @@ $B.assign_dict(_importlib_module,{__name__ :"_importlib",Loader:Loader,VFSFinder
 $B.imported["_importlib"]=_importlib_module})(__BRYTHON__);
 ;
 
-(function($B){$B.builtin_class_flags={builtins:{1073763586:['ModuleNotFoundError','WindowsError','AttributeError','PendingDeprecationWarning','StopAsyncIteration','SystemExit','ResourceWarning','KeyboardInterrupt','FloatingPointError','ChildProcessError','RuntimeWarning','Warning','SystemError','RecursionError','ArithmeticError','PythonFinalizationError','EncodingWarning','TypeError','UnboundLocalError','SyntaxError','UserWarning','AssertionError','ImportError','Exception','RuntimeError','StopIteration','ConnectionRefusedError','ValueError','SyntaxWarning','DeprecationWarning','ConnectionError','OverflowError','BaseException','FileExistsError','EnvironmentError','ImportWarning','InterruptedError','NotImplementedError','ZeroDivisionError','EOFError','PermissionError','MemoryError','ConnectionAbortedError','IndexError','BrokenPipeError','BufferError','KeyError','UnicodeError','UnicodeDecodeError','ReferenceError','FutureWarning','IsADirectoryError','BlockingIOError','OSError','NotADirectoryError','UnicodeTranslateError','ProcessLookupError','FileNotFoundError','GeneratorExit','ConnectionResetError','BaseExceptionGroup','UnicodeWarning','LookupError','NameError','TabError','_IncompleteInputError','IOError','IndentationError','UnicodeEncodeError','TimeoutError','BytesWarning'],1073763848:['ExceptionGroup'],20975874:['bool'],4199682:['bytearray','float'],138417410:['bytes'],21762:['zip','filter','enumerate','property','reversed','map','staticmethod','super','classmethod'],5378:['complex','object'],541087042:['dict'],4216066:['set','frozenset'],20976898:['int'],37770530:['list'],20770:['memoryview'],4386:['range'],20738:['slice'],272635138:['str'],71324962:['tuple'],2155896066:['type'],},types:{20866:['PyCapsule','member_descriptor','getset_descriptor','coroutine','generator','frame','async_generator','classmethod_descriptor','method-wrapper'],22914:['builtin_function_or_method'],20738:['traceback','cell'],4354:['code','NotImplementedType','NoneType','ellipsis'],153858:['function'],20802:['mappingproxy'],153986:['method_descriptor'],22786:['method'],21762:['module'],151938:['wrapper_descriptor'],}}})(__BRYTHON__);
+(function($B){$B.builtin_class_flags={builtins:{1073763586:['WindowsError','BufferError','ImportWarning','StopAsyncIteration','ImportError','Warning','RuntimeWarning','ProcessLookupError','TimeoutError','KeyError','BlockingIOError','ZeroDivisionError','FutureWarning','PythonFinalizationError','TabError','AssertionError','KeyboardInterrupt','ConnectionResetError','NotADirectoryError','FileNotFoundError','FileExistsError','_IncompleteInputError','UnicodeTranslateError','UnicodeDecodeError','ArithmeticError','ChildProcessError','OverflowError','ConnectionRefusedError','PendingDeprecationWarning','ResourceWarning','RuntimeError','NotImplementedError','ModuleNotFoundError','FloatingPointError','GeneratorExit','PermissionError','DeprecationWarning','AttributeError','BrokenPipeError','ConnectionError','InterruptedError','OSError','RecursionError','IndentationError','BaseException','IsADirectoryError','LookupError','UnicodeEncodeError','ReferenceError','ConnectionAbortedError','EnvironmentError','StopIteration','SyntaxWarning','EncodingWarning','NameError','ValueError','BytesWarning','IOError','UnicodeError','UserWarning','BaseExceptionGroup','SyntaxError','SystemExit','SystemError','TypeError','IndexError','Exception','UnicodeWarning','UnboundLocalError','MemoryError','EOFError'],1073763848:['ExceptionGroup'],20975874:['bool'],4199682:['bytearray','float'],138417410:['bytes'],21762:['staticmethod','super','reversed','enumerate','property','filter','zip','map','classmethod'],5378:['complex','object'],541087042:['dict'],4216066:['set','frozenset'],20976898:['int'],37770530:['list'],20770:['memoryview'],4386:['range'],20738:['slice'],272635138:['str'],71324962:['tuple'],2155896066:['type'],},types:{20866:['generator','getset_descriptor','frame','member_descriptor','PyCapsule','method-wrapper','coroutine','classmethod_descriptor','async_generator'],22914:['builtin_function_or_method'],20738:['cell','traceback'],4354:['NoneType','ellipsis','code','NotImplementedType'],153858:['function'],20802:['mappingproxy'],153986:['method_descriptor'],22786:['method'],21762:['module'],151938:['wrapper_descriptor'],}}})(__BRYTHON__);
 ;
 "use strict";
 (function($B){var _b_=$B.builtins

@@ -538,6 +538,30 @@ init_type($B, "FrameLocalsProxy", [
     [_b_.object],
 ])
 
+init_type($B, "Generic", [
+    "Generic",
+    16,
+    0,
+    5504,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
+
+init_type($B, "GenericAlias", [
+    "GenericAlias",
+    24,
+    0,
+    5504,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
+
 init_type($B, "InstructionSequence", [
     "InstructionSequence",
     72,
@@ -550,6 +574,54 @@ init_type($B, "InstructionSequence", [
 --
 
 Create a new InstructionSequence object.`,
+    [_b_.object],
+])
+
+init_type($B, "MethClass", [
+    "MethClass",
+    16,
+    0,
+    4352,
+    0,
+    _b_.object,
+    0,
+    `Class with class methods to test calling conventions`,
+    [_b_.object],
+])
+
+init_type($B, "MethInstance", [
+    "MethInstance",
+    16,
+    0,
+    4352,
+    0,
+    _b_.object,
+    0,
+    `Class with normal (instance) methods to test calling conventions`,
+    [_b_.object],
+])
+
+init_type($B, "MethStatic", [
+    "MethStatic",
+    16,
+    0,
+    4352,
+    0,
+    _b_.object,
+    0,
+    `Class with static methods to test calling conventions`,
+    [_b_.object],
+])
+
+init_type($B, "MethodDescriptorBase", [
+    "MethodDescriptorBase",
+    24,
+    0,
+    138496,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
     [_b_.object],
 ])
 
@@ -678,6 +750,18 @@ init_type($B, "async_generator_wrapped_value", [
     _b_.object,
     0,
     $B.NULL,
+    [_b_.object],
+])
+
+init_type($B, "awaitType", [
+    "awaitType",
+    24,
+    0,
+    4352,
+    0,
+    _b_.object,
+    0,
+    `C level type with tp_as_async`,
     [_b_.object],
 ])
 
@@ -1060,6 +1144,18 @@ init_type($B, "hamt_collision_node", [
     [_b_.object],
 ])
 
+init_type($B, "hashinheritancetester", [
+    "hashinheritancetester",
+    16,
+    0,
+    4352,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
+
 init_type($B, "instancemethod", [
     "instancemethod",
     24,
@@ -1069,6 +1165,18 @@ init_type($B, "instancemethod", [
     _b_.object,
     0,
     `Bind a function to a class.`,
+    [_b_.object],
+])
+
+init_type($B, "ipowType", [
+    "ipowType",
+    16,
+    0,
+    4352,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
     [_b_.object],
 ])
 
@@ -1177,6 +1285,18 @@ init_type($B, "mappingproxy", [
     _b_.object,
     0,
     `Read-only proxy of a mapping.`,
+    [_b_.object],
+])
+
+init_type($B, "matmulType", [
+    "matmulType",
+    16,
+    0,
+    4352,
+    0,
+    _b_.object,
+    0,
+    `C level type with matrix operations defined`,
     [_b_.object],
 ])
 
@@ -1362,6 +1482,30 @@ init_type($B, "symtable_entry", [
     [_b_.object],
 ])
 
+init_type($B, "testBufType", [
+    "testBufType",
+    32,
+    0,
+    20736,
+    0,
+    _b_.object,
+    0,
+    $B.NULL,
+    [_b_.object],
+])
+
+init_type($B, "test_structmembersType_OldAPI", [
+    "test_structmembersType_OldAPI",
+    96,
+    0,
+    4352,
+    0,
+    _b_.object,
+    0,
+    `Type containing all structmember types`,
+    [_b_.object],
+])
+
 init_type($B, "traceback", [
     "traceback",
     40,
@@ -1494,6 +1638,54 @@ init_type(_b_, "bool", [
 The builtins True and False are the only two instances of the class bool.
 The class bool is a subclass of the class int, and cannot be subclassed.`,
     [_b_.int],
+])
+
+init_type($B, "MethodDescriptor2", [
+    "MethodDescriptor2",
+    32,
+    0,
+    138496,
+    0,
+    $B.MethodDescriptorBase,
+    0,
+    $B.NULL,
+    [$B.MethodDescriptorBase],
+])
+
+init_type($B, "MethodDescriptorDerived", [
+    "MethodDescriptorDerived",
+    24,
+    0,
+    138496,
+    0,
+    $B.MethodDescriptorBase,
+    0,
+    $B.NULL,
+    [$B.MethodDescriptorBase],
+])
+
+init_type($B, "MethodDescriptorNopGet", [
+    "MethodDescriptorNopGet",
+    24,
+    0,
+    5376,
+    0,
+    $B.MethodDescriptorBase,
+    0,
+    $B.NULL,
+    [$B.MethodDescriptorBase],
+])
+
+init_type($B, "MyList", [
+    "MyList",
+    48,
+    0,
+    37770528,
+    0,
+    _b_.list,
+    0,
+    $B.NULL,
+    [_b_.list],
 ])
 
 init_type($B, "UnraisableHookArgs", [
@@ -1813,6 +2005,18 @@ init_type(_b_, "Warning", [
     _b_.Exception,
     16,
     `Base class for warning categories.`,
+    [_b_.Exception],
+])
+
+init_type($B, "RecursingInfinitelyError", [
+    "RecursingInfinitelyError",
+    72,
+    0,
+    1073763584,
+    0,
+    _b_.Exception,
+    16,
+    `Instantiating this exception starts infinite recursion.`,
     [_b_.Exception],
 ])
 
