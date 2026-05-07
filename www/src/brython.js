@@ -705,8 +705,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-05-07 21:23:49.316840"
-__BRYTHON__.timestamp=1778181829296
+__BRYTHON__.compiled_date="2026-05-07 21:44:04.956272"
+__BRYTHON__.timestamp=1778183044956
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -13902,16 +13902,18 @@ promise._methods=methods
 promise._done=false
 promise.ob_type=Future
 return promise}
-Future.done=function(){var $=$B.args('done',1,{self:null},arguments)
+var Future_funcs=Future.tp_funcs={}
+Future_funcs.done=function(){var $=$B.args('done',1,{self:null},arguments)
 return !! $.self._done}
-Future.set_result=function(){var $=$B.args('set_result',2,{self:null,value:null},arguments)
+Future_funcs.set_result=function(){var $=$B.args('set_result',2,{self:null,value:null},arguments)
 $.self._done=true
 $.self._methods.resolve($.value)
 return _b_.None}
-Future.set_exception=function(){var $=$B.args('set_exception',2,{self:null,exception:null},arguments)
+Future_funcs.set_exception=function(){var $=$B.args('set_exception',2,{self:null,exception:null},arguments)
 $.self._done=true
 $.self._methods.reject($.exception)
 return _b_.None}
+Future.tp_methods=["done","set_result","set_exception"]
 $B.set_func_names(Future,'browser.aio')
 modules['browser.aio']={ajax:function(){var $=$B.args("ajax",2,{method:null,url:null},arguments,null,null,"kw")
 var method=$.method.toUpperCase(),url=$.url,kw=$.kw

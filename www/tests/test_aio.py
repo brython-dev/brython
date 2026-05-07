@@ -360,3 +360,12 @@ async def test_anext_with_default():
   async_tester.assertEqual(await anext(gen, 99), 99)
 
 aio.run(test_anext_with_default())
+
+async def test_future():
+    fut = aio.Future()
+    timer.set_timeout(lambda: fut.set_result("timeout!"), 2000)
+    print("awaiting...")
+    result = await fut
+    async_tester.assertEqual(result, "timeout!")
+
+aio.run(test_future())

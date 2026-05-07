@@ -11,7 +11,7 @@
     }
     var modules = {}
     var win = $B.jsobj2pyobj(globalThis)
-    
+
     var browser = {
         $package: true,
         $is_package: true,
@@ -1255,19 +1255,21 @@
         return promise
     }
 
-    Future.done = function(){
+    var Future_funcs = Future.tp_funcs = {}
+
+    Future_funcs.done = function(){
         var $ = $B.args('done', 1, {self:null}, arguments)
         return !! $.self._done
     }
 
-    Future.set_result = function(){
+    Future_funcs.set_result = function(){
         var $ = $B.args('set_result', 2, {self:null, value: null}, arguments)
         $.self._done = true
         $.self._methods.resolve($.value)
         return _b_.None
     }
 
-    Future.set_exception = function(){
+    Future_funcs.set_exception = function(){
         var $ = $B.args('set_exception', 2, {self:null, exception: null},
                     arguments)
         $.self._done = true
@@ -1275,6 +1277,8 @@
         return _b_.None
     }
 
+    Future.tp_methods = ["done", "set_result", "set_exception"]
+    
     $B.set_func_names(Future, 'browser.aio')
 
     modules['browser.aio'] = {
