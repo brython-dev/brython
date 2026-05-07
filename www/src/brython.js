@@ -705,8 +705,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-05-02 07:48:35.831385"
-__BRYTHON__.timestamp=1777700915831
+__BRYTHON__.compiled_date="2026-05-07 21:23:49.316840"
+__BRYTHON__.timestamp=1778181829296
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1577,11 +1577,7 @@ if(obj===undefined){return $B.UndefinedType }
 if(obj.ob_type){return obj.ob_type}
 if(obj[$B.OB_TYPE]){return obj[$B.OB_TYPE]}
 var klass
-switch(typeof obj){case "null":
-return $B.NullType
-case "undefined":
-return $B.UndefinedType
-case "number":
+switch(typeof obj){case "number":
 if(Number.isInteger(obj)){return _b_.int}
 break
 case "bigint":
@@ -1593,13 +1589,16 @@ return _b_.bool
 case "function":
 return $B.JSFunction
 case "object":
-if(Array.isArray(obj)){return $B.js_array}else if(typeof Node !=="undefined" 
-&& obj instanceof Node){if(obj.tagName){var res=$B.module_getattr($B.imported['browser.html'],obj.tagName)
+if(Array.isArray(obj)){return $B.js_array}else if(typeof Node !=="undefined"){
+if(obj instanceof Node){if(obj.tagName){var res=$B.module_getattr($B.imported['browser.html'],obj.tagName)
 return res===$B.NULL ? $B.DOMNode :res}
-return $B.DOMNode}else if(obj instanceof Event){return $B.DOMEvent}
+return $B.DOMNode}else if(obj instanceof Event){return $B.DOMEvent}else if(obj.ownerDocument){var view=obj.ownerDocument.defaultView
+if(obj instanceof view.Node){if(obj.tagName){var res=$B.module_getattr($B.imported['browser.html'],obj.tagName)
+return res===$B.NULL ? $B.DOMNode :res}
+return $B.DOMNode}else if(obj instanceof view.event){return $B.DOMEvent}}else if(obj.defaultView){
+return $B.DOMNode}}
 break}
-if(klass===undefined){return $B.get_jsobj_class(obj)}
-return klass}
+return $B.get_jsobj_class(obj)}
 $B.set_type=function(obj,type){obj.ob_type=type}
 $B.exact_type=function(obj,cls){var klass=$B.get_class(obj)
 if(Array.isArray(cls)){for(var item of cls){if(klass===item){return true}}
@@ -13500,7 +13499,7 @@ $B.assign_dict(_importlib_module,{__name__ :"_importlib",Loader:Loader,VFSFinder
 $B.imported["_importlib"]=_importlib_module})(__BRYTHON__);
 ;
 
-(function($B){$B.builtin_class_flags={builtins:{1073763586:['WindowsError','BufferError','ImportWarning','StopAsyncIteration','ImportError','Warning','RuntimeWarning','ProcessLookupError','TimeoutError','KeyError','BlockingIOError','ZeroDivisionError','FutureWarning','PythonFinalizationError','TabError','AssertionError','KeyboardInterrupt','ConnectionResetError','NotADirectoryError','FileNotFoundError','FileExistsError','_IncompleteInputError','UnicodeTranslateError','UnicodeDecodeError','ArithmeticError','ChildProcessError','OverflowError','ConnectionRefusedError','PendingDeprecationWarning','ResourceWarning','RuntimeError','NotImplementedError','ModuleNotFoundError','FloatingPointError','GeneratorExit','PermissionError','DeprecationWarning','AttributeError','BrokenPipeError','ConnectionError','InterruptedError','OSError','RecursionError','IndentationError','BaseException','IsADirectoryError','LookupError','UnicodeEncodeError','ReferenceError','ConnectionAbortedError','EnvironmentError','StopIteration','SyntaxWarning','EncodingWarning','NameError','ValueError','BytesWarning','IOError','UnicodeError','UserWarning','BaseExceptionGroup','SyntaxError','SystemExit','SystemError','TypeError','IndexError','Exception','UnicodeWarning','UnboundLocalError','MemoryError','EOFError'],1073763848:['ExceptionGroup'],20975874:['bool'],4199682:['bytearray','float'],138417410:['bytes'],21762:['staticmethod','super','reversed','enumerate','property','filter','zip','map','classmethod'],5378:['complex','object'],541087042:['dict'],4216066:['set','frozenset'],20976898:['int'],37770530:['list'],20770:['memoryview'],4386:['range'],20738:['slice'],272635138:['str'],71324962:['tuple'],2155896066:['type'],},types:{20866:['generator','getset_descriptor','frame','member_descriptor','PyCapsule','method-wrapper','coroutine','classmethod_descriptor','async_generator'],22914:['builtin_function_or_method'],20738:['cell','traceback'],4354:['NoneType','ellipsis','code','NotImplementedType'],153858:['function'],20802:['mappingproxy'],153986:['method_descriptor'],22786:['method'],21762:['module'],151938:['wrapper_descriptor'],}}})(__BRYTHON__);
+(function($B){$B.builtin_class_flags={builtins:{1073763586:['BaseExceptionGroup','FileNotFoundError','ArithmeticError','KeyboardInterrupt','IndentationError','RecursionError','EOFError','SyntaxError','FileExistsError','GeneratorExit','TabError','PendingDeprecationWarning','AttributeError','EnvironmentError','KeyError','PythonFinalizationError','NotImplementedError','TypeError','UnicodeEncodeError','UnicodeError','InterruptedError','UnboundLocalError','PermissionError','ChildProcessError','FutureWarning','ConnectionRefusedError','AssertionError','UserWarning','IOError','NameError','ValueError','ProcessLookupError','RuntimeError','RuntimeWarning','UnicodeDecodeError','ModuleNotFoundError','BaseException','ConnectionError','UnicodeWarning','BufferError','WindowsError','LookupError','ImportWarning','OverflowError','SystemExit','FloatingPointError','ConnectionAbortedError','Exception','UnicodeTranslateError','ConnectionResetError','EncodingWarning','SyntaxWarning','StopAsyncIteration','ImportError','_IncompleteInputError','BytesWarning','IsADirectoryError','MemoryError','NotADirectoryError','SystemError','TimeoutError','ResourceWarning','IndexError','DeprecationWarning','StopIteration','ZeroDivisionError','OSError','ReferenceError','BlockingIOError','BrokenPipeError','Warning'],1073763848:['ExceptionGroup'],20975874:['bool'],4199682:['float','bytearray'],138417410:['bytes'],21762:['map','enumerate','staticmethod','super','classmethod','reversed','zip','property','filter'],5378:['complex','object'],541087042:['dict'],4216066:['set','frozenset'],20976898:['int'],37770530:['list'],20770:['memoryview'],4386:['range'],20738:['slice'],272635138:['str'],71324962:['tuple'],2155896066:['type'],},types:{20866:['classmethod_descriptor','generator','async_generator','frame','getset_descriptor','member_descriptor','coroutine','PyCapsule','method-wrapper'],22914:['builtin_function_or_method'],20738:['cell','traceback'],4354:['code','ellipsis','NoneType','NotImplementedType'],153858:['function'],20802:['mappingproxy'],153986:['method_descriptor'],22786:['method'],21762:['module'],151938:['wrapper_descriptor'],}}})(__BRYTHON__);
 ;
 "use strict";
 (function($B){var _b_=$B.builtins

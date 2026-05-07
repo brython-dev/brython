@@ -480,10 +480,6 @@ $B.get_class = function(obj){
 
     var klass
     switch(typeof obj){
-        case "null":
-            return $B.NullType
-        case "undefined":
-            return $B.UndefinedType
         case "number":
             if(Number.isInteger(obj)){
                 return _b_.int
@@ -501,22 +497,34 @@ $B.get_class = function(obj){
         case "object":
             if(Array.isArray(obj)){
                 return $B.js_array
-            }else if(typeof Node !== "undefined" // undefined in Web Workers
-                    && obj instanceof Node){
-                if(obj.tagName){
-                    var res = $B.module_getattr($B.imported['browser.html'], obj.tagName)
-                    return res === $B.NULL ? $B.DOMNode : res
+            }else if(typeof Node !== "undefined"){ // undefined in Web Workers
+                if(obj instanceof Node){
+                    if(obj.tagName){
+                        var res = $B.module_getattr($B.imported['browser.html'], obj.tagName)
+                        return res === $B.NULL ? $B.DOMNode : res
+                    }
+                    return $B.DOMNode
+                }else if(obj instanceof Event){
+                    return $B.DOMEvent
+                }else if(obj.ownerDocument){
+                    var view = obj.ownerDocument.defaultView
+                    if(obj instanceof view.Node){
+                        if(obj.tagName){
+                            var res = $B.module_getattr($B.imported['browser.html'], obj.tagName)
+                            return res === $B.NULL ? $B.DOMNode : res
+                        }
+                        return $B.DOMNode
+                    }else if(obj instanceof view.event){
+                        return $B.DOMEvent
+                    }
+                }else if(obj.defaultView){
+                    // document in an iframe
+                    return $B.DOMNode
                 }
-                return $B.DOMNode
-            }else if(obj instanceof Event){
-                return $B.DOMEvent
             }
             break
     }
-    if(klass === undefined){
-        return $B.get_jsobj_class(obj)
-    }
-    return klass
+    return $B.get_jsobj_class(obj)
 }
 
 $B.set_type = function(obj, type){
