@@ -11,7 +11,7 @@
     }
     var modules = {}
     var win = $B.jsobj2pyobj(globalThis)
-
+    
     var browser = {
         $package: true,
         $is_package: true,
