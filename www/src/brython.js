@@ -305,7 +305,7 @@ When called, it accepts no arguments and returns a new featureless
 instance that has no instance attributes and cannot be given any.
 `,[],])
 init_type(_b_,"BaseException",["BaseException",72,0,1073763586,0,_b_.object,16,`Common base class for all exceptions`,[_b_.object],])
-init_type(_b_,"bytearray",["bytearray",56,0,4199682,0,_b_.object,0,`bytearray(iterable_of_ints) -> bytearray
+init_type(_b_,"bytearray",["bytearray",64,0,4199682,0,_b_.object,0,`bytearray(iterable_of_ints) -> bytearray
 bytearray(string, encoding[, errors]) -> bytearray
 bytearray(bytes_or_buffer) -> mutable copy of bytes_or_buffer
 bytearray(int) -> bytes array of size given by the parameter initialized with null bytes
@@ -364,6 +364,15 @@ enumerate is useful for obtaining an indexed list:
 init_type(_b_,"filter",["filter",32,0,21762,0,_b_.object,0,`Return an iterator yielding those items of iterable for which function(item)
 is true. If function is None, return the items that are true.`,[_b_.object],])
 init_type(_b_,"float",["float",24,0,4199682,0,_b_.object,0,`Convert a string or number to a floating-point number, if possible.`,[_b_.object],])
+init_type(_b_,"frozendict",["frozendict",56,0,4216130,0,_b_.object,0,`dict() -> new empty dictionary
+dict(mapping) -> new dictionary initialized from a mapping object's
+    (key, value) pairs
+dict(iterable) -> new dictionary initialized as if via:
+    d = {}
+    for k, v in iterable:
+        d[k] = v
+dict(**kwargs) -> new dictionary initialized with the name=value pairs
+    in the keyword argument list.  For example:  dict(one=1, two=2)`,[_b_.object],])
 init_type(_b_,"frozenset",["frozenset",200,0,4216066,192,_b_.object,0,`Build an immutable unordered collection of unique elements.`,[_b_.object],])
 init_type(_b_,"int",["int",24,4,20976898,0,_b_.object,0,`int([x]) -> integer
 int(x, base=10) -> integer
@@ -420,6 +429,7 @@ start defaults to 0, and stop is omitted!  range(4) produces 0, 1, 2, 3.
 These are exactly the valid indices for a list of 4 elements.
 When step is given, it specifies the increment (or decrement).`,[_b_.object],])
 init_type(_b_,"reversed",["reversed",32,0,21762,0,_b_.object,0,`Return a reverse iterator over the values of the given sequence.`,[_b_.object],])
+init_type(_b_,"sentinel",["sentinel",32,0,20738,0,_b_.object,0,`Create a unique sentinel object with the given name.`,[_b_.object],])
 init_type(_b_,"set",["set",200,0,4216066,192,_b_.object,0,`Build an unordered collection of unique elements.`,[_b_.object],])
 init_type(_b_,"slice",["slice",40,0,20738,0,_b_.object,0,`slice(stop)
 slice(start, stop[, step])
@@ -463,7 +473,7 @@ init_type(_b_,"tuple",["tuple",32,8,71324962,0,_b_.object,0,`Built-in immutable 
 If no argument is given, the constructor returns an empty tuple.
 If iterable is specified the tuple is initialized from iterable's items.
 If the argument is a tuple, the return value is the same object.`,[_b_.object],])
-init_type(_b_,"type",["type",936,40,2155896066,368,_b_.object,264,`type(object) -> the object's type
+init_type(_b_,"type",["type",944,40,2155896066,368,_b_.object,264,`type(object) -> the object's type
 type(name, bases, dict, **kwds) -> a new type`,[_b_.object],])
 init_type(_b_,"zip",["zip",48,0,21762,0,_b_.object,0,`The zip object yields n-length tuples, where n is the number of iterables
 passed as positional arguments to zip().  The i-th element in every tuple
@@ -474,16 +484,12 @@ raise a ValueError.
    >>> list(zip('abcdefg', range(3), range(4)))
    [('a', 0, 0), ('b', 1, 1), ('c', 2, 2)]`,[_b_.object],])
 init_type($B,"EncodingMap",["EncodingMap",64,0,4482,0,_b_.object,0,$B.NULL,[_b_.object],])
-init_type($B,"FrameLocalsProxy",["FrameLocalsProxy",24,0,20802,0,_b_.object,0,$B.NULL,[_b_.object],])
-init_type($B,"Generic",["Generic",16,0,5504,0,_b_.object,0,$B.NULL,[_b_.object],])
-init_type($B,"GenericAlias",["GenericAlias",24,0,5504,0,_b_.object,0,$B.NULL,[_b_.object],])
+init_type($B,"FrameLocalsProxy",["FrameLocalsProxy",24,0,20802,0,_b_.object,0,`Create a write-through view of the locals dictionary for a frame.
+  frame
+    the frame object to wrap.`,[_b_.object],])
 init_type($B,"InstructionSequence",["InstructionSequence",72,0,20738,0,_b_.object,0,`InstructionSequenceType()
 --
 Create a new InstructionSequence object.`,[_b_.object],])
-init_type($B,"MethClass",["MethClass",16,0,4352,0,_b_.object,0,`Class with class methods to test calling conventions`,[_b_.object],])
-init_type($B,"MethInstance",["MethInstance",16,0,4352,0,_b_.object,0,`Class with normal (instance) methods to test calling conventions`,[_b_.object],])
-init_type($B,"MethStatic",["MethStatic",16,0,4352,0,_b_.object,0,`Class with static methods to test calling conventions`,[_b_.object],])
-init_type($B,"MethodDescriptorBase",["MethodDescriptorBase",24,0,138496,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"NoDefaultType",["NoDefaultType",16,0,4354,0,_b_.object,0,`The type of the NoDefault singleton.`,[_b_.object],])
 init_type($B,"NoneType",["NoneType",16,0,4354,0,_b_.object,0,`The type of the None singleton.`,[_b_.object],])
 init_type($B,"NotImplementedType",["NotImplementedType",16,0,4354,0,_b_.object,0,`The type of the NotImplemented singleton.`,[_b_.object],])
@@ -499,9 +505,8 @@ init_type($B,"_buffer_wrapper",["_buffer_wrapper",32,0,20866,0,_b_.object,0,$B.N
 init_type($B,"anext_awaitable",["anext_awaitable",32,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"async_generator",["async_generator",152,8,20866,16,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"async_generator_asend",["async_generator_asend",40,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
-init_type($B,"async_generator_athrow",["async_generator_athrow",40,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
+init_type($B,"async_generator_athrow",["async_generator_athrow",56,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"async_generator_wrapped_value",["async_generator_wrapped_value",24,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
-init_type($B,"awaitType",["awaitType",24,0,4352,0,_b_.object,0,`C level type with tp_as_async`,[_b_.object],])
 init_type($B,"builtin_function_or_method",["builtin_function_or_method",56,0,22914,40,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"bytearray_iterator",["bytearray_iterator",32,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"bytes_iterator",["bytes_iterator",32,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
@@ -549,25 +554,26 @@ init_type($B,"hamt",["hamt",40,0,20738,24,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"hamt_array_node",["hamt_array_node",280,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"hamt_bitmap_node",["hamt_bitmap_node",32,8,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"hamt_collision_node",["hamt_collision_node",32,8,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
-init_type($B,"hashinheritancetester",["hashinheritancetester",16,0,4352,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"instancemethod",["instancemethod",24,0,20738,0,_b_.object,0,`Bind a function to a class.`,[_b_.object],])
-init_type($B,"ipowType",["ipowType",16,0,4352,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"items",["items",168,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"iterator",["iterator",32,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"keys",["keys",168,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
+init_type($B,"lazy_import",["lazy_import",56,0,20866,0,_b_.object,0,`Represents a deferred import that will be resolved on first use.
+Instances of this object accessed from the global scope will be
+automatically imported based upon their name and then replaced with
+the imported value.`,[_b_.object],])
 init_type($B,"line_iterator",["line_iterator",64,0,5506,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"list_iterator",["list_iterator",32,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"list_reverseiterator",["list_reverseiterator",32,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"longrange_iterator",["longrange_iterator",40,0,4482,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"managedbuffer",["managedbuffer",112,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"mappingproxy",["mappingproxy",24,0,20802,0,_b_.object,0,`Read-only proxy of a mapping.`,[_b_.object],])
-init_type($B,"matmulType",["matmulType",16,0,4352,0,_b_.object,0,`C level type with matrix operations defined`,[_b_.object],])
 init_type($B,"member_descriptor",["member_descriptor",48,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"memory_iterator",["memory_iterator",48,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"method",["method",48,0,22786,32,_b_.object,0,`Create a bound instance method object.`,[_b_.object],])
 init_type($B,"method_wrapper",["method-wrapper",32,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"method_descriptor",["method_descriptor",56,0,153986,0,_b_.object,0,$B.NULL,[_b_.object],])
-init_type($B,"module",["module",56,0,21762,40,_b_.object,16,`Create a module object.
+init_type($B,"module",["module",104,0,21762,32,_b_.object,16,`Create a module object.
 The name must be a string; the optional doc argument can have any type.`,[_b_.object],])
 init_type($B,"moduledef",["moduledef",104,0,4482,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"odict_iterator",["odict_iterator",64,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
@@ -577,15 +583,13 @@ init_type($B,"set_iterator",["set_iterator",48,0,20866,0,_b_.object,0,$B.NULL,[_
 init_type($B,"stderrprinter",["stderrprinter",24,0,4482,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"str_ascii_iterator",["str_ascii_iterator",32,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"str_iterator",["str_iterator",32,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
-init_type($B,"symtable_entry",["symtable entry",144,0,4482,0,_b_.object,0,$B.NULL,[_b_.object],])
-init_type($B,"testBufType",["testBufType",32,0,20736,0,_b_.object,0,$B.NULL,[_b_.object],])
-init_type($B,"test_structmembersType_OldAPI",["test_structmembersType_OldAPI",96,0,4352,0,_b_.object,0,`Type containing all structmember types`,[_b_.object],])
+init_type($B,"symtable_entry",["symtable entry",152,0,4482,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"traceback",["traceback",40,0,20738,0,_b_.object,0,`Create a new traceback object.`,[_b_.object],])
 init_type($B,"tuple_iterator",["tuple_iterator",32,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
-init_type($B,"uop_executor",["uop_executor",128,1,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
+init_type($B,"uop_executor",["uop_executor",104,1,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"values",["values",168,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"wrapper_descriptor",["wrapper_descriptor",56,0,151938,0,_b_.object,0,$B.NULL,[_b_.object],])
-init_type(_b_,"BaseExceptionGroup",["BaseExceptionGroup",88,0,1073763586,0,_b_.BaseException,16,`A combination of multiple unrelated exceptions.`,[_b_.BaseException],])
+init_type(_b_,"BaseExceptionGroup",["BaseExceptionGroup",96,0,1073763586,0,_b_.BaseException,16,`A combination of multiple unrelated exceptions.`,[_b_.BaseException],])
 init_type(_b_,"Exception",["Exception",72,0,1073763586,0,_b_.BaseException,16,`Common base class for all non-exit exceptions.`,[_b_.BaseException],])
 init_type(_b_,"GeneratorExit",["GeneratorExit",72,0,1073763586,0,_b_.BaseException,16,`Request that a generator exit.`,[_b_.BaseException],])
 init_type(_b_,"KeyboardInterrupt",["KeyboardInterrupt",72,0,1073763586,0,_b_.BaseException,16,`Program interrupted by user.`,[_b_.BaseException],])
@@ -593,10 +597,6 @@ init_type(_b_,"SystemExit",["SystemExit",80,0,1073763586,0,_b_.BaseException,16,
 init_type(_b_,"bool",["bool",24,4,20975874,0,_b_.int,0,`Returns True when the argument is true, False otherwise.
 The builtins True and False are the only two instances of the class bool.
 The class bool is a subclass of the class int, and cannot be subclassed.`,[_b_.int],])
-init_type($B,"MethodDescriptor2",["MethodDescriptor2",32,0,138496,0,$B.MethodDescriptorBase,0,$B.NULL,[$B.MethodDescriptorBase],])
-init_type($B,"MethodDescriptorDerived",["MethodDescriptorDerived",24,0,138496,0,$B.MethodDescriptorBase,0,$B.NULL,[$B.MethodDescriptorBase],])
-init_type($B,"MethodDescriptorNopGet",["MethodDescriptorNopGet",24,0,5376,0,$B.MethodDescriptorBase,0,$B.NULL,[$B.MethodDescriptorBase],])
-init_type($B,"MyList",["MyList",48,0,37770528,0,_b_.list,0,$B.NULL,[_b_.list],])
 init_type($B,"UnraisableHookArgs",["UnraisableHookArgs",32,8,71323938,0,_b_.tuple,0,`UnraisableHookArgs
 Type used to pass arguments to sys.unraisablehook.`,[_b_.tuple],])
 init_type($B,"asyncgen_hooks",["asyncgen_hooks",32,8,71323938,0,_b_.tuple,0,`asyncgen_hooks
@@ -611,7 +611,7 @@ init_type(_b_,"AssertionError",["AssertionError",72,0,1073763586,0,_b_.Exception
 init_type(_b_,"AttributeError",["AttributeError",88,0,1073763586,0,_b_.Exception,16,`Attribute not found.`,[_b_.Exception],])
 init_type(_b_,"BufferError",["BufferError",72,0,1073763586,0,_b_.Exception,16,`Buffer error.`,[_b_.Exception],])
 init_type(_b_,"EOFError",["EOFError",72,0,1073763586,0,_b_.Exception,16,`Read beyond end of file.`,[_b_.Exception],])
-init_type(_b_,"ExceptionGroup",["ExceptionGroup",88,0,1073763848,-32,_b_.BaseExceptionGroup,16,$B.NULL,[_b_.BaseExceptionGroup,_b_.Exception],])
+init_type(_b_,"ExceptionGroup",["ExceptionGroup",96,0,1073763848,-32,_b_.BaseExceptionGroup,16,$B.NULL,[_b_.BaseExceptionGroup,_b_.Exception],])
 init_type(_b_,"ImportError",["ImportError",104,0,1073763586,0,_b_.Exception,16,`Import can't find module, or can't find name in module.`,[_b_.Exception],])
 init_type(_b_,"LookupError",["LookupError",72,0,1073763586,0,_b_.Exception,16,`Base class for lookup errors.`,[_b_.Exception],])
 init_type(_b_,"MemoryError",["MemoryError",72,0,1073763586,0,_b_.Exception,16,`Out of memory.`,[_b_.Exception],])
@@ -628,7 +628,6 @@ the Python version, and the hardware/OS platform and version.`,[_b_.Exception],]
 init_type(_b_,"TypeError",["TypeError",72,0,1073763586,0,_b_.Exception,16,`Inappropriate argument type.`,[_b_.Exception],])
 init_type(_b_,"ValueError",["ValueError",72,0,1073763586,0,_b_.Exception,16,`Inappropriate argument value (of correct type).`,[_b_.Exception],])
 init_type(_b_,"Warning",["Warning",72,0,1073763586,0,_b_.Exception,16,`Base class for warning categories.`,[_b_.Exception],])
-init_type($B,"RecursingInfinitelyError",["RecursingInfinitelyError",72,0,1073763584,0,_b_.Exception,16,`Instantiating this exception starts infinite recursion.`,[_b_.Exception],])
 init_type(_b_,"BlockingIOError",["BlockingIOError",120,0,1073763586,0,_b_.OSError,16,`I/O operation would block.`,[_b_.OSError],])
 init_type(_b_,"BytesWarning",["BytesWarning",72,0,1073763586,0,_b_.Warning,16,`Base class for warnings about bytes and buffer related problems, mostly
 related to conversion from str or comparing to str.`,[_b_.Warning],])
@@ -641,6 +640,7 @@ init_type(_b_,"FileNotFoundError",["FileNotFoundError",120,0,1073763586,0,_b_.OS
 init_type(_b_,"FloatingPointError",["FloatingPointError",72,0,1073763586,0,_b_.ArithmeticError,16,`Floating-point operation failed.`,[_b_.ArithmeticError],])
 init_type(_b_,"FutureWarning",["FutureWarning",72,0,1073763586,0,_b_.Warning,16,`Base class for warnings about constructs that will change semantically
 in the future.`,[_b_.Warning],])
+init_type(_b_,"ImportCycleError",["ImportCycleError",104,0,1073763586,0,_b_.ImportError,16,`Import produces a cycle.`,[_b_.ImportError],])
 init_type(_b_,"ImportWarning",["ImportWarning",72,0,1073763586,0,_b_.Warning,16,`Base class for warnings about probable mistakes in module imports`,[_b_.Warning],])
 init_type(_b_,"IndentationError",["IndentationError",144,0,1073763586,0,_b_.SyntaxError,16,`Improper indentation.`,[_b_.SyntaxError],])
 init_type(_b_,"IndexError",["IndexError",72,0,1073763586,0,_b_.LookupError,16,`Sequence index out of range.`,[_b_.LookupError],])
@@ -679,7 +679,7 @@ init_type(_b_,"UnicodeTranslateError",["UnicodeTranslateError",112,0,1073763586,
 for(var name in $B.builtin_types){var cls=$B.builtin_types[name]
 cls.ob_type=_b_.type
 cls.tp_mro=$B.make_mro(cls)}
-$B.builtin_funcs=['__build_class__','__import__','abs','aiter','all','anext','any','ascii','bin','breakpoint','callable','chr','compile','delattr','dir','divmod','eval','exec','format','getattr','globals','hasattr','hash','hex','id','input','isinstance','issubclass','iter','len','locals','max','min','next','oct','open','ord','pow','print','repr','round','setattr','sorted','sum','vars']})(__BRYTHON__)
+$B.builtin_funcs=['__build_class__','__import__','__lazy_import__','abs','aiter','all','anext','any','ascii','bin','breakpoint','callable','chr','compile','delattr','dir','divmod','eval','exec','format','getattr','globals','hasattr','hash','hex','id','input','isinstance','issubclass','iter','len','locals','max','min','next','oct','open','ord','pow','print','repr','round','setattr','sorted','sum','vars']})(__BRYTHON__)
 ;
 
 "use strict";
@@ -705,8 +705,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-05-10 10:05:27.129714"
-__BRYTHON__.timestamp=1778400327129
+__BRYTHON__.compiled_date="2026-05-10 14:18:12.810505"
+__BRYTHON__.timestamp=1778415492810
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -14832,14 +14832,29 @@ indent()}
 for(var comprehension of this.generators.slice(1)){js+=comprehension.to_js(scopes)
 nb_paren++
 for(let _if of comprehension.ifs){nb_paren++}}
-if(this instanceof $B.ast.DictComp){var key=$B.js_from_ast(this.key,scopes),value=$B.js_from_ast(this.value,scopes)}else{var elt=$B.js_from_ast(this.elt,scopes)}
+if(this instanceof $B.ast.DictComp){var key=$B.js_from_ast(this.key,scopes)
+var value
+if(this.value===undefined){}else{value=$B.js_from_ast(this.value,scopes)}}else{var elt
+if(this.elt instanceof $B.ast.Starred){elt=$B.js_from_ast(this.elt.value,scopes)}else{elt=$B.js_from_ast(this.elt,scopes)}}
 if(save_target_flags){$B.str_dict_set(comp_scope_symbols,target_name,save_target_flags)}
 var final_nb_await_in_scope=upper_comp_scope.nb_await===undefined ? 0 :
 upper_comp_scope.nb_await
 var has_await=final_nb_await_in_scope > initial_nb_await_in_scope
 js=`(${has_await ? 'async ' : ''}function(expr){\n`+js
 js+=has_await ? 'var save_frame_obj = $B.frame_obj;\n' :''
-if(this instanceof $B.ast.ListComp){js+=prefix+`result_${id}.push(${elt})\n`}else if(this instanceof $B.ast.SetComp){js+=prefix+`$B.set_add(result_${id}, ${elt})\n`}else if(this instanceof $B.ast.DictComp){js+=prefix+`_b_.dict.$setitem(result_${id}, ${key}, ${value})\n`}
+if(this instanceof $B.ast.ListComp){if(this.elt instanceof $B.ast.Starred){js+=prefix+`for(var item of $B.make_js_iterator(${elt})){\n`
+indent()
+js+=prefix+`result_${id}.push(item)\n`
+dedent()
+js+=prefix+'}\n'}else{js+=prefix+`result_${id}.push(${elt})\n`}}else if(this instanceof $B.ast.SetComp){if(this.elt instanceof $B.ast.Starred){js+=prefix+`for(var item of $B.make_js_iterator(${elt})){\n`
+indent()
+js+=prefix+`$B.set_add(result_${id}, item)\n`
+dedent()
+js+=prefix+'}\n'}else{js+=prefix+`$B.set_add(result_${id}, ${elt})\n`}}else if(this instanceof $B.ast.DictComp){if(value===undefined){js+=prefix+`for(var item of _b_.dict.$iter_items(${key})){\n`
+indent()
+js+=prefix+`_b_.dict.$setitem(result_${id}, item.key, item.value)\n`
+dedent()
+js+=prefix+'}\n'}else{js+=prefix+`_b_.dict.$setitem(result_${id}, ${key}, ${value})\n`}}
 dedent()
 for(var i=0;i < nb_paren;i++){js+=prefix+'}\n'
 dedent()}
@@ -15720,13 +15735,21 @@ for(var comprehension of this.generators.slice(1)){js+=comprehension.to_js(scope
 nb_paren++
 for(let _if of comprehension.ifs){nb_paren++}}
 dedent(2)
-var elt=$B.js_from_ast(this.elt,scopes),has_await=comp_scope.has_await
+var elt
+if(this.elt instanceof $B.ast.Starred){elt=$B.js_from_ast(this.elt.value,scopes)}else{elt=$B.js_from_ast(this.elt,scopes)}
+var has_await=comp_scope.has_await
 dedent()
 indent(3)
 js+=has_await ? prefix+'var save_frame_obj = $B.frame_obj;\n' :''
-js+=prefix+`try{\n`+
-prefix+tab+`yield ${elt}\n`+
-prefix+`}catch(err){\n`+
+js+=prefix+`try{\n`
+indent()
+if(this.elt instanceof $B.ast.Starred){js+=prefix+`for(var item_${id} of $B.make_js_iterator(${elt})){\n`
+indent()
+js+=prefix+`yield item_${id}\n`
+dedent()
+js+=prefix+'}\n'}else{js+=prefix+`yield ${elt}\n`}
+dedent()
+js+=prefix+`}catch(err){\n`+
 (has_await ? prefix+tab+'$B.restore_frame_obj(save_frame_obj, locals)\n' :'')+
 prefix+tab+`$B.leave_frame()\n`+
 prefix+tab+`throw err\n`+
@@ -16053,7 +16076,9 @@ $B.ast.SetComp.prototype.to_js=function(scopes){return make_comp.bind(this)(scop
 $B.ast.Slice.prototype.to_js=function(scopes){var lower=this.lower ? $B.js_from_ast(this.lower,scopes):'_b_.None',upper=this.upper ? $B.js_from_ast(this.upper,scopes):'_b_.None',step=this.step ? $B.js_from_ast(this.step,scopes):'_b_.None'
 return `_b_.slice.$fast_slice(${lower}, ${upper}, ${step})`}
 $B.ast.Starred.prototype.to_js=function(scopes){if(this.$handled){return `_b_.list.$unpack(${$B.js_from_ast(this.value, scopes)})`}
-if(this.ctx instanceof $B.ast.Store){compiler_error(this,"starred assignment target must be in a list or tuple")}else{compiler_error(this,"can't use starred expression here")}}
+if(this.ctx instanceof $B.ast.Store){compiler_error(this,"starred assignment target must be in a list or tuple")}else{console.log('starred',this)
+console.log(Error('trace').stack)
+compiler_error(this,"can't use starred expression here")}}
 $B.ast.Subscript.prototype.to_js=function(scopes){var value=$B.js_from_ast(this.value,scopes),slice=$B.js_from_ast(this.slice,scopes)
 var inum=add_to_positions(scopes,this)
 if(this.slice instanceof $B.ast.Slice){return `$B.getitem_slice(${value}, ${slice}, ${inum})`}else{return `$B.$getitem(${value}, ${slice}, ${inum})`}}

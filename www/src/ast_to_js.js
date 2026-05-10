@@ -975,16 +975,20 @@ function make_comp(scopes){
     // Translate element. This must be done after translating comprehensions
     // so that target names are bound
     if(this instanceof $B.ast.DictComp){
-        console.log('dict comp', this)
         var key = $B.js_from_ast(this.key, scopes)
         var value
-        if(value === undefined){
+        if(this.value === undefined){
             // syntax {**t for t in dicts}
         }else{
             value = $B.js_from_ast(this.value, scopes)
         }
     }else{
-        var elt = $B.js_from_ast(this.elt, scopes)
+        var elt
+        if(this.elt instanceof $B.ast.Starred){
+            elt = $B.js_from_ast(this.elt.value, scopes)
+        }else{
+            elt = $B.js_from_ast(this.elt, scopes)
+        }
     }
 
     if(save_target_flags){
@@ -1002,9 +1006,25 @@ function make_comp(scopes){
     js += has_await ? 'var save_frame_obj = $B.frame_obj;\n' : ''
 
     if(this instanceof $B.ast.ListComp){
-        js += prefix + `result_${id}.push(${elt})\n`
+        if(this.elt instanceof $B.ast.Starred){
+            js += prefix + `for(var item of $B.make_js_iterator(${elt})){\n`
+            indent()
+            js += prefix + `result_${id}.push(item)\n`
+            dedent()
+            js += prefix + '}\n'
+        }else{
+            js += prefix + `result_${id}.push(${elt})\n`
+        }
     }else if(this instanceof $B.ast.SetComp){
-        js += prefix + `$B.set_add(result_${id}, ${elt})\n`
+        if(this.elt instanceof $B.ast.Starred){
+            js += prefix + `for(var item of $B.make_js_iterator(${elt})){\n`
+            indent()
+            js += prefix + `$B.set_add(result_${id}, item)\n`
+            dedent()
+            js += prefix + '}\n'
+        }else{
+            js += prefix + `$B.set_add(result_${id}, ${elt})\n`
+        }
     }else if(this instanceof $B.ast.DictComp){
         if(value === undefined){
             js += prefix + `for(var item of _b_.dict.$iter_items(${key})){\n`
@@ -2934,8 +2954,13 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes){
 
     // Translate element. This must be done after translating comprehensions
     // so that target names are bound
-    var elt = $B.js_from_ast(this.elt, scopes),
-        has_await = comp_scope.has_await
+    var elt
+    if(this.elt instanceof $B.ast.Starred){
+        elt = $B.js_from_ast(this.elt.value, scopes)
+    }else{
+        elt = $B.js_from_ast(this.elt, scopes)
+    }
+    var has_await = comp_scope.has_await
 
     // If the element has an "await", attribute has_await is set to the scope
     // Use it to make the function aync or not
@@ -2944,9 +2969,19 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes){
     indent(3)
 
     js += has_await ? prefix + 'var save_frame_obj = $B.frame_obj;\n' : ''
-    js += prefix + `try{\n` +
-          prefix + tab + `yield ${elt}\n` +
-          prefix + `}catch(err){\n` +
+    js += prefix + `try{\n`
+    indent()
+    if(this.elt instanceof $B.ast.Starred){
+        js += prefix + `for(var item_${id} of $B.make_js_iterator(${elt})){\n`
+        indent()
+        js += prefix + `yield item_${id}\n`
+        dedent()
+        js += prefix + '}\n'
+    }else{
+        js += prefix + `yield ${elt}\n`
+    }
+    dedent()
+    js += prefix + `}catch(err){\n` +
           (has_await ? prefix + tab + '$B.restore_frame_obj(save_frame_obj, locals)\n' : '') +
           prefix + tab + `$B.leave_frame()\n` +
           prefix + tab + `throw err\n` +
@@ -3664,6 +3699,8 @@ $B.ast.Starred.prototype.to_js = function(scopes){
         compiler_error(this,
             "starred assignment target must be in a list or tuple")
     }else{
+        console.log('starred', this)
+        console.log(Error('trace').stack)
         compiler_error(this, "can't use starred expression here")
     }
 }
