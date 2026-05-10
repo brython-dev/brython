@@ -54,7 +54,7 @@ init_type(_b_, "BaseException", [
 
 init_type(_b_, "bytearray", [
     "bytearray",
-    56,
+    64,
     0,
     4199682,
     0,
@@ -206,6 +206,26 @@ init_type(_b_, "float", [
     _b_.object,
     0,
     `Convert a string or number to a floating-point number, if possible.`,
+    [_b_.object],
+])
+
+init_type(_b_, "frozendict", [
+    "frozendict",
+    56,
+    0,
+    4216130,
+    0,
+    _b_.object,
+    0,
+    `dict() -> new empty dictionary
+dict(mapping) -> new dictionary initialized from a mapping object's
+    (key, value) pairs
+dict(iterable) -> new dictionary initialized as if via:
+    d = {}
+    for k, v in iterable:
+        d[k] = v
+dict(**kwargs) -> new dictionary initialized with the name=value pairs
+    in the keyword argument list.  For example:  dict(one=1, two=2)`,
     [_b_.object],
 ])
 
@@ -363,6 +383,18 @@ init_type(_b_, "reversed", [
     [_b_.object],
 ])
 
+init_type(_b_, "sentinel", [
+    "sentinel",
+    32,
+    0,
+    20738,
+    0,
+    _b_.object,
+    0,
+    `Create a unique sentinel object with the given name.`,
+    [_b_.object],
+])
+
 init_type(_b_, "set", [
     "set",
     200,
@@ -482,7 +514,7 @@ If the argument is a tuple, the return value is the same object.`,
 
 init_type(_b_, "type", [
     "type",
-    936,
+    944,
     40,
     2155896066,
     368,
@@ -534,31 +566,10 @@ init_type($B, "FrameLocalsProxy", [
     0,
     _b_.object,
     0,
-    $B.NULL,
-    [_b_.object],
-])
+    `Create a write-through view of the locals dictionary for a frame.
 
-init_type($B, "Generic", [
-    "Generic",
-    16,
-    0,
-    5504,
-    0,
-    _b_.object,
-    0,
-    $B.NULL,
-    [_b_.object],
-])
-
-init_type($B, "GenericAlias", [
-    "GenericAlias",
-    24,
-    0,
-    5504,
-    0,
-    _b_.object,
-    0,
-    $B.NULL,
+  frame
+    the frame object to wrap.`,
     [_b_.object],
 ])
 
@@ -574,54 +585,6 @@ init_type($B, "InstructionSequence", [
 --
 
 Create a new InstructionSequence object.`,
-    [_b_.object],
-])
-
-init_type($B, "MethClass", [
-    "MethClass",
-    16,
-    0,
-    4352,
-    0,
-    _b_.object,
-    0,
-    `Class with class methods to test calling conventions`,
-    [_b_.object],
-])
-
-init_type($B, "MethInstance", [
-    "MethInstance",
-    16,
-    0,
-    4352,
-    0,
-    _b_.object,
-    0,
-    `Class with normal (instance) methods to test calling conventions`,
-    [_b_.object],
-])
-
-init_type($B, "MethStatic", [
-    "MethStatic",
-    16,
-    0,
-    4352,
-    0,
-    _b_.object,
-    0,
-    `Class with static methods to test calling conventions`,
-    [_b_.object],
-])
-
-init_type($B, "MethodDescriptorBase", [
-    "MethodDescriptorBase",
-    24,
-    0,
-    138496,
-    0,
-    _b_.object,
-    0,
-    $B.NULL,
     [_b_.object],
 ])
 
@@ -731,7 +694,7 @@ init_type($B, "async_generator_asend", [
 
 init_type($B, "async_generator_athrow", [
     "async_generator_athrow",
-    40,
+    56,
     0,
     20866,
     0,
@@ -750,18 +713,6 @@ init_type($B, "async_generator_wrapped_value", [
     _b_.object,
     0,
     $B.NULL,
-    [_b_.object],
-])
-
-init_type($B, "awaitType", [
-    "awaitType",
-    24,
-    0,
-    4352,
-    0,
-    _b_.object,
-    0,
-    `C level type with tp_as_async`,
     [_b_.object],
 ])
 
@@ -1144,18 +1095,6 @@ init_type($B, "hamt_collision_node", [
     [_b_.object],
 ])
 
-init_type($B, "hashinheritancetester", [
-    "hashinheritancetester",
-    16,
-    0,
-    4352,
-    0,
-    _b_.object,
-    0,
-    $B.NULL,
-    [_b_.object],
-])
-
 init_type($B, "instancemethod", [
     "instancemethod",
     24,
@@ -1165,18 +1104,6 @@ init_type($B, "instancemethod", [
     _b_.object,
     0,
     `Bind a function to a class.`,
-    [_b_.object],
-])
-
-init_type($B, "ipowType", [
-    "ipowType",
-    16,
-    0,
-    4352,
-    0,
-    _b_.object,
-    0,
-    $B.NULL,
     [_b_.object],
 ])
 
@@ -1213,6 +1140,22 @@ init_type($B, "keys", [
     _b_.object,
     0,
     $B.NULL,
+    [_b_.object],
+])
+
+init_type($B, "lazy_import", [
+    "lazy_import",
+    56,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    `Represents a deferred import that will be resolved on first use.
+
+Instances of this object accessed from the global scope will be
+automatically imported based upon their name and then replaced with
+the imported value.`,
     [_b_.object],
 ])
 
@@ -1288,18 +1231,6 @@ init_type($B, "mappingproxy", [
     [_b_.object],
 ])
 
-init_type($B, "matmulType", [
-    "matmulType",
-    16,
-    0,
-    4352,
-    0,
-    _b_.object,
-    0,
-    `C level type with matrix operations defined`,
-    [_b_.object],
-])
-
 init_type($B, "member_descriptor", [
     "member_descriptor",
     48,
@@ -1362,10 +1293,10 @@ init_type($B, "method_descriptor", [
 
 init_type($B, "module", [
     "module",
-    56,
+    104,
     0,
     21762,
-    40,
+    32,
     _b_.object,
     16,
     `Create a module object.
@@ -1472,37 +1403,13 @@ init_type($B, "str_iterator", [
 
 init_type($B, "symtable_entry", [
     "symtable entry",
-    144,
+    152,
     0,
     4482,
     0,
     _b_.object,
     0,
     $B.NULL,
-    [_b_.object],
-])
-
-init_type($B, "testBufType", [
-    "testBufType",
-    32,
-    0,
-    20736,
-    0,
-    _b_.object,
-    0,
-    $B.NULL,
-    [_b_.object],
-])
-
-init_type($B, "test_structmembersType_OldAPI", [
-    "test_structmembersType_OldAPI",
-    96,
-    0,
-    4352,
-    0,
-    _b_.object,
-    0,
-    `Type containing all structmember types`,
     [_b_.object],
 ])
 
@@ -1532,7 +1439,7 @@ init_type($B, "tuple_iterator", [
 
 init_type($B, "uop_executor", [
     "uop_executor",
-    128,
+    104,
     1,
     20866,
     0,
@@ -1568,7 +1475,7 @@ init_type($B, "wrapper_descriptor", [
 
 init_type(_b_, "BaseExceptionGroup", [
     "BaseExceptionGroup",
-    88,
+    96,
     0,
     1073763586,
     0,
@@ -1638,54 +1545,6 @@ init_type(_b_, "bool", [
 The builtins True and False are the only two instances of the class bool.
 The class bool is a subclass of the class int, and cannot be subclassed.`,
     [_b_.int],
-])
-
-init_type($B, "MethodDescriptor2", [
-    "MethodDescriptor2",
-    32,
-    0,
-    138496,
-    0,
-    $B.MethodDescriptorBase,
-    0,
-    $B.NULL,
-    [$B.MethodDescriptorBase],
-])
-
-init_type($B, "MethodDescriptorDerived", [
-    "MethodDescriptorDerived",
-    24,
-    0,
-    138496,
-    0,
-    $B.MethodDescriptorBase,
-    0,
-    $B.NULL,
-    [$B.MethodDescriptorBase],
-])
-
-init_type($B, "MethodDescriptorNopGet", [
-    "MethodDescriptorNopGet",
-    24,
-    0,
-    5376,
-    0,
-    $B.MethodDescriptorBase,
-    0,
-    $B.NULL,
-    [$B.MethodDescriptorBase],
-])
-
-init_type($B, "MyList", [
-    "MyList",
-    48,
-    0,
-    37770528,
-    0,
-    _b_.list,
-    0,
-    $B.NULL,
-    [_b_.list],
 ])
 
 init_type($B, "UnraisableHookArgs", [
@@ -1827,7 +1686,7 @@ init_type(_b_, "EOFError", [
 
 init_type(_b_, "ExceptionGroup", [
     "ExceptionGroup",
-    88,
+    96,
     0,
     1073763848,
     -32,
@@ -2008,18 +1867,6 @@ init_type(_b_, "Warning", [
     [_b_.Exception],
 ])
 
-init_type($B, "RecursingInfinitelyError", [
-    "RecursingInfinitelyError",
-    72,
-    0,
-    1073763584,
-    0,
-    _b_.Exception,
-    16,
-    `Instantiating this exception starts infinite recursion.`,
-    [_b_.Exception],
-])
-
 init_type(_b_, "BlockingIOError", [
     "BlockingIOError",
     120,
@@ -2140,6 +1987,18 @@ init_type(_b_, "FutureWarning", [
     `Base class for warnings about constructs that will change semantically
 in the future.`,
     [_b_.Warning],
+])
+
+init_type(_b_, "ImportCycleError", [
+    "ImportCycleError",
+    104,
+    0,
+    1073763586,
+    0,
+    _b_.ImportError,
+    16,
+    `Import produces a cycle.`,
+    [_b_.ImportError],
 ])
 
 init_type(_b_, "ImportWarning", [
@@ -2549,6 +2408,6 @@ for(var name in $B.builtin_types){
 }
 
 
-$B.builtin_funcs = ['__build_class__', '__import__', 'abs', 'aiter', 'all', 'anext', 'any', 'ascii', 'bin', 'breakpoint', 'callable', 'chr', 'compile', 'delattr', 'dir', 'divmod', 'eval', 'exec', 'format', 'getattr', 'globals', 'hasattr', 'hash', 'hex', 'id', 'input', 'isinstance', 'issubclass', 'iter', 'len', 'locals', 'max', 'min', 'next', 'oct', 'open', 'ord', 'pow', 'print', 'repr', 'round', 'setattr', 'sorted', 'sum', 'vars']
+$B.builtin_funcs = ['__build_class__', '__import__', '__lazy_import__', 'abs', 'aiter', 'all', 'anext', 'any', 'ascii', 'bin', 'breakpoint', 'callable', 'chr', 'compile', 'delattr', 'dir', 'divmod', 'eval', 'exec', 'format', 'getattr', 'globals', 'hasattr', 'hash', 'hex', 'id', 'input', 'isinstance', 'issubclass', 'iter', 'len', 'locals', 'max', 'min', 'next', 'oct', 'open', 'ord', 'pow', 'print', 'repr', 'round', 'setattr', 'sorted', 'sum', 'vars']
 
 })(__BRYTHON__)
