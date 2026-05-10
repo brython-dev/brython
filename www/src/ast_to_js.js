@@ -975,8 +975,14 @@ function make_comp(scopes){
     // Translate element. This must be done after translating comprehensions
     // so that target names are bound
     if(this instanceof $B.ast.DictComp){
-        var key = $B.js_from_ast(this.key, scopes),
+        console.log('dict comp', this)
+        var key = $B.js_from_ast(this.key, scopes)
+        var value
+        if(value === undefined){
+            // syntax {**t for t in dicts}
+        }else{
             value = $B.js_from_ast(this.value, scopes)
+        }
     }else{
         var elt = $B.js_from_ast(this.elt, scopes)
     }
@@ -1000,7 +1006,15 @@ function make_comp(scopes){
     }else if(this instanceof $B.ast.SetComp){
         js += prefix + `$B.set_add(result_${id}, ${elt})\n`
     }else if(this instanceof $B.ast.DictComp){
-        js += prefix + `_b_.dict.$setitem(result_${id}, ${key}, ${value})\n`
+        if(value === undefined){
+            js += prefix + `for(var item of _b_.dict.$iter_items(${key})){\n`
+            indent()
+            js += prefix + `_b_.dict.$setitem(result_${id}, item.key, item.value)\n`
+            dedent()
+            js += prefix + '}\n'
+        }else{
+            js += prefix + `_b_.dict.$setitem(result_${id}, ${key}, ${value})\n`
+        }
     }
 
     dedent()
