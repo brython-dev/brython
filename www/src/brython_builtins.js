@@ -724,7 +724,6 @@ $B.builtins_repr_check = function(builtin, args){
     var self = $.self
     if(! $B.$isinstance(self, builtin)){
         var _b_ = $B.builtins
-        console.log(Error().stack)
         $B.RAISE(_b_.TypeError, "descriptor '__repr__' requires a " +
             `'${builtin.tp_name}' object but received a ` +
             `'${$B.class_name(self)}'`)

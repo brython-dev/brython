@@ -1360,7 +1360,7 @@ dict_funcs.setdefault = function(self){
 }
 
 dict_funcs.update = function(self){
-    var $ = $B.args("update", 1, {"self": null}, arguments, null, "args", 
+    var $ = $B.args("update", 1, {"self": null}, arguments, null, "args",
                 "kw")
     var self = $.self,
         args = $.args,
@@ -1975,6 +1975,7 @@ function jsobj2dict(x, exclude){
     }
     return d
 }
+
 
 })(__BRYTHON__);
 
