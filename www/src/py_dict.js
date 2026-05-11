@@ -627,22 +627,6 @@ dict.$delete_string = function(self, key){
     }
 }
 
-dict.$missing = {}
-
-dict.$get_string = function(self, key, _default){
-    // Used for dicts where all keys are strings
-    if(! self[KEYS] && self.hasOwnProperty(key)){
-        return self[key]
-    }
-    if(self[TABLE] && dict.mp_length(self)){
-        var indices = self[TABLE][_b_.hash(key)]
-        if(indices !== undefined){
-            return self[VALUES][indices[0]]
-        }
-    }
-    return _default ?? _b_.dict.$missing
-}
-
 dict.$getitem_string = function(self, key){
     // Used for dicts where all keys are strings
     if(! self[KEYS] && self.hasOwnProperty(key)){

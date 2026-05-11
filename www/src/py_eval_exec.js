@@ -43,9 +43,8 @@ var $$eval = _b_.eval = function(){
             __name__ = $B.frame_obj.frame[2]
         }
     }
-    if(_globals !== _b_.None && $B.get_class(_globals) == _b_.dict &&
-            _b_.dict.$contains_string(_globals, '__name__')){
-        __name__ = _b_.dict.$getitem_string(_globals, '__name__')
+    if(_globals !== _b_.None && $B.get_class(_globals) == _b_.dict){
+        __name__ = $B.str_dict_get(_globals, '__name__', __name__)
     }
     $B.url2name[filename] = __name__
 
@@ -279,7 +278,7 @@ $$eval.$is_func = true
 
 var exec = _b_.exec = function(){
     var $ = $B.args("exec", 3, {src: null, globals: null, locals: null},
-                arguments, {globals: _b_.None, locals: _b_.None}, null, null, 
+                arguments, {globals: _b_.None, locals: _b_.None}, null, null,
                 1)
     var src = $.src,
         globals = $.globals,

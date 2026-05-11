@@ -1307,12 +1307,13 @@ $B.JSMeta.tp_new = function(cls, args, kw){
     var body = `
     var _b_ = __BRYTHON__.builtins
     return function(){
-        if(_b_.dict.$contains_string(cl_dict, '__init__')){
+        var init_func = $B.str_dict_get(cl_dict, '__init__')
+        if(init_func !== $B.NULL){
             var args = [this]
             for(var i = 0, len = arguments.length; i < len; i++){
                 args.push(arguments[i])
             }
-            _b_.dict.$getitem_string(cl_dict, '__init__').apply(this, args)
+            init_func.apply(this, args)
         }else{
             return new bases[0].$js_func(...arguments)
         }

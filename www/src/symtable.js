@@ -216,10 +216,7 @@ $B._PySymtable_Build = function(mod, filename, future){
 }
 
 function _PyST_GetSymbol(ste, name){
-    if(! _b_.dict.$contains_string(ste.symbols, name)){
-        return 0
-    }
-    return _b_.dict.$getitem_string(ste.symbols, name)
+    return $B.str_dict_get(ste.symbols, name, 0)
 }
 
 function _PyST_GetScope(ste, name){
@@ -533,9 +530,10 @@ function update_symbols(symbols, scopes, bound, free, inlined_cells, classflag){
         v_free
 
     /* Update scope information for all symbols in this scope */
-    for(let name of _b_.dict.$keys_string(symbols)){
+    for(let entry of _b_.dict.$iter_items(symbols)){
+        let name = entry.key
         var test = false // name == 'Callable'
-        let flags = _b_.dict.$getitem_string(symbols, name)
+        let flags = entry.value
         if(test){
             console.log('in update symbols, name', name, 'flags', flags,
             flags & SF.DEF_COMP_CELL)
@@ -567,10 +565,10 @@ function update_symbols(symbols, scopes, bound, free, inlined_cells, classflag){
 
     for(let name of free){
 
-        v = _b_.dict.$get_string(symbols, name)
+        v = $B.str_dict_get(symbols, name)
 
         /* Handle symbol that already exists in this scope */
-        if (v !== _b_.dict.$missing) {
+        if (v !== $B.NULL) {
             /* Handle a free variable in a method of
                the class that has the same name as a local
                or global in the class scope.
@@ -657,8 +655,9 @@ function analyze_block(ste, bound, free, global, typeparams, class_entry){
         }
     }
 
-    for(let name of _b_.dict.$keys_string(ste.symbols)){
-        var flags = _b_.dict.$getitem_string(ste.symbols, name)
+    for(let entry of _b_.dict.$iter_items(ste.symbols)){
+        var name = entry.key
+        var flags = entry.value
         if (!analyze_name(ste, scopes, name, flags,
                           bound, local, free, global,
                           typeparams, class_entry)){
@@ -864,8 +863,8 @@ function symtable_add_def_helper(st, name, flag, ste, _location){
         return 0
     }
     dict = ste.symbols
-    if(_b_.dict.$contains_string(dict, mangled)){
-        o = _b_.dict.$getitem_string(dict, mangled)
+    var o = $B.str_dict_get(dict, mangled)
+    if(o !== $B.NULL){
         val = o
         if ((flag & SF.DEF_PARAM) && (val & SF.DEF_PARAM)) {
             /* Is it better to use 'mangled' or 'name' here? */

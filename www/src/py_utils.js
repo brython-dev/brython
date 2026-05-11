@@ -250,8 +250,8 @@ $B.parse_args = function(args, fname, argcount, slots, arg_names, defaults,
             slots[arg_name] = kw[arg_name]
             kw[arg_name] = empty
         }else{
-            var kw_def = _b_.dict.$get_string(kwdefaults, arg_name)
-            if(kw_def !== _b_.dict.$missing){
+            var kw_def = $B.str_dict_get(kwdefaults, arg_name)
+            if(kw_def !== $B.NULL){
                 slots[arg_name] = kw_def
             }else{
                 missing_kwonly = missing_kwonly ?? []

@@ -30,8 +30,8 @@
                 // ignore
             }else if($B.get_class(options) === _b_.dict){
                 var _options = {}
-                for(var key of _b_.dict.$keys_string(options)){
-                    _options[key] = _b_.dict.$getitem_string(options, key)
+                for(var entry of _b_.dict.$iter_items(options)){
+                    _options[entry.key] = entry.value
                 }
                 options = _options
             }else{

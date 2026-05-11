@@ -705,8 +705,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-05-07 21:44:04.956272"
-__BRYTHON__.timestamp=1778183044956
+__BRYTHON__.compiled_date="2026-05-11 16:11:40.607392"
+__BRYTHON__.timestamp=1778508700607
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1504,8 +1504,8 @@ throw missing_required_pos(fname,missing_pos)}}}
 var missing_kwonly
 for(var i=nb_pos_or_kw;i < nb_expected;i++){var arg_name=arg_names[i]
 if(kw && kw.hasOwnProperty(arg_name)){slots[arg_name]=kw[arg_name]
-kw[arg_name]=empty}else{var kw_def=_b_.dict.$get_string(kwdefaults,arg_name)
-if(kw_def !==_b_.dict.$missing){slots[arg_name]=kw_def}else{missing_kwonly=missing_kwonly ??[]
+kw[arg_name]=empty}else{var kw_def=$B.str_dict_get(kwdefaults,arg_name)
+if(kw_def !==$B.NULL){slots[arg_name]=kw_def}else{missing_kwonly=missing_kwonly ??[]
 missing_kwonly.push(arg_name)}}}
 if(missing_kwonly){throw missing_required_kwonly(fname,missing_kwonly)}
 if(! kwarg){for(var k in kw){if(! slots.hasOwnProperty(k)){var suggestion=$B.offer_suggestions_for_unexpected_keyword_error(
@@ -2342,7 +2342,7 @@ var args=$B.$list([D,B])
 if(B===object){args.push(_b_.None)}else{args.push($B.$call(B,cls))}
 res.push($B.fast_tuple(args))
 var d=$B.empty_dict()
-for(var attr of _b_.dict.$keys_string($B.get_dict(cls))){_b_.dict.$setitem(d,attr,_b_.dict.$getitem_string($B.get_dict(cls),attr))}
+for(var entry of _b_.dict.$iter_items($B.get_dict(cls))){$B.str_dict_set(d,entry.key,entry.value)}
 res.push(d)
 return _b_.tuple.$factory(res)}
 object_funcs.__reduce_ex__=function(self,protocol){var klass=$B.get_class(self)
@@ -5098,8 +5098,7 @@ src=src.replace(/\r\n/g,'\n').
 replace(/\r/g,'\n')}
 var __name__='exec'
 if(_globals===_b_.None){if($B.frame_obj !==null){__name__=$B.frame_obj.frame[2]}}
-if(_globals !==_b_.None && $B.get_class(_globals)==_b_.dict &&
-_b_.dict.$contains_string(_globals,'__name__')){__name__=_b_.dict.$getitem_string(_globals,'__name__')}
+if(_globals !==_b_.None && $B.get_class(_globals)==_b_.dict){__name__=$B.str_dict_get(_globals,'__name__',__name__)}
 $B.url2name[filename]=__name__
 var frame=$B.frame_obj.frame
 $B.exec_scope=$B.exec_scope ||{}
@@ -10518,12 +10517,6 @@ dict.$delete_string=function(self,key){
 if(! self[KEYS]){var ix=self[key]
 if(ix !==undefined){delete self[key]}}
 if(self[TABLE]){delete self[TABLE][_b_.hash(key)]}}
-dict.$missing={}
-dict.$get_string=function(self,key,_default){
-if(! self[KEYS]&& self.hasOwnProperty(key)){return self[key]}
-if(self[TABLE]&& dict.mp_length(self)){var indices=self[TABLE][_b_.hash(key)]
-if(indices !==undefined){return self[VALUES][indices[0]]}}
-return _default ?? _b_.dict.$missing}
 dict.$getitem_string=function(self,key){
 if(! self[KEYS]&& self.hasOwnProperty(key)){return self[key]}
 if(self[TABLE]){var indices=self[TABLE][_b_.hash(key)]
@@ -11853,12 +11846,13 @@ var[class_name,bases,cl_dict]=args
 var body=`
     var _b_ = __BRYTHON__.builtins
     return function(){
-        if(_b_.dict.$contains_string(cl_dict, '__init__')){
+        var init_func = $B.str_dict_get(cl_dict, '__init__')
+        if(init_func !== $B.NULL){
             var args = [this]
             for(var i = 0, len = arguments.length; i < len; i++){
                 args.push(arguments[i])
             }
-            _b_.dict.$getitem_string(cl_dict, '__init__').apply(this, args)
+            init_func.apply(this, args)
         }else{
             return new bases[0].$js_func(...arguments)
         }
@@ -13512,7 +13506,7 @@ var browser={$package:true,$is_package:true,__initialized__:true,__package__:'br
 var $=$B.args("bind",3,{elt:null,evt:null,options:null},arguments,{options:_b_.None})
 var options=$.options
 if(typeof options=="boolean"){}else if($B.get_class(options)===_b_.dict){var _options={}
-for(var key of _b_.dict.$keys_string(options)){_options[key]=_b_.dict.$getitem_string(options,key)}
+for(var entry of _b_.dict.$iter_items(options)){_options[entry.key]=entry.value}
 options=_options}else{options==false}
 return function(callback){if($B.get_class($.elt)===$B.JSObj){
 function f(ev){try{return callback($B.jsobj2pyobj(ev))}catch(err){$B.handle_error(err)}}
@@ -16579,8 +16573,7 @@ for(let item of seq){visitor.stmt(st,item)}
 break}
 symtable_analyze(st)
 return st.top;}
-function _PyST_GetSymbol(ste,name){if(! _b_.dict.$contains_string(ste.symbols,name)){return 0}
-return _b_.dict.$getitem_string(ste.symbols,name)}
+function _PyST_GetSymbol(ste,name){return $B.str_dict_get(ste.symbols,name,0)}
 function _PyST_GetScope(ste,name){var symbol=_PyST_GetSymbol(ste,name);
 return(symbol >> SF.SCOPE_OFFSET)& SF.SCOPE_MASK;}
 function _PyST_IsFunctionLike(ste){return ste.type==FunctionBlock
@@ -16678,8 +16671,9 @@ res=free.delete('__classdict__')
 if(res){ste.needs_class_classdict=1}
 return 1}
 function update_symbols(symbols,scopes,bound,free,inlined_cells,classflag){var v,v_scope,v_new,v_free
-for(let name of _b_.dict.$keys_string(symbols)){var test=false 
-let flags=_b_.dict.$getitem_string(symbols,name)
+for(let entry of _b_.dict.$iter_items(symbols)){let name=entry.key
+var test=false 
+let flags=entry.value
 if(test){console.log('in update symbols, name',name,'flags',flags,flags & SF.DEF_COMP_CELL)}
 if(inlined_cells.has(name)){flags |=SF.DEF_COMP_CELL}
 v_scope=scopes[name]
@@ -16691,8 +16685,8 @@ if(!v_new){return 0;}
 if(test){console.log('set symbol',name,'v_new',v_new,'def comp cell',SF.DEF_COMP_CELL,v_new & SF.DEF_COMP_CELL)}
 _b_.dict.$setitem_string(symbols,name,v_new)}
 v_free=SF.FREE << SF.SCOPE_OFFSET
-for(let name of free){v=_b_.dict.$get_string(symbols,name)
-if(v !==_b_.dict.$missing){
+for(let name of free){v=$B.str_dict_get(symbols,name)
+if(v !==$B.NULL){
 if(classflag &&
 v &(SF.DEF_BOUND |SF.DEF_GLOBAL)){let flags=v |SF.DEF_FREE_CLASS;
 v_new=flags;
@@ -16712,7 +16706,8 @@ let inlined_cells=new Set()
 if(ste.type===ClassBlock){
 Set_Union(newglobal,global)
 if(bound){Set_Union(newbound,bound)}}
-for(let name of _b_.dict.$keys_string(ste.symbols)){var flags=_b_.dict.$getitem_string(ste.symbols,name)
+for(let entry of _b_.dict.$iter_items(ste.symbols)){var name=entry.key
+var flags=entry.value
 if(!analyze_name(ste,scopes,name,flags,bound,local,free,global,typeparams,class_entry)){return 0}}
 if(ste.type !=ClassBlock){
 if(_PyST_IsFunctionLike(ste)){Set_Union(newbound,local);}
@@ -16770,8 +16765,8 @@ return ret;}
 function symtable_add_def_helper(st,name,flag,ste,_location){var o,dict,val,mangled=_Py_Mangle(st.private,name)
 if(!mangled){return 0}
 dict=ste.symbols
-if(_b_.dict.$contains_string(dict,mangled)){o=_b_.dict.$getitem_string(dict,mangled)
-val=o
+var o=$B.str_dict_get(dict,mangled)
+if(o !==$B.NULL){val=o
 if((flag & SF.DEF_PARAM)&&(val & SF.DEF_PARAM)){
 let exc=PyErr_Format(_b_.SyntaxError,DUPLICATE_ARGUMENT,name);
 set_exc_info(exc,st.filename,..._location)

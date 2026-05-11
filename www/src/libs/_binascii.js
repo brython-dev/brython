@@ -127,7 +127,7 @@ var module = {
     b2a_base64: function(){
         var $ = $B.args("b2a_base64", 1, {data: null}, arguments, null, null, 
                     "kw")
-        var newline = _b_.dict.$get_string($.kw, 'newline', false)
+        var newline = $B.str_dict_get($.kw, 'newline', false)
 
         var bytes_list = $B.to_bytes($.data)
         var i = 0
