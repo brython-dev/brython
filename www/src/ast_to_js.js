@@ -524,7 +524,7 @@ function name_scope(name, scopes){
                 console.log('found in locals of', scopes[i])
             }
             return {found: scopes[i]} // reference(scopes, scopes[i], name)
-        }else if(block && _b_.dict.$contains_string(block.symbols, name)){
+        }else if(block && $B.str_dict_contains(block.symbols, name)){
             flags = $B.str_dict_get(block.symbols, name)
             let __scope = (flags >> SF.SCOPE_OFF) & SF.SCOPE_MASK
             if([SF.LOCAL, SF.CELL].indexOf(__scope) > -1){

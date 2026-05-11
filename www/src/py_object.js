@@ -250,7 +250,7 @@ _b_.object.tp_setattro = function(self, attr, value){
         // No data descriptor, delete from instance __dict__
         var dict = $B.get_dict(self)
         if(dict && $B.is_dict(dict) &&
-                _b_.dict.$contains_string(dict, attr)){
+                $B.str_dict_contains(dict, attr)){
             _b_.dict.$delete_string(dict, attr)
             delete self[attr]
             return _b_.None

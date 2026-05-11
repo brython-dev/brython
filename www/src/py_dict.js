@@ -289,6 +289,10 @@ var dict = _b_.dict
 
 dict.$match_mapping_pattern = true // for pattern matching (PEP 634)
 
+$B.str_dict_contains = function(d, key){
+    return d.hasOwnProperty(key)
+}
+
 $B.str_dict_get = function(d, key, _default){
     if(d.hasOwnProperty(key)){
         return d[key]
@@ -601,18 +605,6 @@ dict.$eq = function(self, other){
     return true
 }
 
-
-dict.$contains_string = function(self, key){
-    // Test if string "key" is in a dict where all keys are string
-    if(! self[KEYS]){
-        return self.hasOwnProperty(key)
-    }
-    if(self[TABLE] && self[TABLE][_b_.hash(key)] !== undefined){
-        return true
-    }
-    return false
-}
-
 dict.$delete_string = function(self, key){
     // Used for dicts where all keys are strings
     if(! self[KEYS]){
@@ -625,27 +617,6 @@ dict.$delete_string = function(self, key){
     if(self[TABLE]){
         delete self[TABLE][_b_.hash(key)]
     }
-}
-
-dict.$setitem_string = function(self, key, value){
-    // Used for dicts where all keys are strings
-    if(! self[TABLE]){
-        self[key] = value
-        return _b_.None
-    }else{
-        var h = _b_.hash(key),
-            indices = self[TABLE][h]
-        if(indices !== undefined){
-            self[VALUES][indices[0]] = value
-            return _b_.None
-        }
-    }
-    var index = self[KEYS].length
-    self[key] = index
-    self[KEYS].push(key)
-    self[VALUES].push(value)
-    self[VERSION]++
-    return _b_.None
 }
 
 dict.$getitem = function(self, key, ignore_missing){
@@ -1319,7 +1290,7 @@ dict_funcs.setdefault = function(self){
 }
 
 dict_funcs.update = function(self){
-    var $ = $B.args("update", 1, {"self": null}, arguments, null, "args", 
+    var $ = $B.args("update", 1, {"self": null}, arguments, null, "args",
                 "kw")
     var self = $.self,
         args = $.args,

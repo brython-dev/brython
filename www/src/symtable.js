@@ -346,7 +346,7 @@ function inline_comprehension(ste, comp, scopes, comp_free, inlined_cells){
         if(scope == SF.CELL || only_flags & SF.DEF_COMP_CELL){
            inlined_cells.add(k)
         }
-        var existing = _b_.dict.$contains_string(ste.symbols, k)
+        var existing = $B.str_dict_contains(ste.symbols, k)
         if (!existing) {
             // name does not exist in scope, copy from comprehension
             //assert(scope != SF.FREE || PySet_Contains(comp_free, k) == 1);
@@ -557,7 +557,7 @@ function update_symbols(symbols, scopes, bound, free, inlined_cells, classflag){
                 SF.DEF_COMP_CELL,
                 v_new & SF.DEF_COMP_CELL)
         }
-        _b_.dict.$setitem_string(symbols, name, v_new)
+        $B.str_dict_set(symbols, name, v_new)
     }
 
     /* Record not yet resolved free variables from children (if any) */
@@ -580,7 +580,7 @@ function update_symbols(symbols, scopes, bound, free, inlined_cells, classflag){
                 if (! v_new) {
                     return 0;
                 }
-                _b_.dict.$setitem_string(symbols, name, v_new)
+                $B.str_dict_set(symbols, name, v_new)
             }
             /* It's a cell, or already free in this scope */
             continue;
@@ -590,7 +590,7 @@ function update_symbols(symbols, scopes, bound, free, inlined_cells, classflag){
             continue;       /* it's a global */
         }
         /* Propagate new free symbol up the lexical stack */
-        _b_.dict.$setitem_string(symbols, name, v_free)
+        $B.str_dict_set(symbols, name, v_free)
     }
 
     return 1

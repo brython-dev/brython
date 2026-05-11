@@ -705,8 +705,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-05-11 16:22:17.369183"
-__BRYTHON__.timestamp=1778509337368
+__BRYTHON__.compiled_date="2026-05-11 17:15:43.733122"
+__BRYTHON__.timestamp=1778512543732
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -2192,7 +2192,7 @@ if(test){console.log('in mro',in_mro,'has delete',_b_.hasattr(in_mro,'__delete__
 if(in_mro !==$B.NULL && _b_.hasattr(in_mro,'__delete__')){return $B.$call($B.$getattr(in_mro,'__delete__'),self)}
 var dict=$B.get_dict(self)
 if(dict && $B.is_dict(dict)&&
-_b_.dict.$contains_string(dict,attr)){_b_.dict.$delete_string(dict,attr)
+$B.str_dict_contains(dict,attr)){_b_.dict.$delete_string(dict,attr)
 delete self[attr]
 return _b_.None}
 throw $B.attr_error(attr,self)}
@@ -3727,13 +3727,13 @@ if(has_kw){function add_key(key,value){var index=arg_names.indexOf(key)
 if(index==-1){if(kwarg){add_to_kwargs(locals[kwarg],key,value)
 return}else{$B.RAISE(_b_.TypeError,name+
 `() got an unexpected keyword argument '${key}'`)}}
-if(locals.hasOwnProperty(key)){if(kwarg && index < posonly_length){_b_.dict.$setitem_string(locals[kwarg],key,value)
+if(locals.hasOwnProperty(key)){if(kwarg && index < posonly_length){$B.str_dict_set(locals[kwarg],key,value)
 return}
 $B.RAISE(_b_.TypeError,name+
 `() got multiple values for argument '${key}'`)}
 if(index < posonly_length){if(defaults===_b_.None ||
 index <=positional_length-defaults.length){
-if(kwarg){_b_.dict.$setitem_string(locals[kwarg],key,value)}else{posonly_as_keywords=posonly_as_keywords ??[]
+if(kwarg){$B.str_dict_set(locals[kwarg],key,value)}else{posonly_as_keywords=posonly_as_keywords ??[]
 posonly_as_keywords.push(key)}}}else{locals[key]=value
 filled_pos++}}
 var elt=last_arg
@@ -10408,6 +10408,7 @@ if(! flag){items.push(y)}}
 return items}}
 var dict=_b_.dict
 dict.$match_mapping_pattern=true 
+$B.str_dict_contains=function(d,key){return d.hasOwnProperty(key)}
 $B.str_dict_get=function(d,key,_default){if(d.hasOwnProperty(key)){return d[key]}
 return _default===undefined ? $B.NULL :_default}
 $B.str_dict_set=function(d,attr,value){d[attr]=value}
@@ -10509,25 +10510,10 @@ $B.is_or_equals(value,other_pair[1])){flag=true
 break}}
 if(! flag){return false}}}
 return true}
-dict.$contains_string=function(self,key){
-if(! self[KEYS]){return self.hasOwnProperty(key)}
-if(self[TABLE]&& self[TABLE][_b_.hash(key)]!==undefined){return true}
-return false}
 dict.$delete_string=function(self,key){
 if(! self[KEYS]){var ix=self[key]
 if(ix !==undefined){delete self[key]}}
 if(self[TABLE]){delete self[TABLE][_b_.hash(key)]}}
-dict.$setitem_string=function(self,key,value){
-if(! self[TABLE]){self[key]=value
-return _b_.None}else{var h=_b_.hash(key),indices=self[TABLE][h]
-if(indices !==undefined){self[VALUES][indices[0]]=value
-return _b_.None}}
-var index=self[KEYS].length
-self[key]=index
-self[KEYS].push(key)
-self[VALUES].push(value)
-self[VERSION]++
-return _b_.None}
 dict.$getitem=function(self,key,ignore_missing){
 if(Object.hasOwn(self,$B.JSOBJ)){if(Object.hasOwn(self[$B.JSOBJ],key)){return self[$B.JSOBJ][key]}
 $B.RAISE(_b_.KeyError,key)}
@@ -11524,7 +11510,7 @@ if(Array.isArray(obj)){return obj.map(convert_to_python)}
 if($B.$isinstance(obj,$B.JSObj)){if(typeof obj=='number'){
 return $B.fast_float(obj)}
 var res=$B.empty_dict()
-for(var key in obj){_b_.dict.$setitem_string(res,key,convert_to_python(obj[key]))}
+for(var key in obj){$B.str_dict_set(res,key,convert_to_python(obj[key]))}
 return res}
 return $B.jsobj2pyobj(obj)}
 function pyargs2jsargs(pyargs){var args=new Array(pyargs.length);
@@ -11712,7 +11698,7 @@ if(events.length==0){delete _self.$brython_events[evt]}}}
 JSObj_funcs.to_dict=function(_self){
 if(typeof _self=='function'){$B.RAISE(_b_.TypeError,"method 'to_dict()' not supported for functions")}
 var res=$B.empty_dict()
-for(var key in _self){_b_.dict.$setitem_string(res,key,convert_to_python(_self[key]))}
+for(var key in _self){$B.str_dict_set(res,key,convert_to_python(_self[key]))}
 return res}
 $B.JSObj.tp_methods=["__getattr__","bind","bindings","unbind","to_dict"]
 $B.set_func_names($B.JSObj,"builtins")
@@ -14656,7 +14642,7 @@ if(scopes[i].ast){block=scopes.symtable.table.blocks.get(fast_id(scopes[i].ast))
 if(scopes[i].globals.has(name)){scope.needs_frames=true
 return{found:false,resolve:'global'}}
 if(scopes[i].locals.has(name)&& scopes[i].type !='class'){if(test){console.log('found in locals of',scopes[i])}
-return{found:scopes[i]}}else if(block && _b_.dict.$contains_string(block.symbols,name)){flags=$B.str_dict_get(block.symbols,name)
+return{found:scopes[i]}}else if(block && $B.str_dict_contains(block.symbols,name)){flags=$B.str_dict_get(block.symbols,name)
 let __scope=(flags >> SF.SCOPE_OFF)& SF.SCOPE_MASK
 if([SF.LOCAL,SF.CELL].indexOf(__scope)>-1){
 return{found:false,resolve:'all'}}}
@@ -16601,7 +16587,7 @@ continue;}
 var scope=(comp_flags >> SF.SCOPE_OFFSET)& SF.SCOPE_MASK;
 var only_flags=comp_flags &((1 << SF.SCOPE_OFFSET)-1)
 if(scope==SF.CELL ||only_flags & SF.DEF_COMP_CELL){inlined_cells.add(k)}
-var existing=_b_.dict.$contains_string(ste.symbols,k)
+var existing=$B.str_dict_contains(ste.symbols,k)
 if(!existing){
 var v_flags=only_flags
 _b_.dict.$setitem(ste.symbols,k,v_flags);
@@ -16677,7 +16663,7 @@ flags |=(scope << SF.SCOPE_OFFSET)
 v_new=flags
 if(!v_new){return 0;}
 if(test){console.log('set symbol',name,'v_new',v_new,'def comp cell',SF.DEF_COMP_CELL,v_new & SF.DEF_COMP_CELL)}
-_b_.dict.$setitem_string(symbols,name,v_new)}
+$B.str_dict_set(symbols,name,v_new)}
 v_free=SF.FREE << SF.SCOPE_OFFSET
 for(let name of free){v=$B.str_dict_get(symbols,name)
 if(v !==$B.NULL){
@@ -16685,10 +16671,10 @@ if(classflag &&
 v &(SF.DEF_BOUND |SF.DEF_GLOBAL)){let flags=v |SF.DEF_FREE_CLASS;
 v_new=flags;
 if(! v_new){return 0;}
-_b_.dict.$setitem_string(symbols,name,v_new)}
+$B.str_dict_set(symbols,name,v_new)}
 continue;}
 if(bound && !bound.has(name)){continue;}
-_b_.dict.$setitem_string(symbols,name,v_free)}
+$B.str_dict_set(symbols,name,v_free)}
 return 1}
 function analyze_block(ste,bound,free,global,typeparams,class_entry){var success=0
 let local=new Set()

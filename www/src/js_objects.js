@@ -453,7 +453,7 @@ function convert_to_python(obj){
         }
         var res = $B.empty_dict()
         for(var key in obj){
-            _b_.dict.$setitem_string(res, key, convert_to_python(obj[key]))
+            $B.str_dict_set(res, key, convert_to_python(obj[key]))
         }
         return res
     }
@@ -963,7 +963,7 @@ JSObj_funcs.to_dict = function(_self){
     }
     var res = $B.empty_dict()
     for(var key in _self){
-        _b_.dict.$setitem_string(res, key, convert_to_python(_self[key]))
+        $B.str_dict_set(res, key, convert_to_python(_self[key]))
     }
     return res
 }
