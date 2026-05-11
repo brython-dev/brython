@@ -428,9 +428,8 @@ function name_scope(name, scopes){
     if(test){
         console.log('block symbols', block.symbols)
     }
-    try{
-        flags = _b_.dict.$getitem_string(block.symbols, name)
-    }catch(err){
+    var flags = $B.str_dict_get(block.symbols, name)
+    if(flags === $B.NULL){
         console.log('name', name, 'not in symbols of block', block)
         console.log('symtables', scopes.symtable)
         console.log('scopes', scopes.slice())
@@ -491,14 +490,16 @@ function name_scope(name, scopes){
         // Search name in the surrounding scopes, using symtable
         for(let i = scopes.length - 2; i >= 0; i--){
             block = scopes.symtable.table.blocks.get(fast_id(scopes[i].ast))
-            if(block && _b_.dict.$contains_string(block.symbols, name)){
-                var fl = _b_.dict.$getitem_string(block.symbols, name),
-                    local_to_block =
-                        [SF.LOCAL, SF.CELL].indexOf((fl >> SF.SCOPE_OFF) & SF.SCOPE_MASK) > -1
-                if(! local_to_block){
-                    continue
+            if(block){
+                var fl = $B.str_dict_get(block.symbols, name)
+                if(fl !== $B.NULL){
+                    var local_to_block =
+                            [SF.LOCAL, SF.CELL].indexOf((fl >> SF.SCOPE_OFF) & SF.SCOPE_MASK) > -1
+                    if(! local_to_block){
+                        continue
+                    }
+                    return {found: scopes[i]}
                 }
-                return {found: scopes[i]}
             }
         }
     }
@@ -524,7 +525,7 @@ function name_scope(name, scopes){
             }
             return {found: scopes[i]} // reference(scopes, scopes[i], name)
         }else if(block && _b_.dict.$contains_string(block.symbols, name)){
-            flags = _b_.dict.$getitem_string(block.symbols, name)
+            flags = $B.str_dict_get(block.symbols, name)
             let __scope = (flags >> SF.SCOPE_OFF) & SF.SCOPE_MASK
             if([SF.LOCAL, SF.CELL].indexOf(__scope) > -1){
                 /* name is local to a surrounding scope but not yet bound
@@ -2663,12 +2664,12 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     }
 
     var parameters = [],
-        locals = [],
-        identifiers = _b_.dict.$keys_string(symtable_block.symbols)
+        locals = []
 
     var free_vars = []
-    for(var ident of identifiers){
-        var flag = _b_.dict.$getitem_string(symtable_block.symbols, ident),
+    for(var entry of _b_.dict.$iter_items(symtable_block.symbols)){
+        var ident = entry.key
+        var flag = entry.value,
             _scope = (flag >> SF.SCOPE_OFF) & SF.SCOPE_MASK
         if(_scope == SF.FREE){
             free_vars.push(`'${ident}'`)

@@ -705,8 +705,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-05-11 16:11:40.607392"
-__BRYTHON__.timestamp=1778508700607
+__BRYTHON__.compiled_date="2026-05-11 16:22:17.369183"
+__BRYTHON__.timestamp=1778509337368
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -10517,15 +10517,6 @@ dict.$delete_string=function(self,key){
 if(! self[KEYS]){var ix=self[key]
 if(ix !==undefined){delete self[key]}}
 if(self[TABLE]){delete self[TABLE][_b_.hash(key)]}}
-dict.$getitem_string=function(self,key){
-if(! self[KEYS]&& self.hasOwnProperty(key)){return self[key]}
-if(self[TABLE]){var indices=self[TABLE][_b_.hash(key)]
-if(indices !==undefined){return self[VALUES][indices[0]]}}
-$B.RAISE(_b_.KeyError,key)}
-dict.$keys_string=function(self){
-var res=[]
-if(! self[TABLE]){return Object.keys(self)}else{res=res.concat(self[KEYS].filter((x)=> x !==undefined))}
-return res}
 dict.$setitem_string=function(self,key,value){
 if(! self[TABLE]){self[key]=value
 return _b_.None}else{var h=_b_.hash(key),indices=self[TABLE][h]
@@ -14629,7 +14620,8 @@ if(block===undefined){console.log('no block',scope,scope.ast,'id',fast_id(up_sco
 console.log('scopes',scopes.slice())
 console.log('symtable',scopes.symtable)}
 if(test){console.log('block symbols',block.symbols)}
-try{flags=_b_.dict.$getitem_string(block.symbols,name)}catch(err){console.log('name',name,'not in symbols of block',block)
+var flags=$B.str_dict_get(block.symbols,name)
+if(flags===$B.NULL){console.log('name',name,'not in symbols of block',block)
 console.log('symtables',scopes.symtable)
 console.log('scopes',scopes.slice())
 return{found:false,resolve:'all'}}
@@ -14652,10 +14644,11 @@ if(global_scope.locals.has(name)){return{found:global_scope}}
 scope.needs_frames=true
 return{found:false,resolve:'global'}}else if(scope.nonlocals.has(name)){
 for(let i=scopes.length-2;i >=0;i--){block=scopes.symtable.table.blocks.get(fast_id(scopes[i].ast))
-if(block && _b_.dict.$contains_string(block.symbols,name)){var fl=_b_.dict.$getitem_string(block.symbols,name),local_to_block=
+if(block){var fl=$B.str_dict_get(block.symbols,name)
+if(fl !==$B.NULL){var local_to_block=
 [SF.LOCAL,SF.CELL].indexOf((fl >> SF.SCOPE_OFF)& SF.SCOPE_MASK)>-1
 if(! local_to_block){continue}
-return{found:scopes[i]}}}}
+return{found:scopes[i]}}}}}
 if(scope.has_import_star){if(! is_local){scope.needs_frames=true}
 return{found:false,resolve:is_local ? 'all' :'global'}}
 for(let i=scopes.length-2;i >=0;i--){block=undefined
@@ -14663,7 +14656,7 @@ if(scopes[i].ast){block=scopes.symtable.table.blocks.get(fast_id(scopes[i].ast))
 if(scopes[i].globals.has(name)){scope.needs_frames=true
 return{found:false,resolve:'global'}}
 if(scopes[i].locals.has(name)&& scopes[i].type !='class'){if(test){console.log('found in locals of',scopes[i])}
-return{found:scopes[i]}}else if(block && _b_.dict.$contains_string(block.symbols,name)){flags=_b_.dict.$getitem_string(block.symbols,name)
+return{found:scopes[i]}}else if(block && _b_.dict.$contains_string(block.symbols,name)){flags=$B.str_dict_get(block.symbols,name)
 let __scope=(flags >> SF.SCOPE_OFF)& SF.SCOPE_MASK
 if([SF.LOCAL,SF.CELL].indexOf(__scope)>-1){
 return{found:false,resolve:'all'}}}
@@ -15584,9 +15577,10 @@ if(this.args.vararg){flags |=$B.COMPILER_FLAGS.VARARGS}
 if(this.args.kwarg){flags |=$B.COMPILER_FLAGS.VARKEYWORDS}
 if(is_generator){flags |=$B.COMPILER_FLAGS.GENERATOR}
 if(is_async){flags |=$B.COMPILER_FLAGS.COROUTINE}
-var parameters=[],locals=[],identifiers=_b_.dict.$keys_string(symtable_block.symbols)
+var parameters=[],locals=[]
 var free_vars=[]
-for(var ident of identifiers){var flag=_b_.dict.$getitem_string(symtable_block.symbols,ident),_scope=(flag >> SF.SCOPE_OFF)& SF.SCOPE_MASK
+for(var entry of _b_.dict.$iter_items(symtable_block.symbols)){var ident=entry.key
+var flag=entry.value,_scope=(flag >> SF.SCOPE_OFF)& SF.SCOPE_MASK
 if(_scope==SF.FREE){free_vars.push(`'${ident}'`)}
 if(flag & SF.DEF_PARAM){parameters.push(`'${ident}'`)}else if(flag & SF.DEF_LOCAL){locals.push(`'${ident}'`)}}
 var varnames=parameters.concat(locals)

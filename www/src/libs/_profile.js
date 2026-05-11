@@ -51,8 +51,8 @@ var $module=(function($B) {
                     parent_block: $B.builtins_scope,
                     binding: {}
                 }
-                for(var attr of _b_.dict.$keys_string(_globals)){
-                    parent_scope.binding[attr] = true
+                for(var entry of _b_.dict.$iter_items(_globals)){
+                    parent_scope.binding[entry.key] = true
                 }
             }
 

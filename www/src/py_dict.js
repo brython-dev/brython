@@ -627,31 +627,6 @@ dict.$delete_string = function(self, key){
     }
 }
 
-dict.$getitem_string = function(self, key){
-    // Used for dicts where all keys are strings
-    if(! self[KEYS] && self.hasOwnProperty(key)){
-        return self[key]
-    }
-    if(self[TABLE]){
-        var indices = self[TABLE][_b_.hash(key)]
-        if(indices !== undefined){
-            return self[VALUES][indices[0]]
-        }
-    }
-    $B.RAISE(_b_.KeyError, key)
-}
-
-dict.$keys_string = function(self){
-    // return the list of keys in a dict where are keys are strings
-    var res = []
-    if(! self[TABLE]){
-        return Object.keys(self)
-    }else{
-        res = res.concat(self[KEYS].filter((x) => x !== undefined))
-    }
-    return res
-}
-
 dict.$setitem_string = function(self, key, value){
     // Used for dicts where all keys are strings
     if(! self[TABLE]){
