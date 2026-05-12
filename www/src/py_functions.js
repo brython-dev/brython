@@ -754,7 +754,7 @@ function make_arguments_parser(f){
                 }
                 if(locals.hasOwnProperty(key)){
                     if(kwarg && index < posonly_length){
-                        _b_.dict.$setitem_string(locals[kwarg], key, value)
+                        $B.str_dict_set(locals[kwarg], key, value)
                         return
                     }
                     $B.RAISE(_b_.TypeError, name +
@@ -765,7 +765,7 @@ function make_arguments_parser(f){
                             index <= positional_length - defaults.length){
                         // no default value for key as positional
                         if(kwarg){
-                            _b_.dict.$setitem_string(locals[kwarg], key, value)
+                            $B.str_dict_set(locals[kwarg], key, value)
                         }else{
                             posonly_as_keywords = posonly_as_keywords ?? []
                             posonly_as_keywords.push(key)

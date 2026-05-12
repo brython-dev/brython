@@ -250,7 +250,7 @@ _b_.object.tp_setattro = function(self, attr, value){
         // No data descriptor, delete from instance __dict__
         var dict = $B.get_dict(self)
         if(dict && $B.is_dict(dict) &&
-                _b_.dict.$contains_string(dict, attr)){
+                $B.str_dict_contains(dict, attr)){
             _b_.dict.$delete_string(dict, attr)
             delete self[attr]
             return _b_.None
@@ -604,9 +604,8 @@ object_funcs.__reduce__ = function(cls){
 
     res.push($B.fast_tuple(args))
     var d = $B.empty_dict()
-    for(var attr of _b_.dict.$keys_string($B.get_dict(cls))){
-        _b_.dict.$setitem(d, attr,
-            _b_.dict.$getitem_string($B.get_dict(cls), attr))
+    for(var entry of _b_.dict.$iter_items($B.get_dict(cls))){
+        $B.str_dict_set(d, entry.key, entry.value)
     }
     res.push(d)
     return _b_.tuple.$factory(res)

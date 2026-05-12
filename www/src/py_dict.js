@@ -289,6 +289,10 @@ var dict = _b_.dict
 
 dict.$match_mapping_pattern = true // for pattern matching (PEP 634)
 
+$B.str_dict_contains = function(d, key){
+    return d.hasOwnProperty(key)
+}
+
 $B.str_dict_get = function(d, key, _default){
     if(d.hasOwnProperty(key)){
         return d[key]
@@ -527,14 +531,7 @@ dict.$delitem  = function(self, key){
 
 $B.dict_delitem = dict.$delitem
 
-function dict_eq(){
-    var $ = $B.args("__eq__", 2, {self: null, other: null}, arguments)
-    var self = $.self,
-        other = $.other
-    return dict.$eq(self, other)
-}
-
-dict.$eq = function(self, other){
+function dict_eq(self, other){
     if(! $B.$isinstance(other, dict)){
         return _b_.NotImplemented
     }
@@ -557,12 +554,12 @@ dict.$eq = function(self, other){
     if(! self[KEYS]){
         let d = dict.tp_funcs.copy(self)
         convert_all_str(d)
-        return dict.$eq(d, other)
+        return dict_eq(d, other)
     }
     if(! other[KEYS]){
         let d = dict.tp_funcs.copy(other)
         convert_all_str(d)
-        return dict.$eq(self, d)
+        return dict_eq(self, d)
     }
 
     if(dict.mp_length(self) != dict.mp_length(other)){
@@ -601,18 +598,6 @@ dict.$eq = function(self, other){
     return true
 }
 
-
-dict.$contains_string = function(self, key){
-    // Test if string "key" is in a dict where all keys are string
-    if(! self[KEYS]){
-        return self.hasOwnProperty(key)
-    }
-    if(self[TABLE] && self[TABLE][_b_.hash(key)] !== undefined){
-        return true
-    }
-    return false
-}
-
 dict.$delete_string = function(self, key){
     // Used for dicts where all keys are strings
     if(! self[KEYS]){
@@ -625,68 +610,6 @@ dict.$delete_string = function(self, key){
     if(self[TABLE]){
         delete self[TABLE][_b_.hash(key)]
     }
-}
-
-dict.$missing = {}
-
-dict.$get_string = function(self, key, _default){
-    // Used for dicts where all keys are strings
-    if(! self[KEYS] && self.hasOwnProperty(key)){
-        return self[key]
-    }
-    if(self[TABLE] && dict.mp_length(self)){
-        var indices = self[TABLE][_b_.hash(key)]
-        if(indices !== undefined){
-            return self[VALUES][indices[0]]
-        }
-    }
-    return _default ?? _b_.dict.$missing
-}
-
-dict.$getitem_string = function(self, key){
-    // Used for dicts where all keys are strings
-    if(! self[KEYS] && self.hasOwnProperty(key)){
-        return self[key]
-    }
-    if(self[TABLE]){
-        var indices = self[TABLE][_b_.hash(key)]
-        if(indices !== undefined){
-            return self[VALUES][indices[0]]
-        }
-    }
-    $B.RAISE(_b_.KeyError, key)
-}
-
-dict.$keys_string = function(self){
-    // return the list of keys in a dict where are keys are strings
-    var res = []
-    if(! self[TABLE]){
-        return Object.keys(self)
-    }else{
-        res = res.concat(self[KEYS].filter((x) => x !== undefined))
-    }
-    return res
-}
-
-dict.$setitem_string = function(self, key, value){
-    // Used for dicts where all keys are strings
-    if(! self[TABLE]){
-        self[key] = value
-        return _b_.None
-    }else{
-        var h = _b_.hash(key),
-            indices = self[TABLE][h]
-        if(indices !== undefined){
-            self[VALUES][indices[0]] = value
-            return _b_.None
-        }
-    }
-    var index = self[KEYS].length
-    self[key] = index
-    self[KEYS].push(key)
-    self[VALUES].push(value)
-    self[VERSION]++
-    return _b_.None
 }
 
 dict.$getitem = function(self, key, ignore_missing){
@@ -806,60 +729,6 @@ dict.$iter_items_reversed = function*(d){
         $B.RAISE(_b_.RuntimeError, 'changed in iteration')
     }
 }
-
-dict.$iter_keys_reversed = function*(d){
-    for(var entry of dict.$iter_items_reversed(d)){
-        yield entry[0]
-    }
-}
-
-dict.$iter_values_reversed = function*(d){
-    for(var entry of dict.$iter_items_reversed(d)){
-        yield entry[1]
-    }
-}
-
-function make_reverse_iterator(name, iter_func){
-    // Create the classes to iterate on dictionary keys / values / items
-    // in reverse order
-    // iter_func is the Javascript function that returns the generator for
-    // each specific iteration
-    var klass = $B[name] // already created in init_builtin_types.js
-
-    klass.$factory = function(d){
-        return {
-            ob_type: klass,
-            d,
-            iter: iter_func(d),
-            make_iter:function(){
-                return iter_func(d)
-            }
-        }
-    }
-
-    klass.tp_iter = function(self){
-        self[Symbol.iterator] = self.make_iter
-        return self
-    }
-
-    klass.tp_iternext = function(self){
-        var res = self.iter.next()
-        if(res.done){
-            $B.RAISE(_b_.StopIteration, '')
-        }
-        return res.value
-    }
-
-    klass.__reduce_ex__ = function(self){
-        return $B.fast_tuple([_b_.iter,
-            $B.fast_tuple([$B.$list(Array.from(self.make_iter()))])])
-    }
-
-    $B.set_func_names(klass, 'builtins')
-
-    return klass
-}
-
 
 function convert_all_str(d){
     // convert dict with only str keys to regular dict

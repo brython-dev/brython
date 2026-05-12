@@ -242,7 +242,6 @@ $B.builtins_repr_check=function(builtin,args){
 var $=$B.args('__repr__',1,{self:null},args)
 var self=$.self
 if(! $B.$isinstance(self,builtin)){var _b_=$B.builtins
-console.log(Error().stack)
 $B.RAISE(_b_.TypeError,"descriptor '__repr__' requires a "+
 `'${builtin.tp_name}' object but received a `+
 `'${$B.class_name(self)}'`)}}
@@ -691,7 +690,7 @@ var pylist=['VFS_import','__future__','_aio','_ast_unparse','_codecs','_codecs_j
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
 var js=['_ajax','_ast','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_random','_sre','_sre_utils','_string','_svg','_symtable','_tokenize','_webcomponent','_webworker','_zlib_utils','aes','array','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','marshal','math','md5','modulefinder','pbkdf2','posix','pyexpat','python_re','rabbit','rabbit-legacy','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata','xml_helpers','xml_parser']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
-var pkglist=['_pyrepl','browser','browser.widgets','collections','compression','compression._common','compression.zstd','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','importlib.metadata','importlib.resources','json','logging','multiprocessing','multiprocessing.dummy','pyexpat_utils','site-packages.foobar','site-packages.simpleaio','site-packages.ui','string','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.support._hypothesis_stubs','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
+var pkglist=['_pyrepl','browser','browser.widgets','collections','compression','compression._common','compression.zstd','concurrent','concurrent.futures','concurrent.interpreters','email','email.mime','encodings','html','http','importlib','importlib.metadata','importlib.resources','json','logging','multiprocessing','multiprocessing.dummy','pyexpat_utils','site-packages.foobar','site-packages.simpleaio','site-packages.ui','string','test','test.encoded_modules','test.leakers','test.namespace_pkgs.not_a_namespace_pkg.foo','test.support','test.support._hypothesis_stubs','test.test_email','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.source','test.test_json','test.tracedmodules','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}
 $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__);
 ;
@@ -705,8 +704,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-05-10 14:18:12.810505"
-__BRYTHON__.timestamp=1778415492810
+__BRYTHON__.compiled_date="2026-05-12 15:01:22.379685"
+__BRYTHON__.timestamp=1778590882379
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1504,8 +1503,8 @@ throw missing_required_pos(fname,missing_pos)}}}
 var missing_kwonly
 for(var i=nb_pos_or_kw;i < nb_expected;i++){var arg_name=arg_names[i]
 if(kw && kw.hasOwnProperty(arg_name)){slots[arg_name]=kw[arg_name]
-kw[arg_name]=empty}else{var kw_def=_b_.dict.$get_string(kwdefaults,arg_name)
-if(kw_def !==_b_.dict.$missing){slots[arg_name]=kw_def}else{missing_kwonly=missing_kwonly ??[]
+kw[arg_name]=empty}else{var kw_def=$B.str_dict_get(kwdefaults,arg_name)
+if(kw_def !==$B.NULL){slots[arg_name]=kw_def}else{missing_kwonly=missing_kwonly ??[]
 missing_kwonly.push(arg_name)}}}
 if(missing_kwonly){throw missing_required_kwonly(fname,missing_kwonly)}
 if(! kwarg){for(var k in kw){if(! slots.hasOwnProperty(k)){var suggestion=$B.offer_suggestions_for_unexpected_keyword_error(
@@ -2192,7 +2191,7 @@ if(test){console.log('in mro',in_mro,'has delete',_b_.hasattr(in_mro,'__delete__
 if(in_mro !==$B.NULL && _b_.hasattr(in_mro,'__delete__')){return $B.$call($B.$getattr(in_mro,'__delete__'),self)}
 var dict=$B.get_dict(self)
 if(dict && $B.is_dict(dict)&&
-_b_.dict.$contains_string(dict,attr)){_b_.dict.$delete_string(dict,attr)
+$B.str_dict_contains(dict,attr)){_b_.dict.$delete_string(dict,attr)
 delete self[attr]
 return _b_.None}
 throw $B.attr_error(attr,self)}
@@ -2342,7 +2341,7 @@ var args=$B.$list([D,B])
 if(B===object){args.push(_b_.None)}else{args.push($B.$call(B,cls))}
 res.push($B.fast_tuple(args))
 var d=$B.empty_dict()
-for(var attr of _b_.dict.$keys_string($B.get_dict(cls))){_b_.dict.$setitem(d,attr,_b_.dict.$getitem_string($B.get_dict(cls),attr))}
+for(var entry of _b_.dict.$iter_items($B.get_dict(cls))){$B.str_dict_set(d,entry.key,entry.value)}
 res.push(d)
 return _b_.tuple.$factory(res)}
 object_funcs.__reduce_ex__=function(self,protocol){var klass=$B.get_class(self)
@@ -3727,13 +3726,13 @@ if(has_kw){function add_key(key,value){var index=arg_names.indexOf(key)
 if(index==-1){if(kwarg){add_to_kwargs(locals[kwarg],key,value)
 return}else{$B.RAISE(_b_.TypeError,name+
 `() got an unexpected keyword argument '${key}'`)}}
-if(locals.hasOwnProperty(key)){if(kwarg && index < posonly_length){_b_.dict.$setitem_string(locals[kwarg],key,value)
+if(locals.hasOwnProperty(key)){if(kwarg && index < posonly_length){$B.str_dict_set(locals[kwarg],key,value)
 return}
 $B.RAISE(_b_.TypeError,name+
 `() got multiple values for argument '${key}'`)}
 if(index < posonly_length){if(defaults===_b_.None ||
 index <=positional_length-defaults.length){
-if(kwarg){_b_.dict.$setitem_string(locals[kwarg],key,value)}else{posonly_as_keywords=posonly_as_keywords ??[]
+if(kwarg){$B.str_dict_set(locals[kwarg],key,value)}else{posonly_as_keywords=posonly_as_keywords ??[]
 posonly_as_keywords.push(key)}}}else{locals[key]=value
 filled_pos++}}
 var elt=last_arg
@@ -5098,8 +5097,7 @@ src=src.replace(/\r\n/g,'\n').
 replace(/\r/g,'\n')}
 var __name__='exec'
 if(_globals===_b_.None){if($B.frame_obj !==null){__name__=$B.frame_obj.frame[2]}}
-if(_globals !==_b_.None && $B.get_class(_globals)==_b_.dict &&
-_b_.dict.$contains_string(_globals,'__name__')){__name__=_b_.dict.$getitem_string(_globals,'__name__')}
+if(_globals !==_b_.None && $B.get_class(_globals)==_b_.dict){__name__=$B.str_dict_get(_globals,'__name__',__name__)}
 $B.url2name[filename]=__name__
 var frame=$B.frame_obj.frame
 $B.exec_scope=$B.exec_scope ||{}
@@ -10409,6 +10407,7 @@ if(! flag){items.push(y)}}
 return items}}
 var dict=_b_.dict
 dict.$match_mapping_pattern=true 
+$B.str_dict_contains=function(d,key){return d.hasOwnProperty(key)}
 $B.str_dict_get=function(d,key,_default){if(d.hasOwnProperty(key)){return d[key]}
 return _default===undefined ? $B.NULL :_default}
 $B.str_dict_set=function(d,attr,value){d[attr]=value}
@@ -10485,20 +10484,17 @@ self[VERSION]++
 return _b_.None}
 $B.RAISE(_b_.KeyError,_b_.str.$factory(key))}
 $B.dict_delitem=dict.$delitem
-function dict_eq(){var $=$B.args("__eq__",2,{self:null,other:null},arguments)
-var self=$.self,other=$.other
-return dict.$eq(self,other)}
-dict.$eq=function(self,other){if(! $B.$isinstance(other,dict)){return _b_.NotImplemented}
+function dict_eq(self,other){if(! $B.$isinstance(other,dict)){return _b_.NotImplemented}
 if(! self[KEYS]&& ! other[KEYS]){if(dict.mp_length(self)!==dict.mp_length(other)){return false}
 for(let k in self){if(! other.hasOwnProperty(k)){return false}
 if(! $B.is_or_equals(self[k],other[k])){return false}}
 return true}
 if(! self[KEYS]){let d=dict.tp_funcs.copy(self)
 convert_all_str(d)
-return dict.$eq(d,other)}
+return dict_eq(d,other)}
 if(! other[KEYS]){let d=dict.tp_funcs.copy(other)
 convert_all_str(d)
-return dict.$eq(self,d)}
+return dict_eq(self,d)}
 if(dict.mp_length(self)!=dict.mp_length(other)){return false}
 for(var hash in self[TABLE]){var self_pairs=[]
 for(let index of self[TABLE][hash]){self_pairs.push([self[KEYS][index],self[VALUES][index]])}
@@ -10510,40 +10506,10 @@ $B.is_or_equals(value,other_pair[1])){flag=true
 break}}
 if(! flag){return false}}}
 return true}
-dict.$contains_string=function(self,key){
-if(! self[KEYS]){return self.hasOwnProperty(key)}
-if(self[TABLE]&& self[TABLE][_b_.hash(key)]!==undefined){return true}
-return false}
 dict.$delete_string=function(self,key){
 if(! self[KEYS]){var ix=self[key]
 if(ix !==undefined){delete self[key]}}
 if(self[TABLE]){delete self[TABLE][_b_.hash(key)]}}
-dict.$missing={}
-dict.$get_string=function(self,key,_default){
-if(! self[KEYS]&& self.hasOwnProperty(key)){return self[key]}
-if(self[TABLE]&& dict.mp_length(self)){var indices=self[TABLE][_b_.hash(key)]
-if(indices !==undefined){return self[VALUES][indices[0]]}}
-return _default ?? _b_.dict.$missing}
-dict.$getitem_string=function(self,key){
-if(! self[KEYS]&& self.hasOwnProperty(key)){return self[key]}
-if(self[TABLE]){var indices=self[TABLE][_b_.hash(key)]
-if(indices !==undefined){return self[VALUES][indices[0]]}}
-$B.RAISE(_b_.KeyError,key)}
-dict.$keys_string=function(self){
-var res=[]
-if(! self[TABLE]){return Object.keys(self)}else{res=res.concat(self[KEYS].filter((x)=> x !==undefined))}
-return res}
-dict.$setitem_string=function(self,key,value){
-if(! self[TABLE]){self[key]=value
-return _b_.None}else{var h=_b_.hash(key),indices=self[TABLE][h]
-if(indices !==undefined){self[VALUES][indices[0]]=value
-return _b_.None}}
-var index=self[KEYS].length
-self[key]=index
-self[KEYS].push(key)
-self[VALUES].push(value)
-self[VERSION]++
-return _b_.None}
 dict.$getitem=function(self,key,ignore_missing){
 if(Object.hasOwn(self,$B.JSOBJ)){if(Object.hasOwn(self[$B.JSOBJ],key)){return self[$B.JSOBJ][key]}
 $B.RAISE(_b_.KeyError,key)}
@@ -10580,20 +10546,6 @@ if(d[VERSION]!==version){$B.RAISE(_b_.RuntimeError,'changed in iteration')}}}els
 if(key !==undefined){yield $B.fast_tuple([key,d[VALUES][i]])
 if(d[VERSION]!==version){$B.RAISE(_b_.RuntimeError,'changed in iteration')}}}}
 if(d[VERSION]!==version){$B.RAISE(_b_.RuntimeError,'changed in iteration')}}
-dict.$iter_keys_reversed=function*(d){for(var entry of dict.$iter_items_reversed(d)){yield entry[0]}}
-dict.$iter_values_reversed=function*(d){for(var entry of dict.$iter_items_reversed(d)){yield entry[1]}}
-function make_reverse_iterator(name,iter_func){
-var klass=$B[name]
-klass.$factory=function(d){return{
-ob_type:klass,d,iter:iter_func(d),make_iter:function(){return iter_func(d)}}}
-klass.tp_iter=function(self){self[Symbol.iterator]=self.make_iter
-return self}
-klass.tp_iternext=function(self){var res=self.iter.next()
-if(res.done){$B.RAISE(_b_.StopIteration,'')}
-return res.value}
-klass.__reduce_ex__=function(self){return $B.fast_tuple([_b_.iter,$B.fast_tuple([$B.$list(Array.from(self.make_iter()))])])}
-$B.set_func_names(klass,'builtins')
-return klass}
 function convert_all_str(d){
 d[TABLE]=Object.create(null)
 d[KEYS]=[]
@@ -11540,7 +11492,7 @@ if(Array.isArray(obj)){return obj.map(convert_to_python)}
 if($B.$isinstance(obj,$B.JSObj)){if(typeof obj=='number'){
 return $B.fast_float(obj)}
 var res=$B.empty_dict()
-for(var key in obj){_b_.dict.$setitem_string(res,key,convert_to_python(obj[key]))}
+for(var key in obj){$B.str_dict_set(res,key,convert_to_python(obj[key]))}
 return res}
 return $B.jsobj2pyobj(obj)}
 function pyargs2jsargs(pyargs){var args=new Array(pyargs.length);
@@ -11728,7 +11680,7 @@ if(events.length==0){delete _self.$brython_events[evt]}}}
 JSObj_funcs.to_dict=function(_self){
 if(typeof _self=='function'){$B.RAISE(_b_.TypeError,"method 'to_dict()' not supported for functions")}
 var res=$B.empty_dict()
-for(var key in _self){_b_.dict.$setitem_string(res,key,convert_to_python(_self[key]))}
+for(var key in _self){$B.str_dict_set(res,key,convert_to_python(_self[key]))}
 return res}
 $B.JSObj.tp_methods=["__getattr__","bind","bindings","unbind","to_dict"]
 $B.set_func_names($B.JSObj,"builtins")
@@ -11853,12 +11805,13 @@ var[class_name,bases,cl_dict]=args
 var body=`
     var _b_ = __BRYTHON__.builtins
     return function(){
-        if(_b_.dict.$contains_string(cl_dict, '__init__')){
+        var init_func = $B.str_dict_get(cl_dict, '__init__')
+        if(init_func !== $B.NULL){
             var args = [this]
             for(var i = 0, len = arguments.length; i < len; i++){
                 args.push(arguments[i])
             }
-            _b_.dict.$getitem_string(cl_dict, '__init__').apply(this, args)
+            init_func.apply(this, args)
         }else{
             return new bases[0].$js_func(...arguments)
         }
@@ -13512,7 +13465,7 @@ var browser={$package:true,$is_package:true,__initialized__:true,__package__:'br
 var $=$B.args("bind",3,{elt:null,evt:null,options:null},arguments,{options:_b_.None})
 var options=$.options
 if(typeof options=="boolean"){}else if($B.get_class(options)===_b_.dict){var _options={}
-for(var key of _b_.dict.$keys_string(options)){_options[key]=_b_.dict.$getitem_string(options,key)}
+for(var entry of _b_.dict.$iter_items(options)){_options[entry.key]=entry.value}
 options=_options}else{options==false}
 return function(callback){if($B.get_class($.elt)===$B.JSObj){
 function f(ev){try{return callback($B.jsobj2pyobj(ev))}catch(err){$B.handle_error(err)}}
@@ -14635,7 +14588,8 @@ if(block===undefined){console.log('no block',scope,scope.ast,'id',fast_id(up_sco
 console.log('scopes',scopes.slice())
 console.log('symtable',scopes.symtable)}
 if(test){console.log('block symbols',block.symbols)}
-try{flags=_b_.dict.$getitem_string(block.symbols,name)}catch(err){console.log('name',name,'not in symbols of block',block)
+var flags=$B.str_dict_get(block.symbols,name)
+if(flags===$B.NULL){console.log('name',name,'not in symbols of block',block)
 console.log('symtables',scopes.symtable)
 console.log('scopes',scopes.slice())
 return{found:false,resolve:'all'}}
@@ -14658,10 +14612,11 @@ if(global_scope.locals.has(name)){return{found:global_scope}}
 scope.needs_frames=true
 return{found:false,resolve:'global'}}else if(scope.nonlocals.has(name)){
 for(let i=scopes.length-2;i >=0;i--){block=scopes.symtable.table.blocks.get(fast_id(scopes[i].ast))
-if(block && _b_.dict.$contains_string(block.symbols,name)){var fl=_b_.dict.$getitem_string(block.symbols,name),local_to_block=
+if(block){var fl=$B.str_dict_get(block.symbols,name)
+if(fl !==$B.NULL){var local_to_block=
 [SF.LOCAL,SF.CELL].indexOf((fl >> SF.SCOPE_OFF)& SF.SCOPE_MASK)>-1
 if(! local_to_block){continue}
-return{found:scopes[i]}}}}
+return{found:scopes[i]}}}}}
 if(scope.has_import_star){if(! is_local){scope.needs_frames=true}
 return{found:false,resolve:is_local ? 'all' :'global'}}
 for(let i=scopes.length-2;i >=0;i--){block=undefined
@@ -14669,7 +14624,7 @@ if(scopes[i].ast){block=scopes.symtable.table.blocks.get(fast_id(scopes[i].ast))
 if(scopes[i].globals.has(name)){scope.needs_frames=true
 return{found:false,resolve:'global'}}
 if(scopes[i].locals.has(name)&& scopes[i].type !='class'){if(test){console.log('found in locals of',scopes[i])}
-return{found:scopes[i]}}else if(block && _b_.dict.$contains_string(block.symbols,name)){flags=_b_.dict.$getitem_string(block.symbols,name)
+return{found:scopes[i]}}else if(block && $B.str_dict_contains(block.symbols,name)){flags=$B.str_dict_get(block.symbols,name)
 let __scope=(flags >> SF.SCOPE_OFF)& SF.SCOPE_MASK
 if([SF.LOCAL,SF.CELL].indexOf(__scope)>-1){
 return{found:false,resolve:'all'}}}
@@ -15605,9 +15560,10 @@ if(this.args.vararg){flags |=$B.COMPILER_FLAGS.VARARGS}
 if(this.args.kwarg){flags |=$B.COMPILER_FLAGS.VARKEYWORDS}
 if(is_generator){flags |=$B.COMPILER_FLAGS.GENERATOR}
 if(is_async){flags |=$B.COMPILER_FLAGS.COROUTINE}
-var parameters=[],locals=[],identifiers=_b_.dict.$keys_string(symtable_block.symbols)
+var parameters=[],locals=[]
 var free_vars=[]
-for(var ident of identifiers){var flag=_b_.dict.$getitem_string(symtable_block.symbols,ident),_scope=(flag >> SF.SCOPE_OFF)& SF.SCOPE_MASK
+for(var entry of _b_.dict.$iter_items(symtable_block.symbols)){var ident=entry.key
+var flag=entry.value,_scope=(flag >> SF.SCOPE_OFF)& SF.SCOPE_MASK
 if(_scope==SF.FREE){free_vars.push(`'${ident}'`)}
 if(flag & SF.DEF_PARAM){parameters.push(`'${ident}'`)}else if(flag & SF.DEF_LOCAL){locals.push(`'${ident}'`)}}
 var varnames=parameters.concat(locals)
@@ -16604,8 +16560,7 @@ for(let item of seq){visitor.stmt(st,item)}
 break}
 symtable_analyze(st)
 return st.top;}
-function _PyST_GetSymbol(ste,name){if(! _b_.dict.$contains_string(ste.symbols,name)){return 0}
-return _b_.dict.$getitem_string(ste.symbols,name)}
+function _PyST_GetSymbol(ste,name){return $B.str_dict_get(ste.symbols,name,0)}
 function _PyST_GetScope(ste,name){var symbol=_PyST_GetSymbol(ste,name);
 return(symbol >> SF.SCOPE_OFFSET)& SF.SCOPE_MASK;}
 function _PyST_IsFunctionLike(ste){return ste.type==FunctionBlock
@@ -16639,7 +16594,7 @@ continue;}
 var scope=(comp_flags >> SF.SCOPE_OFFSET)& SF.SCOPE_MASK;
 var only_flags=comp_flags &((1 << SF.SCOPE_OFFSET)-1)
 if(scope==SF.CELL ||only_flags & SF.DEF_COMP_CELL){inlined_cells.add(k)}
-var existing=_b_.dict.$contains_string(ste.symbols,k)
+var existing=$B.str_dict_contains(ste.symbols,k)
 if(!existing){
 var v_flags=only_flags
 _b_.dict.$setitem(ste.symbols,k,v_flags);
@@ -16703,8 +16658,9 @@ res=free.delete('__classdict__')
 if(res){ste.needs_class_classdict=1}
 return 1}
 function update_symbols(symbols,scopes,bound,free,inlined_cells,classflag){var v,v_scope,v_new,v_free
-for(let name of _b_.dict.$keys_string(symbols)){var test=false 
-let flags=_b_.dict.$getitem_string(symbols,name)
+for(let entry of _b_.dict.$iter_items(symbols)){let name=entry.key
+var test=false 
+let flags=entry.value
 if(test){console.log('in update symbols, name',name,'flags',flags,flags & SF.DEF_COMP_CELL)}
 if(inlined_cells.has(name)){flags |=SF.DEF_COMP_CELL}
 v_scope=scopes[name]
@@ -16714,18 +16670,18 @@ flags |=(scope << SF.SCOPE_OFFSET)
 v_new=flags
 if(!v_new){return 0;}
 if(test){console.log('set symbol',name,'v_new',v_new,'def comp cell',SF.DEF_COMP_CELL,v_new & SF.DEF_COMP_CELL)}
-_b_.dict.$setitem_string(symbols,name,v_new)}
+$B.str_dict_set(symbols,name,v_new)}
 v_free=SF.FREE << SF.SCOPE_OFFSET
-for(let name of free){v=_b_.dict.$get_string(symbols,name)
-if(v !==_b_.dict.$missing){
+for(let name of free){v=$B.str_dict_get(symbols,name)
+if(v !==$B.NULL){
 if(classflag &&
 v &(SF.DEF_BOUND |SF.DEF_GLOBAL)){let flags=v |SF.DEF_FREE_CLASS;
 v_new=flags;
 if(! v_new){return 0;}
-_b_.dict.$setitem_string(symbols,name,v_new)}
+$B.str_dict_set(symbols,name,v_new)}
 continue;}
 if(bound && !bound.has(name)){continue;}
-_b_.dict.$setitem_string(symbols,name,v_free)}
+$B.str_dict_set(symbols,name,v_free)}
 return 1}
 function analyze_block(ste,bound,free,global,typeparams,class_entry){var success=0
 let local=new Set()
@@ -16737,7 +16693,8 @@ let inlined_cells=new Set()
 if(ste.type===ClassBlock){
 Set_Union(newglobal,global)
 if(bound){Set_Union(newbound,bound)}}
-for(let name of _b_.dict.$keys_string(ste.symbols)){var flags=_b_.dict.$getitem_string(ste.symbols,name)
+for(let entry of _b_.dict.$iter_items(ste.symbols)){var name=entry.key
+var flags=entry.value
 if(!analyze_name(ste,scopes,name,flags,bound,local,free,global,typeparams,class_entry)){return 0}}
 if(ste.type !=ClassBlock){
 if(_PyST_IsFunctionLike(ste)){Set_Union(newbound,local);}
@@ -16795,8 +16752,8 @@ return ret;}
 function symtable_add_def_helper(st,name,flag,ste,_location){var o,dict,val,mangled=_Py_Mangle(st.private,name)
 if(!mangled){return 0}
 dict=ste.symbols
-if(_b_.dict.$contains_string(dict,mangled)){o=_b_.dict.$getitem_string(dict,mangled)
-val=o
+var o=$B.str_dict_get(dict,mangled)
+if(o !==$B.NULL){val=o
 if((flag & SF.DEF_PARAM)&&(val & SF.DEF_PARAM)){
 let exc=PyErr_Format(_b_.SyntaxError,DUPLICATE_ARGUMENT,name);
 set_exc_info(exc,st.filename,..._location)

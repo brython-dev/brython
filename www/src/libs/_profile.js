@@ -51,8 +51,8 @@ var $module=(function($B) {
                     parent_block: $B.builtins_scope,
                     binding: {}
                 }
-                for(var attr of _b_.dict.$keys_string(_globals)){
-                    parent_scope.binding[attr] = true
+                for(var entry of _b_.dict.$iter_items(_globals)){
+                    parent_scope.binding[entry.key] = true
                 }
             }
 
@@ -61,8 +61,8 @@ var $module=(function($B) {
                 var items = _globals.$jsobj
             }else{
                 var items = {}
-                for(var key of _b_.dict.$keys_string(_globals)){
-                    items[key] = _b_.dict.$getitem_string(_globals, key)
+                for(var entry of _b_.dict.$iter_items(_globals)){
+                    items[entry.key] = entry.value
                 }
             }
             for(var item in items){
@@ -83,8 +83,8 @@ var $module=(function($B) {
                 var items = _locals.$jsobj
             }else{
                 var items = {}
-                for(var key of _b_.dict.$keys_string(_locals)){
-                    items[key] = _b_.dict.$getitem_string(_locals, key)
+                for(var entry of _b_.dict.$iter_items(_locals)){
+                    items[entry.key] = entry.value
                 }            }
             for(var item in items){
                 item1 = to_alias(item)

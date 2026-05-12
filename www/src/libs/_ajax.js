@@ -303,8 +303,8 @@ function file_upload(){
         ajax.tp_funcs.set_timeout(self, timeout.seconds, timeout.func)
     }
 
-    var method = _b_.dict.$get_string(kw, 'method', 'POST'),
-        field_name = _b_.dict.$get_string(kw, 'field_name', 'filetosave')
+    var method = $B.str_dict_get(kw, 'method', 'POST'),
+        field_name = $B.str_dict_get(kw, 'field_name', 'filetosave')
 
     var formdata = new FormData()
     formdata.append(field_name, file, file.name)
