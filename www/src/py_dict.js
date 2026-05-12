@@ -616,7 +616,7 @@ dict.$getitem = function(self, key, ignore_missing){
     // ignore_missing is set in dict.get and dict.setdefault
     if(Object.hasOwn(self, $B.JSOBJ)){
         if(Object.hasOwn(self[$B.JSOBJ], key)){
-            return self[$B.JSOBJ][key]
+            return $B.jsobj2pyobj(self[$B.JSOBJ][key])
         }
         $B.RAISE(_b_.KeyError, key)
     }

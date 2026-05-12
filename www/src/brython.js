@@ -705,8 +705,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-05-12 14:58:32.706312"
-__BRYTHON__.timestamp=1778590712705
+__BRYTHON__.compiled_date="2026-05-12 16:42:58.846813"
+__BRYTHON__.timestamp=1778596978846
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1596,7 +1596,7 @@ return $B.DOMNode}else if(obj instanceof Event){return $B.DOMEvent}else if(obj.o
 if(obj instanceof view.Node){if(obj.tagName){var res=$B.module_getattr($B.imported['browser.html'],obj.tagName)
 return res===$B.NULL ? $B.DOMNode :res}
 return $B.DOMNode}else if(obj instanceof view.event){return $B.DOMEvent}}else if(obj.defaultView){
-return $B.DOMNode}}
+return $B.DOMNode}}else if(obj instanceof Event){return $B.DOMEvent}
 break}
 return $B.get_jsobj_class(obj)}
 $B.set_type=function(obj,type){obj.ob_type=type}
@@ -4512,7 +4512,9 @@ $B.RAISE_ATTRIBUTE_ERROR("Javascript object '"+obj+
 var rawname=attr
 if(obj===undefined){console.log("get attr",attr,"of undefined")}
 var is_class=Object.hasOwn(obj,'tp_name')
-if(test){console.log("attr",attr,"of",obj,"class",klass ?? $B.get_class(obj),"isclass",is_class)}
+if(test){console.log("attr",attr,"of",obj,"class",$B.get_class(obj),"isclass",is_class)
+console.log('typeof Node',typeof Node)
+console.log('is Event ?',obj instanceof Event)}
 if(! is_class){var klass=$B.get_class(obj)
 if(test){console.log('klass',klass)}
 if(klass.tp_funcs && klass.$getattribute===_b_.object.tp_getattro){
@@ -10512,7 +10514,7 @@ if(! self[KEYS]){var ix=self[key]
 if(ix !==undefined){delete self[key]}}
 if(self[TABLE]){delete self[TABLE][_b_.hash(key)]}}
 dict.$getitem=function(self,key,ignore_missing){
-if(Object.hasOwn(self,$B.JSOBJ)){if(Object.hasOwn(self[$B.JSOBJ],key)){return self[$B.JSOBJ][key]}
+if(Object.hasOwn(self,$B.JSOBJ)){if(Object.hasOwn(self[$B.JSOBJ],key)){return $B.jsobj2pyobj(self[$B.JSOBJ][key])}
 $B.RAISE(_b_.KeyError,key)}
 if(! self[TABLE]){if(typeof key=='string'){if(self.hasOwnProperty(key)){return self[key]}}else{var hash_method=$B.$getattr($B.get_class(key),'__hash__')
 if(hash_method !==$B.str_dict_get($B.get_dict(_b_.object),'__hash__')){convert_all_str(self)
@@ -12128,10 +12130,7 @@ var pt=svg_elt.createSVGPoint()
 pt.x=coords.x
 pt.y=coords.y
 return pt.matrixTransform(svg_elt.getScreenCTM().inverse())}
-DOMEvent.tp_getattro=function(ev,attr){switch(attr){case '__repr__':
-case '__str__':
-return function(){return '<DOMEvent object>'}
-case 'x':
+DOMEvent.tp_getattro=function(ev,attr){switch(attr){case 'x':
 return $mouseCoords(ev).x
 case 'y':
 return $mouseCoords(ev).y
