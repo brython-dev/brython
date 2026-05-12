@@ -521,6 +521,8 @@ $B.get_class = function(obj){
                     // document in an iframe
                     return $B.DOMNode
                 }
+            }else if(obj instanceof Event){
+                return $B.DOMEvent
             }
             break
     }
