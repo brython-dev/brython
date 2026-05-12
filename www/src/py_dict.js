@@ -531,14 +531,7 @@ dict.$delitem  = function(self, key){
 
 $B.dict_delitem = dict.$delitem
 
-function dict_eq(){
-    var $ = $B.args("__eq__", 2, {self: null, other: null}, arguments)
-    var self = $.self,
-        other = $.other
-    return dict.$eq(self, other)
-}
-
-dict.$eq = function(self, other){
+function dict_eq(self, other){
     if(! $B.$isinstance(other, dict)){
         return _b_.NotImplemented
     }
@@ -561,12 +554,12 @@ dict.$eq = function(self, other){
     if(! self[KEYS]){
         let d = dict.tp_funcs.copy(self)
         convert_all_str(d)
-        return dict.$eq(d, other)
+        return dict_eq(d, other)
     }
     if(! other[KEYS]){
         let d = dict.tp_funcs.copy(other)
         convert_all_str(d)
-        return dict.$eq(self, d)
+        return dict_eq(self, d)
     }
 
     if(dict.mp_length(self) != dict.mp_length(other)){
@@ -736,60 +729,6 @@ dict.$iter_items_reversed = function*(d){
         $B.RAISE(_b_.RuntimeError, 'changed in iteration')
     }
 }
-
-dict.$iter_keys_reversed = function*(d){
-    for(var entry of dict.$iter_items_reversed(d)){
-        yield entry[0]
-    }
-}
-
-dict.$iter_values_reversed = function*(d){
-    for(var entry of dict.$iter_items_reversed(d)){
-        yield entry[1]
-    }
-}
-
-function make_reverse_iterator(name, iter_func){
-    // Create the classes to iterate on dictionary keys / values / items
-    // in reverse order
-    // iter_func is the Javascript function that returns the generator for
-    // each specific iteration
-    var klass = $B[name] // already created in init_builtin_types.js
-
-    klass.$factory = function(d){
-        return {
-            ob_type: klass,
-            d,
-            iter: iter_func(d),
-            make_iter:function(){
-                return iter_func(d)
-            }
-        }
-    }
-
-    klass.tp_iter = function(self){
-        self[Symbol.iterator] = self.make_iter
-        return self
-    }
-
-    klass.tp_iternext = function(self){
-        var res = self.iter.next()
-        if(res.done){
-            $B.RAISE(_b_.StopIteration, '')
-        }
-        return res.value
-    }
-
-    klass.__reduce_ex__ = function(self){
-        return $B.fast_tuple([_b_.iter,
-            $B.fast_tuple([$B.$list(Array.from(self.make_iter()))])])
-    }
-
-    $B.set_func_names(klass, 'builtins')
-
-    return klass
-}
-
 
 function convert_all_str(d){
     // convert dict with only str keys to regular dict

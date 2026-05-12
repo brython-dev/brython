@@ -705,8 +705,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-05-11 17:15:43.733122"
-__BRYTHON__.timestamp=1778512543732
+__BRYTHON__.compiled_date="2026-05-12 14:58:32.706312"
+__BRYTHON__.timestamp=1778590712705
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -10485,20 +10485,17 @@ self[VERSION]++
 return _b_.None}
 $B.RAISE(_b_.KeyError,_b_.str.$factory(key))}
 $B.dict_delitem=dict.$delitem
-function dict_eq(){var $=$B.args("__eq__",2,{self:null,other:null},arguments)
-var self=$.self,other=$.other
-return dict.$eq(self,other)}
-dict.$eq=function(self,other){if(! $B.$isinstance(other,dict)){return _b_.NotImplemented}
+function dict_eq(self,other){if(! $B.$isinstance(other,dict)){return _b_.NotImplemented}
 if(! self[KEYS]&& ! other[KEYS]){if(dict.mp_length(self)!==dict.mp_length(other)){return false}
 for(let k in self){if(! other.hasOwnProperty(k)){return false}
 if(! $B.is_or_equals(self[k],other[k])){return false}}
 return true}
 if(! self[KEYS]){let d=dict.tp_funcs.copy(self)
 convert_all_str(d)
-return dict.$eq(d,other)}
+return dict_eq(d,other)}
 if(! other[KEYS]){let d=dict.tp_funcs.copy(other)
 convert_all_str(d)
-return dict.$eq(self,d)}
+return dict_eq(self,d)}
 if(dict.mp_length(self)!=dict.mp_length(other)){return false}
 for(var hash in self[TABLE]){var self_pairs=[]
 for(let index of self[TABLE][hash]){self_pairs.push([self[KEYS][index],self[VALUES][index]])}
@@ -10550,20 +10547,6 @@ if(d[VERSION]!==version){$B.RAISE(_b_.RuntimeError,'changed in iteration')}}}els
 if(key !==undefined){yield $B.fast_tuple([key,d[VALUES][i]])
 if(d[VERSION]!==version){$B.RAISE(_b_.RuntimeError,'changed in iteration')}}}}
 if(d[VERSION]!==version){$B.RAISE(_b_.RuntimeError,'changed in iteration')}}
-dict.$iter_keys_reversed=function*(d){for(var entry of dict.$iter_items_reversed(d)){yield entry[0]}}
-dict.$iter_values_reversed=function*(d){for(var entry of dict.$iter_items_reversed(d)){yield entry[1]}}
-function make_reverse_iterator(name,iter_func){
-var klass=$B[name]
-klass.$factory=function(d){return{
-ob_type:klass,d,iter:iter_func(d),make_iter:function(){return iter_func(d)}}}
-klass.tp_iter=function(self){self[Symbol.iterator]=self.make_iter
-return self}
-klass.tp_iternext=function(self){var res=self.iter.next()
-if(res.done){$B.RAISE(_b_.StopIteration,'')}
-return res.value}
-klass.__reduce_ex__=function(self){return $B.fast_tuple([_b_.iter,$B.fast_tuple([$B.$list(Array.from(self.make_iter()))])])}
-$B.set_func_names(klass,'builtins')
-return klass}
 function convert_all_str(d){
 d[TABLE]=Object.create(null)
 d[KEYS]=[]
