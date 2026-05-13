@@ -105,6 +105,7 @@ class A:
 assert not (main == diff)
 assert diff == {A(): 1}
 assert not (main == {A(): 1})
+assert A() in diff
 
 # membership doesn't raise exception "dict changed size during iteration"
 # cf. issue 1114

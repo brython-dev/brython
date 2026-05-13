@@ -705,8 +705,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-05-13 08:33:29.542047"
-__BRYTHON__.timestamp=1778654009541
+__BRYTHON__.compiled_date="2026-05-13 12:24:05.074483"
+__BRYTHON__.timestamp=1778667845074
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -7524,7 +7524,7 @@ if($B.$isinstance(other,[set,frozenset])){other_size=set.mp_length(other)}else i
 other_is_dict=true}else{return set_copy_and_difference(so,other)}
 if(set.mp_length(so)>> 2 > other_size){return set_copy_and_difference(so,other);}
 var result=make_new_set()
-if(other_is_dict){for(let entry of set_iter_with_hash(so)){if(! _b_.dict.$lookup_by_key(other,entry.item,entry.hash).found){set_add(result,entry.item,entry.hash)}}
+if(other_is_dict){for(let entry of set_iter_with_hash(so)){if(! _b_.dict.$contains(other,entry.item,entry.hash)){set_add(result,entry.item,entry.hash)}}
 return result}
 for(let entry of set_iter_with_hash(so)){if(! set_contains(other,entry.item,entry.hash)){set_add(result,entry.item,entry.hash)}}
 result.ob_type=$B.get_class(so)
@@ -10431,11 +10431,6 @@ dict.$to_obj=function(d){
 var res={}
 for(var entry of dict.$iter_items(d)){res[entry.key]=entry.value}
 return res}
-dict.$set_like=function(self){
-for(var v of self[VALUES]){if(v===undefined){continue}else if(typeof v=='string' ||
-typeof v=='number' ||
-typeof v=='boolean'){continue}else if([_b_.tuple,_b_.float,_b_.complex].includes($B.get_class(v))){continue}else if(! _b_.hasattr($B.get_class(v),'__hash__')){return false}}
-return true}
 dict.$iter_items=function*(d){if(! d[KEYS]){for(let key in d){if(key !='$dict_strings'){yield{key,value:d[key]}}}
 return}
 var version=d[VERSION]
@@ -10447,7 +10442,8 @@ right[VERSION]=right[VERSION]||0
 var right_version=right[VERSION]
 if(! right[KEYS]){if(! left[KEYS]){for(let key in right){left[key]=right[key]}}else{for(let key in right){dict.$setitem(left,key,right[key])}}}else{for(var entry of dict.$iter_items(right)){dict.$setitem(left,entry.key,entry.value,entry.hash)
 if(right[VERSION]!=right_version){$B.RAISE(_b_.RuntimeError,"dict mutated during update")}}}}
-function lookup_by_key(d,key,hash){hash=hash===undefined ? _b_.hash(key):hash
+function lookup_by_key(d,key,hash){
+hash=hash ?? _b_.hash(key)
 var indices=d[TABLE][hash],index
 if(indices !==undefined){for(var index of indices){var v=d[KEYS][index]
 if(v===undefined){d[TABLE][hash].splice(i,1)
@@ -10468,11 +10464,12 @@ if($B.is_or_equals(d[KEYS][index],key)){return{
 found:true,key:d[KEYS][index],value:d[VALUES][index],hash,rank:i,index}}}}
 return{
 found:false,hash}}
-dict.$contains=function(self,key){if(! self[KEYS]){if(typeof key=='string'){return self.hasOwnProperty(key)}
-var hash=$B.$getattr($B.get_class(key),'__hash__')
-if(hash===$B.str_dict_get($B.get_dict(_b_.object),'__hash__')){return false}
+dict.$contains=function(self,key,hash){if(! self[KEYS]){if(typeof key=='string'){return self.hasOwnProperty(key)}
+var hash_method=$B.$getattr($B.get_class(key),'__hash__')
+if(hash_method===$B.str_dict_get($B.get_dict(_b_.object),'__hash__')){return false}
+var hash=$B.$call(hash_method,key)
 convert_all_str(self)}
-return lookup_by_key(self,key)!==null}
+return lookup_by_key(self,key,hash)!==null}
 dict.$delitem=function(self,key){if(self[$B.JSOBJ]){delete self[$B.JSOBJ][key]}
 if(! self[KEYS]){if(typeof key=='string'){if(self.hasOwnProperty(key)){dict.$delete_string(self,key)
 return _b_.None}else{$B.RAISE(_b_.KeyError,key)}}

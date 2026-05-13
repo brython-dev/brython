@@ -347,31 +347,13 @@ $B.dict_as_jsobj = function(d){
 
 dict.$to_obj = function(d){
     // Function applied to dictionary that only has string keys,
-    // return a Javascript objects with the keys mapped to the value,
+    // return a Javascript object with the keys mapped to the value,
     // excluding the insertion rank
     var res = {}
     for(var entry of dict.$iter_items(d)){
         res[entry.key] = entry.value
     }
     return res
-}
-
-dict.$set_like = function(self){
-    // return true if all values are hashable
-    for(var v of self[VALUES]){
-        if(v === undefined){
-            continue
-        }else if(typeof v == 'string' ||
-                typeof v == 'number' ||
-                typeof v == 'boolean'){
-            continue
-        }else if([_b_.tuple, _b_.float, _b_.complex].includes($B.get_class(v))){
-            continue
-        }else if(! _b_.hasattr($B.get_class(v), '__hash__')){
-            return false
-        }
-    }
-    return true
 }
 
 dict.$iter_items = function*(d){
@@ -396,7 +378,6 @@ dict.$iter_items = function*(d){
         $B.RAISE(_b_.RuntimeError, 'changed in iteration')
     }
 }
-
 
 var $copy_dict = function(left, right){
     // left and right are dicts
@@ -423,7 +404,8 @@ var $copy_dict = function(left, right){
 }
 
 function lookup_by_key(d, key, hash){
-    hash = hash === undefined ? _b_.hash(key) : hash
+    // only used for dictionaries with a TABLE
+    hash = hash ?? _b_.hash(key)
     var indices = d[TABLE][hash],
         index
     if(indices !== undefined){
@@ -481,19 +463,22 @@ dict.$lookup_by_key = function(d, key, hash){
     }
 }
 
-dict.$contains = function(self, key){
+dict.$contains = function(self, key, hash){
     if(! self[KEYS]){
         if(typeof key == 'string'){
             return self.hasOwnProperty(key)
         }
-        var hash = $B.$getattr($B.get_class(key), '__hash__')
-        if(hash === $B.str_dict_get($B.get_dict(_b_.object), '__hash__')){
+        var hash_method = $B.$getattr($B.get_class(key), '__hash__')
+        if(hash_method === $B.str_dict_get($B.get_dict(_b_.object), '__hash__')){
             return false
         }
+        var hash = $B.$call(hash_method, key)
+        // If the object has a specific __hash__ method, we must check that
+        // no object with the same hash exists
         convert_all_str(self)
     }
 
-    return lookup_by_key(self, key) !== null
+    return lookup_by_key(self, key, hash) !== null
 }
 
 dict.$delitem  = function(self, key){

@@ -93,7 +93,7 @@ function set_difference(so, other){
 
     if(other_is_dict){
         for(let entry of set_iter_with_hash(so)){
-            if(! _b_.dict.$lookup_by_key(other, entry.item, entry.hash).found){
+            if(! _b_.dict.$contains(other, entry.item, entry.hash)){
                 set_add(result, entry.item, entry.hash)
             }
         }
