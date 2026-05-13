@@ -409,7 +409,7 @@ ajax_funcs.bind = function(self, evt, func){
     // req.bind(evt,func) is the same as req.onevt = func
     self.js['on' + evt] = function(){
         try{
-            return func.apply(null, arguments)
+            return $B.$call(func, ...arguments)
         }catch(err){
             $B.handle_error(err)
         }

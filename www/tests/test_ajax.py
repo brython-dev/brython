@@ -177,4 +177,25 @@ ajax.post(url,
           data=form_data,
           oncomplete=oncomplete)
 
+# issue 2682
+class Overlay2682:
+
+    _oauth_validate_url: str = "https://id.twitch.tv/oauth2/validate"
+
+    def __init__(self):
+        self.connect()
+
+    def connect(self):
+        headers = {}
+        async_tester.assertIsNone(
+            ajax.get(self._oauth_validate_url, mode="json", headers=headers,
+                oncomplete=self._oncomplete)
+        )
+
+    def _oncomplete(self, evt):
+        console.debug(evt)
+
+
+overlay2682 = Overlay2682()
+
 print('passed all tests...')
