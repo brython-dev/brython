@@ -2451,7 +2451,6 @@ _b_.bytes.tp_new = function(cls, args, kw){
         return res
     }
     if(encoding !== $B.NULL){
-        console.log('encoding', encoding)
         $B.RAISE(_b_.TypeError, "encoding without a string argument")
     }
     if(typeof source == "number" || $B.is_int(source)){
