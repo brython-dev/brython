@@ -3352,6 +3352,7 @@ try:
     raise AssertionError("should have raised AttributeError")
 except AttributeError as e:
     assert "deletion not allowed" in str(e)
+
 # issue 2650 - WeakKeyDictionary.setdefault() raises JavascriptError
 import weakref
 
@@ -3362,6 +3363,13 @@ foo2650 = Foo2650()
 tags2650 = weakref.WeakKeyDictionary()
 tags2650.setdefault(foo2650, 1)
 assert tags2650[foo2650] == 1
+
+# issue 2683
+def f2683():
+  pass
+
+assert f2683.__annotate__ is None
+assert f2683.__annotations__ == {}
 
 # ==========================================
 # Finally, report that all tests have passed
