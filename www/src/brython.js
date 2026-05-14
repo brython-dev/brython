@@ -705,8 +705,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-05-13 12:24:05.074483"
-__BRYTHON__.timestamp=1778667845074
+__BRYTHON__.compiled_date="2026-05-14 08:26:23.074857"
+__BRYTHON__.timestamp=1778739983071
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1549,7 +1549,7 @@ if((x.$kw && x.$kw[0]&& Object.keys(x.$kw[0]).length > 0)||
 (y !==undefined && y.$kw)){$B.RAISE(_b_.TypeError,name+"() takes no keyword arguments")}}
 $B.keyword_is_empty=function(kw){var first=kw[0]
 for(var key in first){return false}
-for(var i=1;i < kw.length;i++){for(var item of _b_.dict.$iter_items(kw[i])){return false}}
+for(var i=1;i < kw.length;i++){if(_b_.dict.mp_length(kw[i])> 0){return false}}
 return true}
 $B.check_nb_args_no_kw=function(name,expected,args){
 var len=args.length,last=args[len-1]
@@ -2882,8 +2882,7 @@ class_obj,'__dict__',[object_get_dict,$B.set_dict]
 $B.make_init(class_obj)
 $B.make_setattr(class_obj)
 if(test){console.log('scan cl_dict')}
-for(var item of _b_.dict.$iter_items(cl_dict)){if(test){console.log('item in cl dict',item)}
-var key=item.key,v=item.value
+for(var[key,v]of Object.entries(cl_dict)){if(test){console.log('item in cl dict',item)}
 if(test){}
 if(['__module__','__doc__','__dict__','__qualname__','__firstlineno__','__static_attributes__','__annotate_func__'].includes(key)){continue}
 if(key=='__class_getitem__'){
@@ -7214,8 +7213,7 @@ if(! $B.$isinstance(res,bytes)){$B.RAISE(_b_.TypeError,`'${encoding}' codec retu
 `${$B.class_name(res)}, not bytes`)}
 res.ob_type=cls
 return res}
-if(encoding !==$B.NULL){console.log('encoding',encoding)
-$B.RAISE(_b_.TypeError,"encoding without a string argument")}
+if(encoding !==$B.NULL){$B.RAISE(_b_.TypeError,"encoding without a string argument")}
 if(typeof source=="number" ||$B.is_int(source)){var size=$B.PyNumber_Index(source)
 source=[]
 for(var i=0;i < size;i++){source[i]=0}}else if($B.$isinstance(source,[_b_.bytes,_b_.bytearray])){source=source.source}else if($B.$isinstance(source,_b_.memoryview)){source=source.obj.source}else if($B.imported.array &&
@@ -10319,6 +10317,7 @@ const KEYS=Symbol('KEYS')
 const VALUES=Symbol('VALUES')
 const HASHES=Symbol('HASHES')
 const TABLE=Symbol('TABLE')
+const SIZE=Symbol('SIZE')
 $B.dict_proxy=function(dict){
 if($B.exact_type(dict,_b_.dict)){
 return dict}
@@ -10419,6 +10418,9 @@ $B.str_dict_pop=function(d,attr){if(! d.hasOwnProperty(attr)){return $B.NULL}
 delete d[attr]}
 $B.str_dict_empty=function(d){return Object.keys(d).length==0}
 $B.str_dict_length=function(d){return Object.keys(d).length}
+$B.items_iterator=function(d){
+var res=[]
+if(self[KEYS]){for(var i=0,len=self[KEYS].length;i < len;i++){res.push([self[KEYS][i],self[VALUES[i]]])}}}
 $B.hasOnlyStringKeys=function(d){return ! d[KEYS]}
 $B.dict2kwarg=function(d){
 var kw=dict.$to_obj(d)
@@ -10431,18 +10433,20 @@ dict.$to_obj=function(d){
 var res={}
 for(var entry of dict.$iter_items(d)){res[entry.key]=entry.value}
 return res}
-dict.$iter_items=function*(d){if(! d[KEYS]){for(let key in d){if(key !='$dict_strings'){yield{key,value:d[key]}}}
+dict.$iter_items=function*(d){var version=d[VERSION]
+if(! d[KEYS]){for(let key in d){yield{key,value:d[key]}
+if(d[VERSION]!==version){console.log('d',d)
+console.log('version',version,'d[VERSION]',d[VERSION])
+$B.RAISE(_b_.RuntimeError,'dictionary changed size during iteration 1')}}
 return}
-var version=d[VERSION]
 for(var i=0,len=d[KEYS].length;i < len;i++){if(d[KEYS][i]!==undefined){yield{key:d[KEYS][i],value:d[VALUES][i],hash:d[HASHES][i]}
-if(d[VERSION]!==version){$B.RAISE(_b_.RuntimeError,'changed in iteration')}}}
-if(d[VERSION]!==version){$B.RAISE(_b_.RuntimeError,'changed in iteration')}}
+if(d[VERSION]!==version){$B.RAISE(_b_.RuntimeError,'dictionary changed size during iteration 2')}}}}
 var $copy_dict=function(left,right){
 right[VERSION]=right[VERSION]||0
 var right_version=right[VERSION]
 if(! right[KEYS]){if(! left[KEYS]){for(let key in right){left[key]=right[key]}}else{for(let key in right){dict.$setitem(left,key,right[key])}}}else{for(var entry of dict.$iter_items(right)){dict.$setitem(left,entry.key,entry.value,entry.hash)
 if(right[VERSION]!=right_version){$B.RAISE(_b_.RuntimeError,"dict mutated during update")}}}}
-function lookup_by_key(d,key,hash){
+function index_by_key(d,key,hash){
 hash=hash ?? _b_.hash(key)
 var indices=d[TABLE][hash],index
 if(indices !==undefined){for(var index of indices){var v=d[KEYS][index]
@@ -10469,11 +10473,11 @@ var hash_method=$B.$getattr($B.get_class(key),'__hash__')
 if(hash_method===$B.str_dict_get($B.get_dict(_b_.object),'__hash__')){return false}
 var hash=$B.$call(hash_method,key)
 convert_all_str(self)}
-return lookup_by_key(self,key,hash)!==null}
+return index_by_key(self,key,hash)!==null}
 dict.$delitem=function(self,key){if(self[$B.JSOBJ]){delete self[$B.JSOBJ][key]}
-if(! self[KEYS]){if(typeof key=='string'){if(self.hasOwnProperty(key)){dict.$delete_string(self,key)
+if(! self[KEYS]){if(typeof key=='string'){if(self.hasOwnProperty(key)){delete self[key]
 return _b_.None}else{$B.RAISE(_b_.KeyError,key)}}
-if(! dict.sq_contains(self,key)){$B.RAISE(_b_.KeyError,_b_.str.$factory(key))}}
+if(! dict.$contains(self,key)){$B.RAISE(_b_.KeyError,_b_.str.$factory(key))}}
 var lookup=dict.$lookup_by_key(self,key)
 if(lookup.found){self[TABLE][lookup.hash].splice(lookup.rank,1)
 if(self[TABLE][lookup.hash].length==0){delete self[TABLE][lookup.hash]}
@@ -10513,11 +10517,11 @@ if(self[TABLE]){delete self[TABLE][_b_.hash(key)]}}
 dict.$getitem=function(self,key,ignore_missing){
 if(Object.hasOwn(self,$B.JSOBJ)){if(Object.hasOwn(self[$B.JSOBJ],key)){return $B.jsobj2pyobj(self[$B.JSOBJ][key])}
 $B.RAISE(_b_.KeyError,key)}
-if(! self[TABLE]){if(typeof key=='string'){if(self.hasOwnProperty(key)){return self[key]}}else{var hash_method=$B.$getattr($B.get_class(key),'__hash__')
+if(typeof key=='string'){if(self.hasOwnProperty(key)){return self[key]}}else{if(! self[TABLE]){var hash_method=$B.$getattr($B.get_class(key),'__hash__')
 if(hash_method !==$B.str_dict_get($B.get_dict(_b_.object),'__hash__')){convert_all_str(self)
-let index=lookup_by_key(self,key)
-if(index !==null){return self[VALUES][index]}}}}else{let index=lookup_by_key(self,key)
-if(index !==null){return self[VALUES][index]}}
+let index=index_by_key(self,key)
+if(index !==null){return self[VALUES][index]}}}else{let index=index_by_key(self,key)
+if(index !==null){return self[VALUES][index]}}}
 if(! ignore_missing){var klass=$B.get_class(self)
 if(klass !==dict && ! ignore_missing){try{var missing_method=$B.$getattr(klass,"__missing__",_b_.None)}catch(err){console.log(err)}
 if(missing_method !==_b_.None){return missing_method(self,key)}}}
@@ -10557,10 +10561,14 @@ dict.$setitem=function(self,key,value,$hash,from_setdefault){
 if(self[$B.JSOBJ]){
 value=$B.pyobj2jsobj(value)
 self[$B.JSOBJ][key]=value}
+var new_str_key
 if(typeof key=='string'){
+new_str_key=! Object.hasOwn(self,key)
 self[key]=value}
 if(! self[TABLE]){if(typeof key=='string'){var int=parseInt(key)
-if(isNaN(int)||int >=0){self[key]=value
+if(isNaN(int)||int >=0){if(new_str_key){self[VERSION]=self[VERSION]?? 0
+self[VERSION]++}
+self[key]=value
 return _b_.None}else{
 convert_all_str(self)}}else{convert_all_str(self)}}
 if(key instanceof String){key=key.valueOf()}
@@ -10568,8 +10576,8 @@ var hash=$hash !==undefined ? $hash :$B.$hash(key)
 var index
 if(self[TABLE][hash]===undefined){index=self[KEYS].length
 self[TABLE][hash]=[index]}else{if(! from_setdefault){
-var lookup=lookup_by_key(self,key,hash)
-if(lookup !==null){self[VALUES][lookup]=value
+index=index_by_key(self,key,hash)
+if(index !==null){self[VALUES][index]=value
 return _b_.None}}
 index=self[KEYS].length
 if(self[TABLE][hash]===undefined){
@@ -10617,7 +10625,8 @@ return "{"+res.join(", ")+"}"}
 _b_.dict.tp_hash=_b_.None
 _b_.dict.tp_iter=function(self){return{
 ob_type:$B.dict_keyiterator,it:_b_.dict.$iter_items(self),dict_obj:self}}
-_b_.dict.tp_init=function(self,first,second){if(first===undefined){return _b_.None}
+_b_.dict.tp_init=function(self,first,second){if(first===undefined){self[SIZE]=0
+return _b_.None}
 if(second===undefined){
 if((! first.$kw)&& $B.$isinstance(first,$B.JSObj)){for(let key in first){dict.$setitem(self,key,first[key])}
 return _b_.None}else if(first.$kw){var keys=new Set()
@@ -10648,8 +10657,8 @@ dict.tp_funcs.update(self,other)
 return self}
 _b_.dict.mp_ass_subscript=function(self,key,value){if(value===$B.NULL){return dict.$delitem(self,key)}
 return dict.$setitem(self,key,value)}
-_b_.dict.mp_length=function(self){var count=Object.keys(self).length
-if(self[KEYS]){for(var d of self[KEYS]){if(d !==undefined){count++}}}
+_b_.dict.mp_length=function(self){var count=0
+if(self[KEYS]){for(var d of self[KEYS]){if(d !==undefined){count++}}}else{count=Object.keys(self).length}
 return count}
 _b_.dict.mp_subscript=function(self){var $=$B.args("__getitem__",2,{self:null,arg:null},arguments)
 var self=$.self,arg=$.arg
@@ -14752,7 +14761,7 @@ var comp_scope_block=scopes.symtable.table.blocks.get(
 fast_id(upper_comp_scope.ast)),comp_scope_symbols=comp_scope_block.symbols
 var initial_nb_await_in_scope=upper_comp_scope.nb_await===undefined ? 0 :
 upper_comp_scope.nb_await
-for(var symbol of _b_.dict.$iter_items(symtable_block.symbols)){if(symbol.value & SF.DEF_COMP_ITER){comp_iter=symbol.key}}
+for(var[key,value]of Object.entries(symtable_block.symbols)){if(value & SF.DEF_COMP_ITER){comp_iter=key}}
 var comp_iter_scope=name_scope(comp_iter,scopes)
 var first_for=this.generators[0],
 outmost_expr=$B.js_from_ast(first_for.iter,scopes),nb_paren=1
@@ -15317,6 +15326,7 @@ compiler_check(this)
 var id=make_id(),iter=$B.js_from_ast(this.iter,scopes),js=prefix+`frame.$lineno = ${this.lineno}\n`
 var scope=$B.last(scopes),new_scope=copy_scope(scope,this,id)
 scopes.push(new_scope)
+var inum=add_to_positions(scopes,this.iter)
 if(this instanceof $B.ast.AsyncFor){js+=prefix+`var no_break_${id} = true,\n`+
 prefix+tab+tab+`iter_${id} = ${iter},\n`+
 prefix+tab+tab+`type_${id} = _b_.type.$factory(iter_${id})\n`+
@@ -15544,8 +15554,7 @@ if(is_generator){flags |=$B.COMPILER_FLAGS.GENERATOR}
 if(is_async){flags |=$B.COMPILER_FLAGS.COROUTINE}
 var parameters=[],locals=[]
 var free_vars=[]
-for(var entry of _b_.dict.$iter_items(symtable_block.symbols)){var ident=entry.key
-var flag=entry.value,_scope=(flag >> SF.SCOPE_OFF)& SF.SCOPE_MASK
+for(var[ident,flag]of Object.entries(symtable_block.symbols)){var _scope=(flag >> SF.SCOPE_OFF)& SF.SCOPE_MASK
 if(_scope==SF.FREE){free_vars.push(`'${ident}'`)}
 if(flag & SF.DEF_PARAM){parameters.push(`'${ident}'`)}else if(flag & SF.DEF_LOCAL){locals.push(`'${ident}'`)}}
 var varnames=parameters.concat(locals)

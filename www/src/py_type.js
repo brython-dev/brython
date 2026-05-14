@@ -1423,12 +1423,10 @@ _b_.type.tp_new = function(cls, args, kw){
         if(test){
             console.log('scan cl_dict')
         }
-        for(var item of _b_.dict.$iter_items(cl_dict)){
+        for(var [key, v] of Object.entries(cl_dict)){
             if(test){
                 console.log('item in cl dict', item)
             }
-            var key = item.key,
-                v = item.value
             if(test){
                 // console.log('check __set_name__ for', key, v)
             }

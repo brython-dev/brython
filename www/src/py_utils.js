@@ -401,7 +401,7 @@ $B.keyword_is_empty = function(kw){
         return false
     }
     for(var i = 1; i < kw.length; i++){
-        for(var item of _b_.dict.$iter_items(kw[i])){
+        if(_b_.dict.mp_length(kw[i]) > 0){
             return false
         }
     }
