@@ -161,6 +161,7 @@ $B.make_async = func => {
     f.$is_async = true
     f.$args_parser = func.$args_parser
     f.ob_type = $B.function
+    f.__annotate__ = func.__annotate__
     $B.init_dict(f)
     return f
 }
