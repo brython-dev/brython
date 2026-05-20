@@ -918,6 +918,49 @@ function reset_descr_set(cls){
     }
 }
 
+function make_factory(cls){
+    var has_no_slots = $B.get_from_dict(cls, '__slots__') === $B.NULL
+    if(cls.ob_type !== _b_.type){
+        return
+    }
+    if(cls.tp_init === _b_.object.tp_init &&
+            cls.tp_new === _b_.object.tp_new &&
+            has_no_slots){
+        // class has no __new__ and no __init__
+        cls.$factory = function(){
+            if(arguments.length == 0){
+                var res = {
+                    ob_type: cls
+                }
+                $B.init_dict(res)
+                return res
+            }
+            var [args, kw] = $B.parse_args_kw(cls.tp_name, arguments)
+            return _b_.object.tp_new(cls, args, kw)
+        }
+    }else if(cls.tp_new === _b_.object.tp_new &&
+            has_no_slots){
+        // class has no __new__ but a specific __init__
+        cls.$factory = function(){
+            var res = {
+                ob_type: cls
+            }
+            $B.init_dict(res)
+            cls.tp_init.call(null, res, ...arguments)
+            return res
+        }
+    }else{
+        // delete cls.$factory
+    }
+}
+
+function reset_factory(cls){
+    make_factory(cls)
+    for(var kls of cls.tp_subclasses){
+        reset_factory(kls)
+    }
+}
+
 $B.make_iter = function(cls){
     cls.tp_iter = $B.NULL
     var iter = $B.get_from_dict(cls, '__iter__', $B.NULL)
@@ -1111,12 +1154,14 @@ _b_.type.tp_setattro = function(kls, attr, value){
             break
         case '__init__':
             reset_init(kls)
+            reset_factory(kls)
             break
         case '__iter__':
             reset_iter(kls)
             break
         case '__new__':
             reset_new(kls)
+            reset_factory(kls)
             break
     }
 
@@ -1496,6 +1541,7 @@ _b_.type.tp_new = function(cls, args, kw){
     $B.make_descr_set(class_obj)
     //$B.make_iter(class_obj)
     $B.make_call(class_obj)
+    make_factory(class_obj)
     return class_obj
 }
 

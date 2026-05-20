@@ -706,8 +706,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-05-17 09:57:53.410756"
-__BRYTHON__.timestamp=1779004673410
+__BRYTHON__.compiled_date="2026-05-20 12:12:13.211494"
+__BRYTHON__.timestamp=1779271933211
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1834,11 +1834,10 @@ if(in_klass_dict?.ob_type===$B.function){$B.nb_call_attr++
 if(own_dict && Object.hasOwn(own_dict,attr)){return $B.$call_with_position(own_dict[attr],inum,...args)}else{return in_klass_dict.bind(null,obj)(...args)}}}}
 return $B.$call_with_position($B.$getattr(obj,attr),inum,...args)}
 var counter=0
+$B.nb_call_factory=0
 $B.$call_with_position=function(callable,inum,...args){var test=false 
 if(test){console.log('call',callable,inum)}
-var original=callable
-try{var res=$B.$call(callable,...args)
-return res}catch(err){$B.set_inum(inum)
+try{return $B.$call(callable,...args)}catch(err){$B.set_inum(inum)
 throw err}}
 $B.$call=function(callable,...args){var test=false 
 if(typeof callable=='function'){var res=callable(...args)
@@ -2680,6 +2679,23 @@ if(_set !==$B.NULL){cls.tp_descr_set=_set}else if(cls.tp_base){cls.tp_descr_set=
 return cls.tp_descr_set}
 function reset_descr_set(cls){$B.make_descr_set(cls)
 for(var kls of cls.tp_subclasses){reset_descr_set(kls)}}
+function make_factory(cls){var has_no_slots=$B.get_from_dict(cls,'__slots__')===$B.NULL
+if(cls.ob_type !==_b_.type){return}
+if(cls.tp_init===_b_.object.tp_init &&
+cls.tp_new===_b_.object.tp_new &&
+has_no_slots){
+cls.$factory=function(){if(arguments.length==0){var res={ob_type:cls}
+$B.init_dict(res)
+return res}
+var[args,kw]=$B.parse_args_kw(cls.tp_name,arguments)
+return _b_.object.tp_new(cls,args,kw)}}else if(cls.tp_new===_b_.object.tp_new &&
+has_no_slots){
+cls.$factory=function(){var res={ob_type:cls}
+$B.init_dict(res)
+cls.tp_init.call(null,res,...arguments)
+return res}}else{}}
+function reset_factory(cls){make_factory(cls)
+for(var kls of cls.tp_subclasses){reset_factory(kls)}}
 $B.make_iter=function(cls){cls.tp_iter=$B.NULL
 var iter=$B.get_from_dict(cls,'__iter__',$B.NULL)
 if(iter !==$B.NULL){cls.tp_iter=iter}else if(cls.tp_base){cls.tp_iter=cls.tp_base.tp_iter ??
@@ -2757,12 +2773,14 @@ reset_setattr(kls)
 break
 case '__init__':
 reset_init(kls)
+reset_factory(kls)
 break
 case '__iter__':
 reset_iter(kls)
 break
 case '__new__':
 reset_new(kls)
+reset_factory(kls)
 break}
 return _b_.None}
 _b_.type.nb_or=function(){var $=$B.args('__or__',2,{cls:null,other:null},arguments)
@@ -2910,6 +2928,7 @@ $B.make_new(class_obj)
 $B.make_descr_get(class_obj)
 $B.make_descr_set(class_obj)
 $B.make_call(class_obj)
+make_factory(class_obj)
 return class_obj}
 var type_funcs=_b_.type.tp_funcs={}
 type_funcs.__abstractmethods___get=function(cls){if(cls !==type){var res=$B.get_from_dict(cls,'__abstractmethods__',$B.NULL)
