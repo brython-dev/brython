@@ -96,7 +96,7 @@ $B.builtin_object_getattro = function(self, klass, attr){
 }
 
 $B.object_getattribute = function(obj, klass, attr){
-    var test = false // attr === 'addEventListener'
+    var test = attr === 'string'
     if(test){
         console.log('klass', klass, 'attr', attr)
     }
@@ -344,7 +344,7 @@ _b_.object.tp_str = function(self){
 $B.time_object_tp_getattro = 0
 
 _b_.object.tp_getattro = function(self, attr){
-    var test = false // attr == 'pattern' // && self.ob_type && self.ob_type.tp_name == 'super'
+    var test = attr == 'string' // && self.ob_type && self.ob_type.tp_name == 'super'
     var klass = $B.get_class(self)
     if(test){
         console.log('getattr', attr, 'of self', self, klass)

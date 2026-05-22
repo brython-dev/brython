@@ -349,7 +349,6 @@ $B.py2js = function(src, module, locals_id, parent_scope){
                                   src,
                                   imported})
     var js_from_ast = js_obj.js
-
     return {
         _ast,
         imports: js_obj.imports,
@@ -544,7 +543,7 @@ $B.get_html = function(){
     return res
 }
 
-var brython = $B.parser.brython = function(options){
+var brython1 = $B.parser.brython1 = function(options){
     $B.$options = $B.parse_options(options)
 
     if(!($B.isWebWorker || $B.isNode)){
@@ -605,7 +604,6 @@ var brython = $B.parser.brython = function(options){
     }else{
         scripts = python_scripts.slice()
     }
-
     run_scripts(scripts)
 
     /* Uncomment to check the names added in global Javascript namespace
@@ -617,6 +615,18 @@ var brython = $B.parser.brython = function(options){
         }
     }
     */
+}
+
+var brython = $B.parser.brython = function(options){
+    if(globalThis.wasthonLoad){
+        $B.wasthonLoad().then(
+            function(){
+                brython1(options)
+            }
+        )
+    }else{
+        return brython1(options)
+    }
 }
 
 function convert_option(option, value){
@@ -728,6 +738,11 @@ $B.get_option_from_filename = function(option, filename){
     }
 }
 
+$B.wasthonScripts = {
+    zlib: "_zlib",
+    _sre: "_sre"
+}
+
 function run_scripts(_scripts){
     // Split between webworkers and other scripts
     var webworkers = _scripts.filter(script => script.className === 'webworker'),
@@ -790,6 +805,7 @@ function run_scripts(_scripts){
                            $B.script_path, true])
         }
     }
+    console.log('tasks', $B.tasks.slice())
     $B.loop()
 }
 
@@ -826,13 +842,13 @@ $B.run_script = function(script, src, name, url, run_loop){
         return $B.handle_error($B.exception(err)) // in loaders.js
     }
     var _script = {
-            __doc__: get_docstring(root._ast),
-            js: js,
-            __name__: name,
-            __file__: url,
-            script_element: script,
-            filename
-        }
+        __doc__: get_docstring(root._ast),
+        js: js,
+        __name__: name,
+        __file__: url,
+        script_element: script,
+        filename
+    }
     $B.tasks.push(["execute", _script])
     if(run_loop){
         $B.loop()

@@ -356,6 +356,16 @@ function add_jsmodule(module, source){
     $B.precompiled[module] = source
 }
 
+function showWasthon(){
+    console.log('_sre', $B.imported._sre)
+}
+
+$B.wasthonLoad = async function(){
+    await wasthonLoad('zlib', `/src/mjs/_zlib.mjs`)
+    await wasthonLoad('_sre', '/src/mjs/_sre.mjs')
+    console.log('fini !')
+}
+
 $B.inImported = function(module){
     if($B.imported.hasOwnProperty(module)){
         // already imported, do nothing

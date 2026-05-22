@@ -260,11 +260,11 @@ _b_.range.mp_length = function(self){
 
 _b_.range.mp_subscript = function(self, rank){
     if($B.$isinstance(rank, _b_.slice)){
-        var norm = _b_.slice.$conv_for_seq(rank, range.__len__(self)),
+        var norm = _b_.slice.$conv_for_seq(rank, _b_.range.mp_length(self)),
             substep = $B.rich_op('__mul__', self.step, norm.step),
             substart = compute_item(self, norm.start),
             substop = compute_item(self, norm.stop)
-        return range.$factory(substart, substop, substep)
+        return _b_.range.tp_new(_b_.range, [substart, substop, substep])
     }
     try{
         rank = $B.PyNumber_Index(rank)
