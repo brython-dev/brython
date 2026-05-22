@@ -1,0 +1,266 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+body,td,th{
+    font-family:sans-serif;
+    font-size:12px;
+}
+</style>
+
+<link rel="stylesheet" href="/brython.css">
+<link rel="stylesheet" href="console.css">
+
+
+<!-- brython start -->
+<script src="/src/brython_builtins.js"></script>
+<script src="/src/init_builtin_types.js"></script>
+<script src="/src/py_ast_classes.js"></script>
+<script src="/src/stdlib_paths.js"></script>
+<script src="/src/unicode_data.js"></script>
+<script src="/src/version_info.js"></script>
+<script src="/src/py_tokens.js"></script>
+<script src="/src/python_tokenizer.js"></script>
+<script src="/src/py_ast.js"></script>
+
+<script src="/src/wasthon-loader.js"></script>
+
+<script src="/src/loaders.js"></script>
+<script src="/src/py_utils.js"></script>
+<script src="/src/py_object.js"></script>
+<script src="/src/py_type.js"></script>
+<script src="/src/descriptors.js"></script>
+<script src="/src/py_functions.js"></script>
+<script src="/src/py_io.js"></script>
+<script src="/src/py_builtin_functions.js"></script>
+<script src="/src/py_code.js"></script>
+<script src="/src/py_eval_exec.js"></script>
+<script src="/src/py_sort.js"></script>
+<script src="/src/py_exceptions.js"></script>
+<script src="/src/py_range_slice.js"></script>
+<script src="/src/py_bytes.js"></script>
+<script src="/src/memoryobject.js"></script>
+<script src="/src/py_set.js"></script>
+<script src="/src/py_string.js"></script>
+<script src="/src/py_int.js"></script>
+<script src="/src/py_float.js"></script>
+<script src="/src/py_complex.js"></script>
+<script src="/src/py_dict.js"></script>
+<script src="/src/py_list.js"></script>
+<script src="/src/js_objects.js"></script>
+<script src="/src/py_generator.js"></script>
+<script src="/src/py_dom.js"></script>
+<script src="/src/py_pattern_matching.js"></script>
+<script src="/src/async.js"></script>
+<script src="/src/py_import.js"></script>
+<script src="/src/py_flags.js"></script>
+<script src="/src/builtin_modules.js"></script>
+<script src="/src/finalize_builtin_types.js"></script>
+<script src="/src/py2js.js"></script>
+<script src="/src/ast_to_js.js"></script>
+<script src="/src/symtable.js"></script>
+<script src="/src/action_helpers.js"></script>
+<script src="/src/string_parser.js"></script>
+<script src="/src/number_parser.js"></script>
+<script src="/src/python_parser.js"></script>
+<script src="/src/pegen.js"></script>
+<script src="/src/gen_parse.js"></script>
+<script src="/src/brython_ready.js"></script>
+<!-- brython end -->
+<!-- script type="text/javascript" src="/src/brython_stdlib.js"></script -->
+
+<!--script src="/src/brython.js"></script-->
+<!-- script src="/src/brython_stdlib.js"></script -->
+
+
+
+</head>
+<body>
+
+<script type="text/python" debug="2">
+
+import zlib
+
+# Test 1: round-trip on a small string
+msg = b'The quick brown fox jumps over the lazy dog' * 100
+print(f'Test 1: round-trip on {len(msg)} bytes')
+comp = zlib.compress(msg)
+print(f'  compressed: {len(comp)} bytes  (ratio: {len(comp)/len(msg)*100:.1f}%)')
+dec = zlib.decompress(comp)
+ok = dec == msg
+print(f'  decompressed matches original: {"✓" if ok else "✗"}')
+print('ok')
+
+try:
+  import browser
+  import brython_re as re
+except:
+  import re
+
+m = re.search('world', 'hello world')
+print(m)
+assert m is not None
+assert m.string == 'hello world'
+assert m.groups() == ()
+
+m = re.match('world', 'hello world')
+assert m is None
+
+m = re.match('hello', 'hello world')
+assert m is not None
+assert m.string == 'hello world'
+assert m.groups() == ()
+
+# Samples code in Python 3 doc MatchObject.groups (indices only)
+
+m = re.match(r"(\d+)\.(\d+)", "24.1632")
+assert m.groups() == ('24', '1632')
+
+m = re.match(r"(\d+)\.?(\d+)?", "24")
+assert m.groups() == ('24', None)
+assert m.groups('0') == ('24', '0')
+
+m = re.match(r"(\d+)\.?(\d+)? (--)", "24 --")
+assert m.groups() == ('24', None, '--')
+assert m.groups('0') == ('24', '0', '--')
+
+# Samples code in Python 3 doc MatchObject.group (indices only)
+
+m = re.match(r"(\w+) (\w+)", "Isaac Newton, physicist")
+assert m.group(0) == 'Isaac Newton'
+assert m.group(1) == 'Isaac'
+assert m.group(2) == 'Newton'
+assert m.group(1, 2) == ('Isaac', 'Newton')
+
+m = re.match(r"(..)+", "a1b2c3")
+assert m.group(0) == 'a1b2c3'
+assert m.group(1) == 'c3'
+
+_parser = re.compile(r"""        # A numeric string consists of:
+    \s*
+    (?P<sign>[-+])?              # an optional sign, followed by either...
+    (
+        (?=\d|\.\d)              # ...a number (with at least one digit)
+        (?P<int>\d*)             # having a (possibly empty) integer part
+        (\.(?P<frac>\d*))?       # followed by an optional fractional part
+        (E(?P<exp>[-+]?\d+))?    # followed by an optional exponent, or...
+    |
+        Inf(inity)?              # ...an infinity, or...
+    |
+        (?P<signal>s)?           # ...an (optionally signaling)
+        NaN                      # NaN
+        (?P<diag>\d*)            # with (possibly empty) diagnostic info.
+    )
+    \s*
+    \Z
+""", re.VERBOSE | re.IGNORECASE).match
+
+_m = _parser("3.0")
+assert _m.group('int') == '3'
+
+_m = _parser("NaN")
+assert _m.group('diag') is not None
+
+_m = _parser("Inf")
+assert _m.group('diag') is None and _m.group('sign') is None
+
+_m = _parser("-Inf")
+assert _m.group('diag') is None and _m.group('sign') == '-'
+
+# issue 1257
+regex = re.compile('(a|b)')
+assert regex.match("a").group(0) =="a"
+assert regex.match("a")[0] == "a"
+
+# issue 1278
+_whitespace = '\t\n\x0b\x0c\r '
+s = re.escape(_whitespace)
+assert len(s) == 12
+
+# issue 1365
+pattern = re.compile(
+    r"[\wÂ·Ì-Í¯ÎÒ-ÒÖ-Ö½Ö¿×××××Ø-ØÙ-ÙÙ°Û-ÛÛ-Û¤Û§Û¨Ûª-Û­ÜÜ°-ÝÞ¦-Þ°ß«-ß³ß½à -à à -à £à ¥-à §à ©-à ­à¡-à¡à£-à£¡à££-à¤à¤º-à¤¼à¤¾-à¥à¥-à¥à¥¢à¥£à¦-à¦à¦¼à¦¾-à§à§à§à§-à§à§à§¢à§£à§¾à¨-à¨à¨¼à¨¾-à©à©à©à©-à©à©à©°à©±à©µàª-àªàª¼àª¾-à«à«-à«à«-à«à«¢à«£à«º-à«¿à¬-à¬à¬¼à¬¾-à­à­à­à­-à­à­à­à­¢à­£à®à®¾-à¯à¯-à¯à¯-à¯à¯à°-à°à°¾-à±à±-à±à±-à±à±à±à±¢à±£à²-à²à²¼à²¾-à³à³-à³à³-à³à³à³à³¢à³£à´-à´à´»à´¼à´¾-àµàµ-àµàµ-àµàµàµ¢àµ£à¶à¶à·à·-à·à·à·-à·à·²à·³à¸±à¸´-à¸ºà¹-à¹àº±àº´-àº¼à»-à»à¼à¼à¼µà¼·à¼¹à¼¾à¼¿à½±-à¾à¾à¾à¾-à¾à¾-à¾¼à¿á«-á¾á-áá-á á¢-á¤á§-á­á±-á´á-ááá-áá-áá-áá²-á´ááá²á³á´-ááá -á á¢á¢á¢©á¤ -á¤«á¤°-á¤»á¨-á¨á©-á©á© -á©¼á©¿áª°-áª½á¬-á¬á¬´-á­á­«-á­³á®-á®á®¡-á®­á¯¦-á¯³á°¤-á°·á³-á³á³-á³¨á³­á³´á³·-á³¹á·-á·¹á·»-á·¿â¿âââ-ââ¡â¥-â°ââ®â³¯-â³±âµ¿â· -â·¿ãª-ã¯ããê¯ê´-ê½êêê°ê±ê ê ê ê £-ê §ê¢ê¢ê¢´-ê£ê£ -ê£±ê£¿ê¤¦-ê¤­ê¥-ê¥ê¦-ê¦ê¦³-ê§ê§¥ê¨©-ê¨¶ê©ê©ê©ê©»-ê©½êª°êª²-êª´êª·êª¸êª¾êª¿ê«ê««-ê«¯ê«µê«¶ê¯£-ê¯ªê¯¬ê¯­ï¬ï¸-ï¸ï¸ -ï¸¯ï¸³ï¸´ï¹-ï¹ï¼¿ð½ð ð¶-ðºð¨-ð¨ð¨ð¨ð¨-ð¨ð¨¸-ð¨ºð¨¿ð«¥ð«¦ð´¤-ð´§ð½-ð½ð-ðð¸-ðð¿-ðð°-ðºð-ðð§-ð´ððð³ð-ðð³-ðð-ðð¬-ð·ð¾ð-ðªð-ðð»ð¼ð¾-ðððð-ððð¢ð£ð¦-ð¬ð°-ð´ðµ-ððð°-ðð¯-ðµð¸-ðððð°-ðð«-ð·ð-ð«ð ¬-ð ºð§-ð§ð§-ð§ ð§¤ð¨-ð¨ð¨³-ð¨¹ð¨»-ð¨¾ð©ð©-ð©ðª-ðªð°¯-ð°¶ð°¸-ð°¿ð²-ð²§ð²©-ð²¶ð´±-ð´¶ð´ºð´¼ð´½ð´¿-ðµðµð¶-ð¶ð¶ð¶ð¶-ð¶ð»³-ð»¶ð«°-ð«´ð¬°-ð¬¶ð½ð½-ð¾ð¾-ð¾ð²ð²ð¥-ð©ð­-ð²ð»-ðð-ððª-ð­ð-ðð¨-ð¨¶ð¨»-ð©¬ð©µðªðª-ðªðª¡-ðª¯ð-ðð-ðð-ð¡ð£ð¤ð¦-ðªð°-ð¶ð¬-ð¯ð£-ð£ð¥-ð¥ó -ó ¯]+"  # noqa: B950
+)
+
+# issue 1952
+assert re.search('^abc (.*)$', 'abc DEF')
+
+# issue 2342
+inStr = 'text_1'
+outStr = re.sub(r'\W+', '', inStr)
+assert outStr == 'text_1'
+
+# issue 2448
+re.RegexFlag
+
+# issue 2472
+assert re.sub(r'/\*[\s\S]*?\*/', '', 'a/*b c*/') == 'a'
+
+# issue 2490
+p = r'/X(.|\n)*?X/'
+s = 'a/XbzhX/.../XcX/d'
+
+mo = re.search(p, s)
+assert mo.string[mo.start():mo.end()] == '/XbzhX/'
+
+t = []
+for mo in re.finditer(p, s):
+  t.append(mo.string[mo.start():mo.end()])
+
+assert t == ['/XbzhX/', '/XcX/']
+
+assert re.sub(p, '', s) == 'a...d'
+
+p = r'/X(.|\n)*X/'
+mo = re.search(p, s)
+assert mo.string[mo.start():mo.end()] == '/XbzhX/.../XcX/'
+
+assert re.sub(r'/\*(.|\n)*?\*/', '', 'a/*b*/.../*c*/d') == 'a...d'
+
+print('all tests ok..')
+
+
+
+</script>
+
+<script> // src="module1.js">
+
+</script>
+
+<script> // src="module2.js">
+var timer = globalThis.performance
+
+var obj = {'x': 1, 'y': 2, 'z': 3, 'a': 4, 'b': 5, 'c': 6}
+
+function* iter_items(obj){
+  for(var key in obj){
+    yield {key, value: obj[key]}
+  }
+}
+
+var N = 100000
+
+var t0 = timer.now()
+
+for(var i = 0; i < N; i++){
+  for(var entry of iter_items(obj)){
+  }
+}
+
+console.log(timer.now() - t0)
+
+var t0 = timer.now()
+
+for(var i = 0; i < N; i++){
+  for(var [key, value] of Object.entries(obj)){
+  }
+}
+
+console.log(timer.now() - t0)
+
+console.log('wasthonLoad', globalThis.wasthonLoad)
+
+</script>
+</body>
+</html>
