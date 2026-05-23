@@ -706,9 +706,9 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-05-20 12:12:13.211494"
-__BRYTHON__.timestamp=1779271933211
-__BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
+__BRYTHON__.compiled_date="2026-05-23 11:44:58.488705"
+__BRYTHON__.timestamp=1779529498488
+__BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_kozh","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
 "use strict";
@@ -6237,8 +6237,8 @@ if(self.step > 0){if(self.start >=self.stop){return 0}
 len=1n+(stop-start-1n)/step}else{if(self.stop >=self.start){return 0}
 len=1n+(start-stop-1n)/-step}
 return _b_.int.$int_or_long(len)}
-_b_.range.mp_subscript=function(self,rank){if($B.$isinstance(rank,_b_.slice)){var norm=_b_.slice.$conv_for_seq(rank,range.__len__(self)),substep=$B.rich_op('__mul__',self.step,norm.step),substart=compute_item(self,norm.start),substop=compute_item(self,norm.stop)
-return range.$factory(substart,substop,substep)}
+_b_.range.mp_subscript=function(self,rank){if($B.$isinstance(rank,_b_.slice)){var norm=_b_.slice.$conv_for_seq(rank,_b_.range.mp_length(self)),substep=$B.rich_op('__mul__',self.step,norm.step),substart=compute_item(self,norm.start),substop=compute_item(self,norm.stop)
+return _b_.range.tp_new(_b_.range,[substart,substop,substep])}
 try{rank=$B.PyNumber_Index(rank)}catch(err){$B.RAISE(_b_.TypeError,"range indices must be integers "+
 `or slices, not ${$B.class_name(rank)}`)}
 if($B.rich_comp('__gt__',0,rank)){rank=$B.rich_op('__add__',rank,range.__len__(self))}
