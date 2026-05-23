@@ -324,9 +324,6 @@ function dom2svg(svg_elt, coords){
 
 DOMEvent.tp_getattro = function(ev, attr){
     switch(attr) {
-        case '__repr__':
-        case '__str__':
-            return function(){return '<DOMEvent object>'}
         case 'x':
             return $mouseCoords(ev).x
         case 'y':

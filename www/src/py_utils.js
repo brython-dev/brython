@@ -401,7 +401,7 @@ $B.keyword_is_empty = function(kw){
         return false
     }
     for(var i = 1; i < kw.length; i++){
-        for(var item of _b_.dict.$iter_items(kw[i])){
+        if(_b_.dict.mp_length(kw[i]) > 0){
             return false
         }
     }
@@ -521,6 +521,8 @@ $B.get_class = function(obj){
                     // document in an iframe
                     return $B.DOMNode
                 }
+            }else if(obj instanceof Event){
+                return $B.DOMEvent
             }
             break
     }
@@ -1205,15 +1207,16 @@ $B.call_attr = function(obj, attr, inum, ...args){
 }
 
 var counter = 0
+
+$B.nb_call_factory = 0
+
 $B.$call_with_position = function(callable, inum, ...args){
     var test = false // callable.ob_type === $B.coroutine
     if(test){
         console.log('call', callable, inum)
     }
-    var original = callable
     try{
-        var res = $B.$call(callable, ...args)
-        return res
+        return $B.$call(callable, ...args)
     }catch(err){
         $B.set_inum(inum)
         throw err
@@ -1221,7 +1224,7 @@ $B.$call_with_position = function(callable, inum, ...args){
 }
 
 $B.$call = function(callable, ...args){
-    var test = false // callable.ob_type === $B.coroutine // && callable.$function_infos[1] == 'test_gen1'
+    var test = false // callable.tp_name === 'A' // && callable.$function_infos[1] == 'test_gen1'
     if(typeof callable == 'function'){
         var res = callable(...args)
         if(callable.$in_js_module && res === undefined){

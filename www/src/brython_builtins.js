@@ -9,6 +9,13 @@ try{
         "Microsoft Edge, please upgrade to the latest version")
 }
 
+// for code that requires RegExp.escape (cf. issue #2686) 
+if(! Object.hasOwn(RegExp, 'escape')){
+    RegExp.escape = function(str) {
+        return str.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&')
+    }
+}
+
 (function($B) {
 
 // Detect whether we are in a Web Worker

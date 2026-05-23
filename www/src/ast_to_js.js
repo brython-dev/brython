@@ -898,9 +898,9 @@ function make_comp(scopes){
     var initial_nb_await_in_scope = upper_comp_scope.nb_await === undefined ? 0 :
                             upper_comp_scope.nb_await
 
-    for(var symbol of _b_.dict.$iter_items(symtable_block.symbols)){
-        if(symbol.value & SF.DEF_COMP_ITER){
-            comp_iter = symbol.key
+    for(var [key, value] of Object.entries(symtable_block.symbols)){
+        if(value & SF.DEF_COMP_ITER){
+            comp_iter = key
         }
     }
     var comp_iter_scope = name_scope(comp_iter, scopes)
@@ -2249,6 +2249,8 @@ $B.ast.For.prototype.to_js = function(scopes){
         new_scope = copy_scope(scope, this, id)
     scopes.push(new_scope)
 
+    var inum = add_to_positions(scopes, this.iter)
+    
     if(this instanceof $B.ast.AsyncFor){
         js += prefix + `var no_break_${id} = true,\n` +
               prefix + tab + tab + `iter_${id} = ${iter},\n` +
@@ -2269,6 +2271,7 @@ $B.ast.For.prototype.to_js = function(scopes){
     }else{
         js += prefix + `var no_break_${id} = true,\n` +
               prefix + tab + tab + `iterator_${id} = ${iter}\n`
+
         if(this.iter.inum){
             js += prefix + tab + tab + `iterator_${id}[$B.INUM] = ${this.iter.inum}\n`
         }
@@ -2701,10 +2704,8 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
         locals = []
 
     var free_vars = []
-    for(var entry of _b_.dict.$iter_items(symtable_block.symbols)){
-        var ident = entry.key
-        var flag = entry.value,
-            _scope = (flag >> SF.SCOPE_OFF) & SF.SCOPE_MASK
+    for(var [ident, flag] of Object.entries(symtable_block.symbols)){
+        var _scope = (flag >> SF.SCOPE_OFF) & SF.SCOPE_MASK
         if(_scope == SF.FREE){
             free_vars.push(`'${ident}'`)
         }

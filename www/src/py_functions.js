@@ -388,7 +388,11 @@ function_funcs.__annotations___get = function(self){
     if(self.__annotations__ !== undefined){
         return self.__annotations__
     }else{
-        return self.__annotations__ = self.__annotate__(1)
+        if(self.__annotate__ === _b_.None){
+            return self.__annotations__ = $B.empty_dict()
+        }else{
+            return self.__annotations__ = self.__annotate__(1)
+        }
     }
 }
 
@@ -683,7 +687,7 @@ function make_arguments_parser(f){
     var nb_formal = positional_length + kwonly_length
 
     var parser = function(f, args){
-        
+
         var def_obj
         if(defaults !== _b_.None){
             def_obj = {}

@@ -35,6 +35,7 @@ const KEYS = Symbol('KEYS')
 const VALUES = Symbol('VALUES')
 const HASHES = Symbol('HASHES')
 const TABLE = Symbol('TABLE')
+const SIZE = Symbol('SIZE')
 
 $B.dict_proxy = function(dict){
     // Given a dictionary dict, returns an object obj such that obj.x = y is
@@ -323,6 +324,16 @@ $B.str_dict_length = function(d){
     return Object.keys(d).length
 }
 
+$B.items_iterator = function(d){
+    // returns a JS array of [key, value] pairs
+    var res = []
+    if(self[KEYS]){
+        for(var i = 0, len = self[KEYS].length; i < len; i++){
+            res.push([self[KEYS][i], self[VALUES[i]]])
+        }
+    }
+}
+
 $B.hasOnlyStringKeys = function(d){
     return ! d[KEYS]
 }
@@ -347,7 +358,7 @@ $B.dict_as_jsobj = function(d){
 
 dict.$to_obj = function(d){
     // Function applied to dictionary that only has string keys,
-    // return a Javascript objects with the keys mapped to the value,
+    // return a Javascript object with the keys mapped to the value,
     // excluding the insertion rank
     var res = {}
     for(var entry of dict.$iter_items(d)){
@@ -356,47 +367,30 @@ dict.$to_obj = function(d){
     return res
 }
 
-dict.$set_like = function(self){
-    // return true if all values are hashable
-    for(var v of self[VALUES]){
-        if(v === undefined){
-            continue
-        }else if(typeof v == 'string' ||
-                typeof v == 'number' ||
-                typeof v == 'boolean'){
-            continue
-        }else if([_b_.tuple, _b_.float, _b_.complex].includes($B.get_class(v))){
-            continue
-        }else if(! _b_.hasattr($B.get_class(v), '__hash__')){
-            return false
-        }
-    }
-    return true
-}
-
 dict.$iter_items = function*(d){
+    var version = d[VERSION]
     if(! d[KEYS]){
         for(let key in d){
-            if(key != '$dict_strings'){
-                yield {key, value: d[key]}
+            yield {key, value: d[key]}
+            if(d[VERSION] !== version){
+                console.log('d', d)
+                console.log('version', version, 'd[VERSION]', d[VERSION])
+                $B.RAISE(_b_.RuntimeError,
+                    'dictionary changed size during iteration 1')
             }
         }
         return
     }
-    var version = d[VERSION]
     for(var i = 0, len = d[KEYS].length; i < len; i++){
         if(d[KEYS][i] !== undefined){
             yield {key: d[KEYS][i], value: d[VALUES][i], hash: d[HASHES][i]}
             if(d[VERSION] !== version){
-                $B.RAISE(_b_.RuntimeError, 'changed in iteration')
+                $B.RAISE(_b_.RuntimeError,
+                    'dictionary changed size during iteration 2')
             }
         }
     }
-    if(d[VERSION] !== version){
-        $B.RAISE(_b_.RuntimeError, 'changed in iteration')
-    }
 }
-
 
 var $copy_dict = function(left, right){
     // left and right are dicts
@@ -422,8 +416,9 @@ var $copy_dict = function(left, right){
     }
 }
 
-function lookup_by_key(d, key, hash){
-    hash = hash === undefined ? _b_.hash(key) : hash
+function index_by_key(d, key, hash){
+    // only used for dictionaries with a TABLE
+    hash = hash ?? _b_.hash(key)
     var indices = d[TABLE][hash],
         index
     if(indices !== undefined){
@@ -481,19 +476,25 @@ dict.$lookup_by_key = function(d, key, hash){
     }
 }
 
-dict.$contains = function(self, key){
+dict.$contains = function(self, key, hash){
     if(! self[KEYS]){
         if(typeof key == 'string'){
             return self.hasOwnProperty(key)
         }
-        var hash = $B.$getattr($B.get_class(key), '__hash__')
-        if(hash === $B.str_dict_get($B.get_dict(_b_.object), '__hash__')){
+        var hash_method = $B.$getattr($B.get_class(key), '__hash__')
+        if(hash_method === $B.str_dict_get($B.get_dict(_b_.object), '__hash__')){
             return false
         }
+        var hash = $B.$call(hash_method, key)
+        // If the object has a specific __hash__ method and a specific __eq__
+        // method, `hash` could be the same as one of the string keys's hash,
+        // and the __eq__ method might return true. To cover this case we have
+        // to build TABLE, KEYS and VALUES and apply index_by_key to
+        // determine if "key in dict" is True
         convert_all_str(self)
     }
 
-    return lookup_by_key(self, key) !== null
+    return index_by_key(self, key, hash) !== null
 }
 
 dict.$delitem  = function(self, key){
@@ -503,13 +504,13 @@ dict.$delitem  = function(self, key){
     if(! self[KEYS]){
         if(typeof key == 'string'){
             if(self.hasOwnProperty(key)){
-                dict.$delete_string(self, key)
+                delete self[key]
                 return _b_.None
             }else{
                 $B.RAISE(_b_.KeyError, key)
             }
         }
-        if(! dict.sq_contains(self, key)){
+        if(! dict.$contains(self, key)){
             $B.RAISE(_b_.KeyError, _b_.str.$factory(key))
         }
     }
@@ -616,29 +617,29 @@ dict.$getitem = function(self, key, ignore_missing){
     // ignore_missing is set in dict.get and dict.setdefault
     if(Object.hasOwn(self, $B.JSOBJ)){
         if(Object.hasOwn(self[$B.JSOBJ], key)){
-            return self[$B.JSOBJ][key]
+            return $B.jsobj2pyobj(self[$B.JSOBJ][key])
         }
         $B.RAISE(_b_.KeyError, key)
     }
-    if(! self[TABLE]){
-        if(typeof key == 'string'){
-            if(self.hasOwnProperty(key)){
-                return self[key]
-            }
-        }else{
+    if(typeof key == 'string'){
+        if(self.hasOwnProperty(key)){
+            return self[key]
+        }
+    }else{
+        if(! self[TABLE]){
             var hash_method = $B.$getattr($B.get_class(key), '__hash__')
             if(hash_method !== $B.str_dict_get($B.get_dict(_b_.object), '__hash__')){
                 convert_all_str(self)
-                let index = lookup_by_key(self, key)
+                let index = index_by_key(self, key)
                 if(index !== null){
                     return self[VALUES][index]
                 }
             }
-        }
-    }else{
-        let index = lookup_by_key(self, key)
-        if(index !== null){
-            return self[VALUES][index]
+        }else{
+            let index = index_by_key(self, key)
+            if(index !== null){
+                return self[VALUES][index]
+            }
         }
     }
     if(! ignore_missing){
@@ -752,18 +753,20 @@ dict.$setitem = function(self, key, value, $hash, from_setdefault){
         value = $B.pyobj2jsobj(value)
         self[$B.JSOBJ][key] = value
     }
+    var new_str_key
     if(typeof key == 'string'){
-        // Even if dict is not all-string keys, update self.$strings.
-        // This is useful for class dicts: a mappingproxy wrapping the class
-        // dictionary only needs to use d.$strings (the class dictionary
-        // might have non-string keys if __prepare__ returns a dict with
-        // non-string keys)
+        // Even if dict is not all-string keys, set self[key]
+        new_str_key = ! Object.hasOwn(self, key)
         self[key] = value
     }
     if(! self[TABLE]){
         if(typeof key == 'string'){
             var int = parseInt(key)
             if(isNaN(int) || int >= 0){
+                if(new_str_key){
+                    self[VERSION] = self[VERSION] ?? 0
+                    self[VERSION]++
+                }
                 self[key] = value
                 return _b_.None
             }else{
@@ -791,9 +794,9 @@ dict.$setitem = function(self, key, value, $hash, from_setdefault){
         if(! from_setdefault){
             // If $setitem was called from setdefault, it's no use trying
             // another lookup
-            var lookup = lookup_by_key(self, key, hash)
-            if(lookup !== null){
-                self[VALUES][lookup] = value
+            index = index_by_key(self, key, hash)
+            if(index !== null){
+                self[VALUES][index] = value
                 return _b_.None
             }
         }
@@ -896,6 +899,7 @@ _b_.dict.tp_iter = function(self){
 
 _b_.dict.tp_init = function(self, first, second){
     if(first === undefined){
+        self[SIZE] = 0
         return _b_.None
     }
     if(second === undefined){
@@ -1009,13 +1013,15 @@ _b_.dict.mp_ass_subscript = function(self, key, value){
 }
 
 _b_.dict.mp_length = function(self){
-    var count = Object.keys(self).length
+    var count = 0
     if(self[KEYS]){
         for(var d of self[KEYS]){
             if(d !== undefined){
                 count++
             }
         }
+    }else{
+        count = Object.keys(self).length
     }
     return count
 }

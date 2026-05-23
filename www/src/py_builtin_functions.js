@@ -742,7 +742,7 @@ $B.time_builtin_getattr = 0
 
 $B.$getattr = function(obj, attr, _default){
     // Used internally to avoid having to parse the arguments
-    var test = false // attr == '__getformat__'
+    var test = false // attr == 'data'
     if(test){
         console.log('$getattr', obj, attr)
     }
@@ -775,8 +775,10 @@ $B.$getattr = function(obj, attr, _default){
     var is_class = Object.hasOwn(obj, 'tp_name') //klass.tp_mro.includes(_b_.type)
 
     if(test){
-        console.log("attr", attr, "of", obj, "class", klass ?? $B.get_class(obj),
+        console.log("attr", attr, "of", obj, "class", $B.get_class(obj),
         "isclass", is_class)
+        console.log('typeof Node', typeof Node)
+        console.log('is Event ?', obj instanceof Event)
     }
 
     if(! is_class){
