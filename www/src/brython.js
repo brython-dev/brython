@@ -706,8 +706,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-05-22 11:49:04.021435"
-__BRYTHON__.timestamp=1779443344021
+__BRYTHON__.compiled_date="2026-05-23 17:29:19.226496"
+__BRYTHON__.timestamp=1779550159226
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre_kozh","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1385,9 +1385,10 @@ function add_jsmodule(module,source){
 source+="\nvar $locals_"+
 module.replace(/\./g,"_")+" = $module"
 $B.precompiled[module]=source}
-$B.wasthonLoad=function(script){console.log('wasthonLoad',globalThis.wasthonLoad,script)
-var filename=$B.wasthonScripts[script]
-wasthonLoad(script,`/src/mjs/${filename}.mjs`).then(loop)}
+function showWasthon(){console.log('_sre',$B.imported._sre)}
+$B.wasthonLoad=async function(){await wasthonLoad('zlib',`/src/mjs/_zlib.mjs`)
+await wasthonLoad('_sre','/src/mjs/_sre.mjs')
+console.log('fini !')}
 $B.inImported=function(module){if($B.imported.hasOwnProperty(module)){}else if(__BRYTHON__.VFS && __BRYTHON__.VFS.hasOwnProperty(module)){var elts=__BRYTHON__.VFS[module]
 var ext=elts[0],source=elts[1]
 if(ext==".py"){if($B.idb_cx){$B.tasks.splice(0,0,[idb_get,module])}}else{add_jsmodule(module,source)}}else{console.log("bizarre",module)}
@@ -2127,7 +2128,7 @@ return in_mro}
 if(test){console.log('attr',attr,'not found on self',self)
 console.log('self[attr]',self[attr])}
 return $B.NULL}
-$B.object_getattribute=function(obj,klass,attr){var test=false 
+$B.object_getattribute=function(obj,klass,attr){var test=attr==='string'
 if(test){console.log('klass',klass,'attr',attr)}
 if(! klass.$getattribute){console.log('no $getattribute',klass)}
 var getattribute=klass.$getattribute ?? $B.search_slot(klass,'tp_getattro',$B.NULL)
@@ -2232,7 +2233,7 @@ return tp_repr(self)}
 var repr_func=$B.$getattr(klass,"__repr__",$B.NULL)
 return $B.$call(repr_func,self)}
 $B.time_object_tp_getattro=0
-_b_.object.tp_getattro=function(self,attr){var test=false 
+_b_.object.tp_getattro=function(self,attr){var test=attr=='string' 
 var klass=$B.get_class(self)
 if(test){console.log('getattr',attr,'of self',self,klass)
 if(self.jsobj){console.log('in jsobj',self.jsobj[attr])}
@@ -6240,8 +6241,8 @@ if(self.step > 0){if(self.start >=self.stop){return 0}
 len=1n+(stop-start-1n)/step}else{if(self.stop >=self.start){return 0}
 len=1n+(start-stop-1n)/-step}
 return _b_.int.$int_or_long(len)}
-_b_.range.mp_subscript=function(self,rank){if($B.$isinstance(rank,_b_.slice)){var norm=_b_.slice.$conv_for_seq(rank,range.__len__(self)),substep=$B.rich_op('__mul__',self.step,norm.step),substart=compute_item(self,norm.start),substop=compute_item(self,norm.stop)
-return range.$factory(substart,substop,substep)}
+_b_.range.mp_subscript=function(self,rank){if($B.$isinstance(rank,_b_.slice)){var norm=_b_.slice.$conv_for_seq(rank,_b_.range.mp_length(self)),substep=$B.rich_op('__mul__',self.step,norm.step),substart=compute_item(self,norm.start),substop=compute_item(self,norm.stop)
+return _b_.range.tp_new(_b_.range,[substart,substop,substep])}
 try{rank=$B.PyNumber_Index(rank)}catch(err){$B.RAISE(_b_.TypeError,"range indices must be integers "+
 `or slices, not ${$B.class_name(rank)}`)}
 if($B.rich_comp('__gt__',0,rank)){rank=$B.rich_op('__add__',rank,range.__len__(self))}
@@ -14297,7 +14298,6 @@ var future=$B.future_features(_ast,filename)
 var symtable=$B._PySymtable_Build(_ast,filename,future)
 var js_obj=$B.js_from_root({ast:_ast,symtable,filename,src,imported})
 var js_from_ast=js_obj.js
-console.log('imports',js_obj.imports)
 return{
 _ast,imports:js_obj.imports,to_js:function(){return js_from_ast}}}
 $B.parse_options=function(options){
@@ -14361,8 +14361,7 @@ xhr.open('GET',this_url,false)
 xhr.onreadystatechange=function(){res=this.responseText}
 xhr.send()
 return res}
-var brython=$B.parser.brython=function(options){console.log('brython')
-$B.$options=$B.parse_options(options)
+var brython1=$B.parser.brython1=function(options){$B.$options=$B.parse_options(options)
 if(!($B.isWebWorker ||$B.isNode)){if(! status.brython_called){
 status.brython_called=true
 startup_observer.disconnect()
@@ -14378,8 +14377,10 @@ for(var id of ids){var script=document.querySelector(`script[id="${id}"]`)
 if(script){set_script_id(script)
 scripts.push(script)}else{console.log(`no script with id '${id}'`)
 $B.RAISE(_b_.KeyError,`no script with id '${id}'`)}}}else if($B.isWebWorker){}else{scripts=python_scripts.slice()}
-console.log('scripts',scripts)
 run_scripts(scripts)}
+var brython=$B.parser.brython=function(options){if(globalThis.wasthonLoad){$B.wasthonLoad().then(
+function(){brython1(options)}
+)}else{return brython1(options)}}
 function convert_option(option,value){
 if(option=='debug'){if(typeof value=='string' && value.match(/^\d+$/)){return parseInt(value)}else if(typeof value=='number'){return value}else{if(value !==null && value !==undefined){console.debug(`Invalid value for debug: ${value}`)}}}else if(option=='cache' ||
 option=='indexeddb' ||
@@ -14453,7 +14454,6 @@ try{root=$B.py2js({src:src,filename},name,name)
 js=root.to_js()
 if($B.get_option_from_filename('debug',filename)> 1){console.log(js)}}catch(err){return $B.handle_error($B.exception(err))}
 var _script={__doc__:get_docstring(root._ast),js:js,__name__:name,__file__:url,script_element:script,filename}
-if(globalThis.wasthonLoad){for(var mod in root.imports){if(Object.hasOwn($B.wasthonScripts,mod)){$B.tasks.splice(0,0,[$B.wasthonLoad,mod])}}}
 $B.tasks.push(["execute",_script])
 if(run_loop){$B.loop()}}
 $B.brython=brython})(__BRYTHON__);
