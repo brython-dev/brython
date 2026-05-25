@@ -101,7 +101,6 @@ assert m is not None
 assert m.string == 'hello world'
 assert m.groups() == ()
 
-
 m = re.match('world', 'hello world')
 assert m is None
 
@@ -139,6 +138,10 @@ m = re.match(r"(..)+", "a1b2c3")
 assert m.group(0) == 'a1b2c3'
 assert m.group(1) == 'c3'
 print(146)
+
+pattern = re.compile('(a|b)')
+print('pattern', pattern, type(pattern))
+print(dir(type(pattern)))
 
 
 _parser = re.compile(r"""        # A numeric string consists of:
