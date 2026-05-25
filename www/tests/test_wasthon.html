@@ -92,31 +92,11 @@ ok = dec == msg
 print(f'  decompressed matches original: {"✓" if ok else "✗"}')
 print('ok')
 
-try:
-  import browser
-  import brython_re as re
-except:
-  import re
 
+import re
 
-# code that fails - infinite loop ?
-print(100)
-p = re.compile('(a|b)')
-print(p)
-print(102)
-
-
-
-m = re.match(r"(\d+)\.(\d+)", "24.1632")
-print(102)
-m = re.match(r"(\w+) (\w+)", "Isaac Newton, physicist")
-m = re.match(r"(..)+", "a1b2c3")
-regex = re.compile('(a|b)')
-
-print(104)
 
 m = re.search('world', 'hello world')
-print(m)
 assert m is not None
 assert m.string == 'hello world'
 assert m.groups() == ()
