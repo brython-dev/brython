@@ -363,7 +363,7 @@ function showWasthon(){
 $B.wasthonLoad = async function(){
     // pre-load wasthon modules
     await wasthonLoad('zlib', `/src/mjs/_zlib.mjs`)
-    await wasthonLoad('_wasthon_sre', '/src/mjs/_sre.mjs', { initName: '_sre' })
+    await wasthonLoad('_sre', '/src/mjs/_sre.mjs')
 }
 
 $B.inImported = function(module){
