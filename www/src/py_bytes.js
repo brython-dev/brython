@@ -1169,8 +1169,9 @@ _b_.bytearray.sq_ass_item = function(self, arg, value){
             }else if($temp[i] > 255){
                 $B.RAISE(_b_.ValueError, "byte must be in range(0, 256)")
             }
-            self.source.splice(start, 0, $temp[i])
         }
+        // One splice only -> O(N+M) instead of O(N*M)
+        self.source.splice.apply(self.source, [start, 0].concat($temp))
     }else{
         $B.RAISE(_b_.TypeError, 'list indices must be integer, not ' +
             $B.class_name(arg))
