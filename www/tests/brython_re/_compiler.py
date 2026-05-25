@@ -774,12 +774,9 @@ def compile(p, flags=0):
     indexgroup = [None] * p.state.groups
     for k, i in groupindex.items():
         indexgroup[i] = k
-    print('brython_re._compiler, code', code)
-    for item in code:
-        print(item, type(item))
     return _sre.compile(
         pattern, flags | p.state.flags, 
-        list(map(int, code)),
+        code,
         p.state.groups-1,
         groupindex, tuple(indexgroup)
         )

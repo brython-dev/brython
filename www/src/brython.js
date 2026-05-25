@@ -706,8 +706,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-05-23 17:29:19.226496"
-__BRYTHON__.timestamp=1779550159226
+__BRYTHON__.compiled_date="2026-05-25 10:51:15.377371"
+__BRYTHON__.timestamp=1779699075377
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre_kozh","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1386,9 +1386,9 @@ source+="\nvar $locals_"+
 module.replace(/\./g,"_")+" = $module"
 $B.precompiled[module]=source}
 function showWasthon(){console.log('_sre',$B.imported._sre)}
-$B.wasthonLoad=async function(){await wasthonLoad('zlib',`/src/mjs/_zlib.mjs`)
-await wasthonLoad('_sre','/src/mjs/_sre.mjs')
-console.log('fini !')}
+$B.wasthonLoad=async function(){
+await wasthonLoad('zlib',`/src/mjs/_zlib.mjs`)
+await wasthonLoad('_wasthon_sre','/src/mjs/_sre.mjs',{initName:'_sre' })}
 $B.inImported=function(module){if($B.imported.hasOwnProperty(module)){}else if(__BRYTHON__.VFS && __BRYTHON__.VFS.hasOwnProperty(module)){var elts=__BRYTHON__.VFS[module]
 var ext=elts[0],source=elts[1]
 if(ext==".py"){if($B.idb_cx){$B.tasks.splice(0,0,[idb_get,module])}}else{add_jsmodule(module,source)}}else{console.log("bizarre",module)}
@@ -2128,7 +2128,7 @@ return in_mro}
 if(test){console.log('attr',attr,'not found on self',self)
 console.log('self[attr]',self[attr])}
 return $B.NULL}
-$B.object_getattribute=function(obj,klass,attr){var test=attr==='string'
+$B.object_getattribute=function(obj,klass,attr){var test=false 
 if(test){console.log('klass',klass,'attr',attr)}
 if(! klass.$getattribute){console.log('no $getattribute',klass)}
 var getattribute=klass.$getattribute ?? $B.search_slot(klass,'tp_getattro',$B.NULL)
@@ -2233,7 +2233,7 @@ return tp_repr(self)}
 var repr_func=$B.$getattr(klass,"__repr__",$B.NULL)
 return $B.$call(repr_func,self)}
 $B.time_object_tp_getattro=0
-_b_.object.tp_getattro=function(self,attr){var test=attr=='string' 
+_b_.object.tp_getattro=function(self,attr){var test=false 
 var klass=$B.get_class(self)
 if(test){console.log('getattr',attr,'of self',self,klass)
 if(self.jsobj){console.log('in jsobj',self.jsobj[attr])}
