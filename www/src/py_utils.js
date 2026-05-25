@@ -632,13 +632,10 @@ $B.make_js_iterator = function(iterator, frame, lineno){
     }
 
     var it = $B.$iter(iterator)
-    var test = false // $B.get_class(iterator) === $B.js_array //.tp_name == 'FlagBoundary'
+    var test = false // cls.tp_name == 'SubPattern'
     if(test){
         console.log('make js iterator', it)
     }
-
-    // next_func is initialized as undefined; set_lineno() must be called
-    // before it is initialized from the iterator
 
     var next_func = $B.$getattr($B.get_class(it), '__next__', null)
     if(test){

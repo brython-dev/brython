@@ -1137,16 +1137,17 @@ var issubclass = _b_.issubclass = function(klass, classinfo){
 
 /* iterator start */
 $B.iterator.tp_iter = function(self){
+    var ob_type = $B.get_class(self.it_seq)
+    self.len = $B.search_in_mro(ob_type, '__len__')(self.it_seq)
+    self.getitem = $B.search_in_mro(ob_type, '__getitem__')
     return self
 }
 
 $B.iterator.tp_iternext = function*(self){
-    var ob_type = $B.get_class(self.it_seq)
-    var len = $B.search_in_mro(ob_type, '__len__')(self.it_seq)
-    var getitem = $B.search_in_mro(ob_type, '__getitem__')
-    if(self.it_index <= len){
-        yield getitem(self.it_seq, self.it_index)
+    if(self.it_index < self.len){
+        var res = self.getitem(self.it_seq, self.it_index)
         self.it_index++
+        yield res
     }
 }
 
@@ -1195,7 +1196,7 @@ $B.set_func_names(callable_iterator, "builtins")
 $B.$iter = function(obj, sentinel){
     // Function used internally by core Brython modules, to avoid the cost
     // of arguments control
-    var test = false // $B.get_class(obj).tp_name == 'MagicMock'
+    var test = false // $B.get_class(obj).tp_name == 'SubPattern'
     if(test){
         console.log('iter', obj)
     }
@@ -1237,7 +1238,9 @@ $B.$iter = function(obj, sentinel){
             return {
                 ob_type: $B.iterator,
                 it_seq: obj,
-                it_index: 0
+                it_index: 0,
+                getitem: getitem_func,
+                len: $B.$call(len_func, obj)
             }
         }
         $B.RAISE(_b_.TypeError,
