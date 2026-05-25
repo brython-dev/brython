@@ -220,7 +220,7 @@ function make_set_del(cls){
 function make_setitem_delitem(cls){
     var setitem = cls.sq_ass_item ?? cls.mp_ass_subscript
     var setitem_func = function(){
-        var $ = $B.args("__setitem__", 3, 
+        var $ = $B.args("__setitem__", 3,
                     {self: null, key: null, value: null}, arguments)
         return setitem($.self, $.key, $.value)
     }
