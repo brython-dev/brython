@@ -183,7 +183,12 @@ print(179)
 # issue 1257
 regex = re.compile('(a|b)')
 assert regex.match("a").group(0) =="a"
-assert regex.match("a")[0] == "a"
+
+mo = regex.match("a")
+print('mo', mo, type(mo))
+print(dir(type(mo)))
+
+assert mo[0] == "a"
 
 print(197)
 # issue 1278
