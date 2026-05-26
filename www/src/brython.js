@@ -706,8 +706,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-05-23 11:44:58.488705"
-__BRYTHON__.timestamp=1779529498488
+__BRYTHON__.compiled_date="2026-05-26 09:36:34.342312"
+__BRYTHON__.timestamp=1779780994341
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_kozh","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -6807,8 +6807,8 @@ if(stop > self.source.length){check_exports(self)}
 self.source.splice(start,stop-start)
 try{var $temp=_b_.list.$factory(value)}catch(err){$B.RAISE(_b_.TypeError,"can only assign an iterable")}
 if($temp.length !=stop-start){check_exports(self)}
-for(var i=$temp.length-1;i >=0;i--){if(! $B.is_int($temp[i])){$B.RAISE(_b_.TypeError,'an integer is required')}else if($temp[i]> 255){$B.RAISE(_b_.ValueError,"byte must be in range(0, 256)")}
-self.source.splice(start,0,$temp[i])}}else{$B.RAISE(_b_.TypeError,'list indices must be integer, not '+
+for(var i=$temp.length-1;i >=0;i--){if(! $B.is_int($temp[i])){$B.RAISE(_b_.TypeError,'an integer is required')}else if($temp[i]> 255){$B.RAISE(_b_.ValueError,"byte must be in range(0, 256)")}}
+self.source.splice.apply(self.source,[start,0].concat($temp))}else{$B.RAISE(_b_.TypeError,'list indices must be integer, not '+
 $B.class_name(arg))}}
 _b_.bytearray.tp_repr=function(self){var b=_b_.bytes.tp_repr(self)
 return `bytearray(${b})`}
