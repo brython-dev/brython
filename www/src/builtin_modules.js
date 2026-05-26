@@ -310,6 +310,31 @@
                         if(init !== null){
                             init(res, ...arguments)
                         }
+                        if(k.tp_name == 'IFRAME'){
+                            // special case: attribute access might throw an error
+                            return new Proxy(res,
+                                {
+                                    get(target, prop){
+                                        console.log('get IFRAME attr', prop)
+                                        try{
+                                            switch(prop){
+                                                case 'ob_type':
+                                                    return k
+                                                case '$target':
+                                                    return target
+                                                default:
+                                                    return target[prop]
+                                            }
+                                        }catch(err){
+                                            console.warn('objet does not support attr resolution')
+                                        }
+                                    },
+                                    set(target, prop, value){
+                                        target[prop] = value
+                                    }
+                                }
+                            )
+                        }
                         return res
                     }
                 })(klass)
@@ -1278,7 +1303,7 @@
     }
 
     Future.tp_methods = ["done", "set_result", "set_exception"]
-    
+
     $B.set_func_names(Future, 'browser.aio')
 
     modules['browser.aio'] = {

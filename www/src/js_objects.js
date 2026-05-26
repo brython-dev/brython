@@ -192,7 +192,13 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this){
         return jsobj
     }
 
-    let pyobj = jsobj[PYOBJ]
+    let pyobj
+    try{
+        pyobj = jsobj[PYOBJ]
+    }catch(err){
+        // ignore and return jsobj. Cf. issue #2692
+        return jsobj
+    }
     if(pyobj !== undefined) {
         return pyobj
     }

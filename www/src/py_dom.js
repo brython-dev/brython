@@ -942,6 +942,7 @@ var DOMNode_funcs = DOMNode.tp_funcs = {}
 
 DOMNode_funcs.attach = function(self, other){
     // for document, append child to document.body
+    console.log('attach', self, other, 'ob type', other.ob_type)
     if(self.nodeType == Node.DOCUMENT_NODE){
         self = self.body
     }
@@ -952,6 +953,9 @@ DOMNode_funcs.attach = function(self, other){
     }else if(typeof other == "string" || typeof other == "number"){
         var txt = document.createTextNode(other.toString())
         self.appendChild(txt)
+    }else if(other.ob_type === $B.module_getattr($B.imported['browser.html'], 'IFRAME')){
+        console.log('attach FRAME')
+        self.appendChild(other.$target)
     }else if(other instanceof Node){
         self.appendChild(other)
     }else{

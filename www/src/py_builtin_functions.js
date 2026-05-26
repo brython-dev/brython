@@ -1588,7 +1588,9 @@ _b_.pow = function() {
 }
 
 var $print = _b_.print = function(){
+    console.log('enter print', arguments)
     var [args, kw] = $B.parse_args_kw('print', arguments)
+    console.log('ok')
     var end = $B.str_dict_get(kw, 'end', '\n'),
         sep = $B.str_dict_get(kw, 'sep', ' '),
         file = $B.str_dict_get(kw, 'file', $B.get_stdout())
