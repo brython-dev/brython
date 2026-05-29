@@ -322,6 +322,8 @@
                                                     return k
                                                 case '$target':
                                                     return target
+                                                case 'contentWindow':
+                                                    return target[prop]
                                                 default:
                                                     return target[prop]
                                             }

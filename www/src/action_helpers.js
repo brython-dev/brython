@@ -419,7 +419,6 @@ $B._PyPegen.formatted_value = function(p,
 }
 
 $B._PyPegen.decode_fstring_part = function(p, is_raw, constant, token){
-
     var bstr = constant.value
 
     var len;
