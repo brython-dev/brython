@@ -135,4 +135,8 @@ a = 5
 b = 6
 assert f"{a=} {b=}" == 'a=5 b=6'
 
+# {} inside f-string expression
+x = f'{{}}'
+assert x == '{}'
+
 print("passed all tests")

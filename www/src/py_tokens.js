@@ -78,8 +78,11 @@ const tokens = [
 
 $B.py_tokens = {}
 
+$B.token_name = {}
+
 var pos = 0
 for(var tok of tokens){
+    $B.token_name[pos] = tok
     $B.py_tokens[tok] = pos++
 }
 
