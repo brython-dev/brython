@@ -394,6 +394,21 @@ $B.set_func_names = function(klass, module){
             $B.add_function_infos(klass, attr, module)
         }
     }
+    // Also seed $function_infos on tp_funcs entries. Brython-native classes
+    // expose their methods through `tp_funcs` (the C-style slot table); when
+    // those methods are returned as bound methods, `method.tp_repr` reads
+    // `self.im_func.$function_infos[__qualname__]`. Without this loop, the
+    // tp_funcs functions had no $function_infos, so `repr(instance.method)`
+    // or any assertRaises-style report on a bound method would crash with
+    // `self.$function_infos is undefined`.
+    if(klass.tp_funcs){
+        for(var attr in klass.tp_funcs){
+            if(typeof klass.tp_funcs[attr] == 'function'){
+                $B.add_function_infos(klass.tp_funcs, attr, module,
+                    (klass.tp_name || '') + '.' + attr)
+            }
+        }
+    }
 }
 
 $B.add_function_infos = function(klass, attr, module, qualname){
