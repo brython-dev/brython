@@ -2543,7 +2543,7 @@ str_funcs.istitle = function(self){
     otherwise. */
     $B.check_nb_args_no_kw('str.istitle', 1, arguments)
     var _self = to_string(self)
-    return _self.length > 0 && str.title(_self) == _self
+    return _self.length > 0 && str_funcs.title(_self) == _self
 }
 
 str_funcs.isupper = function(self){
