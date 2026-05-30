@@ -1237,12 +1237,16 @@ _b_.type.tp_call = function(cls){
         if(test){
             console.log('init func', init_func)
         }
-        if(init_func !== $B.NULL && init_func !== _b_.object.tp_init){
+        if(init_func !== $B.NULL && init_func !== _b_.object.tp_init &&
+                typeof init_func == 'function'){
             // object.__init__ is not called in this case (it would raise an
             // exception if there are parameters).
-            if(typeof init_func != 'function'){
-                console.log('init func', init_func, 'instance', instance)
-            }
+            //
+            // The `typeof init_func == 'function'` guard handles types whose
+            // tp_init is undefined (some heap types that never call
+            // finalize_type's wrapper_methods loop). Without it,
+            // `init_func.call(...)` crashes with
+            // `can't access property "call", init_func is undefined`.
             try{
                 if(kw_len > 0){
                     var kwarg = $B.dict2kwarg(kw)
