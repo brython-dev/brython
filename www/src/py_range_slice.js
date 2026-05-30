@@ -273,7 +273,7 @@ _b_.range.mp_subscript = function(self, rank){
             `or slices, not ${$B.class_name(rank)}`)
     }
     if($B.rich_comp('__gt__', 0, rank)){
-        rank = $B.rich_op('__add__', rank, range.__len__(self))
+        rank = $B.rich_op('__add__', rank, range.mp_length(self))
     }
     var res = $B.rich_op('__add__', self.start, $B.rich_op('__mul__', rank, self.step))
     if(($B.rich_comp('__gt__', self.step, 0) &&
