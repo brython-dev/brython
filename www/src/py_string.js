@@ -1904,8 +1904,12 @@ _b_.str.mp_subscript = function(self, arg){
     self = to_string(self)
     if($B.is_int(arg)){
         var len = str.mp_length(self)
-        var pos = arg
-        if(arg < 0){
+        // $B.is_int matches `typeof === 'boolean'` too, so the int branch
+        // is also the bool branch (bool is a subclass of int in Python).
+        // Without this coercion `self[true]` / `self[false]` are JS bracket
+        // accesses by property name and yield `undefined`.
+        var pos = (typeof arg === 'boolean') ? +arg : arg
+        if(pos < 0){
             pos += len
         }
         if(pos >= 0 && pos < len){
