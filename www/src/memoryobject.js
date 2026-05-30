@@ -24,8 +24,18 @@ memoryview.$factory = function(obj){
     if($B.get_class(obj) === memoryview){
         return obj
     }
-    var getbuffer = $B.search_slot($B.get_class(obj), 'tp_getbuffer', $B.NULL)
-    if(getbuffer === $B.NULL){
+    // Was `search_slot(cls, 'tp_getbuffer', ...)` — the slot is called
+    // `bf_getbuffer` in Brython's wrapper_methods table; `tp_getbuffer`
+    // never matched anything → every `memoryview(x)` raised TypeError
+    // unless `x` was already a memoryview. Now: accept any object whose
+    // type exposes the buffer protocol (PEP 688 `__buffer__`, the
+    // `bf_getbuffer` slot, or the `$buffer_protocol = true` marker that
+    // Brython-native types set on themselves).
+    var cls_obj = $B.get_class(obj)
+    var has_buffer = $B.$getattr(obj, '__buffer__', $B.NULL) !== $B.NULL
+                  || (cls_obj && cls_obj.bf_getbuffer)
+                  || (cls_obj && cls_obj.$buffer_protocol)
+    if(!has_buffer){
         $B.RAISE(_b_.TypeError, "memoryview: a bytes-like object " +
             "is required, not '" + $B.class_name(obj) + "'"
         )
@@ -150,7 +160,16 @@ _b_.memoryview.tp_new = function(cls, args, kw){
     if($B.get_class(obj) === memoryview){
         return obj
     }
-    if($B.$getattr(obj, '__buffer__', $B.NULL) !== $B.NULL){
+    // Accept any object exposing the buffer protocol: the PEP 688
+    // `__buffer__` hook, the `bf_getbuffer` slot, or the
+    // `$buffer_protocol = true` marker. CPython's memoryview() accepts
+    // anything with bf_getbuffer; restricting to `__buffer__` made
+    // `memoryview(array.array('i', ...))` raise TypeError.
+    var cls_obj = $B.get_class(obj)
+    var has_buffer = $B.$getattr(obj, '__buffer__', $B.NULL) !== $B.NULL
+                  || (cls_obj && cls_obj.bf_getbuffer)
+                  || (cls_obj && cls_obj.$buffer_protocol)
+    if(has_buffer){
         obj.exports = obj.exports ?? 0
         obj.exports++ // used to prevent resizing
         var res = {
@@ -427,7 +446,10 @@ memoryview_funcs.tobytes = function(self){
     }else if($B.imported.array){
         var array = $B.module_getattr($B.imported.array, 'array')
         if($B.$isinstance(self.obj, array)){
-            return array.tobytes(self.obj)
+            // Was `array.tobytes(self.obj)` — methods live in tp_funcs,
+            // not as direct JS properties (finalize_type installs them
+            // in tp_dict as method_descriptors).
+            return array.tp_funcs.tobytes(self.obj)
         }
     }
     $B.RAISE(_b_.TypeError, 'cannot run tobytes with ' + $B.class_name(self.obj))
