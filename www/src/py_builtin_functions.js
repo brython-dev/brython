@@ -1646,10 +1646,26 @@ reversed.$factory = function(seq){
         $B.RAISE(_b_.TypeError, "argument to reversed() must be a sequence")
     }
 
+    var seqlen = _b_.len(seq)
+    // Coerce to a JS primitive number — `_b_.len` may return a Brython
+    // wrapper for some types; `--` on an object yields NaN.
+    if (typeof seqlen !== 'number') {
+        if (typeof seqlen === 'bigint') seqlen = Number(seqlen)
+        else seqlen = Number(seqlen) | 0
+    }
     var res = {
         ob_type: reversed,
         seq,
-        len : _b_.len(seq),
+        len : seqlen,
+        // Initialize `counter` here too — CPython's reverseiterator
+        // sets index in tp_new. Without this, `next(reversed(seq))`
+        // *without* a prior `iter(r)` finds `counter=undefined`,
+        // `undefined-- = NaN`, and getitem receives NaN → TypeError
+        // "array indices must be integers" from C-typed sequences.
+        // (Brython's `for x in r:` does call `iter(r)` which used to
+        // mask this, but `next(r)` direct, `assertRaises(StopIteration,
+        // next, r)`, and similar patterns triggered it.)
+        counter: seqlen,
         getitem: method
     }
     return res
@@ -1658,7 +1674,11 @@ reversed.$factory = function(seq){
 
 /* reversed start */
 _b_.reversed.tp_iter = function(self){
-    self.counter = self.len
+    // CPython semantics: `iter(iterator)` returns the iterator as-is
+    // without resetting state. Used to be `self.counter = self.len` to
+    // lazy-init the counter on first iteration, but $factory above now
+    // seeds it eagerly — re-setting it here re-armed exhausted iterators
+    // and `list(exhausted)` returned the whole sequence instead of [].
     return self
 }
 
@@ -1684,10 +1704,26 @@ _b_.reversed.tp_new = function(cls, args, kw){
         $B.RAISE(_b_.TypeError, "argument to reversed() must be a sequence")
     }
 
+    var seqlen = _b_.len(seq)
+    // Coerce to a JS primitive — `_b_.len` returns a Brython int for some
+    // types (which is an object wrapping the value). `self.counter--` on an
+    // object is NaN (not a numeric decrement). Make sure `counter` is a JS
+    // number primitive.
+    if (typeof seqlen !== 'number') {
+        if (typeof seqlen === 'bigint') seqlen = Number(seqlen)
+        else if (seqlen && seqlen.value !== undefined) seqlen = Number(seqlen.value)
+        else seqlen = Number(seqlen)
+    }
     var res = {
         ob_type: cls,
         seq,
-        len: _b_.len(seq),
+        len: seqlen,
+        // `counter` was missing — `tp_iternext` does `self.counter--`
+        // first, so `undefined--` was NaN forever, and getitem received
+        // NaN ("array indices must be integers" from wasthon array et al.).
+        // Start at `seqlen` so the first post-decrement is the last valid
+        // index.
+        counter: seqlen,
         getitem: method
     }
     return res
