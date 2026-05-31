@@ -942,7 +942,6 @@ var DOMNode_funcs = DOMNode.tp_funcs = {}
 
 DOMNode_funcs.attach = function(self, other){
     // for document, append child to document.body
-    console.log('attach', self, other, 'ob type', other.ob_type)
     if(self.nodeType == Node.DOCUMENT_NODE){
         self = self.body
     }

@@ -9,10 +9,23 @@ try{
         "Microsoft Edge, please upgrade to the latest version")
 }
 
-// for code that requires RegExp.escape (cf. issue #2686) 
+// for code that requires RegExp.escape (cf. issue #2686)
 if(! Object.hasOwn(RegExp, 'escape')){
     RegExp.escape = function(str) {
         return str.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&')
+    }
+}
+
+// discussion #2696
+if(! Object.hasOwn(Set.prototype, 'difference')){
+    Set.prototype.difference = function(self, other){
+        var res = new Set()
+        for(var item of self){
+            if(! other.has(item)){
+                res.add(item)
+            }
+        }
+        return res
     }
 }
 
