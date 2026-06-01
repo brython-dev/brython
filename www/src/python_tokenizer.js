@@ -344,6 +344,7 @@ $B.tokenizer = function(src, filename, mode, parser){
             console.log(carets)
         }
     }
+
     var state = "line_start",
         char,
         cp,
@@ -390,7 +391,7 @@ $B.tokenizer = function(src, filename, mode, parser){
         char = src[pos]
         if(debug){
             console.log('token mode', token_mode, 'state', state,
-                'pos', pos, 'char', char)
+                'pos', pos, 'char', char, 'fstring stack', fstring_stack.slice())
         }
         cp = src.charCodeAt(pos)
         if(cp >= 0xD800 && cp <= 0xDBFF){
@@ -401,7 +402,6 @@ $B.tokenizer = function(src, filename, mode, parser){
         }
         pos++
 
-        // console.log('state', state, 'token mode', token_mode, 'char', char)
         if(token_mode != save_mode){
             if(token_mode == 'ft'){
                 ft_buffer = ''
@@ -518,39 +518,38 @@ $B.tokenizer = function(src, filename, mode, parser){
                     continue
                 }
             }else if(char == '{'){
+                if(format_specifier.length > 0){
+                    t.push(Token(FT_MIDDLE[ft_type], format_specifier,
+                        line_num, ft_start,
+                        line_num, ft_start + format_specifier.length,
+                        line))
+                }                
                 token_mode = 'regular_within_ft'
-                /*
                 fstring_stack.push(
                     {
                         start: pos,
-                        nb_braces_on_entry: braces.length
+                        nb_braces_on_entry: braces.length,
+                        inside_format_specifier: true
                     }
                 )
-                */
                 ft_expr_start = pos - line_start
                 state = null
                 token_modes.push(token_mode)
             }else if(char == '}'){
-                t.push(Token('OP', char,
-                        line_num, ft_start,
-                        line_num, ft_start + format_specifier.length,
-                        line))
                 // emit FSTRING_MIDDLE
                 t.push(Token(FT_MIDDLE[ft_type], format_specifier,
                     line_num, ft_start,
                     line_num, ft_start + format_specifier.length,
                     line))
                 // emit closing bracket token
-                /*
                 t.push(Token('OP', char,
                     line_num, pos - line_start,
                     line_num, pos - line_start + 1,
                     line))
-                */
                 show_braces()
                 if(braces.length == 0 || $B.last(braces).char !== '{'){
                     console.log('braces', braces.slice(), $B.last(braces).char)
-                    throw Error('wrong braces 514')
+                    throw Error('wrong braces')
                 }
                 pop_braces()
                 //fstring_stack.pop()
@@ -857,7 +856,7 @@ $B.tokenizer = function(src, filename, mode, parser){
                                     }
                                 }else{
                                     // closing brace
-                                    let closing_brace =  Token('OP', char,
+                                    let closing_brace = Token('OP', char,
                                         line_num, pos - line_start - op.length + 1,
                                         line_num, pos - line_start + 1,
                                         line)
@@ -1016,6 +1015,10 @@ $B.tokenizer = function(src, filename, mode, parser){
                         line_num, pos - line_start,
                         line))
                     if(token_mode == 'regular_within_ft' && char == '}'){
+                        t.push(Token('OP', char,
+                            line_num, pos - line_start - 1,
+                            line_num, pos - line_start,
+                            line))
                         show_braces()
                         if($B.last(braces).char == '{'){
                             token_modes.pop()
@@ -1023,6 +1026,7 @@ $B.tokenizer = function(src, filename, mode, parser){
                             state = null
                             pop_braces()
                         }
+                        continue
                     }
                     state = null
                     pos--
@@ -1076,7 +1080,7 @@ $B.tokenizer = function(src, filename, mode, parser){
                         if(! escaped && ! triple_quote){
                             // unterminated string
                             var msg
-                            if(token_mode == 'regular_within_fstring'){
+                            if(token_mode == 'regular_within_ft'){
                                 msg = "f-string: missing '}'"
                             }else{
                                 var msg = `unterminated string literal ` +

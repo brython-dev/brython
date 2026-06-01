@@ -9,6 +9,9 @@ try{
 eval("async function* f(){}")}catch(err){console.warn("Your browser is not fully supported. If you are using "+
 "Microsoft Edge, please upgrade to the latest version")}
 if(! Object.hasOwn(RegExp,'escape')){RegExp.escape=function(str){return str.replace(/[/\-\\^$*+?.()|[\]{}]/g,'\\$&')}}
+if(! Object.hasOwn(Set.prototype,'difference')){Set.prototype.difference=function(self,other){var res=new Set()
+for(var item of self){if(! other.has(item)){res.add(item)}}
+return res}}
 (function($B){
 $B.isWebWorker=('undefined' !==typeof WorkerGlobalScope)&&
 ("function"===typeof importScripts)&&
@@ -706,8 +709,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-05-26 09:36:34.342312"
-__BRYTHON__.timestamp=1779780994341
+__BRYTHON__.compiled_date="2026-06-01 08:44:21.361056"
+__BRYTHON__.timestamp=1780296261360
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_kozh","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -716,8 +719,10 @@ __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_clas
 'ERRORTOKEN','ENCODING','N_TOKENS'
 ]
 $B.py_tokens={}
+$B.token_name={}
 var pos=0
-for(var tok of tokens){$B.py_tokens[tok]=pos++}
+for(var tok of tokens){$B.token_name[pos]=tok
+$B.py_tokens[tok]=pos++}
 $B.py_tokens['NT_OFFSET']=256
 $B.EXACT_TOKEN_TYPES={'!':'EXCLAMATION','!=':'NOTEQUAL','%':'PERCENT','%=':'PERCENTEQUAL','&':'AMPER','&=':'AMPEREQUAL','(':'LPAR',')':'RPAR','*':'STAR','**':'DOUBLESTAR','**=':'DOUBLESTAREQUAL','*=':'STAREQUAL','+':'PLUS','+=':'PLUSEQUAL',',':'COMMA','-':'MINUS','-=':'MINEQUAL','->':'RARROW','.':'DOT','...':'ELLIPSIS','/':'SLASH','//':'DOUBLESLASH','//=':'DOUBLESLASHEQUAL','/=':'SLASHEQUAL',':':'COLON',':=':'COLONEQUAL',';':'SEMI','<':'LESS','<<':'LEFTSHIFT','<<=':'LEFTSHIFTEQUAL','<=':'LESSEQUAL','=':'EQUAL','==':'EQEQUAL','>':'GREATER','>=':'GREATEREQUAL','>>':'RIGHTSHIFT','>>=':'RIGHTSHIFTEQUAL','@':'AT','@=':'ATEQUAL','[':'LSQB',']':'RSQB','^':'CIRCUMFLEX','^=':'CIRCUMFLEXEQUAL','{':'LBRACE','|':'VBAR','|=':'VBAREQUAL','}':'RBRACE','~':'TILDE'}
 function ISTERMINAL(x){return x < NT_OFFSET}
@@ -841,10 +846,26 @@ var lines=src.split('\n'),linenum=0,line_at={}
 for(let i=0,len=src.length;i < len;i++){line_at[i]=linenum
 if(src[i]=='\n'){linenum++}}
 function get_line_at(pos){return lines[line_at[pos]]+'\n'}
-var state="line_start",char,cp,mo,pos=0,quote,triple_quote,escaped=false,string_start,string,prefix,name,number,num_type,comment,indent,indent_before_continuation=0,indents=[],braces=[],line,line_num=0,line_start=1,token_modes=['regular'],token_mode='regular',save_mode=token_mode,format_specifier,ft_type,ft_buffer,ft_start,ft_expr_start,ft_escape,ft_format_spec
+function pop_braces(){show_braces()
+var brace=braces.pop()}
+function show_braces(){if(! debug){return}
+var line_num
+var pos
+var carets
+for(var b of braces){var line=lines[b.line_num-1]
+var new_line=b.line_num !==line_num
+if(new_line){if(carets){console.log(carets)}
+console.log(line,b)
+line_num=b.line_num
+carets=' '.repeat(b.pos-b.line_start)+'^'
+pos=b.pos}else{carets+=' '.repeat(b.pos-pos-1)+'^'
+pos=b.pos}}
+if(carets){console.log(carets)}}
+var state="line_start",char,cp,mo,pos=0,quote,triple_quote,escaped=false,string_start,string,prefix,name,number,num_type,comment,indent,indent_before_continuation=0,indents=[],braces=[],line,line_num=0,line_start=1,token_modes=['regular'],token_mode='regular',save_mode=token_mode,format_specifier,ft_type,ft_buffer,ft_start,ft_expr_start,ft_escape,ft_format_spec,braces_length_on_entry,fstring_stack=[],debug=0
 if(parser){parser.braces=braces}
 t.push(Token('ENCODING','utf-8',0,0,0,0,''))
 while(pos < src.length){char=src[pos]
+if(debug){console.log('token mode',token_mode,'state',state,'pos',pos,'char',char,'fstring stack',fstring_stack.slice())}
 cp=src.charCodeAt(pos)
 if(cp >=0xD800 && cp <=0xDBFF){
 cp=ord(src.substr(pos,2))
@@ -865,6 +886,10 @@ pos+=2}
 if(ft_buffer.length > 0){
 t.push(Token(FT_MIDDLE[ft_type],ft_buffer,line_num,ft_start,line_num,ft_start+ft_buffer.length,line))}
 t.push(Token(FT_END[ft_type],char,line_num,pos-line_start,line_num,pos-line_start+1,line))
+show_braces()
+try{$B.last(fstring_stack).end=pos}catch(err){console.log('error, fstring_stack',fstring_stack.slice())
+throw err}
+fstring_stack.pop()
 token_modes.pop()
 token_mode=$B.last(token_modes)
 state=null
@@ -874,6 +899,7 @@ pos++
 continue}else{
 if(ft_buffer.length > 0){t.push(Token(FT_MIDDLE[ft_type],ft_buffer,line_num,ft_start,line_num,ft_start+ft_buffer.length,line))}
 token_mode='regular_within_ft'
+$B.last(fstring_stack).nb_braces_on_entry=braces.length
 ft_expr_start=pos-line_start
 state=null
 token_modes.push(token_mode)}}else if(char=='}'){if(src.charAt(pos)=='}'){
@@ -891,16 +917,20 @@ continue}}else if(token_mode=='format_specifier'){if(char==quote){if(format_spec
 t.push(Token(FT_MIDDLE[ft_type],format_specifier,line_num,ft_start,line_num,ft_start+format_specifier.length,line))
 token_modes.pop()
 token_mode=$B.last(token_modes)
-continue}}else if(char=='{'){
-t.push(Token(FT_MIDDLE[ft_type],format_specifier,line_num,ft_start,line_num,ft_start+format_specifier.length,line))
+continue}}else if(char=='{'){if(format_specifier.length > 0){t.push(Token(FT_MIDDLE[ft_type],format_specifier,line_num,ft_start,line_num,ft_start+format_specifier.length,line))}
 token_mode='regular_within_ft'
+fstring_stack.push(
+{start:pos,nb_braces_on_entry:braces.length,inside_format_specifier:true}
+)
 ft_expr_start=pos-line_start
 state=null
 token_modes.push(token_mode)}else if(char=='}'){
 t.push(Token(FT_MIDDLE[ft_type],format_specifier,line_num,ft_start,line_num,ft_start+format_specifier.length,line))
 t.push(Token('OP',char,line_num,pos-line_start,line_num,pos-line_start+1,line))
-if(braces.length==0 ||$B.last(braces).char !=='{'){throw Error('wrong braces')}
-braces.pop()
+show_braces()
+if(braces.length==0 ||$B.last(braces).char !=='{'){console.log('braces',braces.slice(),$B.last(braces).char)
+throw Error('wrong braces')}
+pop_braces()
 token_modes.pop()
 token_mode=$B.last(token_modes)
 continue}else{format_specifier+=char
@@ -1050,11 +1080,11 @@ let closing_brace=Token('OP',char,line_num,pos-line_start-op.length+1,line_num,p
 closing_brace.metadata=src.substring(
 line_start+ft_expr_start,pos-1)
 t.push(closing_brace)
-token_modes.pop()
-token_mode=token_modes[token_modes.length-1]
 if(braces.length==0 ||$B.last(braces).char !=='{'){t.push(Error('wrong braces'))
 return t}
-braces.pop()
+if(braces.length==1+$B.last(fstring_stack).nb_braces_on_entry){token_modes.pop()
+token_mode=token_modes[token_modes.length-1]}
+pop_braces()
 continue}}
 var op=char
 if(op2.includes(char+src[pos])){op=char+src[pos]
@@ -1064,7 +1094,10 @@ augm_op.includes(op))){op+=src[pos]
 pos++}else if((char=='-' && src[pos]=='>')||
 (char==':' && src[pos]=='=')){op+=src[pos]
 pos++}
-if('[({'.includes(char)){braces.push({char,pos,line_num,line_start,line})}else if('])}'.includes(char)){if(braces.length && $last(braces).char==closing[char]){braces.pop()}else{braces.push({char,pos,line_num,line_start,line})}}
+if('[({'.includes(char)){braces.push({char,pos,line_num,line_start,line})}else if('])}'.includes(char)){if(debug){console.log('closing brace',char,'clsing',closing[char])
+console.log('braces',braces.slice())
+console.log('token mode',token_mode)}
+if(braces.length && $last(braces).char==closing[char]){pop_braces()}else{braces.push({char,pos,line_num,line_start,line})}}
 t.push(Token('OP',op,line_num,pos-line_start-op.length+1,line_num,pos-line_start+1,line))}else if(char=='!'){if(src[pos]=='='){t.push(Token('OP','!=',line_num,pos-line_start,line_num,pos-line_start+2,line))
 pos++}else{
 let token=Token('OP',char,line_num,pos-line_start,line_num,pos-line_start+1,line)
@@ -1102,12 +1135,22 @@ token_modes.push(token_mode)
 var s=triple_quote ? quote.repeat(3):quote
 var end_col=ft_start+name.length+s.length
 t.push(Token(FT_START[ft_type],prefix+s,line_num,ft_start,line_num,end_col,line))
+fstring_stack.push(
+{start:pos,nb_braces_on_entry:braces.length}
+)
 continue}
 escaped=false
 string_start=[line_num,pos-line_start-name.length,line_start]
 string=''}else{t.push(Token('NAME',name,line_num,pos-line_start-name.length,line_num,pos-line_start,line))
 state=null
 pos--}}else{t.push(Token('NAME',name,line_num,pos-line_start-name.length,line_num,pos-line_start,line))
+if(token_mode=='regular_within_ft' && char=='}'){t.push(Token('OP',char,line_num,pos-line_start-1,line_num,pos-line_start,line))
+show_braces()
+if($B.last(braces).char=='{'){token_modes.pop()
+token_mode=$B.last(token_modes)
+state=null
+pop_braces()}
+continue}
 state=null
 pos--}
 break
@@ -1133,7 +1176,7 @@ case '\r':
 case '\n':
 if(! escaped && ! triple_quote){
 var msg
-if(token_mode=='regular_within_fstring'){msg="f-string: missing '}'"}else{var msg=`unterminated string literal `+
+if(token_mode=='regular_within_ft'){msg="f-string: missing '}'"}else{var msg=`unterminated string literal `+
 `(detected at line ${line_num})`,line_num=string_start[0],col_offset=string_start[1]}
 t.push(ErrorToken(_b_.SyntaxError,filename,line_num,col_offset,line_num,col_offset,line,msg))
 return t}
@@ -4846,7 +4889,8 @@ _b_.pow=function(){var $=$B.args('pow',3,{x:null,y:null,mod:null},arguments,{mod
 var x=$.x,y=$.y,z=$.mod
 if(z===_b_.None){return $B.rich_op('__pow__',x,y)}else{if($B.is_int(x)){if($B.$isinstance(y,_b_.float)){throw all_ints()}else if($B.$isinstance(y,_b_.complex)){throw complex_modulo()}else if($B.is_int(y)){if($B.$isinstance(z,_b_.complex)){throw complex_modulo()}else if(! $B.is_int(z)){throw all_ints()}}
 return _b_.int.nb_power(x,y,z)}else if($B.$isinstance(x,_b_.float)){throw all_ints()}else if($B.$isinstance(x,_b_.complex)){throw complex_modulo()}}}
-var $print=_b_.print=function(){var[args,kw]=$B.parse_args_kw('print',arguments)
+var $print=_b_.print=function(){var arg=arguments[0]
+var[args,kw]=$B.parse_args_kw('print',arguments)
 var end=$B.str_dict_get(kw,'end','\n'),sep=$B.str_dict_get(kw,'sep',' '),file=$B.str_dict_get(kw,'file',$B.get_stdout())
 var writer=$B.$getattr(file,'write')
 for(var i=0,len=args.length;i < len;i++){var arg=$B.make_str(args[i])
@@ -11425,7 +11469,9 @@ case 'string':
 return $B.String(jsobj)}
 if(Array.isArray(jsobj)){
 return jsobj}
-let pyobj=jsobj[PYOBJ]
+let pyobj
+try{pyobj=jsobj[PYOBJ]}catch(err){
+return jsobj}
 if(pyobj !==undefined){return pyobj}
 if(jsobj instanceof Promise ||typeof jsobj.then=="function"){return jsobj}
 if(typeof jsobj==="function"){
@@ -12403,7 +12449,8 @@ var DOMNode_funcs=DOMNode.tp_funcs={}
 DOMNode_funcs.attach=function(self,other){
 if(self.nodeType==Node.DOCUMENT_NODE){self=self.body}
 if($B.$isinstance(other,TagSum)){for(var i=0;i < other.children.length;i++){self.appendChild(other.children[i])}}else if(typeof other=="string" ||typeof other=="number"){var txt=document.createTextNode(other.toString())
-self.appendChild(txt)}else if(other instanceof Node){self.appendChild(other)}else{try{
+self.appendChild(txt)}else if(other.ob_type===$B.module_getattr($B.imported['browser.html'],'IFRAME')){console.log('attach FRAME')
+self.appendChild(other.$target)}else if(other instanceof Node){self.appendChild(other)}else{try{
 var items=_b_.list.$factory(other)
 items.forEach(function(item){DOMNode.tp_funcs.attach(self,item)})}catch(err){$B.RAISE(_b_.TypeError,"can't add '"+
 $B.class_name(other)+"' object to DOMNode instance")}}
@@ -13577,6 +13624,17 @@ console.log('creating element',k.tp_name)
 throw err}}
 var init=k.tp_init
 if(init !==null){init(res,...arguments)}
+if(k.tp_name=='IFRAME'){
+return new Proxy(res,{get(target,prop){console.log('get IFRAME attr',prop)
+try{switch(prop){case 'ob_type':
+return k
+case '$target':
+return target
+case 'contentWindow':
+return target[prop]
+default:
+return target[prop]}}catch(err){console.warn('objet does not support attr resolution')}},set(target,prop,value){target[prop]=value}}
+)}
 return res}})(klass)}
 var tags=['A','ABBR','ACRONYM','ADDRESS','APPLET','AREA','B','BASE','BASEFONT','BDO','BIG','BLOCKQUOTE','BODY','BR','BUTTON','CAPTION','CENTER','CITE','CODE','COL','COLGROUP','DD','DEL','DFN','DIR','DIV','DL','DT','EM','FIELDSET','FONT','FORM','FRAME','FRAMESET','H1','H2','H3','H4','H5','H6','HEAD','HR','HTML','I','IFRAME','IMG','INPUT','INS','ISINDEX','KBD','LABEL','LEGEND','LI','LINK','MAP','MENU','META','NOFRAMES','NOSCRIPT','OBJECT','OL','OPTGROUP','OPTION','P','PARAM','PRE','Q','S','SAMP','SCRIPT','SELECT','SMALL','SPAN','STRIKE','STRONG','STYLE','SUB','SUP','SVG','TABLE','TBODY','TD','TEXTAREA','TFOOT','TH','THEAD','TITLE','TR','TT','U','UL','VAR',
 'ARTICLE','ASIDE','AUDIO','BDI','CANVAS','COMMAND','DATA','DATALIST','EMBED','FIGCAPTION','FIGURE','FOOTER','HEADER','KEYGEN','MAIN','MARK','MATH','METER','NAV','OUTPUT','PROGRESS','RB','RP','RT','RTC','RUBY','SECTION','SOURCE','TEMPLATE','TIME','TRACK','VIDEO','WBR',
@@ -30383,7 +30441,7 @@ if(
 &&
 $B._PyPegen.lookahead(0,_tmp_239_rule,p)
 )
-{_res=$B.helper_functions.$B._PyPegen.PyErr_Occurred()? $B.parser_constants.NULL :$B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,"f-string: expecting '=', or '!', or ':', or '}'");
+{_res=$B.helper_functions.PyErr_Occurred()? $B.parser_constants.NULL :$B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,"f-string 19017: expecting '=', or '!', or ':', or '}'");
 break;}
 p.mark=_mark;}
 {
@@ -30400,7 +30458,7 @@ if(
 &&
 $B._PyPegen.lookahead(0,_tmp_240_rule,p)
 )
-{_res=$B.helper_functions.$B._PyPegen.PyErr_Occurred()? $B.parser_constants.NULL :$B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,"f-string: expecting '!', or ':', or '}'");
+{_res=$B.helper_functions.PyErr_Occurred()? $B.parser_constants.NULL :$B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,"f-string 19040: expecting '!', or ':', or '}'");
 break;}
 p.mark=_mark;}
 {
@@ -30441,7 +30499,7 @@ if(
 &&
 $B._PyPegen.lookahead(0,_tmp_242_rule,p)
 )
-{_res=$B.helper_functions.$B._PyPegen.PyErr_Occurred()? $B.parser_constants.NULL :$B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,"f-string: expecting ':' or '}'");
+{_res=$B.helper_functions.PyErr_Occurred()? $B.parser_constants.NULL :$B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,"f-string: expecting ':' or '}'");
 break;}
 p.mark=_mark;}
 {
@@ -30469,7 +30527,7 @@ if(
 &&
 $B._PyPegen.lookahead_with_int(0,$B._PyPegen.expect_token,p,26)
 )
-{_res=$B.helper_functions.$B._PyPegen.PyErr_Occurred()? $B.parser_constants.NULL :$B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,"f-string: expecting '}', or format specs");
+{_res=$B.helper_functions.PyErr_Occurred()? $B.parser_constants.NULL :$B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,"f-string: expecting '}', or format specs");
 break;}
 p.mark=_mark;}
 {
@@ -30491,7 +30549,7 @@ if(
 &&
 $B._PyPegen.lookahead_with_int(0,$B._PyPegen.expect_token,p,26)
 )
-{_res=$B.helper_functions.$B._PyPegen.PyErr_Occurred()? $B.parser_constants.NULL :$B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,"f-string: expecting '}'");
+{_res=$B.helper_functions.PyErr_Occurred()? $B.parser_constants.NULL :$B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,"f-string: expecting '}'");
 break;}
 p.mark=_mark;}
 _res=NULL;
@@ -30600,7 +30658,7 @@ if(
 &&
 $B._PyPegen.lookahead(0,_tmp_247_rule,p)
 )
-{_res=$B.helper_functions.$B._PyPegen.PyErr_Occurred()? $B.parser_constants.NULL :$B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,"t-string: expecting '=', or '!', or ':', or '}'");
+{_res=$B.helper_functions.PyErr_Occurred()? $B.parser_constants.NULL :$B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,"t-string: expecting '=', or '!', or ':', or '}'");
 break;}
 p.mark=_mark;}
 {
@@ -30617,7 +30675,7 @@ if(
 &&
 $B._PyPegen.lookahead(0,_tmp_248_rule,p)
 )
-{_res=$B.helper_functions.$B._PyPegen.PyErr_Occurred()? $B.parser_constants.NULL :$B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,"t-string: expecting '!', or ':', or '}'");
+{_res=$B.helper_functions.PyErr_Occurred()? $B.parser_constants.NULL :$B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,"t-string: expecting '!', or ':', or '}'");
 break;}
 p.mark=_mark;}
 {
@@ -30658,7 +30716,7 @@ if(
 &&
 $B._PyPegen.lookahead(0,_tmp_250_rule,p)
 )
-{_res=$B.helper_functions.$B._PyPegen.PyErr_Occurred()? $B.parser_constants.NULL :$B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,"t-string: expecting ':' or '}'");
+{_res=$B.helper_functions.PyErr_Occurred()? $B.parser_constants.NULL :$B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,"t-string: expecting ':' or '}'");
 break;}
 p.mark=_mark;}
 {
@@ -30686,7 +30744,7 @@ if(
 &&
 $B._PyPegen.lookahead_with_int(0,$B._PyPegen.expect_token,p,26)
 )
-{_res=$B.helper_functions.$B._PyPegen.PyErr_Occurred()? $B.parser_constants.NULL :$B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,"t-string: expecting '}', or format specs");
+{_res=$B.helper_functions.PyErr_Occurred()? $B.parser_constants.NULL :$B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,"t-string: expecting '}', or format specs");
 break;}
 p.mark=_mark;}
 {
@@ -30708,7 +30766,7 @@ if(
 &&
 $B._PyPegen.lookahead_with_int(0,$B._PyPegen.expect_token,p,26)
 )
-{_res=$B.helper_functions.$B._PyPegen.PyErr_Occurred()? $B.parser_constants.NULL :$B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,"t-string: expecting '}'");
+{_res=$B.helper_functions.PyErr_Occurred()? $B.parser_constants.NULL :$B.helper_functions.RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN(p,"t-string: expecting '}'");
 break;}
 p.mark=_mark;}
 _res=NULL;
