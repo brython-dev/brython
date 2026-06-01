@@ -709,8 +709,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-06-01 08:44:21.361056"
-__BRYTHON__.timestamp=1780296261360
+__BRYTHON__.compiled_date="2026-06-01 22:00:00.935044"
+__BRYTHON__.timestamp=1780344000933
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_kozh","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -909,7 +909,10 @@ continue}else{
 t.push(Token('OP',char,line_num,pos-line_start,line_num,pos-line_start+1,line))
 continue}}else if(char=='\\'){if(token_mode.raw){ft_buffer+=char+char}else{if(ft_escape){ft_buffer+='\\'+char}
 ft_escape=! ft_escape}
-continue}else{if(ft_escape){ft_buffer+='\\'}
+continue}else{if(char=="'" && ! ft_escape &&
+ft_buffer[ft_buffer.length-1]=='\\'){
+ft_buffer+='\\'}
+if(ft_escape){ft_buffer+='\\'}
 ft_buffer+=char
 ft_escape=false
 if(char=='\n'){line_num++}

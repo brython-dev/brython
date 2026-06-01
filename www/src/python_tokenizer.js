@@ -494,6 +494,13 @@ $B.tokenizer = function(src, filename, mode, parser){
                 }
                 continue
             }else{
+                if(char == "'" && ! ft_escape &&
+                        ft_buffer[ft_buffer.length - 1] == '\\'){
+                    // eventually the JS code for this string part of the
+                    // f-string will be enclosed in single quotes, so we can't
+                    // leave unescaped single quotes. Cf. issue #2693
+                    ft_buffer += '\\'
+                }
                 if(ft_escape){
                     ft_buffer += '\\'
                 }
@@ -523,7 +530,7 @@ $B.tokenizer = function(src, filename, mode, parser){
                         line_num, ft_start,
                         line_num, ft_start + format_specifier.length,
                         line))
-                }                
+                }
                 token_mode = 'regular_within_ft'
                 fstring_stack.push(
                     {

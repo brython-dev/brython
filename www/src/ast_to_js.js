@@ -2216,7 +2216,7 @@ $B.ast.For.prototype.to_js = function(scopes){
     scopes.push(new_scope)
 
     var inum = add_to_positions(scopes, this.iter)
-    
+
     if(this instanceof $B.ast.AsyncFor){
         js += prefix + `var no_break_${id} = true,\n` +
               prefix + tab + tab + `iter_${id} = ${iter},\n` +
