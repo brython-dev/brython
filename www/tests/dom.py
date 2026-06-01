@@ -188,7 +188,7 @@ assert target.closest('.test') is document['test_2495']
 body = document.select_one('body')
 ifr = html.IFRAME(sandbox="")
 body <= ifr
-print(ifr.contentWindow)
-del ifr
+# print(ifr.contentWindow)
+#del ifr
 
 print('all tests pass...')
