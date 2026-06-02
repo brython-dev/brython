@@ -144,7 +144,8 @@ $B.init_dict(cls)
 if(tp_bases){cls.tp_mro=[cls,...tp_bases,_b_.object]}else{cls.tp_mro=[cls,_b_.object]}
 return cls}
 $B.obj_dict=function(obj,exclude){return obj}
-$B.set_func_names=function(klass,module){for(var attr in klass){if(typeof klass[attr]=='function'){$B.add_function_infos(klass,attr,module)}}}
+$B.set_func_names=function(klass,module){for(var attr in klass){if(typeof klass[attr]=='function'){$B.add_function_infos(klass,attr,module)}}
+if(klass.tp_funcs){for(var attr in klass.tp_funcs){if(typeof klass.tp_funcs[attr]=='function'){$B.add_function_infos(klass.tp_funcs,attr,module,(klass.tp_name ||'')+'.'+attr)}}}}
 $B.add_function_infos=function(klass,attr,module,qualname){module=module ?? klass.__module__
 qualname=qualname ?? module+'.'+attr
 $B.set_function_infos(klass[attr],{__doc__:klass[attr].__doc__ ||'',__module__:module,__name__:attr,__qualname__ :qualname,__defaults__:[],__kwdefaults__:{}}
@@ -709,8 +710,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-06-02 11:07:02.917735"
-__BRYTHON__.timestamp=1780391222917
+__BRYTHON__.compiled_date="2026-06-02 11:29:48.709863"
+__BRYTHON__.timestamp=1780392588709
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_kozh","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1794,6 +1795,10 @@ return _b_.None}}
 throw err}}
 return}else if(klass===_b_.list){try{return $B.list_delitem(obj,item)}catch(err){if($B.is_exc(err,[_b_.IndexError])){$B.set_inum(inum)}
 throw err}}
+if(Object.hasOwn(klass,'mp_ass_subscript')){try{return klass.mp_ass_subscript(obj,item,$B.NULL)}catch(err){$B.set_inum(inum)
+throw err}}
+if(Object.hasOwn(klass,'sq_ass_item')){try{return klass.sq_ass_item(obj,item,$B.NULL)}catch(err){$B.set_inum(inum)
+throw err}}
 var delitem=$B.$getattr(klass,"__delitem__",$B.NULL)
 if(delitem===$B.NULL){$B.RAISE(_b_.TypeError,"'"+$B.class_name(obj)+
 "' object doesn't support item deletion")}
@@ -2857,8 +2862,8 @@ console.log('instance type is cls ?',$B.type_check(instance,cls))}
 if($B.type_check(instance,cls)){
 var init_func=instance_class.tp_init
 if(test){console.log('init func',init_func)}
-if(init_func !==$B.NULL && init_func !==_b_.object.tp_init){
-if(typeof init_func !='function'){console.log('init func',init_func,'instance',instance)}
+if(init_func !==$B.NULL && init_func !==_b_.object.tp_init &&
+typeof init_func=='function'){
 try{if(kw_len > 0){var kwarg=$B.dict2kwarg(kw)
 init_func.call(null,instance,...$.args,kwarg)}else{init_func.call(null,instance,...$.args)}}catch(err){throw err}}}
 if(test){console.log('type.tp_call returns instance',instance)}
@@ -3426,6 +3431,7 @@ $B.method_descriptor.tp_descr_get=function(self,obj,klass){if(obj===$B.NULL){ret
 var f=self.method.bind(null,obj)
 f.ob_type=$B.builtin_method
 f.$infos=self.$infos
+f.$function_infos=self.method.$function_infos
 f.ml={ml_name:self.d_name}
 f.m_self=obj
 return f}
@@ -4916,9 +4922,13 @@ check_nb_args_no_kw('reversed',1,arguments)
 var klass=$B.get_class(seq),rev_method=$B.$getattr(klass,'__reversed__',null)
 if(rev_method !==null){return $B.$call(rev_method,seq)}
 try{var method=$B.$getattr(klass,'__getitem__')}catch(err){$B.RAISE(_b_.TypeError,"argument to reversed() must be a sequence")}
-var res={ob_type:reversed,seq,len :_b_.len(seq),getitem:method}
+var seqlen=_b_.len(seq)
+if(typeof seqlen !=='number'){if(typeof seqlen==='bigint')seqlen=Number(seqlen)
+else seqlen=Number(seqlen)|0}
+var res={ob_type:reversed,seq,len :seqlen,
+counter:seqlen,getitem:method}
 return res}
-_b_.reversed.tp_iter=function(self){self.counter=self.len
+_b_.reversed.tp_iter=function(self){
 return self}
 _b_.reversed.tp_iternext=function*(self){self.counter--
 if(self.counter < 0){return}
@@ -4928,7 +4938,12 @@ $B.check_kw_empty('reversed',kw)
 var rev_method=$B.$getattr($B.get_class(seq),'__reversed__',$B.NULL)
 if(rev_method !==$B.NULL){return $B.$call(rev_method,seq)}
 try{var method=$B.$getattr($B.get_class(seq),'__getitem__')}catch(err){$B.RAISE(_b_.TypeError,"argument to reversed() must be a sequence")}
-var res={ob_type:cls,seq,len:_b_.len(seq),getitem:method}
+var seqlen=_b_.len(seq)
+if(typeof seqlen !=='number'){if(typeof seqlen==='bigint')seqlen=Number(seqlen)
+else if(seqlen && seqlen.value !==undefined)seqlen=Number(seqlen.value)
+else seqlen=Number(seqlen)}
+var res={ob_type:cls,seq,len:seqlen,
+counter:seqlen,getitem:method}
 return res}
 var reversed_funcs=_b_.reversed.tp_funcs={}
 reversed_funcs.__length_hint__=function(self){}
@@ -6288,7 +6303,7 @@ _b_.range.mp_subscript=function(self,rank){if($B.$isinstance(rank,_b_.slice)){va
 return _b_.range.tp_new(_b_.range,[substart,substop,substep])}
 try{rank=$B.PyNumber_Index(rank)}catch(err){$B.RAISE(_b_.TypeError,"range indices must be integers "+
 `or slices, not ${$B.class_name(rank)}`)}
-if($B.rich_comp('__gt__',0,rank)){rank=$B.rich_op('__add__',rank,range.__len__(self))}
+if($B.rich_comp('__gt__',0,rank)){rank=$B.rich_op('__add__',rank,range.mp_length(self))}
 var res=$B.rich_op('__add__',self.start,$B.rich_op('__mul__',rank,self.step))
 if(($B.rich_comp('__gt__',self.step,0)&&
 ($B.rich_comp('__ge__',res,self.stop)||
@@ -7406,8 +7421,11 @@ var memory_iterator_funcs=$B.memory_iterator.tp_funcs={}
 var memoryview=_b_.memoryview
 memoryview.$factory=function(obj){$B.check_nb_args_no_kw('memoryview',1,arguments)
 if($B.get_class(obj)===memoryview){return obj}
-var getbuffer=$B.search_slot($B.get_class(obj),'tp_getbuffer',$B.NULL)
-if(getbuffer===$B.NULL){$B.RAISE(_b_.TypeError,"memoryview: a bytes-like object "+
+var cls_obj=$B.get_class(obj)
+var has_buffer=$B.$getattr(obj,'__buffer__',$B.NULL)!==$B.NULL
+||(cls_obj && cls_obj.bf_getbuffer)
+||(cls_obj && cls_obj.$buffer_protocol)
+if(!has_buffer){$B.RAISE(_b_.TypeError,"memoryview: a bytes-like object "+
 "is required, not '"+$B.class_name(obj)+"'"
 )}
 obj.exports=obj.exports ?? 0
@@ -7448,7 +7466,11 @@ _b_.memoryview.tp_iter=function(self){return{
 ob_type:$B.memory_iterator,it:$B.make_js_iterator(self.obj)}}
 _b_.memoryview.tp_new=function(cls,args,kw){var obj=args[0]
 if($B.get_class(obj)===memoryview){return obj}
-if($B.$getattr(obj,'__buffer__',$B.NULL)!==$B.NULL){obj.exports=obj.exports ?? 0
+var cls_obj=$B.get_class(obj)
+var has_buffer=$B.$getattr(obj,'__buffer__',$B.NULL)!==$B.NULL
+||(cls_obj && cls_obj.bf_getbuffer)
+||(cls_obj && cls_obj.$buffer_protocol)
+if(has_buffer){obj.exports=obj.exports ?? 0
 obj.exports++
 var res={ob_type:cls,obj:obj,mbuf:null,format:'B',itemsize:1,ndim:1,shape:_b_.tuple.$factory([_b_.len(obj)]),strides:_b_.tuple.$factory([1]),suboffsets:_b_.tuple.$factory([]),c_contiguous:true,f_contiguous:true,contiguous:true}
 return res}else{$B.RAISE(_b_.TypeError,"memoryview: a bytes-like object "+
@@ -7543,7 +7565,8 @@ memoryview_funcs.suboffsets_get=function(self){return self.suboffsets}
 memoryview_funcs.suboffsets_set=_b_.None
 memoryview_funcs.tobytes=function(self){if($B.$isinstance(self.obj,[_b_.bytes,_b_.bytearray])){return{
 ob_type:_b_.bytes,source:self.obj.source}}else if($B.imported.array){var array=$B.module_getattr($B.imported.array,'array')
-if($B.$isinstance(self.obj,array)){return array.tobytes(self.obj)}}
+if($B.$isinstance(self.obj,array)){
+return array.tp_funcs.tobytes(self.obj)}}
 $B.RAISE(_b_.TypeError,'cannot run tobytes with '+$B.class_name(self.obj))}
 memoryview_funcs.tolist=function(self){if(self.itemsize==1){return _b_.list.$factory(_b_.bytes.$factory(self.obj))}else if(self.itemsize==4){if(self.format=="I"){var res=[]
 for(var i=0;i < self.obj.source.length;i+=4){var item=self.obj.source[i],coef=256
@@ -11913,7 +11936,10 @@ $B.JSConstructor=$B.make_builtin_class('JavascriptConstructor',[_b_.type])
 $B.JSConstructor.tp_call=function(self,...args){var js_constr=self.tp_bases[0][$B.JSOBJ]
 return jsobj2pyobj(new js_constr(...args))}
 $B.JSFunction=$B.make_builtin_class('JavascriptFunction')
-$B.JSFunction.tp_getattro=function(self,attr){if(self[JSOBJ]&& self[JSOBJ][attr]!==undefined){return jsobj2pyobj(self[JSOBJ][attr],self[JSOBJ])}
+$B.JSFunction.tp_getattro=function(self,attr){if(attr==='__name__' ||attr==='__qualname__'){
+var jsf=self[JSOBJ]||self
+if(jsf && typeof jsf.name==='string' && jsf.name){return jsf.name}}
+if(self[JSOBJ]&& self[JSOBJ][attr]!==undefined){return jsobj2pyobj(self[JSOBJ][attr],self[JSOBJ])}
 return _b_.object.tp_getattro(self,attr)}
 $B.JSFunction.tp_descr_get=function(self,obj){if(obj===$B.NULL){return self}
 return $B.$call($B.method,self,obj)}
@@ -15454,6 +15480,7 @@ $B.js_from_ast(this.format_spec,scopes)+
 ` + '}', ${value})`}else if(this.conversion==-1){value=`_b_.str.$factory(${value})`}
 return value}
 function transform_args(scopes){
+var mangle_arg=x=> mangle(scopes,last_scope(scopes),x)
 var has_posonlyargs=this.args.posonlyargs.length > 0,_defaults=[],nb_defaults=this.args.defaults.length,positional=this.args.posonlyargs.concat(this.args.args),ix=positional.length-nb_defaults,default_names=[],kw_defaults=[],annotations
 for(let arg of positional.concat(this.args.kwonlyargs).concat(
 [this.args.vararg,this.args.kwarg])){if(arg && arg.annotation){annotations=annotations ||{}
@@ -15466,9 +15493,9 @@ for(let arg of this.args.kwonlyargs){ix++
 if(this.args.kw_defaults[ix]===_b_.None){continue}
 if(this.args.kw_defaults[ix]===undefined){_defaults.push(`${arg.arg}: _b_.None`)}else{var v=$B.js_from_ast(this.args.kw_defaults[ix],scopes)
 _defaults.push(`${arg.arg}: `+v)
-kw_defaults.push(`${arg.arg}: ${v}`)}}
+kw_defaults.push(`${mangle_arg(arg.arg)}: ${v}`)}}
 var kw_default_names=[]
-for(var kw of this.args.kwonlyargs){kw_default_names.push(`'${kw.arg}'`)}
+for(var kw of this.args.kwonlyargs){kw_default_names.push(`'${mangle_arg(kw.arg)}'`)}
 return{default_names,_defaults,positional,has_posonlyargs,kw_defaults,kw_default_names,annotations}}
 function type_param_in_def(tp,ref,scopes){var gname=scopes[0].name,globals_name=make_scope_name(scopes,scopes[0])
 var js=''
@@ -15500,9 +15527,8 @@ if(tp.bound){if(! tp.bound.elts){js+=`$B.$call(_set_lazy_eval, locals_${ref}.${n
 return js}
 $B.ast.FunctionDef.prototype.to_js=function(scopes){compiler_check(this)
 var symtable_block=scopes.symtable.table.blocks.get(fast_id(this))
-var in_class=last_scope(scopes).ast instanceof $B.ast.ClassDef,is_async=this instanceof $B.ast.AsyncFunctionDef,mangle_arg=x=> x
-if(in_class){var class_scope=last_scope(scopes)
-mangle_arg=x=> mangle(scopes,class_scope,x)}
+var in_class=last_scope(scopes).ast instanceof $B.ast.ClassDef,is_async=this instanceof $B.ast.AsyncFunctionDef,arg_mangle_scope=last_scope(scopes),mangle_arg=x=> mangle(scopes,arg_mangle_scope,x)
+if(in_class){var class_scope=last_scope(scopes)}
 var func_name_scope=bind(this.name,scopes)
 var gname=scopes[0].name,globals_name=make_scope_name(scopes,scopes[0])
 var decorators=[],decorated=false,decs_declare=this.decorator_list.length > 0 ?
