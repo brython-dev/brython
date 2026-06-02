@@ -2216,7 +2216,7 @@ $B.ast.For.prototype.to_js = function(scopes){
     scopes.push(new_scope)
 
     var inum = add_to_positions(scopes, this.iter)
-
+    
     if(this instanceof $B.ast.AsyncFor){
         js += prefix + `var no_break_${id} = true,\n` +
               prefix + tab + tab + `iter_${id} = ${iter},\n` +
@@ -3234,31 +3234,31 @@ function irrefutable_error(pattern){
 }
 
 function pattern_bindings(pattern){
-    var bindings = []
+    let bindings = []
     switch(pattern.constructor){
+        case $B.ast.MatchSequence:
+        case $B.ast.MatchMapping:
+            if(pattern.rest){
+                bindings.push(pattern.rest)
+            }
+        case $B.ast.MatchClass:
+            for(let p of [...pattern.patterns, ...(pattern?.kwd_patterns ?? [])]){
+                bindings = bindings.concat(pattern_bindings(p))
+            }
+            break
+        case $B.ast.MatchStar:
         case $B.ast.MatchAs:
             if(pattern.name){
                 bindings.push(pattern.name)
             }
             break
-        case $B.ast.MatchSequence:
-            for(var p of pattern.patterns){
-                bindings = bindings.concat(pattern_bindings(p))
-            }
-            break
         case $B.ast.MatchOr:
             bindings = pattern_bindings(pattern.patterns[0])
-            var err_msg = 'alternative patterns bind different names'
+            let err_msg = 'alternative patterns bind different names'
             for(var i = 1; i < pattern.patterns.length; i++){
-                var _bindings = pattern_bindings(pattern.patterns[i])
-                if(_bindings.length != bindings.length){
+                let _bindings = pattern_bindings(pattern.patterns[i])
+                if(_bindings.length !== bindings.length || !bindings.every((_, j) => bindings[j] === _bindings[j])){
                     compiler_error(pattern, err_msg)
-                }else{
-                    for(var j = 0; j < bindings.length; j++){
-                        if(bindings[j] != _bindings[j]){
-                            compiler_error(pattern, err_msg)
-                        }
-                    }
                 }
             }
             break
