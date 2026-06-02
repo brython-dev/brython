@@ -2296,6 +2296,7 @@ $B.ast.FormattedValue.prototype.to_js = function(scopes){
 
 function transform_args(scopes){
     // Code common to FunctionDef and Lambda
+    var mangle_arg = x => mangle(scopes, last_scope(scopes), x)
     var has_posonlyargs = this.args.posonlyargs.length > 0,
         _defaults = [],
         nb_defaults = this.args.defaults.length,
@@ -2327,12 +2328,12 @@ function transform_args(scopes){
         }else{
             var v = $B.js_from_ast(this.args.kw_defaults[ix], scopes)
             _defaults.push(`${arg.arg}: ` + v)
-            kw_defaults.push(`${arg.arg}: ${v}`)
+            kw_defaults.push(`${mangle_arg(arg.arg)}: ${v}`)
         }
     }
     var kw_default_names = []
     for(var kw of this.args.kwonlyargs){
-        kw_default_names.push(`'${kw.arg}'`)
+        kw_default_names.push(`'${mangle_arg(kw.arg)}'`)
     }
     return {default_names, _defaults, positional, has_posonlyargs,
             kw_defaults, kw_default_names, annotations}
@@ -2390,10 +2391,10 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes){
     var symtable_block = scopes.symtable.table.blocks.get(fast_id(this))
     var in_class = last_scope(scopes).ast instanceof $B.ast.ClassDef,
         is_async = this instanceof $B.ast.AsyncFunctionDef,
-        mangle_arg = x => x
+        arg_mangle_scope = last_scope(scopes),
+        mangle_arg = x => mangle(scopes, arg_mangle_scope, x)
     if(in_class){
         var class_scope = last_scope(scopes)
-        mangle_arg = x => mangle(scopes, class_scope, x)
     }
 
     // bind function name in function enclosing scope
