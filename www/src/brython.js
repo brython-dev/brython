@@ -709,8 +709,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-06-01 22:00:00.935044"
-__BRYTHON__.timestamp=1780344000933
+__BRYTHON__.compiled_date="2026-06-02 11:02:59.871837"
+__BRYTHON__.timestamp=1780390979871
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_kozh","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -8610,8 +8610,8 @@ var len=self.len=self.length-self.surrogates.length
 return len}
 _b_.str.mp_subscript=function(self,arg){self=to_string(self)
 if($B.is_int(arg)){var len=str.mp_length(self)
-var pos=arg
-if(arg < 0){pos+=len}
+var pos=(typeof arg==='boolean')?+arg :arg
+if(pos < 0){pos+=len}
 if(pos >=0 && pos < len){var jspos=pypos2jspos(self,pos)
 if(self.codePointAt(jspos)>=0x10000){return $B.String(self.substr(jspos,2))}else{return self[jspos]}}
 $B.RAISE(_b_.IndexError,"string index out of range")}
@@ -8838,7 +8838,7 @@ return _self.length > 0}
 str_funcs.istitle=function(self){
 $B.check_nb_args_no_kw('str.istitle',1,arguments)
 var _self=to_string(self)
-return _self.length > 0 && str.title(_self)==_self}
+return _self.length > 0 && str_funcs.title(_self)==_self}
 str_funcs.isupper=function(self){
 $B.check_nb_args_no_kw('str.isupper',1,arguments)
 var is_upper=false,cp,_self=to_string(self)
