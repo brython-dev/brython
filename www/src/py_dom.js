@@ -961,9 +961,9 @@ DOMNode_funcs.attach = function(self, other){
         try{
             // If other is an iterable, add the items
             var items = _b_.list.$factory(other)
-            items.forEach(function(item){
+            for (let item of items) {
                 DOMNode.tp_funcs.attach(self, item)
-            })
+            }
         }catch(err){
             $B.RAISE(_b_.TypeError, "can't add '" +
                 $B.class_name(other) + "' object to DOMNode instance")
@@ -1105,10 +1105,10 @@ DOMNode_funcs.clone = function(self){
     var events = self.$events || {}
     for(var event in events){
         var evt_list = events[event]
-        evt_list.forEach(function(evt){
+        for (let evt of evt_list) {
             var func = evt[0]
             DOMNode.tp_funcs.bind(res, event, func)
-        })
+        }
     }
     return res
 }

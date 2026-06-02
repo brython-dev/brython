@@ -360,13 +360,13 @@ array_funcs.tobytes = function(self){
     $B.args("tobytes", 1, {self: null}, arguments)
     var items = Array.prototype.slice.call(self.obj),
         res = []
-    items.forEach(function(item){
-        while(item > 256){
+    for (let item of items) {
+        while (item > 256) {
             res.push(item % 256)
             item = Math.floor(item / 256)
         }
         res.push(item)
-    })
+    }
     return _b_.bytes.$factory(res)
 }
 

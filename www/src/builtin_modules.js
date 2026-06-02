@@ -165,7 +165,7 @@
                 // Javascripts in the page
                 var scripts = document.getElementsByTagName('script'),
                     js_scripts = []
-                scripts.forEach(function(script){
+                for (let script of scripts) {
                     if(script.type === undefined ||
                             script.type == 'text/javascript'){
                         js_scripts.push(script)
@@ -173,7 +173,7 @@
                             console.log(script.src)
                         }
                     }
-                })
+                }
                 // Check if imported scripts have been modified
                 for(var mod in $B.imported){
                     if($B.imported[mod].$last_modified){
@@ -1253,12 +1253,12 @@
             // of individual headers
             var lines = headers.trim().split(/[\r\n]+/)
             // Create a map of header names to values
-            lines.forEach(function(line){
+            for(let line of lines) {
               var parts = line.split(': ')
               var header = parts.shift()
               var value = parts.join(': ')
               _b_.dict.$setitem(res, header, value)
-            })
+            }
         }
         return res
     }
@@ -1363,20 +1363,20 @@
             var $ = $B.args("event", 1, {element: null}, arguments)
             var element = $.element,
                 names = $.names
-            return new Promise(function(resolve){
+            return new Promise(function(resolve) {
                 var callbacks = []
-                names.forEach(function(name){
-                    var callback = function(evt){
+                for (let name of names) {
+                    var callback = function(evt) {
                         // When one of the handled events is triggered, all bindings
                         // are removed
-                        callbacks.forEach(function(items){
+                        for (let items of callbacks) {
                             $B.DOMNode.unbind(element, items[0], items[1])
-                        })
+                        }
                         resolve($B.$DOMEvent(evt))
                     }
                     callbacks.push([name, callback])
                     $B.DOMNode.bind(element, name, callback)
-                })
+                }
             })
         },
         get: function(){
@@ -1513,26 +1513,26 @@
 
 
     var $comps = Object.values($B.$comps).concat(["eq", "ne"])
-    $comps.forEach(function(comp){
+    for (let comp of $comps) {
         var op = "__" + comp + "__"
-        $B.cell[op] = (function(op){
-            return function(self, other){
-                if(! $B.$isinstance(other, $B.cell)){
+        $B.cell[op] = (function(op) {
+            return function(self, other) {
+                if (! $B.$isinstance(other, $B.cell)) {
                     return _b_.NotImplemented
                 }
-                if(self.$cell_contents === null){
-                    if(other.$cell_contents === null){
+                if (self.$cell_contents === null) {
+                    if (other.$cell_contents === null) {
                         return op == "__eq__"
-                    }else{
+                    } else {
                         return ["__ne__", "__lt__", "__le__"].indexOf(op) > -1
                     }
-                }else if(other.$cell_contents === null){
+                }else if (other.$cell_contents === null) {
                     return ["__ne__", "__gt__", "__ge__"].indexOf(op) > -1
                 }
                 return $B.rich_comp(op, self.$cell_contents, other.$cell_contents)
             }
         })(op)
-    })
+    }
 
     /* cell start */
     $B.cell.tp_richcompare = function(self){

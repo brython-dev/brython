@@ -1998,9 +1998,9 @@ str_funcs.casefold = function(self){
         char = chars[i]
         cf = $B.unicode_casefold[char]
         if(cf){
-            cf.forEach(function(cp){
+            for (let cp of cf) {
                 res += String.fromCharCode(cp)
-            })
+            }
         }else{
             res += char.toLowerCase()
         }

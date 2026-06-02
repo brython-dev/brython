@@ -2136,9 +2136,9 @@ var decode = $B.decode = function(obj, encoding, errors){
       case "latin":
       case "latin1":
       case "L1":
-          b.forEach(function(item){
+          for (let item of b) {
               s += String.fromCharCode(item)
-          })
+          }
           break
       case "unicode_escape":
           // obj is str or bytes

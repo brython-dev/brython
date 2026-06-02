@@ -337,9 +337,9 @@ memoryview_funcs.format_set = _b_.None
 memoryview_funcs.hex = function(self){
     var res = '',
         bytes = _b_.bytes.$factory(self)
-    bytes.source.forEach(function(item){
+    for (let item of bytes.source) {
         res += item.toString(16)
-    })
+    }
     return res
 }
 

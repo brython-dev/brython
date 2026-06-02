@@ -156,10 +156,10 @@ var module = {
             }
             return c
         }
-        string.forEach(function(char){
+        for (let char of string) {
             res.push(conv((char >> 4) & 0xf))
             res.push(conv(char & 0xf))
-        })
+        }
         return _b_.bytes.$factory(res)
     },
     b2a_uu: function(obj){

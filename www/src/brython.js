@@ -710,8 +710,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-06-02 11:29:48.709863"
-__BRYTHON__.timestamp=1780392588709
+__BRYTHON__.compiled_date="2026-06-02 21:44:40.074749"
+__BRYTHON__.timestamp=1780429480074
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_kozh","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -7173,7 +7173,7 @@ case "cp819":
 case "latin":
 case "latin1":
 case "L1":
-b.forEach(function(item){s+=String.fromCharCode(item)})
+for(let item of b){s+=String.fromCharCode(item)}
 break
 case "unicode_escape":
 if([bytes,bytearray].includes($B.get_class(obj))){obj=decode(obj,"latin-1","strict")}
@@ -7527,7 +7527,7 @@ memoryview_funcs.f_contiguous_set=_b_.None
 memoryview_funcs.format_get=function(self){return self.format}
 memoryview_funcs.format_set=_b_.None
 memoryview_funcs.hex=function(self){var res='',bytes=_b_.bytes.$factory(self)
-bytes.source.forEach(function(item){res+=item.toString(16)})
+for(let item of bytes.source){res+=item.toString(16)}
 return res}
 memoryview_funcs.index=function(self){var $=$B.args('index',4,{self:null,value:null,start:null,stop:null},arguments,{start:0,stop:$B.max_int})
 var self=$.self,value=$.value,start=$.start,stop=$.stop
@@ -8666,7 +8666,7 @@ str_funcs.casefold=function(self){$B.check_nb_args_no_kw('set.remove',1,argument
 var res="",char,cf,_self=to_string(self),chars=to_chars(_self)
 for(var i=0,len=chars.length;i < len;i++){char=chars[i]
 cf=$B.unicode_casefold[char]
-if(cf){cf.forEach(function(cp){res+=String.fromCharCode(cp)})}else{res+=char.toLowerCase()}}
+if(cf){for(let cp of cf){res+=String.fromCharCode(cp)}}else{res+=char.toLowerCase()}}
 return res}
 str_funcs.center=function(){var $=$B.args("center",3,{self:null,width:null,fillchar:null},arguments,{fillchar:" "},null,null),self=to_string($.self)
 if($.width <=self.length){return self}
@@ -12481,7 +12481,7 @@ if($B.$isinstance(other,TagSum)){for(var i=0;i < other.children.length;i++){self
 self.appendChild(txt)}else if(other.ob_type===$B.module_getattr($B.imported['browser.html'],'IFRAME')){console.log('attach FRAME')
 self.appendChild(other.$target)}else if(other instanceof Node){self.appendChild(other)}else{try{
 var items=_b_.list.$factory(other)
-items.forEach(function(item){DOMNode.tp_funcs.attach(self,item)})}catch(err){$B.RAISE(_b_.TypeError,"can't add '"+
+for(let item of items){DOMNode.tp_funcs.attach(self,item)}}catch(err){$B.RAISE(_b_.TypeError,"can't add '"+
 $B.class_name(other)+"' object to DOMNode instance")}}
 return self }
 DOMNode_funcs.__dir__=function(self){var res=[]
@@ -12528,8 +12528,8 @@ DOMNode_funcs.class_name_set=function(self,arg){self.setAttribute("class",arg)}
 DOMNode_funcs.clone=function(self){var res=DOMNode.$factory(self.cloneNode(true))
 var events=self.$events ||{}
 for(var event in events){var evt_list=events[event]
-evt_list.forEach(function(evt){var func=evt[0]
-DOMNode.tp_funcs.bind(res,event,func)})}
+for(let evt of evt_list){var func=evt[0]
+DOMNode.tp_funcs.bind(res,event,func)}}
 return res}
 DOMNode_funcs.closest_get=function(){
 var $=$B.args("closest",2,{self:null,selector:null},arguments,{selector:$B.NULL})
@@ -13607,9 +13607,9 @@ script.src=script_url
 if(callback){script.addEventListener('load',function(){callback()})}
 document.body.appendChild(script)},mouseCoords:function(ev){return $B.jsobj2pyobj($B.$mouseCoords(ev))},prompt:function(message,default_value){return $B.jsobj2pyobj(window.prompt(message,default_value||''))},reload:function(){
 var scripts=document.getElementsByTagName('script'),js_scripts=[]
-scripts.forEach(function(script){if(script.type===undefined ||
+for(let script of scripts){if(script.type===undefined ||
 script.type=='text/javascript'){js_scripts.push(script)
-if(script.src){console.log(script.src)}}})
+if(script.src){console.log(script.src)}}}
 for(var mod in $B.imported){if($B.imported[mod].$last_modified){console.log('check',mod,$B.imported[mod].__file__,$B.imported[mod].$last_modified)}else{console.log('no date for mod',mod)}}},URLParameter:function(name){name=name.replace(/[[]/,"\\[").replace(/[\]]/,"\\]");
 var regex=new RegExp("[\\?&]"+name+"=([^&#]*)"),results=regex.exec(location.search);
 results=results===null ? "" :
@@ -13953,10 +13953,10 @@ if(headers===null){return _b_.None}
 var res=$B.empty_dict()
 if(headers.length > 0){
 var lines=headers.trim().split(/[\r\n]+/)
-lines.forEach(function(line){var parts=line.split(': ')
+for(let line of lines){var parts=line.split(': ')
 var header=parts.shift()
 var value=parts.join(': ')
-_b_.dict.$setitem(res,header,value)})}
+_b_.dict.$setitem(res,header,value)}}
 return res}
 HTTPRequest_funcs.response_headers_set=_b_.None
 HTTPRequest.tp_getset=["data","response_header"
@@ -14004,11 +14004,11 @@ ob_type:$B.coroutine,$args:[url,args],$func:func}},event:function(){
 var $=$B.args("event",1,{element:null},arguments)
 var element=$.element,names=$.names
 return new Promise(function(resolve){var callbacks=[]
-names.forEach(function(name){var callback=function(evt){
-callbacks.forEach(function(items){$B.DOMNode.unbind(element,items[0],items[1])})
+for(let name of names){var callback=function(evt){
+for(let items of callbacks){$B.DOMNode.unbind(element,items[0],items[1])}
 resolve($B.$DOMEvent(evt))}
 callbacks.push([name,callback])
-$B.DOMNode.bind(element,name,callback)})})},get:function(){var ajax=$B.module_getattr($B.imported['browser.aio'],'ajax')
+$B.DOMNode.bind(element,name,callback)}})},get:function(){var ajax=$B.module_getattr($B.imported['browser.aio'],'ajax')
 return ajax.bind(null,"GET").apply(null,arguments)},iscoroutine:function(f){return $B.get_class(f)===$B.coroutine},iscoroutinefunction:function(f){return(f.$function_infos[$B.func_attrs.flags]& 128)!=0},post:function(){var ajax=$B.module_getattr($B.imported['browser.aio'],'ajax')
 return ajax.bind(null,"POST").apply(null,arguments)},run:function(){var handle_success=function(){$B.leave_frame()},handle_error=$B.show_error
 var $=$B.args("run",3,{coro:null,onsuccess:null,onerror:null},arguments,{onsuccess:handle_success,onerror:handle_error})
@@ -14052,10 +14052,11 @@ $B.cell=$B.make_builtin_class("cell")
 $B.cell.$factory=function(value){return{
 ob_type:$B.cell,$cell_contents:value}}
 var $comps=Object.values($B.$comps).concat(["eq","ne"])
-$comps.forEach(function(comp){var op="__"+comp+"__"
+for(let comp of $comps){var op="__"+comp+"__"
 $B.cell[op]=(function(op){return function(self,other){if(! $B.$isinstance(other,$B.cell)){return _b_.NotImplemented}
-if(self.$cell_contents===null){if(other.$cell_contents===null){return op=="__eq__"}else{return["__ne__","__lt__","__le__"].indexOf(op)>-1}}else if(other.$cell_contents===null){return["__ne__","__gt__","__ge__"].indexOf(op)>-1}
-return $B.rich_comp(op,self.$cell_contents,other.$cell_contents)}})(op)})
+if(self.$cell_contents===null){if(other.$cell_contents===null){return op=="__eq__"}else{
+return["__ne__","__lt__","__le__"].indexOf(op)>-1}}else if(other.$cell_contents===null){return["__ne__","__gt__","__ge__"].indexOf(op)>-1}
+return $B.rich_comp(op,self.$cell_contents,other.$cell_contents)}})(op)}
 $B.cell.tp_richcompare=function(self){}
 $B.cell.tp_repr=function(self){return '<cell object>'}
 $B.cell.tp_hash=function(self){}
@@ -15945,18 +15946,22 @@ break}}
 function irrefutable_error(pattern){var msg=pattern.name ? `name capture '${pattern.name}'` :'wildcard'
 msg+=' makes remaining patterns unreachable'
 compiler_error(pattern,msg)}
-function pattern_bindings(pattern){var bindings=[]
-switch(pattern.constructor){case $B.ast.MatchAs:
-if(pattern.name){bindings.push(pattern.name)}
+function pattern_bindings(pattern){let bindings=[]
+switch(pattern.constructor){case $B.ast.MatchSequence:
+case $B.ast.MatchMapping:
+if(pattern.rest){bindings.push(pattern.rest)}
+case $B.ast.MatchClass:
+for(let p of[...pattern.patterns,...(pattern?.kwd_patterns ??[])]){bindings=bindings.concat(pattern_bindings(p))}
 break
-case $B.ast.MatchSequence:
-for(var p of pattern.patterns){bindings=bindings.concat(pattern_bindings(p))}
+case $B.ast.MatchStar:
+case $B.ast.MatchAs:
+if(pattern.name){bindings.push(pattern.name)}
 break
 case $B.ast.MatchOr:
 bindings=pattern_bindings(pattern.patterns[0])
-var err_msg='alternative patterns bind different names'
-for(var i=1;i < pattern.patterns.length;i++){var _bindings=pattern_bindings(pattern.patterns[i])
-if(_bindings.length !=bindings.length){compiler_error(pattern,err_msg)}else{for(var j=0;j < bindings.length;j++){if(bindings[j]!=_bindings[j]){compiler_error(pattern,err_msg)}}}}
+let err_msg='alternative patterns bind different names'
+for(var i=1;i < pattern.patterns.length;i++){let _bindings=pattern_bindings(pattern.patterns[i])
+if(_bindings.length !==bindings.length ||!bindings.every((_,j)=> bindings[j]===_bindings[j])){compiler_error(pattern,err_msg)}}
 break}
 return bindings.sort()}
 $B.ast.Match.prototype.to_js=function(scopes){var irrefutable
