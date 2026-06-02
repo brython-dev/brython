@@ -965,6 +965,27 @@ $B.$delitem = function(obj, item, inum){
             throw err
         }
     }
+    // Symmetric with $setitem (which checks `klass.mp_ass_subscript`
+    // first). C-style types declare the sq_ass_item / mp_ass_subscript
+    // slot but don't install __delitem__ wrappers; CPython delegates
+    // del-by-item via the same slot (NULL value = delete). Without these
+    // direct-slot checks, `del a[i]` raised TypeError on every such type.
+    if(Object.hasOwn(klass, 'mp_ass_subscript')){
+        try{
+            return klass.mp_ass_subscript(obj, item, $B.NULL)
+        }catch(err){
+            $B.set_inum(inum)
+            throw err
+        }
+    }
+    if(Object.hasOwn(klass, 'sq_ass_item')){
+        try{
+            return klass.sq_ass_item(obj, item, $B.NULL)
+        }catch(err){
+            $B.set_inum(inum)
+            throw err
+        }
+    }
     var delitem = $B.$getattr(klass, "__delitem__", $B.NULL)
     if(delitem === $B.NULL){
         $B.RAISE(_b_.TypeError, "'" + $B.class_name(obj) +
