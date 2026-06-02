@@ -150,7 +150,13 @@ array.mp_ass_subscript = function(_self, index, value){
 }
 
 array.tp_new = function(cls, args, kw){
-    var [cls, ...args] = arguments
+    // (the redundant `var [cls, ...args] = arguments` line that used to be
+    // here re-bound `args` to `[args, kw]` — function parameters are
+    // already destructured from arguments[]. Removing the line restores
+    // the intended (cls, args, kw) shape so make_array's unpack_args sees
+    // the real positional arg list. Previously `array.array('b', [1,2,3])`
+    // raised `ValueError: bad typecode` because unpack_args received
+    // `typecode = ['b', [1,2,3]]`.)
     var obj = make_array(args, kw)
     obj.cls = cls
     return obj
