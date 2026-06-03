@@ -1,16 +1,16 @@
 // Script with function to load scripts and modules, including indexedDB cache
 "use strict";
-(function($B){
+(function($B) {
 
 var _b_ = $B.builtins
 
-if($B.VFS_timestamp && $B.VFS_timestamp > $B.timestamp){
+if ($B.VFS_timestamp && $B.VFS_timestamp > $B.timestamp) {
     // A VFS created by python -m brython --modules has its own
     // timestamp. If it is after the one in brython.js, use it
     $B.timestamp = $B.VFS_timestamp
 }
 
-function idb_load(evt, module){
+function idb_load(evt, module) {
     // Callback function of a request to the indexedDB database with a module
     // name as key.
     // If the module is precompiled and its timestamp is the same as in
@@ -24,17 +24,16 @@ function idb_load(evt, module){
             ($B.VFS[module] && res.source_ts !== $B.VFS[module].timestamp)){
         // Not found or not with the same date as in brython_stdlib.js:
         // search in VFS
-        if($B.VFS[module] !== undefined){
+        if ($B.VFS[module] !== undefined) {
             var elts = $B.VFS[module],
                 ext = elts[0],
                 source = elts[1]
-            if(ext == ".py"){
+            if (ext == ".py") {
                 var is_package = elts.length == 4,
                     __package__
 
                 // Temporarily set $B.imported[module] for relative imports
-                if(is_package){__package__ = module}
-                else{
+                if (is_package) {__package__ = module} else {
                     var parts = module.split(".")
                     parts.pop()
                     __package__ = parts.join(".")
@@ -42,48 +41,48 @@ function idb_load(evt, module){
                 $B.imported[module] = $B.module.$factory(module, "",
                     __package__)
                 $B.url2name[module] = module
-                try{
+                try {
                     $B.py2js({src:source, filename: module}, module, module)
-                }catch(err){
+                } catch (err) {
                     $B.handle_error(err)
                 }
                 // Delete temporary import
                 delete $B.imported[module]
-                if(debug > 1){
+                if (debug > 1) {
                     console.log("precompile", module)
                 }
-            }else{
+            } else {
                 console.log('bizarre', module, ext)
             }
-        }else{
+        } else {
             // Module not found : do nothing
         }
-    }else{
+    } else {
         // Precompiled Javascript found in indexedDB database.
-        if(res.is_package){
+        if (res.is_package) {
             $B.precompiled[module] = [res.content]
-        }else{
+        } else {
             $B.precompiled[module] = res.content
         }
-        if(res.imports.length > 0){
+        if (res.imports.length > 0) {
             // res.imports is a string with the modules imported by the current
             // modules, separated by commas
-            if(debug > 1){
+            if (debug > 1) {
                 console.log(module, "imports", res.imports)
             }
             var subimports = res.imports.split(",")
-            for(var i = 0; i < subimports.length; i++){
+            for (var i = 0; i < subimports.length; i++) {
                 var subimport = subimports[i]
-                if(subimport.startsWith(".")){
+                if (subimport.startsWith(".")) {
                     // Relative imports
                     var url_elts = module.split("."),
                         nb_dots = 0
-                    while(subimport.startsWith(".")){
+                    while (subimport.startsWith(".")) {
                         nb_dots++
                         subimport = subimport.substr(1)
                     }
                     let elts = url_elts.slice(0, nb_dots)
-                    if(subimport){
+                    if (subimport) {
                         elts = elts.concat([subimport])
                     }
                     subimport = elts.join(".")
@@ -92,12 +91,12 @@ function idb_load(evt, module){
                         !$B.precompiled.hasOwnProperty(subimport)){
                     // If the code of the required module is not already
                     // loaded, add a task for this.
-                    if($B.VFS.hasOwnProperty(subimport)){
+                    if ($B.VFS.hasOwnProperty(subimport)) {
                         let submodule = $B.VFS[subimport],
                             source = submodule[1]
-                        if(submodule[0] == ".py"){
+                        if (submodule[0] == ".py") {
                             $B.tasks.splice(0, 0, [idb_get, subimport])
-                        }else{
+                        } else {
                             add_jsmodule(subimport, source)
                         }
                     }
@@ -108,48 +107,48 @@ function idb_load(evt, module){
     loop()
 }
 
-function idb_get(module){
+function idb_get(module) {
     // Sends a request to the indexedDB database for the module name.
     var db = $B.idb_cx.result,
         tx = db.transaction("modules", "readonly")
-    try{
+    try {
         var store = tx.objectStore("modules"),
             req = store.get(module)
-        req.onsuccess = function(evt){
+        req.onsuccess = function(evt) {
             idb_load(evt, module)
         }
-    }catch(err){
+    } catch (err) {
         console.info('error', err)
     }
 }
 
-function remove_outdated(db, outdated, callback){
+function remove_outdated(db, outdated, callback) {
     var tx = db.transaction("modules", "readwrite"),
         store = tx.objectStore("modules")
-    if(outdated.length > 0){
+    if (outdated.length > 0) {
         let module = outdated.pop(),
             req = store.delete(module)
-        req.onsuccess = (function(mod){
-            return function(){
-                if($B.get_page_option('debug') > 1){
+        req.onsuccess = (function(mod) {
+            return function() {
+                if ($B.get_page_option('debug') > 1) {
                     console.info("delete outdated", mod)
                 }
                 report_remove_outdated(mod)
                 remove_outdated(db, outdated, callback)
             }
         })(module)
-    }else{
+    } else {
         report_close()
         callback()
     }
 }
 
-$B.idb_open_promise = function(){
-    return new Promise(function(resolve, reject){
+$B.idb_open_promise = function() {
+    return new Promise(function(resolve, reject) {
         $B.idb_name = "brython-cache"
         var idb_cx = $B.idb_cx = indexedDB.open($B.idb_name)
 
-        idb_cx.onsuccess = function(){
+        idb_cx.onsuccess = function() {
             var db = idb_cx.result
             // Preload all compiled modules
             var tx = db.transaction("modules", "readwrite"),
@@ -159,50 +158,50 @@ $B.idb_open_promise = function(){
 
             var openCursor = store.openCursor()
 
-            openCursor.onerror = function(){
+            openCursor.onerror = function() {
                 reject("open cursor error")
             }
 
-            openCursor.onsuccess = function(evt){
+            openCursor.onsuccess = function(evt) {
                 var cursor = evt.target.result
-                if(cursor){
+                if (cursor) {
                     record = cursor.value
                     // A record is valid if the Brython engine timestamp is
                     // the same as record.timestamp, and the timestamp of the
                     // VFS file where the file stands is the same as
                     // record.source_ts
-                    if(record.timestamp == $B.timestamp){
+                    if (record.timestamp == $B.timestamp) {
                         if(!$B.VFS || !$B.VFS[record.name] ||
                                 $B.VFS[record.name].timestamp == record.source_ts){
                             // Load in __BRYTHON__.precompiled
-                            if(record.is_package){
+                            if (record.is_package) {
                                 $B.precompiled[record.name] = [record.content]
-                            }else{
+                            } else {
                                 $B.precompiled[record.name] = record.content
                             }
-                        }else{
+                        } else {
                             // If module with name record.name exists in a VFS
                             // and its timestamp is not the VFS timestamp,
                             // remove from cache
                             outdated.push(record.name)
                         }
-                    }else{
+                    } else {
                         outdated.push(record.name)
                     }
                     cursor.continue()
-                }else{
+                } else {
                     remove_outdated(db, outdated, resolve)
                 }
             }
         }
 
-        idb_cx.onupgradeneeded = function(){
+        idb_cx.onupgradeneeded = function() {
             var db = idb_cx.result,
                 store = db.createObjectStore("modules", {"keyPath": "name"})
             store.onsuccess = resolve
         }
 
-        idb_cx.onerror = function(){
+        idb_cx.onerror = function() {
             // Proceed without indexedDB
             $B.idb_cx = null
             $B.idb_name = null
@@ -213,13 +212,13 @@ $B.idb_open_promise = function(){
 }
 
 
-$B.idb_open = function(){
+$B.idb_open = function() {
     $B.idb_name = "brython-cache"
     var idb_cx = $B.idb_cx = indexedDB.open($B.idb_name)
 
-    idb_cx.onsuccess = function(){
+    idb_cx.onsuccess = function() {
         var db = idb_cx.result
-        if($B.get_page_option('debug') > 1){
+        if ($B.get_page_option('debug') > 1) {
             console.info("using indexedDB for stdlib modules cache")
         }
         // Preload all compiled modules
@@ -230,42 +229,42 @@ $B.idb_open = function(){
 
         var openCursor = store.openCursor()
 
-        openCursor.onerror = function(evt){
+        openCursor.onerror = function(evt) {
             console.log("open cursor error", evt)
         }
 
-        openCursor.onsuccess = function(evt){
+        openCursor.onsuccess = function(evt) {
             var cursor = evt.target.result
-            if(cursor){
+            if (cursor) {
                 record = cursor.value
                 // A record is valid if the Brython engine timestamp is
                 // the same as record.timestamp, and the timestamp of the
                 // VFS file where the file stands is the same as
                 // record.source_ts
-                if(record.timestamp == $B.timestamp){
+                if (record.timestamp == $B.timestamp) {
                     if(!$B.VFS || !$B.VFS[record.name] ||
                             $B.VFS[record.name].timestamp == record.source_ts){
                         // Load in __BRYTHON__.precompiled
-                        if(record.is_package){
+                        if (record.is_package) {
                             $B.precompiled[record.name] = [record.content]
-                        }else{
+                        } else {
                             $B.precompiled[record.name] = record.content
                         }
-                        if($B.get_page_option('debug') > 1){
+                        if ($B.get_page_option('debug') > 1) {
                             console.info("load from cache", record.name)
                         }
-                    }else{
+                    } else {
                         // If module with name record.name exists in a VFS
                         // and its timestamp is not the VFS timestamp,
                         // remove from cache
                         outdated.push(record.name)
                     }
-                }else{
+                } else {
                     outdated.push(record.name)
                 }
                 cursor.continue()
-            }else{
-                if($B.get_page_option('debug') > 1){
+            } else {
+                if ($B.get_page_option('debug') > 1) {
                     console.log("done")
                 }
                 remove_outdated(db, outdated, loop)
@@ -273,14 +272,14 @@ $B.idb_open = function(){
         }
     }
 
-    idb_cx.onupgradeneeded = function(){
+    idb_cx.onupgradeneeded = function() {
         console.info("upgrade needed")
         var db = idb_cx.result,
             store = db.createObjectStore("modules", {"keyPath": "name"})
         store.onsuccess = loop
     }
 
-    idb_cx.onerror = function(){
+    idb_cx.onerror = function() {
         console.info('could not open indexedDB database')
         // Proceed without indexedDB
         $B.idb_cx = null
@@ -289,21 +288,21 @@ $B.idb_open = function(){
         loop()
     }
 
-    idb_cx.onversionchange = function(){
+    idb_cx.onversionchange = function() {
         console.log('version change')
     }
 }
 
-$B.ajax_load_script = function(s){
+$B.ajax_load_script = function(s) {
     var script = s.script,
         url = s.url,
         name = s.name,
         rel_path = url.substr($B.script_dir.length + 1)
 
-    if($B.files && $B.files.hasOwnProperty(rel_path)){
+    if ($B.files && $B.files.hasOwnProperty(rel_path)) {
         // File is present in Virtual File System
         var src = atob($B.files[rel_path].content)
-        if(s.is_ww){
+        if (s.is_ww) {
             $B.webworkers[name] = script
             var filename = $B.script_filename = $B.strip_host(url)
             $B.file_cache[filename] = src
@@ -313,7 +312,7 @@ $B.ajax_load_script = function(s){
         $B.tasks.splice(0, 0, [$B.run_script,
             script, src, name, url, true])
         loop()
-    }else if($B.protocol != "file"){
+    } else if ($B.protocol != "file") {
         var filename = $B.script_filename = $B.strip_host(url)
         $B.scripts[filename] = script
         var req = new XMLHttpRequest(),
@@ -321,20 +320,20 @@ $B.ajax_load_script = function(s){
             qs = cache ? '' :
                     (url.search(/\?/) > -1 ? '&' : '?') + Date.now()
         req.open("GET", url + qs, true)
-        req.onreadystatechange = function(){
-            if(this.readyState == 4){
-                if(this.status == 200){
+        req.onreadystatechange = function() {
+            if (this.readyState == 4) {
+                if (this.status == 200) {
                     var src = this.responseText
-                    if(s.is_ww){
+                    if (s.is_ww) {
                         $B.webworkers[name] = script
                         $B.file_cache[filename] = src
                         // dispatch 'load' event (cf. issue 2215)
                         $B.dispatch_load_event(script)
-                    }else{
+                    } else {
                         $B.tasks.splice(0, 0, [$B.run_script, script, src, name,
                             url, true])
                     }
-                }else if(this.status == 404){
+                } else if (this.status == 404) {
                     var err = $B.EXC(_b_.ModuleNotFoundError, url)
                     err.$suggestion = _b_.None
                     $B.handle_error(err)
@@ -343,62 +342,62 @@ $B.ajax_load_script = function(s){
             loop()
         }
         req.send()
-    }else{
+    } else {
         $B.RAISE(_b_.IOError, "can't load external script at " +
             script.url + " (Ajax calls not supported with protocol file:///)")
     }
 }
 
-function add_jsmodule(module, source){
+function add_jsmodule(module, source) {
     // Use built-in Javascript module
     source += "\nvar $locals_" +
         module.replace(/\./g, "_") + " = $module"
     $B.precompiled[module] = source
 }
 
-$B.inImported = function(module){
-    if($B.imported.hasOwnProperty(module)){
+$B.inImported = function(module) {
+    if ($B.imported.hasOwnProperty(module)) {
         // already imported, do nothing
-    }else if(__BRYTHON__.VFS && __BRYTHON__.VFS.hasOwnProperty(module)){
+    } else if (__BRYTHON__.VFS && __BRYTHON__.VFS.hasOwnProperty(module)) {
         var elts = __BRYTHON__.VFS[module]
         var ext = elts[0],
             source = elts[1]
-        if(ext == ".py"){
-            if($B.idb_cx){
+        if (ext == ".py") {
+            if ($B.idb_cx) {
                 $B.tasks.splice(0, 0, [idb_get, module])
             }
-        }else{
+        } else {
             add_jsmodule(module, source)
         }
-    }else{
+    } else {
         console.log("bizarre", module)
     }
     loop()
 }
 
-function report_remove_outdated(mod){
-    if(!$B.isWebWorker){
+function report_remove_outdated(mod) {
+    if (!$B.isWebWorker) {
         document.dispatchEvent(new CustomEvent('precompile',
             {detail: `remove outdated ${mod} from cache`}))
     }
 }
 
-function report_close(){
-    if(!$B.isWebWorker){
+function report_close() {
+    if (!$B.isWebWorker) {
         document.dispatchEvent(new CustomEvent('precompile',
             {detail: "close"}))
     }
 }
 
-function report_done(){
-    if(!$B.isWebWorker){
+function report_done() {
+    if (!$B.isWebWorker) {
         document.dispatchEvent(new CustomEvent("brython_done",
             {detail: _b_.dict.$from_js($B.$options)}))
     }
 }
 
-var loop = $B.loop = function(){
-    if($B.tasks.length == 0){
+var loop = $B.loop = function() {
+    if ($B.tasks.length == 0) {
         // No more task to process.
         // dispatch event "brython_done"
         report_done()
@@ -408,19 +407,19 @@ var loop = $B.loop = function(){
         func = task[0],
         args = task.slice(1)
 
-    if(func == "execute"){
+    if (func == "execute") {
         let script = task[1],
             script_id = script.__name__.replace(/\./g, "_"),
             module = $B.module.$factory(script.__name__, script.__doc__)
         module.__file__ = script.__file__
         $B.imported[script_id] = module
-        try{
+        try {
             var modobj = new Function(script.js + `\nreturn locals`)()
-            for(var key in modobj){
-                if(! key.startsWith('$')){
-                    try{
+            for (var key in modobj) {
+                if (! key.startsWith('$')) {
+                    try {
                         $B.module.tp_setattro(module, key, modobj[key])
-                    }catch(err){
+                    } catch (err) {
                         // ignore; the name might have been removed by
                         // del globals()[name], then it becomes an accessor
                         // whose method get() raises NameError
@@ -429,24 +428,24 @@ var loop = $B.loop = function(){
             }
             // dispatch "load" event on the <script> element
             $B.dispatch_load_event(script.script_element)
-        }catch(err){
+        } catch (err) {
             // If the error was not caught by the Python runtime, build an
             // instance of a Python exception
             console.log('error in loaders', err)
             console.log('frame obj', $B.frame_obj)
-            if(err.ob_type === undefined){
+            if (err.ob_type === undefined) {
                 err.filename = script.filename
-                if(err.$py_exc){
+                if (err.$py_exc) {
                     err = err.$py_exc
-                }else{
-                    if($B.get_option('debug', err) > 2){
+                } else {
+                    if ($B.get_option('debug', err) > 2) {
                         console.log('JS error', err.stack)
                     }
                     var stack = err.$stack,
                         frame_obj = err.$frame_obj,
                         linenums = err.$linenums
                     var lineNumber = err.lineNumber
-                    if(lineNumber !== undefined){
+                    if (lineNumber !== undefined) {
                         console.log('around line', lineNumber)
                         console.log(script.js.split('\n').
                             slice(lineNumber - 4, lineNumber).join('\n'))
@@ -462,11 +461,11 @@ var loop = $B.loop = function(){
             $B.handle_error(err)
         }
         loop()
-    }else{
+    } else {
         // Run function with arguments
-        try{
+        try {
             func.apply(null, args)
-        }catch(err){
+        } catch (err) {
             $B.handle_error(err)
         }
     }

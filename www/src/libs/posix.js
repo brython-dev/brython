@@ -5,11 +5,11 @@ disguised Unix interface).  Refer to the library manual and
 corresponding Unix manual entries for more information on calls.
 */
 "use strict";
-(function($B){
+(function($B) {
 
 var _b_ = $B.builtins
 
-function _randint(a, b){
+function _randint(a, b) {
     return parseInt(Math.random() * (b - a + 1) + a)
 }
 
@@ -38,7 +38,7 @@ stat_result.$factory = function(filename) {
         $B.init_dict(res)
         $B.assign_dict(res, infos)
         return res
-    } else if($B.files && $B.files.hasOwnProperty(filename)) {
+    } else if ($B.files && $B.files.hasOwnProperty(filename)) {
         var f = $B.files[filename],
             infos = {
                 st_atime: __BRYTHON__.timestamp,
@@ -50,7 +50,7 @@ stat_result.$factory = function(filename) {
                 st_mode: 0,
                 st_size: f.content.length
             };
-        for (let item of ["mtime", "ctime", "atime_ns", "mtime_ns", "ctime_ns"]){
+        for (let item of ["mtime", "ctime", "atime_ns", "mtime_ns", "ctime_ns"]) {
             infos["st_" + item] = infos.st_atime
         }
         let res = {
@@ -181,7 +181,7 @@ for (let funcname of ["_exit", "_getdiskusage", "_getfileinformation", "_getfina
         })(funcname)
 }
 
-module.isatty = function(){
+module.isatty = function() {
     return false
 }
 

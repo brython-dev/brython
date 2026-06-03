@@ -1,5 +1,5 @@
 "use strict";
-;(function($B){
+;(function($B) {
 var _b_ = $B.builtins
 
 // Code adapted from https://github.com/mziccard/node-timsort
@@ -41,23 +41,23 @@ var POWERS_OF_TEN = [1e0, 1e1, 1e2, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8, 1e9]
  * @return {number} - The estimated logarithm of the integer.
  */
 function log10(x) {
-  if(x < 1e5){
-    if(x < 1e2){
+  if (x < 1e5) {
+    if (x < 1e2) {
       return x < 1e1 ? 0 : 1
     }
 
-    if(x < 1e4){
+    if (x < 1e4) {
       return x < 1e3 ? 2 : 3
     }
 
     return 4
   }
 
-  if(x < 1e7){
+  if (x < 1e7) {
     return x < 1e6 ? 5 : 6
   }
 
-  if(x < 1e9){
+  if (x < 1e9) {
     return x < 1e8 ? 7 : 8
   }
 
@@ -72,22 +72,22 @@ function log10(x) {
  * @return {number} - A positive number if a.toString() > b.toString(), a
  * negative number if .toString() < b.toString(), 0 otherwise.
  */
-function alphabeticalCompare(a, b){
-    if(a === b){
+function alphabeticalCompare(a, b) {
+    if (a === b) {
         return 0
     }
 
-    if(~~a === a && ~~b === b){
-        if(a === 0 || b === 0){
+    if (~~a === a && ~~b === b) {
+        if (a === 0 || b === 0) {
             return a < b ? -1 : 1
         }
 
-        if(a < 0 || b < 0){
-            if(b >= 0){
+        if (a < 0 || b < 0) {
+            if (b >= 0) {
               return -1
             }
 
-            if(a >= 0){
+            if (a >= 0) {
               return 1
             }
 
@@ -100,17 +100,17 @@ function alphabeticalCompare(a, b){
 
         var t = 0
 
-        if(al < bl){
+        if (al < bl) {
             a *= POWERS_OF_TEN[bl - al - 1]
             b /= 10
             t = -1
-        }else if(al > bl){
+        } else if (al > bl) {
             b *= POWERS_OF_TEN[al - bl - 1]
             a /= 10;
             t = 1;
         }
 
-        if(a === b){
+        if (a === b) {
             return t
         }
 
@@ -120,7 +120,7 @@ function alphabeticalCompare(a, b){
     var aStr = String(a)
     var bStr = String(b)
 
-    if(aStr === bStr){
+    if (aStr === bStr) {
         return 0
     }
 
@@ -154,23 +154,23 @@ function minRunLength(n) {
  * @param {function} compare - Item comparison function.
  * @return {number} - The length of the run.
  */
-function makeAscendingRun(array, lo, hi, compare){
+function makeAscendingRun(array, lo, hi, compare) {
     var runHi = lo + 1
 
-    if(runHi === hi){
+    if (runHi === hi) {
         return 1;
     }
 
     // Descending
-    if(compare(array[runHi++], array[lo]) < 0){
-        while(runHi < hi && compare(array[runHi], array[runHi - 1]) < 0){
+    if (compare(array[runHi++], array[lo]) < 0) {
+        while (runHi < hi && compare(array[runHi], array[runHi - 1]) < 0) {
             runHi++
         }
 
       reverseRun(array, lo, runHi)
       // Ascending
-    }else{
-        while(runHi < hi && compare(array[runHi], array[runHi - 1]) >= 0){
+    } else {
+        while (runHi < hi && compare(array[runHi], array[runHi - 1]) >= 0) {
             runHi++
         }
     }
@@ -205,8 +205,8 @@ function reverseRun(array, lo, hi) {
  * @param {number} start - First element possibly out of order.
  * @param {function} compare - Item comparison function.
  */
-function binaryInsertionSort(array, lo, hi, start, compare){
-    if(start === lo){
+function binaryInsertionSort(array, lo, hi, start, compare) {
+    if (start === lo) {
         start++
     }
 
@@ -221,12 +221,12 @@ function binaryInsertionSort(array, lo, hi, start, compare){
          *   pivot >= array[i] for i in [lo, left)
          *   pivot <  array[i] for i in  in [right, start)
          */
-        while(left < right){
+        while (left < right) {
             var mid = (left + right) >>> 1
 
-            if(compare(pivot, array[mid]) < 0){
+            if (compare(pivot, array[mid]) < 0) {
                 right = mid
-            }else{
+            } else {
                 left = mid + 1
             }
         }
@@ -277,7 +277,7 @@ function gallopLeft(value, array, start, length, hint, compare) {
         maxOffset = 0,
         offset = 1
 
-    if(compare(value, array[start + hint]) > 0){
+    if (compare(value, array[start + hint]) > 0) {
         maxOffset = length - hint
 
         while(offset < maxOffset && compare(value,
@@ -285,12 +285,12 @@ function gallopLeft(value, array, start, length, hint, compare) {
             lastOffset = offset
             offset = (offset << 1) + 1
 
-            if(offset <= 0){
+            if (offset <= 0) {
                 offset = maxOffset
             }
         }
 
-        if(offset > maxOffset){
+        if (offset > maxOffset) {
             offset = maxOffset
         }
 
@@ -299,18 +299,18 @@ function gallopLeft(value, array, start, length, hint, compare) {
         offset += hint
 
         // value <= array[start + hint]
-    }else{
+    } else {
         maxOffset = hint + 1
         while(offset < maxOffset && compare(value,
                 array[start + hint - offset]) <= 0){
             lastOffset = offset
             offset = (offset << 1) + 1
 
-            if(offset <= 0){
+            if (offset <= 0) {
               offset = maxOffset
             }
         }
-        if(offset > maxOffset){
+        if (offset > maxOffset) {
             offset = maxOffset
         }
 
@@ -327,12 +327,12 @@ function gallopLeft(value, array, start, length, hint, compare) {
      * array[start + offset].
      */
     lastOffset++
-    while(lastOffset < offset){
+    while (lastOffset < offset) {
       var m = lastOffset + ((offset - lastOffset) >>> 1)
 
-      if(compare(value, array[start + m]) > 0){
+      if (compare(value, array[start + m]) > 0) {
         lastOffset = m + 1
-      }else{
+      } else {
         offset = m
       }
     }
@@ -357,7 +357,7 @@ function gallopRight(value, array, start, length, hint, compare) {
         maxOffset = 0,
         offset = 1
 
-    if(compare(value, array[start + hint]) < 0){
+    if (compare(value, array[start + hint]) < 0) {
         maxOffset = hint + 1
 
         while(offset < maxOffset && compare(value,
@@ -365,12 +365,12 @@ function gallopRight(value, array, start, length, hint, compare) {
             lastOffset = offset
             offset = (offset << 1) + 1
 
-            if(offset <= 0){
+            if (offset <= 0) {
               offset = maxOffset
             }
         }
 
-        if(offset > maxOffset){
+        if (offset > maxOffset) {
             offset = maxOffset
         }
 
@@ -380,7 +380,7 @@ function gallopRight(value, array, start, length, hint, compare) {
         offset = hint - tmp
 
         // value >= array[start + hint]
-    }else{
+    } else {
         maxOffset = length - hint
 
         while(offset < maxOffset && compare(value,
@@ -388,12 +388,12 @@ function gallopRight(value, array, start, length, hint, compare) {
             lastOffset = offset
             offset = (offset << 1) + 1
 
-            if(offset <= 0){
+            if (offset <= 0) {
               offset = maxOffset
             }
         }
 
-        if(offset > maxOffset){
+        if (offset > maxOffset) {
             offset = maxOffset
         }
 
@@ -410,12 +410,12 @@ function gallopRight(value, array, start, length, hint, compare) {
      */
     lastOffset++
 
-    while(lastOffset < offset){
+    while (lastOffset < offset) {
         var m = lastOffset + ((offset - lastOffset) >>> 1)
 
-        if (compare(value, array[start + m]) < 0){
+        if (compare(value, array[start + m]) < 0) {
             offset = m
-        }else{
+        } else {
           lastOffset = m + 1
         }
     }
@@ -430,7 +430,7 @@ var TimSortAssertion = function(message) {
 }
 
 
-var TimSort = function(array, compare){
+var TimSort = function(array, compare) {
     var self = {
         array: array,
         compare: compare,
@@ -448,7 +448,7 @@ var TimSort = function(array, compare){
         * @param {number} runStart - Start index of the run in the original array.
         * @param {number} runLength - Length of the run;
         */
-        pushRun: function(runStart, runLength){
+        pushRun: function(runStart, runLength) {
             this.runStart[this.stackSize] = runStart
             this.runLength[this.stackSize] = runLength
             this.stackSize += 1
@@ -460,17 +460,17 @@ var TimSort = function(array, compare){
         * 2) runLength[i - 2] > runLength[i - 1]
         */
         mergeRuns: function() {
-            while(this.stackSize > 1){
+            while (this.stackSize > 1) {
                 var n = this.stackSize - 2
 
                 if((n >= 1 && this.runLength[n - 1] <=
                         this.runLength[n] + this.runLength[n + 1]) ||
                         (n >= 2 && this.runLength[n - 2] <=
                         this.runLength[n] + this.runLength[n - 1])){
-                    if(this.runLength[n - 1] < this.runLength[n + 1]){
+                    if (this.runLength[n - 1] < this.runLength[n + 1]) {
                       n--
                     }
-                }else if(this.runLength[n] > this.runLength[n + 1]){
+                } else if (this.runLength[n] > this.runLength[n + 1]) {
                     break
                 }
                 this.mergeAt(n)
@@ -479,11 +479,11 @@ var TimSort = function(array, compare){
         /**
         * Merge all runs on TimSort's stack until only one remains.
         */
-        forceMergeRuns: function(){
-            while(this.stackSize > 1){
+        forceMergeRuns: function() {
+            while (this.stackSize > 1) {
             var n = this.stackSize - 2
 
-            if(n > 0 && this.runLength[n - 1] < this.runLength[n + 1]){
+            if (n > 0 && this.runLength[n - 1] < this.runLength[n + 1]) {
                 n--
             }
 
@@ -507,7 +507,7 @@ var TimSort = function(array, compare){
 
             this.runLength[i] = length1 + length2
 
-            if(i === this.stackSize - 3){
+            if (i === this.stackSize - 3) {
                 this.runStart[i + 1] = this.runStart[i + 2]
                 this.runLength[i + 1] = this.runLength[i + 2]
             }
@@ -523,7 +523,7 @@ var TimSort = function(array, compare){
             start1 += k
             length1 -= k
 
-            if(length1 === 0){return}
+            if (length1 === 0) {return}
 
             /*
             * Find where the last element in the first run goes in run2. Next elements
@@ -532,15 +532,15 @@ var TimSort = function(array, compare){
             length2 = gallopLeft(array[start1 + length1 - 1], array, start2,
                 length2, length2 - 1, compare)
 
-            if(length2 === 0){return}
+            if (length2 === 0) {return}
 
             /*
             * Merge remaining runs. A tmp array with length = min(length1, length2) is
             * used
             */
-            if(length1 <= length2){
+            if (length1 <= length2) {
                 this.mergeLow(start1, length1, start2, length2)
-            }else{
+            } else {
                 this.mergeHigh(start1, length1, start2, length2)
             }
         },
@@ -558,14 +558,14 @@ var TimSort = function(array, compare){
         * @param {number} start2 - First element in run2.
         * @param {number} length2 - Length of run2.
         */
-        mergeLow: function(start1, length1, start2, length2){
+        mergeLow: function(start1, length1, start2, length2) {
 
             var compare = this.compare,
                 array = this.array,
                 tmp = this.tmp,
                 i = 0
 
-            for(let i = 0; i < length1; i++){
+            for (let i = 0; i < length1; i++) {
                 tmp[i] = array[start1 + i]
             }
 
@@ -575,15 +575,15 @@ var TimSort = function(array, compare){
 
             array[dest++] = array[cursor2++]
 
-            if(--length2 === 0){
-                for(let i = 0; i < length1; i++){
+            if (--length2 === 0) {
+                for (let i = 0; i < length1; i++) {
                     array[dest + i] = tmp[cursor1 + i]
                 }
                 return
             }
 
-            if(length1 === 1){
-                for(let i = 0; i < length2; i++){
+            if (length1 === 1) {
+                for (let i = 0; i < length2; i++) {
                     array[dest + i] = array[cursor2 + i]
                 }
                 array[dest + length2] = tmp[cursor1]
@@ -592,33 +592,33 @@ var TimSort = function(array, compare){
 
             var minGallop = this.minGallop
 
-            while(true){
+            while (true) {
                 var count1 = 0,
                     count2 = 0,
                     exit = false
 
                 do{
-                    if(compare(array[cursor2], tmp[cursor1]) < 0){
+                    if (compare(array[cursor2], tmp[cursor1]) < 0) {
                         array[dest++] = array[cursor2++]
                         count2++
                         count1 = 0
 
-                        if(--length2 === 0){
+                        if (--length2 === 0) {
                             exit = true
                             break
                         }
-                    }else{
+                    } else {
                         array[dest++] = tmp[cursor1++]
                         count1++
                         count2 = 0
-                        if(--length1 === 1){
+                        if (--length1 === 1) {
                             exit = true
                             break
                         }
                     }
                 }while ((count1 | count2) < minGallop)
 
-                if(exit){
+                if (exit) {
                     break
                 }
 
@@ -626,15 +626,15 @@ var TimSort = function(array, compare){
                     count1 = gallopRight(array[cursor2], tmp, cursor1,
                         length1, 0, compare)
 
-                    if(count1 !== 0){
-                        for(let i = 0; i < count1; i++){
+                    if (count1 !== 0) {
+                        for (let i = 0; i < count1; i++) {
                             array[dest + i] = tmp[cursor1 + i]
                         }
 
                         dest += count1
                         cursor1 += count1
                         length1 -= count1
-                        if(length1 <= 1){
+                        if (length1 <= 1) {
                             exit = true
                             break
                         }
@@ -642,7 +642,7 @@ var TimSort = function(array, compare){
 
                     array[dest++] = array[cursor2++]
 
-                    if(--length2 === 0){
+                    if (--length2 === 0) {
                         exit = true
                         break
                     }
@@ -650,8 +650,8 @@ var TimSort = function(array, compare){
                     count2 = gallopLeft(tmp[cursor1], array, cursor2, length2,
                         0, compare)
 
-                    if(count2 !== 0){
-                        for(let i = 0; i < count2; i++){
+                    if (count2 !== 0) {
+                        for (let i = 0; i < count2; i++) {
                             array[dest + i] = array[cursor2 + i]
                         }
 
@@ -659,14 +659,14 @@ var TimSort = function(array, compare){
                         cursor2 += count2
                         length2 -= count2
 
-                        if(length2 === 0){
+                        if (length2 === 0) {
                             exit = true
                             break
                         }
                     }
                     array[dest++] = tmp[cursor1++]
 
-                    if(--length1 === 1){
+                    if (--length1 === 1) {
                         exit = true
                         break
                     }
@@ -676,11 +676,11 @@ var TimSort = function(array, compare){
                 }while(count1 >= DEFAULT_MIN_GALLOPING ||
                         count2 >= DEFAULT_MIN_GALLOPING);
 
-                if(exit){
+                if (exit) {
                     break
                 }
 
-                if(minGallop < 0){
+                if (minGallop < 0) {
                     minGallop = 0
                 }
 
@@ -689,19 +689,19 @@ var TimSort = function(array, compare){
 
             this.minGallop = minGallop
 
-            if(minGallop < 1){
+            if (minGallop < 1) {
                 this.minGallop = 1
             }
 
-            if(length1 === 1){
-                for(let i = 0; i < length2; i++){
+            if (length1 === 1) {
+                for (let i = 0; i < length2; i++) {
                     array[dest + i] = array[cursor2 + i]
                 }
                 array[dest + length2] = tmp[cursor1]
-            }else if(length1 === 0){
+            } else if (length1 === 0) {
                 throw new TimSortAssertion('mergeLow preconditions were not respected')
-            }else{
-                for(let i = 0; i < length1; i++){
+            } else {
+                for (let i = 0; i < length1; i++) {
                     array[dest + i] = tmp[cursor1 + i]
                 }
             }
@@ -720,12 +720,12 @@ var TimSort = function(array, compare){
         * @param {number} start2 - First element in run2.
         * @param {number} length2 - Length of run2.
         */
-        mergeHigh: function(start1, length1, start2, length2){
+        mergeHigh: function(start1, length1, start2, length2) {
             let compare = this.compare,
                 array = this.array,
                 tmp = this.tmp
 
-            for(let i = 0; i < length2; i++){
+            for (let i = 0; i < length2; i++) {
                 tmp[i] = array[start2 + i]
             }
 
@@ -737,23 +737,23 @@ var TimSort = function(array, compare){
 
             array[dest--] = array[cursor1--]
 
-            if(--length1 === 0){
+            if (--length1 === 0) {
                 customCursor = dest - (length2 - 1)
 
-                for(let i = 0; i < length2; i++){
+                for (let i = 0; i < length2; i++) {
                     array[customCursor + i] = tmp[i]
                 }
 
                 return
             }
 
-            if(length2 === 1){
+            if (length2 === 1) {
                 dest -= length1
                 cursor1 -= length1
                 customDest = dest + 1
                 customCursor = cursor1 + 1
 
-                for(let i = length1 - 1; i >= 0; i--){
+                for (let i = length1 - 1; i >= 0; i--) {
                     array[customDest + i] = array[customCursor + i]
                 }
 
@@ -769,43 +769,43 @@ var TimSort = function(array, compare){
                     exit = false
 
                 do{
-                    if(compare(tmp[cursor2], array[cursor1]) < 0){
+                    if (compare(tmp[cursor2], array[cursor1]) < 0) {
                         array[dest--] = array[cursor1--]
                         count1++
                         count2 = 0
-                        if(--length1 === 0){
+                        if (--length1 === 0) {
                             exit = true
                             break
                         }
-                    }else{
+                    } else {
                         array[dest--] = tmp[cursor2--]
                         count2++
                         count1 = 0
-                        if(--length2 === 1){
+                        if (--length2 === 1) {
                             exit = true
                             break
                         }
                     }
                 }while ((count1 | count2) < minGallop)
 
-                if(exit){break}
+                if (exit) {break}
 
                 do{
                     count1 = length1 - gallopRight(tmp[cursor2], array,
                         start1, length1, length1 - 1, compare)
 
-                    if(count1 !== 0){
+                    if (count1 !== 0) {
                         dest -= count1
                         cursor1 -= count1
                         length1 -= count1
                         customDest = dest + 1
                         customCursor = cursor1 + 1
 
-                        for(let i = count1 - 1; i >= 0; i--){
+                        for (let i = count1 - 1; i >= 0; i--) {
                             array[customDest + i] = array[customCursor + i]
                         }
 
-                        if(length1 === 0){
+                        if (length1 === 0) {
                             exit = true
                             break
                         }
@@ -813,7 +813,7 @@ var TimSort = function(array, compare){
 
                     array[dest--] = tmp[cursor2--]
 
-                    if(--length2 === 1){
+                    if (--length2 === 1) {
                         exit = true
                         break
                     }
@@ -821,18 +821,18 @@ var TimSort = function(array, compare){
                     count2 = length2 - gallopLeft(array[cursor1], tmp, 0,
                         length2, length2 - 1, compare)
 
-                    if(count2 !== 0){
+                    if (count2 !== 0) {
                         dest -= count2
                         cursor2 -= count2
                         length2 -= count2
                         customDest = dest + 1
                         customCursor = cursor2 + 1
 
-                        for(let i = 0; i < count2; i++){
+                        for (let i = 0; i < count2; i++) {
                             array[customDest + i] = tmp[customCursor + i]
                         }
 
-                        if(length2 <= 1){
+                        if (length2 <= 1) {
                             exit = true
                             break
                         }
@@ -840,7 +840,7 @@ var TimSort = function(array, compare){
 
                     array[dest--] = array[cursor1--]
 
-                    if(--length1 === 0){
+                    if (--length1 === 0) {
                         exit = true
                         break
                     }
@@ -850,42 +850,42 @@ var TimSort = function(array, compare){
                 } while (count1 >= DEFAULT_MIN_GALLOPING ||
                         count2 >= DEFAULT_MIN_GALLOPING)
 
-                if(exit){break}
+                if (exit) {break}
 
-                if(minGallop < 0){minGallop = 0}
+                if (minGallop < 0) {minGallop = 0}
 
                 minGallop += 2
             }
 
             this.minGallop = minGallop
 
-            if(minGallop < 1){
+            if (minGallop < 1) {
                 this.minGallop = 1
             }
 
-            if(length2 === 1){
+            if (length2 === 1) {
                 dest -= length1
                 cursor1 -= length1
                 customDest = dest + 1
                 customCursor = cursor1 + 1
 
-                for(let i = length1 - 1; i >= 0; i--){
+                for (let i = length1 - 1; i >= 0; i--) {
                     array[customDest + i] = array[customCursor + i]
                 }
 
                 array[dest] = tmp[cursor2]
-            }else if(length2 == 0){
+            } else if (length2 == 0) {
                 throw new TimSortAssertion("mergeHigh preconditions were not respected")
-            }else{
+            } else {
                 customCursor = dest - (length2 - 1)
-                for(let i = 0; i < length2; i++){
+                for (let i = 0; i < length2; i++) {
                     array[customCursor + i] = tmp[i]
                 }
             }
         }
     }
 
-    if(self.length < 2 * DEFAULT_TMP_STORAGE_LENGTH){
+    if (self.length < 2 * DEFAULT_TMP_STORAGE_LENGTH) {
         self.tmpStorageLength = self.length >>> 1
     }
 
@@ -910,8 +910,8 @@ var TimSort = function(array, compare){
  * @param {number} hi - Last element in the range.
  *     comparator.
  */
-function tim_sort(array, compare, lo, hi){
-    if(!Array.isArray(array)){
+function tim_sort(array, compare, lo, hi) {
+    if (!Array.isArray(array)) {
         $B.RAISE(_b_.TypeError, "Can only sort arrays")
     }
 
@@ -919,25 +919,25 @@ function tim_sort(array, compare, lo, hi){
      * Handle the case where a comparison function is not provided. We do
      * lexicographic sorting
      */
-    if(!compare){
+    if (!compare) {
         compare = alphabeticalCompare
-    }else if (typeof compare !== "function"){
+    } else if (typeof compare !== "function") {
         hi = lo
         lo = compare
         compare = alphabeticalCompare
     }
 
-    if(!lo){lo = 0}
-    if(!hi){hi = array.length}
+    if (!lo) {lo = 0}
+    if (!hi) {hi = array.length}
 
     var remaining = hi - lo
 
     // The array is already sorted
-    if(remaining < 2){return}
+    if (remaining < 2) {return}
 
     var runLength = 0
     // On small arrays binary sort can be used directly
-    if(remaining < DEFAULT_MIN_MERGE){
+    if (remaining < DEFAULT_MIN_MERGE) {
         runLength = makeAscendingRun(array, lo, hi, compare)
         binaryInsertionSort(array, lo, hi, lo + runLength, compare)
         return
@@ -949,9 +949,9 @@ function tim_sort(array, compare, lo, hi){
 
     do{
         runLength = makeAscendingRun(array, lo, hi, compare)
-        if(runLength < minRun){
+        if (runLength < minRun) {
             var force = remaining
-            if(force > minRun){
+            if (force > minRun) {
               force = minRun
             }
 

@@ -1,4 +1,4 @@
-(function(){
+(function() {
     var obj = {},
         builtin_names = ['ArithmeticError', 'AssertionError',
             'AttributeError', 'BaseException', 'BaseExceptionGroup',
@@ -35,8 +35,8 @@
             'property', 'quit', 'range', 'repr', 'reversed', 'round', 'set',
             'setattr', 'slice', 'sorted', 'staticmethod', 'str', 'sum',
             'super', 'tuple', 'type', 'vars', 'zip']
-    for(var key of builtin_names){
-        if(__BRYTHON__.builtins[key] !== undefined){
+    for (var key of builtin_names) {
+        if (__BRYTHON__.builtins[key] !== undefined) {
             obj[key] = __BRYTHON__.builtins[key]
         }
     }

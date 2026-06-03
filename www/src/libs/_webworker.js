@@ -1,6 +1,6 @@
 // Web Worker implementation
 
-(function($B){
+(function($B) {
 
 var _b_ = $B.builtins
 
@@ -69,7 +69,7 @@ function scripts_to_load(debug_level) {
 
 var wclass = $B.make_type("Worker")
 
-wclass.$factory = function(worker){
+wclass.$factory = function(worker) {
     return {
         ob_type: wclass,
         worker
@@ -101,7 +101,7 @@ _Worker.$factory = function(id, onmessage, onerror) {
     var id = $.id,
         worker_script = $B.webworkers[id]
 
-    if(worker_script === undefined){
+    if (worker_script === undefined) {
         $B.RAISE(_b_.KeyError, id)
     }
     var filepath = worker_script.src ? worker_script.src : $B.script_path + "#" + id,
@@ -146,7 +146,7 @@ _Worker.$factory = function(id, onmessage, onerror) {
     // Call brython() to initialize internal Brython values
     header += `brython(${JSON.stringify($B.$options)})\n`
     js = header + js
-    js = `try{${js}}catch(err){$B.handle_error(err)}`
+    js = `try {${js}} catch (err) {$B.handle_error(err)}`
 
     var blob = new Blob([js], {type: "application/js"}),
         url = URL.createObjectURL(blob),
@@ -218,17 +218,17 @@ function create_worker() {
     header += `$B.brython_path = "${$B.brython_path}"\n`
     // inject script attributes to get options
     header += `var script = $B.scripts["${filename}"] = new $B.fakeScript()\n`
-    for(var key in $B.brython_options){
+    for (var key in $B.brython_options) {
         var value = $B.brython_options[key]
-        if(Array.isArray(value)){
+        if (Array.isArray(value)) {
             value = `[${value.map(x => '"' + x + '"')}]`
-        }else{
+        } else {
             value = `"${value}"`
         }
         header += `script.options["${key}"] = ${value}\n`
     }
 
-    for(var attr of worker_script.attributes){
+    for (var attr of worker_script.attributes) {
         header += `script.options["${attr.name}"] = "${attr.value}"\n`
     }
 
@@ -244,11 +244,11 @@ function create_worker() {
         error_token = Math.random().toString(36).substr(2, 8)
 
     // open indexedDB cache before running worker code
-    js = `$B.idb_open_promise().then(function(){\n` +
-         `try{\n` +
+    js = `$B.idb_open_promise().then(function() {\n` +
+         `try {\n` +
              `${js}\n` +
              `self.postMessage('${ok_token}')\n` +
-         `}catch(err){\n` +
+         `} catch (err) {\n` +
              `console.log('worker error', err)\n` +
              `self.postMessage('${error_token}Error in worker "${id}"\\n'` +
              ` + $B.error_trace(err))\n` +
@@ -261,7 +261,7 @@ function create_worker() {
                 url = URL.createObjectURL(blob),
                 w = new Worker(url),
                 res = wclass.$factory(w)
-        } catch(err) {
+        } catch (err) {
             reject(err)
         }
 
@@ -277,7 +277,7 @@ function create_worker() {
                 }
                 try {
                     resolve(res)
-                } catch(err) {
+                } catch (err) {
                     reject(err)
                 }
             }
