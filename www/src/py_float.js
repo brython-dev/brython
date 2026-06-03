@@ -1189,7 +1189,7 @@ float_funcs.fromhex = function(klass, s) {
           throw parse_error()
       }
       if (negate) {
-          x = float.__neg__(x)
+          x = float.nb_negative(x)
       }
       return klass === _b_.float ? x : $B.$call(klass, x)
     }
