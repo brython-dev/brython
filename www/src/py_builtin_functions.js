@@ -1139,13 +1139,22 @@ $B.iterator.tp_iter = function(self) {
 }
 
 $B.iterator.tp_iternext = function*(self){
+    // Sequence iterator (CPython PySeqIter): call __getitem__(i) for
+    // i = 0, 1, 2, ... and stop only on IndexError, propagating any other
+    // exception. Don't bound by __len__ (CPython ignores it).
     var ob_type = $B.get_class(self.it_seq)
-    var len = $B.search_in_mro(ob_type, '__len__')(self.it_seq)
     var getitem = $B.search_in_mro(ob_type, '__getitem__')
-    if (self.it_index <= len) {
-        yield getitem(self.it_seq, self.it_index)
-        self.it_index++
+    var value
+    try {
+        value = getitem(self.it_seq, self.it_index)
+    } catch(err) {
+        if ($B.is_exc(err, [_b_.IndexError])) {
+            return
+        }
+        throw err
     }
+    self.it_index++
+    yield value
 }
 
 var iterator_funcs = $B.iterator.tp_funcs = {}
