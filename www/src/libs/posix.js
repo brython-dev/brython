@@ -5,21 +5,21 @@ disguised Unix interface).  Refer to the library manual and
 corresponding Unix manual entries for more information on calls.
 */
 "use strict";
-(function($B){
+(function($B) {
 
 var _b_ = $B.builtins
 
-function _randint(a, b){
+function _randint(a, b) {
     return parseInt(Math.random() * (b - a + 1) + a)
 }
 
 var stat_result = $B.make_type("stat_result")
 
-stat_result.$factory = function(filename){
+stat_result.$factory = function(filename) {
     filename = _b_.str.$factory(filename)
-    if($B.file_cache && $B.file_cache.hasOwnProperty(filename)){
-        var f = $B.file_cache[filename],
-            infos = {
+    if ($B.file_cache && $B.file_cache.hasOwnProperty(filename)) {
+        var f = $B.file_cache[filename]
+        var infos = {
                 st_atime: __BRYTHON__.timestamp,
                 st_ctime: f.ctime,
                 st_mtime: f.mtime,
@@ -28,18 +28,17 @@ stat_result.$factory = function(filename){
                 st_ino: -1,
                 st_mode: 0,
                 st_size: f.length
-            };
-            ["mtime", "ctime", "atime_ns", "mtime_ns", "ctime_ns"].
-                forEach(function(item){
-                    infos["st_" + item] = infos.st_atime
-                });
+        }
+        for (let item of ["mtime", "ctime", "atime_ns", "mtime_ns", "ctime_ns"]) {
+            infos["st_" + item] = infos.st_atime
+        }
         var res = {
             ob_type: stat_result
         }
         $B.init_dict(res)
         $B.assign_dict(res, infos)
         return res
-    }else if($B.files && $B.files.hasOwnProperty(filename)){
+    } else if ($B.files && $B.files.hasOwnProperty(filename)) {
         var f = $B.files[filename],
             infos = {
                 st_atime: __BRYTHON__.timestamp,
@@ -51,17 +50,17 @@ stat_result.$factory = function(filename){
                 st_mode: 0,
                 st_size: f.content.length
             };
-        for(var item of ["mtime", "ctime", "atime_ns", "mtime_ns", "ctime_ns"]){
+        for (let item of ["mtime", "ctime", "atime_ns", "mtime_ns", "ctime_ns"]) {
             infos["st_" + item] = infos.st_atime
         }
-        var res = {
+        let res = {
             ob_type: stat_result
         }
         $B.init_dict(res)
         $B.assign_dict(res, infos)
         return res
 
-    }else{
+    } else {
         $B.RAISE(_b_.OSError, 'no information available for file ' +
             filename)
     }
@@ -100,71 +99,71 @@ var module = {
         [['PYTHONPATH', $B.brython_path],
          ['PYTHONUSERBASE', ' ']]),
     error: _b_.OSError,
-    fspath: function(path){
+    fspath: function(path) {
         return path
     },
-    getcwd: function(){
+    getcwd: function() {
         return $B.brython_path
     },
-    getpid: function(){
+    getpid: function() {
         return 0
     },
-    lstat: function(filename){
+    lstat: function(filename) {
         return stat_result.$factory(filename)
     },
-    open: function(path, flags){
+    open: function(path, flags) {
         $B.RAISE(_b_.NotImplementedError, 'os.open is not implemented')
     },
-    remove: function(path) {
-        var $ = $B.args("remove", 1, { path: null }, arguments)
+    remove: function() {
+        let $ = $B.args("remove", 1, {path: null}, arguments)
 
-        var path = $.path
-        var found_file = false
+        let path = $.path
+        let found_file = false
 
-        if ($B.file_cache && $B.file_cache.hasOwnProperty(path)){
+        if ($B.file_cache && $B.file_cache.hasOwnProperty(path)) {
             delete $B.file_cache[path]
             found_file = true
         }
-        if ($B.files && $B.files.hasOwnProperty(path)){
+        if ($B.files && $B.files.hasOwnProperty(path)) {
             delete $B.files[path]
             found_file = true
         }
 
-        if(!found_file) {
+        if (! found_file) {
             $B.RAISE(_b_.FileNotFoundError, `No such file or directory: '${path}'`)
         }
 
         return _b_.None
     },
-    stat: function(filename){
+    stat: function(filename) {
         return stat_result.$factory(filename)
     },
-    stat_result: function(filename){
+    stat_result: function(filename) {
         return stat_result.$factory(filename)
     },
-    urandom: function(n){
+    urandom: function(n) {
         const randbytes = new Uint8Array(n);
         crypto.getRandomValues(randbytes);
-        return _b_.bytes.$factory(Array.from(randbytes));
+        return _b_.bytes.$factory(Array.from(randbytes))
     },
-    WTERMSIG: function(){
+    WTERMSIG: function() {
         return 0
     },
-    WNOHANG: function(){
+    WNOHANG: function() {
         return _b_.tuple.$factory([0, 0])
     }
-};
+}
 
-["WCOREDUMP", "WIFCONTINUED", "WIFSTOPPED", "WIFSIGNALED", "WIFEXITED"].forEach(function(funcname){
-        module[funcname] = function(){return false}
-    });
+for (let funcname of ["WCOREDUMP", "WIFCONTINUED", "WIFSTOPPED", 
+        "WIFSIGNALED", "WIFEXITED"]) {
+        module[funcname] = () => false
+}
 
-["WEXITSTATUS", "WSTOPSIG", "WTERMSIG"].
-    forEach(function(funcname){
-        module[funcname] = function(){return _b_.None}
-    });
+for (let funcname of ["WEXITSTATUS", "WSTOPSIG", "WTERMSIG"]) {
+        module[funcname] = () => _b_.None
+}
 
-["_exit", "_getdiskusage", "_getfileinformation", "_getfinalpathname",
+for (let funcname of ["_exit", "_getdiskusage", "_getfileinformation", "_getfinalpathname",
     "_getfullpathname", "_isdir", "abort", "access", "chdir", "chmod",
     "close", "closerange", "device_encoding", "dup", "dup2",
     "execv", "execve", "fsat", "fsync", "get_terminal_size", "getcwdb",
@@ -173,14 +172,16 @@ var module = {
     "replace", "rmdir", "spawnv", "spawnve", "startfile", "stat_float_times",
     "statvfs_result", "strerror", "symlink", "system", "terminal_size",
     "times", "times_result", "umask", "uname_result", "unlink", "utime",
-    "waitpid", "write"].forEach(function(funcname){
-        module[funcname] = function(){
-            $B.RAISE(_b_.NotImplementedError, "posix." + funcname +
-                " is not implemented")
-        }
-    });
+    "waitpid", "write"]) {
+        module[funcname] = (function(name) {
+            return function() {
+                $B.RAISE(_b_.NotImplementedError, "posix." + name +
+                    " is not implemented")
+            }
+        })(funcname)
+}
 
-module.isatty = function(){
+module.isatty = function() {
     return false
 }
 

@@ -1253,4 +1253,14 @@ class A:
 
 assert_raises(TypeError, A)
 
+# PR 2711
+class C:
+
+    def m(self):
+        def f(*, __x=1): 
+            return __x
+        return f()
+
+assert C().m() == 1
+
 print('passed all tests..')

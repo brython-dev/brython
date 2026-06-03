@@ -1,4 +1,4 @@
-(function($B){
+(function($B) {
 
 var _b_ = $B.builtins,
     _keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
@@ -8,7 +8,7 @@ var error = $B.make_type("error", [_b_.Exception])
 $B.set_func_names(error, "binascii")
 $B.finalize_type(error)
 
-function decode(bytes, altchars, validate){
+function decode(bytes, altchars, validate) {
     var output = [],
         chr1, chr2, chr3,
         enc1, enc2, enc3, enc4
@@ -21,34 +21,34 @@ function decode(bytes, altchars, validate){
     // are in the alphabet
     var _input = ''
     var padding = 0
-    for(var i = 0, len = input.length; i < len; i++){
+    for (var i = 0, len = input.length; i < len; i++) {
         var car = String.fromCharCode(input[i])
         var char_num = alphabet.indexOf(car)
-        if(char_num == -1){
-            if(validate){
+        if (char_num == -1) {
+            if (validate) {
                 $B.RAISE(error, "Non-base64 digit found: " + car)
             }
-        }else if(char_num == 64 && i < input.length - 2){
-            if(validate){
+        } else if (char_num == 64 && i < input.length - 2) {
+            if (validate) {
                 $B.RAISE(error, "Non-base64 digit found: " + car)
             }
-        }else if(char_num == 64 && i >= input.length - 2){
+        } else if (char_num == 64 && i >= input.length - 2) {
             padding++
             _input += car
-        }else{
+        } else {
             _input += car
         }
     }
     input = _input
-    if(_input.length == padding){
+    if (_input.length == padding) {
         return _b_.bytes.$factory([])
     }
-    if( _input.length % 4 > 0){
+    if ( _input.length % 4 > 0) {
         $B.RAISE(error, "Incorrect padding")
     }
 
     var i = 0
-    while(i < input.length){
+    while (i < input.length) {
 
         enc1 = alphabet.indexOf(input.charAt(i++))
         enc2 = alphabet.indexOf(input.charAt(i++))
@@ -61,8 +61,8 @@ function decode(bytes, altchars, validate){
 
         output.push(chr1)
 
-        if(enc3 != 64){output.push(chr2)}
-        if(enc4 != 64){output.push(chr3)}
+        if (enc3 != 64) {output.push(chr2)}
+        if (enc4 != 64) {output.push(chr3)}
 
     }
     // return Python bytes
@@ -72,14 +72,14 @@ function decode(bytes, altchars, validate){
 
 var hex2int = {},
     hex = '0123456789abcdef'
-for(var i = 0; i < hex.length; i++){
+for (var i = 0; i < hex.length; i++) {
     hex2int[hex[i]] = i
     hex2int[hex[i].toUpperCase()] = i
 }
 
-function make_alphabet(altchars){
+function make_alphabet(altchars) {
     var alphabet = _keyStr
-    if(altchars !== undefined && altchars !== _b_.None){
+    if (altchars !== undefined && altchars !== _b_.None) {
         // altchars is an instance of Python bytes
         var source = altchars.source
         alphabet = alphabet.substr(0,alphabet.length-3) +
@@ -89,42 +89,42 @@ function make_alphabet(altchars){
 }
 
 var module = {
-    a2b_base64: function(){
+    a2b_base64: function() {
         var $ = $B.args("a2b_base64", 2, {s: null, strict_mode: null},
                     arguments, {strict_mode: false})
         var bytes
-        if($B.is_str($.s)){
+        if ($B.is_str($.s)) {
             bytes = _b_.str.encode($.s, 'ascii')
-        }else if($B.$isinstance($.s, [_b_.bytes, _b_.bytearray])){
+        } else if ($B.$isinstance($.s, [_b_.bytes, _b_.bytearray])) {
             bytes = $.s
-        }else{
+        } else {
             $B.RAISE(_b_.TypeError, 'wrong type: ' + $B.class_name($.s))
         }
         return decode(bytes)
     },
-    a2b_hex: function(){
+    a2b_hex: function() {
         var $ = $B.args("a2b_hex", 1, {s: null}, arguments)
         var s = $.s
-        if($B.is_bytes(s)){
+        if ($B.is_bytes(s)) {
             s = $B.bytes_decode(s, 'ascii')
         }
-        if(typeof s !== "string"){
+        if (typeof s !== "string") {
             $B.RAISE(_b_.TypeError, "argument should be bytes, " +
                 "buffer or ASCII string, not '" + $B.class_name(s) + "'")
         }
 
         var len = s.length
-        if(len % 2 == 1){
+        if (len % 2 == 1) {
             $B.RAISE(_b_.TypeError, 'Odd-length string')
         }
 
         var res = []
-        for(var i = 0; i < len; i += 2){
+        for (var i = 0; i < len; i += 2) {
             res.push((hex2int[s.charAt(i)] << 4) + hex2int[s.charAt(i + 1)])
         }
         return _b_.bytes.$factory(res)
     },
-    b2a_base64: function(){
+    b2a_base64: function() {
         var $ = $B.args("b2a_base64", 1, {data: null}, arguments, null, null, 
                     "kw")
         var newline = $B.str_dict_get($.kw, 'newline', false)
@@ -133,42 +133,42 @@ var module = {
         var i = 0
         var size = 100000
         var s = ''
-        while(i < bytes_list.length){
+        while (i < bytes_list.length) {
             s += String.fromCharCode.apply(null, bytes_list.slice(i, i + size))
             i += size
         }
 
         var res = btoa(s)
 
-        if(newline){
+        if (newline) {
             res += "\n"
         }
         return _b_.bytes.$factory(res, "ascii")
     },
-    b2a_hex: function(obj){
+    b2a_hex: function(obj) {
         var string = $B.to_bytes(obj),
             res = []
-        function conv(c){
-            if(c > 9){
+        function conv(c) {
+            if (c > 9) {
                 c = c + 'a'.charCodeAt(0) - 10
-            }else{
+            } else {
                 c = c + '0'.charCodeAt(0)
             }
             return c
         }
-        string.forEach(function(char){
+        for (let char of string) {
             res.push(conv((char >> 4) & 0xf))
             res.push(conv(char & 0xf))
-        })
+        }
         return _b_.bytes.$factory(res)
     },
-    b2a_uu: function(obj){
+    b2a_uu: function(obj) {
         var string = $B.bytes_decode(obj, 'ascii')
         var len = string.length,
             res = String.fromCharCode((0x20 + len) & 0x3F)
-        while(string.length > 0){
+        while (string.length > 0) {
             var s = string.slice(0, 3)
-            while(s.length < 3){s.push(String.fromCharCode(0))}
+            while (s.length < 3) {s.push(String.fromCharCode(0))}
             var A = s[0],
                 B = s[1],
                 C = s[2]

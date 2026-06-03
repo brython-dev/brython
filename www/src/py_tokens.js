@@ -1,6 +1,6 @@
 // Token constants
 "use strict";
-(function($B){
+(function($B) {
 
 const tokens = [
     'ENDMARKER',
@@ -78,8 +78,11 @@ const tokens = [
 
 $B.py_tokens = {}
 
+$B.token_name = {}
+
 var pos = 0
-for(var tok of tokens){
+for (var tok of tokens) {
+    $B.token_name[pos] = tok
     $B.py_tokens[tok] = pos++
 }
 
@@ -137,15 +140,15 @@ $B.EXACT_TOKEN_TYPES = {
     '~': 'TILDE'
 }
 
-function ISTERMINAL(x){
+function ISTERMINAL(x) {
     return x < NT_OFFSET
 }
 
-function ISNONTERMINAL(x){
+function ISNONTERMINAL(x) {
     return x >= NT_OFFSET
 }
 
-function ISEOF(x){
+function ISEOF(x) {
     return x == ENDMARKER
 }
 

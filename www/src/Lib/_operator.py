@@ -1,6 +1,7 @@
 """Brython-specific.
 Only implements _compare_digest because it is used in hmac module."""
 
+@staticmethod
 def _compare_digest(a, b):
     """Return 'a == b'.
     This function uses an approach designed to prevent

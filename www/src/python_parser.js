@@ -3,7 +3,7 @@
 // Implements the left-recursive algorithm described in
 // http://web.cs.ucla.edu/~todd/research/pepm08.pdf
 
-(function($B){
+(function($B) {
 "use strict";
 var _b_ = $B.builtins,
     debug = 0
@@ -43,8 +43,8 @@ $B.parser_constants = {
 }
 
 // actions such as Add, Not, etc.
-for(var op_type of $B.op_types){
-    for(var key in op_type){
+for (var op_type of $B.op_types) {
+    for (var key in op_type) {
         var klass_name = op_type[key]
         $B.parser_constants[klass_name] = new $B.ast[klass_name]()
     }
@@ -55,16 +55,16 @@ var NULL = $B.parser_constants.NULL
 // Generate functions to create AST instances
 $B._PyAST = {}
 
-for(var ast_class in $B.ast_classes){ // in py_ast.js
+for (var ast_class in $B.ast_classes) { // in py_ast.js
     var args = $B.ast_classes[ast_class]
-    if(Array.isArray(args)){
+    if (Array.isArray(args)) {
         continue
     }
     args = args.replace(/\*/g, '').replace(/\?/g, '')
     var arg_names = args.split(',')
 
-    $B._PyAST[ast_class] = (function(ast_name, ast_args){
-        return function(){
+    $B._PyAST[ast_class] = (function(ast_name, ast_args) {
+        return function() {
             var _args = Array.from(arguments).slice(0, ast_args.length + 1)
             var EXTRA = _args.pop()
             var ast_obj = new $B.ast[ast_name](..._args)
@@ -74,20 +74,20 @@ for(var ast_class in $B.ast_classes){ // in py_ast.js
     })(ast_class, arg_names)
 }
 
-function get_last_token(p){
+function get_last_token(p) {
     var last_token = $B.last(p.tokens)
-    if(last_token.type == "ENDMARKER"){
+    if (last_token.type == "ENDMARKER") {
         var src = $B.file_cache[p.filename]
-        if(src){
-            for(var token of $B.tokenizer(src)){
-                if(token.type == "ENDMARKER"){
+        if (src) {
+            for (var token of $B.tokenizer(src)) {
+                if (token.type == "ENDMARKER") {
                     break
                 }
-                if(token.type != "DEDENT"){
+                if (token.type != "DEDENT") {
                     last_token = token
                 }
             }
-        }else{
+        } else {
             last_token = undefined
         }
     }
@@ -95,44 +95,44 @@ function get_last_token(p){
 }
 
 var helper_functions = {
-    CHECK: function(type, obj){
-        if(Array.isArray(type)){
+    CHECK: function(type, obj) {
+        if (Array.isArray(type)) {
             var check
-            for(var t of type){
+            for (var t of type) {
                 check = helper_functions.CHECK(t, obj)
-                if(check){
+                if (check) {
                     return check
                 }
             }
             return undefined
         }
-        if(obj instanceof type){
+        if (obj instanceof type) {
             return obj
         }
         return undefined
     },
 
-    CHECK_VERSION: function(type, version, msg, node){
+    CHECK_VERSION: function(type, version, msg, node) {
         return helper_functions.INVALID_VERSION_CHECK(p, version, msg, node)
     },
 
-    CHECK_NULL_ALLOWED: function(type, obj){
-        if(obj !== NULL){
-            if(type instanceof Array){
-                for(var t of type){
-                    if(obj instanceof t){
+    CHECK_NULL_ALLOWED: function(type, obj) {
+        if (obj !== NULL) {
+            if (type instanceof Array) {
+                for (var t of type) {
+                    if (obj instanceof t) {
                         return obj
                     }
                 }
                 return
-            }else{
+            } else {
                 return obj instanceof type ? obj : undefined
             }
         }
         return obj
     },
 
-    INVALID_VERSION_CHECK: function(p, version, msg, node){
+    INVALID_VERSION_CHECK: function(p, version, msg, node) {
         if (node == NULL) {
             p.error_indicator = 1;  // Inline CHECK_CALL
             return NULL;
@@ -145,11 +145,11 @@ var helper_functions = {
         return node;
     },
 
-    NEW_TYPE_COMMENT: function(p, x){
+    NEW_TYPE_COMMENT: function(p, x) {
         return x
     },
 
-    PyErr_Occurred: function(){
+    PyErr_Occurred: function() {
         return false
     },
 
@@ -163,18 +163,18 @@ var helper_functions = {
         return NULL;
     },
 
-    RAISE_ERROR: function(p, errtype, msg){
+    RAISE_ERROR: function(p, errtype, msg) {
         var extra_args = []
-        for(var i = 1, len = arguments.length; i < len; i++){
+        for (var i = 1, len = arguments.length; i < len; i++) {
             extra_args.push(arguments[i])
         }
         get_last_token(p)
         $B._PyPegen.raise_error(p, errtype, msg, ...extra_args)
     },
 
-    RAISE_SYNTAX_ERROR: function(p, msg){
+    RAISE_SYNTAX_ERROR: function(p, msg) {
         var extra_args = []
-        for(var i = 1, len = arguments.length; i < len; i++){
+        for (var i = 1, len = arguments.length; i < len; i++) {
             extra_args.push(arguments[i])
         }
         get_last_token(p)
@@ -182,16 +182,16 @@ var helper_functions = {
     },
 
 
-    RAISE_INDENTATION_ERROR: function(p, msg, arg){
-        if(arg !== undefined){
+    RAISE_INDENTATION_ERROR: function(p, msg, arg) {
+        if (arg !== undefined) {
             msg = _b_.str.nb_remainder(msg, arg)
         }
         var last_token = $B.last(p.tokens)
-        if(last_token.type == "ENDMARKER"){
+        if (last_token.type == "ENDMARKER") {
             var src = $B.file_cache[p.filename]
-            if(src){
-                for(var token of $B.tokenizer(src)){
-                    if(token.type == "ENDMARKER"){
+            if (src) {
+                for (var token of $B.tokenizer(src)) {
+                    if (token.type == "ENDMARKER") {
                         break
                     }
                     last_token = token
@@ -202,8 +202,8 @@ var helper_functions = {
         $B._PyPegen.raise_error(p, _b_.IndentationError, msg)
     },
 
-    RAISE_SYNTAX_ERROR_KNOWN_LOCATION: function(p, a, err_msg, arg){
-        if(arg !== undefined){
+    RAISE_SYNTAX_ERROR_KNOWN_LOCATION: function(p, a, err_msg, arg) {
+        if (arg !== undefined) {
             err_msg = _b_.str.nb_remainder(err_msg, arg)
         }
 
@@ -213,9 +213,9 @@ var helper_functions = {
             err_msg)
     },
 
-    RAISE_SYNTAX_ERROR_KNOWN_RANGE: function(p, a, b, msg){
+    RAISE_SYNTAX_ERROR_KNOWN_RANGE: function(p, a, b, msg) {
         var extra_args = arguments[4]
-        if(extra_args){
+        if (extra_args) {
             msg = _b_.str.nb_remainder(msg, extra_args)
         }
         helper_functions.RAISE_ERROR_KNOWN_LOCATION(p, _b_.SyntaxError,
@@ -225,7 +225,7 @@ var helper_functions = {
     },
 
 
-    RAISE_SYNTAX_ERROR_INVALID_TARGET: function(p, type, e){
+    RAISE_SYNTAX_ERROR_INVALID_TARGET: function(p, type, e) {
         return helper_functions._RAISE_SYNTAX_ERROR_INVALID_TARGET(p, type, e)
     },
 
@@ -237,7 +237,7 @@ var helper_functions = {
             if (type == $B.parser_constants.STAR_TARGETS ||
                     type == $B.parser_constants.FOR_TARGETS) {
                 msg = "cannot assign to %s";
-            }else{
+            } else {
                 msg = "cannot delete %s";
             }
             return helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(
@@ -250,11 +250,11 @@ var helper_functions = {
         return NULL;
     },
 
-    RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN: function(p, msg){
+    RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN: function(p, msg) {
         return helper_functions.RAISE_SYNTAX_ERROR(p, msg)
     },
 
-    RAISE_SYNTAX_ERROR_STARTING_FROM: function(p, a, msg, ...args){
+    RAISE_SYNTAX_ERROR_STARTING_FROM: function(p, a, msg, ...args) {
         var last = p.tokens[p.tokens.length - 1]
         return helper_functions.RAISE_ERROR_KNOWN_LOCATION(p, _b_.SyntaxError,
             a.lineno, a.col_offset,
@@ -289,7 +289,7 @@ function raise_error_known_location(type, filename, lineno, col_offset,
 
 $B.raise_error_known_location = raise_error_known_location
 
-function make_error_known_token(type, filename, token, message){
+function make_error_known_token(type, filename, token, message) {
     var exc = $B.EXC(type, message)
     exc.filename = filename
     exc.lineno = token.lineno
@@ -306,13 +306,13 @@ function make_error_known_token(type, filename, token, message){
 $B.make_error_known_token = make_error_known_token
 
 
-function set_position_from_EXTRA(ast_obj, EXTRA){
-    for(var key in EXTRA){
+function set_position_from_EXTRA(ast_obj, EXTRA) {
+    for (var key in EXTRA) {
         ast_obj[key] = EXTRA[key]
     }
 }
 
-var Parser = $B.Parser = function(src, filename, mode){
+var Parser = $B.Parser = function(src, filename, mode) {
     // mode is 'file' for a script or exec(), 'eval' for eval()
     this._tokens = $B.tokenizer(src, filename, mode, this) // array
     this.pos = 0
@@ -332,26 +332,26 @@ var Parser = $B.Parser = function(src, filename, mode){
     this.arena = {
         a_objects: []
     }
-    if(filename){
+    if (filename) {
         p.filename = filename
     }
 }
 
-Parser.prototype.read_token = function(){
-    while(true){
+Parser.prototype.read_token = function() {
+    while (true) {
         var next = this._tokens[this.pos++]
-        if(next){
+        if (next) {
             var value = next
-            if(! value.parser_ignored){ // ENCODING, NL, COMMENT are ignored
-                if(value.$error_token){
+            if (! value.parser_ignored) { // ENCODING, NL, COMMENT are ignored
+                if (value.$error_token) {
                     $B.raise_error_known_location(...value)
-                }else if(value.$error_token_known_token){
+                } else if (value.$error_token_known_token) {
                     throw make_error_known_token(...value)
                 }
                 this.tokens[this.tokens.length] = value
                 return value
             }
-        }else{
+        } else {
             throw Error('tokenizer exhausted')
         }
     }
