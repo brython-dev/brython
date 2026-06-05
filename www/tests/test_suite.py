@@ -1211,4 +1211,20 @@ try:
 except NameError:
   pass
 
+# issue 2712
+class C:
+    def f(self):
+        def g():
+            nonlocal nb  # <==
+            if nb == 0:
+                nb += 1
+                assert nb == 1
+            assert nb == 1
+
+        nb = 0
+        g()
+        assert nb == 1
+
+C().f()
+
 print('passed all tests...')

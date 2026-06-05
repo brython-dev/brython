@@ -400,7 +400,7 @@ function local_scope(name, scope) {
 
 function name_scope(name, scopes) {
     // return the scope where name is bound, or undefined
-    var test = false // name == 'xzs' // && scopes[scopes.length - 1].name == "g"
+    var test = false // name == 'nb' && scopes[scopes.length - 1].name == "g"
     if (test) {
         console.log('name scope', name, scopes.slice())
         //alert()
@@ -479,15 +479,18 @@ function name_scope(name, scopes) {
         } else {
             return {found: l_scope.scope}
         }
-    } else if (scope.globals.has(name)) {
+    } else if (up_scope.globals.has(name)) {
         var global_scope = scopes[0]
         if (global_scope.locals.has(name)) {
             return {found: global_scope}
         }
         scope.needs_frames = true
         return {found: false, resolve: 'global'}
-    } else if (scope.nonlocals.has(name)) {
+    } else if (up_scope.nonlocals.has(name)) {
         // Search name in the surrounding scopes, using symtable
+        if (test) {
+            console.log(name, 'is nonlocal !!!')
+        }
         for (let i = scopes.length - 2; i >= 0; i--) {
             block = scopes.symtable.table.blocks.get(fast_id(scopes[i].ast))
             if (block) {
@@ -2216,7 +2219,7 @@ $B.ast.For.prototype.to_js = function(scopes) {
     scopes.push(new_scope)
 
     var inum = add_to_positions(scopes, this.iter)
-    
+
     if (this instanceof $B.ast.AsyncFor) {
         js += prefix + `var no_break_${id} = true,\n` +
               prefix + tab + tab + `iter_${id} = ${iter},\n` +
