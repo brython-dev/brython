@@ -1143,7 +1143,18 @@ $B.tokenizer = function(src, filename, mode, parser) {
                         number += char
                     }
                 } else if (char == '.' && ! number.includes(char)) {
-                    number += char
+                    if (num_type) {
+                        // For hex / oct / bin, a dot can't be part of the
+                        // number. Cf. issue #2694
+                        t.push(Token('NUMBER', number,
+                            line_num, pos - line_start - number.length,
+                            line_num, pos - line_start,
+                            line))
+                        state = null
+                        pos--
+                    } else {
+                        number += char
+                    }
                 }else if(char.toLowerCase() == 'e' &&
                         ! number.toLowerCase().includes('e')){
                     if('+-'.includes(src[pos]) ||

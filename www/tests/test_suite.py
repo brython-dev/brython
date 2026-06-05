@@ -1211,6 +1211,9 @@ try:
 except NameError:
   pass
 
+# issue 2694
+assert 0xEC30A437.to_bytes(4, byteorder='little') == b'7\xa40\xec'
+
 # issue 2712
 class C:
     def f(self):
