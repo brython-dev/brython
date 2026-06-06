@@ -3180,23 +3180,29 @@ str_funcs.swapcase = function(self) {
 
 str_funcs.title = function(self) {
     $B.check_nb_args_no_kw('str.title', 1, arguments)
+    // The first letter of each word takes the Unicode titlecase mapping, which
+    // differs from uppercase only for the digraph letters (DŽ/LJ/NJ/DZ families);
+    // all others fall back to toUpperCase(). istitle() (title(s) == s) relies on
+    // this too.
+    var titlecase = {0x1C4: 0x1C5, 0x1C5: 0x1C5, 0x1C6: 0x1C5, 0x1C7: 0x1C8,
+        0x1C8: 0x1C8, 0x1C9: 0x1C8, 0x1CA: 0x1CB, 0x1CB: 0x1CB, 0x1CC: 0x1CB,
+        0x1F1: 0x1F2, 0x1F2: 0x1F2, 0x1F3: 0x1F2}
     var state,
         cp,
         res = "",
         _self = to_string(self)
     for (var char of _self) {
         cp = _b_.ord(char)
-        if ($B.in_unicode_category('Ll', cp)) {
+        if ($B.in_unicode_category('Ll', cp) ||
+                $B.in_unicode_category('Lu', cp) ||
+                $B.in_unicode_category('Lt', cp)) {
             if (! state) {
-                res += char.toUpperCase()
+                res += titlecase[cp] !== undefined ?
+                    String.fromCodePoint(titlecase[cp]) : char.toUpperCase()
                 state = "word"
             } else {
-                res += char
+                res += char.toLowerCase()
             }
-        }else if($B.in_unicode_category('Lu', cp) ||
-                 $B.in_unicode_category('Lt', cp)){
-            res += state ? char.toLowerCase() : char
-            state = "word"
         } else {
             state = null
             res += char
