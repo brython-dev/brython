@@ -31,7 +31,7 @@ class __loader__:
 
 callbacks = []
 
-def collect(*args,**kw):
+def collect(generation=2):
     """collect([generation]) -> n    
     With no arguments, run a full collection.  The optional argument
     may be an integer specifying which generation to collect.  A ValueError
@@ -41,13 +41,13 @@ def collect(*args,**kw):
     """
     pass
 
-def disable(*args,**kw):
+def disable():
     """disable() -> None    
     Disable automatic garbage collection.
     """
     pass
 
-def enable(*args,**kw):
+def enable():
     """enable() -> None    
     Enable automatic garbage collection.
     """
@@ -55,53 +55,53 @@ def enable(*args,**kw):
 
 garbage = []
 
-def get_count(*args,**kw):
+def get_count():
     """get_count() -> (count0, count1, count2)    
     Return the current collection counts
     """
     pass
 
-def get_debug(*args,**kw):
+def get_debug():
     """get_debug() -> flags    
     Get the garbage collection debugging flags.
     """
     pass
 
-def get_objects(*args,**kw):
+def get_objects():
     """get_objects() -> [...]    
     Return a list of objects tracked by the collector (excluding the list
     returned).
     """
     pass
 
-def get_referents(*args,**kw):
+def get_referents(*objs):
     """get_referents(*objs) -> list    Return the list of objects that are directly referred to by objs."""
     pass
 
-def get_referrers(*args,**kw):
+def get_referrers(*objs):
     """get_referrers(*objs) -> list    Return the list of objects that directly refer to any of objs."""
     pass
 
-def get_threshold(*args,**kw):
+def get_threshold():
     """get_threshold() -> (threshold0, threshold1, threshold2)    
     Return the current collection thresholds
     """
     pass
 
-def is_tracked(*args,**kw):
+def is_tracked(obj):
     """is_tracked(obj) -> bool    
     Returns true if the object is tracked by the garbage collector.
     Simple atomic objects will return false.
     """
     pass
 
-def isenabled(*args,**kw):
+def isenabled():
     """isenabled() -> status    
     Returns true if automatic garbage collection is enabled.
     """
     pass
 
-def set_debug(*args,**kw):
+def set_debug(flags):
     """set_debug(flags) -> None    
     Set the garbage collection debugging flags. Debugging information is
     written to sys.stderr.
@@ -116,7 +116,7 @@ def set_debug(*args,**kw):
     """
     pass
 
-def set_threshold(*args,**kw):
+def set_threshold(threshold0, threshold1=0, threshold2=0):
     """set_threshold(threshold0, [threshold1, threshold2]) -> None    
     Sets the collection thresholds.  Setting threshold0 to zero disables
     collection.
