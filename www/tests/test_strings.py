@@ -518,4 +518,12 @@ assert_raises(TypeError, str, b'a', 'utf-8', 5)
 s = 'abc'
 s.__doc__
 
+# PR 2717 : x.title() is not the same as x.upper()
+t = [c.title() for c in '\u01c4\u01c5\u01c6']
+assert t == ['ǅ', 'ǅ', 'ǅ'], t
+
+x = '\u1F80'
+assert len(x.upper()) == 2
+assert x.title() == '\u1f88'
+
 print("passed all tests...")
