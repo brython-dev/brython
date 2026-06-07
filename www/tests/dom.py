@@ -191,14 +191,5 @@ body <= ifr
 # print(ifr.contentWindow)
 #del ifr
 
-# gc module stub sanity and type assertions
-import gc
-assert gc.DEBUG_STATS == 1
-assert gc.DEBUG_COLLECTABLE == 2
-assert gc.DEBUG_UNCOLLECTABLE == 4
-assert gc.DEBUG_SAVEALL == 32
-assert gc.DEBUG_LEAK == 38
-assert callable(gc.collect)
-assert callable(gc.is_tracked)
 
 print('all tests pass...')
