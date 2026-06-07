@@ -723,8 +723,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-06-05 18:34:58.349086"
-__BRYTHON__.timestamp=1780677298348
+__BRYTHON__.compiled_date="2026-06-07 11:00:24.439714"
+__BRYTHON__.timestamp=1780822824439
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_kozh","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -4960,12 +4960,14 @@ if(klass===classinfo ||mro.indexOf(classinfo)>-1){return true}
 var sch=$B.type_getattribute($B.get_class(classinfo),'__subclasscheck__',$B.NULL)
 if(sch===$B.NULL){return false}
 return $B.$call(sch,classinfo,klass)}
-$B.iterator.tp_iter=function(self){return self}
-$B.iterator.tp_iternext=function*(self){var ob_type=$B.get_class(self.it_seq)
-var len=$B.search_in_mro(ob_type,'__len__')(self.it_seq)
-var getitem=$B.search_in_mro(ob_type,'__getitem__')
-if(self.it_index <=len){yield getitem(self.it_seq,self.it_index)
-self.it_index++}}
+$B.iterator.tp_iter=function(self){var ob_type=$B.get_class(self.it_seq)
+self.len=$B.search_in_mro(ob_type,'__len__')(self.it_seq)
+self.getitem=$B.search_in_mro(ob_type,'__getitem__')
+self.it_index=0
+return self}
+$B.iterator.tp_iternext=function*(self){if(self.it_index <=self.len){var res=self.getitem(self.it_seq,self.it_index)
+self.it_index++
+yield res}}
 var iterator_funcs=$B.iterator.tp_funcs={}
 iterator_funcs.__length_hint__=function(self){}
 iterator_funcs.__reduce__=function(self){}
@@ -4997,8 +4999,8 @@ var getitem_func=$B.search_in_mro(klass,'__getitem__',$B.NULL)
 var len_func=$B.search_in_mro(klass,'__len__',$B.NULL)
 if(test){console.log('getitem_func',getitem_func)
 console.log('len_func',len_func)}
-if(getitem_func !==$B.NULL && len_func !==$B.NULL){return{
-ob_type:$B.iterator,it_seq:obj,it_index:0}}
+if(getitem_func !==$B.NULL && len_func !==$B.NULL){var it={ob_type:$B.iterator,it_seq:obj}
+return $B.iterator.tp_iter(it)}
 $B.RAISE(_b_.TypeError,`'${$B.class_name(obj)}' object is not iterable`
 )}else{
 return callable_iterator.$factory(obj,sentinel)}}

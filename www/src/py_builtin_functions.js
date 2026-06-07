@@ -1135,16 +1135,18 @@ var issubclass = _b_.issubclass = function(klass, classinfo) {
 
 /* iterator start */
 $B.iterator.tp_iter = function(self) {
+    var ob_type = $B.get_class(self.it_seq)
+    self.len = $B.search_in_mro(ob_type, '__len__')(self.it_seq)
+    self.getitem = $B.search_in_mro(ob_type, '__getitem__')
+    self.it_index = 0
     return self
 }
 
 $B.iterator.tp_iternext = function*(self){
-    var ob_type = $B.get_class(self.it_seq)
-    var len = $B.search_in_mro(ob_type, '__len__')(self.it_seq)
-    var getitem = $B.search_in_mro(ob_type, '__getitem__')
-    if (self.it_index <= len) {
-        yield getitem(self.it_seq, self.it_index)
+    if (self.it_index <= self.len) {
+        var res = self.getitem(self.it_seq, self.it_index)
         self.it_index++
+        yield res
     }
 }
 
@@ -1232,11 +1234,12 @@ $B.$iter = function(obj, sentinel) {
             console.log('len_func', len_func)
         }
         if (getitem_func !== $B.NULL && len_func !== $B.NULL) {
-            return {
+            var it = {
                 ob_type: $B.iterator,
-                it_seq: obj,
-                it_index: 0
+                it_seq: obj
             }
+            return $B.iterator.tp_iter(it)
+
         }
         $B.RAISE(_b_.TypeError,
             `'${$B.class_name(obj)}' object is not iterable`
