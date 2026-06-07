@@ -723,8 +723,8 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-06-07 11:00:24.439714"
-__BRYTHON__.timestamp=1780822824439
+__BRYTHON__.compiled_date="2026-06-07 11:01:56.131088"
+__BRYTHON__.timestamp=1780822916130
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_kozh","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -10581,7 +10581,7 @@ float_funcs.fromhex=function(klass,s){function hex_from_char(char){return parseI
 function finished(){
 while(s[pos]&& s[pos].match(/\s/)){pos++;}
 if(pos !=s.length){throw parse_error()}
-if(negate){x=float.__neg__(x)}
+if(negate){x=float.nb_negative(x)}
 return klass===_b_.float ? x :$B.$call(klass,x)}
 function overflow_error(){$B.RAISE(_b_.OverflowError,"hexadecimal value too large to represent as a float");}
 function parse_error(){$B.RAISE(_b_.ValueError,"invalid hexadecimal floating-point string");}
