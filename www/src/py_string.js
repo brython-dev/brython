@@ -2360,7 +2360,8 @@ str_funcs.isalnum = function(self) {
         return false
     }
     for (var char of _self) {
-        if (!unicode_categories_contain_character(alnum_categories, _b_.ord(char))) {
+        if (!(str_funcs.isalpha(char) || str_funcs.isdecimal(char) ||
+              str_funcs.isdigit(char) || str_funcs.isnumeric(char))) {
             return false
         }
     }
