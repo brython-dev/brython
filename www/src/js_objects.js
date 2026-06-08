@@ -210,6 +210,13 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
     }
 
     if (typeof jsobj === "function") {
+        // A function that already carries a Brython type (ob_type) is already
+        // a Python callable (e.g. a builtin_function_or_method such as `iter`);
+        // return it unchanged instead of building a fresh JavascriptFunction
+        // wrapper, which would lose its identity, __name__ and __module__.
+        if (jsobj.ob_type !== undefined) {
+            return jsobj
+        }
         // transform Python arguments to equivalent JS arguments
         _this = _this === undefined ? null : _this
 
