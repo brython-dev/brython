@@ -1138,8 +1138,8 @@ $B.split_format = function(s) {
     return parts
 }
 
-var unicode_categories_contain_character = function (categories, cp) {
-    for (var cat of categories) {
+function unicode_categories_contain_character(categories, cp) {
+    for (let cat of categories) {
         if ($B.in_unicode_category(cat, cp)) {
             return true
         }
@@ -1147,17 +1147,16 @@ var unicode_categories_contain_character = function (categories, cp) {
     return false
 }
 
-var alpha_categories = ['Ll', 'Lu', 'Lm', 'Lt', 'Lo']
-var alnum_categories = ['Ll', 'Lu', 'Lm', 'Lt', 'Lo', 'Nd']
+const alpha_categories = ['Ll', 'Lu', 'Lm', 'Lt', 'Lo']
 
 const numeric_re = /\p{Nd}|\p{Nl}|\p{No}/u
 
 // This regex should match the one in py2js.js
-var unprintable_re = /\p{Cc}|\p{Cf}|\p{Co}|\p{Cs}|\p{Zl}|\p{Zp}|\p{Zs}/u
+const unprintable_re = /\p{Cc}|\p{Cf}|\p{Co}|\p{Cs}|\p{Zl}|\p{Zp}|\p{Zs}/u
 
 $B.make_str = function(arg) {
     // called by print
-    switch(typeof arg){
+    switch (typeof arg) {
         case "int":
         case "bigint":
         case "string":
@@ -1214,7 +1213,7 @@ str.$factory = function() {
             `(type ${$B.class_name(res)})`)
     }
     for (var entry of _b_.dict.$iter_items(kw)) {
-        switch(entry.key){
+        switch (entry.key) {
             case 'encoding':
                 if (encoding !== undefined) {
                     $B.RAISE(_b_.TypeError,
@@ -1413,7 +1412,7 @@ $B.format_width = function(s, fmt) {
         var fill = fmt.fill || " ",
             align = fmt.align || "<",
             missing = fmt.width - s.length
-        switch(align){
+        switch (align) {
             case "<":
                 return s + fill.repeat(missing)
             case ">":
@@ -1711,7 +1710,7 @@ _b_.str.tp_richcompare = function(self, other, op) {
     [self, other] = to_string(self, other)
     self += ''
     other += ''
-    switch(op){
+    switch (op) {
         case '__eq__':
             return self == other
         case '__ne__':
@@ -2144,7 +2143,7 @@ str_funcs.expandtabs = function(self) {
     }
     while (pos < chars.length) {
         var car = chars[pos]
-        switch(car){
+        switch (car) {
             case "\t":
                 while (col % s > 0) {
                     res += " ";
@@ -3044,7 +3043,7 @@ str_funcs.splitlines = function(self, keepends) {
     var pos = 0
     var it = self[Symbol.iterator]()
     for (var char of it) {
-        switch(char){
+        switch (char) {
             case '\r':
                 if (self[pos + 1] == '\n') {
                     res.push(buf + (keepends ? '\r\n' : ''))
@@ -3265,7 +3264,7 @@ str_funcs.zfill = function(self, width) {
     if (width <= len) {
         return _self
     }
-    switch(_self.charAt(0)){
+    switch (_self.charAt(0)) {
         case "+":
         case "-":
             return _self.charAt(0) +
@@ -3364,7 +3363,7 @@ Template.tp_iternext = function(self) {
     }
     var type = 'si'[self.$counter % 2]
     var rank = Math.floor(self.$counter / 2)
-    switch(type){
+    switch (type) {
         case 's':
             var s = self.strings[rank]
             if (s.length > 0) {

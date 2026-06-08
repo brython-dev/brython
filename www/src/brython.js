@@ -724,8 +724,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-06-07 16:26:18.066862"
-__BRYTHON__.timestamp=1780842378066
+__BRYTHON__.compiled_date="2026-06-08 19:20:08.554619"
+__BRYTHON__.timestamp=1780939208554
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_kozh","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -5187,9 +5187,18 @@ var res={ob_type:cls,seq,len:seqlen,
 counter:seqlen,getitem:method}
 return res}
 var reversed_funcs=_b_.reversed.tp_funcs={}
-reversed_funcs.__length_hint__=function(self){}
-reversed_funcs.__reduce__=function(self){}
-reversed_funcs.__setstate__=function(self){}
+reversed_funcs.__length_hint__=function(self){var n=self.counter
+return n < 0 ? 0 :n}
+reversed_funcs.__reduce__=function(self){check_nb_args_no_kw('__reduce__',1,arguments)
+var cls=self.ob_type
+if(self.seq===undefined){return $B.fast_tuple([cls,$B.fast_tuple([$B.fast_tuple([])])])}
+return $B.fast_tuple([cls,$B.fast_tuple([self.seq]),self.counter])}
+reversed_funcs.__setstate__=function(self,state){var n=typeof state==='bigint' ? Number(state):state
+if(typeof n !=='number'){n=Number(n)}
+if(n <-1){n=-1 }
+if(n > self.len){n=self.len }
+self.counter=n
+return _b_.None}
 _b_.reversed.tp_methods=["__length_hint__","__reduce__","__setstate__"]
 $B.set_func_names(reversed,"builtins")
 _b_.round=function(){var $=$B.args('round',2,{number:null,ndigits:null},arguments,{ndigits:None},null,null)
@@ -8728,12 +8737,11 @@ text+=car
 pos++}}
 if(text){parts.push(text)}
 return parts}
-var unicode_categories_contain_character=function(categories,cp){for(var cat of categories){if($B.in_unicode_category(cat,cp)){return true}}
+function unicode_categories_contain_character(categories,cp){for(let cat of categories){if($B.in_unicode_category(cat,cp)){return true}}
 return false}
-var alpha_categories=['Ll','Lu','Lm','Lt','Lo']
-var alnum_categories=['Ll','Lu','Lm','Lt','Lo','Nd']
+const alpha_categories=['Ll','Lu','Lm','Lt','Lo']
 const numeric_re=/\p{Nd}|\p{Nl}|\p{No}/u
-var unprintable_re=/\p{Cc}|\p{Cf}|\p{Co}|\p{Cs}|\p{Zl}|\p{Zp}|\p{Zs}/u
+const unprintable_re=/\p{Cc}|\p{Cf}|\p{Co}|\p{Cs}|\p{Zl}|\p{Zp}|\p{Zs}/u
 $B.make_str=function(arg){
 switch(typeof arg){case "int":
 case "bigint":
@@ -9266,7 +9274,8 @@ str_funcs.isalnum=function(self){
 $B.check_nb_args_no_kw('str.isalnum',1,arguments)
 var _self=to_string(self);
 if(_self.length==0){return false}
-for(var char of _self){if(!unicode_categories_contain_character(alnum_categories,_b_.ord(char))){return false}}
+for(var char of _self){if(!(str_funcs.isalpha(char)||str_funcs.isdecimal(char)||
+str_funcs.isdigit(char)||str_funcs.isnumeric(char))){return false}}
 return true}
 str_funcs.isalpha=function(self){
 $B.check_nb_args_no_kw('str.isalpha',1,arguments)
@@ -9330,8 +9339,15 @@ $B.unicode_bidi_whitespace.indexOf(cp)==-1){return false}}
 return _self.length > 0}
 str_funcs.istitle=function(self){
 $B.check_nb_args_no_kw('str.istitle',1,arguments)
-var _self=to_string(self)
-return _self.length > 0 && str_funcs.title(_self)==_self}
+var _self=to_string(self),cased=false,prev_cased=false
+for(var ch of _self){var cp=_b_.ord(ch)
+if($B.in_unicode_category('Lu',cp)||$B.in_unicode_category('Lt',cp)){if(prev_cased){return false}
+prev_cased=true
+cased=true}else if($B.in_unicode_category('Ll',cp)){if(!prev_cased){return false}
+prev_cased=true
+cased=true}else{
+prev_cased=false}}
+return cased}
 str_funcs.isupper=function(self){
 $B.check_nb_args_no_kw('str.isupper',1,arguments)
 var is_upper=false,cp,_self=to_string(self)
@@ -12100,6 +12116,7 @@ return jsobj}
 if(pyobj !==undefined){return pyobj}
 if(jsobj instanceof Promise ||typeof jsobj.then=="function"){return jsobj}
 if(typeof jsobj==="function"){
+if(jsobj.ob_type !==undefined){return jsobj}
 _this=_this===undefined ? null :_this
 if(_this===null){const pyobj=jsobj[PYOBJFCT];
 if(pyobj !==undefined){return pyobj}}else{
@@ -12489,7 +12506,11 @@ js_array_funcs.extend=function(self){var $=$B.args("extend",2,{self:null,t:null}
 var self=$.self,t=$.t
 for(var item of $B.make_js_iterator(t)){self[self.length]=$B.pyobj2jsobj(item)}
 return _b_.None}
-js_array.tp_methods=["append","extend"]
+js_array_funcs.__reduce_ex__=function(self,protocol){
+var items=new Array(self.length)
+for(var i=0;i < self.length;i++){items[i]=jsobj2pyobj(self[i])}
+return $B.fast_tuple([_b_.list,$B.fast_tuple([$B.fast_tuple(items)])])}
+js_array.tp_methods=["append","extend","__reduce_ex__"]
 $B.set_func_names(js_array,'javascript')
 $B.get_jsobj_class=function(obj){if(typeof obj=='function'){return $B.JSObj}
 var proto=Object.getPrototypeOf(obj)
