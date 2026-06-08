@@ -1731,15 +1731,28 @@ _b_.reversed.tp_new = function(cls, args, kw) {
 var reversed_funcs = _b_.reversed.tp_funcs = {}
 
 reversed_funcs.__length_hint__ = function(self) {
-
+    var n = self.counter
+    return n < 0 ? 0 : n
 }
 
 reversed_funcs.__reduce__ = function(self) {
-
+    check_nb_args_no_kw('__reduce__', 1, arguments)
+    var cls = self.ob_type
+    if(self.seq === undefined){
+        return $B.fast_tuple([cls, $B.fast_tuple([$B.fast_tuple([])])])
+    }
+    return $B.fast_tuple([cls, $B.fast_tuple([self.seq]), self.counter])
 }
 
-reversed_funcs.__setstate__ = function(self) {
-
+reversed_funcs.__setstate__ = function(self, state) {
+    var n = typeof state === 'bigint' ? Number(state) : state
+    if(typeof n !== 'number'){ n = Number(n) }
+    if(n < -1){ n = -1 }
+    if(n > self.len){ n = self.len }
+    self.counter = n
+    // Must return None: pickle's load_build treats a NULL/undefined result
+    // from __setstate__ as a raised exception and corrupts the unpickle stack.
+    return _b_.None
 }
 
 _b_.reversed.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]
