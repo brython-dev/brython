@@ -1235,7 +1235,19 @@ js_array_funcs.extend = function(self) {
     return _b_.None
 }
 
-js_array.tp_methods = ["append", "extend"]
+js_array_funcs.__reduce_ex__ = function(self, protocol) {
+    // A JavascriptArray (a JS-side / C-extension list) is otherwise
+    // unpicklable ("cannot pickle 'JavascriptArray' object"). Pickle it as a
+    // plain list: (list, (items_tuple,)). The items go in a tuple so pickling
+    // never recurses back into this method.
+    var items = new Array(self.length)
+    for (var i = 0; i < self.length; i++) {
+        items[i] = jsobj2pyobj(self[i])
+    }
+    return $B.fast_tuple([_b_.list, $B.fast_tuple([$B.fast_tuple(items)])])
+}
+
+js_array.tp_methods = ["append", "extend", "__reduce_ex__"]
 
 $B.set_func_names(js_array, 'javascript')
 
