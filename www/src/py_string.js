@@ -2542,8 +2542,28 @@ str_funcs.istitle = function(self) {
     characters and lowercase characters only cased ones. Return false
     otherwise. */
     $B.check_nb_args_no_kw('str.istitle', 1, arguments)
-    var _self = to_string(self)
-    return _self.length > 0 && str_funcs.title(_self) == _self
+    var _self = to_string(self),
+        cased = false,
+        prev_cased = false
+    for (var ch of _self) {
+        var cp = _b_.ord(ch)
+        if ($B.in_unicode_category('Lu', cp) || $B.in_unicode_category('Lt', cp)) {
+            if (prev_cased) {
+                return false
+            }
+            prev_cased = true
+            cased = true
+        } else if ($B.in_unicode_category('Ll', cp)) {
+            if (!prev_cased) {
+                return false
+            }
+            prev_cased = true
+            cased = true
+        } else {
+            prev_cased = false
+        }
+    }
+    return cased
 }
 
 str_funcs.isupper = function(self) {
