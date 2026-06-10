@@ -634,7 +634,7 @@ function missing_names(missing) {
     var len = missing.length
     var plural = len == 1 ? '' : 's'
     var report
-    switch(len){
+    switch (len) {
         case 1:
             report = `${missing[0]}`
             break

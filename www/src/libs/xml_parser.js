@@ -220,7 +220,7 @@ function external_id(ext_id) {
         systemId = _b_.None,
         publicId = _b_.None
     if (ext_id_value) {
-        switch(ext_id.selected_option){
+        switch (ext_id.selected_option) {
             case 0:
                 systemId = get_value(ext_id.selected_rule.rules[2])
                 systemId = systemId.substr(1, systemId.length - 2)
@@ -251,7 +251,7 @@ var handler = {
         var defaultdecl = rule.rules[5],
             def_value = _b_.None,
             required = 0
-        switch(defaultdecl.selected_option){
+        switch (defaultdecl.selected_option) {
             case 0:
                 required = true
                 break
@@ -332,7 +332,7 @@ var handler = {
         console.log('element decl', rule)
         var name = get_value(rule.rules[2]),
             model = get_value(rule.rules[4])
-        switch(model){
+        switch (model) {
             case 'ANY':
                 model = $B.fast_tuple([models.XML_CTYPE_ANY, 0, _b_.None, $B.fast_tuple([])])
                 break
@@ -377,7 +377,7 @@ var handler = {
             publicId = _b_.None,
             notationName = _b_.None
         // EntityValue | (ExternalID NDataDecl?)
-        switch(entitydef.selected_option){
+        switch (entitydef.selected_option) {
             case 0:
                 // EntityValue    ::=  '"' ([^%&"] | PEReference | Reference)* '"'
                 //  |  "'" ([^%&'] | PEReference | Reference)* "'"
@@ -452,7 +452,7 @@ var handler = {
             publicId = _b_.None,
             ext_or_public = rule.rules[4]
 
-        switch(ext_or_public.selected_option){
+        switch (ext_or_public.selected_option) {
             case 0:
                 var ext_id = external_id(ext_or_public.selected_rule)
                 systemId = ext_id.systemId
@@ -1167,7 +1167,7 @@ function PITarget_rule(origin) {
 
 PITarget_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // Name
       if (! this.rules[0]) {
         this.rules[0] = new Name_rule(this)
@@ -1343,7 +1343,7 @@ function document_rule(origin) {
 
 document_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // prolog
       if (! this.rules[0]) {
         this.rules[0] = new prolog_rule(this)
@@ -1393,7 +1393,7 @@ function Char_rule(origin) {
 
 Char_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '\t'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, String.fromCharCode(9))
@@ -1458,7 +1458,7 @@ function S_rule(origin) {
 
 S_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_1+
       if (! this.rules[0]) {
         this.rules[0] = new tmp_1_rule(this)
@@ -1490,7 +1490,7 @@ function tmp_1_rule(origin) {
 
 tmp_1_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // ' '
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, String.fromCharCode(32))
@@ -1541,7 +1541,7 @@ function Name_rule(origin) {
 
 Name_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_2
       if (! this.rules[0]) {
         this.rules[0] = new tmp_2_rule(this)
@@ -1580,7 +1580,7 @@ function tmp_2_rule(origin) {
 
 tmp_2_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // Letter
       if (! this.rules[0]) {
         this.rules[0] = new Letter_rule(this)
@@ -1624,7 +1624,7 @@ function Names_rule(origin) {
 
 Names_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // Name
       if (! this.rules[0]) {
         this.rules[0] = new Name_rule(this)
@@ -1662,7 +1662,7 @@ function tmp_3_rule(origin) {
 
 tmp_3_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // ' '
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, String.fromCharCode(32))
@@ -1699,7 +1699,7 @@ function Nmtoken_rule(origin) {
 
 Nmtoken_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // NameChar+
       if (! this.rules[0]) {
         this.rules[0] = new NameChar_rule(this)
@@ -1730,7 +1730,7 @@ function Nmtokens_rule(origin) {
 
 Nmtokens_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // Nmtoken
       if (! this.rules[0]) {
         this.rules[0] = new Nmtoken_rule(this)
@@ -1768,7 +1768,7 @@ function tmp_4_rule(origin) {
 
 tmp_4_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // ' '
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, String.fromCharCode(32))
@@ -1806,7 +1806,7 @@ function EntityValue_rule(origin) {
 
 EntityValue_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_7
       if (! this.rules[0]) {
         this.rules[0] = new tmp_7_rule(this)
@@ -1844,7 +1844,7 @@ function tmp_5_rule(origin) {
 
 tmp_5_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // [^%&']
       if (! this.rules[0]) {
         this.rules[0] = new CHARSET_rule(this, '^%&\'')
@@ -1889,7 +1889,7 @@ function tmp_6_rule(origin) {
 
 tmp_6_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // [^%&"]
       if (! this.rules[0]) {
         this.rules[0] = new CHARSET_rule(this, '^%&"')
@@ -1933,7 +1933,7 @@ function tmp_7_rule(origin) {
 
 tmp_7_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '"'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '"')
@@ -1978,7 +1978,7 @@ function tmp_8_rule(origin) {
 
 tmp_8_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // "'"
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '\'')
@@ -2024,7 +2024,7 @@ function AttValue_rule(origin) {
 
 AttValue_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_11
       if (! this.rules[0]) {
         this.rules[0] = new tmp_11_rule(this)
@@ -2062,7 +2062,7 @@ function tmp_9_rule(origin) {
 
 tmp_9_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // [^<&']
       if (! this.rules[0]) {
         this.rules[0] = new CHARSET_rule(this, '^<&\'')
@@ -2100,7 +2100,7 @@ function tmp_10_rule(origin) {
 
 tmp_10_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // [^<&"]
       if (! this.rules[0]) {
         this.rules[0] = new CHARSET_rule(this, '^<&"')
@@ -2137,7 +2137,7 @@ function tmp_11_rule(origin) {
 
 tmp_11_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '"'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '"')
@@ -2182,7 +2182,7 @@ function tmp_12_rule(origin) {
 
 tmp_12_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // "'"
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '\'')
@@ -2228,7 +2228,7 @@ function SystemLiteral_rule(origin) {
 
 SystemLiteral_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_14
       if (! this.rules[0]) {
         this.rules[0] = new tmp_14_rule(this)
@@ -2265,7 +2265,7 @@ function tmp_13_rule(origin) {
 
 tmp_13_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // "'"
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '\'')
@@ -2310,7 +2310,7 @@ function tmp_14_rule(origin) {
 
 tmp_14_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '"'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '"')
@@ -2356,7 +2356,7 @@ function PubidLiteral_rule(origin) {
 
 PubidLiteral_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_15
       if (! this.rules[0]) {
         this.rules[0] = new tmp_15_rule(this)
@@ -2393,7 +2393,7 @@ function tmp_15_rule(origin) {
 
 tmp_15_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '"'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '"')
@@ -2438,7 +2438,7 @@ function tmp_16_rule(origin) {
 
 tmp_16_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // "'"
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '\'')
@@ -2484,7 +2484,7 @@ function PubidChar_rule(origin) {
 
 PubidChar_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // ' '
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, String.fromCharCode(32))
@@ -2543,7 +2543,7 @@ function PubidCharNoQuote_rule(origin) {
 
 PubidCharNoQuote_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // ' '
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, String.fromCharCode(32))
@@ -2601,7 +2601,7 @@ function Comment_rule(origin) {
 
 Comment_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '<!--'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '<!--')
@@ -2645,7 +2645,7 @@ function PI_rule(origin) {
 
 PI_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '<?'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '<?')
@@ -2697,7 +2697,7 @@ function tmp_17_rule(origin) {
 
 tmp_17_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // S
       if (! this.rules[0]) {
         this.rules[0] = new S_rule(this)
@@ -2734,7 +2734,7 @@ function CDSect_rule(origin) {
 
 CDSect_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // CDStart
       if (! this.rules[0]) {
         this.rules[0] = new CDStart_rule(this)
@@ -2778,7 +2778,7 @@ function CDStart_rule(origin) {
 
 CDStart_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '<![CDATA['
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '<![CDATA[')
@@ -2808,7 +2808,7 @@ function CDEnd_rule(origin) {
 
 CDEnd_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // ']]>'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, ']]>')
@@ -2838,7 +2838,7 @@ function prolog_rule(origin) {
 
 prolog_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // XMLDecl?
       if (! this.rules[0]) {
         this.rules[0] = new XMLDecl_rule(this)
@@ -2885,7 +2885,7 @@ function tmp_18_rule(origin) {
 
 tmp_18_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // doctypedecl
       if (! this.rules[0]) {
         this.rules[0] = new doctypedecl_rule(this)
@@ -2923,7 +2923,7 @@ function XMLDecl_rule(origin) {
 
 XMLDecl_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '<?xml'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '<?xml')
@@ -2991,7 +2991,7 @@ function VersionInfo_rule(origin) {
 
 VersionInfo_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // S
       if (! this.rules[0]) {
         this.rules[0] = new S_rule(this)
@@ -3043,7 +3043,7 @@ function tmp_19_rule(origin) {
 
 tmp_19_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_20
       if (! this.rules[0]) {
         this.rules[0] = new tmp_20_rule(this)
@@ -3080,7 +3080,7 @@ function tmp_20_rule(origin) {
 
 tmp_20_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // "'"
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '\'')
@@ -3124,7 +3124,7 @@ function tmp_21_rule(origin) {
 
 tmp_21_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '"'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '"')
@@ -3168,7 +3168,7 @@ function Eq_rule(origin) {
 
 Eq_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // S?
       if (! this.rules[0]) {
         this.rules[0] = new S_rule(this)
@@ -3214,7 +3214,7 @@ function VersionNum_rule(origin) {
 
 VersionNum_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '1.0'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '1.0')
@@ -3245,7 +3245,7 @@ function Misc_rule(origin) {
 
 Misc_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // Comment
       if (! this.rules[0]) {
         this.rules[0] = new Comment_rule(this)
@@ -3289,7 +3289,7 @@ function doctypedecl_rule(origin) {
 
 doctypedecl_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '<!DOCTYPE'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '<!DOCTYPE')
@@ -3364,7 +3364,7 @@ function tmp_22_rule(origin) {
 
 tmp_22_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '['
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '[')
@@ -3423,7 +3423,7 @@ function tmp_23_rule(origin) {
 
 tmp_23_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // S
       if (! this.rules[0]) {
         this.rules[0] = new S_rule(this)
@@ -3461,7 +3461,7 @@ function DeclSep_rule(origin) {
 
 DeclSep_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // PEReference
       if (! this.rules[0]) {
         this.rules[0] = new PEReference_rule(this)
@@ -3498,7 +3498,7 @@ function intSubset_rule(origin) {
 
 intSubset_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_24*
       if (! this.rules[0]) {
         this.rules[0] = new tmp_24_rule(this)
@@ -3530,7 +3530,7 @@ function tmp_24_rule(origin) {
 
 tmp_24_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // markupdecl
       if (! this.rules[0]) {
         this.rules[0] = new markupdecl_rule(this)
@@ -3568,7 +3568,7 @@ function markupdecl_rule(origin) {
 
 markupdecl_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // elementdecl
       if (! this.rules[0]) {
         this.rules[0] = new elementdecl_rule(this)
@@ -3633,7 +3633,7 @@ function extSubset_rule(origin) {
 
 extSubset_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // TextDecl?
       if (! this.rules[0]) {
         this.rules[0] = new TextDecl_rule(this)
@@ -3671,7 +3671,7 @@ function extSubsetDecl_rule(origin) {
 
 extSubsetDecl_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_25*
       if (! this.rules[0]) {
         this.rules[0] = new tmp_25_rule(this)
@@ -3703,7 +3703,7 @@ function tmp_25_rule(origin) {
 
 tmp_25_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // markupdecl
       if (! this.rules[0]) {
         this.rules[0] = new markupdecl_rule(this)
@@ -3747,7 +3747,7 @@ function SDDecl_rule(origin) {
 
 SDDecl_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // S
       if (! this.rules[0]) {
         this.rules[0] = new S_rule(this)
@@ -3799,7 +3799,7 @@ function tmp_26_rule(origin) {
 
 tmp_26_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // 'yes'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, 'yes')
@@ -3837,7 +3837,7 @@ function tmp_27_rule(origin) {
 
 tmp_27_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // 'yes'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, 'yes')
@@ -3874,7 +3874,7 @@ function tmp_28_rule(origin) {
 
 tmp_28_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '"'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '"')
@@ -3918,7 +3918,7 @@ function tmp_29_rule(origin) {
 
 tmp_29_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // "'"
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '\'')
@@ -3963,7 +3963,7 @@ function tmp_30_rule(origin) {
 
 tmp_30_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_29
       if (! this.rules[0]) {
         this.rules[0] = new tmp_29_rule(this)
@@ -4001,7 +4001,7 @@ function element_rule(origin) {
 
 element_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // EmptyElemTag
       if (! this.rules[0]) {
         this.rules[0] = new EmptyElemTag_rule(this)
@@ -4038,7 +4038,7 @@ function tmp_31_rule(origin) {
 
 tmp_31_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // STag
       if (! this.rules[0]) {
         this.rules[0] = new STag_rule(this)
@@ -4082,7 +4082,7 @@ function STag_rule(origin) {
 
 STag_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '<'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '<')
@@ -4142,7 +4142,7 @@ function tmp_32_rule(origin) {
 
 tmp_32_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // S
       if (! this.rules[0]) {
         this.rules[0] = new S_rule(this)
@@ -4179,7 +4179,7 @@ function Attribute_rule(origin) {
 
 Attribute_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // Name
       if (! this.rules[0]) {
         this.rules[0] = new Name_rule(this)
@@ -4223,7 +4223,7 @@ function ETag_rule(origin) {
 
 ETag_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '</'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '</')
@@ -4275,7 +4275,7 @@ function content_rule(origin) {
 
 content_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // CharData?
       if (! this.rules[0]) {
         this.rules[0] = new CharData_rule(this)
@@ -4315,7 +4315,7 @@ function tmp_33_rule(origin) {
 
 tmp_33_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // element
       if (! this.rules[0]) {
         this.rules[0] = new element_rule(this)
@@ -4373,7 +4373,7 @@ function tmp_34_rule(origin) {
 
 tmp_34_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_33
       if (! this.rules[0]) {
         this.rules[0] = new tmp_33_rule(this)
@@ -4411,7 +4411,7 @@ function EmptyElemTag_rule(origin) {
 
 EmptyElemTag_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '<'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '<')
@@ -4471,7 +4471,7 @@ function tmp_35_rule(origin) {
 
 tmp_35_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // S
       if (! this.rules[0]) {
         this.rules[0] = new S_rule(this)
@@ -4508,7 +4508,7 @@ function elementdecl_rule(origin) {
 
 elementdecl_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '<!ELEMENT'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '<!ELEMENT')
@@ -4582,7 +4582,7 @@ function contentspec_rule(origin) {
 
 contentspec_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // 'EMPTY'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, 'EMPTY')
@@ -4633,7 +4633,7 @@ function children_rule(origin) {
 
 children_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_37
       if (! this.rules[0]) {
         this.rules[0] = new tmp_37_rule(this)
@@ -4672,7 +4672,7 @@ function tmp_36_rule(origin) {
 
 tmp_36_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '?'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '?')
@@ -4717,7 +4717,7 @@ function tmp_37_rule(origin) {
 
 tmp_37_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // choice
       if (! this.rules[0]) {
         this.rules[0] = new choice_rule(this)
@@ -4754,7 +4754,7 @@ function cp_rule(origin) {
 
 cp_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_39
       if (! this.rules[0]) {
         this.rules[0] = new tmp_39_rule(this)
@@ -4793,7 +4793,7 @@ function tmp_38_rule(origin) {
 
 tmp_38_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '?'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '?')
@@ -4838,7 +4838,7 @@ function tmp_39_rule(origin) {
 
 tmp_39_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // Name
       if (! this.rules[0]) {
         this.rules[0] = new Name_rule(this)
@@ -4882,7 +4882,7 @@ function choice_rule(origin) {
 
 choice_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '('
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '(')
@@ -4950,7 +4950,7 @@ function tmp_40_rule(origin) {
 
 tmp_40_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // S?
       if (! this.rules[0]) {
         this.rules[0] = new S_rule(this)
@@ -5003,7 +5003,7 @@ function seq_rule(origin) {
 
 seq_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '('
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '(')
@@ -5071,7 +5071,7 @@ function tmp_41_rule(origin) {
 
 tmp_41_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // S?
       if (! this.rules[0]) {
         this.rules[0] = new S_rule(this)
@@ -5125,7 +5125,7 @@ function Mixed_rule(origin) {
 
 Mixed_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_43
       if (! this.rules[0]) {
         this.rules[0] = new tmp_43_rule(this)
@@ -5162,7 +5162,7 @@ function tmp_42_rule(origin) {
 
 tmp_42_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // S?
       if (! this.rules[0]) {
         this.rules[0] = new S_rule(this)
@@ -5215,7 +5215,7 @@ function tmp_43_rule(origin) {
 
 tmp_43_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '('
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '(')
@@ -5283,7 +5283,7 @@ function tmp_44_rule(origin) {
 
 tmp_44_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '('
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '(')
@@ -5343,7 +5343,7 @@ function AttlistDecl_rule(origin) {
 
 AttlistDecl_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '<!ATTLIST'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '<!ATTLIST')
@@ -5410,7 +5410,7 @@ function AttDef_rule(origin) {
 
 AttDef_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // S
       if (! this.rules[0]) {
         this.rules[0] = new S_rule(this)
@@ -5476,7 +5476,7 @@ function AttType_rule(origin) {
 
 AttType_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // StringType
       if (! this.rules[0]) {
         this.rules[0] = new StringType_rule(this)
@@ -5520,7 +5520,7 @@ function StringType_rule(origin) {
 
 StringType_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // 'CDATA'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, 'CDATA')
@@ -5551,7 +5551,7 @@ function TokenizedType_rule(origin) {
 
 TokenizedType_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // 'ID'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, 'ID')
@@ -5624,7 +5624,7 @@ function EnumeratedType_rule(origin) {
 
 EnumeratedType_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // NotationType
       if (! this.rules[0]) {
         this.rules[0] = new NotationType_rule(this)
@@ -5661,7 +5661,7 @@ function NotationType_rule(origin) {
 
 NotationType_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // 'NOTATION'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, 'NOTATION')
@@ -5743,7 +5743,7 @@ function tmp_45_rule(origin) {
 
 tmp_45_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // S?
       if (! this.rules[0]) {
         this.rules[0] = new S_rule(this)
@@ -5796,7 +5796,7 @@ function Enumeration_rule(origin) {
 
 Enumeration_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '('
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '(')
@@ -5864,7 +5864,7 @@ function tmp_46_rule(origin) {
 
 tmp_46_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // S?
       if (! this.rules[0]) {
         this.rules[0] = new S_rule(this)
@@ -5918,7 +5918,7 @@ function DefaultDecl_rule(origin) {
 
 DefaultDecl_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '#REQUIRED'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '#REQUIRED')
@@ -5962,7 +5962,7 @@ function tmp_47_rule(origin) {
 
 tmp_47_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '#FIXED'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '#FIXED')
@@ -5999,7 +5999,7 @@ function tmp_48_rule(origin) {
 
 tmp_48_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_47?
       if (! this.rules[0]) {
         this.rules[0] = new tmp_47_rule(this)
@@ -6038,7 +6038,7 @@ function conditionalSect_rule(origin) {
 
 conditionalSect_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // includeSect
       if (! this.rules[0]) {
         this.rules[0] = new includeSect_rule(this)
@@ -6075,7 +6075,7 @@ function includeSect_rule(origin) {
 
 includeSect_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '<!['
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '<![')
@@ -6149,7 +6149,7 @@ function ignoreSect_rule(origin) {
 
 ignoreSect_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '<!['
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '<![')
@@ -6224,7 +6224,7 @@ function ignoreSectContents_rule(origin) {
 
 ignoreSectContents_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // Ignore
       if (! this.rules[0]) {
         this.rules[0] = new Ignore_rule(this)
@@ -6262,7 +6262,7 @@ function tmp_49_rule(origin) {
 
 tmp_49_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '<!['
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '<![')
@@ -6314,7 +6314,7 @@ function CharRef_rule(origin) {
 
 CharRef_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_50
       if (! this.rules[0]) {
         this.rules[0] = new tmp_50_rule(this)
@@ -6351,7 +6351,7 @@ function tmp_50_rule(origin) {
 
 tmp_50_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '&#'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '&#')
@@ -6396,7 +6396,7 @@ function tmp_51_rule(origin) {
 
 tmp_51_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '&#x'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '&#x')
@@ -6442,7 +6442,7 @@ function Reference_rule(origin) {
 
 Reference_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // EntityRef
       if (! this.rules[0]) {
         this.rules[0] = new EntityRef_rule(this)
@@ -6479,7 +6479,7 @@ function EntityRef_rule(origin) {
 
 EntityRef_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '&'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '&')
@@ -6523,7 +6523,7 @@ function PEReference_rule(origin) {
 
 PEReference_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '%'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '%')
@@ -6568,7 +6568,7 @@ function EntityDecl_rule(origin) {
 
 EntityDecl_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // GEDecl
       if (! this.rules[0]) {
         this.rules[0] = new GEDecl_rule(this)
@@ -6605,7 +6605,7 @@ function GEDecl_rule(origin) {
 
 GEDecl_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '<!ENTITY'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '<!ENTITY')
@@ -6678,7 +6678,7 @@ function PEDecl_rule(origin) {
 
 PEDecl_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '<!ENTITY'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '<!ENTITY')
@@ -6766,7 +6766,7 @@ function EntityDef_rule(origin) {
 
 EntityDef_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // EntityValue
       if (! this.rules[0]) {
         this.rules[0] = new EntityValue_rule(this)
@@ -6803,7 +6803,7 @@ function tmp_52_rule(origin) {
 
 tmp_52_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // ExternalID
       if (! this.rules[0]) {
         this.rules[0] = new ExternalID_rule(this)
@@ -6842,7 +6842,7 @@ function PEDef_rule(origin) {
 
 PEDef_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // EntityValue
       if (! this.rules[0]) {
         this.rules[0] = new EntityValue_rule(this)
@@ -6880,7 +6880,7 @@ function ExternalID_rule(origin) {
 
 ExternalID_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_53
       if (! this.rules[0]) {
         this.rules[0] = new tmp_53_rule(this)
@@ -6917,7 +6917,7 @@ function tmp_53_rule(origin) {
 
 tmp_53_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // 'SYSTEM'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, 'SYSTEM')
@@ -6961,7 +6961,7 @@ function tmp_54_rule(origin) {
 
 tmp_54_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // 'PUBLIC'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, 'PUBLIC')
@@ -7019,7 +7019,7 @@ function NDataDecl_rule(origin) {
 
 NDataDecl_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // S
       if (! this.rules[0]) {
         this.rules[0] = new S_rule(this)
@@ -7070,7 +7070,7 @@ function TextDecl_rule(origin) {
 
 TextDecl_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '<?xml'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '<?xml')
@@ -7130,7 +7130,7 @@ function extParsedEnt_rule(origin) {
 
 extParsedEnt_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // TextDecl?
       if (! this.rules[0]) {
         this.rules[0] = new TextDecl_rule(this)
@@ -7168,7 +7168,7 @@ function EncodingDecl_rule(origin) {
 
 EncodingDecl_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // S
       if (! this.rules[0]) {
         this.rules[0] = new S_rule(this)
@@ -7220,7 +7220,7 @@ function tmp_55_rule(origin) {
 
 tmp_55_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_56
       if (! this.rules[0]) {
         this.rules[0] = new tmp_56_rule(this)
@@ -7257,7 +7257,7 @@ function tmp_56_rule(origin) {
 
 tmp_56_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '"'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '"')
@@ -7301,7 +7301,7 @@ function tmp_57_rule(origin) {
 
 tmp_57_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // "'"
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '\'')
@@ -7345,7 +7345,7 @@ function EncName_rule(origin) {
 
 EncName_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // [A-Za-z]
       if (! this.rules[0]) {
         this.rules[0] = new CHARSET_rule(this, 'A-Za-z')
@@ -7384,7 +7384,7 @@ function tmp_58_rule(origin) {
 
 tmp_58_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // [A-Za-z0-9._]
       if (! this.rules[0]) {
         this.rules[0] = new CHARSET_rule(this, 'A-Za-z0-9._')
@@ -7421,7 +7421,7 @@ function NotationDecl_rule(origin) {
 
 NotationDecl_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '<!NOTATION'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '<!NOTATION')
@@ -7495,7 +7495,7 @@ function tmp_59_rule(origin) {
 
 tmp_59_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // ExternalID
       if (! this.rules[0]) {
         this.rules[0] = new ExternalID_rule(this)
@@ -7532,7 +7532,7 @@ function PublicID_rule(origin) {
 
 PublicID_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // 'PUBLIC'
       if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, 'PUBLIC')

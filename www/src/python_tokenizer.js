@@ -264,7 +264,7 @@ function get_comment(parser, src, pos, line_num, line_start, token_name, line) {
 }
 
 function test_num(num_type, char) {
-    switch(num_type){
+    switch (num_type) {
         case '':
             return $B.in_unicode_category('Nd', ord(char))
         case 'x':
@@ -570,7 +570,7 @@ $B.tokenizer = function(src, filename, mode, parser) {
             }
         }
 
-        switch(state){
+        switch (state) {
 
             case "line_start":
                 line = get_line_at(pos - 1)
@@ -698,7 +698,7 @@ $B.tokenizer = function(src, filename, mode, parser) {
                 break
 
             case null:
-                switch(char){
+                switch (char) {
                     case '"':
                     case "'":
                         quote = char
@@ -1041,7 +1041,7 @@ $B.tokenizer = function(src, filename, mode, parser) {
                 break
 
             case 'STRING':
-                switch(char){
+                switch (char) {
                     case quote:
                         if (! escaped) {
                             // string end
@@ -1143,7 +1143,18 @@ $B.tokenizer = function(src, filename, mode, parser) {
                         number += char
                     }
                 } else if (char == '.' && ! number.includes(char)) {
-                    number += char
+                    if (num_type) {
+                        // For hex / oct / bin, a dot can't be part of the
+                        // number. Cf. issue #2694
+                        t.push(Token('NUMBER', number,
+                            line_num, pos - line_start - number.length,
+                            line_num, pos - line_start,
+                            line))
+                        state = null
+                        pos--
+                    } else {
+                        number += char
+                    }
                 }else if(char.toLowerCase() == 'e' &&
                         ! number.toLowerCase().includes('e')){
                     if('+-'.includes(src[pos]) ||
@@ -1186,7 +1197,7 @@ $B.tokenizer = function(src, filename, mode, parser) {
         }
     }
 
-    switch(state){
+    switch (state) {
         case 'line_start':
             line_num++
             break

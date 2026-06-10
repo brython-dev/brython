@@ -35,7 +35,7 @@ $B.code.tp_richcompare = function(self, other, op) {
     if (! $B.$isinstance(other, $B.code)) {
         return _b_.NotImplemented
     }
-    switch(op){
+    switch (op) {
         case '__eq__':
             return code_eq(self, other)
         case '__ne__':

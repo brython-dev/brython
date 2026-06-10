@@ -137,7 +137,7 @@ _b_.range.tp_richcompare = function(self, other, op) {
         return _b_.NotImplemented
     }
     var res
-    switch(op){
+    switch (op) {
         case '__eq__':
             res = range_eq(self, other)
             break
@@ -500,7 +500,7 @@ slice.$factory = function(start, stop, step) {
     if (_b_.dict.mp_length(kw) > 0) {
         $B.RAISE(_b_.TypeError, 'slice() takes no keyword arguments')
     }
-    switch(args.length){
+    switch (args.length) {
         case 0:
             $B.RAISE(_b_.TypeError,
                 'slice expected at least 1 argument, got 0'
@@ -554,7 +554,7 @@ _b_.slice.tp_richcompare = function(self, other, op) {
     if (! $B.$isinstance(other, _b_.slice)) {
         return _b_.NotImplemented
     }
-    switch(op){
+    switch (op) {
         case '__eq__':
             return slice_eq(self, other)
         case '__ne__':

@@ -512,7 +512,7 @@ $B.make_module_annotate = function(locals) {
         }
     )
     locals.__annotate_func__ = function(format) {
-        switch(format){
+        switch (format) {
             case 1:
                 var ann_dict = $B.empty_dict()
                 for (var key in locals.$annotations) {
@@ -1135,7 +1135,7 @@ _b_.type.tp_setattro = function(kls, attr, value) {
             $B.set_to_dict(kls, attr, value)
         }
     }
-    switch(attr){
+    switch (attr) {
         case '__call__':
             reset_call(kls)
             break
@@ -2282,7 +2282,7 @@ $B.GenericAlias.tp_richcompare = function(self, other, op) {
         return _b_.NotImplemented
     }
     var res
-    switch(op){
+    switch (op) {
         case '__eq__':
             res = GenericAlias_eq(self, other)
             break
@@ -2460,7 +2460,7 @@ $B.UnionType.tp_richcompare = function(self, other, op) {
     if (! $B.$isinstance(other, $B.UnionType)) {
         return _b_.NotImplemented
     }
-    switch(op){
+    switch (op) {
         case '__eq__':
             return $B.list_eq(self.args, other.args)
         case '__ne__':

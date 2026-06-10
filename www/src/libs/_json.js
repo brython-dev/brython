@@ -17,7 +17,7 @@ function get_error() {
 }
 
 function simple(obj) {
-    switch(typeof obj){
+    switch (typeof obj) {
         case 'string':
         case 'number':
         case 'boolean':
@@ -75,7 +75,7 @@ function to_json(obj, level) {
         kwarg.$kw[0][key] = kw[key]
     }
 
-    switch(typeof obj){
+    switch (typeof obj) {
         case 'string':
             var res = JSON.stringify(obj)
             if (ensure_ascii) {

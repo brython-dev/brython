@@ -463,7 +463,7 @@ _b_.set.tp_richcompare = function(self, other, op) {
         return _b_.NotImplemented
     }
     var res
-    switch(op){
+    switch (op) {
         case '__eq__':
             res = set_eq(self, other)
             break
@@ -881,7 +881,7 @@ frozenset.$factory = function() {
 }
 
 for (var attr in set) {
-    switch(attr) {
+    switch (attr) {
       case "add":
       case "clear":
       case "discard":

@@ -460,7 +460,7 @@ function isspace() {
         len = src.length
 
     for (let i = 0; i < len; ++i) {
-        switch(src[i]){
+        switch (src[i]) {
             case 9:  // Horizontal tab
             case 10: // Line feed
             case 11: // Vertical tab
@@ -598,7 +598,7 @@ function strip(self, cars, lr) {
     } else {
         $B.RAISE(_b_.TypeError, "Type str doesn't support the buffer API")
     }
-    switch(lr){
+    switch (lr) {
         case 'l':
             for (var i = 0, len = self.source.length; i < len; i++) {
                 if (cars.indexOf(self.source[i]) == -1) {
@@ -1986,7 +1986,7 @@ var decode = $B.decode = function(obj, encoding, errors) {
     var s = "",
         b = obj.source,
         enc = normalise(encoding)
-    switch(enc) {
+    switch (enc) {
       case "utf_8":
       case "utf-8":
       case "utf8":
@@ -2209,7 +2209,7 @@ var encode = $B.encode = function() {
         pos = 0,
         enc = normalise(encoding)
 
-    switch(enc) {
+    switch (enc) {
         case "utf-8":
         case "utf_8":
         case "utf8":

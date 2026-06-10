@@ -323,7 +323,7 @@ function dom2svg(svg_elt, coords) {
 }
 
 DOMEvent.tp_getattro = function(ev, attr) {
-    switch(attr) {
+    switch (attr) {
         case 'x':
             return $mouseCoords(ev).x
         case 'y':
@@ -511,7 +511,7 @@ DOMNode.tp_finalize = function(self) {
 }
 
 DOMNode.tp_getattro = function(self, attr) {
-    switch(attr) {
+    switch (attr) {
         case "attrs":
             return Attributes.$factory(self)
         case "x":
@@ -830,7 +830,7 @@ DOMNode.tp_repr = function(self) {
 }
 
 DOMNode.tp_richcompare = function(self, other, op) {
-    switch(op){
+    switch (op) {
         case '__eq__':
             return self === other
         case '__ne__':
@@ -1363,7 +1363,7 @@ DOMNode_funcs.style_set = function(self, style) { // style is a dict
             self.style.cssFloat = value
             self.style.styleFloat = value
         } else {
-            switch(key) {
+            switch (key) {
                 case "top":
                 case "left":
                 case "width":

@@ -219,7 +219,7 @@ function external_id(ext_id) {
         systemId = _b_.None,
         publicId = _b_.None
     if (ext_id_value) {
-        switch(ext_id.selected_option){
+        switch (ext_id.selected_option) {
             case 0:
                 systemId = get_value(ext_id.selected_rule.rules[2])
                 systemId = systemId.substr(1, systemId.length - 2)
@@ -250,7 +250,7 @@ var handler = {
         var defaultdecl = rule.rules[5],
             def_value = _b_.None,
             required = 0
-        switch(defaultdecl.selected_option){
+        switch (defaultdecl.selected_option) {
             case 0:
                 required = true
                 break
@@ -331,7 +331,7 @@ var handler = {
         console.log('element decl', rule)
         var name = get_value(rule.rules[2]),
             model = get_value(rule.rules[4])
-        switch(model){
+        switch (model) {
             case 'ANY':
                 model = $B.fast_tuple([models.XML_CTYPE_ANY, 0, _b_.None, $B.fast_tuple([])])
                 break
@@ -376,7 +376,7 @@ var handler = {
             publicId = _b_.None,
             notationName = _b_.None
         // EntityValue | (ExternalID NDataDecl?)
-        switch(entitydef.selected_option){
+        switch (entitydef.selected_option) {
             case 0:
                 // EntityValue    ::=  '"' ([^%&"] | PEReference | Reference)* '"'
                 //  |  "'" ([^%&'] | PEReference | Reference)* "'"
@@ -451,7 +451,7 @@ var handler = {
             publicId = _b_.None,
             ext_or_public = rule.rules[4]
 
-        switch(ext_or_public.selected_option){
+        switch (ext_or_public.selected_option) {
             case 0:
                 var ext_id = external_id(ext_or_public.selected_rule)
                 systemId = ext_id.systemId
@@ -1166,7 +1166,7 @@ function PITarget_rule(origin) {
 
 PITarget_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // Name
       if (! this.rules[0]) {
         this.rules[0] = new Name_rule(this)

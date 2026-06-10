@@ -1011,7 +1011,7 @@ Flag.tp_richcompare = function(self, other, op) {
         return _b_.NotImplemented
     }
     var res
-    switch(op){
+    switch (op) {
         case '__eq__':
             res = Flag_eq(self, other)
             break
@@ -1190,7 +1190,7 @@ Pattern.tp_richcompare = function(self, other, op) {
         return _b_.NotImplemented
     }
     var res
-    switch(op){
+    switch (op) {
         case '__eq__':
             res = Pattern_eq(self, other)
             break
@@ -1915,7 +1915,7 @@ function CharacterClass(pos, cp, length, groups) {
     // - true if "this" matches 1 character string[pos]
     // - [true, 0] if "this" matches the empty string at pos
     // - false or undefined if "this" doesn't match
-    switch(this.value){
+    switch (this.value) {
         case 'A':
             this.test_func = function(string, pos) {
                 if (pos == 0) {

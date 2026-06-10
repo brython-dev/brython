@@ -1211,4 +1211,23 @@ try:
 except NameError:
   pass
 
+# issue 2694
+assert 0xEC30A437.to_bytes(4, byteorder='little') == b'7\xa40\xec'
+
+# issue 2712
+class C:
+    def f(self):
+        def g():
+            nonlocal nb  # <==
+            if nb == 0:
+                nb += 1
+                assert nb == 1
+            assert nb == 1
+
+        nb = 0
+        g()
+        assert nb == 1
+
+C().f()
+
 print('passed all tests...')

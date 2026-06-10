@@ -519,7 +519,7 @@ _b_.complex.tp_richcompare = function(self, other, op) {
     if (complex_func !== $B.NULL) {
         other = $B.$call(complex_func, other)
     }
-    switch(op){
+    switch (op) {
         case '__eq__':
             return complex_eq(self, other)
         case '__ne__':

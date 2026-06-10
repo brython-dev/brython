@@ -125,7 +125,7 @@ assert "zer".upper() == "ZER"
 
 assert  r'(?:([\w ]+) ([\w.]+) .*\[.* ([\d.]+)\])' == (r'(?:([\w ]+) ([\w.]+) '
         '.*'
-        '\[.* ([\d.]+)\])'), 'raw string continuation'
+        r'\[.* ([\d.]+)\])'), 'raw string continuation'
 
 
 # issue 127
@@ -507,7 +507,7 @@ assert list(b) == [97, 0, 0, 0, 17, 244, 1, 0, 32, 0, 0, 0, 58, 0, 0, 0]
 assert b.decode('utf_32_le') == "a🐑 :"
 
 b = "a🐑 :".encode("utf_16")
-assert list(b) == [254, 255, 97, 0, 61, 216, 17, 220, 32, 0, 58, 0]
+assert list(b) == [254, 255, 97, 0, 61, 216, 17, 220, 32, 0, 58, 0], list(b)
 assert b.decode('utf_16') == "a🐑 :"
 
 # issue 2619
@@ -517,5 +517,16 @@ assert_raises(TypeError, str, b'a', 'utf-8', 5)
 # issue 2659
 s = 'abc'
 s.__doc__
+
+# PR 2717 : x.title() is not the same as x.upper()
+t = [c.title() for c in '\u01c4\u01c5\u01c6']
+assert t == ['ǅ', 'ǅ', 'ǅ'], t
+
+x = '\u1F80'
+assert len(x.upper()) == 2
+assert x.title() == '\u1f88'
+
+# PR 2722 : str.isalnum()
+assert '\u00bd'.isalnum()
 
 print("passed all tests...")

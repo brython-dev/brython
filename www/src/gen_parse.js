@@ -30027,7 +30027,7 @@ $B._PyPegen.parse = function(p) {
     p.n_keyword_lists = n_keyword_lists;
     p.soft_keywords = soft_keywords;
 
-    switch(p.mode){
+    switch (p.mode) {
         case 'file':
             return file_rule(p)
         case 'eval':
