@@ -5,7 +5,7 @@
     $B.imported[$B.OB_TYPE] = _b_.dict
 
     var update = $B.update_obj = function(mod, data) {
-        for(let attr in data) {
+        for (let attr in data) {
             mod[attr] = data[attr]
         }
     }
@@ -21,64 +21,64 @@
             '/Lib/browser/__init__.py',
 
         __BRYTHON__,
-        bind:function(){
+        bind:function() {
             // bind(element, event) is a decorator for callback function
             var $ = $B.args("bind", 3, {elt: null, evt: null, options: null},
                         arguments, {options: _b_.None})
             var options = $.options
-            if(typeof options == "boolean"){
+            if (typeof options == "boolean") {
                 // ignore
-            }else if($B.get_class(options) === _b_.dict){
+            } else if ($B.get_class(options) === _b_.dict) {
                 var _options = {}
-                for(var entry of _b_.dict.$iter_items(options)){
+                for (var entry of _b_.dict.$iter_items(options)) {
                     _options[entry.key] = entry.value
                 }
                 options = _options
-            }else{
+            } else {
                 options == false
             }
-            return function(callback){
-                if($B.get_class($.elt) === $B.JSObj){
+            return function(callback) {
+                if ($B.get_class($.elt) === $B.JSObj) {
                     // eg window, Web Worker
-                    function f(ev){
-                        try{
+                    function f(ev) {
+                        try {
                             return callback($B.jsobj2pyobj(ev))
-                        }catch(err){
+                        } catch (err) {
                             $B.handle_error(err)
                         }
                     }
                     $.elt.addEventListener($.evt, f, options)
                     return callback
-                }else if($B.$isinstance($.elt, $B.DOMNode)){
+                } else if ($B.$isinstance($.elt, $B.DOMNode)) {
                     // DOM element
                     $B.$call($B.$getattr($B.DOMNode, 'bind'), $.elt, $.evt, callback, options)
                     return callback
-                }else if($B.is_str($.elt)){
+                } else if ($B.is_str($.elt)) {
                     // string interpreted as a CSS selector
                     var items = document.querySelectorAll($.elt)
                     var binder = $B.type_getattribute($B.DOMNode, 'bind')
-                    for(var i = 0; i < items.length; i++){
+                    for (var i = 0; i < items.length; i++) {
                         $B.$call(binder, $B.DOMNode.$factory(items[i]),
                             $.evt, callback, options)
                     }
                     return callback
                 }
                 var binder = $B.type_getattribute($B.DOMNode, 'bind')
-                try{
+                try {
                     var it = $B.$iter($.elt)
-                    while(true){
-                        try{
+                    while (true) {
+                        try {
                             var elt = _b_.next(it)
                             $B.$call(binder, elt, $.evt, callback)
-                        }catch(err){
-                            if($B.$isinstance(err, _b_.StopIteration)){
+                        } catch (err) {
+                            if ($B.$isinstance(err, _b_.StopIteration)) {
                                 break
                             }
                             throw err
                         }
                     }
-                }catch(err){
-                    if($B.$isinstance(err, _b_.AttributeError)){
+                } catch (err) {
+                    if ($B.$isinstance(err, _b_.AttributeError)) {
                         $B.$call(binder, $.elt, $.evt, callback)
                     }
                     throw err
@@ -87,7 +87,7 @@
             }
         },
         console: self.console && $B.jsobj2pyobj(self.console),
-        run_script: function(){
+        run_script: function() {
             var $ = $B.args("run_script", 2, {src: null, name: null},
                         arguments, {name: "script_" + $B.UUID()})
             $B.runPythonSource($.src, $.name)
@@ -102,13 +102,13 @@
     if ($B.isNode) {
         delete browser.window
         delete browser.win
-    }else if($B.isWebWorker){
+    } else if ($B.isWebWorker) {
         browser.is_webworker = true
         // In a web worker, name "window" is not defined, but name "self" is
         delete browser.window
         delete browser.win
         // browser.send is an alias for postMessage
-        browser.self.send = function(){
+        browser.self.send = function() {
             var $ = $B.args('send', 1, {message: null}, arguments, null,
                         'args', null)
             var message = $B.pyobj2structuredclone($.message),
@@ -116,18 +116,18 @@
             self.postMessage(message, ...args)
         }
         browser.document = {
-            __get__: function(self){
+            __get__: function(self) {
                 $B.RAISE(_b_.ValueError,
                     "'document' is not available in Web Workers")
             },
-            __set__: function(self, value){
+            __set__: function(self, value) {
                 browser.document = value
             }
         }
-    }else{
+    } else {
         browser.is_webworker = false
         update(browser, {
-            "alert":function(message){
+            "alert":function(message) {
                 window.alert($B.builtins.str.$factory(message || ""))
             },
             confirm: $B.jsobj2pyobj(window.confirm),
@@ -135,51 +135,51 @@
             doc: $B.DOMNode.$factory(document), // want to use document instead of doc
             DOMEvent:$B.DOMEvent,
             DOMNode: $B.DOMNode,
-            load:function(script_url){
+            load:function(script_url) {
                 // Load and eval() the Javascript file at script_url
                 var file_obj = $B.builtins.open(script_url)
                 var content = $B.$getattr(file_obj, 'read')();
                 eval(content);
             },
-            load1:function(script_url, callback){
+            load1:function(script_url, callback) {
                 // Load and eval() the Javascript file at script_url
                 //var file_obj = $B.builtins.open(script_url)
                 //var content = $B.$getattr(file_obj, 'read')()
                 //console.log('content', content.length)
                 var script = document.createElement('SCRIPT')
                 script.src = script_url
-                if(callback){
-                    script.addEventListener('load', function(){
+                if (callback) {
+                    script.addEventListener('load', function() {
                         callback()
                     })
                 }
                 document.body.appendChild(script)
             },
-            mouseCoords: function(ev){
+            mouseCoords: function(ev) {
                 return $B.jsobj2pyobj($B.$mouseCoords(ev))
             },
-            prompt: function(message, default_value){
+            prompt: function(message, default_value) {
                 return $B.jsobj2pyobj(window.prompt(message, default_value||''))
             },
-            reload: function(){
+            reload: function() {
                 // Javascripts in the page
                 var scripts = document.getElementsByTagName('script'),
                     js_scripts = []
-                scripts.forEach(function(script){
+                for (let script of scripts) {
                     if(script.type === undefined ||
                             script.type == 'text/javascript'){
                         js_scripts.push(script)
-                        if(script.src){
+                        if (script.src) {
                             console.log(script.src)
                         }
                     }
-                })
+                }
                 // Check if imported scripts have been modified
-                for(var mod in $B.imported){
-                    if($B.imported[mod].$last_modified){
+                for (var mod in $B.imported) {
+                    if ($B.imported[mod].$last_modified) {
                         console.log('check', mod, $B.imported[mod].__file__,
                             $B.imported[mod].$last_modified)
-                    }else{
+                    } else {
                         console.log('no date for mod', mod)
                     }
                 }
@@ -195,44 +195,44 @@
         })
 
         // creation of an HTML element
-        modules['browser.html'] = (function($B){
+        modules['browser.html'] = (function($B) {
 
             var _b_ = $B.builtins
             var TagSum = $B.TagSum
 
-            function makeTagClass(tagName){
+            function makeTagClass(tagName) {
                 // return the the class associated with tagName
                 var cls = $B.make_builtin_class(tagName, [$B.DOMNode])
 
                 var cls_funcs = cls.tp_funcs = {}
 
-                cls.tp_init = function(){
+                cls.tp_init = function() {
                     var $ = $B.args('__init__', 1, {self: null}, arguments,
                                   null, 'args', 'kw')
                     var self = $.self,
                         args = $.args
-                    if(args.length == 1){
+                    if (args.length == 1) {
                         var first = args[0]
-                        if($B.$isinstance(first,[_b_.str, _b_.int, _b_.float])){
+                        if ($B.$isinstance(first,[_b_.str, _b_.int, _b_.float])) {
                             // set "first" as HTML content (not text)
                             self.innerHTML = _b_.str.$factory(first)
-                        }else if($B.get_class(first) === TagSum){
-                            for(var i = 0, len = first.children.length; i < len; i++){
+                        } else if ($B.get_class(first) === TagSum) {
+                            for (var i = 0, len = first.children.length; i < len; i++) {
                                 self.appendChild(first.children[i])
                             }
-                        }else{
-                            if($B.$isinstance(first, $B.DOMNode)){
+                        } else {
+                            if ($B.$isinstance(first, $B.DOMNode)) {
                                 self.appendChild(first)
-                            }else{
-                                try{
+                            } else {
+                                try {
                                     // If the argument is an iterable other than
                                     // str, add the items
                                     var items = _b_.list.$factory(first)
-                                    for(var item of items){
+                                    for (var item of items) {
                                         $B.DOMNode.tp_funcs.attach(self, item)
                                     }
-                                }catch(err){
-                                    if($B.get_option('debug', err) > 1){
+                                } catch (err) {
+                                    if ($B.get_option('debug', err) > 1) {
                                         console.log(err, $B.get_class(err), err.args)
                                         console.log("first", first)
                                         console.log(arguments)
@@ -244,24 +244,24 @@
                     }
 
                     // attributes
-                    for(var item of _b_.dict.$iter_items($.kw)){
+                    for (var item of _b_.dict.$iter_items($.kw)) {
                         // keyword arguments
                         var arg = item.key,
                             value = item.value
-                        if(arg.toLowerCase().substr(0,2) == "on"){
+                        if (arg.toLowerCase().substr(0,2) == "on") {
                             // Event binding passed as argument "onclick", "onfocus"...
                             $B.DOMNode.tp_setattro(self, arg, value)
-                        }else if(arg.toLowerCase() == "style"){
+                        } else if (arg.toLowerCase() == "style") {
                             $B.DOMNode.tp_setattro(self, "style", value)
-                        }else{
-                            if(value !== false){
+                        } else {
+                            if (value !== false) {
                                 // option.selected = false sets it to true :-)
-                                try{
+                                try {
                                     // Call attribute mapper (cf. issue#1187)
                                     arg = $B.module_getattr($B.imported["browser.html"],
                                         'attribute_mapper')(arg)
                                     self.setAttribute(arg, $B.pyobj2jsobj(value))
-                                }catch(err){
+                                } catch (err) {
                                     $B.RAISE(_b_.ValueError,
                                         "can't set attribute " + arg)
                                 }
@@ -270,17 +270,17 @@
                     }
                 }
 
-                cls.tp_new = function(cls){
+                cls.tp_new = function(cls) {
                     // Only called for subclasses of the HTML tag
                     var res = document.createElement(tagName)
-                    if(cls !== html[tagName]){
+                    if (cls !== html[tagName]) {
                         // Only set ob_type if it is not browser.html.<tagName>
                         res.ob_type = cls
                     }
                     return res
                 }
 
-                cls_funcs.__rmul__ = function(self, num){
+                cls_funcs.__rmul__ = function(self, num) {
                     return $B.DOMNode.nb_multiply(self, num)
                 }
 
@@ -288,18 +288,18 @@
                 return cls
             }
 
-            function makeFactory(klass){
+            function makeFactory(klass) {
                 // Create the factory function for HTML tags.
-                return (function(k){
-                    return function(){
+                return (function(k) {
+                    return function() {
                         var res
-                        if(k.tp_name == 'SVG'){
+                        if (k.tp_name == 'SVG') {
                             res = $B.DOMNode.$factory(
                                 document.createElementNS("http://www.w3.org/2000/svg", "svg"), true)
-                        }else{
-                            try{
+                        } else {
+                            try {
                                 res = document.createElement(k.tp_name)
-                            }catch(err){
+                            } catch (err) {
                                 console.log('error ' + err)
                                 console.log('creating element', k.tp_name)
                                 throw err
@@ -307,8 +307,35 @@
                         }
                         // apply __init__
                         var init = k.tp_init
-                        if(init !== null){
+                        if (init !== null) {
                             init(res, ...arguments)
+                        }
+                        if (k.tp_name == 'IFRAME') {
+                            // special case: attribute access might throw an error
+                            return new Proxy(res,
+                                {
+                                    get(target, prop){
+                                        console.log('get IFRAME attr', prop)
+                                        try {
+                                            switch (prop) {
+                                                case 'ob_type':
+                                                    return k
+                                                case '$target':
+                                                    return target
+                                                case 'contentWindow':
+                                                    return target[prop]
+                                                default:
+                                                    return target[prop]
+                                            }
+                                        } catch (err) {
+                                            console.warn('objet does not support attr resolution')
+                                        }
+                                    },
+                                    set(target, prop, value){
+                                        target[prop] = value
+                                    }
+                                }
+                            )
                         }
                         return res
                     }
@@ -348,15 +375,15 @@
             // performance.
             html.tags = $B.empty_dict()
 
-            function maketag(tagName, ComponentClass){
+            function maketag(tagName, ComponentClass) {
                 // Create a new class associated with the custom HTML tag
                 // "tagName". For instance, "makeTag('P2')" creates the class
                 // that can be used to create tags "<P2></P2>"
-                if(!(typeof tagName == 'string')){
+                if (!(typeof tagName == 'string')) {
                     $B.RAISE(_b_.TypeError, "html.maketag expects a string as argument")
                 }
                 var html_module = $B.imported['browser.html']
-                if($B.module_getattr(html_module, tagName, $B.NULL) !== $B.NULL){
+                if ($B.module_getattr(html_module, tagName, $B.NULL) !== $B.NULL) {
                     $B.RAISE(_b_.ValueError, "cannot reset class for "
                         + tagName)
                 }
@@ -368,7 +395,7 @@
                 return klass
             }
 
-            for(var tagName of tags){
+            for (var tagName of tags) {
                 var klass = makeTagClass(tagName)
                 klass.$factory = makeFactory(klass)
                 html[tagName] = klass
@@ -379,7 +406,7 @@
             html.maketag = maketag
 
             // expose function to transform parameters (issue #1187)
-            html.attribute_mapper = function(attr){
+            html.attribute_mapper = function(attr) {
                 return attr.replace(/_/g, '-')
             }
 
@@ -392,13 +419,13 @@
     // Class for Javascript "undefined"
     $B.UndefinedType = $B.make_builtin_class("UndefinedType")
 
-    $B.UndefinedType.$factory = function(){
+    $B.UndefinedType.$factory = function() {
         return undefined
     }
-    $B.UndefinedType.nb_bool = function(){
+    $B.UndefinedType.nb_bool = function() {
         return false
     }
-    $B.UndefinedType.tp_repr = function(){
+    $B.UndefinedType.tp_repr = function() {
         return "<Javascript undefined>"
     }
 
@@ -407,8 +434,8 @@
     // class for Javascript "null"
     var NullType = $B.NullType = $B.make_builtin_class('NullType')
 
-    NullType.tp_richcompare = function(self, other, op){
-        switch(op){
+    NullType.tp_richcompare = function(self, other, op) {
+        switch (op) {
             case '__eq__':
                 // in Javascript, null == undefined is true...
                 return other === null || other === undefined
@@ -419,7 +446,7 @@
         }
     }
 
-    NullType.tp_repr = function(_self){
+    NullType.tp_repr = function(_self) {
         // in Javascript, null == undefined is true...
         return '<Javascript null>'
     }
@@ -428,21 +455,21 @@
 
     // Class used by javascript.super()
     var super_class = $B.make_builtin_class("JavascriptSuper")
-    super_class.$factory = function(){
+    super_class.$factory = function() {
         // Use Brython's super() to get a reference to self
         var res = _b_.super.$factory()
         var js_constr = res.__thisclass__.tp_bases[0]
-        return function(){
+        return function() {
             var obj = new js_constr.$js_func(...arguments)
-            for(var attr in obj){
+            for (var attr in obj) {
                 $B.get_dict(res.__self_class__)[attr] = $B.jsobj2pyobj(obj[attr])
             }
             return obj
         }
     }
 
-    super_class.tp_getattro = function(self, attr){
-        if(attr == "__init__" || attr == "__call__"){
+    super_class.tp_getattro = function(self, attr) {
+        if (attr == "__init__" || attr == "__call__") {
             return self.__init__
         }
         return $B.$getattr(self.__self_class__, attr, $B.NULL)
@@ -451,15 +478,15 @@
     $B.set_func_names(super_class, "javascript")
 
     modules['javascript'] = {
-        "this": function(){
+        "this": function() {
             // returns the content of Javascript "this"
             // $B.js_this is set to "this" at the beginning of each function
-            if($B.js_this === undefined){return $B.builtins.None}
+            if ($B.js_this === undefined) {return $B.builtins.None}
             return $B.jsobj2pyobj($B.js_this)
         },
         Array: $B.js_array,
         Date: globalThis.Date, // && $B.jsobj2pyobj(self.Date),
-        extends: function(js_constr){
+        extends: function(js_constr) {
             if((!js_constr.$js_func) ||
                     ! js_constr.$js_func.toString().startsWith('class ')){
                 console.log(js_constr)
@@ -467,13 +494,13 @@
                     'argument of extend must be a Javascript class')
             }
             js_constr.ob_type = _b_.type
-            return function(obj){
+            return function(obj) {
                 obj.tp_bases.splice(0, 0, js_constr)
                 obj.__mro__.splice(0, 0, js_constr)
                 return obj
             }
         },
-        import_js: function(){
+        import_js: function() {
             // load JS script at specified url
             // If it exposes a variable $module, use it as the namespace of imported
             // module named "name"
@@ -484,37 +511,37 @@
             var xhr = new XMLHttpRequest(),
                 result
             xhr.open('GET', url, false)
-            xhr.onreadystatechange = function(){
-                if(this.readyState == 4){
-                    if(this.status == 200){
+            xhr.onreadystatechange = function() {
+                if (this.readyState == 4) {
+                    if (this.status == 200) {
                         var js = this.responseText + '\nreturn $module',
                             f = new Function(js)
                         var $module = f()
-                        if(typeof $module !== 'undefined'){
+                        if (typeof $module !== 'undefined') {
                             result = $B.module.$factory(alias)
-                            for(var key in $module){
+                            for (var key in $module) {
                                 $B.module_setattr(result, key,
                                     $B.jsobj2pyobj($module[key]))
                             }
                             $B.module_setattr(result, '__file__', url)
-                        }else{
+                        } else {
                             console.log(this.responseText)
                             result = $B.EXC(_b_.ImportError, 'Javascript ' +
                                 `module at ${url} doesn't define $module`)
                         }
-                    }else{
+                    } else {
                         result = $B.EXC(_b_.ModuleNotFoundError, url)
                     }
                 }
             }
             xhr.send()
-            if($B.$isinstance(result, _b_.BaseException)){
+            if ($B.$isinstance(result, _b_.BaseException)) {
                 $B.handle_error(result)
-            }else{
-                if(alias === _b_.None){
+            } else {
+                if (alias === _b_.None) {
                     // set module name from url
                     var name = url.split('.')
-                    if(name.length > 1){
+                    if (name.length > 1) {
                         name.pop() // remove extension
                     }
                     alias = name.join('.')
@@ -525,50 +552,50 @@
                 frame[1][alias] = result
             }
         },
-        import_modules: function(refs, callback, loaded){
+        import_modules: function(refs, callback, loaded) {
             // loads the Javascript ES6 modules referenced by module_refs,
             // then calls callback with arguments = the module objects
-            if(loaded === undefined){
+            if (loaded === undefined) {
                 loaded = []
             }
-            if(! Array.isArray(refs)){
+            if (! Array.isArray(refs)) {
                 $B.RAISE(_b_.TypeError,
                     `first argument must be a list, got ${$B.class_name(refs)}`)
             }
 
-            if(refs.length > 1){
+            if (refs.length > 1) {
                 var ref = refs.shift()
-                import(ref).then(function(module){
+                import(ref).then(function(module) {
                     loaded.push(module)
                     var im = $B.module_getattr($B.imported.javascript,
                         'import_modules')
                     im(refs, callback, loaded)
                 }).catch($B.show_error)
-            }else{
-                import(refs[0]).then(function(module){
+            } else {
+                import(refs[0]).then(function(module) {
                     loaded.push(module)
                     return $B.$call(callback, ...loaded)
                 }).catch($B.show_error)
             }
         },
-        import_scripts:  function(refs, callback, loaded){
+        import_scripts:  function(refs, callback, loaded) {
             // loads the Javascript ES6 modules referenced by module_refs,
             // then calls callback with arguments = the module objects
             console.log('import scripts', refs)
-            if(loaded === undefined){
+            if (loaded === undefined) {
                 loaded = []
             }
-            if(! Array.isArray(refs)){
+            if (! Array.isArray(refs)) {
                 $B.RAISE(_b_.TypeError,
                     `first argument must be a list, got ${$B.class_name(refs)}`)
             }
 
-            if(refs.length > 0){
+            if (refs.length > 0) {
                 var ref = refs.shift()
                 var script = document.createElement('script')
                 script.src = ref
                 script.addEventListener('load',
-                    function(){
+                    function() {
                         loaded.push(script)
                         var is = $B.module_getattr($B.imported.javascript,
                             'import_scripts')
@@ -576,7 +603,7 @@
                     }
                 )
                 document.body.appendChild(script)
-            }else{
+            } else {
                 return $B.$call(callback, ...loaded)
             }
         },
@@ -585,10 +612,10 @@
         JSON: {
             ob_type: $B.make_builtin_class("JSON")
         },
-        jsobj2pyobj:function(obj){
+        jsobj2pyobj:function(obj) {
             return $B.jsobj2pyobj(obj)
         },
-        load:function(script_url){
+        load:function(script_url) {
             console.log('"javascript.load" is deprecrated. ' +
                 'Use browser.load instead.')
             // Load and eval() the Javascript file at script_url
@@ -601,15 +628,15 @@
         NULL: null,
         NullType,
         Number: self.Number && $B.jsobj2pyobj(self.Number),
-        py2js: function(src, module_name){
-            if(module_name === undefined){
+        py2js: function(src, module_name) {
+            if (module_name === undefined) {
                 module_name = '__main__' + $B.UUID()
             }
             var js = $B.py2js({src, filename: '<string>'}, module_name, module_name,
                 $B.builtins_scope).to_js()
             return $B.format_indent(js, 0)
         },
-        pyobj2jsobj:function(obj){
+        pyobj2jsobj:function(obj) {
             return $B.pyobj2jsobj(obj)
         },
         RegExp: self.RegExp && $B.jsobj2pyobj(self.RegExp),
@@ -621,11 +648,11 @@
 
     $B.assign_dict(modules.javascript.JSON,
         {
-            parse: function(){
+            parse: function() {
                 return $B.structuredclone2pyobj(
                     JSON.parse.apply(this, arguments))
             },
-            stringify: function(obj, replacer, space){
+            stringify: function(obj, replacer, space) {
                 return JSON.stringify($B.pyobj2structuredclone(obj, false),
                     $B.jsobj2pyobj(replacer), space)
             }
@@ -638,7 +665,7 @@
     // Default standard output and error
     // Can be reset by sys.stdout or sys.stderr
     var $io = $B.$io = $B.make_builtin_class("io")
-    $io.$factory = function(out){
+    $io.$factory = function(out) {
         var res = {
             ob_type: $io,
             out,
@@ -649,32 +676,32 @@
     }
     var $io_funcs = $io.tp_funcs = {}
 
-    $io_funcs.encoding_get = function(self){
+    $io_funcs.encoding_get = function(self) {
         return 'utf-8'
     }
 
     $io_funcs.encoding_set = _b_.None
 
-    $io_funcs.flush = function(self){
-        if(self.buf){
+    $io_funcs.flush = function(self) {
+        if (self.buf) {
             // replace chr(0) by ' ' for printing
             var s = self.buf.join(''),
                 chr0 = String.fromCodePoint(0)
             s = s.replace(new RegExp(chr0, 'g'), ' ')
             console[self.out](s)
-            if(s.includes('__spec__')){
+            if (s.includes('__spec__')) {
                 console.log(Error('trace').stack)
             }
             self.buf = []
         }
     }
 
-    $io_funcs.write = function(self, msg){
+    $io_funcs.write = function(self, msg) {
         // Default to printing to browser console
-        if(self.buf === undefined){
+        if (self.buf === undefined) {
             self.buf = []
         }
-        if(typeof msg != "string"){
+        if (typeof msg != "string") {
             $B.RAISE(_b_.TypeError, "write() argument must be str, not " +
                 $B.class_name(msg))
         }
@@ -691,48 +718,48 @@
     // see https://github.com/brython-dev/brython/issues/189
     // see https://docs.python.org/3/reference/toplevel_components.html#programs
     modules['_sys'] = {
-        _getframe : function(){
+        _getframe : function() {
             var $ = $B.args("_getframe", 1, {depth: null}, arguments,
                         {depth: 0})
             var depth = $.depth,
                 frame_obj = $B.frame_obj
-            for(var i = 0; i < depth; i++){
+            for (var i = 0; i < depth; i++) {
                 frame_obj = frame_obj.prev
             }
             var res = frame_obj.frame
             res.$pos = $B.count_frames() - depth - 1
             return res
         },
-        breakpointhook: function(){
+        breakpointhook: function() {
             var hookname = $B.$options.breakpoint,
                 modname,
                 dot,
                 funcname,
                 hook
-            if(hookname === undefined){
+            if (hookname === undefined) {
                 hookname = "pdb.set_trace"
             }
             [modname, dot, funcname] = _b_.str.rpartition(hookname, '.')
-            if(dot == ""){
+            if (dot == "") {
                 modname = "builtins"
             }
-            try{
+            try {
                 $B.$import(modname)
                 hook = $B.$getattr($B.imported[modname], funcname)
-            }catch(err){
+            } catch (err) {
                 console.warn("cannot import breakpoint", hookname)
                 return _b_.None
             }
             return $B.$call(hook, ...arguments)
         },
-        exc_info: function(){
+        exc_info: function() {
             var frame_obj = $B.frame_obj,
                 frame,
                 exc
-            while(frame_obj !== null){
+            while (frame_obj !== null) {
                 frame = frame_obj.frame
                 exc = frame.$current_exception
-                if(exc){
+                if (exc) {
                     return _b_.tuple.$factory([$B.get_class(exc), exc,
                         $B.$getattr(exc, "__traceback__")])
                 }
@@ -740,17 +767,17 @@
             }
             return _b_.tuple.$factory([_b_.None, _b_.None, _b_.None])
         },
-        excepthook: function(exc_class, exc_value){
+        excepthook: function(exc_class, exc_value) {
             $B.show_error(exc_value)
         },
-        exception: function(){
+        exception: function() {
             var frame_obj = $B.frame_obj,
                 frame,
                 exc
-            while(frame_obj !== null){
+            while (frame_obj !== null) {
                 frame = frame_obj.frame
                 exc = frame.$current_exception
-                if(exc !== undefined){
+                if (exc !== undefined) {
                     return exc
                 }
                 frame_obj = frame_obj.prev
@@ -759,74 +786,74 @@
         },
         executable: $B.strip_host($B.brython_path + 'brython.js'),
         float_repr_style: 'short',
-        getdefaultencoding: function(){
+        getdefaultencoding: function() {
             return 'utf-8'
         },
-        getrecursionlimit: function(){
+        getrecursionlimit: function() {
             return $B.recursion_limit
         },
-        getrefcount: function(){
+        getrefcount: function() {
             return 0
         },
-        gettrace: function(){
+        gettrace: function() {
             return $B.tracefunc || _b_.None
         },
-        getunicodeinternedsize: function(){
+        getunicodeinternedsize: function() {
             // compliance with Python3.12
             return 0
         },
         last_exc: {
-            __get__: function(){
+            __get__: function() {
                 return $B.module_getattr($B.imported._sys, 'exception')()
             },
-            __set__: function(value){
+            __set__: function(value) {
                 $B.frame_obj.frame.$current_exception = value
             }
         },
         modules: $B.obj_dict($B.imported),
         path: {
-            __get__: function(){
+            __get__: function() {
                 var filename = $B.get_filename_for_import()
                 return $B.$list($B.import_info[filename].path)
             },
-            __set__: function(value){
+            __set__: function(value) {
                 var filename = $B.get_filename_for_import()
                 $B.import_info[filename].path = value
             }
         },
         meta_path: {
-            __get__: function(){
+            __get__: function() {
                 var filename = $B.get_filename()
                 return $B.$list($B.import_info[filename].meta_path)
             },
-            __set__: function(self, value){
+            __set__: function(self, value) {
                 var filename = $B.get_filename()
                 $B.import_info[filename].meta_path = value
             }
         },
         path_hooks: {
-            __get__: function(){
+            __get__: function() {
                 var filename = $B.get_filename()
                 return $B.$list($B.import_info[filename].path_hooks)
             },
-            __set__: function(self, value){
+            __set__: function(self, value) {
                 var filename = $B.get_filename()
                 $B.import_info[filename].path_hooks = value
             }
         },
         path_importer_cache: {
-            __get__: function(){
+            __get__: function() {
                 return _b_.dict.$factory($B.jsobj2pyobj($B.path_importer_cache))
             },
-            __set__: function(){
+            __set__: function() {
                 $B.RAISE(_b_.TypeError, "Read only property" +
                     " 'sys.path_importer_cache'")
             }
         },
-        setrecursionlimit: function(value){
+        setrecursionlimit: function(value) {
             $B.recursion_limit = value
         },
-        settrace: function(){
+        settrace: function() {
             var $ = $B.args("settrace", 1, {tracefunc: null}, arguments)
             $B.tracefunc = $.tracefunc
             $B.frame_obj.frame.$f_trace = $B.tracefunc
@@ -842,29 +869,29 @@
                     $io.$factory("log"),
         stdout: $io.$factory("log"),
         stdin: {
-            __get__: function(){
+            __get__: function() {
                 return $B.stdin
             },
-            __set__: function(value){
+            __set__: function(value) {
                 $B.stdin = value
             }
         },
         vfs: {
-            __get__: function(){
-                if($B.hasOwnProperty("VFS")){
+            __get__: function() {
+                if ($B.hasOwnProperty("VFS")) {
                     return $B.obj_dict($B.VFS)
-                }else{
+                } else {
                     return _b_.None
                 }
             },
-            __set__: function(){
+            __set__: function() {
                 $B.RAISE(_b_.TypeError, "Read only property 'sys.vfs'")
             }
         }
     }
 
     var WarningMessage = $B.make_builtin_class("WarningMessage")
-    WarningMessage.$factory = function(){
+    WarningMessage.$factory = function() {
         var $ = $B.make_args("WarningMessage", 8,
             {message: null, category: null, filename: null, lineno: null,
              file: null, line:null, source: null},
@@ -893,12 +920,12 @@
 
     // _warnings provides basic warning filtering support.
     modules._warnings = {
-        _acquire_lock: function(){},
+        _acquire_lock: function() {},
         _defaultaction: "default",
-        _filters_mutated: function(){},
-        _filters_mutated_lock_held: function(){},
+        _filters_mutated: function() {},
+        _filters_mutated_lock_held: function() {},
         _onceregistry: $B.empty_dict(),
-        _release_lock: function(){},
+        _release_lock: function() {},
         _warnings_context: {},
         filters: $B.$list([
             $B.fast_tuple(['default', _b_.None, _b_.DeprecationWarning, '__main__', 0]),
@@ -907,7 +934,7 @@
             $B.fast_tuple(['ignore', _b_.None, _b_.ImportWarning, _b_.None, 0]),
             $B.fast_tuple(['ignore', _b_.None, _b_.ResourceWarning, _b_.None, 0])
         ]),
-        warn: function(){
+        warn: function() {
             // Issue a warning, or maybe ignore it or raise an exception.
             var $ = $B.args('warn', 4,
                         {message: null, category: null, stacklevel: null, source: null},
@@ -916,16 +943,16 @@
             var message = $.message,
                 category = $.category,
                 stacklevel = $.stacklevel
-            if($B.$isinstance(message, _b_.Warning)){
+            if ($B.$isinstance(message, _b_.Warning)) {
                 category = $B.get_class(message)
             }
             var filters
-            if($B.imported.warnings){
+            if ($B.imported.warnings) {
                 filters = $B.module_getattr($B.imported.warnings, 'filters')
-            }else{
+            } else {
                 filters = $B.module_getattr(modules._warnings, 'filters')
             }
-            if(filters[0][0] == 'error'){
+            if (filters[0][0] == 'error') {
                 var syntax_error = $B.EXC(_b_.SyntaxError, message.args[0])
                 syntax_error.args[1] = [message.filename, message.lineno,
                     message.offset, message.line]
@@ -940,12 +967,12 @@
                 file,
                 lineno,
                 line
-            if(category === _b_.SyntaxWarning){
+            if (category === _b_.SyntaxWarning) {
                 filename = $B.get_from_dict(message, 'filename'),
                 lineno = $B.get_from_dict(message, 'lineno'),
                 line = $B.get_from_dict(message, 'text', '')
                 var src = $B.file_cache[file]
-                if(src){
+                if (src) {
                     var lines = src.split('\n'),
                         line = lines[lineno - 1]
                 }
@@ -964,7 +991,7 @@
                         _category_name: category.__name__
                     }
                 )
-            }else{
+            } else {
                 let frame_rank = Math.max(0, $B.count_frames() - stacklevel)
                 var frame = $B.get_frame_at(frame_rank)
                 file = frame.__file__
@@ -989,29 +1016,29 @@
                     }
                 )
             }
-            if($B.imported.warnings){
+            if ($B.imported.warnings) {
                 var showwarn = $B.module_getattr($B.imported.warnings,
                     '_showwarnmsg_impl')
                 $B.$call(showwarn, warning_message)
-            }else{
+            } else {
                 var trace = ''
-                if(file && lineno){
+                if (file && lineno) {
                     trace += `${file}:${lineno}: `
                 }
                 trace += $B.class_name(message) + ': ' + message.args[0]
-                if(line){
+                if (line) {
                     trace += '\n    ' + line.trim()
                 }
                 var stderr = $B.get_stderr()
                 $B.$call($B.$getattr(stderr, 'write'), trace + '\n')
                 var flush = $B.$getattr(stderr, 'flush', _b_.None)
-                if(flush !== _b_.None){
+                if (flush !== _b_.None) {
                     $B.$call(flush)
                 }
             }
             return _b_.None
         },
-        warn_explicit: function(){
+        warn_explicit: function() {
             // Low-level interface to warnings functionality.
             console.log("warn_explicit", arguments)
         }
@@ -1023,45 +1050,45 @@
         CASE_COST = 1,
         SIZE_MAX = 65535
 
-    function LEAST_FIVE_BITS(n){
+    function LEAST_FIVE_BITS(n) {
         return ((n) & 31)
     }
 
-    function levenshtein_distance(a, b, max_cost){
+    function levenshtein_distance(a, b, max_cost) {
         // Compute Leveshtein distance between strings a and b
-        if(a == b){
+        if (a == b) {
             return 0
         }
-        if(a.length < b.length){
+        if (a.length < b.length) {
             [a, b] = [b, a]
         }
 
-        while(a.length && a[0] == b[0]){
+        while (a.length && a[0] == b[0]) {
             a = a.substr(1)
             b = b.substr(1)
         }
-        while(a.length && a[a.length - 1] == b[b.length - 1]){
+        while (a.length && a[a.length - 1] == b[b.length - 1]) {
             a = a.substr(0, a.length - 1)
             b = b.substr(0, b.length - 1)
         }
-        if(b.length == 0){
+        if (b.length == 0) {
             return a.length * MOVE_COST
         }
-        if ((b.length - a.length) * MOVE_COST > max_cost){
+        if ((b.length - a.length) * MOVE_COST > max_cost) {
             return max_cost + 1
         }
         var buffer = []
-        for(var i = 0; i < a.length; i++) {
+        for (var i = 0; i < a.length; i++) {
             // cost from b[:0] to a[:i+1]
             buffer[i] = (i + 1) * MOVE_COST
         }
         var result = 0
-        for(var b_index = 0; b_index < b.length; b_index++) {
+        for (var b_index = 0; b_index < b.length; b_index++) {
             var code = b[b_index]
             // cost(b[:b_index], a[:0]) == b_index * MOVE_COST
             var distance = result = b_index * MOVE_COST;
             var minimum = SIZE_MAX;
-            for(var index = 0; index < a.length; index++) {
+            for (var index = 0; index < a.length; index++) {
                 // 1) Previous distance in this row is cost(b[:b_index], a[:index])
                 var substitute = distance + substitution_cost(code, a[index])
                 // 2) cost(b[:b_index], a[:index+1]) from previous row
@@ -1083,45 +1110,45 @@
         return result
     }
 
-    function substitution_cost(a, b){
-        if(LEAST_FIVE_BITS(a) != LEAST_FIVE_BITS(b)){
+    function substitution_cost(a, b) {
+        if (LEAST_FIVE_BITS(a) != LEAST_FIVE_BITS(b)) {
             // Not the same, not a case flip.
             return MOVE_COST
         }
-        if(a == b){
+        if (a == b) {
             return 0
         }
-        if(a.toLowerCase() == b.toLowerCase()){
+        if (a.toLowerCase() == b.toLowerCase()) {
             return CASE_COST
         }
         return MOVE_COST
     }
 
     modules['_suggestions'] = {
-        _generate_suggestions: function(dir, name){
-            if(dir.length >= MAX_CANDIDATE_ITEMS) {
+        _generate_suggestions: function(dir, name) {
+            if (dir.length >= MAX_CANDIDATE_ITEMS) {
                 return null
             }
 
             var suggestion_distance = 2 ** 52,
                 suggestion = null
 
-            for(var item of dir){
+            for (var item of dir) {
                 // No more than 1/3 of the involved characters should need changed.
                 var max_distance = (name.length + item.length + 3) * MOVE_COST / 6
                 // Don't take matches we've already beaten.
                 max_distance = Math.min(max_distance, suggestion_distance - 1)
                 var current_distance =
                     levenshtein_distance(name, item, max_distance)
-                if(current_distance > max_distance){
+                if (current_distance > max_distance) {
                     continue
                 }
-                if(!suggestion || current_distance < suggestion_distance){
+                if (!suggestion || current_distance < suggestion_distance) {
                     suggestion = item
                     suggestion_distance = current_distance
                 }
             }
-            if(suggestion == name){
+            if (suggestion == name) {
                 // avoid messages such as
                 // "object has no attribute 'foo'. Did you mean: 'foo'?"
                 return null
@@ -1136,54 +1163,54 @@
         "dataURL": "arraybuffer"
     }
 
-    function handle_kwargs(kw, method){
+    function handle_kwargs(kw, method) {
         var result = {
                 cache: false,
                 format: 'text',
                 mode: 'text',
                 headers: {}
             }
-        for(let item of _b_.dict.$iter_items(kw)){
+        for (let item of _b_.dict.$iter_items(kw)) {
             let key = item.key,
                 value = item.value
-            if(key == "data"){
+            if (key == "data") {
                 var params = value
-                if(typeof params == "string"  || params instanceof FormData){
+                if (typeof params == "string"  || params instanceof FormData) {
                     result.body = params
-                }else if($B.is_bytes(params)){
+                } else if ($B.is_bytes(params)) {
                     result.body = new ArrayBuffer(params.source.length)
                     var array = new Int8Array(data)
-                    for(let i = 0, len = params.source.length; i < len; i++){
+                    for (let i = 0, len = params.source.length; i < len; i++) {
                         array[i] = params.source[i]
                     }
-                }else{
-                    if($B.get_class(params) !== _b_.dict){
+                } else {
+                    if ($B.get_class(params) !== _b_.dict) {
                         $B.RAISE(_b_.TypeError, "wrong type for data, " +
                             "expected dict, bytes or str, got " +
                             $B.class_name(params))
                     }
                     var items = []
-                    for(let subitem of _b_.dict.$iter_items(params)){
+                    for (let subitem of _b_.dict.$iter_items(params)) {
                         items.push(encodeURIComponent(subitem.key) + "=" +
                                    encodeURIComponent($B.pyobj2jsobj(subitem.value)))
                     }
                     result.body = items.join("&")
                 }
-            }else if(key == "headers"){
-                if(! $B.is_dict(value)){
+            } else if (key == "headers") {
+                if (! $B.is_dict(value)) {
                     $B.RAISE(_b_.ValueError,
                         "headers must be a dict, not " + $B.class_name(value))
                 }
-                for(let subitem of _b_.dict.$iter_items(value)){
+                for (let subitem of _b_.dict.$iter_items(value)) {
                     result.headers[subitem.key.toLowerCase()] = subitem.value
                 }
-            }else if(["cache", "format", "mode"].includes(key)){
+            } else if (["cache", "format", "mode"].includes(key)) {
                 result[key] = value
             }
         }
-        if(method == "post"){
+        if (method == "post") {
             // For POST requests, set default header
-            if(! result.headers.hasOwnProperty("content-type")){
+            if (! result.headers.hasOwnProperty("content-type")) {
                 result.headers["Content-Type"] = "application/x-www-form-urlencoded"
             }
         }
@@ -1192,8 +1219,8 @@
 
     var HTTPRequest = $B.make_builtin_class("HTTPRequest")
 
-    HTTPRequest.tp_getattro = function(self, attr){
-        if(self[attr] !== undefined){
+    HTTPRequest.tp_getattro = function(self, attr) {
+        if (self[attr] !== undefined) {
             return $B.jsobj2pyobj(self[attr])
         }
         return _b_.object.tp_getattro(self, attr)
@@ -1201,13 +1228,13 @@
 
     var HTTPRequest_funcs = HTTPRequest.tp_funcs = {}
 
-    HTTPRequest_funcs.data_get = function(self){
-        if(self.format == "binary"){
+    HTTPRequest_funcs.data_get = function(self) {
+        if (self.format == "binary") {
             var view = new Uint8Array(self.response)
             return _b_.bytes.$factory(Array.from(view))
-        }else if(self.format == "text"){
+        } else if (self.format == "text") {
             return self.responseText
-        }else if(self.format == "dataURL"){
+        } else if (self.format == "dataURL") {
             var base64String = btoa(String.fromCharCode.apply(null,
                 new Uint8Array(self.response)))
             return "data:" + self.getResponseHeader("Content-Type") +
@@ -1217,21 +1244,21 @@
 
     HTTPRequest_funcs.data_set = _b_.None
 
-    HTTPRequest_funcs.response_headers_get = function(self){
+    HTTPRequest_funcs.response_headers_get = function(self) {
         var headers = self.getAllResponseHeaders()
-        if(headers === null){return _b_.None}
+        if (headers === null) {return _b_.None}
         var res = $B.empty_dict()
-        if(headers.length > 0){
+        if (headers.length > 0) {
             // Convert the header string into an array
             // of individual headers
             var lines = headers.trim().split(/[\r\n]+/)
             // Create a map of header names to values
-            lines.forEach(function(line){
+            for (let line of lines) {
               var parts = line.split(': ')
               var header = parts.shift()
               var value = parts.join(': ')
               _b_.dict.$setitem(res, header, value)
-            })
+            }
         }
         return res
     }
@@ -1243,9 +1270,9 @@
     ]
 
     var Future = $B.make_builtin_class("Future")
-    Future.$factory = function(){
+    Future.$factory = function() {
         var methods = {}
-        var promise = new Promise(function(resolve, reject){
+        var promise = new Promise(function(resolve, reject) {
             methods.resolve = resolve
             methods.reject = reject
         })
@@ -1257,19 +1284,19 @@
 
     var Future_funcs = Future.tp_funcs = {}
 
-    Future_funcs.done = function(){
+    Future_funcs.done = function() {
         var $ = $B.args('done', 1, {self:null}, arguments)
         return !! $.self._done
     }
 
-    Future_funcs.set_result = function(){
+    Future_funcs.set_result = function() {
         var $ = $B.args('set_result', 2, {self:null, value: null}, arguments)
         $.self._done = true
         $.self._methods.resolve($.value)
         return _b_.None
     }
 
-    Future_funcs.set_exception = function(){
+    Future_funcs.set_exception = function() {
         var $ = $B.args('set_exception', 2, {self:null, exception: null},
                     arguments)
         $.self._done = true
@@ -1278,34 +1305,34 @@
     }
 
     Future.tp_methods = ["done", "set_result", "set_exception"]
-    
+
     $B.set_func_names(Future, 'browser.aio')
 
     modules['browser.aio'] = {
-        ajax: function(){
+        ajax: function() {
             var $ = $B.args("ajax", 2, {method: null, url: null},
                     arguments, null, null, "kw")
             var method = $.method.toUpperCase(),
                 url = $.url,
                 kw = $.kw
             var args = handle_kwargs(kw, "get")
-            if(method == "GET" && ! args.cache){
+            if (method == "GET" && ! args.cache) {
                 url = url + "?ts" + (new Date()).getTime() + "=0"
             }
-            if(args.body && method == "GET"){
+            if (args.body && method == "GET") {
                 url = url + (args.cache ? "?" : "&") + args.body
             }
-            var func = function(){
-                return new Promise(function(resolve){
+            var func = function() {
+                return new Promise(function(resolve) {
                     var xhr = new XMLHttpRequest()
                     xhr.open(method, url, true)
-                    for(var key in args.headers){
+                    for (var key in args.headers) {
                         xhr.setRequestHeader(key, args.headers[key])
                     }
                     xhr.format = args.format
                     xhr.responseType = responseType[args.format]
-                    xhr.onreadystatechange = function(){
-                        if(this.readyState == 4){
+                    xhr.onreadystatechange = function() {
+                        if (this.readyState == 4) {
                             this.ob_type = HTTPRequest
                             resolve(this)
                         }
@@ -1313,7 +1340,7 @@
                     if(args.body &&
                             ['POST', 'PUT', 'DELETE', 'PATCH'].indexOf(method) > -1){
                         xhr.send(args.body)
-                    }else{
+                    } else {
                         xhr.send()
                     }
                 })
@@ -1329,45 +1356,45 @@
                 $func: func
             }
         },
-        event: function(){
+        event: function() {
             // event(element, *names) is a Promise on the events "names" happening on
             // the element. This promise always resolves (never rejects) with the
             // first triggered DOM event.
             var $ = $B.args("event", 1, {element: null}, arguments)
             var element = $.element,
                 names = $.names
-            return new Promise(function(resolve){
+            return new Promise(function(resolve) {
                 var callbacks = []
-                names.forEach(function(name){
-                    var callback = function(evt){
+                for (let name of names) {
+                    var callback = function(evt) {
                         // When one of the handled events is triggered, all bindings
                         // are removed
-                        callbacks.forEach(function(items){
+                        for (let items of callbacks) {
                             $B.DOMNode.unbind(element, items[0], items[1])
-                        })
+                        }
                         resolve($B.$DOMEvent(evt))
                     }
                     callbacks.push([name, callback])
                     $B.DOMNode.bind(element, name, callback)
-                })
+                }
             })
         },
-        get: function(){
+        get: function() {
             var ajax = $B.module_getattr($B.imported['browser.aio'], 'ajax')
             return ajax.bind(null, "GET").apply(null, arguments)
         },
-        iscoroutine: function(f){
+        iscoroutine: function(f) {
             return $B.get_class(f) === $B.coroutine
         },
-        iscoroutinefunction: function(f){
+        iscoroutinefunction: function(f) {
             return (f.$function_infos[$B.func_attrs.flags] & 128) != 0
         },
-        post: function(){
+        post: function() {
             var ajax = $B.module_getattr($B.imported['browser.aio'], 'ajax')
             return ajax.bind(null, "POST").apply(null, arguments)
         },
-        run: function(){
-            var handle_success = function(){
+        run: function() {
+            var handle_success = function() {
                     $B.leave_frame()
                 },
                 handle_error = $B.show_error
@@ -1385,16 +1412,16 @@
             $B.frame_obj = save_frame_obj
             return _b_.None
         },
-        sleep: function(seconds){
-            if($B.get_class(seconds) === _b_.float){
+        sleep: function(seconds) {
+            if ($B.get_class(seconds) === _b_.float) {
                 seconds = seconds.value
-            }else if(typeof seconds != "number"){
+            } else if (typeof seconds != "number") {
                 $B.RAISE(_b_.TypeError, "'sleep' argument must be " +
                     "int or float, not " + $B.class_name(seconds))
             }
-            var func = function(){
+            var func = function() {
                 return new Promise(resolve => setTimeout(
-                    function(){resolve(_b_.None)}, 1000 * seconds))
+                    function() {resolve(_b_.None)}, 1000 * seconds))
             }
             func.$infos = {
                 __name__: "sleep"
@@ -1408,27 +1435,27 @@
             }
         },
         Future,
-        __getattr__: function(attr){
+        __getattr__: function(attr) {
             // search in _aio.py
             $B.$import('_aio')
             return $B.$getattr($B.imported._aio, attr)
         }
     }
 
-    function load(name, module_obj){
+    function load(name, module_obj) {
         // move all module attribute in its __dict__
         $B.init_dict(module_obj)
         var dict = $B.get_dict(module_obj)
         $B.imported[name] = module_obj
         // set attribute "name" of functions
-        for(var attr in module_obj){
-            if(module_obj[attr] === dict){
+        for (var attr in module_obj) {
+            if (module_obj[attr] === dict) {
                 continue
             }
-            if(attr.startsWith('$')){
+            if (attr.startsWith('$')) {
                 continue
             }
-            if(typeof module_obj[attr] == 'function'){
+            if (typeof module_obj[attr] == 'function') {
                 module_obj[attr].$infos = {
                     __module__: name,
                     __name__: attr,
@@ -1450,10 +1477,10 @@
         $B.module_setattr(module_obj, '__module__', 'builtins')
     }
 
-    for(let attr in modules){
+    for (let attr in modules) {
         load(attr, modules[attr])
     }
-    if(!($B.isWebWorker || $B.isNode)){
+    if (!($B.isWebWorker || $B.isNode)) {
         modules['browser'].html = modules['browser.html']
         modules['browser'].aio = modules['browser.aio']
     }
@@ -1462,14 +1489,14 @@
     _b_.__builtins__ = $B.module.$factory('__builtins__',
         'Python builtins')
 
-    for(let attr in _b_){
+    for (let attr in _b_) {
         $B.module_setattr(_b_.__builtins__, attr, _b_[attr])
         $B.builtins_scope.binding[attr] = true
     }
 
     // Attributes of __BRYTHON__ are Python lists
-    for(let attr in $B){
-        if(Array.isArray($B[attr])){
+    for (let attr in $B) {
+        if (Array.isArray($B[attr])) {
             $B[attr].ob_type = _b_.list
         }
     }
@@ -1477,7 +1504,7 @@
     // Cell objects, for free variables in functions
     // Must be defined after dict, because property uses it
     $B.cell = $B.make_builtin_class("cell")
-    $B.cell.$factory = function(value){
+    $B.cell.$factory = function(value) {
         return {
             ob_type: $B.cell,
             $cell_contents: value
@@ -1486,54 +1513,54 @@
 
 
     var $comps = Object.values($B.$comps).concat(["eq", "ne"])
-    $comps.forEach(function(comp){
+    for (let comp of $comps) {
         var op = "__" + comp + "__"
-        $B.cell[op] = (function(op){
-            return function(self, other){
-                if(! $B.$isinstance(other, $B.cell)){
+        $B.cell[op] = (function(op) {
+            return function(self, other) {
+                if (! $B.$isinstance(other, $B.cell)) {
                     return _b_.NotImplemented
                 }
-                if(self.$cell_contents === null){
-                    if(other.$cell_contents === null){
+                if (self.$cell_contents === null) {
+                    if (other.$cell_contents === null) {
                         return op == "__eq__"
-                    }else{
+                    } else {
                         return ["__ne__", "__lt__", "__le__"].indexOf(op) > -1
                     }
-                }else if(other.$cell_contents === null){
+                } else if (other.$cell_contents === null) {
                     return ["__ne__", "__gt__", "__ge__"].indexOf(op) > -1
                 }
                 return $B.rich_comp(op, self.$cell_contents, other.$cell_contents)
             }
         })(op)
-    })
+    }
 
     /* cell start */
-    $B.cell.tp_richcompare = function(self){
+    $B.cell.tp_richcompare = function(self) {
 
     }
 
-    $B.cell.tp_repr = function(self){
+    $B.cell.tp_repr = function(self) {
         return '<cell object>'
     }
 
-    $B.cell.tp_hash = function(self){
+    $B.cell.tp_hash = function(self) {
 
     }
 
-    $B.cell.tp_new = function(self){
+    $B.cell.tp_new = function(self) {
 
     }
 
     var cell_funcs = $B.cell.tp_funcs = {}
 
-    cell_funcs.cell_contents_get = function(self){
-        if(self.$cell_contents === null){
+    cell_funcs.cell_contents_get = function(self) {
+        if (self.$cell_contents === null) {
             $B.RAISE(_b_.ValueError, "empty cell")
         }
         return self.$cell_contents
     }
 
-    cell_funcs.cell_contents_set = function(self){
+    cell_funcs.cell_contents_set = function(self) {
         self.$cell_contents = value
     }
 
@@ -1545,34 +1572,34 @@
 
     $B.set_func_names($B.cell, "builtins")
 
-    for(let flag in $B.builtin_class_flags.types){
-        for(let key of $B.builtin_class_flags.types[flag]){
-            if($B[key]){
+    for (let flag in $B.builtin_class_flags.types) {
+        for (let key of $B.builtin_class_flags.types[flag]) {
+            if ($B[key]) {
                 $B[key].__flags__ = parseInt(flag)
             }
         }
     }
 
     $B.AST = $B.make_type('AST')
-    $B.AST.$convert = function(js_node){
-        if(js_node === undefined){
+    $B.AST.$convert = function(js_node) {
+        if (js_node === undefined) {
             return _b_.None
         }
         var constr = js_node.constructor
-        if(constr && constr.$name){
+        if (constr && constr.$name) {
             $B.create_python_ast_classes()
             return $B.python_ast_classes[constr.$name].$factory(js_node)
-        }else if(Array.isArray(js_node)){
+        } else if (Array.isArray(js_node)) {
             return js_node.map($B.AST.$convert)
-        }else if(js_node.type){
+        } else if (js_node.type) {
             // literal constant
-            switch(js_node.type){
+            switch (js_node.type) {
                 case 'int':
                     console.log('AST convert, js_node', js_node)
                     var value = js_node.value[1],
                         base = js_node.value[0]
                     var res = parseInt(value, base)
-                    if(! Number.isSafeInteger(res)){
+                    if (! Number.isSafeInteger(res)) {
                         res = BigInt(res)
                     }
                     return res
@@ -1584,26 +1611,26 @@
                 case 'ellipsis':
                     return _b_.Ellipsis
                 case 'str':
-                    if(js_node.is_bytes){
+                    if (js_node.is_bytes) {
                         return _b_.bytes.$factory(js_node.value, 'latin-1')
                     }
                     return js_node.value
                 case 'id':
-                    if(['False', 'None', 'True'].indexOf(js_node.value) > -1){
+                    if (['False', 'None', 'True'].indexOf(js_node.value) > -1) {
                         return _b_[js_node.value]
                     }
                     break
             }
-        }else if(['string', 'number'].indexOf(typeof js_node) > -1){
+        } else if (['string', 'number'].indexOf(typeof js_node) > -1) {
             return js_node
-        }else if(js_node.$name){
+        } else if (js_node.$name) {
             // eg Store(), Load()...
             return js_node.$name + '()'
-        }else if([_b_.None, _b_.True, _b_.False].indexOf(js_node) > -1){
+        } else if ([_b_.None, _b_.True, _b_.False].indexOf(js_node) > -1) {
             return js_node
-        }else if($B.get_class(js_node) !== $B.JSObj){
+        } else if ($B.get_class(js_node) !== $B.JSObj) {
             return js_node
-        }else{
+        } else {
             console.log('cannot handle', js_node)
             return js_node
         }
@@ -1615,10 +1642,10 @@ $B.stdin = {
     closed: false,
     len: 1,
     pos: 0,
-    read: function (){
+    read: function () {
         return ""
     },
-    readline: function(){
+    readline: function() {
         return ""
     }
 }

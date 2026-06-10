@@ -1,4 +1,4 @@
-(function($B){
+(function($B) {
 
 var _b_ = $B.builtins
 
@@ -21,9 +21,9 @@ var co_attrs = [
     "co_exceptiontable"
 ]
 
-function code_eq(self, other){
-    for(var attr of co_attrs){
-        if(! $B.is_or_equals(self[attr], other[attr])){
+function code_eq(self, other) {
+    for (var attr of co_attrs) {
+        if (! $B.is_or_equals(self[attr], other[attr])) {
             return false
         }
     }
@@ -31,11 +31,11 @@ function code_eq(self, other){
 }
 
 /* code start */
-$B.code.tp_richcompare = function(self, other, op){
-    if(! $B.$isinstance(other, $B.code)){
+$B.code.tp_richcompare = function(self, other, op) {
+    if (! $B.$isinstance(other, $B.code)) {
         return _b_.NotImplemented
     }
-    switch(op){
+    switch (op) {
         case '__eq__':
             return code_eq(self, other)
         case '__ne__':
@@ -45,16 +45,16 @@ $B.code.tp_richcompare = function(self, other, op){
     }
 }
 
-$B.code.tp_repr = function(self){
+$B.code.tp_repr = function(self) {
     return `<code object ${self.co_name}, file '${self.co_filename}', ` +
         `line ${self.co_firstlineno || 1}>`
 }
 
-$B.code.tp_hash = function(self){
+$B.code.tp_hash = function(self) {
     return _b_.object.tp_hash(self)
 }
 
-$B.code.tp_new = function(cls, args, kw){
+$B.code.tp_new = function(cls, args, kw) {
     var res = {
         ob_type: cls
     }
@@ -64,71 +64,71 @@ $B.code.tp_new = function(cls, args, kw){
 
 var code_funcs = $B.code.tp_funcs = {}
 
-code_funcs.__replace__ = function(self){
+code_funcs.__replace__ = function(self) {
     $B.RAISE(_b_.NotImplementedError)
 }
 
-code_funcs.__sizeof__ = function(self){
+code_funcs.__sizeof__ = function(self) {
     return 216
 }
 
-code_funcs._co_code_adaptive_get = function(self){
+code_funcs._co_code_adaptive_get = function(self) {
     return _b_.None
 }
 
 code_funcs._co_code_adaptive_set = _b_.None
 
-code_funcs._varname_from_oparg = function(self){
+code_funcs._varname_from_oparg = function(self) {
     $B.RAISE(_b_.NotImplementedError)
 }
 
-code_funcs.co_argcount = function(self){
+code_funcs.co_argcount = function(self) {
     return self.co_argcount
 }
 
-code_funcs.co_branches = function(self){
+code_funcs.co_branches = function(self) {
     console.log('get co branches', self)
 }
 
-code_funcs.co_cellvars_get = function(self){
+code_funcs.co_cellvars_get = function(self) {
     return self.co_cellvars
 }
 
 code_funcs.co_cellvars_set = _b_.None
 
-code_funcs.co_code_get = function(self){
+code_funcs.co_code_get = function(self) {
     return self.co_code
 }
 
 code_funcs.co_code_set = _b_.None
 
-code_funcs.co_freevars_get = function(self){
+code_funcs.co_freevars_get = function(self) {
     return self.co_freevars
 }
 
 code_funcs.co_freevars_set = _b_.None
 
-code_funcs.co_lines = function(self){
+code_funcs.co_lines = function(self) {
     return _b_.NotImplemented
 }
 
-code_funcs.co_lnotab_get = function(self){
+code_funcs.co_lnotab_get = function(self) {
     return _b_.None
 }
 
 code_funcs.co_lnotab_set = _b_.None
 
-code_funcs.co_positions = function(self){
+code_funcs.co_positions = function(self) {
     return self.co_positions()
 }
 
-code_funcs.co_varnames_get = function(self){
+code_funcs.co_varnames_get = function(self) {
     return self.co_varnames
 }
 
 code_funcs.co_varnames_set = _b_.None
 
-code_funcs.replace = function(self){
+code_funcs.replace = function(self) {
     var $ = $B.args('replace', 1, {self: null}, arguments, null, null, 'kw')
     var self = $.self
     var expected = ['co_argcount', 'co_branches', 'co_cellvars', 'co_code',

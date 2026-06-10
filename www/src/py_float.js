@@ -1,37 +1,37 @@
 "use strict";
-(function($B){
+(function($B) {
 
 var _b_ = $B.builtins
 
-function conv_num(x){
-    if(typeof x == 'number'){
+function conv_num(x) {
+    if (typeof x == 'number') {
         return x
-    }else if(typeof x == 'bigint'){
+    } else if (typeof x == 'bigint') {
         return Number(x)
-    }else if($B.is_int(x)){
+    } else if ($B.is_int(x)) {
         // int subclass
         return conv_num(x.value)
-    }else if(x.ob_type === _b_.float){
+    } else if (x.ob_type === _b_.float) {
         return x.value
-    }else if($B.$isinstance(x, _b_.float)){
+    } else if ($B.$isinstance(x, _b_.float)) {
         return x.value
     }
     return $B.NULL
 }
 
-function conv_number(...objs){
+function conv_number(...objs) {
     var res = []
-    for(var obj of objs){
+    for (var obj of objs) {
         res.push(conv_num(obj))
     }
     return res
 }
 
-var float_value = $B.float_value = function(obj){
+var float_value = $B.float_value = function(obj) {
     return obj.ob_type === float ? obj : fast_float(obj.value)
 }
 
-function copysign(x, y){
+function copysign(x, y) {
     var x1 = Math.abs(x)
     var y1 = y
     var sign = Math.sign(y1)
@@ -42,10 +42,10 @@ function copysign(x, y){
 // dictionary for built-in class 'float'
 var float = _b_.float
 
-float.$to_js_number = function(self){
-    if($B.exact_type(self, float)){
+float.$to_js_number = function(self) {
+    if ($B.exact_type(self, float)) {
         return self.value
-    }else{
+    } else {
         return float.$to_js_number(self.value)
     }
 }
@@ -53,25 +53,25 @@ float.$to_js_number = function(self){
 // cache lshifts of 1
 $B.shift1_cache = {}
 
-function check_self_is_float(x, method){
-    if($B.$isinstance(x, _b_.float)){
+function check_self_is_float(x, method) {
+    if ($B.$isinstance(x, _b_.float)) {
         return true
     }
     $B.RAISE(_b_.TypeError, `descriptor '${method}' requires a ` +
         `'float' object but received a '${$B.class_name(x)}'`)
 }
 
-function _float_div_mod(vx, wx){
+function _float_div_mod(vx, wx) {
     // copied from CPython floatobject.c
     var mod = vx % wx
     var div = (vx - mod) / wx
-    if(mod){
+    if (mod) {
         /* ensure the remainder has the same sign as the denominator */
-        if((wx < 0) != (mod < 0)) {
+        if ((wx < 0) != (mod < 0)) {
             mod += wx;
             div -= 1.0;
         }
-    }else{
+    } else {
         /* the remainder is zero, and in the presence of signed zeroes
            fmod returns different results across platforms; ensure
            it has the same sign as the denominator. */
@@ -79,12 +79,12 @@ function _float_div_mod(vx, wx){
     }
     /* snap quotient to nearest integral value */
     var floordiv
-    if(div){
+    if (div) {
         floordiv = Math.floor(div);
-        if(div - floordiv > 0.5){
+        if (div - floordiv > 0.5) {
             floordiv += 1.0;
         }
-    }else{
+    } else {
         /* div is zero - get the same sign as the true quotient */
         floordiv = copysign(0.0, vx / wx); /* zero w/ sign of vx/wx */
     }
@@ -98,8 +98,8 @@ const DBL_MANT_DIG = 53,
       LONG_MIN = $B.MIN_VALUE,
       DBL_MIN_EXP = -1021
 
-var format_sign = function(val, flags){
-    switch(flags.sign){
+var format_sign = function(val, flags) {
+    switch (flags.sign) {
         case '+':
             // indicates that a sign should be used for both positive as well
             // as negative numbers
@@ -113,8 +113,8 @@ var format_sign = function(val, flags){
             // numbers, and a minus sign on negative numbers
             return (val >= 0 || isNaN(val)) ? ' ' : ''
     }
-    if(flags.space){
-        if(val >= 0){
+    if (flags.space) {
+        if (val >= 0) {
             return " "
         }
     }
@@ -122,36 +122,36 @@ var format_sign = function(val, flags){
 }
 
 
-function preformat(self, fmt){
+function preformat(self, fmt) {
     var value = self.value
-    if(fmt.empty){
+    if (fmt.empty) {
         return _b_.str.$factory(self)
     }
-    if(fmt.type && 'eEfFgGn%'.indexOf(fmt.type) == -1){
+    if (fmt.type && 'eEfFgGn%'.indexOf(fmt.type) == -1) {
         $B.RAISE(_b_.ValueError, "Unknown format code '" + fmt.type +
             "' for object of type 'float'")
     }
     var special
-    if(isNaN(value)){
+    if (isNaN(value)) {
         special = "efg".indexOf(fmt.type) > -1 ? "nan" : "NAN"
-    }else if(value == Number.POSITIVE_INFINITY){
+    } else if (value == Number.POSITIVE_INFINITY) {
         special = "efg".indexOf(fmt.type) > -1 ? "inf" : "INF"
-    }else if(value == Number.NEGATIVE_INFINITY){
+    } else if (value == Number.NEGATIVE_INFINITY) {
         special = "efg".indexOf(fmt.type) > -1 ? "-inf" : "-INF"
     }
-    if(special){
+    if (special) {
         return format_sign(value, fmt) + special
     }
-    if(fmt.precision === undefined && fmt.type !== undefined){
+    if (fmt.precision === undefined && fmt.type !== undefined) {
         fmt.precision = 6
     }
-    if(fmt.type == "%"){
+    if (fmt.type == "%") {
         value *= 100
     }
-    if(fmt.type == "e"){
+    if (fmt.type == "e") {
         let res = value.toExponential(fmt.precision),
             exp = parseInt(res.substr(res.search("e") + 1))
-            if(Math.abs(exp) < 10){
+            if (Math.abs(exp) < 10) {
                 res = res.substr(0, res.length - 1) + "0" +
                     res.charAt(res.length - 1)
             }
@@ -159,58 +159,58 @@ function preformat(self, fmt){
     }
 
     var res
-    if(fmt.precision !== undefined){
+    if (fmt.precision !== undefined) {
         // Use Javascript toFixed to get the correct result
         // The argument of toFixed is the number of digits after "."
         let prec = fmt.precision
-        if(prec == 0){
+        if (prec == 0) {
             return Math.round(value) + ""
         }
         res = $B.roundDownToFixed(value, prec) // in py_string.js
         let pt_pos = res.indexOf(".")
         if(fmt.type !== undefined &&
                 (fmt.type == "%" || fmt.type.toLowerCase() == "f")){
-            if(pt_pos == -1){
+            if (pt_pos == -1) {
                 res += "." + "0".repeat(fmt.precision)
-            }else{
+            } else {
                 var missing = fmt.precision - res.length + pt_pos + 1
-                if(missing > 0){
+                if (missing > 0) {
                     res += "0".repeat(missing)
                 }
             }
-        }else if(fmt.type && fmt.type.toLowerCase() == "g"){
+        } else if (fmt.type && fmt.type.toLowerCase() == "g") {
             let exp_fmt = preformat(self, {type: "e"}).split("e"),
                 exp = parseInt(exp_fmt[1])
-            if(-4 <= exp && exp < fmt.precision){
+            if (-4 <= exp && exp < fmt.precision) {
                 res = preformat(self,
                         {type: "f", precision: fmt.precision - 1 - exp})
-            }else{
+            } else {
                 res = preformat(self,
                     {type: "e", precision: fmt.precision - 1})
             }
             let parts = res.split("e")
-            if(fmt.alternate){
-                if(parts[0].search(/\./) == -1){
+            if (fmt.alternate) {
+                if (parts[0].search(/\./) == -1) {
                     parts[0] += '.'
                 }
-            }else{
+            } else {
                 let signif = parts[0]
-                if(signif.indexOf('.') > 0){
-                    while(signif.endsWith("0")){
+                if (signif.indexOf('.') > 0) {
+                    while (signif.endsWith("0")) {
                         signif = signif.substr(0, signif.length - 1)
                     }
                 }
-                if(signif.endsWith(".")){
+                if (signif.endsWith(".")) {
                     signif = signif.substr(0, signif.length - 1)
                 }
                 parts[0] = signif
             }
             res = parts.join("e")
-            if(fmt.type == "G"){
+            if (fmt.type == "G") {
                 res = res.toUpperCase()
             }
             return res
-        }else if(fmt.type === undefined){
+        } else if (fmt.type === undefined) {
             /*
             For float this is the same as 'g', except that when fixed-point
             notation is used to format the result, it always includes at least
@@ -218,7 +218,7 @@ function preformat(self, fmt){
             */
             fmt.type = "g"
             res = preformat(self, fmt)
-            if(res.indexOf('.') == -1){
+            if (res.indexOf('.') == -1) {
                 let exp = res.length - 1
                 exp = exp < 10 ? '0' + exp : exp
                 let is_neg = res.startsWith('-'),
@@ -228,61 +228,61 @@ function preformat(self, fmt){
                 return `${mant}e+${exp}`
             }
             fmt.type = undefined
-        }else{
+        } else {
             let res1 = value.toExponential(fmt.precision - 1),
                 exp = parseInt(res1.substr(res1.search("e") + 1))
-            if(exp < -4 || exp >= fmt.precision - 1){
+            if (exp < -4 || exp >= fmt.precision - 1) {
                 var elts = res1.split("e")
                 // Remove trailing 0 from mantissa
-                while(elts[0].endsWith("0")){
+                while (elts[0].endsWith("0")) {
                     elts[0] = elts[0].substr(0, elts[0].length - 1)
                 }
                 res = elts.join("e")
             }
         }
-    }else{
+    } else {
         res = _b_.str.$factory(self)
     }
 
-    if(fmt.type === undefined || "gGn".indexOf(fmt.type) != -1){
+    if (fmt.type === undefined || "gGn".indexOf(fmt.type) != -1) {
         // remove trailing 0 for non-exponential formats
-        if(res.search("e") == -1){
-            while(res.charAt(res.length - 1) == "0"){
+        if (res.search("e") == -1) {
+            while (res.charAt(res.length - 1) == "0") {
                 res = res.substr(0, res.length - 1)
             }
         }
-        if(res.charAt(res.length - 1) == "."){
-            if(fmt.type === undefined){
+        if (res.charAt(res.length - 1) == ".") {
+            if (fmt.type === undefined) {
                 res += "0"
-            }else{
+            } else {
                 res = res.substr(0, res.length - 1)
             }
         }
     }
-    if(fmt.sign !== undefined){
-        if((fmt.sign == " " || fmt.sign == "+" ) && value > 0){
+    if (fmt.sign !== undefined) {
+        if ((fmt.sign == " " || fmt.sign == "+" ) && value > 0) {
             res = fmt.sign + res
         }
     }
-    if(fmt.type == "%"){
+    if (fmt.type == "%") {
         res += "%"
     }
     return res
 }
 
-float.$format = function(self, fmt){
+float.$format = function(self, fmt) {
     // fmt is the object parsed from a format_spec
     fmt.align = fmt.align || ">"
     var pf = preformat(self, fmt)
-    if(fmt.z && Object.is(parseFloat(pf), -0)){
+    if (fmt.z && Object.is(parseFloat(pf), -0)) {
         // if 'z' option is set, remove minus sign for negative zero
         pf = pf.substr(1)
     }
     var raw = pf.split('.'),
         _int = raw[0]
-    if(fmt.comma){
+    if (fmt.comma) {
         var len = _int.length, nb = Math.ceil(_int.length / 3), chunks = []
-        for(var i = 0; i < nb; i++){
+        for (var i = 0; i < nb; i++) {
             chunks.push(_int.substring(len - 3 * i - 3, len - 3 * i))
         }
         chunks.reverse()
@@ -291,7 +291,7 @@ float.$format = function(self, fmt){
     return $B.format_width(raw.join("."), fmt) // in py_string.js
 }
 
-float.$getnewargs = function(self){
+float.$getnewargs = function(self) {
     return $B.fast_tuple([float_value(self)])
 }
 
@@ -301,26 +301,26 @@ var mp2_31 = Math.pow(2, 31)
 
 $B.float_hash_cache = new Map()
 
-float.$hash_func = function(self){
-    if(self.__hashvalue__ !== undefined){
+float.$hash_func = function(self) {
+    if (self.__hashvalue__ !== undefined) {
         return self.__hashvalue__
     }
     var _v = self.value
     var in_cache = $B.float_hash_cache.get(_v)
-    if(in_cache !== undefined){
+    if (in_cache !== undefined) {
         return in_cache
     }
-    if(_v === Infinity){
+    if (_v === Infinity) {
         return 314159
-    }else if(_v === -Infinity){
+    } else if (_v === -Infinity) {
         return -314159
-    }else if(isNaN(_v)){
+    } else if (isNaN(_v)) {
         return self.__hashvalue__ = nan_hash
-    }else if(_v === Number.MAX_VALUE){
+    } else if (_v === Number.MAX_VALUE) {
         return self.__hashvalue__ = 2234066890152476671n
     }
     // for integers, return the value
-    if(Number.isInteger(_v)){
+    if (Number.isInteger(_v)) {
         return _b_.int.tp_hash(_v)
     }
 
@@ -331,7 +331,7 @@ float.$hash_func = function(self){
     var x = hipart + parseInt(r[0]) + (r[1] << 15)
     x &= 0xFFFFFFFF
     $B.float_hash_cache.set(_v, x)
-    if($B.float_hash_cache.size > 10000){
+    if ($B.float_hash_cache.size > 10000) {
         // avoid memory issues
         $B.float_hash_cache.clear()
     }
@@ -349,36 +349,36 @@ function isinf(x) {
         x1 == Number.POSITIVE_INFINITY || x1 == Number.NEGATIVE_INFINITY
 }
 
-function isnan(x){
+function isnan(x) {
     var x1 = float_value(x).value
     return isNaN(x1)
 }
 
-function fabs(x){
-    if(x == 0){
+function fabs(x) {
+    if (x == 0) {
         return fast_float(0)
     }
     return x > 0 ? float.$factory(x) : float.$factory(-x)
 }
 
-function frexp(x){
+function frexp(x) {
     // x is Python int or float
     var x1 = x
-    if($B.$isinstance(x, float)){
+    if ($B.$isinstance(x, float)) {
         // special case
-        if(isnan(x) || isinf(x)){
+        if (isnan(x) || isinf(x)) {
             return [x, 0]
         }
         x1 = float_value(x).value
-    }else if($B.is_int(x)){
+    } else if ($B.is_int(x)) {
         x = $B.int_value(x)
-        if(typeof x == "bigint"){
+        if (typeof x == "bigint") {
             var exp = x.toString(2).length,
                 power = 2n ** BigInt(exp)
             return[$B.fast_float(Number(x) / Number(power)), exp]
         }
     }
-    if(x1 == 0){
+    if (x1 == 0) {
         return [0, 0]
     }
 
@@ -386,16 +386,16 @@ function frexp(x){
         ex = 0,
         man = x1
 
-    if(man < 0.){
+    if (man < 0.) {
        sign = -sign
        man = -man
     }
 
-    while(man < 0.5){
+    while (man < 0.5) {
        man *= 2.0
        ex--
     }
-    while(man >= 1.0){
+    while (man >= 1.0) {
        man *= 0.5
        ex++
     }
@@ -408,32 +408,32 @@ function frexp(x){
 // copied from
 // https://blog.codefrau.net/2014/08/deconstructing-floats-frexp-and-ldexp.html
 function ldexp(mantissa, exponent) {
-    if(isninf(mantissa)){
+    if (isninf(mantissa)) {
         return NINF
-    }else if(isinf(mantissa)){
+    } else if (isinf(mantissa)) {
         return INF
     }
-    if($B.$isinstance(mantissa, _b_.float)){
+    if ($B.$isinstance(mantissa, _b_.float)) {
         mantissa = mantissa.value
     }
-    if(mantissa == 0){
+    if (mantissa == 0) {
         return ZERO
-    }else if(isNaN(mantissa)){
+    } else if (isNaN(mantissa)) {
         return NAN
     }
-    if($B.is_big_int(exponent)){
+    if ($B.is_big_int(exponent)) {
         exponent = $B.int_value(exponent)
-        if(exponent.value < 0){
+        if (exponent.value < 0) {
             return ZERO
-        }else{
+        } else {
             $B.RAISE(_b_.OverflowError, 'overflow')
         }
-    }else if(! isFinite(mantissa * Math.pow(2, exponent))){
+    } else if (! isFinite(mantissa * Math.pow(2, exponent))) {
         $B.RAISE(_b_.OverflowError, 'overflow')
     }
     var steps = Math.min(3, Math.ceil(Math.abs(exponent) / 1023));
     var result = mantissa;
-    for (var i = 0; i < steps; i++){
+    for (var i = 0; i < steps; i++) {
         result *= Math.pow(2, Math.floor((exponent + i) / steps));
     }
     return fast_float(result);
@@ -441,41 +441,41 @@ function ldexp(mantissa, exponent) {
 
 float.$funcs = {isinf, isninf, isnan, fabs, frexp, ldexp}
 
-function float_round(x, ndigits){
-    function overflow(){
+function float_round(x, ndigits) {
+    function overflow() {
         $B.RAISE(_b_.OverflowError,
             "cannot convert float infinity to integer")
     }
 
     var no_digits = ndigits === _b_.None
-    if(isnan(x)){
-        if(ndigits === _b_.None){
+    if (isnan(x)) {
+        if (ndigits === _b_.None) {
             $B.RAISE(_b_.ValueError,
                 "cannot convert float NaN to integer")
         }
         return NAN
-    }else if(isninf(x)){
+    } else if (isninf(x)) {
         return ndigits === _b_.None ? overflow() : NINF
-    }else if(isinf(x)){
+    } else if (isinf(x)) {
         return ndigits === _b_.None ? overflow() : INF
     }
     x = float_value(x)
     ndigits = ndigits === _b_.None ? 0 : ndigits
-    if(ndigits == 0){
+    if (ndigits == 0) {
         var res = Math.round(x.value)
-        if(Math.abs(x.value - res) == 0.5){
+        if (Math.abs(x.value - res) == 0.5) {
            // rounding is done towards the even choice
-           if(res % 2){
+           if (res % 2) {
                return res - 1
            }
        }
-       if(no_digits){
+       if (no_digits) {
            // return an int
            return res
        }
        return $B.fast_float(res)
     }
-    if(typeof ndigits == "bigint"){
+    if (typeof ndigits == "bigint") {
         ndigits = Number(ndigits)
     }
     // avoids parsing arguments
@@ -483,39 +483,39 @@ function float_round(x, ndigits){
         pow2,
         y,
         z;
-    if(ndigits >= 0){
-        if(ndigits > 22){
+    if (ndigits >= 0) {
+        if (ndigits > 22) {
             /* pow1 and pow2 are each safe from overflow, but
                pow1*pow2 ~= pow(10.0, ndigits) might overflow */
             pow1 = 10 ** (ndigits - 22)
             pow2 = 1e22;
-        }else{
+        } else {
             pow1 = 10 ** ndigits
             pow2 = 1.0;
         }
         y = (x.value * pow1) * pow2;
         /* if y overflows, then rounded value is exactly x */
-        if(!isFinite(y)){
+        if (!isFinite(y)) {
             return x
         }
-    }else{
+    } else {
         pow1 = 10 ** -ndigits;
         pow2 = 1.0; /* unused; silences a gcc compiler warning */
-        if(isFinite(pow1)){
+        if (isFinite(pow1)) {
             y = x.value / pow1
-        }else{
+        } else {
             return ZERO
         }
     }
 
     z = Math.round(y);
-    if (fabs(y - z).value == 0.5){
+    if (fabs(y - z).value == 0.5) {
         /* halfway between two integers; use round-half-even */
         z = 2.0 * Math.round(y / 2);
     }
-    if(ndigits >= 0){
+    if (ndigits >= 0) {
         z = (z / pow2) / pow1;
-    }else{
+    } else {
         z *= pow1;
     }
     /* if computation resulted in overflow, raise OverflowError */
@@ -527,46 +527,46 @@ function float_round(x, ndigits){
     return fast_float(z);
 }
 
-function to_digits(s){
+function to_digits(s) {
     // Transform a string to another string where all arabic-indic digits
     // are converted to latin digits
     var arabic_digits = "\u0660\u0661\u0662\u0663\u0664\u0665\u0666\u0667\u0668\u0669",
         res = ""
-    for(var i = 0; i < s.length; i++){
+    for (var i = 0; i < s.length; i++) {
         var x = arabic_digits.indexOf(s[i])
-        if(x > -1){
+        if (x > -1) {
             res += x
-        }else{
+        } else {
             res += s[i]
         }
     }
     return res
 }
 
-var Float = $B.Float = function(value){
+var Float = $B.Float = function(value) {
     this.ob_type = _b_.float
     this.value = value
 }
 
-Float.prototype.valueOf = function(){
+Float.prototype.valueOf = function() {
     return this.value
 }
 
-const fast_float = $B.fast_float  = function(value){
+const fast_float = $B.fast_float  = function(value) {
     return new Float(value)
 }
 
-function conv_float(...objs){
+function conv_float(...objs) {
     var res = []
-    for(var obj of objs){
+    for (var obj of objs) {
         var x = $B.NULL
-        if($B.$isinstance(obj, _b_.float)){
+        if ($B.$isinstance(obj, _b_.float)) {
             x = obj
-        }else if($B.is_int(obj)){
+        } else if ($B.is_int(obj)) {
             x = _b_.int.nb_float(obj)
-        }else{
+        } else {
             var float_method = $B.$getattr($B.get_class(obj), '__float__', $B.NULL)
-            if(float_method !== $B.NULL){
+            if (float_method !== $B.NULL) {
                 x = $B.$call(float_method, obj)
             }
         }
@@ -576,12 +576,12 @@ function conv_float(...objs){
 }
 
 // constructor for built-in class 'float'
-float.$factory = function(value){
-    if(value === undefined){
+float.$factory = function(value) {
+    if (value === undefined) {
         return fast_float(0)
     }
     $B.check_nb_args_no_kw('float', 1, arguments)
-    switch(value) {
+    switch (value) {
         case true:
             return fast_float(1)
         case false:
@@ -590,34 +590,34 @@ float.$factory = function(value){
 
     var original_value = value
 
-    if(typeof value == "number"){
+    if (typeof value == "number") {
         return fast_float(value)
     }
-    if($B.$isinstance(value, float)){
+    if ($B.$isinstance(value, float)) {
         return $B.float_value(value)
     }
 
-    if($B.$isinstance(value, _b_.memoryview)){
+    if ($B.$isinstance(value, _b_.memoryview)) {
         value = _b_.memoryview.tp_funcs.tobytes(value)
     }
 
-    if($B.is_bytes(value)){
-        try{
+    if ($B.is_bytes(value)) {
+        try {
             value = $B.$getattr(value, "decode")("utf-8")
-        }catch(err){
+        } catch (err) {
             $B.RAISE(_b_.ValueError,
                 "could not convert string to float: " +
                 _b_.repr(original_value))
         }
     }
 
-    if(typeof value == "string"){
-       if(value.trim().length == 0){
+    if (typeof value == "string") {
+       if (value.trim().length == 0) {
            $B.RAISE(_b_.ValueError,
                    `could not convert string to float: ${_b_.repr(value)}`)
        }
        value = value.trim()   // remove leading and trailing whitespace
-       switch(value.toLowerCase()) {
+       switch (value.toLowerCase()) {
            case "+inf":
            case "inf":
            case "+infinity":
@@ -633,27 +633,27 @@ float.$factory = function(value){
                return fast_float(-Number.NaN)
            default:
                var parts = value.split('e')
-               if(parts[1]){
-                   if(parts[1].startsWith('+') || parts[1].startsWith('-')){
+               if (parts[1]) {
+                   if (parts[1].startsWith('+') || parts[1].startsWith('-')) {
                        parts[1] = parts[1].substr(1)
                    }
                }
                parts = parts[0].split('.').concat(parts.splice(1))
-               for(var part of parts){
-                   if(part.startsWith('_') || part.endsWith('_')){
+               for (var part of parts) {
+                   if (part.startsWith('_') || part.endsWith('_')) {
                        $B.RAISE(_b_.ValueError, 'invalid float literal ' +
                            value)
                    }
                }
-               if(value.indexOf('__') > -1){
+               if (value.indexOf('__') > -1) {
                        $B.RAISE(_b_.ValueError, 'invalid float literal ' +
                            value)
                }
                value = value.charAt(0) + value.substr(1).replace(/_/g, "") // PEP 515
                value = to_digits(value) // convert arabic-indic digits to latin
-               if(isFinite(value)){
+               if (isFinite(value)) {
                    return fast_float(parseFloat(value))
-               }else{
+               } else {
                    $B.RAISE(_b_.ValueError,
                        "could not convert string to float: " +
                        _b_.repr(original_value))
@@ -664,19 +664,19 @@ float.$factory = function(value){
     let klass = $B.get_class(value),
         float_method = $B.$getattr(klass, '__float__', null)
 
-    if(float_method === null){
+    if (float_method === null) {
         var index_method = $B.$getattr(klass, '__index__', null)
 
-        if(index_method === null){
+        if (index_method === null) {
             $B.RAISE(_b_.TypeError, "float() argument must be a string or a " +
                 "real number, not '" + $B.class_name(value) + "'")
         }
         let index = $B.$call(index_method, value),
             index_klass = $B.get_class(index)
 
-        if(index_klass === _b_.int){
+        if (index_klass === _b_.int) {
             return fast_float(Number(index))
-        }else if($B.get_mro(index_klass).indexOf(_b_.int) > -1){
+        } else if ($B.get_mro(index_klass).indexOf(_b_.int) > -1) {
             let msg =  `${$B.class_name(value)}.__index__ returned ` +
                 `non-int (type ${$B.class_name(index)}).  The ` +
                 'ability to return an instance of a strict subclass' +
@@ -691,8 +691,8 @@ float.$factory = function(value){
     let res = $B.$call(float_method, value)
     klass = $B.get_class(res)
 
-    if(klass !== _b_.float){
-        if(klass.__mro__.indexOf(_b_.float) > -1){
+    if (klass !== _b_.float) {
+        if (klass.__mro__.indexOf(_b_.float) > -1) {
             let msg =  `${$B.class_name(value)}.__float__ returned ` +
                 `non-float (type ${$B.class_name(res)}).  The ` +
                 'ability to return an instance of a strict subclass' +
@@ -709,17 +709,17 @@ float.$factory = function(value){
 }
 
 /* float start */
-_b_.float.tp_richcompare = function(self, other, op){
+_b_.float.tp_richcompare = function(self, other, op) {
     var other_type = $B.get_class(other)
     var other_nb_float = $B.search_slot(other_type, 'nb_float', $B.NULL)
-    if(other_nb_float === $B.NULL){
+    if (other_nb_float === $B.NULL) {
         return _b_.NotImplemented
     }
     var other_value = other_nb_float(other).value
 
     var res
 
-    switch(op){
+    switch (op) {
         case '__eq__':
             res = self.value == other_value
             break
@@ -745,25 +745,25 @@ _b_.float.tp_richcompare = function(self, other, op){
     return res
 }
 
-_b_.float.nb_add = function(self, other){
+_b_.float.nb_add = function(self, other) {
     var [x, y] = conv_float(self, other)
-    if(x === $B.NULL || y === $B.NULL){
+    if (x === $B.NULL || y === $B.NULL) {
         return _b_.NotImplemented
     }
     return $B.fast_float(x.value + y.value)
 }
 
-_b_.float.nb_subtract = function(self, other){
+_b_.float.nb_subtract = function(self, other) {
     var [x, y] = conv_float(self, other)
-    if(x === $B.NULL || y === $B.NULL){
+    if (x === $B.NULL || y === $B.NULL) {
         return _b_.NotImplemented
     }
     return $B.fast_float(x.value - y.value)
 }
 
-_b_.float.nb_multiply = function(self, other){
+_b_.float.nb_multiply = function(self, other) {
     var [x, y] = conv_float(self, other) //self = conv_float(self)
-    if(x === $B.NULL || y === $B.NULL){
+    if (x === $B.NULL || y === $B.NULL) {
         return _b_.NotImplemented
     }
     return fast_float(x.value * y.value)
@@ -772,23 +772,23 @@ _b_.float.nb_multiply = function(self, other){
 _b_.float.nb_remainder = function(self, other) {
     // can't use Javascript % because it works differently for negative numbers
     self = conv_float(self)[0]
-    if(self === $B.NULL){
+    if (self === $B.NULL) {
         return _b_.NotImplemented
     }
-    if(other == 0){
+    if (other == 0) {
         $B.RAISE(_b_.ZeroDivisionError, "float modulo")
     }
-    if($B.is_int(other)){
+    if ($B.is_int(other)) {
         other = _b_.int.tp_funcs.numerator_get(other)
         return fast_float((self.value % other + other) % other)
     }
 
-    if($B.$isinstance(other, float)){
+    if ($B.$isinstance(other, float)) {
         // use truncated division
         // cf https://en.wikipedia.org/wiki/Modulo_operation
         var q = Math.floor(self.value / other.value),
             r = self.value - other.value * q
-        if(r == 0 && other.value < 0){
+        if (r == 0 && other.value < 0) {
             return fast_float(-0)
         }
         return fast_float(r)
@@ -796,9 +796,9 @@ _b_.float.nb_remainder = function(self, other) {
     return _b_.NotImplemented
 }
 
-_b_.float.nb_divmod = function(self, other){
+_b_.float.nb_divmod = function(self, other) {
     var [x, y] = conv_float(self, other) //self = conv_float(self)
-    if(x === $B.NULL || y === $B.NULL){
+    if (x === $B.NULL || y === $B.NULL) {
         return _b_.NotImplemented
     }
     var divmod = _float_div_mod(x.value, y.value)
@@ -806,39 +806,39 @@ _b_.float.nb_divmod = function(self, other){
                           $B.fast_float(divmod.mod)])
 }
 
-_b_.float.nb_power = function(self, other){
+_b_.float.nb_power = function(self, other) {
     var [x, y] = conv_number(self, other)
-    if(x === $B.NULL || y === $B.NULL){
+    if (x === $B.NULL || y === $B.NULL) {
         return _b_.NotImplemented
     }
 
-    if(x == 1){
+    if (x == 1) {
         return fast_float(1) // even for Infinity or NaN
-    }else if(y == 0){
+    } else if (y == 0) {
         return fast_float(1)
     }
 
-    if(isNaN(y)){
+    if (isNaN(y)) {
         return fast_float(Number.NaN)
     }
-    if(isNaN(x)){
+    if (isNaN(x)) {
         return fast_float(Number.NaN)
     }
 
-    if(x == -1 && ! isFinite(other)){
+    if (x == -1 && ! isFinite(other)) {
         // (-1)**+-inf is 1
         return fast_float(1)
-    }else if(x == 0 && isFinite(other) && other < 0){
+    } else if (x == 0 && isFinite(other) && other < 0) {
         $B.RAISE(_b_.ZeroDivisionError, "0.0 cannot be raised " +
             "to a negative power")
-    }else if(x == 0 && isFinite(other) && other >= 0){
+    } else if (x == 0 && isFinite(other) && other >= 0) {
         /* # (+-0)**y is +-0 for y a positive odd integer */
-        if(Number.isInteger(y) && y % 2 == 1){
+        if (Number.isInteger(y) && y % 2 == 1) {
             return self
         }
         /* (+-0)**y is 0 for y finite and positive but not an odd integer */
         return fast_float(0)
-    }else if(x == Number.NEGATIVE_INFINITY && ! isNaN(y)){
+    } else if (x == Number.NEGATIVE_INFINITY && ! isNaN(y)) {
         /*
         (-INF)**y is
             -0.0 for y a negative odd integer
@@ -846,24 +846,24 @@ _b_.float.nb_power = function(self, other){
             -INF for y a positive odd integer
             INF for y positive but not an odd integer
         */
-        if(y % 2 == -1){
+        if (y % 2 == -1) {
             return fast_float(-0.0)
-        }else if(y < 0){
+        } else if (y < 0) {
             return fast_float(0)
-        }else if(y % 2 == 1){
+        } else if (y % 2 == 1) {
             return fast_float(Number.NEGATIVE_INFINITY)
-        }else{
+        } else {
             return fast_float(Number.POSITIVE_INFINITY)
         }
-    }else if(x == Number.POSITIVE_INFINITY && ! isNaN(y)){
+    } else if (x == Number.POSITIVE_INFINITY && ! isNaN(y)) {
         return y > 0 ? self : fast_float(0)
     }
-    if(y == Number.NEGATIVE_INFINITY && ! isNaN(x)){
+    if (y == Number.NEGATIVE_INFINITY && ! isNaN(x)) {
         // x**-INF is INF for abs(x) < 1 and 0 for abs(x) > 1
         return Math.abs(x) < 1 ?
                    fast_float(Number.POSITIVE_INFINITY) :
                    fast_float(0)
-    }else if(y == Number.POSITIVE_INFINITY  && ! isNaN(x)){
+    } else if (y == Number.POSITIVE_INFINITY  && ! isNaN(x)) {
         // x**INF is 0 for abs(x) < 1 and INF for abs(x) > 1
         return Math.abs(x) < 1 ?
                    fast_float(0) :
@@ -873,7 +873,7 @@ _b_.float.nb_power = function(self, other){
     x**y defers to complex pow for finite negative x and
     non-integral y.
     */
-    if(x < 0 && ! Number.isInteger(y)){
+    if (x < 0 && ! Number.isInteger(y)) {
         return _b_.complex.nb_power($B.make_complex(x, 0),
                                    fast_float(y))
     }
@@ -882,17 +882,17 @@ _b_.float.nb_power = function(self, other){
     return _b_.NotImplemented
 }
 
-_b_.float.tp_repr = function(self){
+_b_.float.tp_repr = function(self) {
     $B.builtins_repr_check(float, arguments) // in brython_builtins.js
     self = self.value
-    if(self == Infinity){
+    if (self == Infinity) {
         return 'inf'
-    }else if(self == -Infinity){
+    } else if (self == -Infinity) {
         return '-inf'
-    }else if(isNaN(self)){
+    } else if (isNaN(self)) {
         return 'nan'
-    }else if(self === 0){
-        if(1 / self === -Infinity){
+    } else if (self === 0) {
+        if (1 / self === -Infinity) {
             return '-0.0'
         }
         return '0.0'
@@ -900,16 +900,16 @@ _b_.float.tp_repr = function(self){
 
     var res = self + "" // coerce to string
 
-    if(res.search(/[.eE]/) == -1){
+    if (res.search(/[.eE]/) == -1) {
         res += ".0"
     }
     var split_e = res.split(/e/i)
-    if(split_e.length == 2){
+    if (split_e.length == 2) {
         let mant = split_e[0],
             exp = split_e[1]
-        if(exp.startsWith('-')){
+        if (exp.startsWith('-')) {
             let exp_str = parseInt(exp.substr(1)) + ''
-            if(exp_str.length < 2){
+            if (exp_str.length < 2) {
                 exp_str = '0' + exp_str
             }
             return mant + 'e-' + exp_str
@@ -918,39 +918,39 @@ _b_.float.tp_repr = function(self){
     var x, y
     [x, y] = res.split('.')
     var sign = ''
-    if(x[0] == '-'){
+    if (x[0] == '-') {
         x = x.substr(1)
         sign = '-'
     }
-    if(x.length > 16){
+    if (x.length > 16) {
         let exp = x.length - 1,
             int_part = x[0],
             dec_part = x.substr(1) + y
-        while(dec_part.endsWith("0")){
+        while (dec_part.endsWith("0")) {
             dec_part = dec_part.substr(0, dec_part.length - 1)
         }
         let mant = int_part
-        if(dec_part.length > 0){
+        if (dec_part.length > 0) {
             mant += '.' + dec_part
         }
         return sign + mant + 'e+' + exp
-    }else if(x == "0"){
+    } else if (x == "0") {
         let exp = 0
-        while(exp < y.length && y.charAt(exp) == "0"){
+        while (exp < y.length && y.charAt(exp) == "0") {
             exp++
         }
-        if(exp > 3){
+        if (exp > 3) {
             // form 0.0000xyz
             let rest = y.substr(exp)
             exp = (exp + 1).toString()
-            while(rest.endsWith("0")){
+            while (rest.endsWith("0")) {
                 rest = rest.substr(0, res.length - 1)
             }
             let mant = rest[0]
-            if(rest.length > 1){
+            if (rest.length > 1) {
                 mant += '.' + rest.substr(1)
             }
-            if(exp.length == 1){
+            if (exp.length == 1) {
                 exp = '0' + exp
             }
             return sign + mant + 'e-' + exp
@@ -959,49 +959,49 @@ _b_.float.tp_repr = function(self){
     return _b_.str.$factory(res)
 }
 
-_b_.float.tp_hash = function(self){
+_b_.float.tp_hash = function(self) {
     check_self_is_float(self, '__hash__')
     return float.$hash_func(self)
 }
 
-_b_.float.tp_new = function(cls, args, kw){
+_b_.float.tp_new = function(cls, args, kw) {
     var [value] = $B.unpack_args('float', args, ['value'], {value: 0})
-    if(cls === undefined){
+    if (cls === undefined) {
         $B.RAISE(_b_.TypeError, "float.__new__(): not enough arguments")
-    }else if(! $B.$isinstance(cls, _b_.type)){
+    } else if (! $B.$isinstance(cls, _b_.type)) {
         $B.RAISE(_b_.TypeError, "float.__new__(X): X is not a type object")
     }
     var res = {
         ob_type: cls,
         value: float.$factory(value).value
     }
-    if(cls !== _b_.float){
+    if (cls !== _b_.float) {
         $B.init_dict(res)
     }
     return res
 }
 
-_b_.float.nb_negative = function(self){
+_b_.float.nb_negative = function(self) {
     return fast_float(-self.value)
 }
 
-_b_.float.nb_positive = function(self){
+_b_.float.nb_positive = function(self) {
     return fast_float(+self.value)
 }
 
-_b_.float.nb_absolute = function(self){
+_b_.float.nb_absolute = function(self) {
     check_self_is_float(self, '__abs__')
     return fast_float(Math.abs(self.value))
 }
 
-_b_.float.nb_bool = function(self){
+_b_.float.nb_bool = function(self) {
     check_self_is_float(self, '__bool__')
     return _b_.bool.$factory(self.value)
 }
 
-_b_.float.nb_int = function(self){
+_b_.float.nb_int = function(self) {
     check_self_is_float(self, '__int__')
-    if(Number.isInteger(self.value)){
+    if (Number.isInteger(self.value)) {
         var res = BigInt(self.value),
             res_num = Number(res)
         return Number.isSafeInteger(res_num) ?
@@ -1011,33 +1011,33 @@ _b_.float.nb_int = function(self){
     return Math.trunc(self.value)
 }
 
-_b_.float.nb_float = function(self){
+_b_.float.nb_float = function(self) {
     return self
 }
 
-_b_.float.nb_floor_divide = function(self, other){
+_b_.float.nb_floor_divide = function(self, other) {
     var [x, y] = conv_float(self, other) //self = conv_float(self)
-    if(x === $B.NULL || y === $B.NULL){
+    if (x === $B.NULL || y === $B.NULL) {
         return _b_.NotImplemented
     }
     var divmod = _float_div_mod(x.value, y.value)
     return $B.fast_float(divmod.floordiv)
 }
 
-_b_.float.nb_true_divide = function(self, other){
+_b_.float.nb_true_divide = function(self, other) {
     self = conv_float(self)[0]
-    if(self === $B.NULL){
+    if (self === $B.NULL) {
         return _b_.NotImplemented
     }
-    if($B.is_int(other)){
-        if(other.valueOf() == 0){
+    if ($B.is_int(other)) {
+        if (other.valueOf() == 0) {
             $B.RAISE(_b_.ZeroDivisionError, "division by zero")
-        }else if($B.is_big_int(other)){
+        } else if ($B.is_big_int(other)) {
             return float.$factory(self.value / Number($B.int_value(other)))
         }
         return float.$factory(self.value / other)
-    }else if($B.$isinstance(other, float)){
-        if(other.value == 0){
+    } else if ($B.$isinstance(other, float)) {
+        if (other.value == 0) {
             $B.RAISE(_b_.ZeroDivisionError, "division by zero")
         }
         return float.$factory(self.value / other.value)
@@ -1047,37 +1047,37 @@ _b_.float.nb_true_divide = function(self, other){
 
 var float_funcs = _b_.float.tp_funcs = {}
 
-float_funcs.__ceil__ = function(self){
+float_funcs.__ceil__ = function(self) {
     check_self_is_float(self, '__ceil__')
-    if(isnan(self)){
+    if (isnan(self)) {
         $B.RAISE(_b_.ValueError, 'cannot convert float NaN to integer')
-    }else if(isinf(self)){
+    } else if (isinf(self)) {
         $B.RAISE(_b_.OverflowError, 'cannot convert float infinity to integer')
     }
     return Math.ceil(self.value)
 }
 
-float_funcs.__floor__ = function(self){
+float_funcs.__floor__ = function(self) {
     check_self_is_float(self, '__floor__')
-    if(isnan(self)){
+    if (isnan(self)) {
         $B.RAISE(_b_.ValueError, 'cannot convert float NaN to integer')
-    }else if(isinf(self)){
+    } else if (isinf(self)) {
         $B.RAISE(_b_.OverflowError, 'cannot convert float infinity to integer')
     }
     return Math.floor(self.value)
 }
 
-float_funcs.__format__ = function(self, format_spec){
+float_funcs.__format__ = function(self, format_spec) {
     check_self_is_float(self, '__format__')
     var fmt = new $B.parse_format_spec(format_spec, self)
     return float.$format(self, fmt)
 }
 
-float_funcs.__getformat__ = function(cls, arg){
-    if(arg == "double" || arg == "float"){
+float_funcs.__getformat__ = function(cls, arg) {
+    if (arg == "double" || arg == "float") {
         return "IEEE, little-endian"
     }
-    if(typeof arg !== 'string'){
+    if (typeof arg !== 'string') {
         $B.RAISE(_b_.TypeError,
             " __getformat__() argument must be str, not " +
             $B.class_name(arg))
@@ -1086,32 +1086,32 @@ float_funcs.__getformat__ = function(cls, arg){
         "'double' or 'float'")
 }
 
-float_funcs.__getnewargs__ = function(self){
+float_funcs.__getnewargs__ = function(self) {
     return float.$getnewargs($B.single_arg('__getnewargs__', 'self', arguments))
 }
 
-float_funcs.__round__ = function(self){
+float_funcs.__round__ = function(self) {
     var $ = $B.args('__round__', 2, {self: null, ndigits: null},
                 arguments, {ndigits: _b_.None})
     return float_round($.self, $.ndigits)
 }
 
-float_funcs.__trunc__ = function(self){
+float_funcs.__trunc__ = function(self) {
     var res
-    if(self.value >= 0){
+    if (self.value >= 0) {
         res = float_funcs.__floor__(self)
-    }else{
+    } else {
         res = float_funcs.__ceil__(self)
     }
     return res
 }
 
-float_funcs.as_integer_ratio = function(self){
-    if(isinf(self)){
+float_funcs.as_integer_ratio = function(self) {
+    if (isinf(self)) {
         $B.RAISE(_b_.OverflowError, "Cannot pass infinity to " +
             "float.as_integer_ratio.")
     }
-    if(isnan(self)){
+    if (isnan(self)) {
         $B.RAISE(_b_.ValueError, "Cannot pass NaN to " +
             "float.as_integer_ratio.")
     }
@@ -1120,10 +1120,10 @@ float_funcs.as_integer_ratio = function(self){
         fp = tmp[0],
         exponent = tmp[1]
 
-    for (var i = 0; i < 300; i++){
-        if(fp == Math.floor(fp)){
+    for (var i = 0; i < 300; i++) {
+        if (fp == Math.floor(fp)) {
             break
-        }else{
+        } else {
             fp *= 2
             exponent--
         }
@@ -1132,41 +1132,41 @@ float_funcs.as_integer_ratio = function(self){
         py_exponent = _b_.abs(exponent),
         denominator = 1,
         x
-    if($B.shift1_cache[py_exponent] !== undefined){
+    if ($B.shift1_cache[py_exponent] !== undefined) {
         x = $B.shift1_cache[py_exponent]
-    }else{
+    } else {
         x = $B.$call($B.$getattr(1, "__lshift__"), py_exponent)
         $B.shift1_cache[py_exponent] = x
     }
     py_exponent = x
-    if(exponent > 0){
+    if (exponent > 0) {
         numerator = $B.rich_op("__mul__", numerator, py_exponent)
-    }else{
+    } else {
         denominator = py_exponent
     }
 
     return $B.fast_tuple([numerator, denominator])
 }
 
-float_funcs.conjugate = function(self){
+float_funcs.conjugate = function(self) {
     $B.RAISE(_b_.NotImplementedError, 'conjugate')
 }
 
-float_funcs.from_number = function(self){
+float_funcs.from_number = function(self) {
     var $ = $B.args('from_number', 1, {number: null}, arguments)
     var number = $.number
-    if($B.$isinstance(number, _b_.float)){
+    if ($B.$isinstance(number, _b_.float)) {
         return float_value(number) // ensure class is float
     }
     var klass = $B.get_class(number)
     var __float__ = $B.search_in_mro(klass, '__float__')
-    if(__float__){
+    if (__float__) {
         return __float__(number)
     }
     var __index__ = $B.search_in_mro(klass, '__index__')
-    if(__index__){
+    if (__index__) {
         var res = __index__(number)
-        if($B.is_int(res)){
+        if ($B.is_int(res)) {
             return fast_float(res)
         }
         $B.RAISE(_b_.TypeError, '__index__ returned non-int of type ' +
@@ -1176,33 +1176,33 @@ float_funcs.from_number = function(self){
         $B.class_name(number))
 }
 
-float_funcs.fromhex = function(klass, s){
-    function hex_from_char(char){
+float_funcs.fromhex = function(klass, s) {
+    function hex_from_char(char) {
         return parseInt(char, 16)
     }
-    function finished(){
+    function finished() {
       /* optional trailing whitespace leading to the end of the string */
-      while (s[pos] && s[pos].match(/\s/)){
+      while (s[pos] && s[pos].match(/\s/)) {
           pos++;
       }
-      if (pos != s.length){
+      if (pos != s.length) {
           throw parse_error()
       }
-      if(negate){
-          x = float.__neg__(x)
+      if (negate) {
+          x = float.nb_negative(x)
       }
       return klass === _b_.float ? x : $B.$call(klass, x)
     }
-    function overflow_error(){
+    function overflow_error() {
         $B.RAISE(_b_.OverflowError,
                       "hexadecimal value too large to represent as a float");
     }
-    function parse_error(){
+    function parse_error() {
         $B.RAISE(_b_.ValueError,
                       "invalid hexadecimal floating-point string");
     }
 
-    function insane_length_error(){
+    function insane_length_error() {
         $B.RAISE(_b_.ValueError,
                       "hexadecimal string too long to convert");
     }
@@ -1211,11 +1211,11 @@ float_funcs.fromhex = function(klass, s){
     s = s.trim()
 
     /* inf and nan */
-    if(s.match(/^\+?inf(inity)?$/i)){
+    if (s.match(/^\+?inf(inity)?$/i)) {
         return INF
-    }else if(s.match(/^-inf(inity)?$/i)){
+    } else if (s.match(/^-inf(inity)?$/i)) {
         return NINF
-    }else if(s.match(/^[+-]?nan$/i)){
+    } else if (s.match(/^[+-]?nan$/i)) {
         return NAN
     }
     /* optional sign */
@@ -1223,39 +1223,39 @@ float_funcs.fromhex = function(klass, s){
         negate,
         ldexp = _b_.float.$funcs.ldexp
 
-    if(s[pos] == '-'){
+    if (s[pos] == '-') {
         pos++;
         negate = 1;
-    }else if(s[pos] == '+'){
+    } else if (s[pos] == '+') {
         pos++
     }
 
     /* [0x] */
-    if(s.substr(pos, 2).toLowerCase() == '0x'){
+    if (s.substr(pos, 2).toLowerCase() == '0x') {
         pos += 2
     }
 
     /* coefficient: <integer> [. <fraction>] */
     var coeff_start = pos,
         coeff_end
-    while (hex_from_char(s[pos]) >= 0){
+    while (hex_from_char(s[pos]) >= 0) {
         pos++;
     }
     var save_pos = pos;
     if (s[pos] == '.') {
         pos++;
-        while (hex_from_char(s[pos]) >= 0){
+        while (hex_from_char(s[pos]) >= 0) {
             pos++;
         }
         coeff_end = pos - 1;
-    }else{
+    } else {
         coeff_end = pos;
     }
 
     /* ndigits = total # of hex digits; fdigits = # after point */
     var ndigits = coeff_end - coeff_start,
         fdigits = coeff_end - save_pos;
-    if(ndigits == 0){
+    if (ndigits == 0) {
         throw parse_error()
     }
     if(ndigits > Math.min(DBL_MIN_EXP - DBL_MANT_DIG - LONG_MIN/2,
@@ -1267,24 +1267,24 @@ float_funcs.fromhex = function(klass, s){
     if (s[pos] == 'p' || s[pos] == 'P') {
         pos++;
         var exp_start = pos;
-        if (s[pos] == '-' || s[pos ]== '+'){
+        if (s[pos] == '-' || s[pos ]== '+') {
             pos++;
         }
-        if (!('0' <= s[pos] && s[pos] <= '9')){
+        if (!('0' <= s[pos] && s[pos] <= '9')) {
             throw parse_error()
         }
         pos++;
-        while ('0' <= s[pos] && s[pos] <= '9'){
+        while ('0' <= s[pos] && s[pos] <= '9') {
             pos++;
         }
         exp = parseInt(s.substr(exp_start));
-    }else{
+    } else {
         exp = 0;
     }
 
     /* for 0 <= j < ndigits, HEX_DIGIT(j) gives the jth most significant digit */
-    function HEX_DIGIT(j){
-        if(! Number.isInteger(j)){
+    function HEX_DIGIT(j) {
+        if (! Number.isInteger(j)) {
             throw Error('j pas entier')
         }
         return  hex_from_char(s[j < fdigits ?
@@ -1296,14 +1296,14 @@ float_funcs.fromhex = function(klass, s){
      *******************************************/
 
     /* Discard leading zeros, and catch extreme overflow and underflow */
-    while (ndigits > 0 && HEX_DIGIT(ndigits-1) == 0){
+    while (ndigits > 0 && HEX_DIGIT(ndigits-1) == 0) {
         ndigits--;
     }
     if (ndigits == 0 || exp < LONG_MIN/2) {
         x = ZERO;
         return finished()
     }
-    if (exp > LONG_MAX/2){
+    if (exp > LONG_MAX/2) {
         console.log('overflow, exp', exp)
         throw overflow_error();
     }
@@ -1312,15 +1312,15 @@ float_funcs.fromhex = function(klass, s){
 
     /* top_exp = 1 more than exponent of most sig. bit of coefficient */
     var top_exp = exp + 4 * (ndigits - 1);
-    for(let digit = BigInt(HEX_DIGIT(ndigits - 1)); digit != 0; digit /= 2n){
+    for (let digit = BigInt(HEX_DIGIT(ndigits - 1)); digit != 0; digit /= 2n) {
         top_exp++;
     }
     /* catch almost all nonextreme cases of overflow and underflow here */
-    if(top_exp < DBL_MIN_EXP - DBL_MANT_DIG){
+    if (top_exp < DBL_MIN_EXP - DBL_MANT_DIG) {
         x = ZERO
         return finished()
     }
-    if (top_exp > DBL_MAX_EXP){
+    if (top_exp > DBL_MAX_EXP) {
         throw overflow_error()
     }
     /* lsb = exponent of least significant bit of the *rounded* value.
@@ -1330,7 +1330,7 @@ float_funcs.fromhex = function(klass, s){
     var x = 0.0;
     if (exp >= lsb) {
         /* no rounding required */
-        for(let i = ndigits - 1; i >= 0; i--){
+        for (let i = ndigits - 1; i >= 0; i--) {
             x = 16.0 * x + HEX_DIGIT(i)
         }
         x = ldexp($B.fast_float(x), exp)
@@ -1340,7 +1340,7 @@ float_funcs.fromhex = function(klass, s){
        containing the first bit to be rounded away. */
     var half_eps = 1 << ((lsb - exp - 1) % 4),
         key_digit = parseInt((lsb - exp - 1) / 4)
-    for(let i = ndigits - 1; i > key_digit; i--){
+    for (let i = ndigits - 1; i > key_digit; i--) {
         x = 16.0 * x + HEX_DIGIT(i)
     }
     let digit = HEX_DIGIT(key_digit)
@@ -1353,8 +1353,8 @@ float_funcs.fromhex = function(klass, s){
         if ((digit & (3 * half_eps - 1)) != 0 || (half_eps == 8 &&
                 key_digit + 1 < ndigits && (HEX_DIGIT(key_digit+1) & 1) != 0)){
             round_up = 1;
-        }else{
-            for(let i = key_digit-1; i >= 0; i--){
+        } else {
+            for (let i = key_digit-1; i >= 0; i--) {
                 if (HEX_DIGIT(i) != 0) {
                     round_up = 1;
                     break;
@@ -1375,14 +1375,14 @@ float_funcs.fromhex = function(klass, s){
     return finished()
 }
 
-float_funcs.hex = function(self){
+float_funcs.hex = function(self) {
     // http://hg.python.org/cpython/file/d422062d7d36/Objects/floatobject.c
     self = float_value(self)
     var TOHEX_NBITS = DBL_MANT_DIG + 3 - (DBL_MANT_DIG + 2) % 4
-    if(isNaN(self.value) || ! isFinite(self.value)){
+    if (isNaN(self.value) || ! isFinite(self.value)) {
         return _b_.repr(self)
     }
-    if(self.value == 0){
+    if (self.value == 0) {
         return Object.is(self.value, 0) ? "0x0.0p0" : "-0x0.0p0"
     }
 
@@ -1399,35 +1399,35 @@ float_funcs.hex = function(self){
     _s += '.'
     _m -= Math.floor(_m)
 
-    for(var i = 0; i < (TOHEX_NBITS - 1) / 4; i++){
+    for (var i = 0; i < (TOHEX_NBITS - 1) / 4; i++) {
         _m *= 16.0
         _s += _int2hex[Math.floor(_m)]
         _m -= Math.floor(_m)
     }
 
     var _esign = "+"
-    if(_e < 0){
+    if (_e < 0) {
        _esign = "-"
        _e = -_e
     }
 
-    if(self.value < 0){
+    if (self.value < 0) {
         return "-0x" + _s + "p" + _esign + _e
     }
     return "0x" + _s + "p" + _esign + _e
 }
 
-float_funcs.imag_get = function(self){
+float_funcs.imag_get = function(self) {
     return 0
 }
 
 float_funcs.imag_set = _b_.None
 
-float_funcs.is_integer = function(self){
+float_funcs.is_integer = function(self) {
     return Number.isInteger(self.value)
 }
 
-float_funcs.real_get = function(self){
+float_funcs.real_get = function(self) {
     return self
 }
 

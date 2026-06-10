@@ -1,5 +1,5 @@
 // multiprocessing
-(function($B){
+(function($B) {
 
 var _b_ = $B.builtins
 
@@ -7,17 +7,17 @@ var Process = $B.make_type('Process')
 
 var $convert_args=function(args) {
     var _list=[]
-    for(var i=0, _len_i = args.length; i < _len_i; i++) {
+    for (var i=0, _len_i = args.length; i < _len_i; i++) {
       var _a=args[i]
-      if($B.is_str(_a)){_list.push("'"+_a+"'")} else {_list.push(_a)}
+      if ($B.is_str(_a)) {_list.push("'"+_a+"'")} else {_list.push(_a)}
     }
 
     return _list.join(',')
 }
 
-Process.is_alive = function(self){return self.$alive}
+Process.is_alive = function(self) {return self.$alive}
 
-Process.join = function(self, timeout){
+Process.join = function(self, timeout) {
    // need to block until process is complete
    // could probably use a addEventListener to execute all existing code
    // after this join statement
@@ -30,11 +30,11 @@ Process.join = function(self, timeout){
    }, false);
 }
 
-Process.run = function(self){
+Process.run = function(self) {
    //fix me
 }
 
-Process.start = function(self){
+Process.start = function(self) {
    self.$worker.postMessage({target: self.$target,
                              args: $convert_args(self.$args),
                           //   kwargs: self.$kwargs
@@ -43,7 +43,7 @@ Process.start = function(self){
    self.$alive=true
 }
 
-Process.terminate = function(self){
+Process.terminate = function(self) {
    self.$worker.terminate()
    self.$alive=false
 }
@@ -54,7 +54,7 @@ Process.terminate = function(self){
 //pid
 //exitcode
 
-Process. $factory = function(){
+Process. $factory = function() {
     //arguments group=None, target=None, name=None, args=(), kwargs=()
 
     var $ns = $B.args('Process', 0, {}, arguments, null, null, 'kw')
@@ -80,14 +80,14 @@ $B.set_func_names(Process, "multiprocessing")
 
 var Pool = $B.make_type("Pool")
 
-Pool.__enter__ = function(self){}
-Pool.__exit__ = function(self){}
+Pool.__enter__ = function(self) {}
+Pool.__exit__ = function(self) {}
 
-Pool.tp_repr = function(self){
+Pool.tp_repr = function(self) {
    return '<object Pool>'
 }
 
-Pool.map = function(){
+Pool.map = function() {
 
    var $ns = $B.args('Pool.map', 3, {self:null, func:null, fargs:null},
            arguments, null, 'args', 'kw')
@@ -100,13 +100,13 @@ Pool.map = function(){
 
    var _pos = 0
    var _workers =[]
-   for(var i=0; i < self.$processes; i++) {
+   for (var i=0; i < self.$processes; i++) {
        _workers[i] = new Worker('/src/web_workers/multiprocessing.js')
        var arg
 
-       try{
+       try {
            arg = $B.$getattr(fargs, '__next__')()
-       }catch(err){
+       } catch (err) {
            $B.RAISE_IF_NOT(err, _b_.StopIteration)
        }
        console.log(arg)
@@ -117,15 +117,15 @@ Pool.map = function(){
 
        _workers[i].addEventListener('message', function(e) {
            _results[e.data.pos]=e.data.result
-           if (_results.length == args.length){
+           if (_results.length == args.length) {
                return _results
            }
-           try{
+           try {
                arg = $B.$getattr(fargs, '__next__')()
                e.currentTarget.postMessage({target: func+'', pos: _pos,
                                             args: $convert_args([arg])})
                _pos++
-           }catch(err){
+           } catch (err) {
                $B.RAISE_IF_NOT(err, _b_.StopIteration)
                this.finished = true
            }
@@ -133,7 +133,7 @@ Pool.map = function(){
    }
 }
 
-Pool.apply_async = function(){
+Pool.apply_async = function() {
 
    var $ns = $B.$args('apply_async', 3,
        {self:null, func:null, fargs:null}, ['self', 'func', 'fargs'],
@@ -144,7 +144,7 @@ Pool.apply_async = function(){
    fargs = _b_.iter(fargs)
 
    async_result = {}
-   async_result.get = function(timeout){
+   async_result.get = function(timeout) {
                       console.log(results)
                       console.log(fargs)
                       return this.results}
@@ -153,13 +153,13 @@ Pool.apply_async = function(){
    var _pos=0
 
    _workers=[]
-   for(var i=0; i < self.$processes; i++) {
+   for (var i=0; i < self.$processes; i++) {
        _workers[i] = new Worker('/src/web_workers/multiprocessing.js')
        var arg
 
-       try{
+       try {
            arg = $B.$getattr(fargs, '__next__')()
-       }catch(err){
+       } catch (err) {
            $B.RAISE_IF_NOT(err, _b_.StopIteration)
        }
        _workers[i].postMessage({target: func+'', pos: _pos,
@@ -170,12 +170,12 @@ Pool.apply_async = function(){
            async_result.results[e.data.pos]=e.data.result
            //if (_results.length == args.length) return _results
 
-           try{
+           try {
                arg = $B.$getattr(fargs, '__next__')()
                e.currentTarget.postMessage({target: func+'', pos: _pos,
                                             args: $convert_args([arg])})
                _pos++
-           }catch(err){
+           } catch (err) {
                $B.RAISE_IF_NOT(err, _b_.StopIteration)
                this.finished=true
            }
@@ -185,7 +185,7 @@ Pool.apply_async = function(){
    return async_result
 }
 
-Pool.$factory = function(){
+Pool.$factory = function() {
     var $ns = $B.args('Pool', 1, {processes:null}, arguments, null,'args',
                   'kw')
 

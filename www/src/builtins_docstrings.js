@@ -153,9 +153,9 @@ type:"type(object) -> the object's type\ntype(name, bases, dict, **kwds) -> a ne
 vars:"vars([object]) -> dictionary\n\nWithout arguments, equivalent to locals().\nWith an argument, equivalent to object.__dict__.",
 zip:"The zip object yields n-length tuples, where n is the number of iterables\npassed as positional arguments to zip().  The i-th element in every tuple\ncomes from the i-th iterable argument to zip().  This continues until the\nshortest argument is exhausted.\n\nIf strict is true and one of the arguments is exhausted before the others,\nraise a ValueError.\n\n   >>> list(zip('abcdefg', range(3), range(4)))\n   [('a', 0, 0), ('b', 1, 1), ('c', 2, 2)]",
 }
-for(var key in docs){
-    if(__BRYTHON__.builtins[key]){
-        if(['object', 'function'].includes(typeof __BRYTHON__.builtins[key])){
+for (var key in docs) {
+    if (__BRYTHON__.builtins[key]) {
+        if (['object', 'function'].includes(typeof __BRYTHON__.builtins[key])) {
             __BRYTHON__.builtins[key].__doc__ = docs[key]
         }
     }

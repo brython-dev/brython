@@ -1,7 +1,7 @@
 // Javascript implementation of the _random module
 // Based on Ian Bicking's implementation of the Mersenne twister
 
-(function($B){
+(function($B) {
 
 var _b_ = $B.builtins
 
@@ -78,13 +78,13 @@ function RandomStream(seed) {
     var mt = new Array(N)   /* the array for the state vector  */
     var mti = N + 1           /* mti==N+1 means mt[N] is not initialized */
 
-    function unsigned32(n1){
+    function unsigned32(n1) {
         // returns a 32-bits unsiged integer from an operand to which applied a
         // bit operator.
         return n1 < 0 ? (n1 ^ UPPER_MASK) + UPPER_MASK : n1
     }
 
-    function subtraction32(n1, n2){
+    function subtraction32(n1, n2) {
     // emulates lowerflow of a c 32-bits unsiged integer variable, instead of
     // the operator -. these both arguments must be non-negative integers
     // expressible using unsigned 32 bits.
@@ -92,20 +92,20 @@ function RandomStream(seed) {
           n1 - n2
     }
 
-    function addition32(n1, n2){
+    function addition32(n1, n2) {
         // emulates overflow of a c 32-bits unsiged integer variable, instead of
         // the operator +. these both arguments must be non-negative integers
         // expressible using unsigned 32 bits.
         return unsigned32((n1 + n2) & 0xffffffff)
     }
 
-    function multiplication32(n1, n2){
+    function multiplication32(n1, n2) {
         // emulates overflow of a c 32-bits unsiged integer variable, instead of the
         // operator *. these both arguments must be non-negative integers
         // expressible using unsigned 32 bits.
         var sum = 0
-        for (var i = 0; i < 32; ++i){
-            if((n1 >>> i) & 0x1){
+        for (var i = 0; i < 32; ++i) {
+            if ((n1 >>> i) & 0x1) {
                 sum = addition32(sum, unsigned32(n2 << i))
             }
         }
@@ -117,7 +117,7 @@ function RandomStream(seed) {
     function init_genrand(s) {
         //c//mt[0]= s & 0xffffffff;
         mt[0] = unsigned32(s & 0xffffffff)
-        for(mti = 1; mti < N; mti++){
+        for (mti = 1; mti < N; mti++) {
             mt[mti] =
                 //c//(1812433253 * (mt[mti-1] ^ (mt[mti-1] >> 30)) + mti);
                 addition32(multiplication32(1812433253,
@@ -144,7 +144,7 @@ function RandomStream(seed) {
         i = 1
         j = 0
         k = (N > key_length ? N : key_length)
-        for(; k; k--){
+        for (; k; k--) {
           //c//mt[i] = (mt[i] ^ ((mt[i-1] ^ (mt[i-1] >> 30)) * 1664525))
           //c// + init_key[j] + j; /* non linear */
           mt[i] = addition32(
@@ -157,10 +157,10 @@ function RandomStream(seed) {
               unsigned32(mt[i] & 0xffffffff)
           i++
           j++
-          if(i >= N){mt[0] = mt[N - 1]; i = 1}
-          if(j >= key_length){j = 0}
+          if (i >= N) {mt[0] = mt[N - 1]; i = 1}
+          if (j >= key_length) {j = 0}
         }
-        for(k = N - 1; k; k--){
+        for (k = N - 1; k; k--) {
             //c//mt[i] = (mt[i] ^ ((mt[i-1] ^ (mt[i-1] >> 30)) * 1566083941))
             //c//- i; /* non linear */
             mt[i] = subtraction32(
@@ -174,7 +174,7 @@ function RandomStream(seed) {
             //c//mt[i] &= 0xffffffff; /* for WORDSIZE > 32 machines */
             mt[i] = unsigned32(mt[i] & 0xffffffff)
             i++
-            if(i >= N){mt[0] = mt[N - 1]; i = 1}
+            if (i >= N) {mt[0] = mt[N - 1]; i = 1}
         }
         mt[0] = 0x80000000; /* MSB is 1; assuring non-zero initial array */
     }
@@ -188,21 +188,21 @@ function RandomStream(seed) {
         var mag01 = [0x0, MATRIX_A];
         /* mag01[x] = x * MATRIX_A  for x=0,1 */
 
-        if(mti >= N){ /* generate N words at one time */
+        if (mti >= N) { /* generate N words at one time */
             //c//int kk;
             var kk
 
-            if(mti == N + 1){   /* if init_genrand() has not been called, */
+            if (mti == N + 1) {   /* if init_genrand() has not been called, */
               init_genrand(Date.now()) /* a default initial seed is used */
             }
 
-            for(kk = 0; kk < N - M; kk++){
+            for (kk = 0; kk < N - M; kk++) {
               //c//y = (mt[kk]&UPPER_MASK)|(mt[kk+1]&LOWER_MASK);
               //c//mt[kk] = mt[kk+M] ^ (y >> 1) ^ mag01[y & 0x1];
               y = unsigned32((mt[kk]&UPPER_MASK) | (mt[kk + 1]&LOWER_MASK))
               mt[kk] = unsigned32(mt[kk + M] ^ (y >>> 1) ^ mag01[y & 0x1])
             }
-            for(;kk < N - 1; kk++){
+            for (;kk < N - 1; kk++) {
               //c//y = (mt[kk]&UPPER_MASK)|(mt[kk+1]&LOWER_MASK);
               //c//mt[kk] = mt[kk+(M-N)] ^ (y >> 1) ^ mag01[y & 0x1];
               y = unsigned32((mt[kk]&UPPER_MASK) | (mt[kk + 1]&LOWER_MASK))
@@ -232,21 +232,21 @@ function RandomStream(seed) {
 
     /* generates a random number on [0,0x7fffffff]-interval */
     //c//long genrand_int31(void)
-    function genrand_int31(){
+    function genrand_int31() {
         //c//return (genrand_int32()>>1);
         return (genrand_int32()>>>1)
     }
 
     /* generates a random number on [0,1]-real-interval */
     //c//double genrand_real1(void)
-    function genrand_real1(){
+    function genrand_real1() {
         return genrand_int32()*(1.0/4294967295.0)
         /* divided by 2^32-1 */
     }
 
     /* generates a random number on [0,1)-real-interval */
     //c//double genrand_real2(void)
-    function genrand_real2(){
+    function genrand_real2() {
         return genrand_int32() * (1.0 / 4294967296.0)
         /* divided by 2^32 */
     }
@@ -270,15 +270,15 @@ function RandomStream(seed) {
 
     var random = genrand_res53
 
-    random.seed = function(seed){
-        if(seed === undefined || $B.is_none(seed)){
+    random.seed = function(seed) {
+        if (seed === undefined || $B.is_none(seed)) {
             const entries = new Uint32Array(N)
             crypto.getRandomValues(entries)
             init_by_array(Array.from(entries), N)
             return
         }
 
-        if(!$B.is_int(seed)){
+        if (!$B.is_int(seed)) {
             seed = _b_.hash(seed)
         }
 
@@ -292,7 +292,7 @@ function RandomStream(seed) {
         var int32_1 = 2n ** 32n - 1n
 
         // decomposition in factors of 2 ** 32
-        while(seed >= int32_1){
+        while (seed >= int32_1) {
             var quot = seed / int32_1,
                 rest = seed % int32_1
             // Rest is a JS number (< 2 ** 32)
@@ -314,11 +314,11 @@ function RandomStream(seed) {
     random.res53 = genrand_res53
 
     // Added for compatibility with Python
-    random.getstate = function(){
+    random.getstate = function() {
         return $B.fast_tuple(mt.concat([mti]))
     }
 
-    random.setstate = function(state){
+    random.setstate = function(state) {
         mt = state.slice(0, state.length - 1)
         mti = state[state.length - 1]
     }
@@ -329,14 +329,14 @@ function RandomStream(seed) {
 
 var Random = $B.make_type("Random")
 
-Random.$factory = function(){
+Random.$factory = function() {
     return {
         ob_type: Random,
         _random: RandomStream(Date.now())
     }
 }
 
-Random.tp_new = function(cls, args, kw){
+Random.tp_new = function(cls, args, kw) {
     var res = {
         ob_type: cls,
         _random: RandomStream(Date.now())
@@ -345,21 +345,21 @@ Random.tp_new = function(cls, args, kw){
     return res
 }
 
-Random.tp_init = function(){
+Random.tp_init = function() {
 
 }
 
 var Random_funcs = Random.tp_funcs = {}
 
-Random_funcs.getrandbits = function(){
+Random_funcs.getrandbits = function() {
     var $ = $B.args("getrandbits", 2, {self: null, k:null}, arguments)
     var self = $.self,
         k = $B.PyNumber_Index($.k)
 
-    if(k < 0){
+    if (k < 0) {
         $B.RAISE(_b_.ValueError, 'number of bits must be non-negative')
     }
-    if(k === 0){
+    if (k === 0) {
         return 0
     }
 
@@ -369,7 +369,7 @@ Random_funcs.getrandbits = function(){
 
     /* Fill-out bits of long integer, by 32-bit words, from least significant
        to most significant. */
-    for(i = 0; i < words; i++, k -= 32){
+    for (i = 0; i < words; i++, k -= 32) {
         r = self._random.int32()
         if (k < 32)
             r >>>= (32 - k)  /* Drop least significant bits */
@@ -379,31 +379,31 @@ Random_funcs.getrandbits = function(){
     return _b_.int.tp_funcs.from_bytes(_b_.bytes, _bytes, "little")
 }
 
-Random_funcs.getstate = function(){
+Random_funcs.getstate = function() {
     var $ = $B.args('getstate', 1, {self: null}, arguments)
     var self = $.self
     return self._random.getstate()
 }
 
-Random_funcs.random = function(){
+Random_funcs.random = function() {
     var $ = $B.args('random', 1, {self: null}, arguments)
     var self = $.self
     return $B.fast_float(self._random())
 }
 
-Random_funcs.seed = function(){
+Random_funcs.seed = function() {
     var $ = $B.args('seed', 2, {self: null, n: null}, arguments)
     var self = $.self,
         n = $.n
 
-    if (self._random === undefined){
+    if (self._random === undefined) {
         self._random = RandomStream(n)
-    }else{
+    } else {
         self._random.seed(n)
     }
 }
 
-Random_funcs.setstate = function(){
+Random_funcs.setstate = function() {
     var $ = $B.args('setstate', 2, {self: null, state:null}, arguments)
     var self = $.self,
         state = $.state

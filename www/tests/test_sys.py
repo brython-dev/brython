@@ -214,4 +214,15 @@ sys._getframe().f_locals['y'] = 5
 assert y == 5
 assert z == 10
 
+# minimal test of module gc (cf. PR #2716)
+# gc module stub sanity and type assertions
+import gc
+assert gc.DEBUG_STATS == 1
+assert gc.DEBUG_COLLECTABLE == 2
+assert gc.DEBUG_UNCOLLECTABLE == 4
+assert gc.DEBUG_SAVEALL == 32
+assert gc.DEBUG_LEAK == 38
+assert callable(gc.collect)
+assert callable(gc.is_tracked)
+
 print('all tests ok...')

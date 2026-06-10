@@ -1,4 +1,4 @@
-(function($B){
+(function($B) {
 
 _b_ = $B.builtins
 
@@ -9,7 +9,7 @@ var ELEMENT_NODE = 1,
 
 var HTMLNode = $B.make_type("HTMLNode")
 
-HTMLNode.$factory = function(){
+HTMLNode.$factory = function() {
     return {
         ob_type: HTMLNode,
         nodeType: TEXT_NODE,
@@ -17,12 +17,12 @@ HTMLNode.$factory = function(){
     }
 }
 
-HTMLNode.tp_repr = function(self){
+HTMLNode.tp_repr = function(self) {
     return self.text
 }
 
-HTMLNode.tp_getattro = function(self, attr){
-    if(Object.hasOwn(self, attr)){
+HTMLNode.tp_getattro = function(self, attr) {
+    if (Object.hasOwn(self, attr)) {
         return self[attr]
     }
     return _b_.object.tp_getattro(self, attr)
@@ -35,14 +35,14 @@ function* tokenize(src){
         pos = 0,
         tag = "",
         type = "text"
-    while(pos < src.length){
+    while (pos < src.length) {
         var char = src[pos]
-        switch(type){
+        switch (type) {
             case "text":
-                if(char == "<"){
+                if (char == "<") {
                     // starts a tag if immediately followed by a letter or by /
                     var tag_mo = /^(\/?)[a-zA-Z]+/.exec(src.substr(pos + 1))
-                    if(tag_mo){
+                    if (tag_mo) {
                         yield node
                         node = HTMLNode.$factory()
                         type = "tag"
@@ -50,10 +50,10 @@ function* tokenize(src){
                         node.nodeType = ELEMENT_NODE
                         node.closing = tag_mo[1] != ""
                         node.attrs = []
-                    }else{
+                    } else {
                         // doctype declaration
                         var decl_mo = /^<!doctype\s+(.*?)>/i.exec(src.substr(pos))
-                        if(decl_mo){
+                        if (decl_mo) {
                             yield node
                             node = HTMLNode.$factory()
                             node.text = decl_mo[0]
@@ -64,10 +64,10 @@ function* tokenize(src){
                             type = "text"
                             pos += decl_mo[0].length
                             break
-                        }else{
+                        } else {
                             // comment
                             var comment_mo = /^\<!(.*?)>/.exec(src.substr(pos))
-                            if(comment_mo){
+                            if (comment_mo) {
                                 yield node
                                 node = HTMLNode.$factory()
                                 node.text = comment_mo[0]
@@ -86,54 +86,54 @@ function* tokenize(src){
                 node.text += char
                 break
             case "tag":
-                if(char.search(/[_a-zA-Z]/) > -1){
+                if (char.search(/[_a-zA-Z]/) > -1) {
                     var mo = /\w+/.exec(src.substr(pos))
-                    if(mo !== null){
+                    if (mo !== null) {
                         pos += mo[0].length
-                        if(node.tagName == ""){
+                        if (node.tagName == "") {
                             node.tagName = mo[0].toUpperCase()
                         }
                         node.text += mo[0]
-                    }else{
+                    } else {
                         pos++
                     }
-                }else if(char == ">"){
+                } else if (char == ">") {
                     node.text += char
                     yield node
                     node = HTMLNode.$factory()
                     type = "text"
                     pos++
-                }else if(char == "="){
+                } else if (char == "=") {
                     node.text += char
                     pos++
-                }else if(char == "'" || char == '"'){
+                } else if (char == "'" || char == '"') {
                     var i = pos + 1,
                         found_string_end = false
-                    while(i < src.length){
-                        if(src[i] == char){
+                    while (i < src.length) {
+                        if (src[i] == char) {
                             var nb_escape = 0
-                            while(src[i - 1 - nb_escape] == '/'){
+                            while (src[i - 1 - nb_escape] == '/') {
                                 nb_escape++
                             }
-                            if(nb_escape % 2 == 0){
+                            if (nb_escape % 2 == 0) {
                                 node.text += src.substr(pos, i + 1 - pos)
                                 pos = i + 1
                                 found_string_end = true
                                 break
-                            }else{
+                            } else {
                                 i++
                             }
-                        }else if(src[i] == '>'){
+                        } else if (src[i] == '>') {
                             break
-                        }else{
+                        } else {
                             i++
                         }
                     }
-                    if(! found_string_end){
+                    if (! found_string_end) {
                         // unterminated string: ignore
                         pos++
                     }
-                }else{
+                } else {
                     node.text += char
                     pos++
                 }

@@ -1,4 +1,4 @@
-(function($B){
+(function($B) {
 
 var _b_ = $B.builtins
 
@@ -827,27 +827,26 @@ var module = {
     LC_TIME: 2,
     Error: _b_.ValueError,
 
-    _date_format: function(spec, hour){
+    _date_format: function(spec, hour) {
         var t,
             locale = __BRYTHON__.locale.substr(0, 2)
 
-        if(spec == "p"){
+        if (spec == "p") {
             var res = hours < 12 ? am[locale] : pm[locale]
-            if(res === undefined){
+            if (res === undefined) {
                 $B.RAISE(_b_.ValueError, "no format " + spec + " for locale " +
                     locale)
             }
             return res
-        }
-        else if(spec == "x"){
+        } else if (spec == "x") {
             t = x_format
-        }else if(spec == "X"){
+        } else if (spec == "X") {
             t = X_format
-        }else{
+        } else {
             $B.RAISE(_b_.ValueError, "invalid format", spec)
         }
-        for(var key in t){
-            if(t[key].indexOf(locale) > -1){
+        for (var key in t) {
+            if (t[key].indexOf(locale) > -1) {
                 return key
             }
         }
@@ -855,7 +854,7 @@ var module = {
             locale)
     },
 
-    localeconv: function(){
+    localeconv: function() {
         var conv = {'grouping': $B.$list([127]),
                 'currency_symbol': '',
                 'n_sign_posn': 127,
@@ -876,39 +875,38 @@ var module = {
                 'int_frac_digits': 127
          }
          var res = $B.empty_dict()
-         for(var key in conv){
+         for (var key in conv) {
              _b_.dict.$setitem(res, key, conv[key])
          }
 
          return res
      },
 
-    setlocale : function(){
+    setlocale : function() {
         var $ = $B.args("setlocale", 2, {category: null, locale: null},
                     arguments, {locale: _b_.None})
         /// XXX category is currently ignored
-        if($.locale == ""){
+        if ($.locale == "") {
             // use browser language setting, if it is set
             var LANG = ($B.language || "").substr(0, 2)
-            if(am.hasOwnProperty(LANG)){
+            if (am.hasOwnProperty(LANG)) {
                 $B.locale = LANG
                 return LANG
-            }else{
+            } else {
                 console.log("Unknown locale: " + LANG)
             }
-        }else if($.locale === _b_.None){
+        } else if ($.locale === _b_.None) {
             // return current locale
             return $B.locale
-        }else{
+        } else {
             // Only use 2 first characters
-            try{$.locale.substr(0, 2)}
-            catch(err){
+            try {$.locale.substr(0, 2)} catch (err) {
                 throw $module.Error.$factory("Invalid locale: " + $.locale)
             }
-            if(am.hasOwnProperty($.locale.substr(0, 2))){
+            if (am.hasOwnProperty($.locale.substr(0, 2))) {
                 $B.locale = $.locale
                 return $.locale
-            }else{
+            } else {
                 throw $module.Error.$factory("Unknown locale: " + $.locale)
             }
         }

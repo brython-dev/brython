@@ -1,5 +1,5 @@
 "use strict";
-(function($B){
+(function($B) {
 
 /*
 #include <Python.h>
@@ -22,35 +22,35 @@ const ENDMARKER = 0,
       NUMBER = 2,
       STRING = 3
 
-function strcmp(x, y){
+function strcmp(x, y) {
    return x == y ? 0 : x < y ? -1 : 1
 }
 
-function strchr(s, char){
+function strchr(s, char) {
     return s.includes(char)
 }
 
-function strlen(s){
+function strlen(s) {
     return s.length
 }
 
-function strncmp(a, b){
+function strncmp(a, b) {
     return a < b ? -1 : a > b ? 1 : 0
 }
 
-function PyOS_strtol(s, end, base){
+function PyOS_strtol(s, end, base) {
     return parseFloat(s)
 }
 
-function PyOS_strtoul(s, end, base){
+function PyOS_strtoul(s, end, base) {
     return parseFloat(s)
 }
 
-function PyOS_string_to_double(s, x, y){
+function PyOS_string_to_double(s, x, y) {
     return parseFloat(s)
 }
 
-function PyFloat_FromDouble(x){
+function PyFloat_FromDouble(x) {
     return x
 }
 
@@ -64,24 +64,24 @@ const NSTATISTICS = 2000,
       Py_single_input = 'py_single_input',
       PyPARSE_ALLOW_INCOMPLETE_INPUT = 0x0100
 
-function PyUnicode_IS_ASCII(char){
+function PyUnicode_IS_ASCII(char) {
     return char.codePointAt(0) < 128
 }
 
-function set_position_from_token(ast_obj, token){
-    for(var attr of ['lineno', 'col_offset', 'end_lineno', 'end_col_offset']){
+function set_position_from_token(ast_obj, token) {
+    for (var attr of ['lineno', 'col_offset', 'end_lineno', 'end_col_offset']) {
         ast_obj[attr] = token[attr]
     }
 }
 
-$B._PyPegen.interactive_exit = function(p){
+$B._PyPegen.interactive_exit = function(p) {
     if (p.errcode) {
         (p.errcode) = E_EOF;
     }
     return NULL;
 }
 
-$B._PyPegen.byte_offset_to_character_offset_raw = function(str, col_offset){
+$B._PyPegen.byte_offset_to_character_offset_raw = function(str, col_offset) {
     var len = str.length
     if (col_offset > len + 1) {
         col_offset = len + 1;
@@ -97,7 +97,7 @@ $B._PyPegen.byte_offset_to_character_offset_raw = function(str, col_offset){
 // Calculate the extra amount of width space the given source
 // code segment might take if it were to be displayed on a fixed
 // width output device. Supports wide unicode characters and emojis.
-$B._PyPegen.calculate_display_width = function(line, character_offset){
+$B._PyPegen.calculate_display_width = function(line, character_offset) {
     var segment = line.substring(0, character_offset);
     if (!segment) {
         return -1;
@@ -141,14 +141,14 @@ $B._PyPegen.calculate_display_width = function(line, character_offset){
     return width;
 }
 
-$B._PyPegen.byte_offset_to_character_offset = function(line, col_offset){
+$B._PyPegen.byte_offset_to_character_offset = function(line, col_offset) {
     var str = line
     return _PyPegen_byte_offset_to_character_offset_raw(str, col_offset);
 }
 
 // Here, mark is the start of the node, while p->mark is the end.
 // If node==NULL, they should be the same.
-$B._PyPegen.insert_memo = function(p, mark, type, node){
+$B._PyPegen.insert_memo = function(p, mark, type, node) {
     // Insert in front
     var m = {
         type,
@@ -161,7 +161,7 @@ $B._PyPegen.insert_memo = function(p, mark, type, node){
 }
 
 // Like _PyPegen_insert_memo(), but updates an existing node if found.
-$B._PyPegen.update_memo = function(p, mark, type, node){
+$B._PyPegen.update_memo = function(p, mark, type, node) {
     for (let m = p.tokens[mark].memo; m != NULL; m = m.next) {
         if (m.type == type) {
             // Update existing node.
@@ -174,13 +174,12 @@ $B._PyPegen.update_memo = function(p, mark, type, node){
     return $B._PyPegen.insert_memo(p, mark, type, node);
 }
 
-function init_normalization(p){
+function init_normalization(p) {
     if (p.normalize) {
         return 1;
     }
     p.normalize = _PyImport_GetModuleAttrString("unicodedata", "normalize");
-    if (!p.normalize)
-    {
+    if (!p.normalize) {
         return 0;
     }
     return 1;
@@ -224,7 +223,7 @@ function growable_comment_array_deallocate(arr) {
     */
 }
 
-function _get_keyword_or_name_type(p, new_token){
+function _get_keyword_or_name_type(p, new_token) {
     return p.keywords[new_token.string] ?? NAME
     /*
     var name_len = new_token.end_col_offset - new_token.col_offset;
@@ -248,7 +247,7 @@ function initialize_token(p, parser_token, new_token, token_type) {
     // assert(parser_token != NULL);
 
     parser_token.num_type = (token_type == NAME) ? _get_keyword_or_name_type(p, new_token) : token_type;
-    if(parser_token.num_type == -1){
+    if (parser_token.num_type == -1) {
         console.log('bizarre', new_token)
         console.log('keywords', p.keywords)
         alert()
@@ -283,24 +282,24 @@ function _PyToken_Init(token) {
     token.metadata = NULL;
 }
 
-function _PyTokenizer_Get(tok, new_token){
+function _PyTokenizer_Get(tok, new_token) {
     var token = tok.next().value
-    for(var key in token){
+    for (var key in token) {
         new_token[key] = token[key]
     }
     return token.num_type
 }
 
-function get_next_token(p, new_token){
+function get_next_token(p, new_token) {
     var token = p.tokens[p.fill] ?? p.read_token()
-    for(var key in token){
+    for (var key in token) {
         new_token[key] = token[key]
     }
-    if(token.num_type == $B.py_tokens.ENDMARKER){
+    if (token.num_type == $B.py_tokens.ENDMARKER) {
         // on 'single' mode, insert a NEWLINE before ENDMARKER
-        if(p.mode == 'single'){
+        if (p.mode == 'single') {
             var end_token = p.tokens[p.tokens.length - 2]
-            if(end_token.num_type != $B.py_tokens.NEWLINE){
+            if (end_token.num_type != $B.py_tokens.NEWLINE) {
                 var newline = $B.clone(end_token)
                 newline.num_type = $B.py_tokens.NEWLINE
                 p.tokens.splice(p.tokens.length - 1, 0, newline)
@@ -311,7 +310,7 @@ function get_next_token(p, new_token){
     return token.num_type
 }
 
-$B._PyPegen.fill_token = function(p){
+$B._PyPegen.fill_token = function(p) {
     var new_token = {metadata: NULL}
     //_PyToken_Init(new_token);
     var type = get_next_token(p, new_token);
@@ -330,7 +329,7 @@ $B._PyPegen.fill_token = function(p){
             p.tok.pendin = -p.tok.indent;
             p.tok.indent = 0;
         }
-    }else{
+    } else {
         p.parsing_started = 1;
     }
 
@@ -348,13 +347,13 @@ $B._PyPegen.fill_token = function(p){
 #define memo_statistics _PyRuntime.parser.memo_statistics
 */
 
-$B._PyPegen.clear_memo_statistics = function(){
+$B._PyPegen.clear_memo_statistics = function() {
     for (let i = 0; i < NSTATISTICS; i++) {
         memo_statistics[i] = 0;
     }
 }
 
-$B._PyPegen.get_memo_statistics = function(){
+$B._PyPegen.get_memo_statistics = function() {
     var ret = new Array(NSTATISTICS);
     if (ret == NULL) {
         return NULL;
@@ -375,7 +374,7 @@ $B._PyPegen.get_memo_statistics = function(){
 // #endif
 
 
-$B._PyPegen.is_memoized = function(p, type, pres){
+$B._PyPegen.is_memoized = function(p, type, pres) {
     if (p.mark == p.fill) {
         if ($B._PyPegen.fill_token(p) < 0) {
             p.error_indicator = 1;
@@ -405,35 +404,35 @@ $B._PyPegen.is_memoized = function(p, type, pres){
     return 0;
 }
 
-$B._PyPegen.lookahead_with_name = function(positive, func, p){
+$B._PyPegen.lookahead_with_name = function(positive, func, p) {
     var mark = p.mark;
     var res = func(p);
     p.mark = mark;
     return (res != NULL) == positive;
 }
 
-$B._PyPegen.lookahead_with_string = function(positive, func, p, arg){
+$B._PyPegen.lookahead_with_string = function(positive, func, p, arg) {
     var mark = p.mark;
     var res = func(p, arg);
     p.mark = mark;
     return (res != NULL) == positive;
 }
 
-$B._PyPegen.lookahead_with_int = function(positive, func, p, arg){
+$B._PyPegen.lookahead_with_int = function(positive, func, p, arg) {
     var mark = p.mark;
     var res = func(p, arg);
     p.mark = mark;
     return (res != NULL) == positive;
 }
 
-$B._PyPegen.lookahead = function(positive, func, p){
+$B._PyPegen.lookahead = function(positive, func, p) {
     var mark = p.mark;
     var res = func(p);
     p.mark = mark;
     return (res != NULL) == positive;
 }
 
-$B._PyPegen.expect_token = function(p, type){
+$B._PyPegen.expect_token = function(p, type) {
     if (p.mark == p.fill) {
         if ($B._PyPegen.fill_token(p) < 0) {
             p.error_indicator = 1;
@@ -441,7 +440,7 @@ $B._PyPegen.expect_token = function(p, type){
         }
     }
     var t = p.tokens[p.mark];
-    if(t.num_type != type){
+    if (t.num_type != type) {
        return NULL;
     }
     p.mark += 1;
@@ -482,7 +481,7 @@ $B._PyPegen.expect_forced_token = function(p, type, expected) {
     return t;
 }
 
-$B._PyPegen.expect_soft_keyword = function(p, keyword){
+$B._PyPegen.expect_soft_keyword = function(p, keyword) {
     if (p.mark == p.fill) {
         if ($B._PyPegen.fill_token(p) < 0) {
             p.error_indicator = 1;
@@ -505,7 +504,7 @@ $B._PyPegen.expect_soft_keyword = function(p, keyword){
     return $B._PyPegen.name_token(p);
 }
 
-$B._PyPegen.get_last_nonnwhitespace_token = function(p){
+$B._PyPegen.get_last_nonnwhitespace_token = function(p) {
     // assert(p.mark >= 0);
     var token = NULL;
     for (let m = p.mark - 1; m >= 0; m--) {
@@ -517,21 +516,19 @@ $B._PyPegen.get_last_nonnwhitespace_token = function(p){
     return token;
 }
 
-$B._PyPegen.new_identifier = function(p, n){
+$B._PyPegen.new_identifier = function(p, n) {
     var id = n
     /* PyUnicode_DecodeUTF8 should always return a ready string. */
     // assert(PyUnicode_IS_READY(id));
     /* Check whether there are non-ASCII characters in the
        identifier; if so, normalize to NFKC. */
-    if (! PyUnicode_IS_ASCII(id)){
+    if (! PyUnicode_IS_ASCII(id)) {
         var id2;
-        if (!init_normalization(p))
-        {
+        if (!init_normalization(p)) {
             return error();
         }
         var form = PyUnicode_InternFromString("NFKC");
-        if (form == NULL)
-        {
+        if (form == NULL) {
             return error();
         }
         var args = {form, id};
@@ -539,7 +536,7 @@ $B._PyPegen.new_identifier = function(p, n){
         if (!id2) {
             return error()
         }
-        if (!PyUnicode_Check(id2)){
+        if (!PyUnicode_Check(id2)) {
             PyErr_Format(PyExc_TypeError,
                          "unicodedata.normalize() must return a string, not " +
                          "%.200s",
@@ -551,13 +548,13 @@ $B._PyPegen.new_identifier = function(p, n){
     PyUnicode_InternInPlace(id);
     return id;
 
-    function error(){
+    function error() {
         p.error_indicator = 1;
         return NULL;
     }
 }
 
-$B._PyPegen.name_from_token = function(p, t){
+$B._PyPegen.name_from_token = function(p, t) {
     if (t == NULL) {
         return NULL;
     }
@@ -578,12 +575,12 @@ $B._PyPegen.name_from_token = function(p, t){
     return res
 }
 
-$B._PyPegen.name_token = function(p){
+$B._PyPegen.name_token = function(p) {
     var t = $B._PyPegen.expect_token(p, NAME);
     return $B._PyPegen.name_from_token(p, t);
 }
 
-$B._PyPegen.string_token = function(p){
+$B._PyPegen.string_token = function(p) {
     return $B._PyPegen.expect_token(p, STRING);
 }
 
@@ -603,18 +600,18 @@ $B._PyPegen.soft_keyword_token = function(p) {
     return NULL;
 }
 
-function prepared_number_value(prepared){
-    switch(prepared.type){
+function prepared_number_value(prepared) {
+    switch (prepared.type) {
         case 'float':
             return $B.fast_float(parseFloat(prepared.value))
         case 'imaginary':
             return $B.make_complex(0, prepared_number_value(prepared.value))
         case 'int':
             var res = parseInt(prepared.value[1], prepared.value[0])
-            if(! Number.isSafeInteger(res)){
+            if (! Number.isSafeInteger(res)) {
                 var base = prepared.value[0],
                     num_str = prepared.value[1]
-                switch(base){
+                switch (base) {
                     case 8:
                         return BigInt('0x' + num_str)
                     case 10:
@@ -627,12 +624,12 @@ function prepared_number_value(prepared){
     }
 }
 
-function parsenumber_raw(s){
+function parsenumber_raw(s) {
     var prepared = $B.prepare_number(s) // in number_parser.js
     return prepared_number_value(prepared)
 }
 
-function parsenumber(s){
+function parsenumber(s) {
     var dup;
     var end;
     var res = NULL;
@@ -648,7 +645,7 @@ function parsenumber(s){
     return res;
 }
 
-$B._PyPegen.number_token = function(p){
+$B._PyPegen.number_token = function(p) {
     var t = $B._PyPegen.expect_token(p, NUMBER);
     if (t == NULL) {
         return NULL;
@@ -699,7 +696,7 @@ $B._PyPegen.number_token = function(p){
 /* Check that the source for a single input statement really is a single
    statement by looking at what is left in the buffer after parsing.
    Trailing whitespace and comments are OK. */
-function bad_single_statement(p){
+function bad_single_statement(p) {
     var cur = p.tok.cur;
     var c = cur;
     var pos = 0
@@ -724,7 +721,7 @@ function bad_single_statement(p){
     }
 }
 
-function compute_parser_flags(flags){
+function compute_parser_flags(flags) {
     var parser_flags = 0;
     if (!flags) {
         return 0;
@@ -805,7 +802,7 @@ $B._PyPegen.Parser_New = function(tok, start_rule, flags,
     return p;
 }
 
-$B._PyPegen.Parser_Free = function(p){
+$B._PyPegen.Parser_Free = function(p) {
     /*
     for (int i = 0; i < p->size; i++) {
         PyMem_Free(p->tokens[i]);
@@ -816,7 +813,7 @@ $B._PyPegen.Parser_Free = function(p){
     */
 }
 
-function reset_parser_state_for_error_pass(p){
+function reset_parser_state_for_error_pass(p) {
     for (let i = 0; i < p.fill; i++) {
         p.tokens[i].memo = NULL;
     }
@@ -832,48 +829,48 @@ function _is_end_of_source(p) {
     return p.tokens[p.tokens.length - 1].type == $B.py_tokens.ENDMARKER
 }
 
-function inside_fstring(p){
+function inside_fstring(p) {
     var res = false
-    for(var token of p.tokens){
-        if(token.type == $B.py_tokens.FSTRING_START){
+    for (var token of p.tokens) {
+        if (token.type == $B.py_tokens.FSTRING_START) {
             res = true
-        }else if(token.type == $B.py_tokens.FSTRING_END){
+        } else if (token.type == $B.py_tokens.FSTRING_END) {
             res = false
         }
     }
     return res
 }
 
-$B._PyPegen.tokenize_full_source_to_check_for_errors = function(p){
+$B._PyPegen.tokenize_full_source_to_check_for_errors = function(p) {
     var last_token = p.tokens[p.fill - 1]
     $B.tokenizer(p.src, p.filename, p.mode, p)
     p.tokens = p._tokens
-    if(p.braces.length > 0){
+    if (p.braces.length > 0) {
         var brace = $B.last(p.braces),
             err_lineno,
             msg
-        if('([{'.includes(brace.char)){
+        if ('([{'.includes(brace.char)) {
             err_lineno =  brace.line_num
-        }else{
-            if(p.braces.length > 1){
+        } else {
+            if (p.braces.length > 1) {
                 err_lineno = p.braces[p.braces.length - 2].line_num
-            }else{
+            } else {
                 err_lineno = brace.line_num
             }
         }
-        if(p.tokens.length == 0 || $B.last(p.tokens).lineno >= err_lineno){
-            if('([{'.includes(brace.char)){
+        if (p.tokens.length == 0 || $B.last(p.tokens).lineno >= err_lineno) {
+            if ('([{'.includes(brace.char)) {
                 msg = `'${brace.char}' was never closed`
-            }else if(p.braces.length > 1){
+            } else if (p.braces.length > 1) {
                 var closing = brace.char,
                     opening = p.braces[p.braces.length - 2].char
-                if(inside_fstring(p)){
+                if (inside_fstring(p)) {
                     msg = `f-string: unmatched '${closing}'`
-                }else{
+                } else {
                     msg = `closing parenthesis '${closing}' does not match ` +
                       `opening parenthesis '${opening}'`
                 }
-            }else{
+            } else {
                 msg = `unmatched '${brace.char}'`
             }
             $B.raise_error_known_location(_b_.SyntaxError,
@@ -920,7 +917,7 @@ $B._PyPegen.set_syntax_error = function(p, last_token) {
 }
 
 $B._PyPegen.set_syntax_error_metadata = function(p, exc) {
-    if(! exc || ! $B.is_exc(exc, [_b_.SyntaxError])){
+    if (! exc || ! $B.is_exc(exc, [_b_.SyntaxError])) {
         return
     }
     var source = NULL;
@@ -948,7 +945,7 @@ $B._PyPegen.set_syntax_error_metadata = function(p, exc) {
     exc._metadata = metadata;
 }
 
-$B._PyPegen.run_parser = function(p){
+$B._PyPegen.run_parser = function(p) {
     var res = $B._PyPegen.parse(p);
     $B.python_keywords = p.keywords
     // assert(p->level == 0);
@@ -962,9 +959,9 @@ $B._PyPegen.run_parser = function(p){
         // rules will be active during parsing.
         var last_token = p.tokens[p.fill - 1];
         reset_parser_state_for_error_pass(p);
-        try{
+        try {
             $B._PyPegen.parse(p);
-        }catch(err){
+        } catch (err) {
             last_token = p.tokens[p.fill - 1]
             // check if a parenthesis error occurred before
             $B._PyPegen.tokenize_full_source_to_check_for_errors(p)
@@ -1020,7 +1017,7 @@ $B._PyPegen.run_parser_from_file_pointer = function(fp, start_rule, filename_ob,
     result = _PyPegen_run_parser(p);
     _PyPegen_Parser_Free(p);
 
-    function error(){
+    function error() {
         _PyTokenizer_Free(tok);
         return result;
     }
@@ -1060,17 +1057,17 @@ $B._PyPegen.run_parser_from_string = function(str, start_rule, filename_ob,
     result = _PyPegen_run_parser(p);
     _PyPegen_Parser_Free(p);
 
-    function error(){
+    function error() {
         // _PyTokenizer_Free(tok);
         return result;
     }
 }
 
 $B.PyPegen = {
-    first_item: function(a, type){
+    first_item: function(a, type) {
         return a[0]
     },
-    last_item: function(a, ptype){
+    last_item: function(a, ptype) {
         return a[a.length - 1]
     }
 }

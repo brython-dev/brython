@@ -1,9 +1,9 @@
-(function($B){
+(function($B) {
 
 var _b_ = $B.builtins
 
 // eval() and exec() built-in functions
-var $$eval = _b_.eval = function(){
+var $$eval = _b_.eval = function() {
     var $ = $B.args("eval", 4,
             {src: null, globals: null, locals: null, mode: null} ,
             arguments,
@@ -22,13 +22,13 @@ var $$eval = _b_.eval = function(){
 
     var filename = '<string>'
 
-    if($B.exact_type(src, $B.code)){
+    if ($B.exact_type(src, $B.code)) {
         filename = src.filename
         // result of compile()
-    }else if((! src.valueOf) || typeof src.valueOf() !== 'string'){
+    } else if ((! src.valueOf) || typeof src.valueOf() !== 'string') {
         $B.RAISE(_b_.TypeError, `${mode}() arg 1 must be a string,` +
             " bytes or code object")
-    }else{
+    } else {
         // src might be an instance of JS String if source has surrogate pairs
         // cf. issue #1772
         src = src.valueOf()
@@ -38,12 +38,12 @@ var $$eval = _b_.eval = function(){
     }
 
     var __name__ = 'exec'
-    if(_globals === _b_.None){
-        if($B.frame_obj !== null){
+    if (_globals === _b_.None) {
+        if ($B.frame_obj !== null) {
             __name__ = $B.frame_obj.frame[2]
         }
     }
-    if(_globals !== _b_.None && $B.get_class(_globals) == _b_.dict){
+    if (_globals !== _b_.None && $B.get_class(_globals) == _b_.dict) {
         __name__ = $B.str_dict_get(_globals, '__name__', __name__)
     }
     $B.url2name[filename] = __name__
@@ -52,7 +52,7 @@ var $$eval = _b_.eval = function(){
 
     $B.exec_scope = $B.exec_scope || {}
 
-    if(typeof src == 'string' && src.endsWith('\\\n')){
+    if (typeof src == 'string' && src.endsWith('\\\n')) {
         var exc = $B.EXC(_b_.SyntaxError, 'unexpected EOF while parsing')
         var lines = src.split('\n'),
             line = lines[lines.length - 2]
@@ -68,27 +68,27 @@ var $$eval = _b_.eval = function(){
         exec_locals = {},
         exec_globals = {}
 
-    if(_globals === _b_.None){
+    if (_globals === _b_.None) {
         // if the optional parts are omitted, the code is executed in the
         // current scope
         // filename = '<string>'
-        if(frame[1] === frame[3]){
+        if (frame[1] === frame[3]) {
             // module level
             global_name += '_globals'
             exec_locals = exec_globals = frame[3]
-        }else{
-            if(mode == "exec"){
+        } else {
+            if (mode == "exec") {
                 // for exec() : if the optional parts are omitted, the code is
                 // executed in the current scope
                 // modifications to the default locals dictionary should not
                 // be attempted: this is why exec_locals is a clone of current
                 // locals
                 exec_locals = $B.clone(frame[1])
-                for(var attr in frame[3]){
+                for (var attr in frame[3]) {
                     exec_locals[attr] = frame[3][attr]
                 }
                 exec_globals = exec_locals
-            }else{
+            } else {
                 // for eval() : If both dictionaries are omitted, the
                 // expression is executed with the globals and locals in the
                 // environment where eval() is called
@@ -96,39 +96,39 @@ var $$eval = _b_.eval = function(){
                 exec_globals = frame[3]
             }
         }
-    }else{
-        if($B.get_class(_globals) !== _b_.dict){
+    } else {
+        if ($B.get_class(_globals) !== _b_.dict) {
             $B.RAISE(_b_.TypeError, `${mode}() globals must be ` +
                 "a dict, not " + $B.class_name(_globals))
         }
         // _globals is used for both globals and locals
         exec_globals = $B.dict_as_jsobj(_globals)
-        if(exec_globals.__builtins__ === undefined){
+        if (exec_globals.__builtins__ === undefined) {
             exec_globals.__builtins__ = _b_.__builtins__
         }
-        if(_locals === _b_.None){
+        if (_locals === _b_.None) {
             exec_locals = exec_globals
-        }else{
-            if(_locals === _globals){
+        } else {
+            if (_locals === _globals) {
                 // running exec at module level
                 global_name += '_globals'
                 exec_locals = exec_globals
-            }else if($B.exact_type(_locals, _b_.dict)){
+            } else if ($B.exact_type(_locals, _b_.dict)) {
                 exec_locals = $B.dict_as_jsobj(_locals)
-            }else{
+            } else {
                 var klass = $B.get_class(_locals),
                     getitem = $B.$getattr(klass, '__getitem__'),
                     setitem = $B.$getattr(klass, '__setitem__')
                 exec_locals = new Proxy(_locals, {
                     get(target, prop){
-                        if(prop == '$target'){
+                        if (prop == '$target') {
                             return target
-                        }else if(prop == $B.LOCALS_PROXY){
+                        } else if (prop == $B.LOCALS_PROXY) {
                             return true
                         }
-                        try{
+                        try {
                             return $B.$call(getitem, target, prop)
-                        }catch(err){
+                        } catch (err) {
                             return undefined
                         }
                     },
@@ -149,17 +149,17 @@ var $$eval = _b_.eval = function(){
     $B.enter_frame(frame, filename, 1)
     var _frame_obj = $B.frame_obj
 
-    if($B.exact_type(src, $B.code)){
-        if(src.mode == 'exec' && mode == 'eval'){
+    if ($B.exact_type(src, $B.code)) {
+        if (src.mode == 'exec' && mode == 'eval') {
             return _b_.None
         }
         _ast = src._ast
-        if(_ast.$js_ast){
+        if (_ast.$js_ast) {
             _ast = _ast.$js_ast
-        }else{
+        } else {
             _ast = $B.ast_py_to_js(_ast)
         }
-        if(_ast instanceof $B.ast.Expression){
+        if (_ast instanceof $B.ast.Expression) {
             // transform `expr` into `varname = expr` so that the exec_func
             // can return varname
             var expr_name = '_' + $B.UUID()
@@ -171,8 +171,8 @@ var $$eval = _b_.eval = function(){
         }
     }
 
-    try{
-        if(! _ast){
+    try {
+        if (! _ast) {
             var _mode = mode == 'eval' ? 'eval' : 'file'
             var parser = new $B.Parser(src, filename, _mode)
             _ast = $B._PyPegen.run_parser(parser)
@@ -189,12 +189,12 @@ var $$eval = _b_.eval = function(){
                                                    exec_globals}
                                       }),
             js = js_obj.js
-    }catch(err){
-        if(err.args){
-            if(err.args[1]){
+    } catch (err) {
+        if (err.args) {
+            if (err.args[1]) {
                 exec_locals.$lineno = err.args[1][1]
             }
-        }else{
+        } else {
             console.log('JS Error', err.message)
             console.log(err)
         }
@@ -202,38 +202,38 @@ var $$eval = _b_.eval = function(){
         throw err
     }
 
-    if(mode == 'eval'){
+    if (mode == 'eval') {
         // must set locals, might be used if expression is like
         // "True and True"
-        if($B.get_class(src) === $B.code){
+        if ($B.get_class(src) === $B.code) {
             js += `\nreturn locals.${expr_name}`
-        }else{
+        } else {
             js = `var __file__ = '${filename}'\n` +
                  `var locals = ${local_name};\n` +
                  'return ' + js
         }
-    }else if(src.single_expression){
-        if($B.get_class(src) === $B.code){
+    } else if (src.single_expression) {
+        if ($B.get_class(src) === $B.code) {
             js += `var result = locals.${expr_name}\n` +
-                 `if(result !== _b_.None){\n` +
+                 `if (result !== _b_.None) {\n` +
                      `_b_.print(result)\n` +
                  `}`
 
-        }else{
+        } else {
             js = `var __file__ = '${filename}'\n` +
                  `var result = ${js}\n` +
-                 `if(result !== _b_.None){\n` +
+                 `if (result !== _b_.None) {\n` +
                      `_b_.print(result)\n` +
                  `}`
         }
     }
 
-    try{
+    try {
         var exec_func = new Function('$B', '_b_', 'locals',
                                      local_name, global_name,
                                      'frame', '_frame_obj', js)
-    }catch(err){
-        if(true){ //$B.get_option('debug') > 1){
+    } catch (err) {
+        if (true) { //$B.get_option('debug') > 1){
             console.log('eval() error\n', js)
             //console.log('-- python source\n', src)
         }
@@ -241,17 +241,17 @@ var $$eval = _b_.eval = function(){
         throw err
     }
 
-    try{
+    try {
         var res = exec_func($B, _b_, exec_locals,
                             exec_locals, exec_globals, frame, _frame_obj)
-    }catch(err){
-        if(err.ob_type === undefined || err.ob_type == _b_.JavascriptError){
+    } catch (err) {
+        if (err.ob_type === undefined || err.ob_type == _b_.JavascriptError) {
             console.log('JS error')
             console.log(err)
             console.log('frame obj', $B.frame_obj)
             console.log('filename', filename)
         }
-        if($B.get_option('debug') > 2){
+        if ($B.get_option('debug') > 2) {
             console.log(
                 'Python code\n', src,
                 '\nexec func', $B.format_indent(exec_func + '', 0),
@@ -276,7 +276,7 @@ var $$eval = _b_.eval = function(){
 
 $$eval.$is_func = true
 
-var exec = _b_.exec = function(){
+var exec = _b_.exec = function() {
     var $ = $B.args("exec", 3, {src: null, globals: null, locals: null},
                 arguments, {globals: _b_.None, locals: _b_.None}, null, null,
                 1)

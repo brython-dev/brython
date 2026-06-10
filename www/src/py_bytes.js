@@ -1,28 +1,28 @@
 "use strict";
 
-(function($B){
+(function($B) {
 
 var _b_ = $B.builtins
 
 var from_unicode = {},
     to_unicode = {}
 
-function bytes_value(obj){
+function bytes_value(obj) {
     return $B.get_class(obj) === bytes ? obj : fast_bytes(obj.source)
 }
 
 // Conversion of byte-like objects (bytes, bytearray, memoryview, array.array...)
 // into a list of bytes
 // Make the function an attribute of $B, it is used in libs/_binascii.js
-$B.to_bytes = function(obj){
+$B.to_bytes = function(obj) {
     var res
-    if($B.$isinstance(obj, [bytes, bytearray])){
+    if ($B.$isinstance(obj, [bytes, bytearray])) {
         res = obj.source
-    }else{
+    } else {
         var ga = $B.$getattr(obj, "tobytes", null)
-        if(ga !== null){
+        if (ga !== null) {
             res = $B.$call(ga).source
-        }else{
+        } else {
             $B.RAISE(_b_.TypeError, "object doesn't support the buffer protocol")
         }
     }
@@ -31,21 +31,21 @@ $B.to_bytes = function(obj){
 
 var ws_cars = []
 var ws = '\r\n \t'
-for(let i = 0, len = ws.length; i < len; i++){
+for (let i = 0, len = ws.length; i < len; i++) {
     ws_cars.push(ws.charCodeAt(i))
 }
 
-function invalid(other){
+function invalid(other) {
     return ! $B.$isinstance(other, [bytes, bytearray])
 }
 
-var is_bytes_like = $B.is_bytes_like = function(obj){
+var is_bytes_like = $B.is_bytes_like = function(obj) {
     return $B.$getattr(obj, '__buffer__', $B.NULL) !== $B.NULL
 }
 
-function get_list_from_bytes_like(obj){
+function get_list_from_bytes_like(obj) {
     var buf = $B.$call($B.$getattr(obj, '__buffer__'), 0)
-    if(! $B.exact_type(buf, _b_.memoryview)){
+    if (! $B.exact_type(buf, _b_.memoryview)) {
         $B.RAISE(_b_.TypeError,
             `__buffer__ should return memoryview, not ${$B.class_name(buf)}`
         )
@@ -53,15 +53,15 @@ function get_list_from_bytes_like(obj){
     return _b_.memoryview.tp_funcs.tolist(buf)
 }
 
-function check_buffer(arg){
-    if(! is_bytes_like(arg)){
+function check_buffer(arg) {
+    if (! is_bytes_like(arg)) {
         $B.RAISE(_b_.TypeError, "a bytes-like object is required, " +
                 "not '" + $B.class_name(arg) + "'")
     }
 }
 
-function check_buffer_or_int(arg){
-    if(! $B.is_int(arg) && ! is_bytes_like(arg)){
+function check_buffer_or_int(arg) {
+    if (! $B.is_int(arg) && ! is_bytes_like(arg)) {
         $B.RAISE(_b_.TypeError,
             `argument should be integer or bytes-like object, ` +
             `not '${$B.class_name(sub)}'`
@@ -70,13 +70,13 @@ function check_buffer_or_int(arg){
 }
 
 /* bytearray_iterator start */
-$B.bytearray_iterator.tp_iter = function(self){
+$B.bytearray_iterator.tp_iter = function(self) {
     return self
 }
 
 $B.bytearray_iterator.tp_iternext = function*(self){
     self.index++
-    if(self.index >= self.len){
+    if (self.index >= self.len) {
         return
     }
     yield self.obj.source[self.index]
@@ -84,15 +84,15 @@ $B.bytearray_iterator.tp_iternext = function*(self){
 
 var bytearray_iterator_funcs = $B.bytearray_iterator.tp_funcs = {}
 
-bytearray_iterator_funcs.__length_hint__ = function(self){
+bytearray_iterator_funcs.__length_hint__ = function(self) {
     return self.len
 }
 
-bytearray_iterator_funcs.__reduce__ = function(self){
+bytearray_iterator_funcs.__reduce__ = function(self) {
     return $B.fast_tuple([_b_.iter, $B.fast_tuple([self.obj]), 0])
 }
 
-bytearray_iterator_funcs.__setstate__ = function(self, value){
+bytearray_iterator_funcs.__setstate__ = function(self, value) {
     self.index = $B.PyNumber_Index(value) - 1
 }
 
@@ -103,65 +103,65 @@ $B.bytearray_iterator.tp_methods = ["__length_hint__", "__reduce__", "__setstate
 //bytearray() (built in class)
 var bytearray = _b_.bytearray
 
-function no_resizing(){
+function no_resizing() {
     $B.RAISE(_b_.BufferError,
         "Existing exports of data: object cannot be re-sized")
 }
 
-function self_arg(func_name, args){
+function self_arg(func_name, args) {
     var $ = $B.args(func_name, 1, {self: null}, args, null, null, null)
     return $.self
 }
 
-function self_other_args(func_name, args){
+function self_other_args(func_name, args) {
     var $ = $B.args(func_name, 2, {self: null, other: null}, args, null,
                 null, null)
     return [$.self, $.other]
 }
 
-function main_type(obj){
+function main_type(obj) {
     // used in methods to get the result type
     // the type of obj.upper() is bytearray if obj type is a subclass of
     // bytearray
     return $B.$isinstance(obj, _b_.bytearray) ? _b_.bytearray : _b_.bytes
 }
 
-function bytearray_delitem(self, arg){
-    if(self.exports){
-        if($B.$isinstance(arg, _b_.slice)){
+function bytearray_delitem(self, arg) {
+    if (self.exports) {
+        if ($B.$isinstance(arg, _b_.slice)) {
             var slice = _b_.slice.$conv_for_seq(arg, self.source.length)
-            if(slice.stop - slice.start > 0){
+            if (slice.stop - slice.start > 0) {
                 no_resizing()
             }
-        }else{
+        } else {
             no_resizing()
         }
     }
     return $B.list_delitem(self.source, arg)
 }
 
-function capitalize(){
+function capitalize() {
     var self = self_arg('capitalize', arguments)
     var src = self.source,
         len = src.length,
         buffer = src.slice()
 
-    if(buffer[0] > 96 && buffer[0] < 123){buffer[0] -= 32}
+    if (buffer[0] > 96 && buffer[0] < 123) {buffer[0] -= 32}
 
-    for(var i = 1; i < len; ++i){
-        if(buffer[i] > 64 && buffer[i] < 91){
+    for (var i = 1; i < len; ++i) {
+        if (buffer[i] > 64 && buffer[i] < 91) {
             buffer[i] += 32
         }
     }
     return main_type(self).$factory(buffer)
 }
 
-function center(){
+function center() {
     var $ = $B.args('center', 3, {self: null, width: null, fillbyte: null},
                 arguments, {fillbyte: bytes.$factory([32])}, null, null)
 
     var diff = $.width - $.self.source.length
-    if(diff <= 0){
+    if (diff <= 0) {
         return bytes.$factory($.self.source)
     }
     var type = main_type(self)
@@ -170,7 +170,7 @@ function center(){
     return type.tp_funcs.rjust(ljust, $.width, $.fillbyte)
 }
 
-function count(self){
+function count(self) {
     var $ = $B.args('count', 4,
                 {self: null, sub: null, start: null, end: null},
                 arguments, {start: 0, end: -1}, null, null)
@@ -182,12 +182,12 @@ function count(self){
     var nb = 0,
         len = self.source.length
 
-    if(typeof sub == "number"){
-        if(sub < 0 || sub > 255){
+    if (typeof sub == "number") {
+        if (sub < 0 || sub > 255) {
             $B.RAISE(_b_.ValueError, "byte must be in range(0, 256)")
         }
-        for(var b of self.source){
-            if(b == sub){
+        for (var b of self.source) {
+            if (b == sub) {
                 nb++
             }
         }
@@ -197,10 +197,10 @@ function count(self){
     var seq = get_list_from_bytes_like(sub)
     var seq_len = seq.length
     var le
-    for(var i = 0; i < len; i++){
+    for (var i = 0; i < len; i++) {
         var found = 1
-        for(var j = 0; j < seq_len; j++){
-            if(self.source[i + j] != seq[j]){
+        for (var j = 0; j < seq_len; j++) {
+            if (self.source[i + j] != seq[j]) {
                 found = 0
                 break
             }
@@ -210,7 +210,7 @@ function count(self){
     return nb
 }
 
-function decode(self){
+function decode(self) {
     var $ = $B.args("decode", 3, {self: null, encoding: null, errors: null},
                 arguments, {encoding: "utf-8", errors: "strict"}, null, null)
     switch ($.errors) {
@@ -227,7 +227,7 @@ function decode(self){
     }
 }
 
-function endswith(){
+function endswith() {
     var $ = $B.args('endswith', 4,
                 {self: null, suffix: null, start: null, end: null},
                 arguments, {start: -1, end: -1}, null, null)
@@ -235,45 +235,45 @@ function endswith(){
         suffix = $.suffix,
         start = $.start,
         end = $.end
-    if(is_bytes_like(suffix)){
+    if (is_bytes_like(suffix)) {
         var seq = get_list_from_bytes_like(suffix)
         start = start == -1 ? 0 : start
         end = end == -1 ? self.source.length : end
         var res = true
         var seq_len = seq.length
-        if(seq_len > end - start){
+        if (seq_len > end - start) {
             return false
         }
-        for(let i = 0; i < seq_len && res; i++){
+        for (let i = 0; i < seq_len && res; i++) {
             res = self.source[end - seq_len + i] == seq[i]
         }
         return res
-    }else if($B.is_tuple(suffix)){
-        for(let sub of suffix){
-            if(endswith(self, sub, start, end)){
+    } else if ($B.is_tuple(suffix)) {
+        for (let sub of suffix) {
+            if (endswith(self, sub, start, end)) {
                 return true
             }
         }
         return false
-    }else{
+    } else {
         $B.RAISE(_b_.TypeError, "endswith first arg must be bytes-like " +
             "or a tuple of bytes-like, not " + $B.class_name($.suffix))
     }
 }
 
-function expandtabs(){
+function expandtabs() {
     var $ = $B.args('expandtabs', 2, {self: null, tabsize: null},
                 arguments, {tabsize: 8}, null, null)
     var self = $.self,
         tabsize = $.tabsize
     var tab_spaces = []
-    for(let i = 0; i < tabsize; ++i){
+    for (let i = 0; i < tabsize; ++i) {
         tab_spaces.push(32)
     }
 
     var buffer = self.source.slice()
-    for(let i = 0; i < buffer.length; ++i){
-        if(buffer[i] === 9){
+    for (let i = 0; i < buffer.length; ++i) {
+        if (buffer[i] === 9) {
             var nb_spaces = tabsize - i % tabsize
             var tabs = new Array(nb_spaces)
             tabs.fill(32)
@@ -283,7 +283,7 @@ function expandtabs(){
     return main_type(self).$factory(buffer)
 }
 
-function find(){
+function find() {
     var func = this // 'find' or 'rfind'
     var $ = $B.args(func, 4, {self: null, sub: null, start: null, end: null},
                 arguments,
@@ -294,9 +294,9 @@ function find(){
         end = $.end
     check_buffer_or_int(sub)
     var seq
-    if($B.is_int(sub)){
+    if ($B.is_int(sub)) {
         seq = [$B.PyNumber_Index(sub)]
-    }else{
+    } else {
         seq = get_list_from_bytes_like(sub)
     }
     var boundaries = _b_.slice.$conv_for_seq({start, stop: end, step: 1},
@@ -304,29 +304,29 @@ function find(){
     start = boundaries.start
     end = boundaries.stop
     var seq_len = seq.length
-    if(func == 'find'){
-        for(var i = start; i < end - seq_len + 1; i++){
+    if (func == 'find') {
+        for (var i = start; i < end - seq_len + 1; i++) {
             var found = true
-            for(var j = 0; j < seq_len; j++){
-                if(self.source[i + j] != seq[j]){
+            for (var j = 0; j < seq_len; j++) {
+                if (self.source[i + j] != seq[j]) {
                     found = false
                     break
                 }
             }
-            if(found){
+            if (found) {
                 return i
             }
         }
-    }else{ // rfind
-        for(var i = end - 1; i > start - seq_len; i--){
+    } else { // rfind
+        for (var i = end - 1; i > start - seq_len; i--) {
             var found = true
-            for(var j = 0; j < seq_len; j++){
-                if(self.source[i + j] != seq[j]){
+            for (var j = 0; j < seq_len; j++) {
+                if (self.source[i + j] != seq[j]) {
                     found = false
                     break
                 }
             }
-            if(found){
+            if (found) {
                 return i
             }
         }
@@ -334,15 +334,15 @@ function find(){
     return -1
 }
 
-function fromhex(){
+function fromhex() {
     var $ = $B.args('fromhex', 2, {cls: null, string: null},
                 arguments, null, null, null)
     var cls = $.cls,
         string = $.string
     string = string.replace(/\s/g, '')
     var source = []
-    for(var i = 0; i < string.length; i += 2){
-        if(i + 2 > string.length){
+    for (var i = 0; i < string.length; i += 2) {
+        if (i + 2 > string.length) {
             $B.RAISE(_b_.ValueError, "non-hexadecimal number found " +
                 "in fromhex() arg")
         }
@@ -351,7 +351,7 @@ function fromhex(){
     return $B.$call(cls, source)
 }
 
-function hex(){
+function hex() {
     // Return a string which is hex representation of the instance
     // The hexstring can include a separator every specified number of bytes
     var $ = $B.args('hex', 3, {self:null, sep:null, bytes_per_sep:null},
@@ -364,18 +364,18 @@ function hex(){
         bps = bytes_per_sep,
         jstart = bps,
         len = self.source.length;
-    if(bytes_per_sep < 0){
+    if (bytes_per_sep < 0) {
         bps = -bytes_per_sep;
         jstart = bps
-    }else if(bytes_per_sep == 0){
+    } else if (bytes_per_sep == 0) {
         sep = ''
-    }else{
+    } else {
         jstart = len % bps
-        if(jstart == 0){
+        if (jstart == 0) {
            jstart = bps
        }
     }
-    for(var i = 0, j = jstart; i < len; i++){
+    for (var i = 0, j = jstart; i < len; i++) {
         var c = self.source[i]
         if (j == 0) {
             res += sep
@@ -388,13 +388,13 @@ function hex(){
     return res
 }
 
-function isalnum(){
+function isalnum() {
     var self = self_arg('isalnum', arguments)
     var src = self.source,
         len = src.length,
         res = len > 0
 
-    for(var i = 0; i < len && res; ++i){
+    for (var i = 0; i < len && res; ++i) {
         res = (src[i] > 96 && src[i] < 123) || // Lowercase
               (src[i] > 64 && src[i] < 91) ||  // Uppercase
               (src[i] > 47 && src[i] < 58)     // Digit
@@ -402,65 +402,65 @@ function isalnum(){
     return res
 }
 
-function isalpha(){
+function isalpha() {
     var self = self_arg('isalpha', arguments)
     var src = self.source,
         len = src.length,
         res = len > 0
 
-    for(var i = 0; i < len && res; ++i){
+    for (var i = 0; i < len && res; ++i) {
         res = (src[i] > 96 && src[i] < 123) || (src[i] > 64 && src[i] < 91)
     }
     return res
 }
 
-function isascii(){
+function isascii() {
     var self = self_arg('isascii', arguments)
-    for(var byte of self.source){
-        if(byte > 0x7F){
+    for (var byte of self.source) {
+        if (byte > 0x7F) {
             return false
         }
     }
     return true
 }
 
-function isdigit(){
+function isdigit() {
     var self = self_arg('isdigit', arguments)
     var src = self.source,
         len = src.length,
         res = len > 0
 
-    for(let i = 0; i < len && res; ++i){
+    for (let i = 0; i < len && res; ++i) {
         res = src[i] > 47 && src[i] < 58
     }
     return res
 }
 
-function islower(){
+function islower() {
     var self = self_arg('islower', arguments)
     var src = self.source,
         len = src.length,
         res = false
 
-    for(let i = 0; i < len; ++i){
+    for (let i = 0; i < len; ++i) {
         // Check for at least 1 lowercase ascii character
         res = res || (src[i] > 96 && src[i] < 123)
 
         // Don't allow any uppercase ascii characters
-        if(src[i] > 64 && src[i] < 91){return false}
+        if (src[i] > 64 && src[i] < 91) {return false}
     }
 
     return res
 }
 
-function isspace(){
+function isspace() {
     var self = self_arg('isspace', arguments)
 
     var src = self.source,
         len = src.length
 
-    for(let i = 0; i < len; ++i){
-        switch(src[i]){
+    for (let i = 0; i < len; ++i) {
+        switch (src[i]) {
             case 9:  // Horizontal tab
             case 10: // Line feed
             case 11: // Vertical tab
@@ -477,7 +477,7 @@ function isspace(){
     return true
 }
 
-function istitle(){
+function istitle() {
     var self = self_arg('istitle', arguments)
     var src = self.source,
         len = src.length,
@@ -486,7 +486,7 @@ function istitle(){
         is_uppercase = false,
         is_lowercase = false
 
-    for(var i = 0; i < len; ++i){
+    for (var i = 0; i < len; ++i) {
         is_lowercase = src[i] > 96 && src[i] < 123
         is_uppercase = src[i] > 64 && src[i] < 91
         current_char_is_letter = is_lowercase || is_uppercase
@@ -502,34 +502,34 @@ function istitle(){
     return true
 }
 
-function isupper(){
+function isupper() {
     var self = self_arg('isupper', arguments)
     var src = self.source,
         len = src.length,
         res = false
 
-    for(let i = 0; i < len; ++i){
+    for (let i = 0; i < len; ++i) {
         // Check for at least 1 uppercase ascii character
         res = res || (src[i] > 64 && src[i] < 91)
 
         // Don't allow any lowercase ascii characters
-        if(src[i] > 96 && src[i] < 123){return false}
+        if (src[i] > 96 && src[i] < 123) {return false}
     }
 
     return res
 }
 
-function join(){
+function join() {
     var $ns = $B.args('join', 2, {self: null, iterable: null},
                   arguments),
         self = $ns['self'],
         iterable = $ns['iterable']
     var res = this.$factory(),
         empty = true
-    for(var item of $B.make_js_iterator(iterable)){
-        if(empty){
+    for (var item of $B.make_js_iterator(iterable)) {
+        if (empty) {
             empty = false
-        }else{
+        } else {
             res = bytes.sq_concat(res, self)
         }
         res = bytes.sq_concat(res, item)
@@ -537,7 +537,7 @@ function join(){
     return res
 }
 
-function ljust(){
+function ljust() {
     // "this" is bytearray or bytes
     var $ = $B.args('ljust', 3, {self: null, width: null, fillbyte: null},
                 arguments, {fillbyte: bytes.$factory([32])})
@@ -550,34 +550,34 @@ function ljust(){
 
     var padding = [],
         count = width - self.source.length
-    for(var i = 0; i < count; ++i){
+    for (var i = 0; i < count; ++i) {
         padding.push(fillbyte.source[0])
     }
     return this.$factory(self.source.concat(padding))
 }
 
-function lower(self){
+function lower(self) {
     var _res = [],
         pos = 0
-    for(var i = 0, len = self.source.length; i < len; i++){
-        if(self.source[i]){_res[pos++] = _lower(self.source[i])}
+    for (var i = 0, len = self.source.length; i < len; i++) {
+        if (self.source[i]) {_res[pos++] = _lower(self.source[i])}
     }
     return this.$factory(_res)
 }
 
-function maketrans(){
+function maketrans() {
     var $ = $B.args('maketrans', 2, {from:null, to: null}, arguments)
     var from = $.from,
         to = $.to
     var _t = []
     to = $B.to_bytes(to)
     // make 'default' translate table
-    for(let i = 0; i < 256; i++){
+    for (let i = 0; i < 256; i++) {
         _t[i] = i
     }
 
     // make substitution in the translation table
-    for(let i = 0, len = from.source.length; i < len; i++){
+    for (let i = 0, len = from.source.length; i < len; i++) {
        var _ndx = from.source[i]     //retrieve ascii code of char
        _t[_ndx] = to[i]
     }
@@ -586,29 +586,29 @@ function maketrans(){
     return this.$factory(_t)
 }
 
-function strip(self, cars, lr){
-    if(cars === undefined){
+function strip(self, cars, lr) {
+    if (cars === undefined) {
         cars = []
         var ws = '\r\n \t'
-        for(let i = 0, len = ws.length; i < len; i++){
+        for (let i = 0, len = ws.length; i < len; i++) {
             cars.push(ws.charCodeAt(i))
         }
-    }else if($B.$isinstance(cars, bytes)){
+    } else if ($B.$isinstance(cars, bytes)) {
         cars = cars.source
-    }else{
+    } else {
         $B.RAISE(_b_.TypeError, "Type str doesn't support the buffer API")
     }
-    switch(lr){
+    switch (lr) {
         case 'l':
-            for(var i = 0, len = self.source.length; i < len; i++){
-                if(cars.indexOf(self.source[i]) == -1){
+            for (var i = 0, len = self.source.length; i < len; i++) {
+                if (cars.indexOf(self.source[i]) == -1) {
                     break
                 }
             }
             return this.$factory(self.source.slice(i))
         case 'r':
-            for(var i = self.source.length - 1; i >= 0; i--){
-               if(cars.indexOf(self.source[i]) == -1){
+            for (var i = self.source.length - 1; i >= 0; i--) {
+               if (cars.indexOf(self.source[i]) == -1) {
                    break
                }
             }
@@ -616,15 +616,15 @@ function strip(self, cars, lr){
     }
 }
 
-function nb_multiply(){
+function nb_multiply() {
     var $ = $B.args('__mul__', 2, {self: null, value: null}, arguments)
 
     var self = $.self,
         value = $.value
     var v = $B.PyNumber_Index(value)
     var source = self.source.slice()
-    for(var i = 0; i < v; i++){
-        for(var item of self.source){
+    for (var i = 0; i < v; i++) {
+        for (var item of self.source) {
             source[source.length] = item
         }
     }
@@ -635,7 +635,7 @@ function nb_multiply(){
     }
 }
 
-function nb_remainder(){
+function nb_remainder() {
     // PEP 461
     var $ = $B.args('__mod__', 2, {self: null, args: null}, arguments)
     var self = $.self,
@@ -645,7 +645,7 @@ function nb_remainder(){
     return _b_.str.tp_funcs.encode(res, "ascii")
 }
 
-function partition(){
+function partition() {
     var $ = $B.args('partition', 2, {self:null, sep:null}, arguments)
     var self = $.self,
         sep = $.sep
@@ -662,20 +662,20 @@ function partition(){
     ])
 }
 
-function removeprefix(self, prefix){
+function removeprefix(self, prefix) {
     var $ = $B.args('removeprefix', 2, {self:null, prefix: null}, arguments)
     var self = $.self,
         prefix = $.prefix
     check_buffer(prefix)
     var seq = get_list_from_bytes_like(prefix)
     var found = true
-    for(var i = 0, seq_len = seq.length; i < seq_len; i++){
-        if(self.source[i] != seq[i]){
+    for (var i = 0, seq_len = seq.length; i < seq_len; i++) {
+        if (self.source[i] != seq[i]) {
             found = false
             break
         }
     }
-    if(found){
+    if (found) {
         return {
             ob_type: $B.get_class(self),
             source: self.source.slice(seq_len)
@@ -684,7 +684,7 @@ function removeprefix(self, prefix){
     return self
 }
 
-function removesuffix(self, prefix){
+function removesuffix(self, prefix) {
     var $ = $B.args('removesuffix', 2, {self:null, prefix: null}, arguments)
     var self = $.self,
         prefix = $.prefix
@@ -693,13 +693,13 @@ function removesuffix(self, prefix){
     var found = true
     var len = self.source.length,
         seq_len = seq.length
-    for(var i = 0; i < seq_len; i++){
-        if(self.source[len - seq_len + i] != seq[i]){
+    for (var i = 0; i < seq_len; i++) {
+        if (self.source[len - seq_len + i] != seq[i]) {
             found = false
             break
         }
     }
-    if(found){
+    if (found) {
         return {
             ob_type: $B.get_class(self),
             source: self.source.slice(0, len - seq_len)
@@ -708,7 +708,7 @@ function removesuffix(self, prefix){
     return self
 }
 
-function replace(){
+function replace() {
     var $ = $B.args('replace', 4,
                 {self: null, old: null, new: null, count: null},
                 arguments, {count: -1})
@@ -723,14 +723,14 @@ function replace(){
     check_buffer($.old)
     check_buffer($.new)
 
-    for(var i = 0; i < len; i++){
-        if(bytes_funcs.startswith(self, old, i) && count){
-            for(var j = 0; j < $new.source.length; j++){
+    for (var i = 0; i < len; i++) {
+        if (bytes_funcs.startswith(self, old, i) && count) {
+            for (var j = 0; j < $new.source.length; j++) {
                 res.push($new.source[j])
             }
             i += (old.source.length - 1)
             count--
-        }else{
+        } else {
             res.push(src[i])
         }
     }
@@ -749,13 +749,13 @@ function rjust() {
 
     var padding = [],
         count = width - self.source.length
-    for(var i = 0; i < count; ++i){
+    for (var i = 0; i < count; ++i) {
         padding.push(fillbyte.source[0])
     }
     return this.$factory(padding.concat(self.source))
 }
 
-function rpartition(){
+function rpartition() {
     var $ = $B.args('rpartition', 2, {self:null, sep:null}, arguments)
 
     var self = $.self,
@@ -774,7 +774,7 @@ function rpartition(){
     ])
 }
 
-function rsplit(){
+function rsplit() {
     var $ = $B.args('rsplit', 3, {self:null, sep:null, maxsplit: null},
                 arguments, {sep: _b_.None, maxsplit: -1})
     var self = $.self,
@@ -782,16 +782,16 @@ function rsplit(){
         maxsplit = $.maxsplit
     var cls = this
     var reversed_self = $B.fast_bytes(self.source.toReversed())
-    if(! $B.is_int(maxsplit)){
+    if (! $B.is_int(maxsplit)) {
         $B.RAISE(_b_.ValueError,
             `maxsplit should be int, not ${$B.class_name(maxsplit)}`
         )
     }
     var parts = [] // array of arrays of bytes
-    if(sep === _b_.None){
+    if (sep === _b_.None) {
         parts = bytes_split_with_whitespace(cls, self, maxsplit)
-    }else{
-        if($B.$getattr(sep, '__buffer__', $B.NULL) === $B.NULL){
+    } else {
+        if ($B.$getattr(sep, '__buffer__', $B.NULL) === $B.NULL) {
             $B.RAISE(_b_.TypeError,
                 `a bytes-like object is required, not '${$B.class_name(sep)}'`
             )
@@ -801,59 +801,59 @@ function rsplit(){
     }
     // restore order
     parts.reverse()
-    for(part of parts){
+    for (part of parts) {
         part.reverse()
     }
     parts = parts.map(t => this.$factory(t))
     return $B.$list(parts)
 }
 
-function sq_contains(self, other){
+function sq_contains(self, other) {
     var [self, other] = self_other_args('__contains__', arguments)
-    if(typeof other == "number"){
+    if (typeof other == "number") {
         return self.source.indexOf(other) > -1
     }
-    if(! is_bytes_like(other)){
+    if (! is_bytes_like(other)) {
         return false
     }
     var seq = get_list_from_bytes_like(other)
-    if(self.source.length < seq.length){
+    if (self.source.length < seq.length) {
         return false
     }
     var len = self.source.length
     var seq_len = seq.length
-    for(var i = 0; i < len - seq_len + 1; i++){
+    for (var i = 0; i < len - seq_len + 1; i++) {
         var flag = true
-        for(var j = 0; j < seq_len; j++){
-            if(self.source[i + j] != seq[j]){
+        for (var j = 0; j < seq_len; j++) {
+            if (self.source[i + j] != seq[j]) {
                 flag = false
                 break
             }
         }
-        if(flag){
+        if (flag) {
             return true
         }
     }
     return false
 }
 
-function split(){
+function split() {
     var $ = $B.args('split', 3, {self:null, sep:null, maxsplit: null},
                 arguments, {sep: _b_.None, maxsplit: -1})
     var self = $.self,
         sep = $.sep,
         maxsplit = $.maxsplit
     var cls = this // bytes or bytearray
-    if(! $B.is_int(maxsplit)){
+    if (! $B.is_int(maxsplit)) {
         $B.RAISE(_b_.ValueError,
             `maxsplit should be int, not ${$B.class_name(maxsplit)}`
         )
     }
     var parts = [] // array of arrays of bytes
-    if(sep === _b_.None){
+    if (sep === _b_.None) {
         parts = bytes_split_with_whitespace(cls, self, maxsplit)
-    }else{
-        if($B.$getattr(sep, '__buffer__', $B.NULL) === $B.NULL){
+    } else {
+        if ($B.$getattr(sep, '__buffer__', $B.NULL) === $B.NULL) {
             $B.RAISE(_b_.TypeError,
                 `a bytes-like object is required, not '${$B.class_name(sep)}'`
             )
@@ -864,7 +864,7 @@ function split(){
     return $B.$list(parts)
 }
 
-function splitlines(){
+function splitlines() {
     var $ = $B.args('splitlines', 2, {self: null, keepends: null},
                 arguments, {keepends: false})
     var self = $.self,
@@ -872,7 +872,7 @@ function splitlines(){
 
     var cls = this // bytes or bytearray
 
-    if(!$B.$isinstance(keepends,[_b_.bool, _b_.int])){
+    if (!$B.$isinstance(keepends,[_b_.bool, _b_.int])) {
         throw _b_.TypeError('integer argument expected, got '+
             $B.get_class(keepends).__name)
     }
@@ -881,28 +881,28 @@ function splitlines(){
         source = self.source,
         start = 0,
         pos = 0
-    if(! source.length){
+    if (! source.length) {
         return res
     }
-    while(pos < source.length){
+    while (pos < source.length) {
         if (pos < source.length - 1 && source[pos] == 0x0d &&
                 source[pos + 1] == 0x0a){
             res.push(cls.$factory(source.slice(start, keepends ? pos + 2 : pos)))
             start = pos = pos + 2
-        }else if(source[pos] == 0x0d || source[pos] == 0x0a){
+        } else if (source[pos] == 0x0d || source[pos] == 0x0a) {
             res.push(cls.$factory(source.slice(start, keepends ? pos + 1 : pos)))
             start = pos = pos + 1
-        }else{
+        } else {
             pos++
         }
     }
-    if(start < source.length){
+    if (start < source.length) {
         res.push(cls.$factory(source.slice(start)))
     }
     return $B.$list(res)
 }
 
-function startswith(){
+function startswith() {
     var $ = $B.args('startswith', 3, {self: null, prefix: null, start:null},
                 arguments, {start:0})
     var self = $.self,
@@ -911,18 +911,18 @@ function startswith(){
 
     var cls = this // bytes or bytearray
 
-    if($B.$isinstance($.prefix, [bytes, bytearray])){
+    if ($B.$isinstance($.prefix, [bytes, bytearray])) {
         let res = true
-        for(let i = 0; i < prefix.source.length && res; i++){
+        for (let i = 0; i < prefix.source.length && res; i++) {
             res = self.source[start + i] == prefix.source[i]
         }
         return res
-    }else if($B.is_tuple(prefix)){
+    } else if ($B.is_tuple(prefix)) {
         let items = []
-        for(let i = 0; i < prefix.length; i++){
-            if($B.$isinstance(prefix[i], [bytes, bytearray])){
+        for (let i = 0; i < prefix.length; i++) {
+            if ($B.$isinstance(prefix[i], [bytes, bytearray])) {
                 items = items.concat(prefix[i].source)
-            }else{
+            } else {
                 $B.RAISE(_b_.TypeError, "startswith first arg must be " +
                     "bytes or a tuple of bytes, not " +
                     $B.class_name(prefix))
@@ -930,32 +930,32 @@ function startswith(){
         }
         let prefix = cls.$factory(items)
         return startswith.call(cls, self, prefix, start)
-    }else{
+    } else {
         $B.RAISE(_b_.TypeError, "startswith first arg must be bytes " +
             "or a tuple of bytes, not " + $B.class_name(prefix))
     }
 }
 
-function upper(){
+function upper() {
     var self = self_arg('upper', arguments)
     var _res = [],
         pos = 0
-    for(var i = 0, len = self.source.length; i < len; i++){
-        if(self.source[i]){_res[pos++] = _upper(self.source[i])}
+    for (var i = 0, len = self.source.length; i < len; i++) {
+        if (self.source[i]) {_res[pos++] = _upper(self.source[i])}
     }
     return main_type(self).$factory(_res)
 }
 
-function swapcase(){
+function swapcase() {
     var self = $B.single_arg('swapcase', 'self', arguments)
     var src = self.source,
         len = src.length,
         buffer = src.slice()
     var cls = this
-    for(var i = 0; i < len; ++i){
-        if(buffer[i] > 96 && buffer[i] < 123){
+    for (var i = 0; i < len; ++i) {
+        if (buffer[i] > 96 && buffer[i] < 123) {
             buffer[i] -= 32
-        }else if (buffer[i] > 64 && buffer[i] < 91){
+        } else if (buffer[i] > 64 && buffer[i] < 91) {
             buffer[i] += 32
         }
     }
@@ -963,7 +963,7 @@ function swapcase(){
     return cls.$factory(buffer)
 }
 
-function title(){
+function title() {
     var self = $B.single_arg('title', 'self', arguments)
     var cls = this // bytes or bytearray
     var src = self.source,
@@ -974,15 +974,15 @@ function title(){
         is_uppercase = false,
         is_lowercase = false
 
-    for(var i = 0; i < len; ++i){
+    for (var i = 0; i < len; ++i) {
         is_lowercase = buffer[i] > 96 && buffer[i] < 123
         is_uppercase = buffer[i] > 64 && buffer[i] < 91
         current_char_is_letter = is_lowercase || is_uppercase
 
-        if(current_char_is_letter){
-            if(prev_char_was_letter && is_uppercase){
+        if (current_char_is_letter) {
+            if (prev_char_was_letter && is_uppercase) {
                 buffer[i] += 32
-            }else if(! prev_char_was_letter && is_lowercase){
+            } else if (! prev_char_was_letter && is_lowercase) {
                 buffer[i] -= 32
             }
         }
@@ -992,26 +992,26 @@ function title(){
     return cls.$factory(buffer)
 }
 
-function translate(){
+function translate() {
     var $ = $B.args('translate', 3, {self: null, table: null, _delete: null},
                 arguments, {_delete: $B.NULL})
     var self = $.self,
         table = $.table,
         _delete = $._delete
     var cls = this // bytes or bytearray
-    if(_delete === $B.NULL){
+    if (_delete === $B.NULL) {
         _delete = []
-    }else if($B.$isinstance(_delete, [bytes, bytearray])){
+    } else if ($B.$isinstance(_delete, [bytes, bytearray])) {
         _delete = _delete.source
-    }else{
+    } else {
         $B.RAISE(_b_.TypeError, "Type " +
             $B.class_name(_delete) + " doesn't support the buffer API")
     }
     var res = [],
         pos = 0
-    if($B.$isinstance(table, [bytes, bytearray]) && table.source.length == 256){
-       for(var i = 0, len = self.source.length; i < len; i++){
-           if(_delete.indexOf(self.source[i]) > -1){
+    if ($B.$isinstance(table, [bytes, bytearray]) && table.source.length == 256) {
+       for (var i = 0, len = self.source.length; i < len; i++) {
+           if (_delete.indexOf(self.source[i]) > -1) {
                continue
            }
            res[pos++] = table.source[self.source[i]]
@@ -1020,7 +1020,7 @@ function translate(){
     return cls.$factory(res)
 }
 
-function zfill(){
+function zfill() {
     var $ = $B.args('zfill', 2, {self: null, width: null}, arguments)
     var self = $.self,
         width = $.width
@@ -1030,7 +1030,7 @@ function zfill(){
 
     var count = width - self.source.length
     var padding = []
-    for(var i = 0; i < count; ++i){
+    for (var i = 0; i < count; ++i) {
         padding.push(48)
     }
     buffer.splice.apply(buffer, [prefix_offset, 0].concat(padding))
@@ -1038,8 +1038,8 @@ function zfill(){
     return cls.$factory(buffer)
 }
 
-function check_exports(self){
-    if(self.exports == 0){
+function check_exports(self) {
+    if (self.exports == 0) {
         return
     }
     /* Check if there is a reference to a memoryview on self
@@ -1067,32 +1067,32 @@ function check_exports(self){
 
     var frame_obj = $B.frame_obj
     var has_exports = false
-    while(frame_obj !== null){
+    while (frame_obj !== null) {
         var locals = frame_obj.frame[1]
-        for(var key in locals){
-            try{
+        for (var key in locals) {
+            try {
                 var value = locals[key]
-                if($B.get_class(value) === _b_.memoryview && value.obj === self){
+                if ($B.get_class(value) === _b_.memoryview && value.obj === self) {
                     has_exports = true
                     break
                 }
-            }catch(err){
+            } catch (err) {
                 // ignore
             }
         }
         frame_obj = frame_obj.prev
     }
-    if(has_exports){
-        if(self.exports){
+    if (has_exports) {
+        if (self.exports) {
             no_resizing()
         }
-    }else{
+    } else {
         // would have been set before if there was a garbage collector
         self.exports = 0
     }
 }
 
-bytearray.$factory = function(){
+bytearray.$factory = function() {
     var res = bytearray.tp_new(bytearray, Array.from(arguments),
         $B.empty_dict())
     res.exports = 0
@@ -1100,54 +1100,54 @@ bytearray.$factory = function(){
 }
 
 /* bytearray start */
-_b_.bytearray.tp_richcompare = function(self, other, op){
-    if(! $B.$isinstance(other, [_b_.bytearray, _b_.bytes])){
+_b_.bytearray.tp_richcompare = function(self, other, op) {
+    if (! $B.$isinstance(other, [_b_.bytearray, _b_.bytes])) {
         return _b_.NotImplemented
     }
     return _b_.list.tp_richcompare(
         $B.$list(self.source), $B.$list(other.source), op)
 }
 
-_b_.bytearray.nb_multiply = function(){
+_b_.bytearray.nb_multiply = function() {
     return nb_multiply.apply(null, arguments)
 }
 
-_b_.bytearray.nb_remainder = function(){
+_b_.bytearray.nb_remainder = function() {
     var res = nb_remainder.apply(null, arguments)
     res.ob_type = $B.get_class(self)
     return res
 }
 
-_b_.bytearray.sq_ass_item = function(self, arg, value){
-    if(value === $B.NULL){
+_b_.bytearray.sq_ass_item = function(self, arg, value) {
+    if (value === $B.NULL) {
         return bytearray_delitem(self, arg)
     }
-    if($B.is_int(arg)){
-        if(! $B.is_int(value)){
+    if ($B.is_int(arg)) {
+        if (! $B.is_int(value)) {
             $B.RAISE(_b_.TypeError, 'an integer is required')
-        }else if(value > 255){
+        } else if (value > 255) {
             $B.RAISE(_b_.ValueError, "byte must be in range(0, 256)")
         }
         var pos = arg
-        if(arg < 0){
+        if (arg < 0) {
             pos = self.source.length + pos
         }
-        if(pos >= 0 && pos < self.source.length){
+        if (pos >= 0 && pos < self.source.length) {
             self.source[pos] = value
-        }else{
+        } else {
             $B.RAISE(_b_.IndexError, 'list index out of range')
         }
-    }else if($B.$isinstance(arg, _b_.slice)){
+    } else if ($B.$isinstance(arg, _b_.slice)) {
         var start = arg.start === _b_.None ? 0 : arg.start
         var stop = arg.stop === _b_.None ? self.source.length : arg.stop
 
-        if(start < 0){
+        if (start < 0) {
             start = self.source.length + start
         }
-        if(stop < 0){
+        if (stop < 0) {
             stop = self.source.length + stop
         }
-        if(stop > self.source.length){
+        if (stop > self.source.length) {
             check_exports(self)
         }
 
@@ -1155,40 +1155,41 @@ _b_.bytearray.sq_ass_item = function(self, arg, value){
 
         // copy items in a temporary JS array
         // otherwise, a[:0] = a fails
-        try{
+        try {
             var $temp = _b_.list.$factory(value)
-        }catch(err){
+        } catch (err) {
             $B.RAISE(_b_.TypeError, "can only assign an iterable")
         }
-        if($temp.length != stop - start){
+        if ($temp.length != stop - start) {
             check_exports(self)
         }
-        for(var i = $temp.length - 1; i >= 0; i--){
-            if(! $B.is_int($temp[i])){
+        for (var i = $temp.length - 1; i >= 0; i--) {
+            if (! $B.is_int($temp[i])) {
                 $B.RAISE(_b_.TypeError, 'an integer is required')
-            }else if($temp[i] > 255){
+            } else if ($temp[i] > 255) {
                 $B.RAISE(_b_.ValueError, "byte must be in range(0, 256)")
             }
-            self.source.splice(start, 0, $temp[i])
         }
-    }else{
+        // One splice only -> O(N+M) instead of O(N*M)
+        self.source.splice.apply(self.source, [start, 0].concat($temp))
+    } else {
         $B.RAISE(_b_.TypeError, 'list indices must be integer, not ' +
             $B.class_name(arg))
     }
 }
 
-_b_.bytearray.tp_repr = function(self){
+_b_.bytearray.tp_repr = function(self) {
     var b = _b_.bytes.tp_repr(self)
     return `bytearray(${b})`
 }
 
 _b_.bytearray.tp_hash = _b_.None
 
-_b_.bytearray.tp_str = function(self){
+_b_.bytearray.tp_str = function(self) {
     return _b_.bytearray.tp_repr(self)
 }
 
-_b_.bytearray.tp_iter = function(self){
+_b_.bytearray.tp_iter = function(self) {
     return {
         ob_type: $B.bytearray_iterator,
         obj: self,
@@ -1197,18 +1198,18 @@ _b_.bytearray.tp_iter = function(self){
     }
 }
 
-_b_.bytearray.tp_init = function(self){
+_b_.bytearray.tp_init = function(self) {
 
 }
 
-_b_.bytearray.tp_new = function(cls, args, kw){
+_b_.bytearray.tp_new = function(cls, args, kw) {
     var b = _b_.bytes.tp_new(cls, args, kw)
     b.ob_type = cls
     return b
 }
 
-_b_.bytearray.nb_inplace_add = function(self, other){
-    if(! $B.$isinstance(other, [_b_.bytearray, _b_.bytes])){
+_b_.bytearray.nb_inplace_add = function(self, other) {
+    if (! $B.$isinstance(other, [_b_.bytearray, _b_.bytes])) {
         $B.RAISE(_b_.TypeError,
             `can't concat ${$B.class_name(other)} to bytearray`
         )
@@ -1217,11 +1218,11 @@ _b_.bytearray.nb_inplace_add = function(self, other){
     return self
 }
 
-_b_.bytearray.nb_inplace_multiply = function(self, value){
+_b_.bytearray.nb_inplace_multiply = function(self, value) {
     var v = $B.PyNumber_Index(value)
     var source = self.source.slice()
-    for(var i = 1; i < v; i++){
-        for(var item of self.source){
+    for (var i = 1; i < v; i++) {
+        for (var item of self.source) {
             source[source.length] = item
         }
     }
@@ -1229,21 +1230,21 @@ _b_.bytearray.nb_inplace_multiply = function(self, value){
     return self
 }
 
-_b_.bytearray.mp_length = function(self){
+_b_.bytearray.mp_length = function(self) {
     return _b_.bytes.mp_length(self)
 }
 
-_b_.bytearray.mp_subscript = function(self, arg){
+_b_.bytearray.mp_subscript = function(self, arg) {
     return _b_.bytes.mp_subscript(self, arg)
 }
 
-_b_.bytearray.sq_concat = function(self, other){
-    try{
+_b_.bytearray.sq_concat = function(self, other) {
+    try {
         var other_bytes = $B.to_bytes(other)
-    }catch(err){
+    } catch (err) {
         $B.RAISE(_b_.TypeError, `can't concat ${$B.class_name(other)} to bytes`)
     }
-    if(other_bytes.length > 0){
+    if (other_bytes.length > 0) {
         check_exports(self)
     }
     return {
@@ -1252,77 +1253,77 @@ _b_.bytearray.sq_concat = function(self, other){
     }
 }
 
-_b_.bytearray.sq_contains = function(){
+_b_.bytearray.sq_contains = function() {
     return sq_contains.apply(null, arguments)
 }
 
-_b_.bytearray.bf_getbuffer = function(self){
+_b_.bytearray.bf_getbuffer = function(self) {
     return $B.$call(_b_.memoryview, self)
 }
 
-_b_.bytearray.bf_releasebuffer = function(self){
+_b_.bytearray.bf_releasebuffer = function(self) {
 
 }
 
 var bytearray_funcs = _b_.bytearray.tp_funcs = {}
 
-bytearray_funcs.__alloc__ = function(self){
+bytearray_funcs.__alloc__ = function(self) {
 
 }
 
-bytearray_funcs.__reduce__ = function(self){
+bytearray_funcs.__reduce__ = function(self) {
     var s = $B.decode(self, 'latin-1')
     return $B.fast_tuple([bytearray, $B.fast_tuple([s, 'latin-1']), _b_.None])
 }
 
-bytearray_funcs.__reduce_ex__ = function(self, protocol){
+bytearray_funcs.__reduce_ex__ = function(self, protocol) {
     return bytearray_funcs.__reduce__(self)
 }
 
-bytearray_funcs.__sizeof__ = function(self){
+bytearray_funcs.__sizeof__ = function(self) {
     return 60
 }
 
-bytearray_funcs.append = function(self, b){
+bytearray_funcs.append = function(self, b) {
     check_exports(self)
-    if(arguments.length != 2){$B.RAISE(_b_.TypeError,
+    if (arguments.length != 2) {$B.RAISE(_b_.TypeError,
         "append takes exactly one argument (" + (arguments.length - 1) +
         " given)")
     }
-    if(! $B.is_int(b)){
+    if (! $B.is_int(b)) {
         $B.RAISE(_b_.TypeError, "an integer is required")
     }
-    if(b > 255){
+    if (b > 255) {
         $B.RAISE(_b_.ValueError, "byte must be in range(0, 256)")
     }
     self.source[self.source.length] = b
 }
 
-bytearray_funcs.capitalize = function(){
+bytearray_funcs.capitalize = function() {
     return capitalize.apply(null, arguments)
 }
 
-bytearray_funcs.center = function(self){
+bytearray_funcs.center = function(self) {
     return center.apply(null, arguments)
 }
 
-bytearray_funcs.clear = function(self){
+bytearray_funcs.clear = function(self) {
     check_exports(self)
     self.source = []
 }
 
-bytearray_funcs.copy = function(self){
+bytearray_funcs.copy = function(self) {
     return {
         ob_type: _b_.bytearray,
         source: self.source.slice()
     }
 }
 
-bytearray_funcs.count = function(self){
+bytearray_funcs.count = function(self) {
     return count.apply(null, arguments)
 }
 
-bytearray_funcs.decode = function(self){
+bytearray_funcs.decode = function(self) {
     var $ = $B.args('decode', 3, {self: null, encoding: null, errors: null},
                 arguments, {encoding: 'utf-8', errors: 'strict'})
     var self = $.self,
@@ -1331,111 +1332,111 @@ bytearray_funcs.decode = function(self){
     return decode(self, encoding, errors)
 }
 
-bytearray_funcs.endswith = function(self){
+bytearray_funcs.endswith = function(self) {
     return endswith.apply(null, arguments)
 }
 
-bytearray_funcs.expandtabs = function(self){
+bytearray_funcs.expandtabs = function(self) {
     return expandtabs.apply(null, arguments)
 }
 
-bytearray_funcs.extend = function(self, b){
+bytearray_funcs.extend = function(self, b) {
     check_exports(self)
-    if(self.in_iteration){
+    if (self.in_iteration) {
         // happens in re.finditer()
         no_resizing()
     }
-    if([bytearray, bytes].includes($B.get_class(b))){
+    if ([bytearray, bytes].includes($B.get_class(b))) {
         self.source = self.source.concat(b.source)
         return _b_.None
     }
-    for(var item of $B.make_js_iterator(b)){
+    for (var item of $B.make_js_iterator(b)) {
         bytearray.append(self, $B.PyNumber_Index(item))
     }
     return _b_.None
 }
 
-bytearray_funcs.find = function(self){
+bytearray_funcs.find = function(self) {
     return find.apply('find', arguments)
 }
 
-bytearray_funcs.fromhex = function(self){
+bytearray_funcs.fromhex = function(self) {
     return fromhex.apply(null, arguments)
 }
 
-bytearray_funcs.hex = function(self){
+bytearray_funcs.hex = function(self) {
     return hex.apply(null, arguments)
 }
 
-bytearray_funcs.index = function(self){
+bytearray_funcs.index = function(self) {
     var res = find.apply('find', arguments)
-    if(res == -1){
+    if (res == -1) {
         $B.RAISE(_b_.ValueError, 'subsection not found')
     }
     return res
 }
 
-bytearray_funcs.insert = function(self, pos, b){
+bytearray_funcs.insert = function(self, pos, b) {
     check_exports(self)
-    if(arguments.length != 3){
+    if (arguments.length != 3) {
         $B.RAISE(_b_.TypeError,
             "insert takes exactly 2 arguments (" + (arguments.length - 1) +
             " given)")
     }
-    if(! $B.is_int(b)){
+    if (! $B.is_int(b)) {
         $B.RAISE(_b_.TypeError, "an integer is required")
     }
-    if(b > 255){
+    if (b > 255) {
         $B.RAISE(_b_.ValueError, "byte must be in range(0, 256)")
     }
     _b_.list.tp_funcs.insert(self.source, pos, b)
 }
 
-bytearray_funcs.isalnum = function(){
+bytearray_funcs.isalnum = function() {
     return isalnum.apply(null, arguments)
 }
 
-bytearray_funcs.isalpha = function(){
+bytearray_funcs.isalpha = function() {
     return isalpha.apply(null, arguments)
 }
 
-bytearray_funcs.isascii = function(){
+bytearray_funcs.isascii = function() {
     return isascii.apply(null, arguments)
 }
 
-bytearray_funcs.isdigit = function(){
+bytearray_funcs.isdigit = function() {
     return isdigit.apply(null, arguments)
 }
 
-bytearray_funcs.islower = function(){
+bytearray_funcs.islower = function() {
     return islower.apply(null, arguments)
 }
 
-bytearray_funcs.isspace = function(){
+bytearray_funcs.isspace = function() {
     return isspace.apply(null, arguments)
 }
 
-bytearray_funcs.istitle = function(){
+bytearray_funcs.istitle = function() {
     return istitle.apply(null, arguments)
 }
 
-bytearray_funcs.isupper = function(){
+bytearray_funcs.isupper = function() {
     return isupper.apply(null, arguments)
 }
 
-bytearray_funcs.join = function(){
+bytearray_funcs.join = function() {
     return join.apply(_b_.bytearray, arguments)
 }
 
-bytearray_funcs.ljust = function(){
+bytearray_funcs.ljust = function() {
     return ljust.apply(_b_.bytearray, arguments)
 }
 
-bytearray_funcs.lower = function(self){
+bytearray_funcs.lower = function(self) {
     return lower.apply(_b_.bytearray, arguments)
 }
 
-bytearray_funcs.lstrip = function(self){
+bytearray_funcs.lstrip = function(self) {
     var $ = $B.args('lstrip', 2, {self: null, cars: null},
                 arguments, {cars: ws_cars})
     var self = $.self,
@@ -1443,15 +1444,15 @@ bytearray_funcs.lstrip = function(self){
     return strip.call(_b_.bytearray, self, cars, 'l')
 }
 
-bytearray_funcs.maketrans = function(self){
+bytearray_funcs.maketrans = function(self) {
     return maketrans.apply(_b_.bytearray, arguments)
 }
 
-bytearray_funcs.partition = function(self){
+bytearray_funcs.partition = function(self) {
     return partition.apply(_b_.bytearray, arguments)
 }
 
-bytearray_funcs.pop = function(self){
+bytearray_funcs.pop = function(self) {
     var $ = $B.args('pop', 2, {self:null, index:null},
                 arguments, {index: -1})
     var self = $.self,
@@ -1460,78 +1461,78 @@ bytearray_funcs.pop = function(self){
     return _b_.list.tp_funcs.pop(self.source, index)
 }
 
-bytearray_funcs.remove = function(self){
+bytearray_funcs.remove = function(self) {
     var $ = $B.args('remove', 2, {self: null, value: null}, arguments)
     var self = $.self,
         value = $.value
     value = $B.PyNumber_Index(value)
-    if(value > 255){
+    if (value > 255) {
         return
     }
     var ix = self.source.indexOf(value)
-    if(ix != -1){
+    if (ix != -1) {
         self.source.splice(ix, 1)
     }
 }
 
-bytearray_funcs.removeprefix = function(self, prefix){
+bytearray_funcs.removeprefix = function(self, prefix) {
     return removeprefix.apply(null, arguments)
 }
 
-bytearray_funcs.removesuffix = function(self){
+bytearray_funcs.removesuffix = function(self) {
     return removesuffix.apply(null, arguments)
 }
 
-bytearray_funcs.replace = function(self){
+bytearray_funcs.replace = function(self) {
     return replace.apply(_b_.bytearray, arguments)
 }
 
-bytearray_funcs.resize = function(self, size){
+bytearray_funcs.resize = function(self, size) {
     check_exports(self)
     size = $B.PyNumber_Index(size)
-    if(size < 0){
+    if (size < 0) {
         $B.RAISE(_b_.ValueError,
             `Can only resize to positive sizes, got -${size}`)
     }
-    if(size > self.source.length){
-        for(var i = 0, len = size - self.source.length; i < len; i++){
+    if (size > self.source.length) {
+        for (var i = 0, len = size - self.source.length; i < len; i++) {
             self.source.push(0)
         }
-    }else{
+    } else {
         self.source = self.source.slice(0, size)
     }
     return _b_.None
 }
 
-bytearray_funcs.reverse = function(self){
+bytearray_funcs.reverse = function(self) {
     self.source.reverse()
 }
 
-bytearray_funcs.rfind = function(){
+bytearray_funcs.rfind = function() {
     return find.apply('rfind', arguments)
 }
 
-bytearray_funcs.rindex = function(self){
+bytearray_funcs.rindex = function(self) {
     var res = find.apply('rfind', arguments)
-    if(res == -1){
+    if (res == -1) {
         $B.RAISE(_b_.ValueError, 'subsection not found')
     }
     return res
 }
 
-bytearray_funcs.rjust = function(){
+bytearray_funcs.rjust = function() {
     return rjust.apply(_b_.bytearray, arguments)
 }
 
-bytearray_funcs.rpartition = function(self){
+bytearray_funcs.rpartition = function(self) {
     return rpartition.apply(_b_.bytearray, arguments)
 }
 
-bytearray_funcs.rsplit = function(self){
+bytearray_funcs.rsplit = function(self) {
     return rsplit.apply(_b_.bytearray, arguments)
 }
 
-bytearray_funcs.rstrip = function(self){
+bytearray_funcs.rstrip = function(self) {
     var $ = $B.args('rstrip', 2, {self: null, cars: null},
                 arguments, {cars: ws_cars})
     var self = $.self,
@@ -1539,19 +1540,19 @@ bytearray_funcs.rstrip = function(self){
     return strip.call(_b_.bytearray, self, cars, 'r')
 }
 
-bytearray_funcs.split = function(){
+bytearray_funcs.split = function() {
     return split.apply(_b_.bytearray, arguments)
 }
 
-bytearray_funcs.splitlines = function(self){
+bytearray_funcs.splitlines = function(self) {
     return splitlines.apply(_b_.bytearray, arguments)
 }
 
-bytearray_funcs.startswith = function(self){
+bytearray_funcs.startswith = function(self) {
     return startswith.apply(_b_.bytearray, arguments)
 }
 
-bytearray_funcs.strip = function(self){
+bytearray_funcs.strip = function(self) {
     var $ = $B.args('lstrip', 2, {self: null, cars: null},
                 arguments, {cars: ws_cars})
     var self = $.self,
@@ -1560,23 +1561,23 @@ bytearray_funcs.strip = function(self){
     return strip.call(_b_.bytearray, res, cars, 'l')
 }
 
-bytearray_funcs.swapcase = function(self){
+bytearray_funcs.swapcase = function(self) {
     return swapcase.apply(_b_.bytearray, arguments)
 }
 
-bytearray_funcs.title = function(self){
+bytearray_funcs.title = function(self) {
     return title.apply(_b_.bytearray, arguments)
 }
 
-bytearray_funcs.translate = function(self){
+bytearray_funcs.translate = function(self) {
     return translate.apply(_b_.bytearray, arguments)
 }
 
-bytearray_funcs.upper = function(self){
+bytearray_funcs.upper = function(self) {
     return upper.apply(null, arguments)
 }
 
-bytearray_funcs.zfill = function(self){
+bytearray_funcs.zfill = function(self) {
     return zfill.apply(_b_.bytearray, arguments)
 }
 
@@ -1606,46 +1607,46 @@ var bytes = _b_.bytes
 bytes.$buffer_protocol = true
 bytes.$is_sequence = true
 
-function bytes_split_with_sep(cls, self, seps, maxsplit){
+function bytes_split_with_sep(cls, self, seps, maxsplit) {
     var parts = [],
         pos = 0,
         source = self.source,
         len = source.length
 
     var sep_len = seps.length
-    if(sep_len == 0){
+    if (sep_len == 0) {
         $B.RAISE(_b_.ValueError, 'empty separator')
     }
-    if(self.source.length == 0){
+    if (self.source.length == 0) {
         return $B.$list([cls.$factory()])
     }
     var acc = []
     var done = false
-    while(pos < len){
+    while (pos < len) {
         var i = 0,
             found = false
-        while(source[pos + i] == seps[i]){
+        while (source[pos + i] == seps[i]) {
             i += 1
-            if(i == sep_len){
+            if (i == sep_len) {
                 found = true
                 break
             }
         }
-        if(found){
+        if (found) {
             parts.push(acc)
-            if(maxsplit > 0 && parts.length == maxsplit){
+            if (maxsplit > 0 && parts.length == maxsplit) {
                 parts.push(source.slice(pos + sep_len))
                 done = true
                 break
             }
             acc = []
             pos += sep_len
-        }else{
+        } else {
             acc.push(source[pos])
             pos += 1
         }
     }
-    if(! done){
+    if (! done) {
         parts.push(acc)
     }
 
@@ -1653,7 +1654,7 @@ function bytes_split_with_sep(cls, self, seps, maxsplit){
     return $B.$list(parts)
 }
 
-function bytes_split_with_whitespace(cls, self, maxsplit){
+function bytes_split_with_whitespace(cls, self, maxsplit) {
     var parts = [],
         pos = 0,
         seps,
@@ -1663,15 +1664,15 @@ function bytes_split_with_whitespace(cls, self, maxsplit){
     maxsplit = $B.int_value(maxsplit)
     var ws = [9, 10, 11, 12, 13, 32]
     // strip leading and trailing whitespaces
-    while(pos < len && ws.includes(source[pos])){
+    while (pos < len && ws.includes(source[pos])) {
         pos++
     }
-    if(pos == len){
+    if (pos == len) {
         return $B.$list([])
     }
     var start = pos
     pos = source.length - 1
-    while(pos > 0 && ws.includes(source[pos])){
+    while (pos > 0 && ws.includes(source[pos])) {
         pos--
     }
     source = source.slice(start, pos - start + 1)
@@ -1679,22 +1680,22 @@ function bytes_split_with_whitespace(cls, self, maxsplit){
     // split by consecutive whitespace bytes
     var acc = []
     pos = 0
-    while(pos < len){
+    while (pos < len) {
         var i = 0,
             found = false
-        while(ws.includes(source[pos + i])){
+        while (ws.includes(source[pos + i])) {
             i++
         }
-        if(i > 0){
+        if (i > 0) {
             parts.push(acc)
             acc = []
             pos += i
-        }else{
+        } else {
             acc.push(source[pos])
             pos++
         }
     }
-    if(acc.length > 0){
+    if (acc.length > 0) {
         parts.push(acc)
     }
     parts = parts.map(t => cls.$factory(t))
@@ -1704,14 +1705,14 @@ function bytes_split_with_whitespace(cls, self, maxsplit){
 var bytes_iterator = $B.bytes_iterator
 
 /* bytes_iterator start */
-$B.bytes_iterator.tp_iter = function(self){
+$B.bytes_iterator.tp_iter = function(self) {
     self.index = -1
     return self
 }
 
 $B.bytes_iterator.tp_iternext = function*(self){
     self.index++
-    if(self.index >= self.len){
+    if (self.index >= self.len) {
         return
     }
     yield self.obj.source[self.index]
@@ -1719,15 +1720,15 @@ $B.bytes_iterator.tp_iternext = function*(self){
 
 var bytes_iterator_funcs = $B.bytes_iterator.tp_funcs = {}
 
-bytes_iterator_funcs.__length_hint__ = function(self){
+bytes_iterator_funcs.__length_hint__ = function(self) {
     return self.len
 }
 
-bytes_iterator_funcs.__reduce__ = function(self){
+bytes_iterator_funcs.__reduce__ = function(self) {
     return $B.fast_tuple([_b_.iter, $B.fast_tuple([self.obj]), 0])
 }
 
-bytes_iterator_funcs.__setstate__ = function(self, value){
+bytes_iterator_funcs.__setstate__ = function(self, value) {
     self.index = $B.PyNumber_Index(value) - 1
 }
 
@@ -1737,62 +1738,62 @@ $B.bytes_iterator.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]
 
 $B.set_func_names(bytes_iterator, 'builtins')
 
-bytes.$getnewargs = function(self){
+bytes.$getnewargs = function(self) {
     return $B.fast_tuple([bytes_value(self)])
 }
 
-bytes.$new = function(cls, source, encoding, errors){
+bytes.$new = function(cls, source, encoding, errors) {
     // Create an instance of bytes. Called by methods that have already parsed
     // the arguments.
     var self = {ob_type: cls},
         int_list = [],
         pos = 0
-    if(source === undefined){
+    if (source === undefined) {
         // empty list
-    }else if(typeof source == "number" || $B.is_int(source)){
+    } else if (typeof source == "number" || $B.is_int(source)) {
         let i = source
-        while(i--){
+        while (i--) {
             int_list[pos++] = 0
         }
-    }else{
-        if(typeof source == "string" || $B.is_str(source)){
-            if(encoding === undefined){
+    } else {
+        if (typeof source == "string" || $B.is_str(source)) {
+            if (encoding === undefined) {
                 $B.RAISE(_b_.TypeError, "string argument without an encoding")
             }
             int_list = encode(source, encoding || "utf-8", errors || "strict")
-        }else{
-            if(encoding !== undefined){
+        } else {
+            if (encoding !== undefined) {
                 console.log('encoding', encoding)
                 $B.RAISE(_b_.TypeError, "encoding without a string argument")
             }
             // tranform iterable "source" into a list
-            if(Array.isArray(source)){
+            if (Array.isArray(source)) {
                 int_list = source
-            }else{
-                try{
+            } else {
+                try {
                     int_list = _b_.list.$factory(source)
-                }catch(err){
+                } catch (err) {
                     var bytes_method = $B.$getattr(source, '__bytes__', _b_.None)
-                    if(bytes_method === _b_.None){
+                    if (bytes_method === _b_.None) {
                         $B.RAISE(_b_.TypeError, "cannot convert " +
                             `'${$B.class_name(source)}' object to bytes`)
                     }
                     var res = $B.$call(bytes_method)
-                    if(! $B.is_bytes(res)){
+                    if (! $B.is_bytes(res)) {
                         $B.RAISE(_b_.TypeError, `__bytes__ returned ` +
                             `non-bytes (type ${$B.class_name(res)})`)
                     }
                     return res
                 }
-                for(let i = 0; i < int_list.length; i++){
-                    try{
+                for (let i = 0; i < int_list.length; i++) {
+                    try {
                         var item = _b_.int.$factory(int_list[i])
-                    }catch(err){
+                    } catch (err) {
                         $B.RAISE(_b_.TypeError, "'" +
                             $B.class_name(int_list[i]) + "' object " +
                             "cannot be interpreted as an integer 8")
                     }
-                    if(item < 0 || item > 255){
+                    if (item < 0 || item > 255) {
                         $B.RAISE(_b_.ValueError, "bytes must be in range" +
                             "(0, 256)")
                     }
@@ -1806,33 +1807,33 @@ bytes.$new = function(cls, source, encoding, errors){
     return self
 }
 
-bytes.__release_buffer__ = function(_self, buffer){
+bytes.__release_buffer__ = function(_self, buffer) {
     _b_.memoryview.tp_funcs.release(buffer)
 }
 
 var _lower = function(char_code) {
-    if(char_code >= 65 && char_code <= 90){
+    if (char_code >= 65 && char_code <= 90) {
         return char_code + 32
-    }else{
+    } else {
         return char_code
     }
 }
 
-var _upper = function(char_code){
-    if(char_code >= 97 && char_code <= 122){
+var _upper = function(char_code) {
+    if (char_code >= 97 && char_code <= 122) {
         return char_code - 32
-    }else{
+    } else {
         return char_code
     }
 }
 
-function $UnicodeEncodeError(encoding, code_point, position){
+function $UnicodeEncodeError(encoding, code_point, position) {
     $B.RAISE(_b_.UnicodeEncodeError, "'" + encoding +
         "' codec can't encode character " + _b_.hex(code_point) +
         " in position " + position)
 }
 
-function _hex(_int){
+function _hex(_int) {
     var h = _int.toString(16)
     return '0x' + '0'.repeat(2 - h.length) + h
 }
@@ -1935,92 +1936,92 @@ var aliases = {
 }
 
 var codecs_aliases = {}
-for(var name in aliases){
-    for(var alias of aliases[name]){
+for (var name in aliases) {
+    for (var alias of aliases[name]) {
         codecs_aliases[alias.toLowerCase().replace(/-/g, '_')] = name
     }
 }
 
-function normalise(encoding){
+function normalise(encoding) {
     // lowercase, replace " " and "-" by "-"
     var enc = encoding.toLowerCase()
                       .replace(/ /g, '_')
                       .replace(/-/g, '_')
     // replace aliases by name, eg 'rot13' by 'rot_13'
-    if(codecs_aliases[enc] !== undefined){
+    if (codecs_aliases[enc] !== undefined) {
         enc = codecs_aliases[enc]
     }
     return enc
 }
 
-function load_decoder(enc){
+function load_decoder(enc) {
     // load table from Lib/encodings/<enc>.py
-    if(to_unicode[enc] === undefined){
+    if (to_unicode[enc] === undefined) {
         var mod = _b_.__import__("encodings." + enc)
         var enc_mod = $B.module_getattr(mod, enc)
-        if(enc_mod !== $B.NULL){
+        if (enc_mod !== $B.NULL) {
             var getregentry = $B.module_getattr(enc_mod, 'getregentry')
-            if(getregentry !== $B.NULL){
+            if (getregentry !== $B.NULL) {
                 to_unicode[enc] = $B.$getattr($B.$call(getregentry), "decode")
             }
         }
     }
 }
 
-function load_encoder(enc){
+function load_encoder(enc) {
     // load table from encodings/<enc>.py
-    if(from_unicode[enc] === undefined){
+    if (from_unicode[enc] === undefined) {
         var mod = _b_.__import__("encodings." + enc)
         var enc_mod = $B.module_getattr(mod, enc)
-        if(enc_mod !== $B.NULL){
+        if (enc_mod !== $B.NULL) {
             var getregentry = $B.module_getattr(enc_mod, 'getregentry')
-            if(getregentry !== $B.NULL){
+            if (getregentry !== $B.NULL) {
                 from_unicode[enc] = $B.$getattr($B.$call(getregentry), "encode")
             }
         }
     }
 }
 
-var decode = $B.decode = function(obj, encoding, errors){
+var decode = $B.decode = function(obj, encoding, errors) {
     var s = "",
         b = obj.source,
         enc = normalise(encoding)
-    switch(enc) {
+    switch (enc) {
       case "utf_8":
       case "utf-8":
       case "utf8":
       case "U8":
       case "UTF":
-          if(globalThis.TextDecoder){
+          if (globalThis.TextDecoder) {
               var decoder = new TextDecoder('utf-8', {fatal: true}),
                   array = new Uint8Array(b)
-              try{
+              try {
                   return decoder.decode(array)
-              }catch(err){
+              } catch (err) {
                   // handled below; TextDecoder doesn't provide the same
                   // information as Python
               }
           }
           var pos = 0,
               err_info
-          while(pos < b.length){
+          while (pos < b.length) {
               let byte = b[pos]
               err_info = null
-              if(!(byte & 0x80)){
+              if (!(byte & 0x80)) {
                   // Most significant bit = 0
                   s += String.fromCodePoint(byte)
                   pos++
-              }else if((byte >> 5) == 6){
+              } else if ((byte >> 5) == 6) {
                   // Expect 2 bytes with the 2nd of the form 10xxxxxx
-                  if(b[pos + 1] === undefined){
+                  if (b[pos + 1] === undefined) {
                       err_info = [byte, pos, "end"]
-                  }else if((b[pos + 1] & 0xc0) != 0x80){
+                  } else if ((b[pos + 1] & 0xc0) != 0x80) {
                       err_info = [byte, pos, "continuation"]
                   }
-                  if(err_info !== null){
-                      if(errors == "ignore"){
+                  if (err_info !== null) {
+                      if (errors == "ignore") {
                           pos++
-                      }else{
+                      } else {
                           $B.RAISE(_b_.UnicodeDecodeError,
                               "'utf-8' codec can't decode byte 0x" +
                               err_info[0].toString(16) +"  in position " +
@@ -2028,33 +2029,33 @@ var decode = $B.decode = function(obj, encoding, errors){
                               (err_info[2] == "end" ? ": unexpected end of data" :
                                   ": invalid continuation byte"))
                       }
-                  }else{
+                  } else {
                       let cp = byte & 0x1f
                       cp <<= 6
                       cp += b[pos + 1] & 0x3f
                       s += String.fromCodePoint(cp)
                       pos += 2
                   }
-              }else if((byte >> 4) == 14){
+              } else if ((byte >> 4) == 14) {
                   // 3 bytes with the 2nd and 3d of the form 10xxxxxx
-                  if(b[pos + 1] === undefined){
+                  if (b[pos + 1] === undefined) {
                       err_info = [byte, pos, "end", pos + 1]
-                  }else if((b[pos + 1] & 0xc0) != 0x80){
+                  } else if ((b[pos + 1] & 0xc0) != 0x80) {
                       err_info = [byte, pos, "continuation", pos + 2]
-                  }else if(b[pos + 2] === undefined){
+                  } else if (b[pos + 2] === undefined) {
                       err_info = [byte, pos + '-' + (pos + 1), "end", pos + 2]
-                  }else if((b[pos + 2] & 0xc0) != 0x80){
+                  } else if ((b[pos + 2] & 0xc0) != 0x80) {
                       err_info = [byte, pos, "continuation", pos + 3]
                   }
-                  if(err_info !== null){
-                      if(errors == "ignore"){
+                  if (err_info !== null) {
+                      if (errors == "ignore") {
                           pos = err_info[3]
-                      }else if(errors == "surrogateescape"){
-                          for(let i = pos; i < err_info[3]; i++){
+                      } else if (errors == "surrogateescape") {
+                          for (let i = pos; i < err_info[3]; i++) {
                               s += String.fromCodePoint(0xdc80 + b[i] - 0x80)
                           }
                           pos = err_info[3]
-                      }else{
+                      } else {
                           $B.RAISE(_b_.UnicodeDecodeError,
                               "'utf-8' codec can't decode byte 0x" +
                               err_info[0].toString(16) +"  in position " +
@@ -2062,7 +2063,7 @@ var decode = $B.decode = function(obj, encoding, errors){
                               (err_info[2] == "end" ? ": unexpected end of data" :
                                   ": invalid continuation byte"))
                       }
-                  }else{
+                  } else {
                       let cp = byte & 0xf
                       cp = cp << 12
                       cp += (b[pos + 1] & 0x3f) << 6
@@ -2070,30 +2071,30 @@ var decode = $B.decode = function(obj, encoding, errors){
                       s += String.fromCodePoint(cp)
                       pos += 3
                   }
-              }else if((byte >> 3) == 30){
+              } else if ((byte >> 3) == 30) {
                   // 4 bytes, 1st of the form 11110xxx and 3 next 10xxxxxx
-                  if(b[pos + 1] === undefined){
+                  if (b[pos + 1] === undefined) {
                       err_info = [byte, pos, "end", pos + 1]
-                  }else if((b[pos + 1] & 0xc0) != 0x80){
+                  } else if ((b[pos + 1] & 0xc0) != 0x80) {
                       err_info = [byte, pos, "continuation", pos + 2]
-                  }else if(b[pos + 2] === undefined){
+                  } else if (b[pos + 2] === undefined) {
                       err_info = [byte, pos + '-' + (pos + 1), "end", pos + 2]
-                  }else if((b[pos + 2] & 0xc0) != 0x80){
+                  } else if ((b[pos + 2] & 0xc0) != 0x80) {
                       err_info = [byte, pos, "continuation", pos + 3]
-                  }else if(b[pos + 3] === undefined){
+                  } else if (b[pos + 3] === undefined) {
                       err_info = [byte,
                                   pos + '-' + (pos + 1) + '-' + (pos + 2),
                                   "end", pos + 3]
                   }
-                  if(err_info !== null){
-                      if(errors == "ignore"){
+                  if (err_info !== null) {
+                      if (errors == "ignore") {
                           pos = err_info[3]
-                      }else if(errors == "surrogateescape"){
-                          for(let i = pos; i < err_info[3]; i++){
+                      } else if (errors == "surrogateescape") {
+                          for (let i = pos; i < err_info[3]; i++) {
                               s += String.fromCodePoint(0xdc80 + b[i] - 0x80)
                           }
                           pos = err_info[3]
-                      }else{
+                      } else {
                           $B.RAISE(_b_.UnicodeDecodeError,
                               "'utf-8' codec can't decode byte 0x" +
                               err_info[0].toString(16) +"  in position " +
@@ -2101,7 +2102,7 @@ var decode = $B.decode = function(obj, encoding, errors){
                               (err_info[2] == "end" ? ": unexpected end of data" :
                                   ": invalid continuation byte"))
                       }
-                  }else{
+                  } else {
                       let cp = byte & 0xf
                       cp = cp << 18
                       cp += (b[pos + 1] & 0x3f) << 12
@@ -2111,13 +2112,13 @@ var decode = $B.decode = function(obj, encoding, errors){
                       pos += 4
                   }
 
-              }else{
-                  if(errors == "ignore"){
+              } else {
+                  if (errors == "ignore") {
                       pos++
-                  }else if(errors == "surrogateescape"){
+                  } else if (errors == "surrogateescape") {
                       s += String.fromCodePoint(0xdc80 + b[pos] - 0x80)
                       pos++
-                  }else{
+                  } else {
                       $B.RAISE(_b_.UnicodeDecodeError,
                           "'utf-8' codec can't decode byte 0x" +
                           byte.toString(16) + " in position " + pos +
@@ -2135,13 +2136,13 @@ var decode = $B.decode = function(obj, encoding, errors){
       case "latin":
       case "latin1":
       case "L1":
-          b.forEach(function(item){
+          for (let item of b) {
               s += String.fromCharCode(item)
-          })
+          }
           break
       case "unicode_escape":
           // obj is str or bytes
-          if([bytes, bytearray].includes($B.get_class(obj))){
+          if ([bytes, bytearray].includes($B.get_class(obj))) {
               obj = decode(obj, "latin-1", "strict")
           }
           return obj.replace(/\\n/g, "\n").
@@ -2152,24 +2153,24 @@ var decode = $B.decode = function(obj, encoding, errors){
                    replace(/\\'/g, "'").
                    replace(/\\"/g, '"')
       case "raw_unicode_escape":
-          if([bytes, bytearray].includes($B.get_class(obj))){
+          if ([bytes, bytearray].includes($B.get_class(obj))) {
               obj = decode(obj, "latin-1", "strict")
           }
-          return obj.replace(/\\u([a-fA-F0-9]{4})/g, function(mo){
+          return obj.replace(/\\u([a-fA-F0-9]{4})/g, function(mo) {
               let cp = parseInt(mo.substr(2), 16)
               return String.fromCharCode(cp)
           })
       case "ascii":
-          for(let i = 0, len = b.length; i < len; i++){
+          for (let i = 0, len = b.length; i < len; i++) {
               let cp = b[i]
-              if(cp <= 127){
+              if (cp <= 127) {
                   s += String.fromCharCode(cp)
-              }else{
-                  if(errors == "ignore"){
+              } else {
+                  if (errors == "ignore") {
                       // ignore
-                  }else if(errors == "backslashreplace"){
+                  } else if (errors == "backslashreplace") {
                       s += '\\x' + cp.toString(16)
-                  }else{
+                  } else {
                       let msg = "'ascii' codec can't decode byte 0x" +
                         cp.toString(16) + " in position " + i +
                         ": ordinal not in range(128)"
@@ -2179,15 +2180,15 @@ var decode = $B.decode = function(obj, encoding, errors){
           }
           break
       default:
-          try{
+          try {
               load_decoder(enc)
-          }catch(err){
+          } catch (err) {
               console.log('error in load decoder', enc, err)
               $B.RAISE(_b_.LookupError, "unknown encoding: " + enc)
           }
           var decoded = $B.$call(to_unicode[enc], obj)[0]
-          for(let i = 0, len = decoded.length; i < len; i++){
-              if(decoded.codePointAt(i) == 0xfffe){
+          for (let i = 0, len = decoded.length; i < len; i++) {
+              if (decoded.codePointAt(i) == 0xfffe) {
                   $B.RAISE(_b_.UnicodeDecodeError, "'charmap' codec " +
                       `can't decode byte ${_hex(b[i])} in position ${i}: ` +
                       "character maps to <undefined>")
@@ -2198,7 +2199,7 @@ var decode = $B.decode = function(obj, encoding, errors){
     return s
 }
 
-var encode = $B.encode = function(){
+var encode = $B.encode = function() {
     var $ = $B.args("encode", 3, {s: null, encoding: null, errors: null},
                 arguments, {encoding: "utf-8", errors:"strict"})
     var s = $.s,
@@ -2208,32 +2209,32 @@ var encode = $B.encode = function(){
         pos = 0,
         enc = normalise(encoding)
 
-    switch(enc) {
+    switch (enc) {
         case "utf-8":
         case "utf_8":
         case "utf8":
-            if(globalThis.TextEncoder){
+            if (globalThis.TextEncoder) {
                 var encoder = new TextEncoder('utf-8', {fatal: true})
-                try{
+                try {
                     var array = encoder.encode(s)
                     return fast_bytes(Array.from(array))
-                }catch(err){
+                } catch (err) {
                     // handled below; TextDecoder doesn't provide the same
                     // information as Python
                 }
             }
-            for(let i = 0, len = s.length; i < len; i++){
+            for (let i = 0, len = s.length; i < len; i++) {
                 let cp = s.charCodeAt(i)
-                if(cp <= 0x7f){
+                if (cp <= 0x7f) {
                     t.push(cp)
-                }else if(cp <= 0x7ff){
+                } else if (cp <= 0x7ff) {
                     t.push(0xc0 + (cp >> 6),
                              0x80 + (cp & 0x3f))
-                }else if(cp <= 0xffff){
+                } else if (cp <= 0xffff) {
                     t.push(0xe0 + (cp >> 12),
                              0x80 + ((cp & 0xfff) >> 6),
                              0x80 + (cp & 0x3f))
-                }else{
+                } else {
                     console.log("4 bytes")
                 }
             }
@@ -2248,59 +2249,59 @@ var encode = $B.encode = function(){
         case "8859":
         case "cp819":
         case "windows1252":
-            for(let i = 0, len = s.length; i < len; i++){
+            for (let i = 0, len = s.length; i < len; i++) {
                 let cp = s.charCodeAt(i) // code point
-                if(cp <= 255){
+                if (cp <= 255) {
                     t[pos++] = cp
-                }else if(errors != "ignore"){
+                } else if (errors != "ignore") {
                     $UnicodeEncodeError(encoding, i)
                 }
             }
             break
         case "ascii":
-          for(let i = 0, len = _b_.str.mp_length(s); i < len; i++){
+          for (let i = 0, len = _b_.str.mp_length(s); i < len; i++) {
               let cp = s.charCodeAt(i), // code point
                   char = _b_.str.mp_subscript(s, i)
-              if(cp <= 127){
+              if (cp <= 127) {
                   t[pos++] = cp
-              }else if(errors == "backslashreplace"){
+              } else if (errors == "backslashreplace") {
                   let hex = _b_.hex(_b_.ord(char))
-                  if(hex.length < 5){
+                  if (hex.length < 5) {
                       hex = '\\x' + '0'.repeat(4 - hex.length) + hex.substr(2)
-                  }else if(hex.length < 7){
+                  } else if (hex.length < 7) {
                       hex = '\\u' + '0'.repeat(6 - hex.length) + hex.substr(2)
-                  }else{
+                  } else {
                       hex = '\\U' + '0'.repeat(10 - hex.length) + hex.substr(2)
                   }
-                  for(let char of hex){
+                  for (let char of hex) {
                       t[pos++] = char.charCodeAt(0)
                   }
-              }else if(errors !== 'ignore'){
+              } else if (errors !== 'ignore') {
                   $UnicodeEncodeError(encoding, i)
               }
           }
           break
         case "raw_unicode_escape":
-          for(let i = 0, len = s.length; i < len; i++){
+          for (let i = 0, len = s.length; i < len; i++) {
               let cp = s.charCodeAt(i) // code point
-              if(cp < 256){
+              if (cp < 256) {
                   t[pos++] = cp
-              }else{
+              } else {
                   let us = cp.toString(16)
-                  if(us.length % 2){
+                  if (us.length % 2) {
                       us = "0" + us
                   }
                   us = "\\u" + us
-                  for(let j = 0; j < us.length; j++){
+                  for (let j = 0; j < us.length; j++) {
                       t[pos++] = us.charCodeAt(j)
                   }
               }
           }
           break
         default:
-            try{
+            try {
                 load_encoder(enc)
-            }catch(err){
+            } catch (err) {
                 $B.RAISE(_b_.LookupError, "unknown encoding: " + encoding)
             }
             return $B.$call(from_unicode[enc], s)[0]
@@ -2308,7 +2309,7 @@ var encode = $B.encode = function(){
     return fast_bytes(t)
 }
 
-function fast_bytes(t){
+function fast_bytes(t) {
     return {
         ob_type: _b_.bytes,
         source: t ?? []
@@ -2317,28 +2318,28 @@ function fast_bytes(t){
 
 $B.fast_bytes = fast_bytes
 
-bytes.$factory = function(){
+bytes.$factory = function() {
     var [args, kw] = $B.parse_args_kw('bytes', arguments)
     return bytes.tp_new(bytes, Array.from(args), kw)
 }
 
 /* bytes start */
-_b_.bytes.tp_richcompare = function(self, other, op){
-    if(! $B.is_bytes(other)){
+_b_.bytes.tp_richcompare = function(self, other, op) {
+    if (! $B.is_bytes(other)) {
         return _b_.NotImplemented
     }
     return _b_.list.tp_richcompare(
         $B.$list(self.source), $B.$list(other.source), op)
 }
 
-_b_.bytes.nb_multiply = function(){
+_b_.bytes.nb_multiply = function() {
     var $ = $B.args('__mul__', 2, {self: null, other: null}, arguments)
     var other = $B.PyNumber_Index($.other)
     var t = [],
         source = $.self.source,
         slen = source.length
-    for(var i = 0; i < other; i++){
-        for(var j = 0; j < slen; j++){
+    for (var i = 0; i < other; i++) {
+        for (var j = 0; j < slen; j++) {
             t.push(source[j])
         }
     }
@@ -2347,54 +2348,54 @@ _b_.bytes.nb_multiply = function(){
     return res
 }
 
-_b_.bytes.nb_remainder = function(){
+_b_.bytes.nb_remainder = function() {
     return nb_remainder.apply(null, arguments)
 }
 
-_b_.bytes.tp_repr = function(self){
+_b_.bytes.tp_repr = function(self) {
     var t = $B.special_string_repr, // in brython_builtins.js
         res = ""
-    for(var i = 0, len = self.source.length; i < len; i++){
+    for (var i = 0, len = self.source.length; i < len; i++) {
         var s = self.source[i]
-        if(t[s] !== undefined){
+        if (t[s] !== undefined) {
             res += t[s]
-        }else if(s < 32 || s >= 128){
+        } else if (s < 32 || s >= 128) {
             var hx = s.toString(16)
             hx = (hx.length == 1 ? '0' : '') + hx
             res += '\\x' + hx
-        }else if(s == "\\".charCodeAt(0)){
+        } else if (s == "\\".charCodeAt(0)) {
             res += "\\\\"
-        }else{
+        } else {
             res += String.fromCharCode(s)
         }
     }
-    if(res.indexOf("'") > -1 && res.indexOf('"') == -1){
+    if (res.indexOf("'") > -1 && res.indexOf('"') == -1) {
         return 'b"' + res + '"'
-    }else{
+    } else {
         return "b'" + res.replace(new RegExp("'", "g"), "\\'")  + "'"
     }
 }
 
-_b_.bytes.tp_hash = function(self){
-    if(self === undefined){
+_b_.bytes.tp_hash = function(self) {
+    if (self === undefined) {
         return bytes.__hashvalue__ || $B.$py_next_hash--  // for hash of str$
     }
 
     //http://stackoverflow.com/questions/2909106/python-whats-a-correct-and-good-$
     // this implementation for strings maybe good enough for us..
     var hash = 1
-    for(var i = 0, len = self.source.length; i < len; i++){
+    for (var i = 0, len = self.source.length; i < len; i++) {
         hash = (101 * hash + self.source[i]) & 0xFFFFFFFF
     }
 
     return hash
 }
 
-_b_.bytes.tp_str = function(self){
+_b_.bytes.tp_str = function(self) {
     return _b_.bytes.tp_repr(self)
 }
 
-_b_.bytes.tp_iter = function(self){
+_b_.bytes.tp_iter = function(self) {
     return {
         ob_type: bytes_iterator,
         obj: self,
@@ -2403,46 +2404,46 @@ _b_.bytes.tp_iter = function(self){
     }
 }
 
-_b_.bytes.tp_new = function(cls, args, kw){
+_b_.bytes.tp_new = function(cls, args, kw) {
     var [source, encoding, errors] = $B.unpack_args('bytes', args,
         ['source', 'encoding', 'errors'],
         {source: $B.NULL, encoding: $B.NULL, errors: $B.NULL}
     )
-    if(source === $B.NULL){
+    if (source === $B.NULL) {
         return {
             ob_type: cls,
             source: []
         }
     }
     var kw_encoding = $B.str_dict_get(kw, 'encoding', $B.NULL)
-    if(encoding !== $B.NULL){
-        if(kw_encoding !== $B.NULL){
+    if (encoding !== $B.NULL) {
+        if (kw_encoding !== $B.NULL) {
             $B.RAISE(_b_.TypeError,
                 `argument for bytes() given by name ('encoding') ` +
                 `and position (2)`
             )
         }
-    }else{
+    } else {
         encoding = kw_encoding
     }
     var kw_errors = $B.str_dict_get(kw, 'errors', $B.NULL)
-    if(errors !== $B.NULL){
-        if(kw_errors !== $B.NULL){
+    if (errors !== $B.NULL) {
+        if (kw_errors !== $B.NULL) {
             $B.RAISE(_b_.TypeError,
                 `argument for bytes() given by name ('errors') ` +
                 `and position (3)`
             )
         }
-    }else{
+    } else {
         errors = kw_errors === $B.NULL ? 'strict' : kw_errors
     }
 
-    if(typeof source == "string" || $B.is_str(source)){
-        if(encoding === $B.NULL){
+    if (typeof source == "string" || $B.is_str(source)) {
+        if (encoding === $B.NULL) {
              $B.RAISE(_b_.TypeError, 'string argument without an encoding')
         }
         let res = encode(source, encoding, errors)
-        if(! $B.$isinstance(res, bytes)){
+        if (! $B.$isinstance(res, bytes)) {
             $B.RAISE(_b_.TypeError, `'${encoding}' codec returns ` +
                 `${$B.class_name(res)}, not bytes`)
         }
@@ -2450,59 +2451,59 @@ _b_.bytes.tp_new = function(cls, args, kw){
         res.ob_type = cls
         return res
     }
-    if(encoding !== $B.NULL){
+    if (encoding !== $B.NULL) {
         $B.RAISE(_b_.TypeError, "encoding without a string argument")
     }
-    if(typeof source == "number" || $B.is_int(source)){
+    if (typeof source == "number" || $B.is_int(source)) {
         var size = $B.PyNumber_Index(source)
         source = []
-        for(var i = 0; i < size; i++){
+        for (var i = 0; i < size; i++) {
             source[i] = 0
         }
-    }else if($B.$isinstance(source, [_b_.bytes, _b_.bytearray])){
+    } else if ($B.$isinstance(source, [_b_.bytes, _b_.bytearray])) {
         source = source.source
-    }else if($B.$isinstance(source, _b_.memoryview)){
+    } else if ($B.$isinstance(source, _b_.memoryview)) {
         source = source.obj.source
     }else if($B.imported.array &&
             $B.$isinstance(source, $B.module_getattr($B.imported.array, 'array'))){
         var array = $B.module_getattr($B.imported.array, 'array')
         source = array.tp_funcs.tobytes(source).source
-    }else{
+    } else {
         var int_list
-        if(Array.isArray(source)){
+        if (Array.isArray(source)) {
             int_list = source
-        }else{
-            try{
+        } else {
+            try {
                 int_list = _b_.list.$factory(source)
-            }catch(err){
+            } catch (err) {
                 var bytes_method = $B.$getattr(source, '__bytes__', _b_.None)
-                if(bytes_method === _b_.None){
+                if (bytes_method === _b_.None) {
                     $B.RAISE(_b_.TypeError, "cannot convert " +
                         `'${$B.class_name(source)}' object to bytes`)
                 }
                 let res = $B.$call(bytes_method)
-                if(! $B.is_bytes(res)){
+                if (! $B.is_bytes(res)) {
                     $B.RAISE(_b_.TypeError, `__bytes__ returned ` +
                         `non-bytes (type ${$B.class_name(res)})`)
                 }
-                if(res.source === undefined){
+                if (res.source === undefined) {
                     console.log('!!!!!!!', source)
                 }
                 return res
             }
         }
         source = []
-        for(var item of int_list){
+        for (var item of int_list) {
             item = $B.PyNumber_Index(item)
-            if(item >= 0 && item < 256){
+            if (item >= 0 && item < 256) {
                 source.push(item)
-            }else{
+            } else {
                 $B.RAISE(_b_.ValueError,
                     "bytes must be in range (0, 256)")
             }
         }
     }
-    if(source === undefined){
+    if (source === undefined) {
         console.log('bytes.__new__, no source', source)
     }
     return {
@@ -2511,42 +2512,42 @@ _b_.bytes.tp_new = function(cls, args, kw){
     }
 }
 
-_b_.bytes.mp_length = function(self){
+_b_.bytes.mp_length = function(self) {
     return self.source.length
 }
 
-_b_.bytes.mp_subscript = function(self, arg){
-    if($B.is_int(arg)){
+_b_.bytes.mp_subscript = function(self, arg) {
+    if ($B.is_int(arg)) {
         arg = $B.int_value(arg)
         let pos = arg
-        if(arg < 0){
+        if (arg < 0) {
             pos = self.source.length + pos
         }
-        if(pos >= 0 && pos < self.source.length){
+        if (pos >= 0 && pos < self.source.length) {
             return self.source[pos]
         }
         $B.RAISE(_b_.IndexError, "index out of range")
-    }else if($B.$isinstance(arg, _b_.slice)){
+    } else if ($B.$isinstance(arg, _b_.slice)) {
         let s = _b_.slice.$conv_for_seq(arg, self.source.length)
         var start = s.start,
             stop = s.stop,
             step = s.step
         let res = [],
             pos = 0
-        if(step > 0){
+        if (step > 0) {
             stop = Math.min(stop, self.source.length)
-            if(stop <= start){
+            if (stop <= start) {
                 return bytes.$factory([])
             }
-            for(let i = start; i < stop; i += step){
+            for (let i = start; i < stop; i += step) {
                 res[pos++] = self.source[i]
             }
-        }else{
-            if(stop >= start){
+        } else {
+            if (stop >= start) {
                 return bytes.$factory([])
             }
             stop = Math.max(0, stop)
-            for(let i = start; i >= stop; i += step){
+            for (let i = start; i >= stop; i += step) {
                 res[pos++] = self.source[i]
             }
         }
@@ -2557,11 +2558,11 @@ _b_.bytes.mp_subscript = function(self, arg){
     )
 }
 
-_b_.bytes.sq_concat = function(self, other){
+_b_.bytes.sq_concat = function(self, other) {
     var $ = $B.args('__add__', 2, {self: null, other: null}, arguments)
     var self = $.self,
         other = $.other
-    if(! is_bytes_like(other)){
+    if (! is_bytes_like(other)) {
         $B.RAISE(_b_.TypeError, `can't concat ${$B.class_name(other)} to bytes`)
     }
     return {
@@ -2570,37 +2571,37 @@ _b_.bytes.sq_concat = function(self, other){
     }
 }
 
-_b_.bytes.sq_contains = function(self, other){
-    if(typeof other == "number"){
+_b_.bytes.sq_contains = function(self, other) {
+    if (typeof other == "number") {
         return self.source.indexOf(other) > -1
     }
-    if(self.source.length < other.source.length){
+    if (self.source.length < other.source.length) {
         return false
     }
     var len = other.source.length
-    for(var i = 0; i < self.source.length - other.source.length + 1; i++){
+    for (var i = 0; i < self.source.length - other.source.length + 1; i++) {
         var flag = true
-        for(var j = 0; j < len; j++){
-            if(other.source[i + j] != self.source[j]){
+        for (var j = 0; j < len; j++) {
+            if (other.source[i + j] != self.source[j]) {
                 flag = false
                 break
             }
         }
-        if(flag){
+        if (flag) {
             return true
         }
     }
     return false
 }
 
-_b_.bytes.bf_getbuffer = function(self, flags){
+_b_.bytes.bf_getbuffer = function(self, flags) {
     return $B.$call(_b_.memoryview, self)
 }
 
 var bytes_funcs = _b_.bytes.tp_funcs = {}
 
-bytes_funcs.__bytes__ = function(self){
-    if($B.exact_type(self, _b_.bytes)){
+bytes_funcs.__bytes__ = function(self) {
+    if ($B.exact_type(self, _b_.bytes)) {
         return self
     }
     return {
@@ -2609,23 +2610,23 @@ bytes_funcs.__bytes__ = function(self){
     }
 }
 
-bytes_funcs.__getnewargs__ = function(self){
+bytes_funcs.__getnewargs__ = function(self) {
     return bytes.$getnewargs($B.single_arg('__getnewargs__', 'self', arguments))
 }
 
-bytes_funcs.capitalize = function(self){
+bytes_funcs.capitalize = function(self) {
     return capitalize.apply(null, arguments)
 }
 
-bytes_funcs.center = function(self){
+bytes_funcs.center = function(self) {
     return center.apply(null, arguments)
 }
 
-bytes_funcs.count = function(self){
+bytes_funcs.count = function(self) {
     return count.apply(null, arguments)
 }
 
-bytes_funcs.decode = function(self){
+bytes_funcs.decode = function(self) {
     var $ = $B.args('decode', 3, {self: null, encoding: null, errors: null},
                 arguments, {encoding: 'utf-8', errors: 'strict'})
     var self = $.self,
@@ -2634,82 +2635,82 @@ bytes_funcs.decode = function(self){
     return decode(self, encoding, errors)
 }
 
-bytes_funcs.endswith = function(self){
+bytes_funcs.endswith = function(self) {
     return endswith.apply(null, arguments)
 }
 
-bytes_funcs.expandtabs = function(self){
+bytes_funcs.expandtabs = function(self) {
     return expandtabs.apply(null, arguments)
 }
 
-bytes_funcs.find = function(self, sub){
+bytes_funcs.find = function(self, sub) {
     return find.apply('find', arguments)
 }
 
-bytes_funcs.fromhex = function(self){
+bytes_funcs.fromhex = function(self) {
     return fromhex.apply(null, arguments)
 }
 
-bytes_funcs.hex = function(){
+bytes_funcs.hex = function() {
     return hex.apply(null, arguments)
 }
 
-bytes_funcs.index = function(){
+bytes_funcs.index = function() {
     var $ = $B.args('index', 4,
         {self: null, sub: null, start: null, end: null},
         arguments, {start: 0, end: -1})
     var index = bytes_funcs.find($.self, $.sub, $.start, $.end)
-    if(index == -1){
+    if (index == -1) {
         $B.RAISE(_b_.ValueError, "subsection not found")
     }
     return index
 }
 
-bytes_funcs.isalnum = function(){
+bytes_funcs.isalnum = function() {
     return isalnum.apply(null, arguments)
 }
 
-bytes_funcs.isalpha = function(){
+bytes_funcs.isalpha = function() {
     return isalpha.apply(null, arguments)
 }
 
-bytes_funcs.isascii = function(){
+bytes_funcs.isascii = function() {
     return isascii.apply(null, arguments)
 }
 
-bytes_funcs.isdigit = function(){
+bytes_funcs.isdigit = function() {
     return isdigit.apply(null, arguments)
 }
 
-bytes_funcs.islower = function(){
+bytes_funcs.islower = function() {
     return islower.apply(null, arguments)
 }
 
-bytes_funcs.isspace = function(){
+bytes_funcs.isspace = function() {
     return isspace.apply(null, arguments)
 }
 
-bytes_funcs.istitle = function(){
+bytes_funcs.istitle = function() {
     return istitle.apply(null, arguments)
 }
 
-bytes_funcs.isupper = function(){
+bytes_funcs.isupper = function() {
     return isupper.apply(null, arguments)
 }
 
-bytes_funcs.join = function(){
+bytes_funcs.join = function() {
     return join.apply(_b_.bytes, arguments)
 }
 
-bytes_funcs.ljust = function(){
+bytes_funcs.ljust = function() {
     return ljust.apply(bytes, arguments)
 }
 
-bytes_funcs.lower = function(){
+bytes_funcs.lower = function() {
     return lower.apply(_b_.bytes, arguments)
 }
 
-bytes_funcs.lstrip = function(self, cars){
+bytes_funcs.lstrip = function(self, cars) {
     var $ = $B.args('lstrip', 2, {self: null, cars: null},
                 arguments, {cars: ws_cars})
     var self = $.self,
@@ -2717,27 +2718,27 @@ bytes_funcs.lstrip = function(self, cars){
     return strip.call(_b_.bytes, self, cars, 'l')
 }
 
-bytes_funcs.maketrans = function(){
+bytes_funcs.maketrans = function() {
     return maketrans.apply(_b_.bytes, arguments)
 }
 
-bytes_funcs.partition = function(){
+bytes_funcs.partition = function() {
     return partition.apply(_b_.bytes, arguments)
 }
 
-bytes_funcs.removeprefix = function(){
+bytes_funcs.removeprefix = function() {
     return removeprefix.apply(null, arguments)
 }
 
-bytes_funcs.removesuffix = function(){
+bytes_funcs.removesuffix = function() {
     return removesuffix.apply(null, arguments)
 }
 
-bytes_funcs.replace = function(){
+bytes_funcs.replace = function() {
     return replace.apply(_b_.bytes, arguments)
 }
 
-bytes_funcs.rfind = function(){
+bytes_funcs.rfind = function() {
     return find.apply('rfind', arguments)
 }
 
@@ -2747,7 +2748,7 @@ bytes_funcs.rindex = function() {
             arguments, {start: 0, end: -1})
 
     var index = bytes_funcs.rfind($.self, $.sub, $.start, $.end)
-    if(index == -1){
+    if (index == -1) {
         $B.RAISE(_b_.ValueError, "subsection not found")
     }
     return index
@@ -2761,11 +2762,11 @@ bytes_funcs.rpartition = function() {
     return rpartition.apply(_b_.bytes, arguments)
 }
 
-bytes_funcs.rsplit = function(){
+bytes_funcs.rsplit = function() {
     return rsplit.apply(_b_.bytes, arguments)
 }
 
-bytes_funcs.rstrip = function(){
+bytes_funcs.rstrip = function() {
     var $ = $B.args('lstrip', 2, {self: null, cars: null},
                 arguments, {cars: ws_cars})
     var self = $.self,
@@ -2773,19 +2774,19 @@ bytes_funcs.rstrip = function(){
     return strip.call(_b_.bytes, self, cars, 'r')
 }
 
-bytes_funcs.split = function(){
+bytes_funcs.split = function() {
     return split.apply(_b_.bytes, arguments)
 }
 
-bytes_funcs.splitlines = function(){
+bytes_funcs.splitlines = function() {
     return splitlines.apply(_b_.bytes, arguments)
 }
 
-bytes_funcs.startswith = function(self){
+bytes_funcs.startswith = function(self) {
     return startswith.apply(_b_.bytes, arguments)
 }
 
-bytes_funcs.strip = function(){
+bytes_funcs.strip = function() {
     var $ = $B.args('lstrip', 2, {self: null, cars: null},
                 arguments, {cars: ws_cars})
     var self = $.self,
@@ -2794,23 +2795,23 @@ bytes_funcs.strip = function(){
     return strip.call(_b_.bytes, res, cars, 'l')
 }
 
-bytes_funcs.swapcase = function(){
+bytes_funcs.swapcase = function() {
     return swapcase.apply(_b_.bytes, arguments)
 }
 
-bytes_funcs.title = function(){
+bytes_funcs.title = function() {
     return title.apply(_b_.bytes, arguments)
 }
 
-bytes_funcs.translate = function(){
+bytes_funcs.translate = function() {
     return translate.apply(_b_.bytes, arguments)
 }
 
-bytes_funcs.upper = function(){
+bytes_funcs.upper = function() {
     return upper.apply(null, arguments)
 }
 
-bytes_funcs.zfill = function(){
+bytes_funcs.zfill = function() {
     return zfill.apply(_b_.bytes, arguments)
 }
 

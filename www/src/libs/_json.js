@@ -1,4 +1,4 @@
-(function($B){
+(function($B) {
 
 var _b_ = $B.builtins
 
@@ -7,17 +7,17 @@ var JSONDecodeError = $B.make_type('JSONDecodeError', [_b_.Exception])
 $B.finalize_type(JSONDecodeError)
 $B.set_func_names(JSONDecodeError, '_json')
 
-function get_error(){
+function get_error() {
     // If module json is imported, use JSONDecodeError
-    if($B.imported.json){
+    if ($B.imported.json) {
         return $B.module_getattr($B.imported.json, 'JSONDecodeError')
-    }else{
+    } else {
         return JSONDecodeError
     }
 }
 
-function simple(obj){
-    switch(typeof obj){
+function simple(obj) {
+    switch (typeof obj) {
         case 'string':
         case 'number':
         case 'boolean':
@@ -31,7 +31,7 @@ function simple(obj){
     return false
 }
 
-function to_json(obj, level){
+function to_json(obj, level) {
     var $defaults = {skipkeys:_b_.False, ensure_ascii:_b_.True,
             check_circular:_b_.True, allow_nan:_b_.True, cls:_b_.None,
             indent:_b_.None, separators:_b_.None, "default":_b_.None,
@@ -40,8 +40,8 @@ function to_json(obj, level){
                 {level: 1}, null, "kw")
 
     var kw = _b_.dict.$to_obj($.kw)
-    for(var key in $defaults){
-        if(! kw.hasOwnProperty(key)){
+    for (var key in $defaults) {
+        if (! kw.hasOwnProperty(key)) {
             kw[key] = $defaults[key]
         }
     }
@@ -59,36 +59,36 @@ function to_json(obj, level){
 
     var item_separator = separators[0],
         key_separator = separators[1]
-    if(indent !== _b_.None){
+    if (indent !== _b_.None) {
         var indent_str
-        if(typeof indent == "string"){
+        if (typeof indent == "string") {
             indent_str = indent
-        }else if(typeof indent == "number" && indent >= 1){
+        } else if (typeof indent == "number" && indent >= 1) {
             indent_str = " ".repeat(indent)
-        }else{
+        } else {
             $B.RAISE(_b_.ValueError, "invalid indent: " +
                 _b_.str.$factory(indent))
         }
     }
     var kwarg = {$kw: [{}]}
-    for(var key in kw){
+    for (var key in kw) {
         kwarg.$kw[0][key] = kw[key]
     }
 
-    switch(typeof obj){
+    switch (typeof obj) {
         case 'string':
             var res = JSON.stringify(obj)
-            if(ensure_ascii){
+            if (ensure_ascii) {
                 var escaped = ''
-                for(var i = 0, len = res.length; i < len; i++){
+                for (var i = 0, len = res.length; i < len; i++) {
                     var u = res.codePointAt(i)
-                    if(u > 127){
+                    if (u > 127) {
                         u = u.toString(16)
-                        while(u.length < 4){
+                        while (u.length < 4) {
                             u = "0" + u
                         }
                         escaped += '\\u' + u
-                    }else{
+                    } else {
                         escaped += res.charAt(i)
                     }
                 }
@@ -100,7 +100,7 @@ function to_json(obj, level){
         case 'number':
             if([Infinity, -Infinity].indexOf(obj) > -1 ||
                     isNaN(obj)){
-                if(! allow_nan){
+                if (! allow_nan) {
                     $B.RAISE(_b_.ValueError,
                         'Out of range float values are not JSON compliant')
                 }
@@ -109,31 +109,31 @@ function to_json(obj, level){
         case "bigint":
             return obj.toString()
     }
-    if(obj instanceof String){
-        if(! ensure_ascii){
+    if (obj instanceof String) {
+        if (! ensure_ascii) {
             return $B.String(obj)
         }
         // string with surrogate pairs. cf. issue #1903.
         var res = ''
-        if(obj.surrogates){
+        if (obj.surrogates) {
             var s_ix = 0,
                 s_pos = obj.surrogates[s_ix]
-            for(var i = 0, len = obj.length; i < len; i++){
-                if(i == s_pos){
+            for (var i = 0, len = obj.length; i < len; i++) {
+                if (i == s_pos) {
                     var code = obj.codePointAt(i) - 0x10000
                     res += '\\u' + (0xD800 | (code >> 10)).toString(16) +
                            '\\u' + (0xDC00 | (code & 0x3FF)).toString(16)
                     i++
                     s_ix++
                     s_pos = obj.surrogates[s_ix]
-                }else{
+                } else {
                     var code = obj.charCodeAt(i)
-                    if(code < 127){
+                    if (code < 127) {
                         var x = _b_.repr(obj[i])
                         res += x.substr(1, x.length - 2)
-                    }else{
+                    } else {
                         var x = code.toString(16)
-                        while(x.length < 4){
+                        while (x.length < 4) {
                             x = '0' + x
                         }
                         res += '\\u' + x
@@ -144,61 +144,61 @@ function to_json(obj, level){
         return '"' + res.replace(new RegExp('"', "g"), '\\"') + '"'
     }
 
-    if($B.$isinstance(obj, [_b_.list, _b_.tuple])){
+    if ($B.$isinstance(obj, [_b_.list, _b_.tuple])) {
         var res = []
         var sep = item_separator,
             first = '[',
             last = ']'
-        if(indent !== _b_.None){
+        if (indent !== _b_.None) {
             sep += "\n" + indent_str.repeat(level)
             first = '[' + '\n' + indent_str.repeat(level)
             last = '\n' + indent_str.repeat(level - 1) + ']'
             level++
         }
-        for(var i = 0, len = obj.length; i < len; i++){
+        for (var i = 0, len = obj.length; i < len; i++) {
             res.push(to_json(obj[i], level, kwarg))
         }
         return first + res.join(sep) + last
-    }else if($B.$isinstance(obj, _b_.float)){
+    } else if ($B.$isinstance(obj, _b_.float)) {
         return obj.value
-    }else if($B.is_big_int(obj)){
+    } else if ($B.is_big_int(obj)) {
         return $B.int_value(obj).toString()
-    }else if(obj === _b_.None){
+    } else if (obj === _b_.None) {
         return "null"
-    }else if($B.is_dict(obj)){
+    } else if ($B.is_dict(obj)) {
         var res = [],
             items = Array.from($B.make_js_iterator(_b_.dict.tp_funcs.items(obj)))
-        if(sort_keys){
+        if (sort_keys) {
             // Sort keys by alphabetical order
             items.sort()
         }
         var sep = item_separator,
             first = '{',
             last = '}'
-        if(indent !== _b_.None){
+        if (indent !== _b_.None) {
             sep += "\n" + indent_str.repeat(level)
             first = '{' + '\n' + indent_str.repeat(level)
             last = '\n' + indent_str.repeat(level - 1) + '}'
             level++
         }
-        for(var i = 0, len = items.length; i < len; i++){
+        for (var i = 0, len = items.length; i < len; i++) {
             var item = items[i]
-            if(! simple(item[0])){
-                if(! skipkeys){
+            if (! simple(item[0])) {
+                if (! skipkeys) {
                     $B.RAISE(_b_.TypeError, "keys must be str, int, " +
                         "float, bool or None, not " + $B.class_name(obj))
                 }
-            }else{
+            } else {
                 // In the result, key must be a string
                 var key = _b_.str.$factory(item[0])
                 // Check circular reference
-                if(check_circular && $B.repr.enter(item[1])){
+                if (check_circular && $B.repr.enter(item[1])) {
                     $B.RAISE(_b_.ValueError, "Circular reference detected")
                 }
                 res.push(
                     [to_json(key, level, kwarg), to_json(item[1], level, kwarg)].
                     join(key_separator))
-                if(check_circular){
+                if (check_circular) {
                     $B.repr.leave(item[1])
                 }
             }
@@ -206,74 +206,74 @@ function to_json(obj, level){
         return first + res.join(sep) + last
     }
     // For other types, use function default if provided
-    if(_default == _b_.None){
+    if (_default == _b_.None) {
         console.log('obj', obj)
         $B.RAISE(_b_.TypeError, "Object of type " + $B.class_name(obj) +
             " is not JSON serializable")
-    }else{
+    } else {
         return to_json($B.$call(_default, obj), level, kwarg)
     }
 }
 
-function loads(s){
+function loads(s) {
     var args = []
-    for(var i = 1, len = arguments.length; i < len; i++){
+    for (var i = 1, len = arguments.length; i < len; i++) {
         args.push(arguments[i])
     }
     var decoder = JSONDecoder.$factory.apply(null, args)
     return JSONDecoder.decode(decoder, s)
 }
 
-function to_py(obj, kw){
+function to_py(obj, kw) {
     // Conversion to Python objects
     // kw are the keyword arguments to loads()
     var res
-    if(obj instanceof List){
+    if (obj instanceof List) {
         return $B.$list(obj.items.map(x => to_py(x, kw)))
-    }else if(obj instanceof Dict){
-        if(kw.object_pairs_hook !== _b_.None){
+    } else if (obj instanceof Dict) {
+        if (kw.object_pairs_hook !== _b_.None) {
             var pairs = []
-            for(var i = 0, len = obj.keys.length; i < len; i++){
+            for (var i = 0, len = obj.keys.length; i < len; i++) {
                 pairs.push($B.fast_tuple([obj.keys[i],
                     to_py(obj.values[i], kw)]))
             }
             return $B.$call(kw.object_pairs_hook, pairs)
-        }else{
+        } else {
             var dict = $B.empty_dict()
-            for(var i = 0, len = obj.keys.length; i < len; i++){
+            for (var i = 0, len = obj.keys.length; i < len; i++) {
                 _b_.dict.$setitem(dict, obj.keys[i], to_py(obj.values[i], kw))
             }
             return kw.object_hook === _b_.None ? dict :
                 $B.$call(kw.object_hook, dict)
         }
-    }else if(obj.type == 'str'){
+    } else if (obj.type == 'str') {
         return obj.value
-    }else if(obj.type == 'num'){
-        if(obj.value.search(/[.eE]/) > -1){
+    } else if (obj.type == 'num') {
+        if (obj.value.search(/[.eE]/) > -1) {
             // float
-            if(kw.parse_float !== _b_.None){
+            if (kw.parse_float !== _b_.None) {
                 return $B.$call(kw.parse_float, obj.value)
             }
             return $B.fast_float(parseFloat(obj.value))
-        }else{
+        } else {
             // integer
-            if(kw.parse_int !== _b_.None){
+            if (kw.parse_int !== _b_.None) {
                 return $B.$call(kw.parse_int, obj.value)
             }
             var int = parseInt(obj.value)
-            if(Math.abs(int) < $B.max_int){
+            if (Math.abs(int) < $B.max_int) {
                 return int
-            }else{
+            } else {
                 return BigInt(obj.value)
             }
         }
-    }else{
-        if(obj instanceof Number && kw.parse_float !== _b_.None){
+    } else {
+        if (obj instanceof Number && kw.parse_float !== _b_.None) {
             return $B.$call(kw.parse_float, obj)
         }else if(kw.parse_int !== _b_.None &&
                 (typeof obj == 'number' || typeof obj == "bigint")){
             return $B.$call(kw.parse_int, obj)
-        }else if(kw.parse_constant !== _b_.None && ! isFinite(obj)){
+        } else if (kw.parse_constant !== _b_.None && ! isFinite(obj)) {
             return kw.parse_constant(obj)
         }
         return obj
@@ -291,22 +291,22 @@ var escapes = {'n': '\n',
                '/': '/'
                }
 
-function string_at(s, i){
+function string_at(s, i) {
     var error = get_error()
 
     var j = i + 1,
         escaped = false,
         len = s.length,
         value = ''
-    while(j < len){
-        if(s[j] == '"' && ! escaped){
+    while (j < len) {
+        if (s[j] == '"' && ! escaped) {
             return [{type: 'str', value}, j + 1]
-        }else if(! escaped && s[j] == '\\'){
+        } else if (! escaped && s[j] == '\\') {
             escaped = ! escaped
             j++
-        }else if(escaped){
+        } else if (escaped) {
             var esc = escapes[s[j]]
-            if(esc){
+            if (esc) {
                 value += esc
                 j++
                 escaped = false
@@ -316,10 +316,10 @@ function string_at(s, i){
                 value += String.fromCharCode(parseInt(s.substr(j + 1, 4), 16))
                 j += 5
                 escaped = ! escaped
-            }else{
+            } else {
                 throw $B.$call(error, 'invalid escape "' + s[j] + '"', s, j)
             }
-        }else{
+        } else {
             value += s[j]
             j++
         }
@@ -328,38 +328,38 @@ function string_at(s, i){
     throw $B.$call(error, 'Unterminated string starting at', s, i)
 }
 
-function to_num(num_string, nb_dots, exp){
+function to_num(num_string, nb_dots, exp) {
     // convert to correct Brython type
-    if(exp || nb_dots){
+    if (exp || nb_dots) {
         return new Number(num_string)
-    }else{
+    } else {
         var int = parseInt(num_string)
-        if(Math.abs(int) < $B.max_int){
+        if (Math.abs(int) < $B.max_int) {
             return int
-        }else{
+        } else {
             return BigInt(num_string)
         }
     }
 }
 
-function num_at(s, i){
+function num_at(s, i) {
   var res = s[i],
       j = i + 1,
       nb_dots = 0,
       exp = false,
       len = s.length
-  while(j < len){
-      if(s[j].match(/\d/)){
+  while (j < len) {
+      if (s[j].match(/\d/)) {
         j++
-      }else if(s[j] == '.' && nb_dots == 0){
+      } else if (s[j] == '.' && nb_dots == 0) {
         nb_dots++
         j++
-      }else if('eE'.indexOf(s[j]) > -1 && ! exp){
+      } else if ('eE'.indexOf(s[j]) > -1 && ! exp) {
         exp = ! exp
         j++
-      }else if(s[j] == '-' && 'eE'.includes(s[j-1])){
+      } else if (s[j] == '-' && 'eE'.includes(s[j-1])) {
         j++
-      }else{
+      } else {
         return [{type: 'num', value: s.substring(i, j)}, j]
       }
   }
@@ -377,59 +377,59 @@ function* tokenize(s){
       column_start = 0,
       value,
       end
-  while(i < len){
-    if(s[i] == " " || s[i] == '\r' || s[i] == '\n' || s[i] == '\t'){
+  while (i < len) {
+    if (s[i] == " " || s[i] == '\r' || s[i] == '\n' || s[i] == '\t') {
       i++
       line_num++
       column_start = i
-    }else if('[]{}:,'.indexOf(s[i]) > -1){
+    } else if ('[]{}:,'.indexOf(s[i]) > -1) {
       yield [s[i], i]
       i++
-    }else if(s.substr(i, 4) == 'null'){
+    } else if (s.substr(i, 4) == 'null') {
       yield [_b_.None , i]
       i += 4
-    }else if(s.substr(i, 4) == 'true'){
+    } else if (s.substr(i, 4) == 'true') {
       yield [true, i]
       i += 4
-    }else if(s.substr(i, 5) == 'false'){
+    } else if (s.substr(i, 5) == 'false') {
       yield [false, i]
       i += 5
-    }else if(s.substr(i, 8) == 'Infinity'){
+    } else if (s.substr(i, 8) == 'Infinity') {
       yield [{type: 'num', value: 'Infinity'}, i]
       i += 8
-    }else if(s.substr(i, 9) == '-Infinity'){
+    } else if (s.substr(i, 9) == '-Infinity') {
       yield [{type: 'num', value: '-Infinity'}, i]
       i += 9
-    }else if(s.substr(i, 3) == 'NaN'){
+    } else if (s.substr(i, 3) == 'NaN') {
       yield [{type: 'num', value: 'NaN'}, i]
       i += 3
-    }else if(s[i] == '"'){
+    } else if (s[i] == '"') {
       value = string_at(s, i)
       yield value
       i = value[1]
-    }else if(s[i].match(/\d/) || s[i] == '-'){
+    } else if (s[i].match(/\d/) || s[i] == '-') {
       value = num_at(s, i)
       yield value
       i = value[1]
-    }else{
+    } else {
       throw $B.$call(JSONError, 'Extra data: ' +
           `line ${line_num} column ${1 + i - column_start}`)
     }
   }
 }
 
-function Node(parent){
+function Node(parent) {
     this.parent = parent
-    if(parent instanceof List){
+    if (parent instanceof List) {
         this.list = parent.items
-    }else if(parent instanceof Dict){
+    } else if (parent instanceof Dict) {
         this.list = parent.values
-    }else if(parent === undefined){
+    } else if (parent === undefined) {
         this.list = []
     }
 }
 
-Node.prototype.transition = function(token){
+Node.prototype.transition = function(token) {
     if([true, false, _b_.None].includes(token) ||
             ['str', 'num'].includes(token.type)){
         if(this.parent === undefined &&
@@ -438,57 +438,57 @@ Node.prototype.transition = function(token){
         }
         this.list.push(token)
         return this.parent ? this.parent : this
-    }else if(token == '{'){
-        if(this.parent === undefined){
+    } else if (token == '{') {
+        if (this.parent === undefined) {
           this.content = new Dict(this)
           return this.content
         }
         return new Dict(this.parent)
-    }else if(token == '['){
-        if(this.parent === undefined){
+    } else if (token == '[') {
+        if (this.parent === undefined) {
             this.content = new List(this)
             return this.content
         }
         return new List(this.parent)
-    }else{
+    } else {
         throw Error('unexpected item:' + token)
     }
 }
 
-function Dict(parent){
+function Dict(parent) {
     this.parent = parent
     this.keys = []
     this.values = []
     this.expect = 'key'
-    if(parent instanceof List){
+    if (parent instanceof List) {
         parent.items.push(this)
-    }else if(parent instanceof Dict){
+    } else if (parent instanceof Dict) {
         parent.values.push(this)
     }
 }
 
-Dict.prototype.transition = function(token){
-    if(this.expect == 'key'){
-        if(token.type == 'str'){
+Dict.prototype.transition = function(token) {
+    if (this.expect == 'key') {
+        if (token.type == 'str') {
             this.keys.push(token.value)
             this.expect = ':'
             return this
-        }else if(token == '}' && this.keys.length == 0){
+        } else if (token == '}' && this.keys.length == 0) {
             return this.parent
-        }else{
+        } else {
             throw Error('expected str')
         }
-    }else if(this.expect == ':'){
-        if(token == ':'){
+    } else if (this.expect == ':') {
+        if (token == ':') {
           this.expect = '}'
           return new Node(this)
-        }else{
+        } else {
           throw Error('expected :')
         }
-    }else if(this.expect == '}'){
-        if(token == '}'){
+    } else if (this.expect == '}') {
+        if (token == '}') {
             return this.parent
-        }else if(token == ','){
+        } else if (token == ',') {
             this.expect = 'key'
             return this
         }
@@ -496,8 +496,8 @@ Dict.prototype.transition = function(token){
     }
 }
 
-function List(parent){
-    if(parent instanceof List){
+function List(parent) {
+    if (parent instanceof List) {
         parent.items.push(this)
     }
     this.parent = parent
@@ -505,78 +505,78 @@ function List(parent){
     this.expect = 'item'
 }
 
-List.prototype.transition = function(token){
-    if(this.expect == 'item'){
+List.prototype.transition = function(token) {
+    if (this.expect == 'item') {
         this.expect = ','
-        if([true, false, _b_.None].indexOf(token) > -1){
+        if ([true, false, _b_.None].indexOf(token) > -1) {
             this.items.push(token)
             return this
-        }else if(token.type == 'num' || token.type == 'str'){
+        } else if (token.type == 'num' || token.type == 'str') {
             this.items.push(token)
             return this
-        }else if(token == '{'){
+        } else if (token == '{') {
             return new Dict(this)
-        }else if(token == '['){
+        } else if (token == '[') {
             return new List(this)
-        }else if(token == ']'){
-            if(this.items.length == 0){
-                if(this.parent instanceof Dict){
+        } else if (token == ']') {
+            if (this.items.length == 0) {
+                if (this.parent instanceof Dict) {
                     this.parent.values.push(this)
                 }
                 return this.parent
             }
             throw Error('unexpected ]')
-        }else{
+        } else {
             console.log('token', token)
             throw Error('unexpected item:' + token)
         }
 
-    }else if(this.expect == ','){
+    } else if (this.expect == ',') {
         this.expect = 'item'
-        if(token == ','){
+        if (token == ',') {
           return this
-        }else if(token == ']'){
-          if(this.parent instanceof Dict){
+        } else if (token == ']') {
+          if (this.parent instanceof Dict) {
               this.parent.values.push(this)
           }
           return this.parent
-        }else{
+        } else {
           throw Error('expected :')
         }
     }
 }
 
-function parse(s){
+function parse(s) {
   var res,
       state,
       node = new Node(),
       root = node,
       token
   var last_pos = 0
-  for(var item of tokenize(s)){
+  for (var item of tokenize(s)) {
       token = item[0]
       last_pos = item[1]
-      try{
+      try {
           node = node.transition(token)
-      }catch(err){
+      } catch (err) {
           console.log('error, item', item)
           console.log(err, err.message)
           console.log('node', node)
-          if(err.ob_type){
+          if (err.ob_type) {
               throw err
-          }else{
+          } else {
               var error = get_error()
               throw $B.$call(error, err.message, s, item[1])
           }
       }
   }
   // Check if no valid JSON was parsed (empty string or whitespace only)
-  if(!root.content && root.list.length === 0){
+  if (!root.content && root.list.length === 0) {
       var error = get_error()
       throw $B.$call(error, 'Expecting value', s, 0)
   }
   // Check if we're still inside an incomplete structure
-  if(node !== root){
+  if (node !== root) {
       var error = get_error()
       var expected = node instanceof Dict ? "'}'" : "']'"
       throw $B.$call(error, "Expecting ',' delimiter", s, last_pos)
@@ -586,14 +586,14 @@ function parse(s){
 
 var JSONDecoder = $B.make_type("JSONDecoder")
 
-JSONDecoder.$factory = function(){
+JSONDecoder.$factory = function() {
     var $defaults = {cls: _b_.None, object_hook: _b_.None,
             parse_float: _b_.None, parse_int: _b_.None,
             parse_constant: _b_.None, object_pairs_hook: _b_.None}
     var $ = $B.args("decode", 0, {}, arguments, null, null, "kw")
     var kw = _b_.dict.$to_obj($.kw)
-    for(var key in $defaults){
-        if(kw[key] === undefined){
+    for (var key in $defaults) {
+        if (kw[key] === undefined) {
             kw[key] = $defaults[key]
         }
     }
@@ -608,7 +608,7 @@ JSONDecoder.$factory = function(){
     }
 }
 
-JSONDecoder.decode = function(self, s){
+JSONDecoder.decode = function(self, s) {
     return to_py(parse(s), self)
 }
 
@@ -617,7 +617,7 @@ $B.finalize_type(JSONDecoder)
 
 $B.addToImported('_json',
     {
-        dumps: function(){
+        dumps: function() {
             return _b_.str.$factory(to_json.apply(null, arguments))
         },
         loads,

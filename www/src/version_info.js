@@ -1,8 +1,8 @@
 "use strict";
 __BRYTHON__.implementation = [3, 15, 0, 'dev', 0]
 __BRYTHON__.version_info = [3, 15, 0, 'final', 0]
-__BRYTHON__.compiled_date = "2026-05-23 11:41:25.302710"
-__BRYTHON__.timestamp = 1779529285302
+__BRYTHON__.compiled_date = "2026-06-10 14:53:34.145296"
+__BRYTHON__.timestamp = 1781096014145
 __BRYTHON__.builtin_module_names = ["_ajax",
     "_ast",
     "_base64",

@@ -1,21 +1,21 @@
 "use strict";
-(function($B){
+(function($B) {
 
 var _b_ = $B.builtins
 
-function conv_complex(...objs){
+function conv_complex(...objs) {
     var res = []
-    for(var obj of objs){
-        if($B.$isinstance(obj, _b_.float)){
+    for (var obj of objs) {
+        if ($B.$isinstance(obj, _b_.float)) {
             res.push($B.make_complex(obj))
-        }else if($B.is_int(obj)){
+        } else if ($B.is_int(obj)) {
             res.push($B.make_complex(obj))
-        }else{
+        } else {
             var complex_method = $B.$getattr($B.get_class(obj), '__complex__',
                 $B.NULL)
-            if(complex_method !== $B.NULL){
+            if (complex_method !== $B.NULL) {
                 res.push($B.$call(complex_method, obj))
-            }else{
+            } else {
                 res.push($B.NULL)
             }
         }
@@ -25,17 +25,17 @@ function conv_complex(...objs){
 
 var complex = _b_.complex
 
-function complex_eq(self, other){
-    if($B.$isinstance(other, complex)){
+function complex_eq(self, other) {
+    if ($B.$isinstance(other, complex)) {
         return self.real.value == other.real.value &&
             self.imag.value == other.imag.value
     }
-    if($B.is_int(other)){
-        if(self.imag.value != 0){return false}
+    if ($B.is_int(other)) {
+        if (self.imag.value != 0) {return false}
         return self.real.value == other.valueOf()
     }
-    if($B.$isinstance(other, _b_.float)){
-        if(! $B.rich_comp('__eq__', 0, self.imag)){
+    if ($B.$isinstance(other, _b_.float)) {
+        if (! $B.rich_comp('__eq__', 0, self.imag)) {
             return false
         }
         return self.real.value == other.value
@@ -45,41 +45,41 @@ function complex_eq(self, other){
 
 const max_precision = 2 ** 31 - 4
 
-complex.$getnewargs = function(self){
+complex.$getnewargs = function(self) {
     return $B.fast_tuple([self.real, self.imag])
 }
 
-function complex2expo(cx){
+function complex2expo(cx) {
     var norm = Math.sqrt((cx.real.value * cx.real.value) +
                          (cx.imag.value * cx.imag.value)),
         sin = cx.imag.value / norm,
         cos = cx.real.value / norm,
         angle
-    if(cos == 0){
+    if (cos == 0) {
         angle = sin == 1 ? Math.PI / 2 : 3 * Math.PI / 2
-    }else if(sin == 0){
+    } else if (sin == 0) {
         angle = cos == 1 ? 0 : Math.PI
-    }else{
+    } else {
         angle = Math.atan(sin / cos)
     }
     return {norm: norm, angle: angle}
 }
 
 // functions copied from CPython Objects/complexobject.c
-function c_powi(x, n){
-    if (n > 0){
+function c_powi(x, n) {
+    if (n > 0) {
         return c_powu(x, n)
-    }else{
+    } else {
         return c_quot(c_1, c_powu(x, -n))
     }
 }
 
-function c_powu(x, n){
+function c_powu(x, n) {
     var mask = 1,
         r = c_1,
         p = x
     while (mask > 0 && n >= mask) {
-        if (n & mask){
+        if (n & mask) {
             r = c_prod(r, p)
         }
         mask <<= 1
@@ -88,37 +88,37 @@ function c_powu(x, n){
     return r
 }
 
-function c_prod(a, b){
+function c_prod(a, b) {
     return make_complex(
         a.real.value * b.real.value - a.imag.value * b.imag.value,
         a.real.value * b.imag.value + a.imag.value * b.real.value)
 }
 
-function c_quot(a, b){
+function c_quot(a, b) {
      var abs_breal = Math.abs(b.real.value),
          abs_bimag = Math.abs(b.imag.value)
 
-    if ($B.rich_comp('__ge__', abs_breal, abs_bimag)){
+    if ($B.rich_comp('__ge__', abs_breal, abs_bimag)) {
         /* divide tops and bottom by b.real */
         if (abs_breal == 0.0) {
             $B.RAISE(_b_.ZeroDivisionError, )
-        }else{
+        } else {
             let ratio = b.imag.value / b.real.value,
                 denom = b.real.value + b.imag.value * ratio
             return make_complex((a.real.value + a.imag.value * ratio) / denom,
                 (a.imag.value - a.real.value * ratio) / denom)
         }
-    }else if (abs_bimag >= abs_breal) {
+    } else if (abs_bimag >= abs_breal) {
         /* divide tops and bottom by b.imag */
         let ratio = b.real.value / b.imag.value,
             denom = b.real.value * ratio + b.imag.value;
-        if(b.imag.value == 0.0){
+        if (b.imag.value == 0.0) {
             $B.RAISE(_b_.ZeroDivisionError, )
         }
         return make_complex(
             (a.real.value * ratio + a.imag.value) / denom,
             (a.imag.value * ratio - a.real.value) / denom)
-    }else{
+    } else {
         /* At least one of b.real or b.imag is a NaN */
         return $B.make_complex('nan', 'nan')
     }
@@ -137,18 +137,18 @@ var expected_class = {
     "__index__": _b_.int
 }
 
-function _convert(obj){
+function _convert(obj) {
     // If object's class defines one of the methods, return the result
     // of method(obj), else return null
-    if($B.$isinstance(obj, _b_.float)){
+    if ($B.$isinstance(obj, _b_.float)) {
         return {method: '__float__', result: $B.float_value(obj)}
     }
     var klass = $B.get_class(obj)
-    for(var method_name in expected_class) {
+    for (var method_name in expected_class) {
         var method = $B.$getattr(klass, method_name, $B.NULL)
-        if(method !== $B.NULL){
+        if (method !== $B.NULL) {
             var res = $B.$call(method, obj)
-            if(!$B.$isinstance(res, expected_class[method_name])){
+            if (!$B.$isinstance(res, expected_class[method_name])) {
                 $B.RAISE(_b_.TypeError, method_name + "returned non-" +
                     expected_class[method_name].__name__ +
                     "(type " + $B.get_class(res) +")")
@@ -157,7 +157,7 @@ function _convert(obj){
                     $B.rich_comp('__gt__', res, __BRYTHON__.MAX_VALUE)){
                 $B.RAISE(_b_.OverflowError, 'int too large to convert to float')
             }
-            if(method_name == '__complex__' && ! $B.exact_type(res, complex)){
+            if (method_name == '__complex__' && ! $B.exact_type(res, complex)) {
                 $B.warn(_b_.DeprecationWarning, "__complex__ returned " +
                 `non-complex (type ${$B.class_name(res)}). ` +
                 "The ability to return an instance of a strict subclass " +
@@ -170,7 +170,7 @@ function _convert(obj){
     return null
 }
 
-var make_complex = $B.make_complex = function(real, imag){
+var make_complex = $B.make_complex = function(real, imag) {
     return {
         ob_type: complex,
         real: _b_.float.$factory(real),
@@ -182,19 +182,19 @@ var c_1 = make_complex(1, 0)
 
 /* complex start */
 
-_b_.complex.nb_absolute = function(self){
+_b_.complex.nb_absolute = function(self) {
     var _rf = isFinite(self.real.value),
         _if = isFinite(self.imag.value)
     if((_rf && isNaN(self.imag.value)) || (_if && isNaN(self.real.value)) ||
             (isNaN(self.imag.value) && isNaN(self.real.value))){
         return $B.fast_float(NaN)
     }
-    if(! _rf || ! _if){
+    if (! _rf || ! _if) {
         return $B.fast_float(Infinity)
     }
     var mag = Math.sqrt(Math.pow(self.real.value, 2) +
                         Math.pow(self.imag.value, 2))
-    if(!isFinite(mag) && _rf && _if){
+    if (!isFinite(mag) && _rf && _if) {
         // In these circumstances Math.hypot quietly returns inf, but Python
         // should raise.
         // See https://hg.python.org/jython/rev/69826acfb4a9
@@ -203,32 +203,32 @@ _b_.complex.nb_absolute = function(self){
     return $B.fast_float(mag)
 }
 
-_b_.complex.nb_add = function(self, other){
+_b_.complex.nb_add = function(self, other) {
     var [x, y] = conv_complex(self, other)
-    if(x === $B.NULL || y === $B.NULL){
+    if (x === $B.NULL || y === $B.NULL) {
         return _b_.NotImplemented
     }
     return make_complex(x.real.value + y.real.value,
                             x.imag.value + y.imag.value)
 }
 
-_b_.complex.nb_bool = function(self){
+_b_.complex.nb_bool = function(self) {
     return (! $B.rich_comp('__eq__', self.real, 0)) ||
             ! $B.rich_comp('__eq__', self.imag, 0)
 }
 
-_b_.complex.nb_subtract = function(self, other){
+_b_.complex.nb_subtract = function(self, other) {
     var [x, y] = conv_complex(self, other)
-    if(x === $B.NULL || y === $B.NULL){
+    if (x === $B.NULL || y === $B.NULL) {
         return _b_.NotImplemented
     }
     return make_complex(x.real.value - y.real.value,
                         x.imag.value - y.imag.value)
 }
 
-_b_.complex.nb_multiply = function(self, other){
+_b_.complex.nb_multiply = function(self, other) {
     var [x, y] = conv_complex(self, other)
-    if(x === $B.NULL || y === $B.NULL){
+    if (x === $B.NULL || y === $B.NULL) {
         return _b_.NotImplemented
     }
     return make_complex(x.real.value * y.real.value -
@@ -238,25 +238,25 @@ _b_.complex.nb_multiply = function(self, other){
 }
 
 
-_b_.complex.nb_negative = function(self){
+_b_.complex.nb_negative = function(self) {
     return make_complex(-self.real.value, -self.imag.value)
 }
 
-_b_.complex.nb_positive = function(self){
+_b_.complex.nb_positive = function(self) {
     return self
 }
 
-_b_.complex.nb_power = function(self, other, mod){
+_b_.complex.nb_power = function(self, other, mod) {
     // complex power : use Moivre formula
     // (cos(x) + i sin(x))**y = cos(xy)+ i sin(xy)
     var [x, y] = conv_complex(self, other)
-    if(x === $B.NULL || y === $B.NULL){
+    if (x === $B.NULL || y === $B.NULL) {
         return _b_.NotImplemented
     }
-    if(mod !== undefined && mod !== _b_.None){
+    if (mod !== undefined && mod !== _b_.None) {
         $B.RAISE(_b_.ValueError, 'complex modulo')
     }
-    if($B.rich_comp('__eq__', other, 1)){
+    if ($B.rich_comp('__eq__', other, 1)) {
         var funcs = _b_.float.$funcs
         if(funcs.isinf(x.real) || funcs.isninf(x.real) ||
                 funcs.isinf(x.imag) || funcs.isninf(x.imag)){
@@ -273,14 +273,14 @@ _b_.complex.nb_power = function(self, other, mod){
             Math.abs(y.real.value) < 100){
         small_int = y.real.value
     }
-    if(small_int !== null){
+    if (small_int !== null) {
         return c_powi(self, small_int)
     }
-    if($B.$isinstance(other, _b_.float)){
+    if ($B.$isinstance(other, _b_.float)) {
         other = _b_.float.$to_js_number(other)
     }
-    if(x.real.value == 0 && x.imag.value == 0){
-        if(y.imag.value != 0 || y.real.value < 0){
+    if (x.real.value == 0 && x.imag.value == 0) {
+        if (y.imag.value != 0 || y.real.value < 0) {
             $B.RAISE(_b_.ZeroDivisionError,
                 '0.0 to a negative or complex power')
         }
@@ -288,44 +288,44 @@ _b_.complex.nb_power = function(self, other, mod){
     }
     var exp = complex2expo(x),
         angle = exp.angle
-    if($B.is_int(other)){
+    if ($B.is_int(other)) {
         var res = Math.pow(exp.norm, other)
         return make_complex(res * Math.cos(angle * other),
             res * Math.sin(angle * other))
-    }else if($B.$isinstance(other, _b_.float)){
+    } else if ($B.$isinstance(other, _b_.float)) {
         var res = Math.pow(exp.norm, other)
         return make_complex(res * Math.cos(angle * other.value),
             res * Math.sin(angle * other.value))
-    }else if($B.$isinstance(other, complex)){
+    } else if ($B.$isinstance(other, complex)) {
         // (r*e**Ai)**(x+iy) = (e**iAx)*(e**-Ay)
         var x = other.real.value,
             y = other.imag.value
         var pw = Math.pow(exp.norm, x) * Math.pow(Math.E, -y * angle),
             theta = y * Math.log(exp.norm) - x * angle
-        if(pw == Number.POSITIVE_INFINITY || pw === Number.NEGATIVE_INFINITY){
+        if (pw == Number.POSITIVE_INFINITY || pw === Number.NEGATIVE_INFINITY) {
             $B.RAISE(_b_.OverflowError, 'complex exponentiation')
         }
         return make_complex(pw * Math.cos(theta), pw * Math.sin(theta))
-    }else{
+    } else {
         $B.RAISE(_b_.TypeError, "unsupported operand type(s) " +
             "for ** or pow(): 'complex' and '" +
             $B.class_name(other) + "'")
     }
 }
 
-_b_.complex.nb_true_divide = function(self, other){
+_b_.complex.nb_true_divide = function(self, other) {
     var [x, y] = conv_complex(self, other)
-    if(x === $B.NULL || y === $B.NULL){
+    if (x === $B.NULL || y === $B.NULL) {
         return _b_.NotImplemented
     }
-    if(y.real.value == 0 && y.imag.value == 0){
+    if (y.real.value == 0 && y.imag.value == 0) {
        $B.RAISE(_b_.ZeroDivisionError, "division by zero")
     }
-    if(y.imag.value == 0){
+    if (y.imag.value == 0) {
         // divide by real only
         return make_complex($B.fast_float(x.real.value / y.real.value),
             $B.fast_float(x.imag.value / y.real.value))
-    }else if(y.real.value == 0){
+    } else if (y.real.value == 0) {
         // divide by imag only
         return make_complex($B.fast_float(x.imag.value / y.imag.value),
             $B.fast_float(- x.real.value / y.imag.value))
@@ -341,44 +341,44 @@ _b_.complex.nb_true_divide = function(self, other){
         $B.fast_float(_num2 / _div))
 }
 
-_b_.complex.tp_hash = function(self){
+_b_.complex.tp_hash = function(self) {
     // this is a quick fix for something like 'hash(complex)', where
     // complex is not an instance but a type
     return $B.$hash(self.real) + $B.$hash(self.imag) * 1000003
 }
 
-_b_.complex.tp_new = function(cls, args, kw){
+_b_.complex.tp_new = function(cls, args, kw) {
     var nb_args = args.length + $B.str_dict_length(kw)
-    if(nb_args > 2){
+    if (nb_args > 2) {
         $B.RAISE(_b_.TypeError,
             `complex() takes at most 2 arguments (${nb_args} given)`
         )
-    }else if(nb_args == 0){
+    } else if (nb_args == 0) {
         return $B.make_complex(0, 0)
     }
     var [first, second] = $B.unpack_args('complex', args, ['first', 'second'],
                               {first: $B.NULL, second: $B.NULL})
     $B.check_expected_keywords('complex', kw, ['real', 'imag'])
-    for(var entry of _b_.dict.$iter_items(kw)){
-        if(entry.key == 'real'){
-            if(first !== $B.NULL){
+    for (var entry of _b_.dict.$iter_items(kw)) {
+        if (entry.key == 'real') {
+            if (first !== $B.NULL) {
                 $B.RAISE(_b_.TypeError,
                     `argument for complex() given by name ('real') ` +
                     `and position (1)`
                 )
-            }else{
+            } else {
                 first = entry.value
             }
         }
     }
-    if(typeof first == "string"){
-        if(second !== $B.NULL){
+    if (typeof first == "string") {
+        if (second !== $B.NULL) {
             $B.RAISE(_b_.TypeError, "complex() can't take second arg " +
                 "if first is a string")
-        }else{
+        } else {
             var arg = first
             first = first.trim()
-            if(first.startsWith("(") && first.endsWith(")")){
+            if (first.startsWith("(") && first.endsWith(")")) {
                 first = first.substr(1)
                 first = first.substr(0, first.length - 1)
             }
@@ -388,15 +388,15 @@ _b_.complex.tp_new = function(cls, args, kw){
 
             var parts = complex_re.exec(first)
 
-            function to_num(s){
+            function to_num(s) {
                 var res = parseFloat(s.charAt(0) + s.substr(1).replace(/_/g, ""))
-                if(isNaN(res)){
+                if (isNaN(res)) {
                     $B.RAISE(_b_.ValueError, "could not convert string " +
                         "to complex: '" + arg +"'")
                 }
                 return res
             }
-            if(parts === null){
+            if (parts === null) {
                 $B.RAISE(_b_.ValueError, "complex() arg is a malformed string")
             }
             if(parts[_real] && parts[_imag].startsWith('.') &&
@@ -406,21 +406,21 @@ _b_.complex.tp_new = function(cls, args, kw){
                     parts[_real] == ".e" || parts[_imag] == ".e" ||
                     parts[_real] == "e" || parts[_imag] == "e"){
                 $B.RAISE(_b_.ValueError, "complex() arg is a malformed string")
-            }else if(parts[_j] != ""){
-                if(parts[_sign] == ""){
+            } else if (parts[_j] != "") {
+                if (parts[_sign] == "") {
                     first = 0
-                    if(parts[_real] == "+" || parts[_real] == ""){
+                    if (parts[_real] == "+" || parts[_real] == "") {
                         second = 1
-                    }else if (parts[_real] == '-'){
+                    } else if (parts[_real] == '-') {
                         second = -1
-                    }else{second = to_num(parts[_real])}
-                }else{
+                    } else {second = to_num(parts[_real])}
+                } else {
                     first = to_num(parts[_real])
                     second = parts[_imag] == "" ? 1 : to_num(parts[_imag])
                     second = parts[_sign] == "-" ? -second : second
                 }
-            }else{
-                if(parts[_sign] && parts[_imag] == ''){
+            } else {
+                if (parts[_sign] && parts[_imag] == '') {
                     $B.RAISE(_b_.ValueError, 'complex() arg is a malformed string')
                 }
                 first = to_num(parts[_real])
@@ -433,41 +433,41 @@ _b_.complex.tp_new = function(cls, args, kw){
         }
     }
 
-    if($B.exact_type(first, complex) && cls === complex && second === $B.NULL){
+    if ($B.exact_type(first, complex) && cls === complex && second === $B.NULL) {
         return first
     }
     var arg1 = _convert(first),
         r,
         i
-    if(arg1 === null){
+    if (arg1 === null) {
         $B.RAISE(_b_.TypeError, "complex() first argument must be a " +
             `string or a number, not '${$B.class_name(first)}'`)
     }
 
-    if(typeof second == "string"){
+    if (typeof second == "string") {
         $B.RAISE(_b_.TypeError, "complex() second arg can't be a string")
     }
 
     var arg2 = _convert(second === $B.NULL ? 0 : second)
 
-    if(arg2 === null){
+    if (arg2 === null) {
         $B.RAISE(_b_.TypeError, "complex() second argument must be a " +
             `number, not '${$B.class_name(second)}'`)
     }
 
-    if(arg1.method == '__complex__'){
-        if(arg2.method == '__complex__'){
+    if (arg1.method == '__complex__') {
+        if (arg2.method == '__complex__') {
             r = $B.rich_op('__sub__', arg1.result.real, arg2.result.imag)
             i = $B.rich_op('__add__', arg1.result.imag, arg2.result.real)
-        }else{
+        } else {
             r = arg1.result.real
             i = $B.rich_op('__add__', arg1.result.imag, arg2.result)
         }
-    }else{
-        if(arg2.method == '__complex__'){
+    } else {
+        if (arg2.method == '__complex__') {
             r = $B.rich_op('__sub__', arg1.result, arg2.result.imag)
             i = arg2.result.real
-        }else{
+        } else {
             r = arg1.result
             i = arg2.result
         }
@@ -479,7 +479,7 @@ _b_.complex.tp_new = function(cls, args, kw){
     return res
 }
 
-_b_.complex.tp_repr = function(self){
+_b_.complex.tp_repr = function(self) {
     $B.builtins_repr_check(complex, arguments) // in brython_builtins.js
     var real = Number.isInteger(self.real.value) ?
                    self.real.value + '' :
@@ -487,25 +487,25 @@ _b_.complex.tp_repr = function(self){
         imag = Number.isInteger(self.imag.value) ?
                    self.imag.value + '' :
                    _b_.str.$factory(self.imag)
-    if(imag.endsWith('.0')){
+    if (imag.endsWith('.0')) {
         imag = imag.substr(0, imag.length - 2)
     }
-    if(Object.is(self.imag.value, -0)){
+    if (Object.is(self.imag.value, -0)) {
         imag = "-0"
     }
     var sign = imag.startsWith('-') ? '' : '+'
-    if(self.real.value == 0){
-        if(Object.is(self.real.value, -0)){
+    if (self.real.value == 0) {
+        if (Object.is(self.real.value, -0)) {
             return "(-0" + sign + imag + "j)"
-        }else{
+        } else {
             return imag + "j"
         }
     }
-    if(self.imag.value > 0 || isNaN(self.imag.value)){
+    if (self.imag.value > 0 || isNaN(self.imag.value)) {
         return "(" + real + "+" + imag + "j)"
     }
-    if(self.imag.value == 0){
-        if(1 / self.imag.value < 0){
+    if (self.imag.value == 0) {
+        if (1 / self.imag.value < 0) {
             return "(" + real + "-0j)"
         }
         return "(" + real + "+0j)"
@@ -514,12 +514,12 @@ _b_.complex.tp_repr = function(self){
     return "(" + real + sign + imag + "j)"
 }
 
-_b_.complex.tp_richcompare = function(self, other, op){
+_b_.complex.tp_richcompare = function(self, other, op) {
     var complex_func = $B.$getattr($B.get_class(other), '__complex__', $B.NULL)
-    if(complex_func !== $B.NULL){
+    if (complex_func !== $B.NULL) {
         other = $B.$call(complex_func, other)
     }
-    switch(op){
+    switch (op) {
         case '__eq__':
             return complex_eq(self, other)
         case '__ne__':
@@ -533,16 +533,16 @@ _b_.complex.tp_richcompare = function(self, other, op){
 
 var complex_funcs = _b_.complex.tp_funcs = {}
 
-complex_funcs.__complex__ = function(self){
+complex_funcs.__complex__ = function(self) {
     // returns an instance of complex (not a subclass)
-    if($B.exact_type(self, complex)){
+    if ($B.exact_type(self, complex)) {
         return self
     }
     return $B.make_complex(self.real, self.imag)
 }
 
-complex_funcs.__format__ = function(self, format_spec){
-    if(format_spec.length == 0){
+complex_funcs.__format__ = function(self, format_spec) {
+    if (format_spec.length == 0) {
         return _b_.str.$factory(self)
     }
     var fmt = new $B.parse_format_spec(format_spec, self),
@@ -551,15 +551,15 @@ complex_funcs.__format__ = function(self, format_spec){
     var skip_re,
         add_parens
 
-    if(type === undefined || 'eEfFgGn'.indexOf(type) > -1){
-        if(fmt.precision > max_precision){
+    if (type === undefined || 'eEfFgGn'.indexOf(type) > -1) {
+        if (fmt.precision > max_precision) {
             $B.RAISE(_b_.ValueError, 'precision too big')
         }
-        if(fmt.fill_char == '0'){
+        if (fmt.fill_char == '0') {
             $B.RAISE(_b_.ValueError,
                 "Zero padding is not allowed in complex format specifier")
         }
-        if(fmt.align == '='){
+        if (fmt.align == '=') {
             $B.RAISE(_b_.ValueError,
                  "'=' alignment flag is not allowed in complex format " +
                  "specifier")
@@ -567,19 +567,19 @@ complex_funcs.__format__ = function(self, format_spec){
         var re = self.real.value,
             precision = parseInt(fmt.precision, 10)
 
-        if(type === undefined){
+        if (type === undefined) {
             type = 'r'
-            if(re == 0 && Object.is(re, 0)){
+            if (re == 0 && Object.is(re, 0)) {
                 skip_re = 1
-            }else{
+            } else {
                 add_parens = 1
             }
-        }else if(type == 'n'){
+        } else if (type == 'n') {
             type = 'g'
         }
-        if(precision < 0){
+        if (precision < 0) {
             precision = 6
-        }else if(type == 'r'){
+        } else if (type == 'r') {
             type = 'g'
         }
         var format = $B.clone(fmt)
@@ -587,18 +587,18 @@ complex_funcs.__format__ = function(self, format_spec){
         format.precision = precision
 
         var res = ''
-        if(! skip_re){
+        if (! skip_re) {
             res += _b_.float.$format(self.real, format)
-            if(self.imag.value >= 0){
+            if (self.imag.value >= 0) {
                 res += '+'
             }
         }
         var formatted_im = _b_.float.$format(self.imag, format)
         var pos = -1,
             last_num
-        for(var char of formatted_im){
+        for (var char of formatted_im) {
             pos++
-            if(char.match(/\d/)){
+            if (char.match(/\d/)) {
                 last_num = pos
             }
         }
@@ -606,7 +606,7 @@ complex_funcs.__format__ = function(self, format_spec){
             formatted_im.substr(last_num + 1)
         res += formatted_im
 
-        if(add_parens){
+        if (add_parens) {
             res = '(' + res + ')'
         }
 
@@ -615,25 +615,25 @@ complex_funcs.__format__ = function(self, format_spec){
     $B.RAISE(_b_.ValueError, `invalid type for complex: ${type}`)
 }
 
-complex_funcs.__getnewargs__ = function(){
+complex_funcs.__getnewargs__ = function() {
     return complex.$getnewargs($B.single_arg('__getnewargs__', 'self', arguments))
 }
 
-complex_funcs.conjugate = function(self){
+complex_funcs.conjugate = function(self) {
     return make_complex(self.real.value, -self.imag.value)
 }
 
-complex_funcs.from_number = function(cls, obj){
+complex_funcs.from_number = function(cls, obj) {
     var complex_func = $B.$getattr(obj, '__complex__', $B.NULL)
-    if(complex_func !== _b_.NULL){
+    if (complex_func !== _b_.NULL) {
         return $B.$call(complex_func)
     }
     var float_func = $B.$getattr(obj, '__float__', $B.NULL)
-    if(float_func !== $B.NULL){
+    if (float_func !== $B.NULL) {
         return $B.make_complex($B.$call(float_func), 0)
     }
     var index_func = $B.$getattr(obj, '__index__', $B.NULL)
-    if(index_func !== $B.NULL){
+    if (index_func !== $B.NULL) {
         return $B.make_complex($B.$call(index_func), 0)
     }
     $R.RAISE(_b_.TypeError, `must be real number, not ${$B.class_name(obj)}`)

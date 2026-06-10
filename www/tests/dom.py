@@ -184,5 +184,12 @@ assert_raises(AttributeError, exec, "document.closest", globals())
 target = document["test_closest_2495"]
 assert target.closest('.test') is document['test_2495']
 
+# issue 2692
+body = document.select_one('body')
+ifr = html.IFRAME(sandbox="")
+body <= ifr
+# print(ifr.contentWindow)
+#del ifr
+
 
 print('all tests pass...')

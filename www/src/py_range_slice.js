@@ -1,5 +1,5 @@
 "use strict";
-(function($B){
+(function($B) {
 
 var _b_ = $B.builtins,
     None = _b_.None,
@@ -8,16 +8,16 @@ var _b_ = $B.builtins,
 range.$match_sequence_pattern = true // for Pattern Matching (PEP 634)
 range.$is_sequence = true
 
-_b_.range[$B.FAST_ITER] = function(self, set_lineno, frame, lineno){
+_b_.range[$B.FAST_ITER] = function(self, set_lineno, frame, lineno) {
     var obj = {ix: self.start}
-    if(self.step > 0){
+    if (self.step > 0) {
         return {
             [Symbol.iterator](){
                 return this
             },
             next(){
                 set_lineno(frame, lineno)
-                if(obj.ix >= self.stop){
+                if (obj.ix >= self.stop) {
                     return {done: true, value: null}
                 }
                 var value = obj.ix
@@ -25,14 +25,14 @@ _b_.range[$B.FAST_ITER] = function(self, set_lineno, frame, lineno){
                 return {done: false, value}
             }
         }
-    }else{
+    } else {
         return {
             [Symbol.iterator](){
                 return this
             },
             next(){
                 set_lineno(frame, lineno)
-                if(obj.ix <= self.stop){
+                if (obj.ix <= self.stop) {
                     return {done: true, value: null}
                 }
                 var value = obj.ix
@@ -43,19 +43,19 @@ _b_.range[$B.FAST_ITER] = function(self, set_lineno, frame, lineno){
     }
 }
 
-function range_eq(self, other){
-    if($B.$isinstance(other, range)){
+function range_eq(self, other) {
+    if ($B.$isinstance(other, range)) {
         var len = range.mp_length(self)
-        if(! $B.rich_comp('__eq__', len, range.mp_length(other))){
+        if (! $B.rich_comp('__eq__', len, range.mp_length(other))) {
             return false
         }
-        if(len == 0){
+        if (len == 0) {
             return true
         }
-        if(! $B.rich_comp('__eq__', self.start, other.start)){
+        if (! $B.rich_comp('__eq__', self.start, other.start)) {
             return false
         }
-        if(len == 1){
+        if (len == 1) {
             return true
         }
         return $B.rich_comp('__eq__', self.step, other.step)
@@ -63,45 +63,45 @@ function range_eq(self, other){
     return false
 }
 
-function compute_item(r, i){
+function compute_item(r, i) {
     var len = range.mp_length(r)
-    if(len == 0){
+    if (len == 0) {
         return r.start
-    }else if(i > len){
+    } else if (i > len) {
         return r.stop
     }
     return $B.rich_op('__add__', r.start, $B.rich_op('__mul__', r.step, i))
 }
 
 /* range_iterator start */
-$B.range_iterator.tp_iter = function(self){
+$B.range_iterator.tp_iter = function(self) {
     return self
 }
 
 $B.range_iterator.tp_iternext = function*(self){
-    if(self.safe){
-        if(self.stop > self.start){
-            while(self.it < self.stop){
+    if (self.safe) {
+        if (self.stop > self.start) {
+            while (self.it < self.stop) {
                 var res = self.it
                 self.it += self.step
                 yield res
             }
-        }else{
-            while(self.it > self.stop){
+        } else {
+            while (self.it > self.stop) {
                 var res = self.it
                 self.it += self.step
                 yield res
             }
         }
-    }else{
-        if(self.stop > self.start){
-            while(self.it < self.stop){
+    } else {
+        if (self.stop > self.start) {
+            while (self.it < self.stop) {
                 var res = _b_.int.$int_or_long(self.it)
                 self.it += self.step
                 yield res
             }
-        }else{
-            while(self.it > self.stop){
+        } else {
+            while (self.it > self.stop) {
                 var res = _b_.int.$int_or_long(self.it)
                 self.it += self.step
                 yield res
@@ -112,15 +112,15 @@ $B.range_iterator.tp_iternext = function*(self){
 
 var range_iterator_funcs = $B.range_iterator.tp_funcs = {}
 
-range_iterator_funcs.__length_hint__ = function(self){
+range_iterator_funcs.__length_hint__ = function(self) {
     return _b_.range.mp_length(self.obj)
 }
 
-range_iterator_funcs.__reduce__ = function(self){
+range_iterator_funcs.__reduce__ = function(self) {
     return $B.fast_tuple([_b_.iter, $B.fast_tuple([self.obj]), _b_.None])
 }
 
-range_iterator_funcs.__setstate__ = function(self, value){
+range_iterator_funcs.__setstate__ = function(self, value) {
     self.it = self.start + value * self.step
 }
 
@@ -132,12 +132,12 @@ $B.set_func_names($B.range_iterator, "builtins")
 
 
 /* range start */
-_b_.range.tp_richcompare = function(self, other, op){
-    if(! $B.$isinstance(other, _b_.range)){
+_b_.range.tp_richcompare = function(self, other, op) {
+    if (! $B.$isinstance(other, _b_.range)) {
         return _b_.NotImplemented
     }
     var res
-    switch(op){
+    switch (op) {
         case '__eq__':
             res = range_eq(self, other)
             break
@@ -151,34 +151,34 @@ _b_.range.tp_richcompare = function(self, other, op){
     return res
 }
 
-_b_.range.tp_repr = function(self){
+_b_.range.tp_repr = function(self) {
     $B.builtins_repr_check(range, arguments) // in brython_builtins.js
     var res = "range(" + _b_.str.$factory(self.start) + ", " +
         _b_.str.$factory(self.stop)
-    if(self.step != 1){
+    if (self.step != 1) {
         res += ", " + _b_.str.$factory(self.step)
     }
     return res + ")"
 }
 
-_b_.range.tp_hash = function(self){
+_b_.range.tp_hash = function(self) {
     var len = range.mp_length(self)
-    if(len == 0){
+    if (len == 0) {
         return _b_.hash(_b_.tuple.$factory([0, None, None]))
     }
-    if(len == 1){
+    if (len == 1) {
         return _b_.hash(_b_.tuple.$factory([1, self.start, None]))
     }
     return _b_.hash(_b_.tuple.$factory([len, self.start, self.step]))
 }
 
-_b_.range.tp_iter = function(self){
+_b_.range.tp_iter = function(self) {
     var start, stop, step
-    if(self.$safe){
+    if (self.$safe) {
         start = self.start
         stop = self.stop
         step = self.step
-    }else{
+    } else {
         start = $B.to_bigint(self.start)
         stop = $B.to_bigint(self.stop)
         step = $B.to_bigint(self.step)
@@ -195,11 +195,11 @@ _b_.range.tp_iter = function(self){
     }
 }
 
-_b_.range.tp_new = function(cls, args, kw){
+_b_.range.tp_new = function(cls, args, kw) {
     var [start, stop, step] = args
     var safe
-    if(stop === undefined && step === undefined){
-        if(start == undefined){
+    if (stop === undefined && step === undefined) {
+        if (start == undefined) {
             $B.RAISE(_b_.TypeError, "range expected 1 arguments, got 0")
         }
         stop = $B.PyNumber_Index(start)
@@ -213,13 +213,13 @@ _b_.range.tp_new = function(cls, args, kw){
             $safe: safe
         }
     }
-    if(step === undefined){
+    if (step === undefined) {
         step = 1
     }
     start = $B.PyNumber_Index(start)
     stop = $B.PyNumber_Index(stop)
     step = $B.PyNumber_Index(step)
-    if(step == 0){
+    if (step == 0) {
         $B.RAISE(_b_.ValueError, "range arg 3 must not be zero")
     }
     safe = (typeof start == "number" && typeof stop == "number" &&
@@ -234,23 +234,23 @@ _b_.range.tp_new = function(cls, args, kw){
     }
 }
 
-_b_.range.nb_bool = function(self){
+_b_.range.nb_bool = function(self) {
     return self.start != self.end
 }
 
-_b_.range.mp_length = function(self){
+_b_.range.mp_length = function(self) {
     var len,
         start = $B.to_bigint(self.start),
         stop = $B.to_bigint(self.stop),
         step = $B.to_bigint(self.step)
-    if(self.step > 0){
-        if(self.start >= self.stop){
+    if (self.step > 0) {
+        if (self.start >= self.stop) {
             return 0
         }
         // len is 1+(self.stop-self.start-1)/self.step
         len = 1n + (stop - start - 1n) / step
-    }else{
-        if(self.stop >= self.start){
+    } else {
+        if (self.stop >= self.start) {
             return 0
         }
         len = 1n + (start - stop - 1n) / - step
@@ -258,22 +258,22 @@ _b_.range.mp_length = function(self){
     return _b_.int.$int_or_long(len)
 }
 
-_b_.range.mp_subscript = function(self, rank){
-    if($B.$isinstance(rank, _b_.slice)){
-        var norm = _b_.slice.$conv_for_seq(rank, range.__len__(self)),
+_b_.range.mp_subscript = function(self, rank) {
+    if ($B.$isinstance(rank, _b_.slice)) {
+        var norm = _b_.slice.$conv_for_seq(rank, _b_.range.mp_length(self)),
             substep = $B.rich_op('__mul__', self.step, norm.step),
             substart = compute_item(self, norm.start),
             substop = compute_item(self, norm.stop)
-        return range.$factory(substart, substop, substep)
+        return _b_.range.tp_new(_b_.range, [substart, substop, substep])
     }
-    try{
+    try {
         rank = $B.PyNumber_Index(rank)
-    }catch(err){
+    } catch (err) {
         $B.RAISE(_b_.TypeError, "range indices must be integers " +
             `or slices, not ${$B.class_name(rank)}`)
     }
-    if($B.rich_comp('__gt__', 0, rank)){
-        rank = $B.rich_op('__add__', rank, range.__len__(self))
+    if ($B.rich_comp('__gt__', 0, rank)) {
+        rank = $B.rich_op('__add__', rank, range.mp_length(self))
     }
     var res = $B.rich_op('__add__', self.start, $B.rich_op('__mul__', rank, self.step))
     if(($B.rich_comp('__gt__', self.step, 0) &&
@@ -287,19 +287,19 @@ _b_.range.mp_subscript = function(self, rank){
     return res
 }
 
-_b_.range.sq_contains = function(self, other){
-    if(range.mp_length(self) == 0){
+_b_.range.sq_contains = function(self, other) {
+    if (range.mp_length(self) == 0) {
         return false
     }
-    try{
+    try {
         other = $B.int_or_bool(other)
-    }catch(err){
+    } catch (err) {
         // If other is not an integer, test if it is equal to
         // one of the items in range
-        try{
+        try {
             range.tp_funcs.index(self, other)
             return true
-        }catch(err){
+        } catch (err) {
             return false
         }
     }
@@ -311,24 +311,24 @@ _b_.range.sq_contains = function(self, other){
     var sub = other - start,
         fl = sub / step,
         res = step * fl
-    if(res == sub){
-        if(stop > start){
+    if (res == sub) {
+        if (stop > start) {
             return other >= start && stop > other
-        }else{
+        } else {
             return start >= other && other > stop
         }
-    }else{
+    } else {
         return false
     }
 }
 
 var range_funcs = _b_.range.tp_funcs = {}
 
-range_funcs.__reduce__ = function(self){
+range_funcs.__reduce__ = function(self) {
     return $B.fast_tuple([_b_.range, $B.fast_tuple([self.start, self.stop, self.step])])
 }
 
-range_funcs.__reversed__ = function(self){
+range_funcs.__reversed__ = function(self) {
     var n = $B.rich_op('__sub__', range.mp_length(self), 1)
     var start = $B.rich_op('__add__', self.start, $B.rich_op('__mul__', n,
         self.step))
@@ -337,21 +337,21 @@ range_funcs.__reversed__ = function(self){
     return $B.$call(range, start, stop, step)
 }
 
-range_funcs.count = function(self, ob){
-    if($B.$isinstance(ob, [_b_.int, _b_.float, _b_.bool])){
+range_funcs.count = function(self, ob) {
+    if ($B.$isinstance(ob, [_b_.int, _b_.float, _b_.bool])) {
         return _b_.int.$factory(range.sq_contains(self, ob))
-    }else{
-        var comp = function(other){return $B.rich_comp("__eq__", ob, other)},
+    } else {
+        var comp = function(other) {return $B.rich_comp("__eq__", ob, other)},
             it = range.tp_iter(self),
             _next = RangeIterator.tp_iternext,
             nb = 0
-        while(true){
-            try{
-                if(comp(_next(it))){
+        while (true) {
+            try {
+                if (comp(_next(it))) {
                     nb++
                 }
-            }catch(err){
-                if($B.$isinstance(err, _b_.StopIteration)){
+            } catch (err) {
+                if ($B.$isinstance(err, _b_.StopIteration)) {
                     return nb
                 }
                 throw err
@@ -360,27 +360,27 @@ range_funcs.count = function(self, ob){
     }
 }
 
-range_funcs.index = function(self){
+range_funcs.index = function(self) {
     var $ = $B.args("index", 2, {self: null, other: null}, arguments)
     var self = $.self,
         other = $.other
-    try{
+    try {
         other = $B.int_or_bool(other)
-    }catch(err){
-        var comp = function(x){
+    } catch (err) {
+        var comp = function(x) {
                 return $B.rich_comp("__eq__", other, x)
             },
             it = range.tp_iter(self),
             _next = RangeIterator.tp_iternext,
             nb = 0
-        while(true){
-            try{
-                if(comp(_next(it))){
+        while (true) {
+            try {
+                if (comp(_next(it))) {
                     return nb
                 }
                 nb++
-            }catch(err){
-                if($B.$isinstance(err, _b_.StopIteration)){
+            } catch (err) {
+                if ($B.$isinstance(err, _b_.StopIteration)) {
                     $B.RAISE(_b_.ValueError, _b_.str.$factory(other) +
                         " not in range")
                 }
@@ -391,7 +391,7 @@ range_funcs.index = function(self){
     var sub = $B.rich_op('__sub__', other, self.start),
         fl = $B.rich_op('__floordiv__', sub, self.step),
         res = $B.rich_op('__mul__', self.step, fl)
-    if($B.rich_comp('__eq__', res, sub)){
+    if ($B.rich_comp('__eq__', res, sub)) {
         if(($B.rich_comp('__gt__', self.stop, self.start) &&
                 $B.rich_comp('__ge__', other, self.start) &&
                 $B.rich_comp('__gt__', self.stop, other)) ||
@@ -399,9 +399,9 @@ range_funcs.index = function(self){
                 $B.rich_comp('__ge__', self.start, other)
                 && $B.rich_comp('__gt__', other, self.stop))){
             return fl
-        }else{$B.RAISE(_b_.ValueError, _b_.str.$factory(other) +
+        } else {$B.RAISE(_b_.ValueError, _b_.str.$factory(other) +
             ' not in range')}
-    }else{
+    } else {
         $B.RAISE(_b_.ValueError, _b_.str.$factory(other) +
             " not in range")
     }
@@ -422,7 +422,7 @@ $B.set_func_names(range, "builtins")
 // slice
 var slice = _b_.slice
 
-function slice_eq(self, other){
+function slice_eq(self, other) {
     var conv1 = conv_slice(self),
         conv2 = conv_slice(other)
     return conv1[0] == conv2[0] &&
@@ -430,21 +430,21 @@ function slice_eq(self, other){
         conv1[2] == conv2[2]
 }
 
-slice.tp_setattro = function(self, attr){
+slice.tp_setattro = function(self, attr) {
     $B.RAISE_ATTRIBUTE_ERROR("readonly attribute", self, attr)
 }
 
-function conv_slice(self){
+function conv_slice(self) {
     var attrs = ["start", "stop", "step"],
         res = []
-    for(var i = 0; i < attrs.length; i++){
+    for (var i = 0; i < attrs.length; i++) {
         var val = self[attrs[i]]
-        if(val === _b_.None){
+        if (val === _b_.None) {
             res.push(val)
-        }else{
-            try{
+        } else {
+            try {
                 res.push($B.$call(_b_.int, val))
-            }catch(err){
+            } catch (err) {
                 $B.RAISE(_b_.TypeError, "slice indices must be " +
                     "integers or None or have an __index__ method")
             }
@@ -453,54 +453,54 @@ function conv_slice(self){
     return res
 }
 
-slice.$conv_for_seq = function(self, len){
+slice.$conv_for_seq = function(self, len) {
     // Internal method, uses the integer len to set
     // start, stop, step to integers
     var step = self.step === None ? 1 : $B.PyNumber_Index(self.step),
         step_is_neg = $B.rich_comp('__gt__', 0, step),
         len_1 = $B.rich_op('__sub__', len, 1)
-    if(step == 0){
+    if (step == 0) {
         $B.RAISE(_b_.ValueError, 'slice step cannot be zero')
     }
     var start,
         stop
-    if(self.start === None){
+    if (self.start === None) {
         start = step_is_neg ? len_1 : 0
-    }else{
+    } else {
         start = $B.$call(_b_.int, self.start)
-        if($B.rich_comp('__gt__', 0, start)){
+        if ($B.rich_comp('__gt__', 0, start)) {
             start = $B.rich_op('__add__', start, len)
-            if($B.rich_comp('__gt__', 0, start)){
+            if ($B.rich_comp('__gt__', 0, start)) {
                 start = 0
             }
         }
-        if($B.rich_comp('__ge__', start, len)){
+        if ($B.rich_comp('__ge__', start, len)) {
             start = step < 0 ? len_1 : len
         }
     }
-    if(self.stop === None){
+    if (self.stop === None) {
         stop = step_is_neg ? -1 : len
-    }else{
+    } else {
         stop = $B.PyNumber_Index(self.stop)
-        if($B.rich_comp('__gt__', 0, stop)){
+        if ($B.rich_comp('__gt__', 0, stop)) {
             stop = $B.rich_op('__add__', stop, len)
         }
-        if($B.rich_comp('__ge__', stop, len)){
+        if ($B.rich_comp('__ge__', stop, len)) {
             stop = step_is_neg ? len_1 : len
         }
     }
     return {start, stop, step}
 }
 
-slice.$factory = function(start, stop, step){
+slice.$factory = function(start, stop, step) {
     var [args, kw] = $B.parse_args_kw('slice', arguments)
     var start,
         stop,
         step
-    if(_b_.dict.mp_length(kw) > 0){
+    if (_b_.dict.mp_length(kw) > 0) {
         $B.RAISE(_b_.TypeError, 'slice() takes no keyword arguments')
     }
-    switch(args.length){
+    switch (args.length) {
         case 0:
             $B.RAISE(_b_.TypeError,
                 'slice expected at least 1 argument, got 0'
@@ -525,12 +525,12 @@ slice.$factory = function(start, stop, step){
     return slice.$fast_slice(start, stop, step ?? $B.NULL)
 }
 
-slice.$fast_slice = function(start, stop, step){
-    if(stop === $B.NULL && step === $B.NULL){
+slice.$fast_slice = function(start, stop, step) {
+    if (stop === $B.NULL && step === $B.NULL) {
         stop = start
         start = _b_.None
         step = _b_.None
-    }else{
+    } else {
         step = step === $B.NULL ? _b_.None : step
     }
 
@@ -550,11 +550,11 @@ const _PyHASH_XXPRIME_5 = 2870177450012600261
 const _PyHASH_XXROTATE = (x) => ((x << 31) | (x >> 33))  /* Rotate left 31 bits */
 
 /* slice start */
-_b_.slice.tp_richcompare = function(self, other, op){
-    if(! $B.$isinstance(other, _b_.slice)){
+_b_.slice.tp_richcompare = function(self, other, op) {
+    if (! $B.$isinstance(other, _b_.slice)) {
         return _b_.NotImplemented
     }
-    switch(op){
+    switch (op) {
         case '__eq__':
             return slice_eq(self, other)
         case '__ne__':
@@ -564,18 +564,18 @@ _b_.slice.tp_richcompare = function(self, other, op){
     }
 }
 
-_b_.slice.tp_repr = function(self){
+_b_.slice.tp_repr = function(self) {
     $B.builtins_repr_check(slice, arguments) // in brython_builtins.js
     return "slice(" + _b_.str.$factory(self.start) + ", " +
         _b_.str.$factory(self.stop) + ", " + _b_.str.$factory(self.step) + ")"
 }
 
-_b_.slice.tp_hash = function(self){
+_b_.slice.tp_hash = function(self) {
     var acc = _PyHASH_XXPRIME_5
 
-    function _PyHASH_SLICE_PART(v){
+    function _PyHASH_SLICE_PART(v) {
         var lane = _b_.hash(v)
-        if(lane == -1){
+        if (lane == -1) {
             return -1
         }
         acc += lane * _PyHASH_XXPRIME_2
@@ -585,13 +585,13 @@ _b_.slice.tp_hash = function(self){
     _PyHASH_SLICE_PART(self.start)
     _PyHASH_SLICE_PART(self.stop)
     _PyHASH_SLICE_PART(self.step)
-    if(acc == -1){
+    if (acc == -1) {
         return 1546275796
     }
     return acc
 }
 
-_b_.slice.tp_new = function(cls, args, kw){
+_b_.slice.tp_new = function(cls, args, kw) {
     var [start, stop, step] = $B.unpack_args('slice', args,
         ['start', 'stop', 'step'], {stop: $B.NULL, step: $B.NULL})
     var res = slice.$fast_slice(start, stop, step)
@@ -601,12 +601,12 @@ _b_.slice.tp_new = function(cls, args, kw){
 
 var slice_funcs = _b_.slice.tp_funcs = {}
 
-slice_funcs.__reduce__ = function(self){
+slice_funcs.__reduce__ = function(self) {
     return $B.fast_tuple([$B.get_class(self),
         $B.fast_tuple([self.start, self.stop, self.step])])
 }
 
-slice_funcs.indices = function(){
+slice_funcs.indices = function() {
     // This method takes a single integer argument length and computes
     // information about the slice that the slice object would describe if
     // applied to a sequence of length items. It returns a tuple of three
@@ -617,26 +617,26 @@ slice_funcs.indices = function(){
     var self = $.self,
         length = $.length
     var len = $B.PyNumber_Index(length)
-    if(len < 0){
+    if (len < 0) {
         $B.RAISE(_b_.ValueError, "length should not be negative")
     }
     var _step = (self.step == _b_.None)? 1 : self.step,
         _start,
         _stop
-    if(_step < 0){
+    if (_step < 0) {
         _start = self.start
         _stop = self.stop
         _start = (_start == _b_.None)? len - 1 :
             (_start < 0)? _b_.max(-1, _start + len) : _b_.min(len - 1, self.start)
         _stop = (self.stop == _b_.None)? -1 :
             (_stop < 0)? _b_.max(-1, _stop + len) : _b_.min(len - 1, self.stop)
-    }else{
+    } else {
         _start = (self.start == _b_.None) ? 0 : _b_.min(len, self.start)
         _stop = (self.stop == _b_.None)? len :_b_.min(len, self.stop)
-        if(_start < 0){
+        if (_start < 0) {
             _start = _b_.max(0, _start + len)
         }
-        if(_stop < 0){
+        if (_stop < 0) {
             _stop = _b_.max(0, _stop + len)
         }
     }

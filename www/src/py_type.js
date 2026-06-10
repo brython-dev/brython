@@ -1,5 +1,5 @@
 "use strict";
-(function($B){
+(function($B) {
 
 var _b_ = $B.builtins
 
@@ -9,16 +9,16 @@ const TPFLAGS = $B.TPFLAGS // defined ib brython_builtins.js
 $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
         bases, extra_kwargs){
     var test = false // class_name == 'FlagBoundary'
-    if(test){
+    if (test) {
         console.log('class constructor', class_name, 'dict', dict)
         console.log('metaclass', metaclass)
     }
-    if(metaclass.tp_mro === undefined){
+    if (metaclass.tp_mro === undefined) {
         console.log('no mro in metaclass', metaclass)
     }
 
     // bool is not a valid base
-    for(var base of bases){
+    for (var base of bases) {
         if(base.tp_flags !== undefined &&
                  ! (base.tp_flags & TPFLAGS.BASETYPE)){
             $B.RAISE(_b_.TypeError,
@@ -32,16 +32,16 @@ $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
     // set __module__ and __qualname__ before calling metaclass.__new__
     var classdef_frame = $B.frame_obj.prev.frame
     var module = classdef_frame[2]
-    if(Object.hasOwn(classdef_frame[1], '__name__')){
+    if (Object.hasOwn(classdef_frame[1], '__name__')) {
         module = classdef_frame[1].__name__
     }
     $B.str_dict_set(dict, '__module__', module)
 
     var stack = []
     var frame_obj = $B.frame_obj.prev
-    while(frame_obj.prev){
+    while (frame_obj.prev) {
         var frame = frame_obj.frame
-        if(frame[0] == frame[2]){
+        if (frame[0] == frame[2]) {
             break
         }
         stack.push(frame_obj.frame[0] + '.')
@@ -59,12 +59,12 @@ $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
 
     // Check if class has __slots__
     var slots = $B.str_dict_get(dict, '__slots__', $B.NULL)
-    if(slots !== $B.NULL){
-        if(typeof slots == "string"){
+    if (slots !== $B.NULL) {
+        if (typeof slots == "string") {
             slots = [slots]
-        }else{
-            for(let item of $B.make_js_iterator(slots)){
-                if(typeof item != 'string'){
+        } else {
+            for (let item of $B.make_js_iterator(slots)) {
+                if (typeof item != 'string') {
                     $B.RAISE(_b_.TypeError, '__slots__ items must be ' +
                         `strings, not '${$B.class_name(item)}'`)
                 }
@@ -77,43 +77,43 @@ $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
 
     // Apply method __new__ of metaclass to create the class object
     var meta_new = metaclass.tp_new
-    if(test){
+    if (test) {
         console.log('metaclass', metaclass, 'meta_new', meta_new)
     }
     var kls
-    try{
-        if(meta_new.$is_slot){
-            try{
+    try {
+        if (meta_new.$is_slot) {
+            try {
                 kls = meta_new(metaclass, [class_name, resolved_bases, dict],
                     $B.obj_dict(extra_kwargs))
-            }catch(err){
+            } catch (err) {
                 throw err
             }
-        }else{
+        } else {
             kls = $B.$call(meta_new, metaclass, class_name, resolved_bases, dict,
                            {$kw:[extra_kwargs]})
         }
-    }catch(err){
-        if(test){
+    } catch (err) {
+        if (test) {
             console.log('error in meta_new', meta_new, extra_kwargs)
         }
         throw err
     }
 
-    if(kls.$getattribute === undefined){
+    if (kls.$getattribute === undefined) {
         $B.make_getattr(kls)
     }
 
     //$B.make_annotate_class(kls, annotate, frame)
 
-    if($B.get_class(kls) === metaclass){
+    if ($B.get_class(kls) === metaclass) {
         // Initialize the class object by a call to metaclass __init__
         var meta_init = _b_.type.tp_getattro(metaclass, "__init__")
-        try{
+        try {
             $B.$call(meta_init, kls, class_name, resolved_bases, dict,
                       {$kw: [extra_kwargs]})
-        }catch(err){
-            if(class_name == 'SupportsInt'){
+        } catch (err) {
+            if (class_name == 'SupportsInt') {
                 console.log('err for', class_name)
                 console.log(err)
                 console.log(err.stack)
@@ -123,7 +123,7 @@ $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
     }
 
     // Set new class as subclass of its parents
-    for(let i = 0; i < bases.length; i++){
+    for (let i = 0; i < bases.length; i++) {
         bases[i].tp_subclasses  = bases[i].tp_subclasses || []
         bases[i].tp_subclasses.push(kls)
     }
@@ -131,45 +131,45 @@ $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
     return kls
 }
 
-function set_type_new(dict){
+function set_type_new(dict) {
     // If dict has key __new__, make sure it's a staticmethod
     var new_func = $B.str_dict_get(dict, '__new__', $B.NULL)
-    if(new_func !== $B.NULL){
-        if($B.get_class(new_func) === $B.function){
+    if (new_func !== $B.NULL) {
+        if ($B.get_class(new_func) === $B.function) {
             $B.str_dict_set(dict, '__new__', _b_.staticmethod.$factory(new_func))
         }
     }
 }
 
-function set_type_getattro(cls){
+function set_type_getattro(cls) {
     // Set attribute tp_getattro for attribute resolution
     var getattribute = $B.get_from_dict(cls, '__getattribute__', $B.NULL)
     var getattr = $B.search_in_mro(cls, '__getattr__', $B.NULL)
-    if(getattribute === $B.NULL && getattr === $B.NULL){
-        if(cls.tp_base === undefined){
+    if (getattribute === $B.NULL && getattr === $B.NULL) {
+        if (cls.tp_base === undefined) {
             console.log('no tp_base', cls)
         }
         cls.tp_getattro = cls.tp_base.tp_getattro ?? _b_.object.tp_getattro
-        if(cls.tp_getattro === undefined){
+        if (cls.tp_getattro === undefined) {
             console.log('no tp_getattro from base', cls)
         }
-    }else if(getattr === $B.NULL){
-        cls.tp_getattro = function tp_getattro(){
+    } else if (getattr === $B.NULL) {
+        cls.tp_getattro = function tp_getattro() {
             return $B.$call(getattribute, ...arguments)
         }
-    }else if(getattribute === $B.NULL){
-        cls.tp_getattro = function tp_getattro(){
+    } else if (getattribute === $B.NULL) {
+        cls.tp_getattro = function tp_getattro() {
             var res = cls.tp_base.tp_getattro(...arguments)
-            if(res === $B.NULL){
+            if (res === $B.NULL) {
                 return $B.$call(getattr, ...arguments)
             }
         }
-    }else{
-        cls.tp_getattro = function tp_getattro(){
+    } else {
+        cls.tp_getattro = function tp_getattro() {
             var res
-            try{
+            try {
                 return $B.$call(getattribute, ...arguments)
-            }catch(err){
+            } catch (err) {
                 $B.RAISE_IF_NOT(err, _b_.AttributeError)
                 return $B.$call(getattr, ...arguments)
             }
@@ -179,32 +179,32 @@ function set_type_getattro(cls){
     //cls.tp_getattro = tp_getattro
 }
 
-function current_module(){
-    if($B.frame_obj === null){
+function current_module() {
+    if ($B.frame_obj === null) {
         return '<unknown>'
     }
     return $B.frame_obj.frame[2]
 }
 
-$B.get_metaclass = function(class_name, bases, kw_meta){
+$B.get_metaclass = function(class_name, bases, kw_meta) {
     // If a keyword argument "metaclass=kw_meta" is passed, kw_meta is set
     var metaclass
-    if(kw_meta === undefined && bases.length == 0){
+    if (kw_meta === undefined && bases.length == 0) {
         return _b_.type
-    }else if(kw_meta){
-        if(! $B.$isinstance(kw_meta, _b_.type)){
+    } else if (kw_meta) {
+        if (! $B.$isinstance(kw_meta, _b_.type)) {
             return kw_meta
         }
         metaclass = kw_meta
     }
-    if(bases && bases.length > 0){
-        for(var base of bases){
+    if (bases && bases.length > 0) {
+        for (var base of bases) {
             var mc = $B.get_class(base)
-            if(metaclass === undefined){
+            if (metaclass === undefined) {
                 metaclass = mc
-            }else if(mc === metaclass || _b_.issubclass(metaclass, mc)){
+            } else if (mc === metaclass || _b_.issubclass(metaclass, mc)) {
                 // same metaclass or a subclass, do nothing
-            }else if(_b_.issubclass(mc, metaclass)){
+            } else if (_b_.issubclass(mc, metaclass)) {
                 metaclass = mc
             }else if(metaclass.tp_bases &&
                     metaclass.tp_bases.indexOf(mc) == -1){
@@ -213,7 +213,7 @@ $B.get_metaclass = function(class_name, bases, kw_meta){
                     "strict) subclass of the metaclasses of all its bases")
             }
         }
-    }else{
+    } else {
         metaclass = metaclass || _b_.type
     }
 
@@ -221,18 +221,18 @@ $B.get_metaclass = function(class_name, bases, kw_meta){
 }
 
 /* Determine the most derived metatype. */
-function calculate_metaclass(metatype, bases){
+function calculate_metaclass(metatype, bases) {
     /* Determine the proper metatype to deal with this,
        and check for metatype conflicts while we're at it.
        Note that if some other metatype wins to contract,
        it's possible that its instances are not types. */
     var winner = metatype
-    for(let tmp of bases){
+    for (let tmp of bases) {
         var tmptype = $B.get_class(tmp)
-        if(_b_.issubclass(winner, tmptype)){
+        if (_b_.issubclass(winner, tmptype)) {
             continue;
         }
-        if(_b_.issubclass(tmptype, winner)){
+        if (_b_.issubclass(tmptype, winner)) {
             winner = tmptype
             continue
         }
@@ -244,7 +244,7 @@ function calculate_metaclass(metatype, bases){
     return winner
 }
 
-function shape_differs(t1, t2){
+function shape_differs(t1, t2) {
     console.log('shape differs', t1, t2)
     return (
         t1.tp_basicsize != t2.tp_basicsize ||
@@ -266,20 +266,20 @@ one, that is the solid base. If there are multiple, but one is a subclass of
 all others, the solid base is the subclass. Otherwise, the class cannot exist.
 */
 
-function solid_base(type){
+function solid_base(type) {
     var base
-    if(type.tp_base){
+    if (type.tp_base) {
         base = solid_base(type.tp_base)
-    }else{
+    } else {
         base = _b_.object
     }
-    try{
+    try {
         var slots = $B.search_in_dict(type, '__slots__', $B.NULL)
-    }catch(err){
+    } catch (err) {
         console.log('error searching __slots__ in type', type)
         throw err
     }
-    if(slots !== $B.NULL && slots.length > 0){
+    if (slots !== $B.NULL && slots.length > 0) {
         return type
     }
     return base
@@ -287,15 +287,15 @@ function solid_base(type){
 
 /* Calculate the best base amongst multiple base classes.
    This is the first one that's on the path to the "solid base". */
-function best_base(bases, ctx){
+function best_base(bases, ctx) {
     var test = false // ctx.name == 'EnumCheck'
     var n = bases.length
     var base,
         winner,
         candidate
-    for(let base_i of bases){
+    for (let base_i of bases) {
 
-        if(! $B.is_type(base_i)){
+        if (! $B.is_type(base_i)) {
             $B.RAISE(_b_.TypeError, "bases must be types")
         }
 
@@ -305,46 +305,46 @@ function best_base(bases, ctx){
                 `type '${base.__name__}' is not an acceptable base type`)
         }
         candidate = solid_base(base_i)
-        if(test){
+        if (test) {
             console.log('base_i', base_i, 'candidate', candidate, 'winner', winner,
                 'base', base)
         }
-        if(winner == undefined){
+        if (winner == undefined) {
             winner = candidate
             base = base_i
-        }else if(_b_.issubclass(winner, candidate)){
+        } else if (_b_.issubclass(winner, candidate)) {
             // ignore
-        }else if(_b_.issubclass(candidate, winner)){
+        } else if (_b_.issubclass(candidate, winner)) {
             winner = candidate
             base = base_i
-        }else{
+        } else {
             $B.RAISE(_b_.TypeError,
                 "multiple bases have instance lay-out conflict")
         }
     }
-    if(test){
+    if (test) {
         console.log('base', base)
     }
     return base
 }
 
-function type_new_get_bases(ctx, type){
+function type_new_get_bases(ctx, type) {
     var nbases = ctx.bases.length
-    if(nbases == 0){
+    if (nbases == 0) {
         // Adjust for empty tuple bases
         ctx.base = _b_.object
         ctx.bases = $B.fast_tuple([_b_.object])
         return 0
     }
-    for(let base of ctx.bases){
-        if($B.is_type(base)){
+    for (let base of ctx.bases) {
+        if ($B.is_type(base)) {
             continue
         }
         var rc = $B.search_in_mro(base, '__mro_entries__', $B.NULL)
-        if(rc === $B.NULL){
+        if (rc === $B.NULL) {
             return -1
         }
-        if(rc){
+        if (rc) {
             $B.RAISE(_b_.TypeError,
                 "type() doesn't support MRO entry resolution; " +
                 "use types.new_class()"
@@ -355,14 +355,14 @@ function type_new_get_bases(ctx, type){
     // Search the bases for the proper metatype to deal with this
     var winner = calculate_metaclass(ctx.metatype, ctx.bases)
 
-    if(winner !== ctx.metatype){
+    if (winner !== ctx.metatype) {
         var winner_new_func = winner.tp_new
         var type_new_func = type.tp_new
-        if(winner_new_func !== type_new_func){
+        if (winner_new_func !== type_new_func) {
             /* Pass it to the winner */
-            if(winner_new_func.$is_slot){
+            if (winner_new_func.$is_slot) {
                 type = winner_new_func(winner, ctx.args, ctx.kwds)
-            }else{
+            } else {
                 type = winner_new_func(winner, ...ctx.args, $B.dict2kwarg(ctx.kwds))
             }
             return {type}
@@ -379,20 +379,20 @@ $B.make_class_namespace = function(metaclass, class_name, qualname,
                                    orig_bases, bases){
     // Use __prepare__ (PEP 3115)
     var prepare = $B.$getattr(metaclass, "__prepare__", $B.NULL)
-    if(prepare === $B.NULL){
+    if (prepare === $B.NULL) {
         $B.RAISE(_b_.TypeError, 'metaclass has no __prepare__')
     }
     var class_dict = $B.$call(prepare, class_name, bases) // dict or dict-like
-    if(! $B.is_dict(class_dict)){
+    if (! $B.is_dict(class_dict)) {
         console.log('class dict', class_dict)
         $B.RAISE(_b_.TypeError,
             `${$B.get_name(metaclass)}.__prepare__() must return a mapping, ` +
             `not ${$B.class_name(class_dict)}`)
     }
-    if(orig_bases !== bases){
+    if (orig_bases !== bases) {
         $B.str_dict_set(class_dict, '__orig_bases__', orig_bases)
     }
-    if(! $B.hasOnlyStringKeys(class_dict)){
+    if (! $B.hasOnlyStringKeys(class_dict)) {
         $B.warn(_b_.RuntimeWarning,
             `non-string key in the __dict__ of class ${class_name}`)
     }
@@ -400,30 +400,30 @@ $B.make_class_namespace = function(metaclass, class_name, qualname,
 }
 
 
-$B.resolve_mro_entries = function(bases){
+$B.resolve_mro_entries = function(bases) {
     // Replace non-class bases that have a __mro_entries__ (PEP 560)
     var new_bases = [],
         has_mro_entries = false
-    for(var base of bases){
-        if(! $B.$isinstance(base, _b_.type)){
+    for (var base of bases) {
+        if (! $B.$isinstance(base, _b_.type)) {
             var mro_entries = $B.$getattr(base, "__mro_entries__",
                 _b_.None)
-            if(mro_entries !== _b_.None){
+            if (mro_entries !== _b_.None) {
                 has_mro_entries = true
                 var entries = _b_.list.$factory($B.$call(mro_entries, bases))
                 new_bases = new_bases.concat(entries)
-            }else{
+            } else {
                 new_bases.push(base)
             }
-        }else{
+        } else {
             new_bases.push(base)
         }
     }
     return has_mro_entries ? new_bases : bases
 }
 
-$B.make_annotate_func = function(dict, annotations, class_frame){
-    if(annotations === undefined){
+$B.make_annotate_func = function(dict, annotations, class_frame) {
+    if (annotations === undefined) {
         $B.str_dict_set(dict, '__annotate_func__', _b_.None)
         return
     }
@@ -445,18 +445,18 @@ $B.make_annotate_func = function(dict, annotations, class_frame){
     )
 }
 
-$B.check_annotate_format = function(format){
-    if(! $B.is_int(format)){
+$B.check_annotate_format = function(format) {
+    if (! $B.is_int(format)) {
         $B.RAISE(_b_.TypeError, '__annotate__ argument should be ' +
             `int, not ${$B.class_name(format)}`)
     }
     format = $B.int_value(format)
-    if(format != 1 && format != 2){
+    if (format != 1 && format != 2) {
         $B.RAISE(_b_.NotImplementedError, '')
     }
 }
 
-$B.postpone_annotations = function(obj, file){
+$B.postpone_annotations = function(obj, file) {
     // create property __annotations__ for a module with
     // "from __future__ import annotations
     var module_frame = $B.frame_obj.frame
@@ -465,11 +465,11 @@ $B.postpone_annotations = function(obj, file){
         {
             configurable: true,
             get(){
-                if(obj.$set_annotations){
+                if (obj.$set_annotations) {
                     return obj.$set_annotations
                 }
                 var res = $B.empty_dict()
-                for(var key in obj.$annotations){
+                for (var key in obj.$annotations) {
                     _b_.dict.$setitem(res, key, obj.$annotations[key][1]())
                 }
                 return res
@@ -481,14 +481,14 @@ $B.postpone_annotations = function(obj, file){
     )
 }
 
-$B.make_module_annotate = function(locals){
+$B.make_module_annotate = function(locals) {
     Object.defineProperty(locals, '__annotations__',
         {
             get() {
-                if(locals.$set_annotations){
+                if (locals.$set_annotations) {
                     return locals.$set_annotations
                 }
-                if(locals.__annotate__){
+                if (locals.__annotate__) {
                     return locals.__annotate__(1)
                 }
                 return locals.__annotate_func__(1)
@@ -501,7 +501,7 @@ $B.make_module_annotate = function(locals){
     Object.defineProperty(locals, '__annotate__',
         {
             get() {
-                if(locals.$annotate){
+                if (locals.$annotate) {
                     return locals.$annotate
                 }
                 return locals.__annotate_func__
@@ -511,11 +511,11 @@ $B.make_module_annotate = function(locals){
             }
         }
     )
-    locals.__annotate_func__ = function(format){
-        switch(format){
+    locals.__annotate_func__ = function(format) {
+        switch (format) {
             case 1:
                 var ann_dict = $B.empty_dict()
-                for(var key in locals.$annotations){
+                for (var key in locals.$annotations) {
                     var item = locals.$annotations[key]
                     //frame.$lineno = item[0]
                     $B.$setitem(ann_dict, key, item[1]())
@@ -531,20 +531,20 @@ $B.make_module_annotate = function(locals){
     $B.set_function_attr(locals.__annotate_func__, '__qualname__', '__annotate__')
 }
 
-function object_get_dict(obj){
-    if($B.is_type(obj)){
+function object_get_dict(obj) {
+    if ($B.is_type(obj)) {
         return $B.mappingproxy.tp_new($B.mappingproxy, [$B.get_dict(obj)])
     }
     return $B.get_dict(obj)
 }
 
-function object_set_dict(obj, value){
+function object_set_dict(obj, value) {
     $B.set_dict(obj, value)
 }
 
 var type = _b_.type // defined in py_object.js
 
-type.$factory = function(){
+type.$factory = function() {
     var $ = $B.args('type', 3, {first: null, bases: null, cl_dict: null},
                 arguments, {bases: $B.NULL, cl_dict: $B.NULL}, null, 'kw')
     var first = $.first,
@@ -552,22 +552,22 @@ type.$factory = function(){
         cl_dict = $.cl_dict,
         kw = $.kw
 
-    if(cl_dict === $B.NULL){
-        if(bases !== $B.NULL){
+    if (cl_dict === $B.NULL) {
+        if (bases !== $B.NULL) {
             $B.RAISE(_b_.TypeError, 'type() takes 1 or 3 arguments')
         }
         return $B.get_class(first)
-    }else{
+    } else {
         return type.tp_call(type, ...arguments)
     }
 }
 
-type.$call = function(klass, new_func, init_func){
+type.$call = function(klass, new_func, init_func) {
     // return factory function for classes with __init__ method
-    return function(){
+    return function() {
         // create an instance with __new__
         var instance = new_func.bind(null, klass).apply(null, arguments)
-        if($B.$isinstance(instance, klass)){
+        if ($B.$isinstance(instance, klass)) {
             // call __init__ with the same parameters
             init_func.bind(null, instance).apply(null, arguments)
         }
@@ -575,10 +575,10 @@ type.$call = function(klass, new_func, init_func){
     }
 }
 
-type.$call_no_new_init = function(klass, init_func){
+type.$call_no_new_init = function(klass, init_func) {
     // return factory function for classes without explicit __new__ method
     // and explicit __init__
-    return function(){
+    return function() {
         var instance = _b_.object.$no_new_init(klass)
         // call __init__ with the same parameters
         init_func(instance, ...arguments)
@@ -586,58 +586,58 @@ type.$call_no_new_init = function(klass, init_func){
     }
 }
 
-type.$call_no_init = function(klass, new_func){
+type.$call_no_init = function(klass, new_func) {
     // return factory function for classes without __init__
     return new_func.bind(null, klass)
 }
 
-$B.$class_getitem = function(kls, origin, args){
+$B.$class_getitem = function(kls, origin, args) {
     return $B.GenericAlias.$factory(kls, origin, args)
 }
 
-$B.merge_class_dict = function(dict, klass){
+$B.merge_class_dict = function(dict, klass) {
     var classdict,
         bases
 
     /* Merge in the type's dict (if any). */
     classdict = $B.$getattr(klass, '__dict__', null)
-    if(classdict !== null){
+    if (classdict !== null) {
         $B.$call($B.type_getattribute(_b_.dict, 'update'), dict, classdict)
-    }else{
+    } else {
         return
     }
     /* Recursively merge in the base types' (if any) dicts. */
     bases = klass.tp_bases
-    if(bases === undefined){
+    if (bases === undefined) {
         return
     }
-    for(var base of bases){
+    for (var base of bases) {
         $B.merge_class_dict(dict, base)
     }
 }
 
 var dict_name = $B.DICT = Symbol('DICT')
 
-$B.get_dict = function(cls){
+$B.get_dict = function(cls) {
     return cls[dict_name] ??
         (cls.ob_type === $B.function
             ? (cls[dict_name] = $B.empty_dict())
             : undefined)
 }
 
-$B.init_dict = function(cls){
+$B.init_dict = function(cls) {
     cls[dict_name] = $B.empty_dict()
 }
 
-$B.set_dict = function(cls, value){
+$B.set_dict = function(cls, value) {
     cls[dict_name] = value
 }
 
-$B.get_from_dict = function(cls, attr, _default){
+$B.get_from_dict = function(cls, attr, _default) {
     return $B.str_dict_get($B.get_dict(cls), attr, _default)
 }
 
-$B.set_to_dict = function(cls, attr, value){
+$B.set_to_dict = function(cls, attr, value) {
     $B.str_dict_set($B.get_dict(cls), attr, value)
 }
 
@@ -662,27 +662,27 @@ $B.slot2dunder = {
 }
 
 $B.dunder2slot = {}
-for(var key in $B.slot2dunder){
+for (var key in $B.slot2dunder) {
     $B.dunder2slot[$B.slot2dunder[key]] = key
 }
 
-function where_is(cls, attr){
-    for(var kls of cls.tp_mro){
-        if($B.get_from_dict(kls, attr, $B.NULL) !== $B.NULL){
+function where_is(cls, attr) {
+    for (var kls of cls.tp_mro) {
+        if ($B.get_from_dict(kls, attr, $B.NULL) !== $B.NULL) {
             return kls
         }
     }
 }
 
-$B.search_own_slot = function(cls, slot, _default){
+$B.search_own_slot = function(cls, slot, _default) {
     var dunder = $B.slot2dunder[slot]
-    if(cls.hasOwnProperty(slot)){
+    if (cls.hasOwnProperty(slot)) {
         return cls[slot]
     }
-    if(dunder){
+    if (dunder) {
         var v = $B.get_from_dict(cls, dunder, $B.NULL)
-        if(v !== $B.NULL){
-            if(v.ob_type.tp_descr_get){
+        if (v !== $B.NULL) {
+            if (v.ob_type.tp_descr_get) {
                 v = v.ob_type.tp_descr_get(v, cls)
             }
             return v
@@ -691,29 +691,29 @@ $B.search_own_slot = function(cls, slot, _default){
     return _default
 }
 
-$B.search_slot = function(cls, slot, _default){
+$B.search_slot = function(cls, slot, _default) {
     var test = false // cls.tp_name == 'MagicMock' && slot == 'tp_call'
-    if(test){
+    if (test) {
         console.log('search slot', cls, slot)
     }
     var dunder = $B.slot2dunder[slot]
-    if(cls.tp_mro === undefined){
+    if (cls.tp_mro === undefined) {
         console.log('no mro', cls)
     }
-    for(var klass of cls.tp_mro){
-        if(klass.hasOwnProperty(slot) && klass[slot] !== $B.NULL){
+    for (var klass of cls.tp_mro) {
+        if (klass.hasOwnProperty(slot) && klass[slot] !== $B.NULL) {
             return klass[slot]
         }
-        if(dunder){
+        if (dunder) {
             var v = $B.get_from_dict(klass, dunder, $B.NULL)
-            if(v !== $B.NULL){
-                if(test){
+            if (v !== $B.NULL) {
+                if (test) {
                     console.log('klass has __call__', v)
                 }
-                if(typeof v !== 'function'){
+                if (typeof v !== 'function') {
                     var v_type = $B.get_class(v)
                     var getter = v_type.tp_descr_get
-                    if(getter !== $B.NULL){
+                    if (getter !== $B.NULL) {
                         v = getter(v, cls)
                     }
                 }
@@ -724,9 +724,9 @@ $B.search_slot = function(cls, slot, _default){
     return _default
 }
 
-$B.builtin_slot = function(cls, slot){
-    for(var kls of cls.tp_mro){
-        if(Object.hasOwn(kls, slot)){
+$B.builtin_slot = function(cls, slot) {
+    for (var kls of cls.tp_mro) {
+        if (Object.hasOwn(kls, slot)) {
             return kls[slot]
         }
     }
@@ -735,74 +735,74 @@ $B.builtin_slot = function(cls, slot){
 
 $B.time_type_getattribute = 0
 
-$B.type_getattribute = function(klass, attr){
+$B.type_getattribute = function(klass, attr) {
     var test = false // attr == 'spam'
-    if(test){
+    if (test) {
         console.log('type getattribute', attr, klass)
 
     }
     var meta = $B.get_class(klass)
-    if(meta === _b_.type){
+    if (meta === _b_.type) {
         var res = meta.tp_getattro(klass, attr)
         return res
     }
     var getattro = $B.search_slot(meta, 'tp_getattro', $B.NULL)
-    if(getattro !== $B.NULL){
-        if(test){
+    if (getattro !== $B.NULL) {
+        if (test) {
             console.log('getattro', getattro)
         }
         var res = getattro(klass, attr, $B.NULL)
-        if(test){
+        if (test) {
             console.log('result of getattro', res)
         }
-        if(res !== $B.NULL){
+        if (res !== $B.NULL) {
             return res
         }
     }
     var getattr = $B.search_in_mro(meta, '__getattr__', $B.NULL)
-    if(getattr === $B.NULL){
+    if (getattr === $B.NULL) {
         return $B.NULL
     }
-    try{
+    try {
         return $B.$call(getattr, klass, attr)
-    }catch(err){
-        if($B.is_exc(err, _b_.AttributeError)){
+    } catch (err) {
+        if ($B.is_exc(err, _b_.AttributeError)) {
             return $B.NULL
         }
         throw err
     }
 }
 
-function update_subclasses(kls, name, alias, value){
+function update_subclasses(kls, name, alias, value) {
     // recursively propagate kls[alias] = value to subclasses of kls that
     // don't define kls[name]
     // For instance, set kls.$tp_setattr for subclasses that don't define
     // __setattr__
-    for(var subclass of kls.tp_subclasses){
-        if(! subclass.hasOwnProperty(name)){
+    for (var subclass of kls.tp_subclasses) {
+        if (! subclass.hasOwnProperty(name)) {
             subclass[alias] = value
             update_subclasses(subclass, name, alias, value)
         }
     }
 }
 
-$B.type_check = function(obj, cls){
+$B.type_check = function(obj, cls) {
     var obj_type = $B.get_class(obj)
     return obj_type === cls || obj_type.tp_mro.includes(cls)
 }
 
-function type_mro(cls){
+function type_mro(cls) {
     return $B.$list($B.make_mro(cls))
 }
 
-function set_tp_slots(cls){
-    for(var [slot, dunder] of Object.entries($B.slot2dunder)){
+function set_tp_slots(cls) {
+    for (var [slot, dunder] of Object.entries($B.slot2dunder)) {
         var method = $B.get_from_dict(cls, dunder, $B.NULL)
-        if(method !== $B.NULL){
+        if (method !== $B.NULL) {
             cls[slot] = method
-        }else{
-            for(var kls of $B.get_mro(cls).slice(1)){
-                if(kls[slot]){
+        } else {
+            for (var kls of $B.get_mro(cls).slice(1)) {
+                if (kls[slot]) {
                     cls[slot] = kls[slot]
                     break
                 }
@@ -816,52 +816,52 @@ var special_attrs = [
     "__type_params__", "__annotate__", "__annotations__"
 ]
 
-$B.make_getattr = function(cls){
-    if(cls.tp_mro){
+$B.make_getattr = function(cls) {
+    if (cls.tp_mro) {
         var getattribute = $B.search_slot(cls, 'tp_getattro', $B.NULL)
         var getattr = $B.search_in_mro(cls, '__getattr__', $B.NULL)
-        if(getattr === $B.NULL){
+        if (getattr === $B.NULL) {
             cls.$getattribute = getattribute
-        }else{
-            cls.$getattribute = function(obj, attr){
+        } else {
+            cls.$getattribute = function(obj, attr) {
                 var res = $B.NULL
-                try{
+                try {
                     res = getattribute(obj, attr)
-                }catch(err){
+                } catch (err) {
                     $B.RAISE_IF_NOT(err, _b_.AttributeError)
                 }
-                if(res === $B.NULL){
+                if (res === $B.NULL) {
                     return $B.$call(getattr, obj, attr)
                 }
                 return res
             }
         }
-    }else{
+    } else {
         cls.$getattribute = $B.NULL
     }
 }
 
-function reset_getattribute(cls){
+function reset_getattribute(cls) {
     // recursively reset attribute $getattribute of cls and its subclasses
     $B.make_getattr(cls)
-    for(var kls of cls.tp_subclasses){
+    for (var kls of cls.tp_subclasses) {
         reset_getattribute(kls)
     }
 }
 
-$B.make_call = function(cls){
+$B.make_call = function(cls) {
     cls.tp_call = $B.NULL
     var call = $B.get_from_dict(cls, '__call__', $B.NULL)
-    if(call !== $B.NULL){
+    if (call !== $B.NULL) {
         cls.tp_call = call
-    }else{
-        for(var kls of cls.tp_mro){
-            if(kls.tp_call && kls.tp_call !== $B.NULL){
+    } else {
+        for (var kls of cls.tp_mro) {
+            if (kls.tp_call && kls.tp_call !== $B.NULL) {
                 cls.tp_call = kls.tp_call
                 return
-            }else{
+            } else {
                 call = $B.get_from_dict(kls, '__call__', $B.NULL)
-                if(call !== $B.NULL){
+                if (call !== $B.NULL) {
                     cls.tp_call = call
                     return
                 }
@@ -870,65 +870,65 @@ $B.make_call = function(cls){
     }
 }
 
-function reset_call(cls){
+function reset_call(cls) {
     $B.make_call(cls)
-    if(cls.tp_subclasses === undefined){
+    if (cls.tp_subclasses === undefined) {
         console.log('no subclasses', cls)
     }
-    for(var kls of cls.tp_subclasses){
+    for (var kls of cls.tp_subclasses) {
         reset_call(kls)
     }
 }
 
-$B.make_descr_get = function(cls){
+$B.make_descr_get = function(cls) {
     cls.tp_descr_get = $B.NULL
     var get = $B.get_from_dict(cls, '__get__', $B.NULL)
-    if(get !== $B.NULL){
+    if (get !== $B.NULL) {
         cls.tp_descr_get = get
-    }else if(cls.tp_base){
+    } else if (cls.tp_base) {
         cls.tp_descr_get = cls.tp_base.tp_descr_get ??
             (cls.tp_base.tp_descr_get = $B.make_descr_get(cls.tp_base))
     }
     return cls.tp_descr_get
 }
 
-function reset_descr_get(cls){
+function reset_descr_get(cls) {
     $B.make_descr_get(cls)
-    for(var kls of cls.tp_subclasses){
+    for (var kls of cls.tp_subclasses) {
         reset_descr_get(kls)
     }
 }
 
-$B.make_descr_set = function(cls){
+$B.make_descr_set = function(cls) {
     cls.tp_descr_set = $B.NULL
     var _set = $B.get_from_dict(cls, '__set__', $B.NULL)
-    if(_set !== $B.NULL){
+    if (_set !== $B.NULL) {
         cls.tp_descr_set = _set
-    }else if(cls.tp_base){
+    } else if (cls.tp_base) {
         cls.tp_descr_set = cls.tp_base.tp_descr_set ??
             (cls.tp_base.tp_descr_set = $B.make_descr_set(cls.tp_base))
     }
     return cls.tp_descr_set
 }
 
-function reset_descr_set(cls){
+function reset_descr_set(cls) {
     $B.make_descr_set(cls)
-    for(var kls of cls.tp_subclasses){
+    for (var kls of cls.tp_subclasses) {
         reset_descr_set(kls)
     }
 }
 
-function make_factory(cls){
+function make_factory(cls) {
     var has_no_slots = $B.get_from_dict(cls, '__slots__') === $B.NULL
-    if(cls.ob_type !== _b_.type){
+    if (cls.ob_type !== _b_.type) {
         return
     }
     if(cls.tp_init === _b_.object.tp_init &&
             cls.tp_new === _b_.object.tp_new &&
             has_no_slots){
         // class has no __new__ and no __init__
-        cls.$factory = function(){
-            if(arguments.length == 0){
+        cls.$factory = function() {
+            if (arguments.length == 0) {
                 var res = {
                     ob_type: cls
                 }
@@ -941,7 +941,7 @@ function make_factory(cls){
     }else if(cls.tp_new === _b_.object.tp_new &&
             has_no_slots){
         // class has no __new__ but a specific __init__
-        cls.$factory = function(){
+        cls.$factory = function() {
             var res = {
                 ob_type: cls
             }
@@ -949,41 +949,41 @@ function make_factory(cls){
             cls.tp_init.call(null, res, ...arguments)
             return res
         }
-    }else{
+    } else {
         // delete cls.$factory
     }
 }
 
-function reset_factory(cls){
+function reset_factory(cls) {
     make_factory(cls)
-    for(var kls of cls.tp_subclasses){
+    for (var kls of cls.tp_subclasses) {
         reset_factory(kls)
     }
 }
 
-$B.make_iter = function(cls){
+$B.make_iter = function(cls) {
     cls.tp_iter = $B.NULL
     var iter = $B.get_from_dict(cls, '__iter__', $B.NULL)
-    if(iter !== $B.NULL){
+    if (iter !== $B.NULL) {
         cls.tp_iter = iter
-    }else if(cls.tp_base){
+    } else if (cls.tp_base) {
         cls.tp_iter = cls.tp_base.tp_iter ??
             (cls.tp_base.tp_iter = $B.make_iter(cls.tp_base))
     }
     return cls.tp_iter
 }
 
-function reset_iter(cls){
+function reset_iter(cls) {
     $B.make_iter(cls)
-    if(cls.tp_subclasses === undefined){
+    if (cls.tp_subclasses === undefined) {
         console.log('no subclasses', cls)
     }
-    for(var kls of cls.tp_subclasses){
+    for (var kls of cls.tp_subclasses) {
         reset_iter(kls)
     }
 }
 
-$B.make_fast_iter = function(cls){
+$B.make_fast_iter = function(cls) {
     if(cls.tp_base &&
             cls.tp_base[$B.FAST_ITER] &&
             $B.get_from_dict(cls, '__iter__', $B.NULL) === $B.NULL){
@@ -991,68 +991,68 @@ $B.make_fast_iter = function(cls){
     }
 }
 
-$B.make_new = function(cls){
+$B.make_new = function(cls) {
     cls.tp_new = $B.NULL
-    for(var kls of cls.tp_mro){
-        if(kls.tp_flags & $B.TPFLAGS.HEAPTYPE){
+    for (var kls of cls.tp_mro) {
+        if (kls.tp_flags & $B.TPFLAGS.HEAPTYPE) {
             var _new = $B.get_from_dict(kls, '__new__', $B.NULL)
-            if(_new !== $B.NULL){
-                if($B.get_class(_new) === _b_.staticmethod){
+            if (_new !== $B.NULL) {
+                if ($B.get_class(_new) === _b_.staticmethod) {
                     _new = _new.sm_callable
                 }
                 cls.tp_new = _new
                 return
             }
-        }else{
+        } else {
             cls.tp_new = kls.tp_new
             return
         }
     }
 }
 
-function reset_new(cls){
+function reset_new(cls) {
     $B.make_new(cls)
-    if(cls.tp_subclasses === undefined){
+    if (cls.tp_subclasses === undefined) {
         console.log('no subclasses', cls)
     }
-    for(var kls of cls.tp_subclasses){
+    for (var kls of cls.tp_subclasses) {
         reset_new(kls)
     }
 }
 
-$B.make_init = function(cls){
+$B.make_init = function(cls) {
     cls.tp_init = $B.NULL
-    for(var kls of cls.tp_mro){
-        if(kls.tp_flags & $B.TPFLAGS.HEAPTYPE){
+    for (var kls of cls.tp_mro) {
+        if (kls.tp_flags & $B.TPFLAGS.HEAPTYPE) {
             var init = $B.get_from_dict(kls, '__init__', $B.NULL)
-            if(init !== $B.NULL){
+            if (init !== $B.NULL) {
                 cls.tp_init = init
                 return
             }
-        }else{
+        } else {
             cls.tp_init = kls.tp_init
             return
         }
     }
 }
 
-function reset_init(cls){
+function reset_init(cls) {
     $B.make_init(cls)
-    if(cls.tp_subclasses === undefined){
+    if (cls.tp_subclasses === undefined) {
         console.log('no subclasses', cls)
     }
-    for(var kls of cls.tp_subclasses){
+    for (var kls of cls.tp_subclasses) {
         reset_init(kls)
     }
 }
 
-$B.make_setattr = function(cls){
+$B.make_setattr = function(cls) {
     cls.tp_setattro = $B.NULL
     var setattr = $B.get_from_dict(cls, '__setattr__', $B.NULL)
-    if(setattr !== $B.NULL){
+    if (setattr !== $B.NULL) {
         cls.tp_setattro = setattr
-    }else if(cls.tp_mro){
-        for(var kls of cls.tp_mro){
+    } else if (cls.tp_mro) {
+        for (var kls of cls.tp_mro) {
             if(Object.hasOwn(kls, 'tp_setattro') &&
                     kls.tp_setattro !== $B.NULL &&
                     (kls === _b_.object ||
@@ -1064,20 +1064,20 @@ $B.make_setattr = function(cls){
     }
 }
 
-function reset_setattr(cls){
+function reset_setattr(cls) {
     $B.make_setattr(cls)
-    if(cls.tp_subclasses === undefined){
+    if (cls.tp_subclasses === undefined) {
         console.log('no subclasses', cls)
     }
-    for(var kls of cls.tp_subclasses){
+    for (var kls of cls.tp_subclasses) {
         reset_setattr(kls)
     }
 }
 
-function set_slots(cl_dict, class_obj){
+function set_slots(cl_dict, class_obj) {
     let slots = $B.str_dict_get(cl_dict, '__slots__', $B.NULL)
-    if(slots !== $B.NULL){
-        for(let key of $B.make_js_iterator(slots)){
+    if (slots !== $B.NULL) {
+        for (let key of $B.make_js_iterator(slots)) {
             var member = {
                 name: key,
                 type: $B.TYPES.OBJECT,
@@ -1096,13 +1096,13 @@ function set_slots(cl_dict, class_obj){
 }
 
 /* type start */
-_b_.type.tp_setattro = function(kls, attr, value){
+_b_.type.tp_setattro = function(kls, attr, value) {
     var $test = false // attr == '__getattribute__' // kls.tp_name == 'A'
-    if($test){
+    if ($test) {
         console.log('set attr', attr, 'of class', kls, 'to', value)
         console.log('kls dict', $B.get_dict(kls))
     }
-    if(kls.tp_flags & TPFLAGS.IMMUTABLETYPE){
+    if (kls.tp_flags & TPFLAGS.IMMUTABLETYPE) {
         $B.RAISE(_b_.TypeError,
             `cannot set '${attr}' attribute ` +
             `of immutable type '${$B.get_name(kls)}'`
@@ -1110,32 +1110,32 @@ _b_.type.tp_setattro = function(kls, attr, value){
     }
     var in_mro = $B.search_in_mro($B.get_class(kls), attr, $B.NULL)
     var done = false
-    if(in_mro !== $B.NULL){
-        if($test){
+    if (in_mro !== $B.NULL) {
+        if ($test) {
             console.log('attr', attr, 'found in mro', in_mro)
         }
         var in_mro_type = $B.get_class(in_mro)
         var setter = $B.search_slot(in_mro_type, 'tp_descr_set', $B.NULL)
-        if(setter !== $B.NULL){
-            if($test){
+        if (setter !== $B.NULL) {
+            if ($test) {
                 console.log('use setter', setter)
             }
             done = true
             setter(in_mro, kls, value)
         }
     }
-    if( ! done){
-        if(value === $B.NULL){
+    if ( ! done) {
+        if (value === $B.NULL) {
             var current = $B.get_from_dict(kls, attr, $B.NULL)
-            if(current === $B.NULL){
+            if (current === $B.NULL) {
                 throw $B.attr_error(attr, kls)
             }
             _b_.dict.$delitem($B.get_dict(kls), attr)
-        }else{
+        } else {
             $B.set_to_dict(kls, attr, value)
         }
     }
-    switch(attr){
+    switch (attr) {
         case '__call__':
             reset_call(kls)
             break
@@ -1168,7 +1168,7 @@ _b_.type.tp_setattro = function(kls, attr, value){
     return _b_.None
 }
 
-_b_.type.nb_or = function(){
+_b_.type.nb_or = function() {
     var $ = $B.args('__or__', 2, {cls: null, other: null},  arguments)
     var cls = $.cls,
         other = $.other
@@ -1179,193 +1179,197 @@ _b_.type.nb_or = function(){
     return $B.UnionType.$factory([cls, other])
 }
 
-_b_.type.tp_repr = function(kls){
+_b_.type.tp_repr = function(kls) {
     var name = $B.get_name(kls)
     var qualname
-    if(kls.hasOwnProperty('tp_flags') && (kls.tp_flags & TPFLAGS.HEAPTYPE)){
+    if (kls.hasOwnProperty('tp_flags') && (kls.tp_flags & TPFLAGS.HEAPTYPE)) {
         var module = $B.$getattr(kls, '__module__', $B.NULL)
         qualname = (module === $B.NULL || module == 'builtins') ? name :
             module + "." + name
-    }else{
+    } else {
         qualname = name
     }
     return "<class '" + qualname + "'>"
 }
 
-_b_.type.tp_call = function(cls){
+_b_.type.tp_call = function(cls) {
     var $ = $B.args('__call__', 1, {cls: null}, arguments, null, 'args', 'kw'),
         cls = $.cls,
         args = $.args,
         kw = $.kw,
         kw_len = _b_.dict.mp_length(kw)
     var test = false // cls.tp_name === 'AIter'
-    if(test){
+    if (test) {
         console.log('type.tp_call', cls, args)
         console.log(Error('trace').stack)
     }
-    if(cls === _b_.type){
-        if($.args.length == 1 && kw_len == 0){
+    if (cls === _b_.type) {
+        if ($.args.length == 1 && kw_len == 0) {
             // one argument: return type of argument
             return $B.get_class(args[0])
         }
-        if(args.length !== 1 && args.length !== 3){
+        if (args.length !== 1 && args.length !== 3) {
             $B.RAISE(_b_.TypeError, 'type() takes 1 or 3 arguments')
         }
     }
     var new_func = cls.tp_new
-    if(new_func === undefined){
+    if (new_func === undefined) {
         console.log('no tp_new', cls, args, kw)
     }
-    if(test){
+    if (test) {
         console.log('new_func', new_func, 'is slot tp_new', new_func.$is_slot)
     }
     // create an instance with __new__
     var instance
-    if(new_func.$is_slot){
+    if (new_func.$is_slot) {
         instance = new_func(cls, args, kw)
-    }else{
+    } else {
         instance = new_func(cls, ...args, $B.dict2kwarg(kw))
     }
     var instance_class = $B.get_class(instance)
-    if(test){
+    if (test) {
         console.log('instance of type', instance, 'cls', cls)
         console.log('instance type is cls ?', $B.type_check(instance, cls))
     }
-    if($B.type_check(instance, cls)){
+    if ($B.type_check(instance, cls)) {
         // call __init__ with the same parameters
         var init_func = instance_class.tp_init
-        if(test){
+        if (test) {
             console.log('init func', init_func)
         }
-        if(init_func !== $B.NULL && init_func !== _b_.object.tp_init){
+        if(init_func !== $B.NULL && init_func !== _b_.object.tp_init &&
+                typeof init_func == 'function'){
             // object.__init__ is not called in this case (it would raise an
             // exception if there are parameters).
-            if(typeof init_func != 'function'){
-                console.log('init func', init_func, 'instance', instance)
-            }
-            try{
-                if(kw_len > 0){
+            //
+            // The `typeof init_func == 'function'` guard handles types whose
+            // tp_init is undefined (some heap types that never call
+            // finalize_type's wrapper_methods loop). Without it,
+            // `init_func.call(...)` crashes with
+            // `can't access property "call", init_func is undefined`.
+            try {
+                if (kw_len > 0) {
                     var kwarg = $B.dict2kwarg(kw)
                     init_func.call(null, instance, ...$.args, kwarg)
-                }else{
+                } else {
                     init_func.call(null, instance, ...$.args)
                 }
-            }catch(err){
+            } catch (err) {
                 throw err
             }
         }
     }
-    if(test){
+    if (test) {
         console.log('type.tp_call returns instance', instance)
     }
     return instance
 }
 
-_b_.type.tp_getattro = function(obj, name){
+_b_.type.tp_getattro = function(obj, name) {
     var test = false // name == '__getformat__' // && obj.tp_name == 'Mapping'
-    if(test){
+    if (test) {
         console.log('class_getattr', obj, name)
         console.log('frame obj', $B.frame_obj)
     }
     var klass = $B.get_class(obj)
     var in_mro = $B.search_in_mro(klass, name, $B.NULL)
     // print('in mro', in_mro, type(in_mro), in_mro is null)
-        if(test){
+        if (test) {
             console.log('attr', name, 'of class', klass)
             console.log('in mro', in_mro)
         }
     var getter = $B.NULL
-    if(in_mro !== $B.NULL){
+    if (in_mro !== $B.NULL) {
         var in_mro_class = $B.get_class(in_mro)
-        if(test){
+        if (test) {
             console.log('in_mro class', in_mro_class)
         }
         var getter = in_mro_class.tp_descr_get
-        if(test){
+        if (test) {
             console.log('getter', getter)
         }
-        if(getter !== $B.NULL){
-            if(in_mro_class.tp_descr_set !== $B.NULL){
-                if(test){
+        if (getter !== $B.NULL) {
+            if (in_mro_class.tp_descr_set !== $B.NULL) {
+                if (test) {
                     console.log('data descriptor', name)
                     console.log('__set__', in_mro_class.tp_descr_set)
                 }
-                try{
+                try {
                     var res = getter(in_mro, obj, klass)     // data descriptor
-                    if(test){
+                    if (test) {
                         console.log('result of getter', res)
                     }
                     return res
-                }catch(err){
+                } catch (err) {
                     $B.RAISE_IF_NOT(err, _b_.AttributeError)
                 }
-            }else{
-                if(test){
+            } else {
+                if (test) {
                     console.log('non-data descriptor', name)
                 }
             }
         }
     }
-    if(test){
+    if (test) {
         console.log('search attribute', name, 'in mro', obj)
    }
     var attribute = $B.search_in_mro(obj, name, $B.NULL)
-    if(attribute !== $B.NULL){
-        if(test){
+    if (attribute !== $B.NULL) {
+        if (test) {
             console.log('attribute', attribute)
             console.log('class', $B.get_class(attribute))
         }
         var local_get = $B.get_class(attribute).tp_descr_get
-        if(test){
+        if (test) {
             console.log('local_get', $B.get_class(local_get))
         }
-        if(local_get !== $B.NULL){
-            if(typeof local_get !== 'function'){
+        if (local_get !== $B.NULL) {
+            if (typeof local_get !== 'function') {
                 console.log('not a function', local_get, 'NULL', $B.NULL)
             }
             // Something special here. For built-in types, passing _b_.None
             // results in an error when the object itself is None, for
             // instance for resolving None.__bool__
-            if($B.get_class(local_get) === $B.JSFunction){
+            if ($B.get_class(local_get) === $B.JSFunction) {
                 var res = local_get(attribute, $B.NULL, obj)
-            }else{
+            } else {
                 var res = local_get(attribute, _b_.None, obj)
             }
-            if(test){
+            if (test) {
                 console.log('result of local_get', res)
             }
             return res
         }
         return attribute
-    }else if(test){
+    } else if (test) {
         console.log('no attribute')
     }
-    if(getter !== $B.NULL){
-        if(typeof getter !== 'function'){
+    if (getter !== $B.NULL) {
+        if (typeof getter !== 'function') {
             console.log('getter', getter)
             console.log(Error().stack)
         }
-        try{
+        try {
             return getter(in_mro, obj)  // non-data descriptor
-        }catch(err){
+        } catch (err) {
             $B.RAISE_IF_NOT(err, _b_.AttributeError)
             return $B.NULL
         }
     }
-    if(in_mro !== $B.NULL){
+    if (in_mro !== $B.NULL) {
         return in_mro
     }
     return $B.NULL
 }
 
-_b_.type.tp_init = function(self){
-    if(arguments.length == 0){
+_b_.type.tp_init = function(self) {
+    if (arguments.length == 0) {
         $B.RAISE(_b_.TypeError, "descriptor '__init__' of 'type' " +
             "object needs an argument")
     }
 }
 
-_b_.type.tp_new = function(cls, args, kw){
+_b_.type.tp_new = function(cls, args, kw) {
     // Return a new type object. This is essentially a dynamic form of the
     // class statement. The name string is the class name and becomes the
     // __name__ attribute; the bases tuple itemizes the base classes and
@@ -1379,7 +1383,7 @@ _b_.type.tp_new = function(cls, args, kw){
     var [name, bases, cl_dict] = args
 
     var test = false // name == 'A'
-    if(test){
+    if (test) {
         console.log('type.tp_new', name, 'metatype', metatype,
             'extrakw', kwds)
         console.log($B.frame_obj.frame.__file__, 'line', $B.frame_obj.frame.$lineno)
@@ -1408,7 +1412,7 @@ _b_.type.tp_new = function(cls, args, kw){
         tp_flags: $B.TPFLAGS.DEFAULT | $B.TPFLAGS.HEAPTYPE |
                    $B.TPFLAGS.BASETYPE | $B.TPFLAGS.HAVE_GC
     }
-    for(var base of bases){
+    for (var base of bases) {
         class_obj.tp_flags |= base.tp_flags & $B.TPFLAGS.UNICODE_SUBCLASS
         class_obj.tp_flags |= base.tp_flags & $B.TPFLAGS.LONG_SUBCLASS
         class_obj.tp_flags |= base.tp_flags & $B.TPFLAGS.TUPLE_SUBCLASS
@@ -1428,7 +1432,7 @@ _b_.type.tp_new = function(cls, args, kw){
     set_type_new(cl_dict)
 
     var res = type_new_get_bases(ctx, class_obj)
-    if(test){
+    if (test) {
         console.log('after get bases', ctx.name, 'base', ctx.base)
     }
     class_obj.tp_base = ctx.base
@@ -1436,24 +1440,24 @@ _b_.type.tp_new = function(cls, args, kw){
 
     $B.make_fast_iter(class_obj)
 
-    if(test){
+    if (test) {
         console.log('result of type_new_get_bases', res)
     }
 
 
-    if(res < 0){
+    if (res < 0) {
         assert(PyErr_Occurred());
         return NULL;
     }
-    if(res == 1){
+    if (res == 1) {
         return class_obj
     }
-    if(res instanceof Object){
+    if (res instanceof Object) {
         // res.type is the result of tp_new on the classe's metaclass
         class_obj = res.type
         $B.make_init(class_obj)
         $B.make_setattr(class_obj)
-    }else{
+    } else {
         set_slots(cl_dict, class_obj)
 
         $B.set_to_dict(class_obj, '__dict__',
@@ -1465,14 +1469,14 @@ _b_.type.tp_new = function(cls, args, kw){
         )
         $B.make_init(class_obj)
         $B.make_setattr(class_obj)
-        if(test){
+        if (test) {
             console.log('scan cl_dict')
         }
-        for(var [key, v] of Object.entries(cl_dict)){
-            if(test){
+        for (var [key, v] of Object.entries(cl_dict)) {
+            if (test) {
                 console.log('item in cl dict', item)
             }
-            if(test){
+            if (test) {
                 // console.log('check __set_name__ for', key, v)
             }
             if(['__module__', '__doc__', '__dict__', '__qualname__',
@@ -1480,46 +1484,46 @@ _b_.type.tp_new = function(cls, args, kw){
                     '__annotate_func__'].includes(key)){
                 continue
             }
-            if(key == '__class_getitem__'){
+            if (key == '__class_getitem__') {
                 // always a classmethod
-                if($B.get_class(v) !== _b_.classmethod){
+                if ($B.get_class(v) !== _b_.classmethod) {
                     var v1 = $B.$call(_b_.classmethod, v)
                     $B.str_dict_set(cl_dict, key, v1)
                 }
             }
 
             // cf PEP 487 and issue #1178
-            if(test){
+            if (test) {
                 console.log('set name', item)
             }
             var set_name = $B.type_getattribute($B.get_class(v), "__set_name__")
-            if(set_name !== $B.NULL){
+            if (set_name !== $B.NULL) {
                 $B.$call(set_name, v, class_obj, key)
             }
-            if(typeof v == "function"){
-                if(v.$function_infos === undefined){
+            if (typeof v == "function") {
+                if (v.$function_infos === undefined) {
                     // internal functions have $infos
-                    if(v.$infos){
+                    if (v.$infos) {
                         v.$infos.__qualname__ = name + '.' + v.$infos.__name__
                     }
-                }else{
+                } else {
                     v.$function_infos[$B.func_attrs.method_class] = class_obj
                     v.$function_infos[$B.func_attrs.__qualname__] = name + '.' +
                         v.$function_infos[$B.func_attrs.__name__]
                 }
             }
         }
-        if(test){
+        if (test) {
             console.log('class obj', class_obj)
         }
-        if(test){
+        if (test) {
             console.log('call init subclass', init_subclass)
             console.log('extra_kwargs', extra_kwargs)
         }
         if(where_is(class_obj, '__init_subclass__') === _b_.object &&
                 _b_.dict.mp_length(extra_kwargs) == 0){
             // no use calling object.__init_subclass__
-        }else{
+        } else {
             var sup =
                 {
                     ob_type: _b_.super,
@@ -1533,7 +1537,7 @@ _b_.type.tp_new = function(cls, args, kw){
         }
         class_obj.tp_flags |= $B.TPFLAGS.READY
     }
-    if(test){
+    if (test) {
         console.log('$getattribute is set for', class_obj)
     }
     $B.make_new(class_obj)
@@ -1547,38 +1551,38 @@ _b_.type.tp_new = function(cls, args, kw){
 
 var type_funcs = _b_.type.tp_funcs = {}
 
-type_funcs.__abstractmethods___get = function(cls){
-    if(cls !== type) {
+type_funcs.__abstractmethods___get = function(cls) {
+    if (cls !== type) {
         var res = $B.get_from_dict(cls, '__abstractmethods__', $B.NULL)
-        if(res !== $B.NULL){
+        if (res !== $B.NULL) {
             return res
         }
     }
     throw $B.attr_error('__abstractmethods__', cls)
 }
 
-type_funcs.__abstractmethods___set = function(cls, value){
+type_funcs.__abstractmethods___set = function(cls, value) {
     var abstract, res;
     var dict = $B.get_dict(cls)
-    if(value != $B.NULL) {
+    if (value != $B.NULL) {
         abstract = $B.$bool(value)
         res = $B.str_dict_set(dict, '__abstractmethods__', value)
-    }else{
+    } else {
         abstract = 0;
         res = $B.str_dict_pop(dict, '__abstractmethods__')
-        if(res === $B.NULL){
+        if (res === $B.NULL) {
             $B.RAISE(_b_.AttributeError, '__abstractmethods__')
         }
     }
-    if(abstract){
+    if (abstract) {
         cls.tp_flags |= $B.TPFLAGS.IS_ABSTRACT
-    }else{
+    } else {
         cls.tp_flags = cls.tp_flags & ~ $B.TPFLAGS.IS_ABSTRACT
     }
 }
 
-type_funcs.__annotate___get = function(self){
-    if(! (self.tp_flags & TPFLAGS.HEAPTYPE)){
+type_funcs.__annotate___get = function(self) {
+    if (! (self.tp_flags & TPFLAGS.HEAPTYPE)) {
         $B.RAISE(_b_.AttributeError,
             `type object '${$B.get_name(self)}' ` +
             `has no attribute '__annotate__'`
@@ -1586,57 +1590,57 @@ type_funcs.__annotate___get = function(self){
     }
     // First try __annotate__, in case that's been set explicitly
     var annotate = $B.get_from_dict(self, '__annotate__', $B.NULL)
-    if(annotate === $B.NULL){
+    if (annotate === $B.NULL) {
         annotate = $B.get_from_dict(self, '__annotate_func__', $B.NULL)
     }
-    if(annotate !== $B.NULL){
+    if (annotate !== $B.NULL) {
         var get = $B.get_class(annotate).tp_descr_get
-        if(get !== $B.NULL){
+        if (get !== $B.NULL) {
             annotate = get(annotate, $B.NULL, self)
         }
-    }else{
+    } else {
         annotate = _b_.None;
         $B.set_to_dict(self, '__annotate_func__', annotate)
     }
     return annotate
 }
 
-type_funcs.__annotate___set = function(cls, value){
-    if(value === $B.NULL){
+type_funcs.__annotate___set = function(cls, value) {
+    if (value === $B.NULL) {
         $B.RAISE(_b_.TypeError, 'cannot delete __annotate__ attribute')
     }
     $B.set_to_dict(cls, '__annotate__', value)
 }
 
-type_funcs.__annotations___get = function(cls){
+type_funcs.__annotations___get = function(cls) {
     var annotations = $B.get_from_dict(cls, '__annotations__', $B.NULL)
-    if(annotations !== $B.NULL){
+    if (annotations !== $B.NULL) {
         return annotations
     }
     var ann_func = $B.get_from_dict(cls, '__annotate_func__', $B.NULL)
-    if(ann_func === $B.NULL || ann_func === _b_.None){
+    if (ann_func === $B.NULL || ann_func === _b_.None) {
         return $B.empty_dict()
     }
     return $B.$call(ann_func, 1)
 }
 
-type_funcs.__annotations___set = function(cls, value){
-    if(value === $B.NULL){
+type_funcs.__annotations___set = function(cls, value) {
+    if (value === $B.NULL) {
         value = $B.empty_dict()
         type.tp_funcs.__annotate___set(cls, _b_.None)
     }
     $B.set_to_dict(cls, '__annotations__', value)
 }
 
-type_funcs.__bases___get = function(cls){
+type_funcs.__bases___get = function(cls) {
     return $B.fast_tuple(cls.tp_bases)
 }
 
-type_funcs.__bases___set = function(){
+type_funcs.__bases___set = function() {
     var $ = $B.args('__bases__', 2, {cls: null, bases: null}, arguments)
     var cls = $.cls,
         bases = $.bases
-    if(! $B.exact_type(bases, _b_.tuple)){
+    if (! $B.exact_type(bases, _b_.tuple)) {
         $B.RAISE(_b_.TypeError,
             `can only assign tuple to ${$B.get_name(cls)}.__bases__, ` +
             `not ${$B.class_name(bases)}`
@@ -1646,121 +1650,121 @@ type_funcs.__bases___set = function(){
     cls.tp_mro = $B.make_mro(cls)
 }
 
-type_funcs.__dict___get = function(cls){
+type_funcs.__dict___get = function(cls) {
     return {
         ob_type: $B.mappingproxy,
         mapping: $B.get_dict(cls)
     }
 }
 
-type_funcs.__dict___set = function(self){
+type_funcs.__dict___set = function(self) {
 
 }
 
-type_funcs.__dir__ = function(klass){
+type_funcs.__dir__ = function(klass) {
     var dict = $B.empty_dict()
     $B.merge_class_dict(dict, klass)
     return _b_.list.$factory(dict)
 }
 
-type_funcs.__doc___get = function(cls){
-    if(! (cls.tp_flags & TPFLAGS.HEAPTYPE) && cls.tp_doc){
+type_funcs.__doc___get = function(cls) {
+    if (! (cls.tp_flags & TPFLAGS.HEAPTYPE) && cls.tp_doc) {
         return cls.tp_doc
     }
     return $B.get_from_dict(cls, '__doc__', _b_.None)
 }
 
-type_funcs.__doc___set = function(cls, value){
+type_funcs.__doc___set = function(cls, value) {
     $B.set_to_dict(cls, '__doc__', value)
 }
 
-type_funcs.__instancecheck__ = function(cls, instance){
+type_funcs.__instancecheck__ = function(cls, instance) {
     var kl = $B.get_class(instance)
     var mro = $B.get_mro(kl)
-    for(var klass of mro){
-        if(klass === cls){
+    for (var klass of mro) {
+        if (klass === cls) {
             return true
         }
     }
     return false
 }
 
-type_funcs.__module___get = function(self){
-    if($B.get_dict(self)){
+type_funcs.__module___get = function(self) {
+    if ($B.get_dict(self)) {
         var module = $B.get_from_dict(self, '__module__', $B.NULL)
-        if(module !== $B.NULL){
+        if (module !== $B.NULL) {
             return module
         }
     }
     return 'builtins'
 }
 
-type_funcs.__module___set = function(self, value){
+type_funcs.__module___set = function(self, value) {
     $B.set_to_dict(self, '__module__', value)
 }
 
-type_funcs.__mro___get = function(self){
+type_funcs.__mro___get = function(self) {
     return $B.fast_tuple($B.get_mro(self))
 }
 
-type_funcs.__mro___set = function(self){
+type_funcs.__mro___set = function(self) {
 
 }
 
-type_funcs.__name___get = function(cls){
+type_funcs.__name___get = function(cls) {
     return $B.get_name(cls)
 }
 
-type_funcs.__name___set = function(cls,value){
+type_funcs.__name___set = function(cls,value) {
     cls.tp_name = value
 }
 
-type_funcs.__prepare__ = function(cls){
+type_funcs.__prepare__ = function(cls) {
     return $B.empty_dict()
 }
 
-type_funcs.__qualname___get = function(cls){
+type_funcs.__qualname___get = function(cls) {
     return $B.get_from_dict(cls, '__qualname__', $B.get_name(cls))
 }
 
-type_funcs.__qualname___set = function(cls, value){
+type_funcs.__qualname___set = function(cls, value) {
     cls.tp_name = value
 }
 
-type_funcs.__sizeof__ = function(self){
+type_funcs.__sizeof__ = function(self) {
 
 }
 
-type_funcs.__subclasscheck__ = function(self, subclass){
+type_funcs.__subclasscheck__ = function(self, subclass) {
     // Is subclass a subclass of self ?
     var klass = self
-    if(subclass.tp_bases === undefined){
+    if (subclass.tp_bases === undefined) {
         return self === _b_.object
     }
     return subclass.tp_bases.indexOf(klass) > -1
 }
 
-type_funcs.__subclasses__ = function(cls){
+type_funcs.__subclasses__ = function(cls) {
     return $B.$list(cls.tp_subclasses)
 }
 
-type_funcs.__text_signature___get = function(self){
+type_funcs.__text_signature___get = function(self) {
 
 }
 
-type_funcs.__text_signature___set = function(self){
+type_funcs.__text_signature___set = function(self) {
 
 }
 
-type_funcs.__type_params___get = function(self){
+type_funcs.__type_params___get = function(self) {
 
 }
 
-type_funcs.__type_params___set = function(self){
+type_funcs.__type_params___set = function(self) {
 
 }
 
-type_funcs.mro = function(cls){
+type_funcs.mro = function(cls) {
     return $B.$list($B.get_mro(cls))
 }
 
@@ -1794,10 +1798,10 @@ $B.set_func_names(type, "builtins")
 // property (built in function)
 var property = _b_.property
 
-$B.internal_property = function(module, fget, fset){
+$B.internal_property = function(module, fget, fset) {
     // used in built-in modules
-    for(var func of [fget, fset]){
-        if($B.get_class(func) === $B.JSFunction){
+    for (var func of [fget, fset]) {
+        if ($B.get_class(func) === $B.JSFunction) {
             $B.set_type(func, $B.function)
         }
     }
@@ -1810,7 +1814,7 @@ $B.internal_property = function(module, fget, fset){
     }
 }
 
-property.$factory = function(fget, fset, fdel, doc){
+property.$factory = function(fget, fset, fdel, doc) {
     var res = {
         ob_type: property
     }
@@ -1821,37 +1825,37 @@ property.$factory = function(fget, fset, fdel, doc){
 
 
 /* property start */
-_b_.property.tp_descr_set = function(self, obj, value){
-    if(self.prop_set === _b_.None){
+_b_.property.tp_descr_set = function(self, obj, value) {
+    if (self.prop_set === _b_.None) {
         var name = self.prop_get.$function_infos[$B.func_attrs.__name__]
         var msg = `property '${name}' of '${$B.class_name(obj)}' object ` +
                   'has no setter'
         $B.RAISE_ATTRIBUTE_ERROR(msg, self, '__set__')
     }
-    if(value === $B.NULL){
-        if(self.prop_del === _b_.None){
+    if (value === $B.NULL) {
+        if (self.prop_del === _b_.None) {
             $B.RAISE(_b_.AttributeError,
                 `property '${self.prop_name}' of '${$B.class_name(obj)}' ` +
                 `object has no deleter`
             )
         }
         $B.$call(self.prop_del, obj)
-    }else{
+    } else {
         $B.$call(self.prop_set, obj, value)
     }
 }
 
-_b_.property.tp_descr_get = function(self, obj, type){
-    if(obj === $B.NULL){
+_b_.property.tp_descr_get = function(self, obj, type) {
+    if (obj === $B.NULL) {
         return self
     }
-    if(self.prop_get === _b_.None){
+    if (self.prop_get === _b_.None) {
         $B.RAISE_ATTRIBUTE_ERROR("unreadable attribute", self, '__get__')
     }
     return $B.$call(self.prop_get, obj)
 }
 
-_b_.property.tp_init = function(){
+_b_.property.tp_init = function() {
     var $ = $B.args('__init__', 5,
                 {self: null, fget: null, fset: null, fdel: null, doc: null},
                 arguments,
@@ -1863,7 +1867,7 @@ _b_.property.tp_init = function(){
         fdel = $.fdel,
         doc = $.doc
     self.prop_doc = doc
-    if($B.$getattr && doc === _b_.None){
+    if ($B.$getattr && doc === _b_.None) {
         self.prop_doc = $B.$getattr(fget, '__doc__', doc)
     }
     self.prop_get = fget
@@ -1871,14 +1875,14 @@ _b_.property.tp_init = function(){
     self.prop_del = fdel
     self.$is_property = true
 
-    if(fget && fget.$attrs){
-        for(var key in fget.$attrs){
+    if (fget && fget.$attrs) {
+        for (var key in fget.$attrs) {
             self[key] = fget.$attrs[key]
         }
     }
 }
 
-_b_.property.tp_new = function(cls, args, kw){
+_b_.property.tp_new = function(cls, args, kw) {
     return {
         ob_type: cls
     }
@@ -1886,37 +1890,37 @@ _b_.property.tp_new = function(cls, args, kw){
 
 var property_funcs = _b_.property.tp_funcs = {}
 
-property_funcs.__isabstractmethod___get = function(self){
+property_funcs.__isabstractmethod___get = function(self) {
 
 }
 
-property_funcs.__isabstractmethod___set = function(self){
+property_funcs.__isabstractmethod___set = function(self) {
 
 }
 
-property_funcs.__name___get = function(self){
+property_funcs.__name___get = function(self) {
     return $B.$getattr(self.prop_get, '__name__')
 }
 
-property_funcs.__name___set = function(self){
+property_funcs.__name___set = function(self) {
 
 }
 
-property_funcs.__set_name__ = function(self, cls, name){
+property_funcs.__set_name__ = function(self, cls, name) {
     self.prop_name = name
 }
 
-property_funcs.deleter = function(self, fdel){
+property_funcs.deleter = function(self, fdel) {
     self.prop_del = fdel
     return self
 }
 
-property_funcs.getter = function(self, fget){
+property_funcs.getter = function(self, fget) {
     self.prop_get = fget
     return self
 }
 
-property_funcs.setter = function(self, fset){
+property_funcs.setter = function(self, fset) {
     self.prop_set = fset
     return self
 }
@@ -1936,7 +1940,7 @@ _b_.property.tp_getset = ["__name__", "__isabstractmethod__"]
 
 $B.set_func_names(property, "builtins")
 
-$B.make_iterator_class = function(name, reverse){
+$B.make_iterator_class = function(name, reverse) {
     // Builds a class to iterate over items
 
     var klass = {
@@ -1945,7 +1949,7 @@ $B.make_iterator_class = function(name, reverse){
         __name__: name,
         __qualname__: name,
 
-        $factory: function(items){
+        $factory: function(items) {
             var res = {
                 ob_type: klass,
                 counter: reverse ? items.length : -1,
@@ -1958,7 +1962,7 @@ $B.make_iterator_class = function(name, reverse){
         },
         $iterator_class: true,
 
-        tp_iter: function(self){
+        tp_iter: function(self) {
             self.counter =
                 self.counter === undefined
                     ? reverse
@@ -1969,38 +1973,38 @@ $B.make_iterator_class = function(name, reverse){
             return self
         },
 
-        __len__: function(self){
+        __len__: function(self) {
             return self.items.length
         },
 
-        tp_iternext: function(self){
-            if(typeof self.test_change == "function"){
+        tp_iternext: function(self) {
+            if (typeof self.test_change == "function") {
                 var message = self.test_change()
                 // Used in dictionaries : test if the current dictionary
                 // attribute "$version" is the same as when the iterator was
                 // created. If not, items have been added to or removed from
                 // the dictionary
-                if(message){
+                if (message) {
                     $B.RAISE(_b_.RuntimeError, message)
                 }
             }
 
-            if(reverse){
+            if (reverse) {
                 self.counter--
-                if(self.counter >= 0){
+                if (self.counter >= 0) {
                     var item = self.items[self.counter]
-                    if(self.items.$is_js_array){
+                    if (self.items.$is_js_array) {
                         // iteration on Javascript lists produces Python objects
                         // cf. issue #1388
                         item = $B.jsobj2pyobj(item)
                     }
                     return item
                 }
-            }else{
+            } else {
                 self.counter++
-                if(self.counter < self.items.length){
+                if (self.counter < self.items.length) {
                     var item = self.items[self.counter]
-                    if(self.items.$is_js_array){
+                    if (self.items.$is_js_array) {
                         // iteration on Javascript lists produces Python objects
                         // cf. issue #1388
                         item = $B.jsobj2pyobj(item)
@@ -2011,7 +2015,7 @@ $B.make_iterator_class = function(name, reverse){
             $B.RAISE(_b_.StopIteration, "StopIteration")
         },
 
-        __reduce_ex__: function(self){
+        __reduce_ex__: function(self) {
             return $B.fast_tuple([_b_.iter, _b_.tuple.$factory([self.items])])
         }
     }
@@ -2022,27 +2026,27 @@ $B.make_iterator_class = function(name, reverse){
 
 
 // PEP 585
-function _Py_make_parameters(args){
+function _Py_make_parameters(args) {
     var is_args_list = $B.is_list(args)
     var tuple_args
-    if(is_args_list){
+    if (is_args_list) {
         args = tuple_args = $B.fast_tuple(args)
     }
     var nargs = args.length
     var len = nargs
     var parameters = $B.fast_tuple()
     var iparam = 0
-    for(let iarg = 0; iarg < nargs; iarg++){
+    for (let iarg = 0; iarg < nargs; iarg++) {
         let t = args[iarg]
         // We don't want __parameters__ descriptor of a bare Python class.
-        if($B.is_type(t)){
+        if ($B.is_type(t)) {
             continue
         }
         var rc = $B.$getattr(t, '__typing_subst__', $B.NULL)
-        if(rc !== $B.NULL){
+        if (rc !== $B.NULL) {
             parameters.push(t)
             iparam++
-        }else{
+        } else {
             var subparams = $B.$getattr(t, '__parameters__', $B.NULL)
             if(subparams === $B.NULL &&
                     $B.$isinstance(t, [_b_.tuple, _b_.list])){
@@ -2050,27 +2054,27 @@ function _Py_make_parameters(args){
                 // add the results to the current parameters.
                 subparams = _Py_make_parameters(t)
             }
-            if(subparams && $B.is_tuple(subparams)){
+            if (subparams && $B.is_tuple(subparams)) {
                 var len2 = subparams.length
                 var needed = len2 - 1 - (iarg - iparam)
-                if(needed > 0){
+                if (needed > 0) {
                     len += needed;
                     _PyTuple_Resize(parameters, len)
                 }
-                for(let t2 of subparams){
+                for (let t2 of subparams) {
                     parameters.push(t2)
                     iparam++
                 }
             }
         }
     }
-    if(iparam < len){
+    if (iparam < len) {
         _PyTuple_Resize(parameters, iparam)
     }
     return parameters
 }
 
-function _unpacked_tuple_args(arg){
+function _unpacked_tuple_args(arg) {
     var result
     // Fast path
     if($B.exact_type(arg, $B.GenericAlias) &&
@@ -2080,8 +2084,8 @@ function _unpacked_tuple_args(arg){
     }
 
     var result = $B.$getattr(arg, '__typing_unpacked_tuple_args__', $B.NULL)
-    if(result !== $B.NULL) {
-        if(result === _b_.None){
+    if (result !== $B.NULL) {
+        if (result === _b_.None) {
             return $B.NULL
         }
         return result
@@ -2089,13 +2093,13 @@ function _unpacked_tuple_args(arg){
     return $B.NULL
 }
 
-function _unpack_args(item){
+function _unpack_args(item) {
     var newargs = []
     var is_tuple = $B.is_tuple(item)
     var nitems = is_tuple ? item.length : 1
     var argitems = is_tuple ? item[0] : item
-    for(let item of argitems){
-        if(! $B.is_type(item)){
+    for (let item of argitems) {
+        if (! $B.is_type(item)) {
             var subargs = _unpacked_tuple_args(item)
             if (subargs !== $B.NULL &&
                     $B.is_tuple(subargs) &&
@@ -2110,19 +2114,19 @@ function _unpack_args(item){
     return $B.$list(newargs)
 }
 
-function _is_unpacked_typevartuple(arg){
+function _is_unpacked_typevartuple(arg) {
     var tmp
-    if($B.is_type(arg)){ // TODO: Add test
+    if ($B.is_type(arg)) { // TODO: Add test
         return 0
     }
     var tmp = $B.$getattr(arg, '__typing_is_unpacked_typevartuple__', $B.NULL)
-    if(tmp !== $B.NULL){
+    if (tmp !== $B.NULL) {
         res = !!tmp
     }
     return res
 }
 
-function subs_tvars(obj, params, argitems, nargs){
+function subs_tvars(obj, params, argitems, nargs) {
     var subparams
     var subparams = $B.$getattr(obj, '__parameters__', $B.NULL)
     if(subparams !== $B.NULL &&
@@ -2132,12 +2136,12 @@ function subs_tvars(obj, params, argitems, nargs){
         var nsubargs = subparams.length
         var subargs = $B.fast_tuple()
         var j = 0
-        for(let arg of subparams){
+        for (let arg of subparams) {
             var iparam = tuple_index(params, nparams, arg)
-            if(iparam >= 0){
+            if (iparam >= 0) {
                 var param = params[iparam]
                 arg = argitems[iparam]
-                if($B.get_class(param).tp_iter && $B.is_tuple(arg)){  // TypeVarTuple
+                if ($B.get_class(param).tp_iter && $B.is_tuple(arg)) {  // TypeVarTuple
                     j = tuple_extend(subargs, j,
                                     arg[0],
                                     arg.length)
@@ -2152,18 +2156,18 @@ function subs_tvars(obj, params, argitems, nargs){
     return obj
 }
 
-function _Py_subs_parameters(self, args, parameters, item){
+function _Py_subs_parameters(self, args, parameters, item) {
     var nparams = parameters.length
-    if(nparams == 0){
+    if (nparams == 0) {
         $B.RAISE(_b_.TypeError,
             `${_b_.repr(self)} is not a generic class`
         )
     }
     item = _unpack_args(item)
-    for(let param of parameters) {
+    for (let param of parameters) {
         var tmp
         var prepare = $B.$getattr(param, '__typing_prepare_subst__', $B.NULL)
-        if (prepare !== $B.NULL && prepare != _b_.None){
+        if (prepare !== $B.NULL && prepare != _b_.None) {
             tmp = $B.$call(prepare, self, item)
             item = tmp
         }
@@ -2171,7 +2175,7 @@ function _Py_subs_parameters(self, args, parameters, item){
     var is_tuple = $B.is_tuple(item)
     var nitems = is_tuple ? item.length : 1
     var argitems = is_tuple ? item[0] : item
-    if(nitems != nparams){
+    if (nitems != nparams) {
         var qualif = nitems > nparams ? "many" : "few"
         $B.RAISE(_b_.TypeError,
             `Too ${qualif} arguments for ${_b_.repr(self)}; ` +
@@ -2187,24 +2191,24 @@ function _Py_subs_parameters(self, args, parameters, item){
      */
     var is_args_list = $B.is_list(args)
     var tuple_args
-    if(is_args_list){
+    if (is_args_list) {
         args = tuple_args = $B.fats_tuple(args)
     }
     var nargs = args.length
     var newargs = $B.fast_tuple()
-    for(let iarg = 0, jarg = 0; iarg < nargs; iarg++){
+    for (let iarg = 0, jarg = 0; iarg < nargs; iarg++) {
         var arg = args[iarg]
-        if($B.is_type(arg)){
+        if ($B.is_type(arg)) {
             newargs[jarg] = arg
             jarg++
             continue
         }
         // Recursively substitute params in lists/tuples.
-        if($B.$isinstance(arg, [_b_.tuple, _b_.list])){
+        if ($B.$isinstance(arg, [_b_.tuple, _b_.list])) {
             var subargs = _Py_subs_parameters(self, arg, parameters, item)
-            if($B.is_tuple(arg)){
+            if ($B.is_tuple(arg)) {
                 newargs[jarg] = subargs
-            }else{
+            } else {
                 // _Py_subs_parameters returns a tuple. If the original arg was a list,
                 // convert subargs to a list as well.
                 newargs[jarg] = $B.$list(subargs)
@@ -2214,14 +2218,14 @@ function _Py_subs_parameters(self, args, parameters, item){
         }
         var unpack = _is_unpacked_typevartuple(arg);
         var subst = $B.$getattr(arg, '__typing_subst__', $B.NULL)
-        if(subst !== $B.NULL){
+        if (subst !== $B.NULL) {
             var iparam = tuple_index(parameters, nparams, arg);
             arg = $B.$call(subst, argitems[iparam])
-        }else{
+        } else {
             arg = subs_tvars(arg, parameters, argitems, nitems);
         }
-        if(unpack){
-            if(! $B.is_tuple(arg)){
+        if (unpack) {
+            if (! $B.is_tuple(arg)) {
                 var original = args[iarg]
                 $B.RAISE(_b_.TypeError,
                     `expected __typing_subst__ of ${_b_.repr(original)} ` +
@@ -2230,7 +2234,7 @@ function _Py_subs_parameters(self, args, parameters, item){
             }
             jarg = tuple_extend(newargs, jarg,
                     arg[0], arg.length)
-        }else{
+        } else {
             newargs[jarg] = arg
             jarg++
         }
@@ -2240,7 +2244,7 @@ function _Py_subs_parameters(self, args, parameters, item){
 
 $B.GenericAlias = $B.make_builtin_class("types.GenericAlias")
 
-$B.GenericAlias.$factory = function(origin, args){
+$B.GenericAlias.$factory = function(origin, args) {
     var res = {
         ob_type: $B.GenericAlias,
         origin,
@@ -2249,7 +2253,7 @@ $B.GenericAlias.$factory = function(origin, args){
     return res
 }
 
-function GenericAlias_eq(self, other){
+function GenericAlias_eq(self, other) {
     return $B.rich_comp("__eq__", self.origin, other.origin) &&
         $B.rich_comp("__eq__", self.args, other.args)
 }
@@ -2273,12 +2277,12 @@ var ga_attr_blocked = [
 ]
 
 /* GenericAlias start */
-$B.GenericAlias.tp_richcompare = function(self, other, op){
-    if(! $B.$isinstance(other, $B.GenericAlias)){
+$B.GenericAlias.tp_richcompare = function(self, other, op) {
+    if (! $B.$isinstance(other, $B.GenericAlias)) {
         return _b_.NotImplemented
     }
     var res
-    switch(op){
+    switch (op) {
         case '__eq__':
             res = GenericAlias_eq(self, other)
             break
@@ -2292,21 +2296,21 @@ $B.GenericAlias.tp_richcompare = function(self, other, op){
     return res
 }
 
-$B.GenericAlias.nb_or = function(){
+$B.GenericAlias.nb_or = function() {
     var $ = $B.args('__or__', 2, {self: null, other: null}, arguments)
     return $B.UnionType.$factory([$.self, $.other])
 }
 
-$B.GenericAlias.tp_repr = function(self){
+$B.GenericAlias.tp_repr = function(self) {
     var args = Array.isArray(self.args) ? self.args : [self.args]
     var reprs = []
-    for(var arg of args){
-        if(arg === _b_.Ellipsis){
+    for (var arg of args) {
+        if (arg === _b_.Ellipsis) {
             reprs.push('...')
-        }else{
-            if($B.is_type(arg)){
+        } else {
+            if ($B.is_type(arg)) {
                 reprs.push($B.get_name(arg))
-            }else{
+            } else {
                 reprs.push(_b_.repr(arg))
             }
         }
@@ -2317,34 +2321,34 @@ $B.GenericAlias.tp_repr = function(self){
         reprs.join(", ") + ']'
 }
 
-$B.GenericAlias.tp_hash = function(self){
+$B.GenericAlias.tp_hash = function(self) {
 
 }
 
-$B.GenericAlias.tp_call = function(self, ...args){
+$B.GenericAlias.tp_call = function(self, ...args) {
     return $B.$call(self.origin, ...args)
 }
 
-$B.GenericAlias.tp_getattro = function(self, name){
-    if($B.exact_type(name, _b_.str)){
+$B.GenericAlias.tp_getattro = function(self, name) {
+    if ($B.exact_type(name, _b_.str)) {
         // When we check blocked attrs, we don't allow to proxy them to `__origin__`.
         // Otherwise, we can break existing code.
-        if(ga_attr_blocked.includes(name)){
+        if (ga_attr_blocked.includes(name)) {
             return _b_.object.tp_getattro(self, name)
         }
         // When we see own attrs, it has a priority over `__origin__`'s attr.
-        if(ga_attr_exceptions.includes(name)){
+        if (ga_attr_exceptions.includes(name)) {
             return _b_.object.tp_getattro(self, name)
         }
         return _b_.object.tp_getattro(self.origin, name)
     }
 }
 
-$B.GenericAlias.tp_iter = function(self){
+$B.GenericAlias.tp_iter = function(self) {
 
 }
 
-$B.GenericAlias.tp_new = function(cls, args, kw){
+$B.GenericAlias.tp_new = function(cls, args, kw) {
     var [origin, args] = $B.unpack_args('GenericAlias', args,
         ['origin', 'args'], {})
     return {
@@ -2355,9 +2359,9 @@ $B.GenericAlias.tp_new = function(cls, args, kw){
     }
 }
 
-$B.GenericAlias.mp_subscript = function(self, item){
+$B.GenericAlias.mp_subscript = function(self, item) {
     // Populate __parameters__ if needed.
-    if (! self.hasOwnProperty('parameters')){
+    if (! self.hasOwnProperty('parameters')) {
         self.parameters = _Py_make_parameters(self.args)
     }
 
@@ -2370,37 +2374,37 @@ $B.GenericAlias.mp_subscript = function(self, item){
 
 var GenericAlias_funcs = $B.GenericAlias.tp_funcs = {}
 
-GenericAlias_funcs.__dir__ = function(self){
+GenericAlias_funcs.__dir__ = function(self) {
 
 }
 
-GenericAlias_funcs.__instancecheck__ = function(self){
+GenericAlias_funcs.__instancecheck__ = function(self) {
 
 }
 
-GenericAlias_funcs.__mro_entries__ = function(self){
+GenericAlias_funcs.__mro_entries__ = function(self) {
     return $B.fast_tuple([self.origin])
 }
 
-GenericAlias_funcs.__parameters___get = function(self){
+GenericAlias_funcs.__parameters___get = function(self) {
     return $B.fast_tuple()
 }
 
 GenericAlias_funcs.__parameters___set = _b_.None
 
-GenericAlias_funcs.__reduce__ = function(self){
+GenericAlias_funcs.__reduce__ = function(self) {
 
 }
 
-GenericAlias_funcs.__subclasscheck__ = function(self){
+GenericAlias_funcs.__subclasscheck__ = function(self) {
 
 }
 
-GenericAlias_funcs.__typing_unpacked_tuple_args___get = function(self){
+GenericAlias_funcs.__typing_unpacked_tuple_args___get = function(self) {
 
 }
 
-GenericAlias_funcs.__typing_unpacked_tuple_args___set = function(self){
+GenericAlias_funcs.__typing_unpacked_tuple_args___set = function(self) {
 
 }
 
@@ -2445,18 +2449,18 @@ E.g. for int | str <class 'str'>
 
 $B.UnionType = $B.make_builtin_class("UnionType")
 
-$B.UnionType.$factory = function(items){
+$B.UnionType.$factory = function(items) {
     return {
         ob_type: $B.UnionType,
         args: $B.fast_tuple(items)
     }
 }
 
-$B.UnionType.tp_richcompare = function(self, other, op){
-    if(! $B.$isinstance(other, $B.UnionType)){
+$B.UnionType.tp_richcompare = function(self, other, op) {
+    if (! $B.$isinstance(other, $B.UnionType)) {
         return _b_.NotImplemented
     }
-    switch(op){
+    switch (op) {
         case '__eq__':
             return $B.list_eq(self.args, other.args)
         case '__ne__':
@@ -2466,25 +2470,25 @@ $B.UnionType.tp_richcompare = function(self, other, op){
     }
 }
 
-$B.UnionType.tp_repr = function(self){
+$B.UnionType.tp_repr = function(self) {
     var t = []
-    for(var item of self.args){
-        if($B.is_type(item)){
+    for (var item of self.args) {
+        if ($B.is_type(item)) {
             var s = $B.get_name(item)
-            if($B.get_from_dict(item, '__module__') !== "builtins"){
+            if ($B.get_from_dict(item, '__module__') !== "builtins") {
                 s = item.__module__ + '.' + s
             }
             t.push(s)
-        }else{
+        } else {
             t.push(_b_.repr(item))
         }
     }
     return t.join(' | ')
 }
 
-$B.UnionType.nb_or = function(self, other){
+$B.UnionType.nb_or = function(self, other) {
     var items = self.args.slice()
-    if(! items.includes(other)){
+    if (! items.includes(other)) {
         items.push(other)
     }
     return $B.UnionType.$factory(items)
@@ -2492,15 +2496,15 @@ $B.UnionType.nb_or = function(self, other){
 
 var UnionType_funcs = $B.UnionType.tp_funcs = {}
 
-UnionType_funcs.__class_getitem__ = function(cls, items){
-    if($B.is_tuple(items)){
+UnionType_funcs.__class_getitem__ = function(cls, items) {
+    if ($B.is_tuple(items)) {
         return $B.UnionType.$factory(items)
-    }else{
+    } else {
         return items
     }
 }
 
-UnionType_funcs.__parameters___get = function(self){
+UnionType_funcs.__parameters___get = function(self) {
     return $B.fast_tuple([]) // XXX
 }
 

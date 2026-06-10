@@ -1,9 +1,9 @@
 "use strict";
-(function($B){
+(function($B) {
 
 var _b_ = $B.builtins
 
-function is_whitespace(char){
+function is_whitespace(char) {
     return ' \n\r\t\f'.includes(char)
 }
 
@@ -12,7 +12,7 @@ var unprintable_re = /\p{Cc}|\p{Cf}|\p{Co}|\p{Cs}|\p{Zl}|\p{Zp}|\p{Zs}/u
 const Other_ID_Start = [0x1885, 0x1886, 0x2118, 0x212E, 0x309B, 0x309C].map(
                            x => String.fromCodePoint(x))
 
-function is_ID_Start(char){
+function is_ID_Start(char) {
     return /\p{Letter}/u.test(char) ||
            /\p{Nl}/u.test(char) ||
            char == '_' ||
@@ -24,57 +24,57 @@ const Other_ID_Continue = [0x00B7, 0x0387, 0x1369, 0x1370, 0x1371, 0x19DA,
                            0x200C, 0x200D, 0x30FB, 0xFF65].
                            map(x => String.fromCodePoint(x))
 
-function is_ID_Continue(char){
+function is_ID_Continue(char) {
     return is_ID_Start(char) ||
            /\p{Mn}|\p{Mc}|\p{Nd}|\p{Pc}/u.test(char) ||
            Other_ID_Continue.includes(char)
 }
 
-$B.is_XID_Start = function(cp){
+$B.is_XID_Start = function(cp) {
     let char = String.fromCodePoint(cp)
-    if(! is_ID_Start(char)){
+    if (! is_ID_Start(char)) {
         return false
     }
     var norm = char.normalize('NFKC')
-    if(! is_ID_Start(norm[0])){
+    if (! is_ID_Start(norm[0])) {
         return false
     }
-    for(let char of norm.substr(1)){
-        if(! is_ID_Continue(char)){
+    for (let char of norm.substr(1)) {
+        if (! is_ID_Continue(char)) {
             return false
         }
     }
     return true
 }
 
-$B.is_XID_Continue = function(cp){
+$B.is_XID_Continue = function(cp) {
     let char = String.fromCodePoint(cp)
-    if(! is_ID_Continue(char)){
+    if (! is_ID_Continue(char)) {
         return false
     }
     var norm = char.normalize('NFKC')
-    for(let char of norm.substr(1)){
-        if(! is_ID_Continue(char)){
+    for (let char of norm.substr(1)) {
+        if (! is_ID_Continue(char)) {
             return false
         }
     }
     return true
 }
 
-$B.in_unicode_category = function(category, cp){
-    if(isNaN(cp)){
+$B.in_unicode_category = function(category, cp) {
+    if (isNaN(cp)) {
         return false
     }
-    try{
+    try {
         var re = new RegExp('\\p{' + category + '}', 'u')
         return re.test(String.fromCodePoint(cp))
-    }catch(err){
+    } catch (err) {
         // invalid category
         return in_unicode_category(category, cp)
     }
 }
 
-function in_unicode_category(category, cp){
+function in_unicode_category(category, cp) {
     // categories used internally but not valid as General Category
     // eg 'numeric' in str.isnumeric
     var table = $B.unicode[category],
@@ -85,43 +85,43 @@ function in_unicode_category(category, cp){
         nb = 0
     var first = table[start],
         item = typeof first == 'number' ? first : first[0]
-    if(cp < item){
+    if (cp < item) {
         return false
     }
     var last = table[end]
-    if(typeof last == 'number'){
-        if(cp > last){
+    if (typeof last == 'number') {
+        if (cp > last) {
             return false
         }
-    }else if(last[0] + last[1] < cp){
+    } else if (last[0] + last[1] < cp) {
         return false
     }
 
-    while(true){
+    while (true) {
         nb++
-        if(nb > 100){
+        if (nb > 100) {
             console.log('infinite loop for', cp)
             alert()
         }
         item = table[ix]
-        if(typeof item != 'number'){
+        if (typeof item != 'number') {
             item = item[0]
         }
-        if(item == cp){
+        if (item == cp) {
             return true
-        }else if(item > cp){
+        } else if (item > cp) {
             end = ix
-        }else{
+        } else {
             start = ix
         }
         len = Math.floor((end - start) / 2)
-        if(end - start == 1){
+        if (end - start == 1) {
             break
         }
         ix = start + len
     }
     var step = table[start][2]
-    if(step === undefined){
+    if (step === undefined) {
         return table[start][0] + table[start][1] > cp
     }
     return (table[start][0] + step * table[start][1] > cp) &&
@@ -132,8 +132,8 @@ const FT_START = {f: 'FSTRING_START', t: 'TSTRING_START'},
       FT_MIDDLE = {f: 'FSTRING_MIDDLE', t: 'TSTRING_MIDDLE'},
       FT_END = {f: 'FSTRING_END', t: 'TSTRING_END'}
 
-function ord(char){
-    if(char.length == 1){
+function ord(char) {
+    if (char.length == 1) {
         return char.charCodeAt(0)
     }
     var code = 0x10000
@@ -143,7 +143,7 @@ function ord(char){
 }
 
 
-function $last(array){
+function $last(array) {
   return array[array.length - 1]
 }
 
@@ -176,7 +176,7 @@ function ErrorToken(err_type, filename, lineno, col_offset,
     return token
 }
 
-function ErrorTokenKnownToken(){
+function ErrorTokenKnownToken() {
     var args = Array.from(arguments)
     args.$error_token_known_token = true
     return args
@@ -187,44 +187,44 @@ function Token(type, string, lineno, col_offset, end_lineno, end_col_offset,
     // type is a string; token.type is a number
     var res = {type, string, line, lineno, col_offset, end_lineno, end_col_offset}
     res.type = res.num_type = $B.py_tokens[type]
-    if(type == 'OP'){
+    if (type == 'OP') {
         res.num_type = $B.py_tokens[$B.EXACT_TOKEN_TYPES[string]]
-    }else if(type == 'ENCODING'){
+    } else if (type == 'ENCODING') {
         res.parser_ignored = true
-    }else if(type == 'NL' || type == 'COMMENT'){
+    } else if (type == 'NL' || type == 'COMMENT') {
         res.parser_ignored = true
     }
     res.bytes = res.string // cheating
     return res
 }
 
-function get_comment(parser, src, pos, line_num, line_start, token_name, line){
+function get_comment(parser, src, pos, line_num, line_start, token_name, line) {
     var start = pos,
         ix
     var t = []
-    while(true){
-        if(pos >= src.length || (ix = '\r\n'.indexOf(src[pos])) > -1){
-            if(parser && parser.flags & $B.PyCF_TYPE_COMMENTS){
+    while (true) {
+        if (pos >= src.length || (ix = '\r\n'.indexOf(src[pos])) > -1) {
+            if (parser && parser.flags & $B.PyCF_TYPE_COMMENTS) {
                 var comment = src.substring(start - 1, pos),
                     mo = /^#\s*type\s*:(.*)/.exec(comment)
-                if(mo){
+                if (mo) {
                     var is_type_ignore = false
-                    if(mo[1].startsWith('ignore')){
-                        if(mo[1].length == 6){
+                    if (mo[1].startsWith('ignore')) {
+                        if (mo[1].length == 6) {
                             is_type_ignore = true
-                        }else{
+                        } else {
                             var char = mo[1][6]
-                            if(char.charCodeAt(0) <= 128 && /[a-zA-Z0-9]/.exec(char) === null){
+                            if (char.charCodeAt(0) <= 128 && /[a-zA-Z0-9]/.exec(char) === null) {
                                 is_type_ignore = true
                             }
                         }
                     }
-                    if(is_type_ignore){
+                    if (is_type_ignore) {
                         t.push(Token('TYPE_IGNORE', comment,
                                      line_num, start - line_start,
                                      line_num, pos - line_start + 1,
                                      line))
-                    }else{
+                    } else {
                         t.push(Token('TYPE_COMMENT', comment,
                                      line_num, start - line_start,
                                      line_num, pos - line_start + 1,
@@ -237,11 +237,11 @@ function get_comment(parser, src, pos, line_num, line_start, token_name, line){
                  line_num, start - line_start,
                  line_num, pos - line_start + 1,
                  line))
-            if(ix !== undefined){
+            if (ix !== undefined) {
                 var nb = 1
-                if(src[pos] == '\r' && src[pos + 1] == '\n'){
+                if (src[pos] == '\r' && src[pos + 1] == '\n') {
                     nb++
-                }else if(src[pos] === undefined){
+                } else if (src[pos] === undefined) {
                     // The comment ends the script without a NEWLINE
                     nb = 0
                 }
@@ -249,7 +249,7 @@ function get_comment(parser, src, pos, line_num, line_start, token_name, line){
                     line_num, pos - line_start + 1,
                     line_num, pos - line_start + nb + 1,
                     line))
-                if(src[pos] === undefined){
+                if (src[pos] === undefined) {
                     t.push(Token('NEWLINE', '\n',
                         line_num, pos - line_start + 1,
                         line_num, pos - line_start + 2,
@@ -263,8 +263,8 @@ function get_comment(parser, src, pos, line_num, line_start, token_name, line){
     }
 }
 
-function test_num(num_type, char){
-    switch(num_type){
+function test_num(num_type, char) {
+    switch (num_type) {
         case '':
             return $B.in_unicode_category('Nd', ord(char))
         case 'x':
@@ -278,11 +278,11 @@ function test_num(num_type, char){
     }
 }
 
-function nesting_level(token_modes){
+function nesting_level(token_modes) {
     var ix = token_modes.length - 1
-    while(ix >= 0){
+    while (ix >= 0) {
         var mode = token_modes[ix]
-        if(mode.nesting !== undefined){
+        if (mode.nesting !== undefined) {
             return mode.nesting
         }
         ix--
@@ -290,26 +290,59 @@ function nesting_level(token_modes){
 }
 
 
-$B.tokenizer = function(src, filename, mode, parser){
+$B.tokenizer = function(src, filename, mode, parser) {
     var string_prefix = /^(r|u|R|U|f|F|t|T||fr|Fr|fR|FR|rf|rF|Rf|RF||tr|Tr|tR|TR|rt|rT|Rt|RT)$/,
         bytes_prefix = /^(b|B|br|Br|bR|BR|rb|rB|Rb|RB)$/,
         t = []
-    if(mode != 'eval' && ! src.endsWith('\n')){
+    if (mode != 'eval' && ! src.endsWith('\n')) {
         src += '\n'
     }
     var lines = src.split('\n'),
         linenum = 0,
         line_at = {}
 
-    for(let i = 0, len = src.length; i < len; i++){
+    for (let i = 0, len = src.length; i < len; i++) {
         line_at[i] = linenum
-        if(src[i] == '\n'){
+        if (src[i] == '\n') {
             linenum++
         }
     }
 
-    function get_line_at(pos){
+    function get_line_at(pos) {
         return lines[line_at[pos]] + '\n'
+    }
+
+    function pop_braces() {
+        show_braces()
+        var brace = braces.pop()
+    }
+
+    function show_braces() {
+        if (! debug) {
+            return
+        }
+        var line_num
+        var pos
+        var carets
+        for (var b of braces) {
+            var line = lines[b.line_num - 1]
+            var new_line = b.line_num !== line_num
+            if (new_line) {
+                if (carets) {
+                    console.log(carets)
+                }
+                console.log(line, b)
+                line_num = b.line_num
+                carets = ' '.repeat(b.pos - b.line_start) + '^'
+                pos = b.pos
+            } else {
+                carets += ' '.repeat(b.pos - pos - 1) + '^'
+                pos = b.pos
+            }
+        }
+        if (carets) {
+            console.log(carets)
+        }
     }
 
     var state = "line_start",
@@ -343,18 +376,25 @@ $B.tokenizer = function(src, filename, mode, parser){
         ft_start,
         ft_expr_start,
         ft_escape,
-        ft_format_spec
+        ft_format_spec,
+        braces_length_on_entry,
+        fstring_stack = [],
+        debug = 0
 
-    if(parser){
+    if (parser) {
         parser.braces = braces
     }
 
     t.push(Token('ENCODING', 'utf-8', 0, 0, 0, 0, ''))
 
-    while(pos < src.length){
+    while (pos < src.length) {
         char = src[pos]
+        if (debug) {
+            console.log('token mode', token_mode, 'state', state,
+                'pos', pos, 'char', char, 'fstring stack', fstring_stack.slice())
+        }
         cp = src.charCodeAt(pos)
-        if(cp >= 0xD800 && cp <= 0xDBFF){
+        if (cp >= 0xD800 && cp <= 0xDBFF) {
             // code point encoded by a surrogate pair
             cp = ord(src.substr(pos, 2))
             char = src.substr(pos, 2)
@@ -362,33 +402,32 @@ $B.tokenizer = function(src, filename, mode, parser){
         }
         pos++
 
-        // console.log('state', state, 'token mode', token_mode, 'char', char)
-        if(token_mode != save_mode){
-            if(token_mode == 'ft'){
+        if (token_mode != save_mode) {
+            if (token_mode == 'ft') {
                 ft_buffer = ''
                 ft_escape = false
-            }else if(token_mode == 'format_specifier'){
+            } else if (token_mode == 'format_specifier') {
                 format_specifier = ''
             }
         }
         save_mode = token_mode
 
-        if(token_mode == 'ft'){ // f-string or t-string
-            if(char == token_mode.quote){
-                if(ft_escape){
+        if (token_mode == 'ft') { // f-string or t-string
+            if (char == token_mode.quote) {
+                if (ft_escape) {
                     ft_buffer += '\\' + char
                     ft_escape = false
                     continue
                 }
-                if(token_mode.triple_quote){
-                    if(src.substr(pos, 2) != token_mode.quote.repeat(2)){
+                if (token_mode.triple_quote) {
+                    if (src.substr(pos, 2) != token_mode.quote.repeat(2)) {
                         ft_buffer += char
                         continue
                     }
                     char = token_mode.quote.repeat(3)
                     pos += 2
                 }
-                if(ft_buffer.length > 0){
+                if (ft_buffer.length > 0) {
                     // emit FSTRING_MIDDLE token
                     t.push(Token(FT_MIDDLE[ft_type], ft_buffer,
                         line_num, ft_start,
@@ -397,37 +436,46 @@ $B.tokenizer = function(src, filename, mode, parser){
                 }
                 t.push(Token(FT_END[ft_type], char, line_num, pos - line_start,
                             line_num, pos - line_start + 1, line))
+                show_braces()
+                try {
+                    $B.last(fstring_stack).end = pos
+                } catch (err) {
+                    console.log('error, fstring_stack', fstring_stack.slice())
+                    throw err
+                }
+                fstring_stack.pop()
                 // pop from token modes
                 token_modes.pop()
                 token_mode = $B.last(token_modes)
                 state = null
                 continue
-            }else if(char == '{'){
-                if(src.charAt(pos) == '{'){
+            } else if (char == '{') {
+                if (src.charAt(pos) == '{') {
                     // consecutive opening brackets = the "{" character
                     ft_buffer += char
                     pos++
                     continue
-                }else{
+                } else {
                     // emit FSTRING_MIDDLE if not empty
-                    if(ft_buffer.length > 0){
+                    if (ft_buffer.length > 0) {
                         t.push(Token(FT_MIDDLE[ft_type], ft_buffer,
                             line_num, ft_start,
                             line_num, ft_start + ft_buffer.length,
                             line))
                     }
                     token_mode = 'regular_within_ft'
+                    $B.last(fstring_stack).nb_braces_on_entry = braces.length
                     ft_expr_start = pos - line_start
                     state = null
                     token_modes.push(token_mode)
                 }
-            }else if(char == '}'){
-                if(src.charAt(pos) == '}'){
+            } else if (char == '}') {
+                if (src.charAt(pos) == '}') {
                     // consecutive closing brackets = the "}" character
                     ft_buffer += char
                     pos++
                     continue
-                }else{
+                } else {
                     // emit closing bracket token
                     t.push(Token('OP', char,
                         line_num, pos - line_start,
@@ -435,30 +483,37 @@ $B.tokenizer = function(src, filename, mode, parser){
                         line))
                     continue
                 }
-            }else if(char == '\\'){
-                if(token_mode.raw){
+            } else if (char == '\\') {
+                if (token_mode.raw) {
                     ft_buffer += char + char
-                }else{
-                    if(ft_escape){
+                } else {
+                    if (ft_escape) {
                         ft_buffer += '\\' + char
                     }
                     ft_escape = ! ft_escape
                 }
                 continue
-            }else{
-                if(ft_escape){
+            } else {
+                if(char == "'" && ! ft_escape &&
+                        ft_buffer[ft_buffer.length - 1] == '\\'){
+                    // eventually the JS code for this string part of the
+                    // f-string will be enclosed in single quotes, so we can't
+                    // leave unescaped single quotes. Cf. issue #2693
+                    ft_buffer += '\\'
+                }
+                if (ft_escape) {
                     ft_buffer += '\\'
                 }
                 ft_buffer += char
                 ft_escape = false
-                if(char == '\n'){
+                if (char == '\n') {
                     line_num++
                 }
                 continue
             }
-        }else if(token_mode == 'format_specifier'){
-            if(char == quote){
-                if(format_specifier.length > 0){
+        } else if (token_mode == 'format_specifier') {
+            if (char == quote) {
+                if (format_specifier.length > 0) {
                     // emit FSTRING_MIDDLE token
                     t.push(Token(FT_MIDDLE[ft_type], format_specifier,
                         line_num, ft_start,
@@ -469,17 +524,25 @@ $B.tokenizer = function(src, filename, mode, parser){
                     token_mode = $B.last(token_modes)
                     continue
                 }
-            }else if(char == '{'){
-                // emit FSTRING_MIDDLE
-                t.push(Token(FT_MIDDLE[ft_type], format_specifier,
-                    line_num, ft_start,
-                    line_num, ft_start + format_specifier.length,
-                    line))
+            } else if (char == '{') {
+                if (format_specifier.length > 0) {
+                    t.push(Token(FT_MIDDLE[ft_type], format_specifier,
+                        line_num, ft_start,
+                        line_num, ft_start + format_specifier.length,
+                        line))
+                }
                 token_mode = 'regular_within_ft'
+                fstring_stack.push(
+                    {
+                        start: pos,
+                        nb_braces_on_entry: braces.length,
+                        inside_format_specifier: true
+                    }
+                )
                 ft_expr_start = pos - line_start
                 state = null
                 token_modes.push(token_mode)
-            }else if(char == '}'){
+            } else if (char == '}') {
                 // emit FSTRING_MIDDLE
                 t.push(Token(FT_MIDDLE[ft_type], format_specifier,
                     line_num, ft_start,
@@ -490,37 +553,40 @@ $B.tokenizer = function(src, filename, mode, parser){
                     line_num, pos - line_start,
                     line_num, pos - line_start + 1,
                     line))
-                if(braces.length == 0 || $B.last(braces).char !== '{'){
+                show_braces()
+                if (braces.length == 0 || $B.last(braces).char !== '{') {
+                    console.log('braces', braces.slice(), $B.last(braces).char)
                     throw Error('wrong braces')
                 }
-                braces.pop()
+                pop_braces()
+                //fstring_stack.pop()
                 // pop from token modes
                 token_modes.pop()
                 token_mode = $B.last(token_modes)
                 continue
-            }else{
+            } else {
                 format_specifier += char
                 continue
             }
         }
 
-        switch(state){
+        switch (state) {
 
             case "line_start":
                 line = get_line_at(pos - 1)
                 line_start = pos
                 line_num++
-                if(mo = /^\f?(\r\n|\r|\n)/.exec(src.substr(pos - 1))){
+                if (mo = /^\f?(\r\n|\r|\n)/.exec(src.substr(pos - 1))) {
                     // line break
                     t.push(Token('NL', mo[0], line_num, 0,
                         line_num, mo[0].length,
                         line))
                     pos += mo[0].length - 1
                     continue
-                }else if(char == '#'){
+                } else if (char == '#') {
                     comment = get_comment(parser, src, pos, line_num,
                         line_start, 'NL', line)
-                    for(var item of comment.t){
+                    for (var item of comment.t) {
                         t.push(item)
                     }
                     pos = comment.pos
@@ -529,15 +595,15 @@ $B.tokenizer = function(src, filename, mode, parser){
                 }
                 // count number of leading whitespaces in line
                 indent = 0
-                if(char == ' '){
+                if (char == ' ') {
                     indent = 1
-                }else if(char == '\t'){
+                } else if (char == '\t') {
                     indent = 8
                 }
-                if(indent){
+                if (indent) {
                     var broken = false
-                    while(pos < src.length){
-                        if(broken && indent > 0 && ' \t'.includes(src[pos])){
+                    while (pos < src.length) {
+                        if (broken && indent > 0 && ' \t'.includes(src[pos])) {
                             t.push(ErrorToken(
                                 _b_.IndentationError,
                                 filename,
@@ -547,11 +613,11 @@ $B.tokenizer = function(src, filename, mode, parser){
                                 'unindent does not match any outer indentation level'))
                             return t
                         }
-                        if(src[pos] == ' '){
+                        if (src[pos] == ' ') {
                             indent++
-                        }else if(src[pos] == '\t'){
+                        } else if (src[pos] == '\t') {
                             indent += 8
-                        }else if(src[pos] == '\\' && src[pos + 1] == '\n'){
+                        } else if (src[pos] == '\\' && src[pos + 1] == '\n') {
                             // continuation line at the end of a
                             // whitespace-only line
                             pos++
@@ -559,31 +625,31 @@ $B.tokenizer = function(src, filename, mode, parser){
                             line_num++
                             line = get_line_at(pos + 2)
                             broken = true
-                        }else{
+                        } else {
                             break
                         }
                         pos++
                     }
-                    if(pos == src.length){
+                    if (pos == src.length) {
                         // reach eof while counting indent
                         line_num--
                         break
                     }
-                    if(src[pos] == '#'){
+                    if (src[pos] == '#') {
                         // ignore leading whitespace if line is a comment
                         comment = get_comment(parser, src, pos + 1, line_num,
                             line_start, 'NL', line)
-                        for(var item of comment.t){
+                        for (var item of comment.t) {
                             t.push(item)
                         }
                         pos = comment.pos
                         continue
-                    }else if(src[pos] == '\\'){
-                        if(/^\f?(\r\n|\r|\n)/.exec(src[pos + 1])){
+                    } else if (src[pos] == '\\') {
+                        if (/^\f?(\r\n|\r|\n)/.exec(src[pos + 1])) {
                             line_num++
                             pos++
                             continue
-                        }else{
+                        } else {
                             t.push(ErrorToken(_b_.SyntaxError,
                                 filename, line_num, pos + 2 - line_start,
                                 line_num, pos + 3 - line_start,
@@ -591,20 +657,20 @@ $B.tokenizer = function(src, filename, mode, parser){
                                 'unexpected character after line continuation character'))
                             return t
                         }
-                    }else if(mo = /^\f?(\r\n|\r|\n)/.exec(src.substr(pos))){
+                    } else if (mo = /^\f?(\r\n|\r|\n)/.exec(src.substr(pos))) {
                         // whitespace-only line
                         t.push(Token('NL', '', line_num, pos - line_start + 1,
                           line_num, pos - line_start + 1 + mo[0].length, line))
                         pos += mo[0].length
                         continue
                     }
-                    if(indents.length == 0 || indent > $last(indents)){
+                    if (indents.length == 0 || indent > $last(indents)) {
                         indents.push(indent)
                         t.push(Token('INDENT', '', line_num, 0,
                             line_num, indent, line))
-                    }else if(indent < $last(indents)){
+                    } else if (indent < $last(indents)) {
                         var ix = indents.indexOf(indent)
-                        if(ix == -1){
+                        if (ix == -1) {
                             var message = 'unindent does not match ' +
                                 'any outer indentation level'
                             t.push(ErrorToken(_b_.IndentationError,
@@ -612,16 +678,16 @@ $B.tokenizer = function(src, filename, mode, parser){
                                 line_num, 0, line, message))
                             return t
                         }
-                        for(var i = indents.length - 1; i > ix; i--){
+                        for (var i = indents.length - 1; i > ix; i--) {
                             indents.pop()
                             t.push(Token('DEDENT', '', line_num, indent,
                                 line_num, indent, line))
                         }
                     }
                     state = null
-                }else{
+                } else {
                     // dedent all
-                    while(indents.length > 0){
+                    while (indents.length > 0) {
                         indents.pop()
                         t.push(Token('DEDENT', '', line_num, indent,
                           line_num, indent, line))
@@ -632,13 +698,13 @@ $B.tokenizer = function(src, filename, mode, parser){
                 break
 
             case null:
-                switch(char){
+                switch (char) {
                     case '"':
                     case "'":
                         quote = char
                         triple_quote = src[pos] == char && src[pos + 1] == char
                         string_start = [line_num, pos - line_start, line_start]
-                        if(triple_quote){
+                        if (triple_quote) {
                             pos += 2
                         }
                         escaped = false
@@ -650,13 +716,13 @@ $B.tokenizer = function(src, filename, mode, parser){
                         var token_name = braces.length > 0 ? 'NL' : 'NEWLINE'
                         comment = get_comment(parser, src, pos, line_num, line_start,
                             token_name, line)
-                        for(var item of comment.t){
+                        for (var item of comment.t) {
                             t.push(item)
                         }
                         pos = comment.pos
-                        if(braces.length == 0){
+                        if (braces.length == 0) {
                             state = 'line_start'
-                        }else{
+                        } else {
                             state = null
                             line_num++
                             line_start = pos + 1
@@ -676,11 +742,11 @@ $B.tokenizer = function(src, filename, mode, parser){
                             number += src[pos]
                             num_type = src[pos].toLowerCase()
                             pos++
-                        }else if(src[pos]){
+                        } else if (src[pos]) {
                             var pos1 = pos
-                            while(pos1 < src.length){
-                                if(src[pos1].match(/\d/)){
-                                    if(src[pos1] == '0'){
+                            while (pos1 < src.length) {
+                                if (src[pos1].match(/\d/)) {
+                                    if (src[pos1] == '0') {
                                         pos1++
                                         continue
                                     }
@@ -693,32 +759,32 @@ $B.tokenizer = function(src, filename, mode, parser){
                                         line_num, pos - line_start,
                                         line, msg))
                                     return t
-                                }else{
+                                } else {
                                     break
                                 }
                             }
                         }
                         break
                     case '.':
-                        if(src[pos] && $B.in_unicode_category('Nd', ord(src[pos]))){
+                        if (src[pos] && $B.in_unicode_category('Nd', ord(src[pos]))) {
                             state = 'NUMBER'
                             num_type = ''
                             number = char
-                        }else{
+                        } else {
                             var op = char
-                            while(src[pos] == char){
+                            while (src[pos] == char) {
                                 pos++
                                 op += char
                             }
                             var dot_pos = pos - line_start - op.length + 1
-                            while(op.length >= 3){
+                            while (op.length >= 3) {
                                 // sequences of 3 consecutive dots are sent
                                 // as a single token for Ellipsis
                                 t.push(Token('OP', '...', line_num, dot_pos,
                                     line_num, dot_pos + 3, line))
                                 op = op.substr(3)
                             }
-                            for(var i = 0; i < op.length; i++){
+                            for (var i = 0; i < op.length; i++) {
                                 t.push(Token('OP', '.', line_num, dot_pos,
                                     line_num, dot_pos + 1, line))
                                 dot_pos++
@@ -727,8 +793,8 @@ $B.tokenizer = function(src, filename, mode, parser){
                         break
                     case '\\':
                         var mo = /^\f?(\r\n|\r|\n)/.exec(src.substr(pos))
-                        if(mo){
-                            if(pos == src.length - 1){
+                        if (mo) {
+                            if (pos == src.length - 1) {
                                 var msg = 'unexpected EOF while parsing'
                                 raise_error(_b_.SyntaxError,
                                     filename, line_num, pos - line_start, line_num, pos - line_start + 1,
@@ -738,7 +804,7 @@ $B.tokenizer = function(src, filename, mode, parser){
                             pos += mo[0].length
                             line_start = pos + 1
                             line = get_line_at(pos)
-                        }else{
+                        } else {
                             pos++;
                             var msg = 'unexpected character after line ' +
                                 'continuation character'
@@ -755,32 +821,32 @@ $B.tokenizer = function(src, filename, mode, parser){
                             line_num, pos - line_start,
                             line_num, pos - line_start + mo[0].length, line))
                         pos += mo[0].length - 1
-                        if(token_name == 'NEWLINE'){
+                        if (token_name == 'NEWLINE') {
                             state = 'line_start'
-                        }else{
+                        } else {
                             line_num++
                             line_start = pos + 1
                             line = get_line_at(pos)
                         }
                         break
                     default:
-                        if($B.is_XID_Start(ord(char))){
+                        if ($B.is_XID_Start(ord(char))) {
                             // start name
                             state = 'NAME'
                             name = char
-                        }else if($B.in_unicode_category('Nd', ord(char))){
+                        } else if ($B.in_unicode_category('Nd', ord(char))) {
                             state = 'NUMBER'
                             num_type = ''
                             number = char
-                        }else if(ops.includes(char)){
+                        } else if (ops.includes(char)) {
                             if(token_mode == 'regular_within_ft' &&
                                     (char == ':' || char == '}')){
-                                if(char == ':'){
+                                if (char == ':') {
                                     // Nesting_level(token_modes) is the number of
                                     // braces at the start of the fstring
                                     // Inside a ReplacementField, braces has the
                                     // opening '{' appended
-                                    if(nesting_level(token_modes) == braces.length - 1){
+                                    if (nesting_level(token_modes) == braces.length - 1) {
                                         let colon = Token('OP', char,
                                             line_num, pos - line_start - op.length + 1,
                                             line_num, pos - line_start + 1,
@@ -795,27 +861,29 @@ $B.tokenizer = function(src, filename, mode, parser){
                                         token_modes.push(token_mode)
                                         continue
                                     }
-                                }else{
+                                } else {
                                     // closing brace
-                                    let closing_brace =  Token('OP', char,
+                                    let closing_brace = Token('OP', char,
                                         line_num, pos - line_start - op.length + 1,
                                         line_num, pos - line_start + 1,
                                         line)
                                     closing_brace.metadata = src.substring(
                                         line_start + ft_expr_start, pos - 1)
                                     t.push(closing_brace)
-                                    token_modes.pop()
-                                    token_mode = token_modes[token_modes.length - 1]
-                                    if(braces.length == 0 || $B.last(braces).char !== '{'){
+                                    if (braces.length == 0 || $B.last(braces).char !== '{') {
                                         t.push(Error('wrong braces'))
                                         return t
                                     }
-                                    braces.pop()
+                                    if (braces.length == 1 + $B.last(fstring_stack).nb_braces_on_entry) {
+                                        token_modes.pop()
+                                        token_mode = token_modes[token_modes.length - 1]
+                                    }
+                                    pop_braces()
                                     continue
                                 }
                             }
                             var op = char
-                            if(op2.includes(char + src[pos])){
+                            if (op2.includes(char + src[pos])) {
                                 op = char + src[pos]
                                 pos++
                             }
@@ -828,12 +896,17 @@ $B.tokenizer = function(src, filename, mode, parser){
                                 op += src[pos]
                                 pos++
                             }
-                            if('[({'.includes(char)){
+                            if ('[({'.includes(char)) {
                                 braces.push({char, pos, line_num, line_start, line})
-                            }else if('])}'.includes(char)){
-                                if(braces.length && $last(braces).char == closing[char]){
-                                    braces.pop()
-                                }else{
+                            } else if ('])}'.includes(char)) {
+                                if (debug) {
+                                    console.log('closing brace', char, 'clsing', closing[char])
+                                    console.log('braces', braces.slice())
+                                    console.log('token mode', token_mode)
+                                }
+                                if (braces.length && $last(braces).char == closing[char]) {
+                                    pop_braces()
+                                } else {
                                     braces.push({char, pos, line_num, line_start, line})
                                 }
                             }
@@ -841,14 +914,14 @@ $B.tokenizer = function(src, filename, mode, parser){
                                 line_num, pos - line_start - op.length + 1,
                                 line_num, pos - line_start + 1,
                                 line))
-                        }else if(char == '!'){
-                            if(src[pos] == '='){
+                        } else if (char == '!') {
+                            if (src[pos] == '=') {
                                 t.push(Token('OP', '!=',
                                     line_num, pos - line_start,
                                     line_num, pos - line_start + 2,
                                     line))
                                 pos++
-                            }else{
+                            } else {
                                 // conversion
                                 let token = Token('OP', char,
                                     line_num, pos - line_start,
@@ -859,21 +932,21 @@ $B.tokenizer = function(src, filename, mode, parser){
                                     line_start + ft_start + 2, pos - 1)
                                 t.push(token)
                             }
-                        }else if(char == ' ' || char == '\t'){
+                        } else if (char == ' ' || char == '\t') {
                             // ignore
-                        }else{
+                        } else {
                             // invalid character
                             var cp = char.codePointAt(0),
                                 err_msg = 'invalid'
-                            if(unprintable_re.exec(char)){
+                            if (unprintable_re.exec(char)) {
                                 err_msg += ' non-printable'
                             }
                             var unicode = cp.toString(16).toUpperCase()
-                            while(unicode.length < 4){
+                            while (unicode.length < 4) {
                                 unicode = '0' + unicode
                             }
                             err_msg += ` character '${char}' (U+${unicode})`
-                            if(char == '$' || char == '`'){
+                            if (char == '$' || char == '`') {
                                 err_msg = 'invalid syntax'
                             }
                             var err_token = Token('ERRORTOKEN', char,
@@ -888,27 +961,27 @@ $B.tokenizer = function(src, filename, mode, parser){
               break
 
             case 'NAME':
-                if($B.is_XID_Continue(ord(char))){
+                if ($B.is_XID_Continue(ord(char))) {
                     name += char
-                }else if(char == '"' || char == "'"){
-                    if(string_prefix.exec(name) || bytes_prefix.exec(name)){
+                } else if (char == '"' || char == "'") {
+                    if (string_prefix.exec(name) || bytes_prefix.exec(name)) {
                         // prefixed string, like r"...", b"..." etc.
                         state = 'STRING'
                         quote = char
                         triple_quote = src[pos] == quote && src[pos + 1] == quote
                         prefix = name
-                        if(triple_quote){
+                        if (triple_quote) {
                           pos += 2
                         }
                         var is_ft = false
-                        if(prefix.toLowerCase().includes('f')){
+                        if (prefix.toLowerCase().includes('f')) {
                             is_ft = true
                             ft_type = 'f'
-                        }else if(prefix.toLowerCase().includes('t')){
+                        } else if (prefix.toLowerCase().includes('t')) {
                             is_ft = true
                             ft_type = 't'
                         }
-                        if(is_ft){
+                        if (is_ft) {
                             token_mode = new String('ft')
                             ft_start = pos - line_start - name.length
                             token_mode.nesting = braces.length
@@ -922,6 +995,12 @@ $B.tokenizer = function(src, filename, mode, parser){
                                 line_num, ft_start,
                                 line_num, end_col,
                                 line))
+                            fstring_stack.push(
+                                {
+                                    start: pos,
+                                    nb_braces_on_entry: braces.length
+                                }
+                            )
                             continue
                         }
 
@@ -929,7 +1008,7 @@ $B.tokenizer = function(src, filename, mode, parser){
                         string_start = [line_num,
                             pos - line_start - name.length, line_start]
                         string = ''
-                    }else{
+                    } else {
                         t.push(Token('NAME', name,
                             line_num, pos - line_start - name.length,
                             line_num, pos - line_start,
@@ -937,30 +1016,44 @@ $B.tokenizer = function(src, filename, mode, parser){
                         state = null
                         pos--
                     }
-                }else{
+                } else {
                     t.push(Token('NAME', name,
                         line_num, pos - line_start - name.length,
                         line_num, pos - line_start,
                         line))
+                    if (token_mode == 'regular_within_ft' && char == '}') {
+                        t.push(Token('OP', char,
+                            line_num, pos - line_start - 1,
+                            line_num, pos - line_start,
+                            line))
+                        show_braces()
+                        if ($B.last(braces).char == '{') {
+                            token_modes.pop()
+                            token_mode = $B.last(token_modes)
+                            state = null
+                            pop_braces()
+                        }
+                        continue
+                    }
                     state = null
                     pos--
                 }
                 break
 
             case 'STRING':
-                switch(char){
+                switch (char) {
                     case quote:
-                        if(! escaped){
+                        if (! escaped) {
                             // string end
                             var string_line = line
                             // If the string spans over several lines, "line"
                             // is extended until the last quote
-                            if(line_num > string_start[0]){
+                            if (line_num > string_start[0]) {
                                 string_line = src.substring(
                                     string_start[2] - 1, pos + 2)
                             }
                             var full_string
-                            if(! triple_quote){
+                            if (! triple_quote) {
                                 full_string = prefix + quote + string +
                                   quote
                                 t.push(Token('STRING', full_string,
@@ -981,22 +1074,22 @@ $B.tokenizer = function(src, filename, mode, parser){
                                     string_line))
                                 pos += 2
                                 state = null
-                            }else{
+                            } else {
                                 string += char
                             }
-                        }else{
+                        } else {
                             string += char
                         }
                         escaped = false
                         break
                     case '\r':
                     case '\n':
-                        if(! escaped && ! triple_quote){
+                        if (! escaped && ! triple_quote) {
                             // unterminated string
                             var msg
-                            if(token_mode == 'regular_within_fstring'){
+                            if (token_mode == 'regular_within_ft') {
                                 msg = "f-string: missing '}'"
-                            }else{
+                            } else {
                                 var msg = `unterminated string literal ` +
                                           `(detected at line ${line_num})`,
                                     line_num = string_start[0],
@@ -1012,7 +1105,7 @@ $B.tokenizer = function(src, filename, mode, parser){
                         string += char
                         line_num++
                         line_start = pos + 1
-                        if(char == '\r' && src[pos] == '\n'){
+                        if (char == '\r' && src[pos] == '\n') {
                             string += src[pos]
                             line_start++
                             pos++
@@ -1032,10 +1125,10 @@ $B.tokenizer = function(src, filename, mode, parser){
                 break
 
             case 'NUMBER':
-                if(test_num(num_type, char)){
+                if (test_num(num_type, char)) {
                     number += char
-                }else if(char == '_' && ! number.endsWith('.')){
-                    if(number.endsWith('_')){
+                } else if (char == '_' && ! number.endsWith('.')) {
+                    if (number.endsWith('_')) {
                         throw SyntaxError('consecutive _ in number')
                     }else if(src[pos] === undefined ||
                             ! test_num(num_type, src[pos])){
@@ -1046,17 +1139,28 @@ $B.tokenizer = function(src, filename, mode, parser){
                             line))
                         state = null
                         pos--
-                    }else{
+                    } else {
                         number += char
                     }
-                }else if(char == '.' && ! number.includes(char)){
-                    number += char
+                } else if (char == '.' && ! number.includes(char)) {
+                    if (num_type) {
+                        // For hex / oct / bin, a dot can't be part of the
+                        // number. Cf. issue #2694
+                        t.push(Token('NUMBER', number,
+                            line_num, pos - line_start - number.length,
+                            line_num, pos - line_start,
+                            line))
+                        state = null
+                        pos--
+                    } else {
+                        number += char
+                    }
                 }else if(char.toLowerCase() == 'e' &&
                         ! number.toLowerCase().includes('e')){
                     if('+-'.includes(src[pos]) ||
                             $B.in_unicode_category('Nd', ord(src[pos]))){
                         number += char
-                    }else{
+                    } else {
                         t.push(Token('NUMBER', number,
                             line_num, pos - line_start - number.length,
                             line_num, pos - line_start,
@@ -1067,21 +1171,21 @@ $B.tokenizer = function(src, filename, mode, parser){
                 }else if((char == '+' || char == '-') &&
                         number.toLowerCase().endsWith('e')){
                     number += char
-                }else if(char.toLowerCase() == 'j'){ // complex number
+                } else if (char.toLowerCase() == 'j') { // complex number
                     number += char
                     t.push(Token('NUMBER', number,
                         line_num, pos - line_start - number.length + 1,
                         line_num, pos - line_start + 1,
                         line))
                     state = null
-                }else if(char.match(/\p{Letter}/u)){
+                } else if (char.match(/\p{Letter}/u)) {
                     raise_error(_b_.SyntaxError,
                         filename,
                         line_num, pos - line_start,
                         line_num, pos - line_start,
                         line, 'invalid decimal literal')
                     return t
-                }else{
+                } else {
                     t.push(Token('NUMBER', number,
                         line_num, pos - line_start - number.length,
                         line_num, pos - line_start,
@@ -1093,7 +1197,7 @@ $B.tokenizer = function(src, filename, mode, parser){
         }
     }
 
-    switch(state){
+    switch (state) {
         case 'line_start':
             line_num++
             break
@@ -1124,13 +1228,13 @@ $B.tokenizer = function(src, filename, mode, parser){
             return t
 }
 
-    if(! src.endsWith('\n') && state != line_start){
+    if (! src.endsWith('\n') && state != line_start) {
         t.push(Token('NEWLINE', '', line_num, pos - line_start + 1,
             line_num, pos - line_start + 1, line +'\n'))
         line_num++
     }
 
-    while(indents.length > 0){
+    while (indents.length > 0) {
         indents.pop()
         t.push(Token('DEDENT', '', line_num, 0, line_num, 0, ''))
     }

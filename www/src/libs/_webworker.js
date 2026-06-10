@@ -1,14 +1,14 @@
 // Web Worker implementation
 
-(function($B){
+(function($B) {
 
 var _b_ = $B.builtins
 
 var VFS = $B.brython_modules ? 'brython_modules' :
             $B.use_VFS ? 'brython_stdlib' : null
 
-function scripts_to_load(debug_level){
-    if(debug_level > 2){
+function scripts_to_load(debug_level) {
+    if (debug_level > 2) {
         var brython_scripts = [
             'brython_builtins',
 
@@ -57,11 +57,11 @@ function scripts_to_load(debug_level){
             'gen_parse',
             'brython_ready'
         ]
-    }else{
+    } else {
         var brython_scripts = ['brython']
     }
 
-    if(VFS !== null){
+    if (VFS !== null) {
         brython_scripts.push(VFS)
     }
     return brython_scripts
@@ -69,7 +69,7 @@ function scripts_to_load(debug_level){
 
 var wclass = $B.make_type("Worker")
 
-wclass.$factory = function(worker){
+wclass.$factory = function(worker) {
     return {
         ob_type: wclass,
         worker
@@ -78,7 +78,7 @@ wclass.$factory = function(worker){
 
 var wclass_funcs = wclass.tp_funcs = {}
 
-wclass_funcs.send = function(){
+wclass_funcs.send = function() {
     var $ = $B.args('send', 2, {self: null, message: null}, arguments, null,
                 'args')
     var message = $B.pyobj2structuredclone($.message)
@@ -92,7 +92,7 @@ $B.finalize_type(wclass)
 
 var _Worker = $B.make_type("Worker")
 
-_Worker.$factory = function(id, onmessage, onerror){
+_Worker.$factory = function(id, onmessage, onerror) {
     $B.warn(_b_.DeprecationWarning,
         "worker.Worker is deprecated in version 3.12. " +
         "Use worker.create_worker instead")
@@ -101,7 +101,7 @@ _Worker.$factory = function(id, onmessage, onerror){
     var id = $.id,
         worker_script = $B.webworkers[id]
 
-    if(worker_script === undefined){
+    if (worker_script === undefined) {
         $B.RAISE(_b_.KeyError, id)
     }
     var filepath = worker_script.src ? worker_script.src : $B.script_path + "#" + id,
@@ -118,19 +118,19 @@ _Worker.$factory = function(id, onmessage, onerror){
         header = '';
     var brython_scripts = scripts_to_load(
         $B.get_option_from_filename('debug', filename))
-    brython_scripts.forEach(function(script){
-        if(script != VFS || VFS == "brython_stdlib"){
+    for (let script of brython_scripts) {
+        if (script != VFS || VFS == "brython_stdlib") {
             var url = $B.brython_path + script + ".js"
-        }else{
+        } else {
             // attribute $B.brython_modules is set to the path of
             // brython_modules.js by the script itself
             var url = $B.brython_modules
         }
-        if(! $B.get_option('cache')){ // cf. issue 1954
+        if (! $B.get_option('cache')) { // cf. issue 1954
             url += '?' + (new Date()).getTime()
         }
         header += 'importScripts("' + url + '")\n'
-    })
+    }
     // set __BRYTHON__.imported[script_id]
     header += `
     var $B = __BRYTHON__,
@@ -146,7 +146,7 @@ _Worker.$factory = function(id, onmessage, onerror){
     // Call brython() to initialize internal Brython values
     header += `brython(${JSON.stringify($B.$options)})\n`
     js = header + js
-    js = `try{${js}}catch(err){$B.handle_error(err)}`
+    js = `try {${js}} catch (err) {$B.handle_error(err)}`
 
     var blob = new Blob([js], {type: "application/js"}),
         url = URL.createObjectURL(blob),
@@ -155,7 +155,7 @@ _Worker.$factory = function(id, onmessage, onerror){
     return res
 }
 
-function create_worker(){
+function create_worker() {
     var $ = $B.args("__init__", 4,
                 {id: null, onready: null, onmessage: null, onerror: null},
                 arguments,
@@ -163,20 +163,20 @@ function create_worker(){
     var id = $.id,
         worker_script = $B.webworkers[id],
         onready = $.onready === _b_.None ? _b_.None :
-            function(){
+            function() {
                 return $B.$call($.onready, ...arguments)
             },
         onmessage = $.onmessage === _b_.None ? _b_.None :
-            function(){
+            function() {
                 return $B.$call($.onmessage, ...arguments)
             }
         ,
         onerror = $.onerror === _b_.None ? _b_.None :
-            function(){
+            function() {
                 return $B.$call($.onerror, ...arguments)
             }
 
-    if(worker_script === undefined){
+    if (worker_script === undefined) {
         $B.RAISE(_b_.RuntimeError, `No webworker with id '${id}'`)
     }
     var script_id = "worker" + $B.UUID(),
@@ -190,15 +190,15 @@ function create_worker(){
 
     var js = $B.py2js({src, filename}, script_id).to_js(),
         header = '';
-    for(var script of brython_scripts){
-        if(script != VFS || VFS == "brython_stdlib"){
+    for (var script of brython_scripts) {
+        if (script != VFS || VFS == "brython_stdlib") {
             var url = $B.brython_path + script + ".js"
-        }else{
+        } else {
             // attribute $B.brython_modules is set to the path of
             // brython_modules.js by the script itself
             var url = $B.brython_modules
         }
-        if(! $B.get_option('cache')){ // cf. issue 1954
+        if (! $B.get_option('cache')) { // cf. issue 1954
             url += '?' + (new Date()).getTime()
         }
         header += 'importScripts("' + url + '")\n'
@@ -218,17 +218,17 @@ function create_worker(){
     header += `$B.brython_path = "${$B.brython_path}"\n`
     // inject script attributes to get options
     header += `var script = $B.scripts["${filename}"] = new $B.fakeScript()\n`
-    for(var key in $B.brython_options){
+    for (var key in $B.brython_options) {
         var value = $B.brython_options[key]
-        if(Array.isArray(value)){
+        if (Array.isArray(value)) {
             value = `[${value.map(x => '"' + x + '"')}]`
-        }else{
+        } else {
             value = `"${value}"`
         }
         header += `script.options["${key}"] = ${value}\n`
     }
 
-    for(var attr of worker_script.attributes){
+    for (var attr of worker_script.attributes) {
         header += `script.options["${attr.name}"] = "${attr.value}"\n`
     }
 
@@ -244,40 +244,40 @@ function create_worker(){
         error_token = Math.random().toString(36).substr(2, 8)
 
     // open indexedDB cache before running worker code
-    js = `$B.idb_open_promise().then(function(){\n` +
-         `try{\n` +
+    js = `$B.idb_open_promise().then(function() {\n` +
+         `try {\n` +
              `${js}\n` +
              `self.postMessage('${ok_token}')\n` +
-         `}catch(err){\n` +
+         `} catch (err) {\n` +
              `console.log('worker error', err)\n` +
              `self.postMessage('${error_token}Error in worker "${id}"\\n'` +
              ` + $B.error_trace(err))\n` +
          `}\n})`
     js = header + js
 
-    var p = new Promise(function(resolve, reject){
-        try{
+    var p = new Promise(function(resolve, reject) {
+        try {
             var blob = new Blob([js], {type: "application/js"}),
                 url = URL.createObjectURL(blob),
                 w = new Worker(url),
                 res = wclass.$factory(w)
-        }catch(err){
+        } catch (err) {
             reject(err)
         }
 
-        w.onmessage = function(ev){
-            if(ev.data == ok_token){
+        w.onmessage = function(ev) {
+            if (ev.data == ok_token) {
                 resolve(res)
-            }else if(typeof ev.data == 'string' &&
-                    ev.data.startsWith(error_token)){
+            } else if(typeof ev.data == 'string' &&
+                    ev.data.startsWith(error_token)) {
                 reject($B.EXC(_b_.Exception, ev.data.substr(error_token.length)))
-            }else{
-                if(onmessage !== _b_.None){
+            } else {
+                if (onmessage !== _b_.None) {
                     onmessage(ev)
                 }
-                try{
+                try {
                     resolve(res)
-                }catch(err){
+                } catch (err) {
                     reject(err)
                 }
             }
@@ -288,9 +288,9 @@ function create_worker(){
 
     var error_func = onerror === _b_.None ? $B.handle_error : onerror
 
-    if(onready !== _b_.None){
+    if (onready !== _b_.None) {
         p.then(onready).catch(error_func)
-    }else{
+    } else {
         p.catch(error_func)
     }
     return _b_.None

@@ -1,30 +1,30 @@
 "use strict";
-(function($B){
+(function($B) {
 
 var _b_ = $B.builtins
 
 var s_escaped = 'abfnrtvxuU"0123456789' + "'" + '\\',
     is_escaped = {}
-for(var i = 0; i < s_escaped.length; i++){
+for (var i = 0; i < s_escaped.length; i++) {
     is_escaped[s_escaped.charAt(i)] = true
 }
 
-function escaped_to_byte(char){
+function escaped_to_byte(char) {
     var table = {a: 7, b: 8, f: 12, n: 10, r: 13, t: 9, v: 11}
-    if(table[char] !== undefined){
+    if (table[char] !== undefined) {
         return table[char]
     }
     return char.charCodeAt(0)
 }
 
-function to_bytes(s){
+function to_bytes(s) {
     var pos = 0,
         bytes = []
-    while(pos < s.length){
-        if(s[pos] == '\\'){
+    while (pos < s.length) {
+        if (s[pos] == '\\') {
             bytes[bytes.length] = escaped_to_byte(s[pos + 1])
             pos += 2
-        }else{
+        } else {
             bytes[bytes.length] = s.charCodeAt(pos)
             pos++
         }
@@ -32,15 +32,15 @@ function to_bytes(s){
     return bytes
 }
 
-function string_error(p, token, msg){
+function string_error(p, token, msg) {
     $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, token, msg)
 }
 
-function SurrogatePair(value){
+function SurrogatePair(value) {
     this.value = value
 }
 
-function test_escape(p, token, context, text, string_start, antislash_pos){
+function test_escape(p, token, context, text, string_start, antislash_pos) {
     // Test if the escape sequence starting at position "antislash_pos" in text
     // is is valid
     // $pos is set at the position before the string quote in original string
@@ -51,18 +51,18 @@ function test_escape(p, token, context, text, string_start, antislash_pos){
         mo
     // 1 to 3 octal digits = Unicode char
     mo = /^[0-7]{1,3}/.exec(text.substr(antislash_pos + 1))
-    if(mo){
-        if(mo[0].length == 3 && mo[0][0] >= '4'){
+    if (mo) {
+        if (mo[0].length == 3 && mo[0][0] >= '4') {
             $B.warn(_b_.SyntaxWarning,
                 `invalid octal escape sequence '\\${mo[0]}'`,
                 p.filename, token)
         }
         return [String.fromCharCode(parseInt(mo[0], 8)), 1 + mo[0].length]
     }
-    switch(text[antislash_pos + 1]){
+    switch (text[antislash_pos + 1]) {
         case "x":
             var mo = /^[0-9A-F]{0,2}/i.exec(text.substr(antislash_pos + 2))
-            if(mo[0].length != 2){
+            if (mo[0].length != 2) {
                 seq_end = antislash_pos + mo[0].length + 1
                 //$token.value.start[1] = seq_end
                 // $pos = string_start + seq_end + 2
@@ -70,44 +70,44 @@ function test_escape(p, token, context, text, string_start, antislash_pos){
                      ["(unicode error) 'unicodeescape' codec can't decode " +
                      `bytes in position ${antislash_pos}-${seq_end}: truncated ` +
                      "\\xXX escape"])
-            }else{
+            } else {
                 return [String.fromCharCode(parseInt(mo[0], 16)), 2 + mo[0].length]
             }
         case "u":
             var mo = /^[0-9A-F]{0,4}/i.exec(text.substr(antislash_pos + 2))
-            if(mo[0].length != 4){
+            if (mo[0].length != 4) {
                 seq_end = antislash_pos + mo[0].length + 1
                 //$token.value.start[1] = seq_end
                 string_error(p, token,
                      ["(unicode error) 'unicodeescape' codec can't decode " +
                      `bytes in position ${antislash_pos}-${seq_end}: truncated ` +
                      "\\uXXXX escape"])
-            }else{
+            } else {
                 return [String.fromCharCode(parseInt(mo[0], 16)), 2 + mo[0].length]
             }
         case "U":
             var mo = /^[0-9A-F]{0,8}/i.exec(text.substr(antislash_pos + 2))
-            if(mo[0].length != 8){
+            if (mo[0].length != 8) {
                 seq_end = antislash_pos + mo[0].length + 1
                 //$token.value.start[1] = seq_end
                 string_error(p, token,
                      ["(unicode error) 'unicodeescape' codec can't decode " +
                      `bytes in position ${antislash_pos}-${seq_end}: truncated ` +
                      "\\UXXXXXXXX escape"])
-            }else{
+            } else {
                 var value = parseInt(mo[0], 16)
-                if(value > 0x10FFFF){
+                if (value > 0x10FFFF) {
                     string_error(p, token, 'invalid unicode escape ' + mo[0])
-                }else if(value >= 0x10000){
+                } else if (value >= 0x10000) {
                     return [new SurrogatePair(value), 2 + mo[0].length]
-                }else{
+                } else {
                     return [String.fromCharCode(value), 2 + mo[0].length]
                 }
             }
     }
 }
 
-$B.prepare_string = function(p, token){
+$B.prepare_string = function(p, token) {
     var s = token.string,
         len = s.length,
         pos = 0,
@@ -117,14 +117,14 @@ $B.prepare_string = function(p, token){
         inner,
         context = {type: 'str'} // XXX
 
-    while(pos < len){
-        if(s[pos] == '"' || s[pos] == "'"){
+    while (pos < len) {
+        if (s[pos] == '"' || s[pos] == "'") {
             quote = s[pos]
             string_modifier = s.substr(0, pos)
-            if(s.substr(pos, 3) == quote.repeat(3)){
+            if (s.substr(pos, 3) == quote.repeat(3)) {
                 _type = "triple_string"
                 inner = s.substring(pos + 3, s.length - 3)
-            }else{
+            } else {
                 inner = s.substring(pos + quote.length,
                     len - quote.length)
             }
@@ -134,7 +134,7 @@ $B.prepare_string = function(p, token){
     }
     var result = {quote}
     var mods = {r: 'raw', f: 'fstring', b: 'bytes'}
-    for(var mod of string_modifier){
+    for (var mod of string_modifier) {
         result[mods[mod]] = true
     }
 
@@ -144,8 +144,8 @@ $B.prepare_string = function(p, token){
         fstring = false,
         sm_length, // length of string modifier
         end = null;
-    if(string_modifier){
-        switch(string_modifier) {
+    if (string_modifier) {
+        switch (string_modifier) {
             case 'r': // raw string
                 raw = true
                 break
@@ -180,61 +180,61 @@ $B.prepare_string = function(p, token){
         end = 0,
         src = inner
 
-    if(bytes){
+    if (bytes) {
         var source = []
     }
-    while(end < src.length){
-        if(escaped){
-            if(src.charAt(end) == "a" && ! raw){
+    while (end < src.length) {
+        if (escaped) {
+            if (src.charAt(end) == "a" && ! raw) {
                 zone = zone.substr(0, zone.length - 1) + "\u0007"
-            }else{
+            } else {
                 zone += src.charAt(end)
-                if(raw && src.charAt(end) == '\\'){
+                if (raw && src.charAt(end) == '\\') {
                     zone += '\\'
                 }
             }
             escaped = false
             end++
-        }else if(src.charAt(end) == "\\"){
-            if(raw){
+        } else if (src.charAt(end) == "\\") {
+            if (raw) {
                 if(end < src.length - 1 &&
                         src.charAt(end + 1) == quote){
                     zone += '\\\\' + quote
                     end += 2
-                }else{
+                } else {
                     zone += '\\\\'
                     end++
                 }
                 escaped = true
-            }else{
-                if(src.charAt(end + 1) == '\n'){
+            } else {
+                if (src.charAt(end + 1) == '\n') {
                     // explicit line joining inside strings
                     end += 2
-                }else if(src.substr(end + 1, 2) == 'N{'){
+                } else if (src.substr(end + 1, 2) == 'N{') {
                     // Unicode literal ?
                     var end_lit = end + 3,
                         re = new RegExp("[-a-zA-Z0-9 ]+"),
                         search = re.exec(src.substr(end_lit))
-                    if(search === null){
+                    if (search === null) {
                         string_error(p, token, "(unicode error) " +
                             "malformed \\N character escape", pos)
                     }
                     var end_lit = end_lit + search[0].length
-                    if(src.charAt(end_lit) != "}"){
+                    if (src.charAt(end_lit) != "}") {
                         string_error(p, token, "(unicode error) " +
                             "malformed \\N character escape")
                     }
                     var description = search[0].toUpperCase()
                     // Load unicode table if not already loaded
-                    if($B.unicodedb === undefined){
+                    if ($B.unicodedb === undefined) {
                         var xhr = new XMLHttpRequest
                         xhr.open("GET",
                             $B.brython_path + "unicode.txt", false)
-                        xhr.onreadystatechange = function(){
-                            if(this.readyState == 4){
-                                if(this.status == 200){
+                        xhr.onreadystatechange = function() {
+                            if (this.readyState == 4) {
+                                if (this.status == 200) {
                                     $B.unicodedb = this.responseText
-                                }else{
+                                } else {
                                     console.log("Warning - could not " +
                                         "load unicode.txt")
                                 }
@@ -242,33 +242,33 @@ $B.prepare_string = function(p, token){
                         }
                         xhr.send()
                     }
-                    if($B.unicodedb !== undefined){
+                    if ($B.unicodedb !== undefined) {
                         var re = new RegExp("^([0-9A-F]+);" +
                             description + ";.*$", "m")
                         search = re.exec($B.unicodedb)
-                        if(search === null){
+                        if (search === null) {
                             string_error(p, token, "(unicode error) " +
                                 "unknown Unicode character name")
                         }
                         var cp = parseInt(search[1], 16) // code point
                         zone += String.fromCodePoint(cp)
                         end = end_lit + 1
-                    }else{
+                    } else {
                         end++
                     }
-                }else{
+                } else {
                     var esc = test_escape(p, token, context, src,
                                           string_start, end)
-                    if(esc){
-                        if(esc[0] == '\\'){
+                    if (esc) {
+                        if (esc[0] == '\\') {
                             zone += '\\\\'
-                        }else if(esc[0] instanceof SurrogatePair){
+                        } else if (esc[0] instanceof SurrogatePair) {
                             zone += String.fromCodePoint(esc[0].value)
-                        }else{
+                        } else {
                             zone += esc[0]
                         }
                         end += esc[1]
-                    }else{
+                    } else {
                         if(end < src.length - 1 &&
                             is_escaped[src.charAt(end + 1)] === undefined){
                                 zone += '\\'
@@ -279,12 +279,12 @@ $B.prepare_string = function(p, token){
                     }
                 }
             }
-        }else if(src.charAt(end) == '\n' && _type != 'triple_string'){
+        } else if (src.charAt(end) == '\n' && _type != 'triple_string') {
             // In a string with single quotes, line feed not following
             // a backslash raises SyntaxError
             console.log(pos, end, src.substring(pos, end))
             string_error(p, token, ["EOL while scanning string literal"])
-        }else{
+        } else {
             zone += src.charAt(end)
             end++
         }
@@ -295,19 +295,19 @@ $B.prepare_string = function(p, token){
     // Escape quotes inside string, except if they are
     // already escaped.
     // In raw mode, always escape.
-    for(var i = 0; i < $string.length; i++){
+    for (var i = 0; i < $string.length; i++) {
         var $car = $string.charAt(i)
-        if($car == quote){
+        if ($car == quote) {
             if(raw || (i == 0 ||
                     $string.charAt(i - 1) != '\\')){
                 string += '\\'
-            }else if(_type == "triple_string"){
+            } else if (_type == "triple_string") {
                 // Unescaped quotes in triple string are allowed
                 var j = i - 1
-                while($string.charAt(j) == '\\'){
+                while ($string.charAt(j) == '\\') {
                     j--
                 }
-                if((i - j - 1) % 2 == 0){
+                if ((i - j - 1) % 2 == 0) {
                     string += '\\'
                 }
             }
@@ -315,22 +315,22 @@ $B.prepare_string = function(p, token){
         string += $car
     }
 
-    if(fstring){
-        try{
+    if (fstring) {
+        try {
             var re = new RegExp("\\\\" + quote, "g"),
                 string_no_bs = string.replace(re, quote)
             var elts = $B.parse_fstring(string_no_bs) // in py_string.js
-        }catch(err){
+        } catch (err) {
             string_error(p, token, err.message)
         }
     }
 
-    if(bytes){
+    if (bytes) {
         result.value = 'b' + quote + string + quote
         result.bytes = to_bytes(string)
-    }else if(fstring){
+    } else if (fstring) {
         result.value = elts
-    }else{
+    } else {
         result.value = quote + string + quote
     }
     context.raw = raw;

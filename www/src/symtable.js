@@ -1,5 +1,5 @@
 "use strict";
-(function($B){
+(function($B) {
 
 var _b_ = $B.builtins
 
@@ -45,25 +45,25 @@ var ModuleBlock = 2,
 
 var PyExc_SyntaxError = _b_.SyntaxError
 
-function assert(test){
-    if(! $B.$bool(test)){
+function assert(test) {
+    if (! $B.$bool(test)) {
         console.log('test fails', test)
         throw Error('test fails')
     }
 }
 
-function LOCATION(x){
+function LOCATION(x) {
     // (x)->lineno, (x)->col_offset, (x)->end_lineno, (x)->end_col_offset
     return [x.lineno, x.col_offset, x.end_lineno, x.end_col_offset]
 }
 
-function ST_LOCATION(x){
+function ST_LOCATION(x) {
     // (x)->ste_lineno, (x)->ste_col_offset, (x)->ste_end_lineno, (x)->ste_end_col_offset
     return [x.lineno, x.col_offset, x.end_lineno, x.end_col_offset]
 }
 
 
-function _Py_Mangle(privateobj, ident){
+function _Py_Mangle(privateobj, ident) {
     /* Name mangling: __private becomes _classname__private.
        This is independent from how the name is used. */
     var plen,
@@ -87,10 +87,10 @@ function _Py_Mangle(privateobj, ident){
     }
     /* Strip leading underscores from class name */
     ipriv = 0;
-    while(privateobj[ipriv] == '_'){
+    while (privateobj[ipriv] == '_') {
         ipriv++
     }
-    if(ipriv == plen){
+    if (ipriv == plen) {
         return ident /* Don't mangle if class is just underscores */
     }
     var prefix = privateobj.substr(ipriv)
@@ -105,11 +105,11 @@ var NoComprehension = 0,
     SetComprehension = 3,
     GeneratorExpression = 4
 
-function GET_IDENTIFIER(VAR){
+function GET_IDENTIFIER(VAR) {
     return VAR
 }
 
-function Symtable(){
+function Symtable() {
 
     this.filename = NULL;
 
@@ -120,8 +120,8 @@ function Symtable(){
 
 }
 
-function id(obj){
-    if(obj[$B.ID] !== undefined){
+function id(obj) {
+    if (obj[$B.ID] !== undefined) {
         return obj[$B.ID]
     }
     return obj[$B.ID] = $B.UUID()
@@ -178,7 +178,7 @@ function ste_new(st, name, block,
 }
 
 
-$B._PySymtable_Build = function(mod, filename, future){
+$B._PySymtable_Build = function(mod, filename, future) {
     var st = new Symtable(),
         seq
     st.filename = filename;
@@ -186,15 +186,15 @@ $B._PySymtable_Build = function(mod, filename, future){
     st.type = SF.TYPE_MODULE
 
     /* Make the initial symbol information gathering pass */
-    if(!symtable_enter_block(st, 'top', ModuleBlock, mod, 0, 0, 0, 0)){
+    if (!symtable_enter_block(st, 'top', ModuleBlock, mod, 0, 0, 0, 0)) {
         return NULL;
     }
 
     st.top = st.cur
-    switch(mod.constructor){
+    switch (mod.constructor) {
         case $B.ast.Module:
             seq = mod.body
-            for(let item of seq){
+            for (let item of seq) {
                 visitor.stmt(st, item)
             }
             break
@@ -203,7 +203,7 @@ $B._PySymtable_Build = function(mod, filename, future){
             break
         case $B.ast.Interactive:
             seq = mod.body
-            for(let item of seq){
+            for (let item of seq) {
                 visitor.stmt(st, item)
             }
             break
@@ -215,54 +215,54 @@ $B._PySymtable_Build = function(mod, filename, future){
     return st.top;
 }
 
-function _PyST_GetSymbol(ste, name){
+function _PyST_GetSymbol(ste, name) {
     return $B.str_dict_get(ste.symbols, name, 0)
 }
 
-function _PyST_GetScope(ste, name){
+function _PyST_GetScope(ste, name) {
     var symbol = _PyST_GetSymbol(ste, name);
     return (symbol >> SF.SCOPE_OFFSET) & SF.SCOPE_MASK;
 }
 
-function _PyST_IsFunctionLike(ste){
+function _PyST_IsFunctionLike(ste) {
     return ste.type == FunctionBlock
         || ste.type == TypeVarBoundBlock
         || ste.type == TypeAliasBlock
         || ste.type == TypeParamBlock;
 }
 
-function PyErr_Format(exc_type, message, arg){
-    if(arg){
+function PyErr_Format(exc_type, message, arg) {
+    if (arg) {
         message = _b_.str.nb_remainder(message, arg)
     }
     return $B.$call(exc_type, message)
 }
 
-function PyErr_SetString(exc_type, message){
+function PyErr_SetString(exc_type, message) {
     return exc_type.$factory(message)
 }
 
-function set_exc_info(exc, filename, lineno, offset, end_lineno, end_offset){
+function set_exc_info(exc, filename, lineno, offset, end_lineno, end_offset) {
     exc.filename = filename
     exc.lineno = lineno
     exc.offset = offset + 1
     exc.end_lineno = end_lineno
     exc.end_offset = end_offset + 1
     var src = $B.file_cache[filename]
-    if(src !== undefined){
+    if (src !== undefined) {
         var lines = src.split('\n')
         exc.text = lines[lineno - 1]
-    }else{
+    } else {
         exc.text = ''
     }
     exc.args[1] = [filename, exc.lineno, exc.offset, exc.text,
                    exc.end_lineno, exc.end_offset]
 }
 
-function error_at_directive(exc, ste, name){
+function error_at_directive(exc, ste, name) {
     assert(ste.directives)
-    for(var data of ste.directives){
-        if(data[0] == name){
+    for (var data of ste.directives) {
+        if (data[0] == name) {
             set_exc_info(exc, ste.table.filename,
                 data[1], data[2], data[3], data[4])
             return 0
@@ -322,18 +322,18 @@ function SET_SCOPE(DICT, NAME, I) {
     DICT[NAME] = I
 }
 
-function is_free_in_any_child(entry, key){
-    for (var child_ste of entry.ste_children){
+function is_free_in_any_child(entry, key) {
+    for (var child_ste of entry.ste_children) {
         var scope = _PyST_GetScope(child_ste, key)
-        if(scope == SF.FREE){
+        if (scope == SF.FREE) {
             return 1
         }
     }
     return 0
 }
 
-function inline_comprehension(ste, comp, scopes, comp_free, inlined_cells){
-    for(var item of _b_.dict.$iter_items(comp.symbols)) {
+function inline_comprehension(ste, comp, scopes, comp_free, inlined_cells) {
+    for (var item of _b_.dict.$iter_items(comp.symbols)) {
         // skip comprehension parameter
         var k = item.key,
             comp_flags = item.value;
@@ -343,7 +343,7 @@ function inline_comprehension(ste, comp, scopes, comp_free, inlined_cells){
         }
         var scope = (comp_flags >> SF.SCOPE_OFFSET) & SF.SCOPE_MASK;
         var only_flags = comp_flags & ((1 << SF.SCOPE_OFFSET) - 1)
-        if(scope == SF.CELL || only_flags & SF.DEF_COMP_CELL){
+        if (scope == SF.CELL || only_flags & SF.DEF_COMP_CELL) {
            inlined_cells.add(k)
         }
         var existing = $B.str_dict_contains(ste.symbols, k)
@@ -377,8 +377,8 @@ function inline_comprehension(ste, comp, scopes, comp_free, inlined_cells){
 function analyze_name(ste, scopes, name, flags,
              bound, local, free,
              global, type_params, class_entry){
-    if(flags & SF.DEF_GLOBAL){
-        if(flags & SF.DEF_NONLOCAL){
+    if (flags & SF.DEF_GLOBAL) {
+        if (flags & SF.DEF_NONLOCAL) {
             let exc = PyErr_Format(_b_.SyntaxError,
                          "name '%s' is nonlocal and global",
                          name)
@@ -387,13 +387,13 @@ function analyze_name(ste, scopes, name, flags,
         }
         SET_SCOPE(scopes, name, SF.GLOBAL_EXPLICIT)
         global.add(name)
-        if (bound){
+        if (bound) {
             bound.delete(name)
         }
         return 1
     }
     if (flags & SF.DEF_NONLOCAL) {
-        if(!bound){
+        if (!bound) {
             let exc = PyErr_Format(_b_.SyntaxError,
                          "nonlocal declaration not allowed at module level");
             error_at_directive(exc, ste, name)
@@ -405,7 +405,7 @@ function analyze_name(ste, scopes, name, flags,
             error_at_directive(exc, ste, name)
             throw exc
         }
-        if(type_params.has(name)){
+        if (type_params.has(name)) {
             let exc = PyErr_Format(_b_.SyntaxError,
                          "nonlocal binding not allowed for type parameter '%s'",
                          name);
@@ -423,7 +423,7 @@ function analyze_name(ste, scopes, name, flags,
         global.delete(name)
         if (flags & SF.DEF_TYPE_PARAM) {
             type_params.add(name)
-        }else{
+        } else {
             type_params.delete(name)
         }
         return 1
@@ -464,7 +464,7 @@ function analyze_name(ste, scopes, name, flags,
         SET_SCOPE(scopes, name, SF.GLOBAL_IMPLICIT)
         return 1
     }
-    if (ste.nested){
+    if (ste.nested) {
         ste.free = 1
     }
     SET_SCOPE(scopes, name, SF.GLOBAL_IMPLICIT)
@@ -479,22 +479,22 @@ function analyze_name(ste, scopes, name, flags,
    That's safe because no name can be free and local in the same scope.
 */
 
-function analyze_cells(scopes, free, inlined_cells){
+function analyze_cells(scopes, free, inlined_cells) {
     var v,
         v_cell;
 
     v_cell = SF.CELL;
-    if (!v_cell){
+    if (!v_cell) {
         return 0;
     }
-    for(let name in scopes){
+    for (let name in scopes) {
         v = scopes[name]
         //assert(PyLong_Check(v));
         var scope = v;
-        if (scope != SF.LOCAL){
+        if (scope != SF.LOCAL) {
             continue;
         }
-        if (! free.has(name) && ! inlined_cells.has(name)){
+        if (! free.has(name) && ! inlined_cells.has(name)) {
             continue;
         }
         /* Replace SF.LOCAL with SF.CELL for this name, and remove
@@ -507,13 +507,13 @@ function analyze_cells(scopes, free, inlined_cells){
     return 1
 }
 
-function drop_class_free(ste, free){
+function drop_class_free(ste, free) {
     var res = free.delete('__class__')
-    if(res){
+    if (res) {
         ste.needs_class_closure = 1
     }
     res = free.delete('__classdict__')
-    if(res){
+    if (res) {
         ste.needs_class_classdict = 1
     }
     return 1
@@ -523,36 +523,36 @@ function drop_class_free(ste, free){
  *
  * All arguments are dicts.  Modifies symbols, others are read-only.
 */
-function update_symbols(symbols, scopes, bound, free, inlined_cells, classflag){
+function update_symbols(symbols, scopes, bound, free, inlined_cells, classflag) {
     var v,
         v_scope,
         v_new,
         v_free
 
     /* Update scope information for all symbols in this scope */
-    for(let entry of _b_.dict.$iter_items(symbols)){
+    for (let entry of _b_.dict.$iter_items(symbols)) {
         let name = entry.key
         var test = false // name == 'Callable'
         let flags = entry.value
-        if(test){
+        if (test) {
             console.log('in update symbols, name', name, 'flags', flags,
             flags & SF.DEF_COMP_CELL)
         }
-        if(inlined_cells.has(name)){
+        if (inlined_cells.has(name)) {
             flags |= SF.DEF_COMP_CELL
         }
         v_scope = scopes[name]
         var scope = v_scope
-        if(test){
+        if (test) {
             console.log('name', name, 'scopes[name]', scopes[name],
                 ' flags |=', scope << SF.SCOPE_OFFSET)
         }
         flags |= (scope << SF.SCOPE_OFFSET)
         v_new = flags
-        if (!v_new){
+        if (!v_new) {
             return 0;
         }
-        if(test){
+        if (test) {
             console.log('set symbol', name, 'v_new', v_new, 'def comp cell',
                 SF.DEF_COMP_CELL,
                 v_new & SF.DEF_COMP_CELL)
@@ -563,7 +563,7 @@ function update_symbols(symbols, scopes, bound, free, inlined_cells, classflag){
     /* Record not yet resolved free variables from children (if any) */
     v_free = SF.FREE << SF.SCOPE_OFFSET
 
-    for(let name of free){
+    for (let name of free) {
 
         v = $B.str_dict_get(symbols, name)
 
@@ -618,7 +618,7 @@ function update_symbols(symbols, scopes, bound, free, inlined_cells, classflag){
 */
 
 
-function analyze_block(ste, bound, free, global, typeparams, class_entry){
+function analyze_block(ste, bound, free, global, typeparams, class_entry) {
     var success = 0
 
     let local = new Set()  /* collect new names bound in block */
@@ -655,7 +655,7 @@ function analyze_block(ste, bound, free, global, typeparams, class_entry){
         }
     }
 
-    for(let entry of _b_.dict.$iter_items(ste.symbols)){
+    for (let entry of _b_.dict.$iter_items(ste.symbols)) {
         var name = entry.key
         var flags = entry.value
         if (!analyze_name(ste, scopes, name, flags,
@@ -678,7 +678,7 @@ function analyze_block(ste, bound, free, global, typeparams, class_entry){
         /* Pass down known globals */
         Set_Union(newglobal, global);
 
-    }else{
+    } else {
         /* Special-case __class__ and __classdict__ */
         newbound.add('__class__')
         newbound.add('__classdict__')
@@ -691,15 +691,15 @@ function analyze_block(ste, bound, free, global, typeparams, class_entry){
        be collected in allfree.
     */
 
-    for (var c of ste.children){
+    for (var c of ste.children) {
         var child_free = new Set()
         let entry = c
 
         var new_class_entry = NULL;
         if (entry.can_see_class_scope) {
-            if(ste.type == ClassBlock){
+            if (ste.type == ClassBlock) {
                 new_class_entry = ste
-            }else if(class_entry){
+            } else if (class_entry) {
                 new_class_entry = class_entry
             }
         }
@@ -718,12 +718,12 @@ function analyze_block(ste, bound, free, global, typeparams, class_entry){
         }
         Set_Union(newfree, child_free);
         /* Check if any children have free variables */
-        if (entry.free || entry.child_free){
+        if (entry.free || entry.child_free) {
             ste.child_free = 1
         }
     }
     /* Splice children of inlined comprehensions into our children list */
-    for(let i = ste.children.length - 1; i >= 0; i--) {
+    for (let i = ste.children.length - 1; i >= 0; i--) {
         let entry = ste.children[i];
         if (entry.comp_inlined) {
             ste.children.splice(i, 0, ...entry.children)
@@ -733,9 +733,9 @@ function analyze_block(ste, bound, free, global, typeparams, class_entry){
     // Set_Union(newfree, child_free)
 
     /* Check if any local variables must be converted to cell variables */
-    if (_PyST_IsFunctionLike(ste) && !analyze_cells(scopes, newfree, inlined_cells)){
+    if (_PyST_IsFunctionLike(ste) && !analyze_cells(scopes, newfree, inlined_cells)) {
         return 0
-    }else if (ste.type === ClassBlock && !drop_class_free(ste, newfree)){
+    } else if (ste.type === ClassBlock && !drop_class_free(ste, newfree)) {
         return 0
     }
     /* Records the results of the analysis in the symbol table entry */
@@ -749,8 +749,8 @@ function analyze_block(ste, bound, free, global, typeparams, class_entry){
     return success
 }
 
-function PySet_New(arg){
-    if(arg === NULL){
+function PySet_New(arg) {
+    if (arg === NULL) {
         return new Set()
     }
     return new Set(arg)
@@ -784,7 +784,7 @@ function analyze_child_block(entry, bound, free,
     return 1;
 }
 
-function symtable_analyze(st){
+function symtable_analyze(st) {
     var free = new Set(),
         global = new Set(),
         typeparams = new Set()
@@ -797,13 +797,13 @@ function symtable_analyze(st){
    in symtable_exit_block().
 */
 
-function symtable_exit_block(st){
+function symtable_exit_block(st) {
     var size = st.stack.length
 
     st.cur = NULL;
     if (size) {
         st.stack.pop()
-        if (--size){
+        if (--size) {
             st.cur = st.stack[size - 1]
         }
     }
@@ -814,7 +814,7 @@ function symtable_enter_block(st, name, block,
                      ast, lineno, col_offset,
                      end_lineno, end_col_offset){
     var prev
-    if(ast === undefined){
+    if (ast === undefined) {
         console.log('call ste new, key undef', st, name)
     }
     var ste = ste_new(st, name, block, ast,
@@ -838,7 +838,7 @@ function symtable_enter_block(st, name, block,
         return 1
     }
 
-    if (block === ModuleBlock){
+    if (block === ModuleBlock) {
         st.global = st.cur.symbols
     }
     if (prev) {
@@ -847,24 +847,24 @@ function symtable_enter_block(st, name, block,
     return 1;
 }
 
-function symtable_lookup(st, name){
+function symtable_lookup(st, name) {
     var mangled = _Py_Mangle(st.private, name)
-    if (!mangled){
+    if (!mangled) {
         return 0;
     }
     var ret = _PyST_GetSymbol(st.cur, mangled)
     return ret;
 }
 
-function symtable_add_def_helper(st, name, flag, ste, _location){
+function symtable_add_def_helper(st, name, flag, ste, _location) {
     var o, dict, val, mangled = _Py_Mangle(st.private, name)
 
-    if (!mangled){
+    if (!mangled) {
         return 0
     }
     dict = ste.symbols
     var o = $B.str_dict_get(dict, mangled)
-    if(o !== $B.NULL){
+    if (o !== $B.NULL) {
         val = o
         if ((flag & SF.DEF_PARAM) && (val & SF.DEF_PARAM)) {
             /* Is it better to use 'mangled' or 'name' here? */
@@ -878,7 +878,7 @@ function symtable_add_def_helper(st, name, flag, ste, _location){
             throw exc
         }
         val |= flag
-    }else{
+    } else {
         val = flag
     }
     if (ste.comp_iter_target) {
@@ -896,7 +896,7 @@ function symtable_add_def_helper(st, name, flag, ste, _location){
         val |= SF.DEF_COMP_ITER
     }
     o = val
-    if (o == NULL){
+    if (o == NULL) {
         return 0
     }
     _b_.dict.$setitem(dict, mangled, o)
@@ -908,11 +908,11 @@ function symtable_add_def_helper(st, name, flag, ste, _location){
            perhaps only DEF_FREE_GLOBAL */
         val = flag
         var mangled_global = $B.str_dict_get(st.global, 'mangled', $B.NULL)
-        if(mangled_global !== $B.NULL){ // (o = PyDict_GetItemWithError(st.global, mangled))) {
+        if (mangled_global !== $B.NULL) { // (o = PyDict_GetItemWithError(st.global, mangled))) {
             val |= mangled_global
         }
         o = val
-        if (o == NULL){
+        if (o == NULL) {
             return 0
         }
         _b_.dict.$setitem(st.global, 'mangled', o)
@@ -920,7 +920,7 @@ function symtable_add_def_helper(st, name, flag, ste, _location){
     return 1
 }
 
-function symtable_add_def(st, name, flag, _location){
+function symtable_add_def(st, name, flag, _location) {
     return symtable_add_def_helper(st, name, flag, st.cur, _location);
 }
 
@@ -930,7 +930,7 @@ function symtable_enter_type_param_block(st, name,
                                _location){
     var prev = st.cur,
         current_type = st.cur.type;
-    if(!symtable_enter_block(st, name, TypeParamBlock, ast, ..._location)) {
+    if (!symtable_enter_block(st, name, TypeParamBlock, ast, ..._location)) {
         return 0;
     }
     prev.$type_param = st.cur
@@ -940,7 +940,7 @@ function symtable_enter_type_param_block(st, name,
             return 0;
         }
     }
-    if(kind == $B.ast.ClassDef) {
+    if (kind == $B.ast.ClassDef) {
         // It gets "set" when we create the type params tuple and
         // "used" when we build up the bases.
         if (!symtable_add_def(st, "type_params", SF.DEF_LOCAL,
@@ -992,20 +992,20 @@ function symtable_enter_type_param_block(st, name,
    first adjusts current recursion counter depth.
 */
 
-function VISIT_QUIT(ST, X){
+function VISIT_QUIT(ST, X) {
     return X
 }
 
-function VISIT(ST, TYPE, V){
+function VISIT(ST, TYPE, V) {
     var f = visitor[TYPE]
-    if (!f(ST, V)){
+    if (!f(ST, V)) {
         VISIT_QUIT(ST, 0);
     }
 }
 
 function VISIT_SEQ(ST, TYPE, SEQ) {
-    for (var elt of SEQ){
-        if (! visitor[TYPE](ST, elt)){
+    for (var elt of SEQ) {
+        if (! visitor[TYPE](ST, elt)) {
             VISIT_QUIT(ST, 0)
         }
     }
@@ -1014,7 +1014,7 @@ function VISIT_SEQ(ST, TYPE, SEQ) {
 function VISIT_SEQ_TAIL(ST, TYPE, SEQ, START) {
     for (var i = START, len = SEQ.length; i < len; i++) {
         var elt = SEQ[i];
-        if (! visitor[TYPE](ST, elt)){
+        if (! visitor[TYPE](ST, elt)) {
             VISIT_QUIT(ST, 0)
         }
     }
@@ -1022,10 +1022,10 @@ function VISIT_SEQ_TAIL(ST, TYPE, SEQ, START) {
 
 function VISIT_SEQ_WITH_NULL(ST, TYPE, SEQ) {
     for (var elt of SEQ) {
-        if(! elt){
+        if (! elt) {
             continue /* can be NULL */
         }
-        if(! visitor[TYPE](ST, elt)){
+        if (! visitor[TYPE](ST, elt)) {
             VISIT_QUIT((ST), 0)
         }
     }
@@ -1039,7 +1039,7 @@ function symtable_record_directive(st, name, lineno,
         st.cur.directives = []
     }
     mangled = _Py_Mangle(st.private, name);
-    if (!mangled){
+    if (!mangled) {
         return 0;
     }
     data = $B.fast_tuple([mangled, lineno, col_offset, end_lineno, end_col_offset])
@@ -1047,9 +1047,9 @@ function symtable_record_directive(st, name, lineno,
     return true
 }
 
-function has_kwonlydefaults(kwonlyargs, kw_defaults){
+function has_kwonlydefaults(kwonlyargs, kw_defaults) {
     for (var i = 0, len = kwonlyargs.length; i < len; i++) {
-        if(kw_defaults[i]){
+        if (kw_defaults[i]) {
             return 1;
         }
     }
@@ -1058,7 +1058,7 @@ function has_kwonlydefaults(kwonlyargs, kw_defaults){
 
 var visitor = {}
 
-visitor.stmt = function(st, s){
+visitor.stmt = function(st, s) {
     switch (s.constructor) {
     case $B.ast.FunctionDef:
         if (!symtable_add_def(st, s.name, SF.DEF_LOCAL, LOCATION(s)))
@@ -1084,7 +1084,7 @@ visitor.stmt = function(st, s){
         if (!visitor.annotations(st, s, s.args,
                                         s.returns))
             VISIT_QUIT(st, 0)
-        if(s.decorator_list){
+        if (s.decorator_list) {
             VISIT_SEQ(st, expr, s.decorator_list)
         }
         if (!symtable_enter_block(st, s.name,
@@ -1094,11 +1094,11 @@ visitor.stmt = function(st, s){
         }
         VISIT(st, 'arguments', s.args)
         VISIT_SEQ(st, stmt, s.body)
-        if(!symtable_exit_block(st)){
+        if (!symtable_exit_block(st)) {
             VISIT_QUIT(st, 0)
         }
-        if(s.type_params.length > 0) {
-            if (!symtable_exit_block(st)){
+        if (s.type_params.length > 0) {
+            if (!symtable_exit_block(st)) {
                 VISIT_QUIT(st, 0)
             }
         }
@@ -1111,7 +1111,7 @@ visitor.stmt = function(st, s){
         VISIT_SEQ(st, keyword, s.keywords)
         if (s.decorator_list)
             VISIT_SEQ(st, expr, s.decorator_list);
-        if(s.type_params.length > 0){
+        if (s.type_params.length > 0) {
             if (!symtable_enter_type_param_block(st, s.name,
                                                 s.type_params,
                                                 false, false, s.constructor,
@@ -1128,7 +1128,7 @@ visitor.stmt = function(st, s){
             VISIT_QUIT(st, 0)
         tmp = st.private
         st.private = s.name
-        if(s.type_params.length > 0){
+        if (s.type_params.length > 0) {
             if (!symtable_add_def(st, '__type_params__',
                                   SF.DEF_LOCAL, LOCATION(s))) {
                 VISIT_QUIT(st, 0);
@@ -1142,7 +1142,7 @@ visitor.stmt = function(st, s){
         st.private = tmp
         if(! symtable_exit_block(st))
             VISIT_QUIT(st, 0)
-        if(s.type_params.length > 0){
+        if (s.type_params.length > 0) {
             if (!symtable_exit_block(st))
                 VISIT_QUIT(st, 0);
         }
@@ -1154,7 +1154,7 @@ visitor.stmt = function(st, s){
         var name = s.name.id,
             is_in_class = st.cur.type === ClassBlock,
             is_generic = s.type_params.length > 0
-        if(is_generic){
+        if (is_generic) {
             if (!symtable_enter_type_param_block(
                     st, name,
                     s.type_params,
@@ -1174,7 +1174,7 @@ visitor.stmt = function(st, s){
             VISIT_QUIT(st, 0);
         }
         VISIT(st, expr, s.value);
-        if (!symtable_exit_block(st)){
+        if (!symtable_exit_block(st)) {
             VISIT_QUIT(st, 0);
         }
         if (is_generic) {
@@ -1184,7 +1184,7 @@ visitor.stmt = function(st, s){
         break
 
     case $B.ast.Return:
-        if(s.value){
+        if (s.value) {
             VISIT(st, expr, s.value)
             st.cur.returns_value = 1
         }
@@ -1197,7 +1197,7 @@ visitor.stmt = function(st, s){
         VISIT(st, expr, s.value)
         break
     case $B.ast.AnnAssign:
-        if(s.target instanceof $B.ast.Name){
+        if (s.target instanceof $B.ast.Name) {
             var e_name = s.target
             var cur = symtable_lookup(st, e_name.id)
             if (cur < 0) {
@@ -1220,20 +1220,20 @@ visitor.stmt = function(st, s){
                ! symtable_add_def(st, e_name.id,
                                   SF.DEF_ANNOT | SF.DEF_LOCAL, LOCATION(e_name))){
                 VISIT_QUIT(st, 0)
-            }else{
+            } else {
                 if(s.value
                     && !symtable_add_def(st, e_name.id, SF.DEF_LOCAL, LOCATION(e_name))){
                     VISIT_QUIT(st, 0)
                 }
             }
-        }else{
+        } else {
             VISIT(st, expr, s.target)
         }
-        if(!visitor.annotation(st, s.annotation)){
+        if (!visitor.annotation(st, s.annotation)) {
             VISIT_QUIT(st, 0)
         }
 
-        if(s.value){
+        if (s.value) {
             VISIT(st, expr, s.value)
         }
         break
@@ -1245,14 +1245,14 @@ visitor.stmt = function(st, s){
         VISIT(st, expr, s.target)
         VISIT(st, expr, s.iter)
         VISIT_SEQ(st, stmt, s.body)
-        if(s.orelse){
+        if (s.orelse) {
             VISIT_SEQ(st, stmt, s.orelse)
         }
         break
     case $B.ast.While:
         VISIT(st, expr, s.test)
         VISIT_SEQ(st, stmt, s.body)
-        if (s.orelse){
+        if (s.orelse) {
             VISIT_SEQ(st, stmt, s.orelse)
         }
         break
@@ -1260,7 +1260,7 @@ visitor.stmt = function(st, s){
         /* XXX if 0: and lookup_yield() hacks */
         VISIT(st, expr, s.test)
         VISIT_SEQ(st, stmt, s.body)
-        if (s.orelse){
+        if (s.orelse) {
             VISIT_SEQ(st, stmt, s.orelse)
         }
         break
@@ -1269,9 +1269,9 @@ visitor.stmt = function(st, s){
         VISIT_SEQ(st, match_case, s.cases)
         break
     case $B.ast.Raise:
-        if(s.exc){
+        if (s.exc) {
             VISIT(st, expr, s.exc)
-            if(s.cause){
+            if (s.cause) {
                 VISIT(st, expr, s.cause)
             }
         }
@@ -1290,7 +1290,7 @@ visitor.stmt = function(st, s){
         break
     case $B.ast.Assert:
         VISIT(st, expr, s.test)
-        if(s.msg){
+        if (s.msg) {
             VISIT(st, expr, s.msg);
         }
         break
@@ -1302,20 +1302,20 @@ visitor.stmt = function(st, s){
         break
     case $B.ast.Global:
         var seq = s.names
-        for(var name of seq){
+        for (var name of seq) {
             var cur = symtable_lookup(st, name)
-            if(cur < 0){
+            if (cur < 0) {
                 VISIT_QUIT(st, 0)
             }
-            if(cur & (SF.DEF_PARAM | SF.DEF_LOCAL | SF.USE | SF.DEF_ANNOT)){
+            if (cur & (SF.DEF_PARAM | SF.DEF_LOCAL | SF.USE | SF.DEF_ANNOT)) {
                 var msg
-                if(cur & SF.DEF_PARAM){
+                if (cur & SF.DEF_PARAM) {
                     msg = GLOBAL_PARAM
-                }else if(cur & SF.USE){
+                } else if (cur & SF.USE) {
                     msg = GLOBAL_AFTER_USE
-                }else if(cur & SF.DEF_ANNOT) {
+                } else if (cur & SF.DEF_ANNOT) {
                     msg = GLOBAL_ANNOT
-                }else{  /* SF.DEF_LOCAL */
+                } else {  /* SF.DEF_LOCAL */
                     msg = GLOBAL_AFTER_ASSIGN
                 }
                 var exc = PyErr_Format(_b_.SyntaxError, msg, name)
@@ -1335,18 +1335,18 @@ visitor.stmt = function(st, s){
         var seq = s.names;
         for (var name of seq) {
             var cur = symtable_lookup(st, name)
-            if(cur < 0){
+            if (cur < 0) {
                 VISIT_QUIT(st, 0)
             }
-            if(cur & (SF.DEF_PARAM | SF.DEF_LOCAL | SF.USE | SF.DEF_ANNOT)){
+            if (cur & (SF.DEF_PARAM | SF.DEF_LOCAL | SF.USE | SF.DEF_ANNOT)) {
                 var msg
-                if(cur & SF.DEF_PARAM){
+                if (cur & SF.DEF_PARAM) {
                     msg = NONLOCAL_PARAM
-                }else if(cur & SF.USE) {
+                } else if (cur & SF.USE) {
                     msg = NONLOCAL_AFTER_USE
-                }else if(cur & SF.DEF_ANNOT) {
+                } else if (cur & SF.DEF_ANNOT) {
                     msg = NONLOCAL_ANNOT
-                }else{  /* SF.DEF_LOCAL */
+                } else {  /* SF.DEF_LOCAL */
                     msg = NONLOCAL_AFTER_ASSIGN
                 }
                 var exc = PyErr_Format(_b_.SyntaxError, msg, name)
@@ -1425,7 +1425,7 @@ visitor.stmt = function(st, s){
         VISIT(st, expr, s.target)
         VISIT(st, expr, s.iter)
         VISIT_SEQ(st, stmt, s.body)
-        if(s.orelse){
+        if (s.orelse) {
             VISIT_SEQ(st, stmt, s.orelse)
         }
         break
@@ -1436,7 +1436,7 @@ visitor.stmt = function(st, s){
     VISIT_QUIT(st, 1)
 }
 
-function symtable_extend_namedexpr_scope(st, e){
+function symtable_extend_namedexpr_scope(st, e) {
     assert(st.stack)
     assert(e instanceof $B.ast.Name)
 
@@ -1456,7 +1456,7 @@ function symtable_extend_namedexpr_scope(st, e){
          */
         if (ste.comprehension) {
             let target_in_scope = _PyST_GetSymbol(ste, target_name);
-            if(target_in_scope & SF.DEF_COMP_ITER){
+            if (target_in_scope & SF.DEF_COMP_ITER) {
                 let exc = PyErr_Format(_b_.SyntaxError, NAMED_EXPR_COMP_CONFLICT, target_name);
                 set_exc_info(exc, st.filename, e.lineno, e.col_offset,
                     e.ed_lineno, e.end_col_offset)
@@ -1505,7 +1505,7 @@ function symtable_extend_namedexpr_scope(st, e){
     return 0;
 }
 
-function symtable_handle_namedexpr(st, e){
+function symtable_handle_namedexpr(st, e) {
     if (st.cur.comp_iter_expr > 0) {
         /* Assignment isn't allowed in a comprehension iterable expression */
         var exc = PyErr_Format(PyExc_SyntaxError, NAMED_EXPR_COMP_ITER_EXPR);
@@ -1534,7 +1534,7 @@ const alias = 'alias',
       type_param = 'type_param',
       withitem = 'withitem'
 
-visitor.expr = function(st, e){
+visitor.expr = function(st, e) {
     switch (e.constructor) {
     case $B.ast.NamedExpr:
         if (!symtable_raise_if_annotation_block(st, "named expression", e)) {
@@ -1603,7 +1603,7 @@ visitor.expr = function(st, e){
         if (!symtable_raise_if_annotation_block(st, "yield expression", e)) {
             VISIT_QUIT(st, 0);
         }
-        if(e.value){
+        if (e.value) {
             VISIT(st, expr, e.value)
         }
         st.cur.generator = 1;
@@ -1622,7 +1622,7 @@ visitor.expr = function(st, e){
         }
         break;
     case $B.ast.Await:
-        if(!symtable_raise_if_annotation_block(st, "await expression", e)){
+        if (!symtable_raise_if_annotation_block(st, "await expression", e)) {
             VISIT_QUIT(st, 0)
         }
         VISIT(st, expr, e.value)
@@ -1639,13 +1639,13 @@ visitor.expr = function(st, e){
         break;
     case $B.ast.FormattedValue:
         VISIT(st, expr, e.value);
-        if(e.format_spec){
+        if (e.format_spec) {
             VISIT(st, expr, e.format_spec);
         }
         break;
     case $B.ast.Interpolation:
         VISIT(st, expr, e.value);
-        if(e.format_spec){
+        if (e.format_spec) {
             VISIT(st, expr, e.format_spec);
         }
         break;
@@ -1701,28 +1701,28 @@ visitor.expr = function(st, e){
     VISIT_QUIT(st, 1);
 }
 
-visitor.type_param_bound_or_default = function(st, e, name, key){
-    if(e){
+visitor.type_param_bound_or_default = function(st, e, name, key) {
+    if (e) {
         var is_in_class = st.cur.can_see_class_scope;
-        if(! symtable_enter_block(st, name, TypeVarBoundBlock, key, LOCATION(e))){
+        if (! symtable_enter_block(st, name, TypeVarBoundBlock, key, LOCATION(e))) {
             return 0
         }
         st.cur.can_see_class_scope = is_in_class
-        if(is_in_class && !symtable_add_def(st, '__classdict__', SF.USE, LOCATION(e))){
+        if (is_in_class && !symtable_add_def(st, '__classdict__', SF.USE, LOCATION(e))) {
             VISIT_QUIT(st, 0)
         }
         VISIT(st, expr, e)
-        if (!symtable_exit_block(st)){
+        if (!symtable_exit_block(st)) {
             return 0
         }
     }
     return 1
 }
 
-visitor.type_param = function(st, tp){
-  switch(tp.constructor) {
+visitor.type_param = function(st, tp) {
+  switch (tp.constructor) {
     case $B.ast.TypeVar:
-        if(! symtable_add_def(st, tp.name, SF.DEF_TYPE_PARAM | SF.DEF_LOCAL, LOCATION(tp))){
+        if (! symtable_add_def(st, tp.name, SF.DEF_TYPE_PARAM | SF.DEF_LOCAL, LOCATION(tp))) {
             VISIT_QUIT(st, 0);
         }
         if(! visitor.type_param_bound_or_default(st, tp.bound,
@@ -1737,7 +1737,7 @@ visitor.type_param = function(st, tp){
         }
         break;
     case $B.ast.TypeVarTuple:
-        if(! symtable_add_def(st, tp.name, SF.DEF_TYPE_PARAM | SF.DEF_LOCAL, LOCATION(tp))){
+        if (! symtable_add_def(st, tp.name, SF.DEF_TYPE_PARAM | SF.DEF_LOCAL, LOCATION(tp))) {
             VISIT_QUIT(st, 0)
         }
         if(! visitor.type_param_bound_or_default(st, tp.default_value,
@@ -1746,7 +1746,7 @@ visitor.type_param = function(st, tp){
         }
         break;
     case $B.ast.ParamSpec:
-        if(! symtable_add_def(st, tp.name, SF.DEF_TYPE_PARAM | SF.DEF_LOCAL, LOCATION(tp))){
+        if (! symtable_add_def(st, tp.name, SF.DEF_TYPE_PARAM | SF.DEF_LOCAL, LOCATION(tp))) {
             VISIT_QUIT(st, 0)
         }
         if(! visitor.type_param_bound_or_default(st, tp.default_value,
@@ -1758,7 +1758,7 @@ visitor.type_param = function(st, tp){
     VISIT_QUIT(st, 1);
 }
 
-visitor.pattern = function(st, p){
+visitor.pattern = function(st, p) {
     switch (p.constructor) {
     case $B.ast.MatchValue:
         VISIT(st, expr, p.value);
@@ -1801,7 +1801,7 @@ visitor.pattern = function(st, p){
     VISIT_QUIT(st, 1);
 }
 
-function symtable_implicit_arg(st, pos){
+function symtable_implicit_arg(st, pos) {
     var id = '.' + pos
     if (!symtable_add_def(st, id, SF.DEF_PARAM, ST_LOCATION(st.cur))) {
         return 0;
@@ -1809,18 +1809,18 @@ function symtable_implicit_arg(st, pos){
     return 1;
 }
 
-visitor.params = function(st, args){
-    if(! args){
+visitor.params = function(st, args) {
+    if (! args) {
         return -1
     }
-    for(var arg of args){
+    for (var arg of args) {
         if(! symtable_add_def(st, arg.arg, SF.DEF_PARAM, LOCATION(arg)))
             return 0
     }
     return 1
 }
 
-visitor.annotation = function(st, annotation){
+visitor.annotation = function(st, annotation) {
     var future_annotations = st.future.features & $B.CO_FUTURE_ANNOTATIONS
     if (future_annotations &&
         !symtable_enter_block(st, '_annotation', AnnotationBlock,
@@ -1832,25 +1832,25 @@ visitor.annotation = function(st, annotation){
         VISIT_QUIT(st, 0)
     }
     VISIT(st, expr, annotation)
-    if(future_annotations && !symtable_exit_block(st)){
+    if (future_annotations && !symtable_exit_block(st)) {
         VISIT_QUIT(st, 0)
     }
     return 1
 }
 
-visitor.argannotations = function(st, args){
-    if(!args){
+visitor.argannotations = function(st, args) {
+    if (!args) {
         return -1
     }
-    for(var arg of args){
-        if(arg.annotation){
+    for (var arg of args) {
+        if (arg.annotation) {
             VISIT(st, expr, arg.annotation)
         }
     }
     return 1
 }
 
-visitor.annotations = function(st, o, a, returns){
+visitor.annotations = function(st, o, a, returns) {
     var future_annotations = st.future.ff_features & $B.CO_FUTURE_ANNOTATIONS;
     if (future_annotations &&
         !symtable_enter_block(st, '_annotation', AnnotationBlock,
@@ -1877,7 +1877,7 @@ visitor.annotations = function(st, o, a, returns){
     return 1;
 }
 
-visitor.arguments = function(st, a){
+visitor.arguments = function(st, a) {
     /* skip default arguments inside function block
        XXX should ast be different?
     */
@@ -1901,7 +1901,7 @@ visitor.arguments = function(st, a){
 }
 
 
-visitor.excepthandler = function(st, eh){
+visitor.excepthandler = function(st, eh) {
     if (eh.type)
         VISIT(st, expr, eh.type);
     if (eh.name)
@@ -1911,7 +1911,7 @@ visitor.excepthandler = function(st, eh){
     return 1;
 }
 
-visitor.withitem = function(st, item){
+visitor.withitem = function(st, item) {
     VISIT(st, expr, item.context_expr);
     if (item.optional_vars) {
         VISIT(st, expr, item.optional_vars);
@@ -1919,7 +1919,7 @@ visitor.withitem = function(st, item){
     return 1;
 }
 
-visitor.match_case = function(st, m){
+visitor.match_case = function(st, m) {
     VISIT(st, pattern, m.pattern);
     if (m.guard) {
         VISIT(st, expr, m.guard);
@@ -1928,7 +1928,7 @@ visitor.match_case = function(st, m){
     return 1;
 }
 
-visitor.alias = function(st, a){
+visitor.alias = function(st, a) {
     /* Compute store_name, the name actually bound by the import
        operation.  It is different than a->name when a->name is a
        dotted package name (e.g. spam.eggs)
@@ -1940,13 +1940,13 @@ visitor.alias = function(st, a){
         store_name = name.substring(0, dot);
         if (!store_name)
             return 0;
-    }else{
+    } else {
         store_name = name;
     }
     if (name != "*") {
         var r = symtable_add_def(st, store_name, SF.DEF_IMPORT, LOCATION(a));
         return r;
-    }else{
+    } else {
         if (st.cur.type != ModuleBlock) {
             var lineno = a.lineno,
                 col_offset = a.col_offset,
@@ -1965,7 +1965,7 @@ visitor.alias = function(st, a){
 }
 
 
-visitor.comprehension = function(st, lc){
+visitor.comprehension = function(st, lc) {
     st.cur.comp_iter_target = 1;
     VISIT(st, expr, lc.target);
     st.cur.comp_iter_target = 0;
@@ -1979,7 +1979,7 @@ visitor.comprehension = function(st, lc){
     return 1;
 }
 
-visitor.keyword = function(st, k){
+visitor.keyword = function(st, k) {
     VISIT(st, expr, k.value);
     return 1;
 }
@@ -2000,7 +2000,7 @@ function symtable_handle_comprehension(st, e,
                               e.end_lineno, e.end_col_offset)) {
         return 0;
     }
-    switch(e.constructor) {
+    switch (e.constructor) {
         case $B.ast.ListComp:
             st.cur.comprehension = ListComprehension;
             break;
@@ -2044,32 +2044,32 @@ function symtable_handle_comprehension(st, e,
     return 1;
 }
 
-visitor.genexp = function(st, e){
+visitor.genexp = function(st, e) {
     return symtable_handle_comprehension(st, e, 'genexpr',
                                          e.generators,
                                          e.elt, NULL);
 }
 
-visitor.listcomp = function(st, e){
+visitor.listcomp = function(st, e) {
     return symtable_handle_comprehension(st, e, 'listcomp',
                                          e.generators,
                                          e.elt, NULL);
 }
 
-visitor.setcomp = function(st, e){
+visitor.setcomp = function(st, e) {
     return symtable_handle_comprehension(st, e, 'setcomp',
                                          e.generators,
                                          e.elt, NULL);
 }
 
-visitor.dictcomp = function(st, e){
+visitor.dictcomp = function(st, e) {
     return symtable_handle_comprehension(st, e, 'dictcomp',
                                          e.generators,
                                          e.key,
                                          e.value);
 }
 
-function symtable_raise_if_annotation_block(st, name, e){
+function symtable_raise_if_annotation_block(st, name, e) {
     var type = st.cur.type,
         exc
     if (type == AnnotationBlock)

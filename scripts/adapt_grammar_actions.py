@@ -116,7 +116,7 @@ def transform_action(action):
     action9 = re.sub(r'RAISE_(.*?)\s*\(([^p])', r'RAISE_\1(p, \2', action9)
     action10 = action9.strip('{}')
 
-    action10 = re.sub('PyErr_Occurred', '$B._PyPegen.PyErr_Occurred', action10)
+    # action10 = re.sub('PyErr_Occurred', '$B._PyPegen.PyErr_Occurred', action10)
 
     #return action10
     action11 = restore_strings(action10, strings)

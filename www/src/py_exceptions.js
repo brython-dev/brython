@@ -1,72 +1,72 @@
 "use strict";
-(function($B){
+(function($B) {
 
 var _b_ = $B.builtins
 
-$B.del_exc = function(frame){
+$B.del_exc = function(frame) {
     delete frame.$current_exception
 }
 
-$B.set_exc = function(exc, frame){
+$B.set_exc = function(exc, frame) {
     exc.__traceback__ = exc.__traceback__ === _b_.None ? make_tb() : exc.__traceback__
-    if(exc.ob_type === undefined){
+    if (exc.ob_type === undefined) {
         // console.log('no class', exc)
     }
     exc.ob_type = exc.ob_type ?? _b_.JavascriptError
     exc.suppress_context = exc.suppress_context ?? false
     exc.args = exc.args ?? [exc.message]
-    if(frame === undefined){
+    if (frame === undefined) {
         var msg = 'Internal error: no frame for exception ' + _b_.repr(exc)
         console.error(['Traceback (most recent call last):',
             $B.print_stack(exc.$frame_obj),
             msg].join('\n'))
-        if($B.get_option('debug', exc) > 1){
+        if ($B.get_option('debug', exc) > 1) {
             console.log(exc.args)
             console.log(exc.stack)
         }
         throw Error(msg)
-    }else{
+    } else {
         frame.$current_exception = $B.exception(exc)
     }
 }
 
-$B.set_exc_and_trace = function(frame, exc){
+$B.set_exc_and_trace = function(frame, exc) {
     $B.set_exc(exc, frame)
-    if((! exc.$in_trace_func) && frame.$f_trace !== _b_.None){
+    if ((! exc.$in_trace_func) && frame.$f_trace !== _b_.None) {
         frame.$f_trace = $B.trace_exception()
     }
 }
 
-$B.set_exc_and_leave = function(frame, exc){
+$B.set_exc_and_leave = function(frame, exc) {
     $B.set_exc_and_trace(frame, exc)
     $B.leave_frame()
     throw exc
 }
 
-$B.get_exc = function(){
+$B.get_exc = function() {
     var frame = $B.frame_obj.frame
     return frame.$current_exception
 }
 
-$B.set_exception_offsets = function(exc, position){
+$B.set_exception_offsets = function(exc, position) {
     // Used for PEP 657
     exc.$positions = exc.$positions || {}
     exc.$positions[$B.frame_obj.count - 1] = position
     return exc
 }
 
-$B.$raise = function(arg, cause){
+$B.$raise = function(arg, cause) {
     // Used for "raise" without specifying an exception.
     // If there is an exception in the stack, use it, else throw a simple
     // Exception
     var active_exc = $B.get_exc()
-    if(arg === undefined){
-        if(active_exc !== undefined){
+    if (arg === undefined) {
+        if (active_exc !== undefined) {
             throw active_exc
         }
         $B.RAISE(_b_.RuntimeError, "No active exception to reraise")
-    }else{
-        if($B.$isinstance(arg, _b_.BaseException)){
+    } else {
+        if ($B.$isinstance(arg, _b_.BaseException)) {
             if($B.is_exc(arg, _b_.StopIteration) &&
                     $B.frame_obj.frame.$is_generator){
                 // PEP 479
@@ -76,9 +76,9 @@ $B.$raise = function(arg, cause){
             arg.__cause__ = cause || _b_.None
             arg.suppress_context = cause !== undefined
             throw arg
-        }else if($B.is_type(arg) && _b_.issubclass(arg, _b_.BaseException)){
-            if(arg === _b_.StopIteration){
-                if($B.frame_obj.frame[1].$is_generator){
+        } else if ($B.is_type(arg) && _b_.issubclass(arg, _b_.BaseException)) {
+            if (arg === _b_.StopIteration) {
+                if ($B.frame_obj.frame[1].$is_generator) {
                     // PEP 479
                     $B.RAISE(_b_.RuntimeError, "generator raised StopIteration")
                 }
@@ -88,24 +88,24 @@ $B.$raise = function(arg, cause){
             exc.__cause__ = cause || _b_.None
             exc.suppress_context = cause !== undefined
             throw exc
-        }else{
+        } else {
             $B.RAISE(_b_.TypeError, "exceptions must derive from BaseException")
         }
     }
 }
 
-$B.print_stack = function(frame_obj){
+$B.print_stack = function(frame_obj) {
     // Print frames stack with traceback format
     var stack = make_frames_stack(frame_obj || $B.frame_obj)
     var trace = []
-    for(var frame of stack){
+    for (var frame of stack) {
         var lineno = frame.$lineno,
             filename = frame.__file__
-        if(lineno !== undefined){
+        if (lineno !== undefined) {
             var local = frame[0] == frame[2] ? "<module>" : frame[0]
             trace.push(`  File "${filename}" line ${lineno}, in ${local}`)
             var src = $B.file_cache[filename]
-            if(src){
+            if (src) {
                 var lines = src.split("\n"),
                     line = lines[lineno - 1]
                 trace.push("    " + line.trim())
@@ -115,16 +115,16 @@ $B.print_stack = function(frame_obj){
     return trace.join("\n")
 }
 
-$B.count_frames = function(frame_obj){
+$B.count_frames = function(frame_obj) {
     frame_obj = frame_obj || $B.frame_obj
     return frame_obj == null ? 0 : frame_obj.count
 }
 
-$B.get_frame_at = function(pos, frame_obj){
+$B.get_frame_at = function(pos, frame_obj) {
     frame_obj = frame_obj || $B.frame_obj
     var nb = frame_obj.count - pos - 1
-    for(var i = 0; i < nb; i++){
-        if(frame_obj.prev === null){
+    for (var i = 0; i < nb; i++) {
+        if (frame_obj.prev === null) {
             break
         }
         frame_obj = frame_obj.prev
@@ -132,19 +132,19 @@ $B.get_frame_at = function(pos, frame_obj){
     return frame_obj.frame
 }
 
-function make_frames_list(){
+function make_frames_list() {
     var t = []
     var frame_obj = $B.frame_obj
-    while(frame_obj){
+    while (frame_obj) {
         t.push(frame_obj.frame)
         frame_obj = frame_obj.prev
     }
     return t
 }
 
-var make_tb = $B.make_tb = function(frames_list){
+var make_tb = $B.make_tb = function(frames_list) {
     frames_list = frames_list ?? make_frames_list()
-    if(frames_list.length == 0){
+    if (frames_list.length == 0) {
         return _b_.None
     }
     var _frame = frames_list.pop()
@@ -160,50 +160,50 @@ var make_tb = $B.make_tb = function(frames_list){
 
 // class of traceback objects
 var traceback = $B.traceback
-traceback.$factory = function(exc){
+traceback.$factory = function(exc) {
     return make_tb()
 }
 
 /* traceback start */
-$B.traceback.tp_new = function(cls, args, kw){
+$B.traceback.tp_new = function(cls, args, kw) {
     return make_tb()
 }
 
 var traceback_funcs = $B.traceback.tp_funcs = {}
 
-traceback_funcs.__dir__ = function(self){
+traceback_funcs.__dir__ = function(self) {
     return $B.$list(['tb_frame', 'tb_next', 'tb_lasti', 'tb_lineno'])
 }
 
-traceback_funcs.tb_lineno_get = function(self){
+traceback_funcs.tb_lineno_get = function(self) {
     return self.tb_lineno
 }
 
 traceback_funcs.tb_lineno_set = _b_.None
 
-traceback_funcs.tb_next_get = function(self){
+traceback_funcs.tb_next_get = function(self) {
     return self.tb_next ?? _b_.None
 }
 
-traceback_funcs.tb_next_set = function(self, value){
-    if(value === $B.NULL){
+traceback_funcs.tb_next_set = function(self, value) {
+    if (value === $B.NULL) {
         $B.RAISE(_b_.TypeError, "can't delete tb_next attribute")
     }
 
     /* We accept None or a traceback object, and map None -> NULL (inverse of
        tb_next_get) */
-    if(value == _b_.None) {
+    if (value == _b_.None) {
         value = self.tb_next = value
         return
-    }else if(! $B.exact_type(value, $B.traceback)){
+    } else if (! $B.exact_type(value, $B.traceback)) {
         $B.RAISE(_b_.TypeError,
             `expected traceback object, got '$B.class_name(value)'`)
     }
 
     /* Check for loops */
     var cursor = value
-    while(cursor !== _b_.None){
-        if(cursor === self) {
+    while (cursor !== _b_.None) {
+        if (cursor === self) {
             $B.RAISE(_b_.ValueError, "traceback loop detected")
         }
         cursor = cursor.tb_next
@@ -228,7 +228,7 @@ $B.set_func_names(traceback, "builtins")
 var frame = $B.frame
 
 /* frame */
-$B.frame.tp_repr = function(self){
+$B.frame.tp_repr = function(self) {
     return '<frame object, file ' + self.__file__ +
         ', line ' + self.$lineno + ', code ' +
         frame.tp_funcs.f_code_get(self).co_name + '>'
@@ -236,24 +236,24 @@ $B.frame.tp_repr = function(self){
 
 var frame_funcs = $B.frame.tp_funcs = {}
 
-frame_funcs.__sizeof__ = function(self){
+frame_funcs.__sizeof__ = function(self) {
 
 }
 
-frame_funcs.clear = function(self){
+frame_funcs.clear = function(self) {
 
 }
 
-frame_funcs.f_back_get = function(self){
+frame_funcs.f_back_get = function(self) {
     // search self in $B.frame_obj
     var frame_obj = $B.frame_obj
-    while(frame_obj !== null){
-        if(frame_obj.frame === self){
+    while (frame_obj !== null) {
+        if (frame_obj.frame === self) {
             break
         }
         frame_obj = frame_obj.prev
     }
-    if(frame_obj.prev !== null){
+    if (frame_obj.prev !== null) {
         return frame_obj.prev.frame
     }
     return _b_.None
@@ -261,8 +261,8 @@ frame_funcs.f_back_get = function(self){
 
 frame_funcs.f_back_set = _b_.None
 
-frame_funcs.f_builtins_get = function(self){
-    if(self[3].hasOwnProperty('__builtins__')){
+frame_funcs.f_builtins_get = function(self) {
+    if (self[3].hasOwnProperty('__builtins__')) {
         return $B.get_dict(self[3].__builtins__)
     }
     return $B.obj_dict(_b_)
@@ -270,16 +270,16 @@ frame_funcs.f_builtins_get = function(self){
 
 frame_funcs.f_builtins_set = _b_.None
 
-frame_funcs.f_code_get = function(self){
+frame_funcs.f_code_get = function(self) {
     var res
     var positions = [[0, 0, 0, 0]] // fake value
-    if(self[4]){
+    if (self[4]) {
         res = $B.$getattr(self[4], '__code__')
         positions = self.positions ?? positions
-    }else if(self.f_code){
+    } else if (self.f_code) {
         // set in comprehensions
         res = self.f_code
-    }else{
+    } else {
         var infos = {
             co_name: (self[0] == self[2] ? '<module>' : self[0]),
             co_filename: self.__file__,
@@ -291,7 +291,7 @@ frame_funcs.f_code_get = function(self){
             ob_type: $B.code
         }
         $B.init_dict(res)
-        for(var attr in infos){
+        for (var attr in infos) {
             res[attr] = infos[attr]
         }
         positions = self.positions ?? positions
@@ -306,63 +306,63 @@ frame_funcs.f_code_get = function(self){
 
 frame_funcs.f_code_set = _b_.None
 
-frame_funcs.f_generator_get = function(self){
+frame_funcs.f_generator_get = function(self) {
 
 }
 
 frame_funcs.f_generator_set = _b_.None
 
-frame_funcs.f_globals_get = function(self){
-    if(self.f_globals){
+frame_funcs.f_globals_get = function(self) {
+    if (self.f_globals) {
         return self.f_globals
-    }else if(self.f_locals && self[1] == self[3]){
+    } else if (self.f_locals && self[1] == self[3]) {
         return self.f_globals = self.f_locals
-    }else{
+    } else {
         return self.f_globals = $B.obj_dict(self[3])
     }
 }
 
 frame_funcs.f_globals_set = _b_.None
 
-frame_funcs.f_lasti_get = function(self){
+frame_funcs.f_lasti_get = function(self) {
     return 0
 }
 
 frame_funcs.f_lasti_set = _b_.None
 
-frame_funcs.f_lineno_get = function(self){
+frame_funcs.f_lineno_get = function(self) {
     return self.$lineno
 }
 
-frame_funcs.f_lineno_set = function(self, value){
+frame_funcs.f_lineno_set = function(self, value) {
     $B.RAISE(_b_.ValueError, 'f_lineno can only be set in a trace function')
 }
 
-frame_funcs.f_locals_get = function(self){
+frame_funcs.f_locals_get = function(self) {
     // If locals and globals are the same, f_locals and f_globals
     // are the same object
-    if(self.f_locals){
+    if (self.f_locals) {
         return self.f_locals
-    }else if(self.f_globals && self[1] == self[3]){
+    } else if (self.f_globals && self[1] == self[3]) {
         return self.f_locals = self.f_globals
-    }else{
+    } else {
         return self.f_locals = $B.obj_dict(self[1])
     }
 }
 
 frame_funcs.f_locals_set = _b_.None
 
-frame_funcs.f_trace_get = function(self){
+frame_funcs.f_trace_get = function(self) {
     return self.$f_trace
 }
 
-frame_funcs.f_trace_opcodes_get = function(self){
+frame_funcs.f_trace_opcodes_get = function(self) {
 
 }
 
 frame_funcs.f_trace_opcodes_set = _b_.None
 
-frame_funcs.f_trace_set = function(self, value){
+frame_funcs.f_trace_set = function(self, value) {
     self.$f_trace = value
 }
 
@@ -381,7 +381,7 @@ $B.frame.tp_getset = [
 $B.set_func_names(frame, "builtins")
 $B._frame = frame // used in builtin_modules.js
 
-$B.make_f_code = function(frame, varnames){
+$B.make_f_code = function(frame, varnames) {
     // create attribute f_code of generator expressions frame
     frame.f_code = {
         ob_type: $B.code
@@ -403,14 +403,14 @@ $B.make_f_code = function(frame, varnames){
     )
 }
 
-$B.restore_frame_obj = function(frame_obj, locals){
+$B.restore_frame_obj = function(frame_obj, locals) {
     $B.frame_obj = frame_obj
     $B.frame_obj.frame[1] = locals
 }
 
-var make_frames_stack = $B.make_frames_stack = function(frame_obj){
+var make_frames_stack = $B.make_frames_stack = function(frame_obj) {
     var stack = []
-    while(frame_obj !== null){
+    while (frame_obj !== null) {
         stack[stack.length] = frame_obj.frame
         frame_obj = frame_obj.prev
     }
@@ -418,27 +418,27 @@ var make_frames_stack = $B.make_frames_stack = function(frame_obj){
     return stack
 }
 
-$B.exception = function(js_exc){
+$B.exception = function(js_exc) {
     // thrown by eval(), exec() or by a function
     // js_exc is the Javascript exception, which can be raised by the
     // code generated by Python - in this case it has attribute $py_error set -
     // or by the Javascript interpreter (ReferenceError for instance)
     var exc
     var klass = $B.get_class(js_exc)
-    if(klass === $B.JSObject){
-        if(js_exc.$py_exc){
+    if (klass === $B.JSObject) {
+        if (js_exc.$py_exc) {
             // when the JS exception is handled in a frame above, return the
             // same Python exception
             return js_exc.$py_exc
         }
-        if(true){ // $B.get_option('debug', exc) > 1){
+        if (true) { // $B.get_option('debug', exc) > 1){
             console.log('Javascript error', js_exc)
             console.log(js_exc.stack)
         }
         var msg = js_exc.name + ': ' + js_exc.message
         exc = $B.EXC(_b_.JavascriptError, msg)
         exc.$js_exc = js_exc
-        if($B.is_recursion_error(js_exc)){
+        if ($B.is_recursion_error(js_exc)) {
             msg = "maximum recursion depth exceeded"
             exc = $B.EXC(_b_.RecursionError, msg)
         }
@@ -449,42 +449,42 @@ $B.exception = function(js_exc){
         exc.args = _b_.tuple.$factory([msg])
         exc.$py_error = true
         js_exc.$py_exc = exc
-    }else{
+    } else {
         exc = js_exc
     }
     exc.__traceback__ = exc.__traceback__ ?? traceback.$factory(exc)
     return exc
 }
 
-$B.is_exc = function(exc, exc_list){
+$B.is_exc = function(exc, exc_list) {
     // used in try/except to check if an exception is an instance of
     // one of the classes in exc_list
-    if($B.get_class(exc) === undefined){
+    if ($B.get_class(exc) === undefined) {
         exc = $B.exception(exc)
     }
 
-    if(! Array.isArray(exc_list)){
+    if (! Array.isArray(exc_list)) {
         exc_list = [exc_list]
     }
     var this_exc_class = $B.is_type(exc) ? exc : $B.get_class(exc)
-    for(var i = 0; i < exc_list.length; i++){
+    for (var i = 0; i < exc_list.length; i++) {
         var exc_class = exc_list[i]
-        if(this_exc_class === undefined){
+        if (this_exc_class === undefined) {
             console.log("exc class undefined", exc)
         }
-        if(_b_.issubclass(this_exc_class, exc_class)){
+        if (_b_.issubclass(this_exc_class, exc_class)) {
             return true
         }
     }
     return false
 }
 
-$B.is_recursion_error = function(js_exc){
+$B.is_recursion_error = function(js_exc) {
     // Test if the JS exception matches Python RecursionError
     console.log('js exc', js_exc)
     var msg = js_exc + "",
         parts = msg.split(":")
-    if(parts.length == 1){
+    if (parts.length == 1) {
         return false
     }
     var err_type = parts[0].trim(),
@@ -494,38 +494,38 @@ $B.is_recursion_error = function(js_exc){
         (err_type == 'RangeError' && err_msg == 'Maximum call stack size exceeded')
 }
 
-$B.RAISE = function(error_type, message){
+$B.RAISE = function(error_type, message) {
     throw $B.$call(error_type, message ?? '')
 }
 
-$B.RAISE_IF_NOT = function(exc, exc_type){
-    if(! $B.$isinstance(exc, exc_type)){
+$B.RAISE_IF_NOT = function(exc, exc_type) {
+    if (! $B.$isinstance(exc, exc_type)) {
         throw exc
     }
 }
 
-$B.RAISE_ATTRIBUTE_ERROR = function(message, obj, name){
+$B.RAISE_ATTRIBUTE_ERROR = function(message, obj, name) {
     var exc = $B.EXC(_b_.AttributeError, message)
     exc.obj = obj
     exc.name = name
     throw exc
 }
 
-$B.EXC = function(error_type, message){
+$B.EXC = function(error_type, message) {
     return $B.$call(error_type, message)
 }
 
 // built-in exceptions
 
-function make_builtin_exception(exc_name, base, set_value){
+function make_builtin_exception(exc_name, base, set_value) {
     // Create a builtin exception class
     // If set_value is provided:
     // - if it is a string, set the attribute with this name to the value
     //   passed to the constructor
     // - if it is a function, call it with the exception instance as first
     //   argument, then the arguments passed to the constructor
-    if(Array.isArray(exc_name)){
-        for(var name of exc_name){
+    if (Array.isArray(exc_name)) {
+        for (var name of exc_name) {
             make_builtin_exception(name, base, set_value)
         }
         return
@@ -536,35 +536,35 @@ function make_builtin_exception(exc_name, base, set_value){
 
 /* make_builtin_exception("BaseException", _b_.object) */
 
-function check_no_keywords(obj, kw){
-    if(_b_.len(kw)){
+function check_no_keywords(obj, kw) {
+    if (_b_.len(kw)) {
         $B.RAISE(_b_.TypeError, `${$B.class_name(obj)}() takes no keyword arguments`)
     }
 }
 
 /* BaseException start */
-_b_.BaseException.tp_repr = function(self){
+_b_.BaseException.tp_repr = function(self) {
     var args = ''
-    if(self.args.length > 0 && self.args[0] !== _b_.None){
+    if (self.args.length > 0 && self.args[0] !== _b_.None) {
         args = _b_.repr(self.args[0])
     }
     return `${$B.class_name(self)}(${args})`
 }
 
-_b_.BaseException.tp_str = function(self){
-    if(self.args.length > 0 && self.args[0] !== _b_.None){
+_b_.BaseException.tp_str = function(self) {
+    if (self.args.length > 0 && self.args[0] !== _b_.None) {
         return _b_.str.$factory(self.args[0])
     }
     return ''
 }
 
-_b_.BaseException.tp_init = function(self, ...args){
+_b_.BaseException.tp_init = function(self, ...args) {
     var $ = $B.args('__init__', 1, {self: null}, arguments, null, 'args', 'kw')
     check_no_keywords($.self, $.kw)
     self.args = $B.fast_tuple(args)
 }
 
-_b_.BaseException.tp_new = function(cls, args, kw){
+_b_.BaseException.tp_new = function(cls, args, kw) {
     var res = {
         ob_type: cls,
         args: $B.fast_tuple(args),
@@ -580,115 +580,115 @@ _b_.BaseException.tp_new = function(cls, args, kw){
 
 var BaseException_funcs = _b_.BaseException.tp_funcs = {}
 
-BaseException_funcs.__cause___get = function(self){
+BaseException_funcs.__cause___get = function(self) {
     return self.__cause__ ?? _b_.None
 }
 
-BaseException_funcs.__cause___set = function(self, value){
-    if(value === $B.NULL){
+BaseException_funcs.__cause___set = function(self, value) {
+    if (value === $B.NULL) {
         $B.RAISE(_b_.TypeError, "__cause__ may not be deleted")
-    }else if(value === _b_.None){
+    } else if (value === _b_.None) {
         delete self.__cause__
-    }else if(! $B.$isinstance(value, _b_.BaseException)){
+    } else if (! $B.$isinstance(value, _b_.BaseException)) {
         $B.RAISE(_b_.TypeError,
             "exception cause must be None or derive from BaseException"
         )
-    }else{
+    } else {
         self.__cause__ = value
     }
 }
 
-BaseException_funcs.__context___get = function(self){
+BaseException_funcs.__context___get = function(self) {
     return self.__context__ ?? _b_.None
 }
 
-BaseException_funcs.__context___set = function(self, value){
-    if(value === $B.NULL){
+BaseException_funcs.__context___set = function(self, value) {
+    if (value === $B.NULL) {
         $B.RAISE(_b_.TypeError, "__context__ may not be deleted")
-    }else if(value === _b_.None){
+    } else if (value === _b_.None) {
         delete self.__context__
-    }else if(! $B.$isinstance(value, _b_.BaseException)){
+    } else if (! $B.$isinstance(value, _b_.BaseException)) {
         $B.RAISE(_b_.TypeError,
             "exception context must be None or derive from BaseException"
         )
-    }else{
+    } else {
         self.__context__ = value
     }
 }
 
-BaseException_funcs.__dict___get = function(self){
+BaseException_funcs.__dict___get = function(self) {
     return $B.get_dict(self)
 }
 
-BaseException_funcs.__dict___set = function(self, value){
+BaseException_funcs.__dict___set = function(self, value) {
     $B.set_dict(self, value)
 }
 
-BaseException_funcs.__reduce__ = function(self){
+BaseException_funcs.__reduce__ = function(self) {
     var dict = $B.get_dict(self)
-    if(self.args && dict && ! $B.str_dict_empty(dict)){
+    if (self.args && dict && ! $B.str_dict_empty(dict)) {
         return $B.fast_tuple([$B.get_class(self), $B.fast_tuple(self.args),
             dict])
-    }else{
+    } else {
         return $B.fast_tuple([$B.get_class(self), $B.fast_tuple(self.args)])
     }
 }
 
-BaseException_funcs.__setstate__ = function(self, state){
-    if(state != _b_.None){
-        if(! $B.is_dict(state)){
+BaseException_funcs.__setstate__ = function(self, state) {
+    if (state != _b_.None) {
+        if (! $B.is_dict(state)) {
             $B.RAISE(_b_.TypeError, "state is not a dictionary")
         }
-        for(var entry of _b_.dict.$iter_items(state)){
+        for (var entry of _b_.dict.$iter_items(state)) {
             _b_.object.tp_setattro(self, entry.key, entry.value)
         }
     }
     return _b_.None
 }
 
-BaseException_funcs.__traceback___get = function(self){
+BaseException_funcs.__traceback___get = function(self) {
     return self.__traceback__ ?? _b_.None
 }
 
-BaseException_funcs.__traceback___set = function(self, value){
-    if(value === $B.NULL){
+BaseException_funcs.__traceback___set = function(self, value) {
+    if (value === $B.NULL) {
         $B.RAISE(_b_.TypeError, "__traceback__ may not be deleted")
     }
-    if($B.exact_type(value, $B.traceback)){
+    if ($B.exact_type(value, $B.traceback)) {
         self.__traceback__ = value
-    }else if(value === _b_.None){
+    } else if (value === _b_.None) {
         delete self.__traceback__
-    }else{
+    } else {
         $B.RAISE(_b_.TypeError, "__traceback__ must be a traceback or None")
     }
 }
 
-BaseException_funcs.add_note = function(self, note){
+BaseException_funcs.add_note = function(self, note) {
     // PEP 678
-    if(! $B.is_str(note)){
+    if (! $B.is_str(note)) {
         $B.RAISE(_b_.TypeError, 'note must be a str, not ' +
             `'${$B.class_name(note)}'`)
     }
     var notes = $B.get_from_dict(self, '__notes__', $B.NULL)
-    if(notes !== $B.NULL){
+    if (notes !== $B.NULL) {
         notes.push(note)
-    }else{
+    } else {
         $B.set_to_dict(self, '__notes__', $B.$list([note]))
     }
 }
 
-BaseException_funcs.args_get = function(self){
+BaseException_funcs.args_get = function(self) {
     return self.args
 }
 
-BaseException_funcs.args_set = function(self, value){
-    if(value === $B.NULL){
+BaseException_funcs.args_set = function(self, value) {
+    if (value === $B.NULL) {
         $B.RAISE(_b_.TypeError, "args may not be deleted")
     }
     self.args = $B.fast_tuple(value)
 }
 
-BaseException_funcs.with_traceback = function(self, tb){
+BaseException_funcs.with_traceback = function(self, tb) {
     self.__traceback__ = tb
     return self
 }
@@ -711,7 +711,7 @@ _b_.BaseException.tp_getset = [
 
 $B.set_func_names(_b_.BaseException, 'builtins')
 
-_b_.StopIteration.tp_init = function(self){
+_b_.StopIteration.tp_init = function(self) {
     var $ = $B.args("StopIteration", 1, {self: null}, arguments, null,
                 'args', 'kw')
     var self = $.self,
@@ -719,7 +719,7 @@ _b_.StopIteration.tp_init = function(self){
         kw = $.kw
     check_no_keywords(self, kw)
     _b_.BaseException.tp_init(self, ...args)
-    if(args.length > 0){
+    if (args.length > 0) {
         self.value = args[0]
     }
 }
@@ -732,7 +732,7 @@ _b_.StopIteration.tp_members = [
 
 $B.set_func_names(_b_.StopIteration, 'builtins')
 
-_b_.ImportError.tp_init = function(){
+_b_.ImportError.tp_init = function() {
     var $ = $B.args("ImportError", 1, {self: null},
                 arguments, null, 'args', 'kw')
     _b_.BaseException.tp_init($.self, ...$.args)
@@ -741,7 +741,7 @@ _b_.ImportError.tp_init = function(){
 
 $B.set_func_names(_b_.ImportError, 'builtins')
 
-_b_.SyntaxError.tp_init = function(){
+_b_.SyntaxError.tp_init = function() {
     var $ = $B.args('SyntaxError', 1, {self: null}, arguments, null, 'args',
                 'kw')
     var _self = $.self,
@@ -752,15 +752,15 @@ _b_.SyntaxError.tp_init = function(){
     _self.msg = args[0] ?? _b_.None
     _self.args = $B.fast_tuple(Array.from(args))
     var details = []
-    if(args.length > 1){
+    if (args.length > 1) {
         details = args[1]
-        if(details.length > 0){
+        if (details.length > 0) {
             details = _b_.tuple.$factory(details)
-            if(details.length < 4){
+            if (details.length < 4) {
                 $B.RAISE(_b_.TypeError,
                     `function takes at least 4 arguments (${args.length} given)`)
             }
-            if(details.length > 6){
+            if (details.length > 6) {
                 $B.RAISE(_b_.TypeError,
                     `function takes at most 6 arguments (${args.length} given)`)
             }
@@ -770,16 +770,16 @@ _b_.SyntaxError.tp_init = function(){
                  'end_offset'],
         expected_types = [_b_.str, _b_.int, _b_.int, _b_.str, _b_.int,
                  _b_.int]
-    for(var i = 0; i < attrs.length; i++){
-        if(details[i] !== undefined){
-            if(! $B.$isinstance(details[i], expected_types[i])){
+    for (var i = 0; i < attrs.length; i++) {
+        if (details[i] !== undefined) {
+            if (! $B.$isinstance(details[i], expected_types[i])) {
                 $B.RAISE(_b_.TypeError, `item #${i + 1} (${attrs[i]}) ` +
                     `of the second argument of SyntaxError should be ` +
                     `'${expected_types[i].__name__}', not ` +
                     `'${$B.class_name(details[i])}'`)
             }
             _self[attrs[i]] = details[i]
-        }else{
+        } else {
             _self[attrs[i]] = _b_.None
         }
     }
@@ -804,8 +804,8 @@ _b_.WindowsError = _b_.OSError
 _b_.IOError = _b_.OSError
 
 // special case for KeyError.__str__ (cf. issue #2582)
-_b_.KeyError.tp_str = function(self){
-    if(self.args.length == 1){
+_b_.KeyError.tp_str = function(self) {
+    if (self.args.length == 1) {
         return _b_.repr(self.args[0])
     }
     return _b_.BaseException.tp_repr(self)
@@ -813,15 +813,15 @@ _b_.KeyError.tp_str = function(self){
 
 $B.set_func_names(_b_.KeyError, 'builtins')
 
-$B.set_expected_kwargs = function(obj, expected, kwargs){
-    for(var item of _b_.dict.$iter_items(kwargs)){
-        if(expected.includes(item.key)){
+$B.set_expected_kwargs = function(obj, expected, kwargs) {
+    for (var item of _b_.dict.$iter_items(kwargs)) {
+        if (expected.includes(item.key)) {
             obj[item.key] = item.value
-        }else{
+        } else {
             var msg = `${$B.class_name(obj)}()  got an unexpected ` +
                       `keyword argument '${item.key}'`
             var suggestions = calculate_suggestions(expected, item.key)
-            if(suggestions){
+            if (suggestions) {
                 msg += `. Did you mean '${suggestions}'?`
             }
             $B.RAISE(_b_.TypeError, msg)
@@ -831,14 +831,14 @@ $B.set_expected_kwargs = function(obj, expected, kwargs){
 
 // AttributeError supports keyword-only "name" and "obj" parameters
 
-_b_.AttributeError.tp_init = function(){
+_b_.AttributeError.tp_init = function() {
     var $ = $B.args("AttributeError", 1, {self: null},
                 arguments, null, 'args', 'kw')
     _b_.BaseException.tp_init($.self, ...$.args)
     $B.set_expected_kwargs($.self, ['name', 'obj'], $.kw)
 }
 
-_b_.AttributeError.tp_repr = function(self){
+_b_.AttributeError.tp_repr = function(self) {
     return self.args[0]
 }
 
@@ -850,11 +850,11 @@ _b_.AttributeError.tp_members = [
 $B.set_func_names(_b_.AttributeError, 'builtins')
 
 // Shortcut to create an AttributeError
-$B.attr_error = function(name, obj){
+$B.attr_error = function(name, obj) {
     var msg
-    if($B.is_type(obj)){
+    if ($B.is_type(obj)) {
         msg = `type object '${obj.tp_name}'`
-    }else{
+    } else {
         msg = `'${$B.class_name(obj)}' object`
     }
     msg +=  ` has no attribute '${name}'`
@@ -864,7 +864,7 @@ $B.attr_error = function(name, obj){
 // NameError supports keyword-only "name" parameter
 
 /* NameError start */
-_b_.NameError.tp_init = function(){
+_b_.NameError.tp_init = function() {
     var $ = $B.args('__init__', 1, {self: null}, arguments, null, 'args', 'kw')
     _b_.BaseException.tp_init($.self, ...$.args)
     $B.set_expected_kwargs($.self, ['name'], $.kw)
@@ -882,14 +882,14 @@ $B.set_func_names(_b_.NameError, 'builtins')
 
 /* make_builtin_exception("UnboundLocalError", _b_.NameError) */
 
-_b_.UnboundLocalError.tp_repr = function(self){
+_b_.UnboundLocalError.tp_repr = function(self) {
     return self.args[0]
 }
 
 $B.set_func_names(_b_.UnboundLocalError, 'builtins')
 
 /* IndexError start */
-_b_.IndexError.tp_new = function(cls, args, kw){
+_b_.IndexError.tp_new = function(cls, args, kw) {
     return _b_.BaseException.tp_new(cls, args, kw)
 }
 
@@ -898,13 +898,13 @@ var IndexError_funcs = _b_.IndexError.tp_funcs = {}
 /* IndexError end */
 
 // Shortcut to create a NameError
-$B.name_error = function(name){
+$B.name_error = function(name) {
     var exc = $B.$call(_b_.NameError, `name '${name}' is not defined`)
     exc.name = name
     return exc
 }
 
-$B.recursion_error = function(frame){
+$B.recursion_error = function(frame) {
     var exc = $B.$call(_b_.RecursionError, "maximum recursion depth exceeded")
     $B.set_exc(exc, frame)
     return exc
@@ -912,21 +912,21 @@ $B.recursion_error = function(frame){
 
 // Suggestions in case of NameError or AttributeError
 
-function calculate_suggestions(list, name){
+function calculate_suggestions(list, name) {
     return $B.module_getattr($B.imported._suggestions,
         '_generate_suggestions')(list, name)
 }
 
-$B.offer_suggestions_for_attribute_error = function(exc){
+$B.offer_suggestions_for_attribute_error = function(exc) {
     var name = exc.name,
         obj = exc.obj
     if(name === _b_.None || name === undefined ||
             obj === _b_.None || obj === undefined){
         return _b_.None
     }
-    try{
+    try {
         var dir = _b_.dir(obj)
-    }catch(err){
+    } catch (err) {
         console.log('error in dir, attribute error', name, obj)
         console.log(err)
         throw err
@@ -935,46 +935,46 @@ $B.offer_suggestions_for_attribute_error = function(exc){
     return suggestions || _b_.None
 }
 
-$B.offer_suggestions_for_name_error = function(exc, frame){
+$B.offer_suggestions_for_name_error = function(exc, frame) {
     var name = exc.name
-    if(typeof name != 'string'){
+    if (typeof name != 'string') {
         return _b_.None
     }
     var tb = exc.__traceback__
-    if(tb === undefined || tb === _b_.None){
+    if (tb === undefined || tb === _b_.None) {
         return _b_.None
     }
-    while(tb.tb_next !== _b_.None){
+    while (tb.tb_next !== _b_.None) {
         tb = tb.tb_next
     }
     var frame = tb.tb_frame
     var locals = Object.keys(frame[1]).filter(x => ! (x.startsWith('$')))
     var suggestion = calculate_suggestions(locals, name)
-    if(suggestion){
+    if (suggestion) {
         return suggestion
     }
-    if(frame[2] != frame[0]){
+    if (frame[2] != frame[0]) {
         var globals = Object.keys(frame[3]).filter(x => ! (x.startsWith('$')))
         suggestion = calculate_suggestions(globals, name)
-        if(suggestion){
+        if (suggestion) {
             return suggestion
         }
     }
-    if(frame[4] && frame[4].$is_method){
+    if (frame[4] && frame[4].$is_method) {
         // new in 3.12
         console.log('frame', frame)
         $B.check_infos(frame[4])
         var instance_name = frame[4].$infos.__code__.co_varnames[0],
             instance = frame[1][instance_name]
-        if(_b_.hasattr(instance, name)){
+        if (_b_.hasattr(instance, name)) {
             return `self.${name}`
         }
     }
     return _b_.None
 }
 
-$B.offer_suggestions_for_unexpected_keyword_error = function(arg_names, key){
-    if(key === _b_.None){
+$B.offer_suggestions_for_unexpected_keyword_error = function(arg_names, key) {
+    if (key === _b_.None) {
         return _b_.None
     }
     var suggestions = calculate_suggestions(arg_names, key)
@@ -983,7 +983,7 @@ $B.offer_suggestions_for_unexpected_keyword_error = function(arg_names, key){
 
 // PEP 654
 
-_b_.BaseExceptionGroup.$factory = function(msg, excs){
+_b_.BaseExceptionGroup.$factory = function(msg, excs) {
     var res = _b_.BaseExceptionGroup.tp_new(
         _b_.BaseExceptionGroup,
         [msg, $B.fast_tuple(excs)],
@@ -993,28 +993,28 @@ _b_.BaseExceptionGroup.$factory = function(msg, excs){
 }
 
 /* BaseExceptionGroup start */
-_b_.BaseExceptionGroup.tp_str = function(self){
+_b_.BaseExceptionGroup.tp_str = function(self) {
     return `${self.msg} (${self.excs.length} sub-exception` +
         `${self.excs.length > 1 ? 's' : ''})`
 }
 
-_b_.BaseExceptionGroup.tp_init = function(self, ...args){
+_b_.BaseExceptionGroup.tp_init = function(self, ...args) {
     $B.check_no_kw('__init__', arguments)
     _b_.BaseException.tp_init(self, ...args)
 }
 
-_b_.BaseExceptionGroup.tp_new = function(cls, args, kw){
+_b_.BaseExceptionGroup.tp_new = function(cls, args, kw) {
     var [message, exceptions] = $B.unpack_args('BaseExceptionGroup', args,
         ['message', 'exceptions'], {})
 
-    if(! $B.is_sequence(exceptions)){
+    if (! $B.is_sequence(exceptions)) {
         $B.RAISE(_b_.TypeError,
             "second argument (exceptions) must be a sequence")
     }
 
     exceptions = $B.fast_tuple(Array.from($B.make_js_iterator(exceptions)))
 
-    if(exceptions.length == 0){
+    if (exceptions.length == 0) {
         $B.RAISE(_b_.ValueError,
             "second argument (exceptions) must be a non-empty sequence"
         )
@@ -1022,34 +1022,34 @@ _b_.BaseExceptionGroup.tp_new = function(cls, args, kw){
 
     var nested_base_exceptions = false
     var i = 0
-    for(let exc of exceptions){
-        if(! $B.$isinstance(exc, _b_.BaseException)){
+    for (let exc of exceptions) {
+        if (! $B.$isinstance(exc, _b_.BaseException)) {
             $B.RAISE(_b_.ValueError,
                 `Item ${i} of second argument (exceptions) is not an exception`
             )
         }
-        if(! $B.$isinstance(exc, _b_.Exception)){
+        if (! $B.$isinstance(exc, _b_.Exception)) {
             nested_base_exceptions = true
         }
         i++
     }
-    if(cls === _b_.ExceptionGroup){
-        if(nested_base_exceptions){
+    if (cls === _b_.ExceptionGroup) {
+        if (nested_base_exceptions) {
             $B.RAISE(_b_.TypeError,
                 "Cannot nest BaseExceptions in an ExceptionGroup"
             )
         }
-    }else if(cls === _b_.BaseExceptionGroup){
-        if(! nested_base_exceptions){
+    } else if (cls === _b_.BaseExceptionGroup) {
+        if (! nested_base_exceptions) {
             /* All nested exceptions are Exception subclasses,
              * wrap them in an ExceptionGroup
              */
             cls = _b_.ExceptionGroup
         }
-    }else{
+    } else {
         /* user-defined subclass */
-        if(nested_base_exceptions){
-            if(_b_.issubclass(cls, _b_.Exception)){
+        if (nested_base_exceptions) {
+            if (_b_.issubclass(cls, _b_.Exception)) {
                 $B.RAISE(TypeError,
                     "Cannot nest BaseExceptions in '$B.get_name(cls)'"
                 )
@@ -1065,54 +1065,54 @@ _b_.BaseExceptionGroup.tp_new = function(cls, args, kw){
 
 var BaseExceptionGroup_funcs = _b_.BaseExceptionGroup.tp_funcs = {}
 
-BaseExceptionGroup_funcs.__class_getitem__ = function(){
+BaseExceptionGroup_funcs.__class_getitem__ = function() {
     return $B.$class_getitem.apply(null, arguments)
 }
 
-BaseExceptionGroup_funcs.derive = function(self, excs){
+BaseExceptionGroup_funcs.derive = function(self, excs) {
     var init_args = $B.fast_tuple([self.msg, excs])
     return $B.$call(_b_.BaseExceptionGroup, ...init_args)
 }
 
-BaseExceptionGroup_funcs.split = function(self, condition){
+BaseExceptionGroup_funcs.split = function(self, condition) {
     // condition is a function applied to exceptions
     // returns (matching_be, non_matching_be)
     var matching_excs = [],
         non_matching_excs = []
-    for(var exc of self.excs){
-        if($B.$isinstance(exc, _b_.BaseExceptionGroup)){
+    for (var exc of self.excs) {
+        if ($B.$isinstance(exc, _b_.BaseExceptionGroup)) {
             var subsplit = BaseExceptionGroup_funcs.split(exc, condition),
                 matching = subsplit[0],
                 non_matching = subsplit[1]
-            if(matching === _b_.None){
+            if (matching === _b_.None) {
                 non_matching_excs.push(exc)
-            }else if(matching.excs.length == exc.excs.length){
+            } else if (matching.excs.length == exc.excs.length) {
                 matching_excs.push(exc)
-            }else{
-                if(matching.excs.length > 0){
+            } else {
+                if (matching.excs.length > 0) {
                     matching_excs = matching_excs.concat(matching)
                 }
-                if(non_matching.excs.length > 0){
+                if (non_matching.excs.length > 0) {
                     non_matching_excs = non_matching_excs.concat(non_matching)
                 }
             }
-        }else if(condition(exc)){
+        } else if (condition(exc)) {
             matching_excs.push(exc)
-        }else{
+        } else {
             non_matching_excs.push(exc)
         }
     }
-    if(matching_excs.length == 0){
+    if (matching_excs.length == 0) {
         matching_excs = _b_.None
     }
-    if(non_matching_excs.length == 0){
+    if (non_matching_excs.length == 0) {
         non_matching_excs = _b_.None
     }
     var res = []
-    for(var item of [matching_excs, non_matching_excs]){
-        if(item === _b_.None){
+    for (var item of [matching_excs, non_matching_excs]) {
+        if (item === _b_.None) {
             res.push(item)
-        }else{
+        } else {
             var eg = _b_.BaseExceptionGroup.tp_new(_b_.BaseExceptionGroup,
                 [self.msg, $B.$list(item)])
             eg.__cause__ = self.__cause__
@@ -1124,7 +1124,7 @@ BaseExceptionGroup_funcs.split = function(self, condition){
     return $B.fast_tuple(res)
 }
 
-BaseExceptionGroup_funcs.subgroup = function(self, condition){
+BaseExceptionGroup_funcs.subgroup = function(self, condition) {
     return BaseExceptionGroup_funcs.split(self, condition)[0]
 }
 
@@ -1143,7 +1143,7 @@ _b_.BaseExceptionGroup.tp_members = [
 $B.set_func_names(_b_.BaseExceptionGroup, "builtins")
 
 
-_b_.ExceptionGroup.$factoryXXX = function(){
+_b_.ExceptionGroup.$factoryXXX = function() {
     var missing = {},
         $ = $B.args("ExceptionGroup", 2, {message: null, exceptions: null},
                     arguments, {exceptions: missing})
@@ -1159,10 +1159,10 @@ _b_.ExceptionGroup.$factoryXXX = function(){
     The ExceptionGroup constructor raises a TypeError if any of the nested
     exceptions is not an Exception instance
     */
-    if(err.exceptions !== _b_.None){
+    if (err.exceptions !== _b_.None) {
         var exc_list = _b_.list.$factory(err.exceptions)
-        for(var exc of exc_list){
-            if(! $B.$isinstance(exc, _b_.Exception)){
+        for (var exc of exc_list) {
+            if (! $B.$isinstance(exc, _b_.Exception)) {
                 $B.RAISE(_b_.TypeError,
                     'Cannot nest BaseExceptions in an ExceptionGroup')
             }
@@ -1178,11 +1178,11 @@ _b_.ExceptionGroup.$factoryXXX = function(){
 /* ExceptionGroup start */
 var ExceptionGroup_funcs = _b_.ExceptionGroup.tp_funcs = {}
 
-ExceptionGroup_funcs.__weakref___get = function(self){
+ExceptionGroup_funcs.__weakref___get = function(self) {
 
 }
 
-ExceptionGroup_funcs.__weakref___set = function(self){
+ExceptionGroup_funcs.__weakref___set = function(self) {
 
 }
 
@@ -1196,7 +1196,7 @@ $B.set_func_names(_b_.ExceptionGroup, "builtins")
 _b_.JavascriptError = $B.make_builtin_class('JavascriptError',
     [_b_.Exception])
 
-function make_report(lines, positions){
+function make_report(lines, positions) {
     // positions is [lineno, end_lineno, col_offset, end_col_offset]
     // Return a string with the lines between lineno and end_lineno,
     // with a 4-whitespace indentation
@@ -1205,14 +1205,14 @@ function make_report(lines, positions){
     lines = lines.slice(lineno - 1, end_lineno)
     var min_indent = get_min_indent(lines)
     lines = lines.map(line => '    ' + line.substr(min_indent).trimRight())
-    if(lines.length > 3){
+    if (lines.length > 3) {
         lines = [lines[0], `    ...<${lines.length - 2} lines>...`,
             lines[lines.length - 1]]
     }
     return lines.join('\n')
 }
 
-function make_trace_lines(lines, lineno, expr){
+function make_trace_lines(lines, lineno, expr) {
     // expr is an expression inside a code segment
     // Returns the lines of the segment, 4-space indented
     var line_start = expr.lineno + lineno - 2
@@ -1221,25 +1221,25 @@ function make_trace_lines(lines, lineno, expr){
         [line_start, line_end, expr.col_offset, expr.end_col_offset])
 }
 
-function get_indent(line){
+function get_indent(line) {
     return line.length - line.trimLeft().length
 }
 
-function get_min_indent(lines){
+function get_min_indent(lines) {
     var min_indent = 2 ** 16
-    for(var line of lines){
-        if(! line.trim()){
+    for (var line of lines) {
+        if (! line.trim()) {
             continue
         }
         var indent = get_indent(line)
-        if(indent < min_indent){
+        if (indent < min_indent) {
             min_indent = indent
         }
     }
     return min_indent
 }
 
-function fill_marks(lines, first_lineno, first_col_offset){
+function fill_marks(lines, first_lineno, first_col_offset) {
     // Create the marks (~ and ^) to be insered under source code lines in
     // traceback
     // lines: list of lines in original source
@@ -1256,16 +1256,16 @@ function fill_marks(lines, first_lineno, first_col_offset){
     var marks = ' '.repeat(first_col_offset)
     var line
     var indent
-    for(var i = 0; i < args.length; i += 3){
+    for (var i = 0; i < args.length; i += 3) {
         var [mark, lineno, col_offset] = args.slice(i, i + 3)
         // write mark from (start_lineno, start_col_offset) to
         // (lineno, col_offset)
-        if(lineno == start_lineno){
+        if (lineno == start_lineno) {
             marks += mark.repeat(col_offset - start_col_offset)
-        }else{
+        } else {
             line = lines[start_lineno - 1]
             marks += mark.repeat(line.length - start_col_offset) + '\n'
-            for(var lnum = start_lineno + 1; lnum < lineno; lnum++){
+            for (var lnum = start_lineno + 1; lnum < lineno; lnum++) {
                 line = lines[lnum - 1].trimRight()
                 indent = get_indent(line)
                 marks += ' '.repeat(indent) + mark.repeat(line.length - indent) + '\n'
@@ -1281,7 +1281,7 @@ function fill_marks(lines, first_lineno, first_col_offset){
     // adapt indentation
     var min_indent = get_min_indent(lines.slice(first_lineno - 1, lineno))
     var err_lines = []
-    for(var lnum = 0; lnum < marks_lines.length; lnum++){
+    for (var lnum = 0; lnum < marks_lines.length; lnum++) {
         err_lines.push('    ' +
             lines[first_lineno + lnum - 1].trimRight().substr(min_indent))
         err_lines.push('    ' + marks_lines[lnum].substr(min_indent))
@@ -1289,13 +1289,13 @@ function fill_marks(lines, first_lineno, first_col_offset){
     return err_lines.join('\n')
 }
 
-function make_line_setter(lineno){
+function make_line_setter(lineno) {
     // Return the function that returns coordinates in code segment to
     // coordinates in original source code
     // lineno is the line number of the problematic code
     // The segment is `(\n{text}\n)`. The line feed explains why the lineno
     // offset is lineno - 2
-    return function(coords){
+    return function(coords) {
         return {
             lineno: coords.lineno + lineno - 2,
             end_lineno: coords.end_lineno + lineno - 2,
@@ -1305,7 +1305,7 @@ function make_line_setter(lineno){
     }
 }
 
-function handle_BinOp_error(lines, lineno, ast_obj, tokens){
+function handle_BinOp_error(lines, lineno, ast_obj, tokens) {
     // lines: original source code lines
     // lineno: line number of the first line in BinOp in original source
     // ast_obj: the ast.BinOp instance found in the segment
@@ -1316,8 +1316,8 @@ function handle_BinOp_error(lines, lineno, ast_obj, tokens){
     // get position of operator = the last OP token different from '(' before
     // right operand
     var operator
-    for(var token of tokens){
-        if(token.type == $B.py_tokens.OP){
+    for (var token of tokens) {
+        if (token.type == $B.py_tokens.OP) {
             if(is_before(ast_obj.right, token.lineno, token.col_offset)
                     && token.string != '('){
                 operator = reset_lineno(token)
@@ -1339,7 +1339,7 @@ function handle_BinOp_error(lines, lineno, ast_obj, tokens){
 }
 
 
-function handle_Call_error(lines, lineno, ast_obj, tokens){
+function handle_Call_error(lines, lineno, ast_obj, tokens) {
     // same argments as in handle_BinOP_error
     var reset_lineno = make_line_setter(lineno)
 
@@ -1349,13 +1349,13 @@ function handle_Call_error(lines, lineno, ast_obj, tokens){
     var opening_parenth
     var closing_parenth
 
-    for(var token of tokens){
-        if(token.type == $B.py_tokens.OP){
+    for (var token of tokens) {
+        if (token.type == $B.py_tokens.OP) {
             if(token.string == '(' && ! opening_parenth &&
                     token.lineno == ast_obj.func.end_lineno &&
                     token.col_offset >= ast_obj.func.end_col_offset){
                 opening_parenth = reset_lineno(token)
-            }else if(token.string == ')'){
+            } else if (token.string == ')') {
                 closing_parenth = reset_lineno(token)
             }
         }
@@ -1369,7 +1369,7 @@ function handle_Call_error(lines, lineno, ast_obj, tokens){
 }
 
 
-function handle_Expr_error(lines, lineno, ast_obj){
+function handle_Expr_error(lines, lineno, ast_obj) {
     var reset_lineno = make_line_setter(lineno)
     var expr = reset_lineno(ast_obj)
     // marks are '^' under the expression
@@ -1377,13 +1377,13 @@ function handle_Expr_error(lines, lineno, ast_obj){
                       '^', expr.end_lineno, expr.end_col_offset)
 }
 
-function is_before(obj, lineno, col){
+function is_before(obj, lineno, col) {
     // Determines if position (lineno, col) is before the ast object ast_obj
     return lineno < obj.lineno ||
            (lineno == obj.lineno && col < obj.col_offset)
 }
 
-function handle_Subscript_error(lines, lineno, ast_obj, tokens){
+function handle_Subscript_error(lines, lineno, ast_obj, tokens) {
     // same arguments as handle_BinOp_error
 
     var reset_lineno = make_line_setter(lineno)
@@ -1391,12 +1391,12 @@ function handle_Subscript_error(lines, lineno, ast_obj, tokens){
     // get position of
     // - opening bracket = the last OP token '[' before ast_obj.slice start
     // - closing bracket = the last OP token ']'
-    for(var token of tokens){
-        if(token.type == $B.py_tokens.OP){
+    for (var token of tokens) {
+        if (token.type == $B.py_tokens.OP) {
             if(token.string == '[' &&
                     is_before(ast_obj.slice, token.lineno, token.col_offset)){
                 var opening_bracket = reset_lineno(token)
-            }else if(token.string == ']'){
+            } else if (token.string == ']') {
                 var closing_bracket = reset_lineno(token)
             }
         }
@@ -1411,23 +1411,23 @@ function handle_Subscript_error(lines, lineno, ast_obj, tokens){
 }
 
 
-function trace_from_stack(err){
-    function handle_repeats(src, count_repeats){
-        if(count_repeats > 0){
+function trace_from_stack(err) {
+    function handle_repeats(src, count_repeats) {
+        if (count_repeats > 0) {
             var len = trace.length
-            for(var i = 0; i < 2; i++){
-                if(src){
+            for (var i = 0; i < 2; i++) {
+                if (src) {
                     trace.push(trace[len - 2])
                     trace.push(trace[len - 1])
-                }else{
+                } else {
                     trace.push(trace[len - 1])
                 }
                 count_repeats--
-                if(count_repeats == 0){
+                if (count_repeats == 0) {
                     break
                 }
             }
-            if(count_repeats > 0){
+            if (count_repeats > 0) {
                 trace.push(`[Previous line repeated ${count_repeats} more` +
                     ` time${count_repeats > 1 ? 's' : ''}]`)
             }
@@ -1441,12 +1441,12 @@ function trace_from_stack(err){
         tb = err.__traceback__
 
     var is_syntax_error = $B.is_exc(err, _b_.SyntaxError)
-    while(tb !== _b_.None){
+    while (tb !== _b_.None) {
         let frame = tb.tb_frame,
             lineno = tb.tb_lineno,
             filename = frame.__file__,
             scope = frame[0] == frame[2] ? '<module>' : frame[0]
-        if(filename == save_filename && scope == save_scope && lineno == save_lineno){
+        if (filename == save_filename && scope == save_scope && lineno == save_lineno) {
             count_repeats++
             tb = tb.tb_next
             continue
@@ -1459,21 +1459,21 @@ function trace_from_stack(err){
         trace.push(`  File "${filename}", line ${lineno}, in ` +
             (frame[0] == frame[2] ? '<module>' : frame[0]))
         var src = false
-        if(! filename.startsWith('<')){
+        if (! filename.startsWith('<')) {
             src = $B.file_cache[filename]
         }
-        if(src){
+        if (src) {
             var lines = src.split('\n')
             // PEP 657
             var positions = false
-            if(! is_syntax_error && frame.inum && frame.positions){
+            if (! is_syntax_error && frame.inum && frame.positions) {
                 positions = $B.decode_position(
                     frame.positions[Math.floor(frame.inum / 2)])
             }
-            if(positions){
+            if (positions) {
                 let [lineno, end_lineno, col_offset, end_col_offset] = positions
                 // part of first line before error
-                if(lines[lineno - 1] === undefined){
+                if (lines[lineno - 1] === undefined) {
                     console.log('no line, lines\n', lines, 'lineno', lineno)
                     console.log('filename', filename, 'src', src)
                     continue
@@ -1481,40 +1481,40 @@ function trace_from_stack(err){
                 var head = lines[lineno - 1].substr(0, col_offset)
                 // start with whitespaces to preserve col_offset in the ast
                 var segment = ' '.repeat(col_offset)
-                if(lineno == end_lineno){
+                if (lineno == end_lineno) {
                     segment += lines[lineno - 1].substring(col_offset, end_col_offset)
-                }else{
+                } else {
                     segment += lines[lineno - 1].substr(col_offset) + '\n'
-                    for(var lnum = lineno + 1; lnum < end_lineno; lnum++){
+                    for (var lnum = lineno + 1; lnum < end_lineno; lnum++) {
                         segment += lines[lnum - 1] + '\n'
                     }
                     segment += lines[end_lineno - 1].substr(0, end_col_offset)
                 }
                 // parse the source code again; wrap it inside parenthesis to
                 // avoid syntax errors if it is an expression on several lines
-                try{
+                try {
                     let parser = new $B.Parser(`(\n${segment}\n)`,
                         'test', 'file')
                     var ast = $B._PyPegen.run_parser(parser)
                     var tokens = parser.tokens
                     // remove leading '(' and trailing ')', NEWLINE, ENDMARKER
                     tokens = tokens.slice(1, tokens.length - 3)
-                }catch(err){
+                } catch (err) {
                     // only show report
                     trace.push(make_report(lines, positions))
                     tb = tb.tb_next
                     continue
                 }
-                if(! (ast instanceof $B.ast.Module)){
+                if (! (ast instanceof $B.ast.Module)) {
                     console.log('not a module', ast)
                     continue
                 }
                 var expr = ast.body[0]
                 var marks = ''
-                switch(expr.constructor){
+                switch (expr.constructor) {
                     case $B.ast.Expr:
-                        try{
-                            switch(expr.value.constructor){
+                        try {
+                            switch (expr.value.constructor) {
                                 case $B.ast.BinOp:
                                     trace.push(handle_BinOp_error(
                                         lines, lineno, expr.value, tokens))
@@ -1532,8 +1532,8 @@ function trace_from_stack(err){
                                         lines, lineno, expr.value))
                                     break
                             }
-                        }catch(err){
-                            if($B.get_option('debug') > 1){
+                        } catch (err) {
+                            if ($B.get_option('debug') > 1) {
                                 console.log('error in error handlers', err)
                             }
                             // Fallback in case of internal error
@@ -1543,24 +1543,24 @@ function trace_from_stack(err){
                     default:
                         trace.push(make_trace_lines(lines, lineno, expr))
                 }
-            }else{
+            } else {
                 trace.push('    ' + lines[lineno - 1].trim())
             }
-        }else{
-            if($B.get_option('debug') > 1){
+        } else {
+            if ($B.get_option('debug') > 1) {
                 console.log('no src for filename', filename)
             }
         }
 
         tb = tb.tb_next
     }
-    if(count_repeats > 1){
+    if (count_repeats > 1) {
         let len = trace.length
-        for(let i = 0; i < 2; i++){
-            if(src){
+        for (let i = 0; i < 2; i++) {
+            if (src) {
                 trace.push(trace[len - 2])
                 trace.push(trace[len - 1])
-            }else{
+            } else {
                 trace.push(trace[len - 1])
             }
         }
@@ -1571,37 +1571,37 @@ function trace_from_stack(err){
 
 var python_keywords
 
-function _find_keyword_typos(err){
+function _find_keyword_typos(err) {
     // copied from the traceback module
-    if(err.msg != "invalid syntax" && ! err.msg.includes("Perhaps you forgot a comma")){
+    if (err.msg != "invalid syntax" && ! err.msg.includes("Perhaps you forgot a comma")) {
         return
     }
     let [line, offset, source] = err._metadata
     let end_line = self.lineno === _b_.None ? 0 : self.lineno
     let lines = source.split('\n')
     var error_code
-    if(line > 0){
+    if (line > 0) {
         error_code = [lines[line - 1]]
-    }else{
+    } else {
         error_code = lines.slice(0, end_line)
     }
     var indent = Math.min(...error_code.map(x => x.length - x.trimLeft().length))
     var error_code_lines = error_code.map(x => x.substr(indent))
     error_code = error_code_lines.join('\n')
     // Do not continue if the source is too large
-    if(error_code.length > 1024){
+    if (error_code.length > 1024) {
         return
     }
-    if(python_keywords === undefined){
+    if (python_keywords === undefined) {
         python_keywords = Object.keys($B.python_keywords)
     }
-    for(let token of $B.tokenizer(error_code, '<debug>', 'exec')){
-        if(token.type == $B.py_tokens['NAME']){
-            if(python_keywords.includes(token.string)){
+    for (let token of $B.tokenizer(error_code, '<debug>', 'exec')) {
+        if (token.type == $B.py_tokens['NAME']) {
+            if (python_keywords.includes(token.string)) {
                 continue
             }
             var suggestions = calculate_suggestions(python_keywords, token.string)
-            if(suggestions){
+            if (suggestions) {
                 console.log(token.lineno)
                 var new_line = token.line.substr(0, token.col_offset) +
                                suggestions + token.line.substr(token.end_col_offset)
@@ -1610,17 +1610,17 @@ function _find_keyword_typos(err){
                                     1, new_line)
                 var candidate = new_lines.join('\n')
                 var found = false
-                try{
+                try {
                     var parser = new $B.Parser(candidate, '<debug>', 'file')
                     parser.flags = $B.PyCF_ALLOW_INCOMPLETE_INPUT
                     var _ast = $B._PyPegen.run_parser(parser)
                     found = true
-                }catch(err){
-                    if($B.is_exc(err, _b_._IncompleteInputError)){
+                } catch (err) {
+                    if ($B.is_exc(err, _b_._IncompleteInputError)) {
                         found = true
                     }
                 }
-                if(found){
+                if (found) {
                     err.args[1][2] = err.offset = token.col_offset
                     err.args[1][5] = err.end_offset = token.end_col_offset
                     err.args[0] = err.msg = `invalid syntax. Did you mean '${suggestions}'?`
@@ -1632,25 +1632,25 @@ function _find_keyword_typos(err){
     }
 }
 
-$B.error_trace = function(err){
+$B.error_trace = function(err) {
     var trace = '',
         has_stack = err.__traceback__ !== _b_.None
 
     var debug = $B.get_option('debug', err)
-    if(debug > 1){
+    if (debug > 1) {
         console.log("handle error", $B.get_class(err), err.args, err.__traceback__)
         console.log(Error().stack)
     }
 
-    if(has_stack){
+    if (has_stack) {
         trace = 'Traceback (most recent call last):\n'
     }
-    if($B.is_exc(err, [_b_.SyntaxError, _b_.IndentationError])){
+    if ($B.is_exc(err, [_b_.SyntaxError, _b_.IndentationError])) {
         trace += trace_from_stack(err)
-        if(err.args.length > 0){
+        if (err.args.length > 0) {
             var filename = err.filename,
                 line = err.text
-            if(line !== _b_.None){
+            if (line !== _b_.None) {
                 var indent = line.length - line.trimLeft().length
                 trace += `  File "${filename}", line ${err.args[1][1]}\n` +
                              `    ${line.trim()}\n`
@@ -1658,11 +1658,11 @@ $B.error_trace = function(err){
         }
         if(! $B.is_exc(err, _b_.IndentationError) &&
                 err.text && err.text !== _b_.None){
-            if(err._metadata){
+            if (err._metadata) {
                 _find_keyword_typos(err)
             }
             // add ^ under the line
-            if($B.get_option('debug') > 2){
+            if ($B.get_option('debug') > 2) {
                 console.log('debug from error', $B.get_option('debug', err))
                 console.log('error args', err.args[1])
                 console.log('err line', line)
@@ -1675,9 +1675,9 @@ $B.error_trace = function(err){
                     (end_offset == err.offset ? 1 : 0),
                 marks = '    ' + ' '.repeat(Math.max(0, start)),
                 nb_marks = 1
-            if(end_lineno > err.lineno){
+            if (end_lineno > err.lineno) {
                 nb_marks = line.length - start - indent
-            }else{
+            } else {
                 nb_marks = end_offset - start - indent
             }
             if(nb_marks == 0 &&
@@ -1689,76 +1689,76 @@ $B.error_trace = function(err){
         }
 
         trace += `${$B.get_name($B.get_class(err))}: ${err.args[0] ?? '<no detail available>'}`
-    }else if($B.get_class(err) !== $B.JSObj){
+    } else if ($B.get_class(err) !== $B.JSObj) {
         var name = $B.class_name(err)
         trace += trace_from_stack(err)
         var args_str = _b_.str.$factory(err)
         trace += name + (args_str ? ': ' + args_str : '')
-        if($B.is_exc(err, _b_.NameError)){
+        if ($B.is_exc(err, _b_.NameError)) {
             let suggestion = $B.offer_suggestions_for_name_error(err)
-            if(suggestion !== _b_.None && suggestion !== err.name){
+            if (suggestion !== _b_.None && suggestion !== err.name) {
                 trace += `. Did you mean: '${suggestion}'?`
             }
-            if($B.stdlib_module_names.indexOf(err.name) > -1){
+            if ($B.stdlib_module_names.indexOf(err.name) > -1) {
                 // new in 3.12
                 trace += `. Did you forget to import '${err.name}'?`
             }
-        }else if($B.is_exc(err, _b_.AttributeError)){
+        } else if ($B.is_exc(err, _b_.AttributeError)) {
             let suggestion = $B.offer_suggestions_for_attribute_error(err)
-            if(suggestion !== _b_.None){
+            if (suggestion !== _b_.None) {
                 trace += `. Did you mean: '${suggestion}'?`
             }
-        }else if($B.is_exc(err, _b_.ImportError)){
-            if(err.$suggestion !== _b_.None){
+        } else if ($B.is_exc(err, _b_.ImportError)) {
+            if (err.$suggestion !== _b_.None) {
                 trace += `. Did you mean: '${err.$suggestion}'?`
             }
         }
-    }else{
+    } else {
         trace = err + ""
     }
-    if(err.$js_exc){
+    if (err.$js_exc) {
         trace += '\n'
-        if($B.get_option('debug', err) > 1){
+        if ($B.get_option('debug', err) > 1) {
             trace += err.$js_exc.stack
         }
     }
     return trace
 }
 
-$B.get_stderr = function(){
+$B.get_stderr = function() {
     return $B.imported.sys ?
         $B.module_getattr($B.imported.sys, 'stderr') :
         $B.module_getattr($B.imported._sys, 'stderr')
 }
 
-$B.get_stdout = function(){
+$B.get_stdout = function() {
     return $B.imported.sys ?
         $B.module_getattr($B.imported.sys, 'stdout') :
         $B.module_getattr($B.imported._sys, 'stdout')
 }
 
-$B.show_error = function(err){
-    if($B.get_option('debug', err) > 2){
+$B.show_error = function(err) {
+    if ($B.get_option('debug', err) > 2) {
         console.debug(err.stack)
     }
     var trace = $B.error_trace($B.exception(err))
-    try{
+    try {
         var stderr = $B.get_stderr()
         $B.$call($B.$getattr(stderr, 'write'), trace)
         var flush = $B.$getattr(stderr, 'flush', _b_.None)
-        if(flush !== _b_.None){
+        if (flush !== _b_.None) {
             $B.$call(flush)
         }
-    }catch(print_exc_err){
+    } catch (print_exc_err) {
         //console.debug(trace)
         console.log(print_exc_err)
     }
 }
 
-$B.handle_error = function(err){
+$B.handle_error = function(err) {
     // Print the error traceback on the standard error stream
     console.log('handle error', $B.frame_obj)
-    if(err.$handled){
+    if (err.$handled) {
         return
     }
     err.$handled = true

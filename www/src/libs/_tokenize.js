@@ -1,4 +1,4 @@
-(function($B){
+(function($B) {
 
 var _b_ = $B.builtins
 
@@ -6,7 +6,7 @@ $B.$import('token')
 
 var TokenizerIter = $B.make_type('TokenizerIter')
 
-TokenizerIter.$factory = function(it){
+TokenizerIter.$factory = function(it) {
     var $ = $B.args('TokenizerIter', 3, 
                 {it: null, encoding: null, extra_tokens:null}, arguments,
                 {encoding: _b_.None, extra_tokens: false})
@@ -18,7 +18,7 @@ TokenizerIter.$factory = function(it){
     }
 }
 
-TokenizerIter.tp_new = function(cls, args, kw){
+TokenizerIter.tp_new = function(cls, args, kw) {
     var [source] = $B.unpack_args('TokenizerIter', args, ['source'])
     $B.check_expected_keywords('TokenizerIter', kw,
         ['encoding', 'extra_tokens'])
@@ -32,20 +32,20 @@ TokenizerIter.tp_new = function(cls, args, kw){
     }
 }
 
-TokenizerIter.tp_iter = function(self){
+TokenizerIter.tp_iter = function(self) {
     var js_iter = function*(){
         var line_num = 0
         var err
-        while(true){
-            try{
+        while (true) {
+            try {
                 var line = $B.$call(self.it)
-            }catch(err){
-                if(! $B.$isinstance(err, _b_.StopIteration)){
+            } catch (err) {
+                if (! $B.$isinstance(err, _b_.StopIteration)) {
                     throw err
                 }
                 line = ''
             }
-            if(line.length == 0){
+            if (line.length == 0) {
                 token = endmarker
                 token.lineno++
                 token.end_lineno++
@@ -54,21 +54,21 @@ TokenizerIter.tp_iter = function(self){
                                      $B.fast_tuple([token.end_lineno, token.end_col_offset]),
                                      token.line])
                 break
-            }else if(self.encoding !== _b_.None){
-                if(! $B.$isinstance(line, [_b_.bytes, _b_.bytearray])){
+            } else if (self.encoding !== _b_.None) {
+                if (! $B.$isinstance(line, [_b_.bytes, _b_.bytearray])) {
                     $B.RAISE(_b_.TypeError,
                         'readline() returned a non-bytes object')
                 }
                 line = $B.bytes_decode(line, self.encoding)
             }
             line_num++
-            for(var token of $B.tokenizer(line, 'test')){
-                if(token.num_type == $B.py_tokens.ENCODING){ // skip encoding token
+            for (var token of $B.tokenizer(line, 'test')) {
+                if (token.num_type == $B.py_tokens.ENCODING) { // skip encoding token
                     continue
-                }else if(token.num_type == $B.py_tokens.ENDMARKER){
+                } else if (token.num_type == $B.py_tokens.ENDMARKER) {
                     var endmarker = token
                     continue
-                }else if(token.num_type == $B.py_tokens.ERRORTOKEN){
+                } else if (token.num_type == $B.py_tokens.ERRORTOKEN) {
                     $B.RAISE(_b_.SyntaxError, token.message)
                 }
                 //token.type = token.num_type

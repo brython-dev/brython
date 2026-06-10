@@ -1,5 +1,5 @@
 // creation of a SVG element
-(function($B){
+(function($B) {
 
 var _b_ = $B.builtins
 var TagSum = $B.TagSum // defined in py_dom.js
@@ -7,55 +7,55 @@ var TagSum = $B.TagSum // defined in py_dom.js
 var $svgNS = "http://www.w3.org/2000/svg"
 var $xlinkNS = "http://www.w3.org/1999/xlink"
 
-function makeTagDict(tagName){
+function makeTagDict(tagName) {
     // return the dictionary for the class associated with tagName
     var dict = $B.make_type(tagName, [$B.DOMNode])
 
-    dict.tp_init = function(){
+    dict.tp_init = function() {
         var $ = $B.args('__init__', 1, {self: null}, arguments, null,
                       'args', 'kw'),
             self = $.self,
             args = $.args
-        if(args.length == 1){
+        if (args.length == 1) {
             var first = args[0]
-            if($B.$isinstance(first, [_b_.str, _b_.int, _b_.float])){
+            if ($B.$isinstance(first, [_b_.str, _b_.int, _b_.float])) {
                 self.appendChild(document.createTextNode(_b_.str.$factory(first)))
-            }else if($B.exact_type(first, TagSum)){
-                for(var i = 0, len = first.children.length; i < len; i++){
+            } else if ($B.exact_type(first, TagSum)) {
+                for (var i = 0, len = first.children.length; i < len; i++) {
                     self.appendChild(first.children[i].elt)
                 }
-            }else{ // argument is another DOMNode instance
-                try{
+            } else { // argument is another DOMNode instance
+                try {
                     self.appendChild(first.elt)
-                }catch(err){
+                } catch (err) {
                     $B.RAISE(_b_.ValueError, 'wrong element ' + first)
                 }
             }
         }
 
         // attributes
-        for(var item of _b_.dict.$iter_items($.kw)){
+        for (var item of _b_.dict.$iter_items($.kw)) {
             // keyword arguments
             var arg = item.key,
                 value = $B.py_immutable_to_js(item.value)
-            if(arg.toLowerCase().substr(0,2) == "on"){
+            if (arg.toLowerCase().substr(0,2) == "on") {
                 // Event binding passed as argument "onclick", "onfocus"...
                 // Better use method bind of DOMNode objects
                 $B.DOMNode.tp_funcs.bind(self,
                                 arg.toLowerCase().substr(2),
                                 value)
-            }else if(arg.toLowerCase() == "style"){
+            } else if (arg.toLowerCase() == "style") {
                 $B.$setattr(self, 'style', item.value)
-            }else if(arg.toLowerCase().indexOf("href") !== -1){ // xlink:href
+            } else if (arg.toLowerCase().indexOf("href") !== -1) { // xlink:href
                 self.setAttributeNS( "http://www.w3.org/1999/xlink",
                     "href", value)
-            }else{
-                if(value !== false){
+            } else {
+                if (value !== false) {
                     // option.selected=false sets it to true :-)
-                    try{
+                    try {
                         arg = arg.replace('_', '-')
                         self.setAttributeNS(null, arg, value)
-                    }catch(err){
+                    } catch (err) {
                         $B.RAISE(_b_.ValueError, "can't set attribute " + arg)
                     }
                 }
@@ -63,13 +63,13 @@ function makeTagDict(tagName){
         }
     }
 
-    dict.tp_new = function(cls, args, kw){
+    dict.tp_new = function(cls, args, kw) {
         var res = $B.DOMNode.$factory(document.createElementNS($svgNS, tagName))
         res.ob_type = cls
         return res
     }
 
-    dict.$factory = function(){
+    dict.$factory = function() {
         var res = $B.DOMNode.$factory(
             document.createElementNS($svgNS, tagName))
         res.ob_type = dict
@@ -126,7 +126,7 @@ var $svg_tags = ['a',
 // create classes
 var obj = new Object()
 var dicts = {}
-for(var i = 0, len = $svg_tags.length; i < len; i++){
+for (var i = 0, len = $svg_tags.length; i < len; i++) {
     var tag = $svg_tags[i]
     obj[tag] = makeTagDict(tag)
 }

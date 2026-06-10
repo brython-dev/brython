@@ -1,18 +1,31 @@
 "use strict";
 var __BRYTHON__ = globalThis.__BRYTHON__ || {}  // global object with brython built-ins
 
-try{
+try {
     // "async function*" is not supported in old versions of Microsoft Edge
     eval("async function* f(){}")
-}catch(err){
+} catch (err) {
     console.warn("Your browser is not fully supported. If you are using " +
         "Microsoft Edge, please upgrade to the latest version")
 }
 
-// for code that requires RegExp.escape (cf. issue #2686) 
-if(! Object.hasOwn(RegExp, 'escape')){
+// for code that requires RegExp.escape (cf. issue #2686)
+if (! Object.hasOwn(RegExp, 'escape')) {
     RegExp.escape = function(str) {
         return str.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&')
+    }
+}
+
+// discussion #2696
+if (! Object.hasOwn(Set.prototype, 'difference')) {
+    Set.prototype.difference = function(self, other) {
+        var res = new Set()
+        for (var item of self) {
+            if (! other.has(item)) {
+                res.add(item)
+            }
+        }
+        return res
     }
 }
 
@@ -28,23 +41,23 @@ $B.isNode = (typeof process !=='undefined') && (process.release.name === 'node')
 
 
 var has_storage = typeof(Storage) !== "undefined"
-if(has_storage){
+if (has_storage) {
     $B.has_local_storage = false
     // add attributes local_storage and session_storage
-    try{
-        if(localStorage){
+    try {
+        if (localStorage) {
             $B.local_storage = localStorage
             $B.has_local_storage = true
         }
-    }catch(err){}
+    } catch (err) {}
     $B.has_session_storage = false
-    try{
-        if(sessionStorage){
+    try {
+        if (sessionStorage) {
             $B.session_storage = sessionStorage
             $B.has_session_storage = true
         }
-    }catch(err){}
-}else{
+    } catch (err) {}
+} else {
     $B.has_local_storage = false
     $B.has_session_storage = false
 }
@@ -74,15 +87,15 @@ $B.protocol = href.split(':')[0]
 
 $B.indexedDB = _window.indexedDB
 
-if($B.brython_path === undefined){
+if ($B.brython_path === undefined) {
     // Get url of this script brython_builtins.js
     var this_url;
-    if($B.isWebWorker){
+    if ($B.isWebWorker) {
         this_url = _window.location.href;
-        if(this_url.startsWith("blob:")){
+        if (this_url.startsWith("blob:")) {
             this_url = this_url.substr(5)
         }
-    }else{
+    } else {
         this_url = document.currentScript.src
     }
 
@@ -91,19 +104,19 @@ if($B.brython_path === undefined){
     // brython_path is the url of the directory holding brython core scripts
     // It is used to import modules of the standard library
     $B.brython_path = elts.join('/') + '/'
-}else{
-    if(! $B.brython_path.endsWith("/")){
+} else {
+    if (! $B.brython_path.endsWith("/")) {
         $B.brython_path += "/"
     }
 }
 
 var parts_re = new RegExp('(.*?)://(.*?)/(.*)'),
     mo = parts_re.exec($B.brython_path)
-if(mo){
+if (mo) {
     $B.full_url = {protocol: mo[1],
                    host: mo[2],
                    address: mo[3]}
-    if(['http', 'https'].includes(mo[1])){
+    if (['http', 'https'].includes(mo[1])) {
         $B.domain = mo[1] + '://' + mo[2]
     }
 }
@@ -115,21 +128,21 @@ path_elts.pop()
 $B.script_dir = path_elts.join("/")
 
 mo = parts_re.exec($B.script_dir)
-if(mo){
-    if(['http', 'https'].includes(mo[1])){
+if (mo) {
+    if (['http', 'https'].includes(mo[1])) {
         $B.script_domain = mo[1] + '://' + mo[2]
     }
-}else{
+} else {
     var parts_re_root = new RegExp('(.*?)://(.*?)'),
         mo = parts_re_root.exec($B.script_dir)
-    if(mo && ['http', 'https'].includes(mo[1])){
+    if (mo && ['http', 'https'].includes(mo[1])) {
         // script is at server root (issue #2412)
         $B.script_domain = $B.script_dir
     }
 }
 
-$B.strip_host = function(url){
-    try{
+$B.strip_host = function(url) {
+    try {
         var parsed_url = new URL(url)
         return parsed_url.pathname.substr(1) + parsed_url.search +
             parsed_url.hash
@@ -144,7 +157,7 @@ $B.strip_host = function(url){
 var href = $B.script_path = _window.location.href.split('#')[0],
     href_elts = href.split('/')
 href_elts.pop()
-if($B.isWebWorker || $B.isNode){
+if ($B.isWebWorker || $B.isNode) {
     href_elts.pop()
 }
 $B.curdir = href_elts.join('/')
@@ -184,50 +197,50 @@ $B.created_types = {}
 
 $B.NULL = {null: null}
 
-$B.get_mro = function(cls){
+$B.get_mro = function(cls) {
     return cls.tp_mro ?? cls.__mro__
 }
 
-$B.make_mro = function(cls){
+$B.make_mro = function(cls) {
     // method resolution order
     // copied from http://code.activestate.com/recipes/577748-calculate-the-mro-of-a-class/
     // by Steve d'Aprano
-    if(cls === undefined){
+    if (cls === undefined) {
         $B.RAISE(_b_.TypeError,
             'unbound method type.mro() needs an argument')
     }
     var bases = cls.tp_bases,
         seqs = [],
         pos1 = 0
-    for(var base of bases){
+    for (var base of bases) {
         // We can't simply push bases[i].__mro__
         // because it would be modified in the algorithm
         let bmro = [],
             pos = 0
         if(base === undefined ||
                 $B.get_mro(base) === undefined){
-            if(base === undefined){
+            if (base === undefined) {
                 console.log('no base', cls)
             }
-            if(base.ob_type === undefined){
+            if (base.ob_type === undefined) {
                 // Brython class inherits a Javascript constructor. The
                 // constructor is the attribute js_func
                 return [_b_.object]
-            }else{
+            } else {
                 console.log('error for base', base)
                 console.log('cls', cls)
             }
         }
         bmro[pos++] = base
-        if(base.tp_mro === undefined){
+        if (base.tp_mro === undefined) {
             console.log('no tp_mro for base', base)
         }
         var _tmp = base.tp_mro.slice()
-        if(_tmp){
-            if(_tmp[0] === base){
+        if (_tmp) {
+            if (_tmp[0] === base) {
                 _tmp.splice(0, 1)
             }
-            for(var k = 0; k < _tmp.length; k++){
+            for (var k = 0; k < _tmp.length; k++) {
                 bmro[pos++] = _tmp[k]
             }
         }
@@ -238,111 +251,111 @@ $B.make_mro = function(cls){
 
     var mro = [cls],
         mpos = 1
-    while(1){
+    while (1) {
         let non_empty = [],
             pos = 0
-        for(let i = 0; i < seqs.length; i++){
-            if(seqs[i].length > 0){non_empty[pos++] = seqs[i]}
+        for (let i = 0; i < seqs.length; i++) {
+            if (seqs[i].length > 0) {non_empty[pos++] = seqs[i]}
         }
-        if(non_empty.length == 0){
+        if (non_empty.length == 0) {
             break
         }
         let candidate
-        for(let i = 0; i < non_empty.length; i++){
+        for (let i = 0; i < non_empty.length; i++) {
             let seq = non_empty[i]
             candidate = seq[0]
             let not_head = [],
                 pos = 0
-            for(let j = 0; j < non_empty.length; j++){
+            for (let j = 0; j < non_empty.length; j++) {
                 let s = non_empty[j]
-                if(s.slice(1).indexOf(candidate) > -1){
+                if (s.slice(1).indexOf(candidate) > -1) {
                     not_head[pos++] = s
                 }
             }
-            if(not_head.length > 0){
+            if (not_head.length > 0) {
                 candidate = null
-            }else{
+            } else {
                 break
             }
         }
-        if(candidate === null){
+        if (candidate === null) {
             $B.RAISE(_b_.TypeError,
                 "inconsistent hierarchy, no C3 MRO is possible")
         }
         mro[mpos++] = candidate
-        for(let i = 0; i < seqs.length;  i++){
+        for (let i = 0; i < seqs.length;  i++) {
             let seq = seqs[i]
-            if(seq[0] === candidate){ // remove candidate
+            if (seq[0] === candidate) { // remove candidate
                 seqs[i].shift()
             }
         }
     }
-    if(mro[mro.length - 1] !== _b_.object){
+    if (mro[mro.length - 1] !== _b_.object) {
         mro[mpos++] = _b_.object
     }
-    if(mro[0] !== cls){
+    if (mro[0] !== cls) {
         console.log('bizarre', cls, mro)
     }
 
     return mro
 }
 
-$B.is_type = function(obj){
+$B.is_type = function(obj) {
     var klass = $B.get_class(obj)
     return klass.tp_mro.includes(_b_.type)
 }
 
-$B.is_bytes = function(obj){
+$B.is_bytes = function(obj) {
     return obj?.ob_type?.tp_flags & $B.TPFLAGS.BYTES_SUBCLASS
 }
 
-$B.is_dict = function(obj){
+$B.is_dict = function(obj) {
     return obj && obj[$B.OB_TYPE]?.tp_flags & $B.TPFLAGS.DICT_SUBCLASS
 }
 
-$B.is_int = function(obj){
+$B.is_int = function(obj) {
     return typeof obj == 'number' ||
            typeof obj == 'bigint' ||
            typeof obj == 'boolean' ||
            obj?.ob_type?.tp_flags & $B.TPFLAGS.LONG_SUBCLASS
 }
 
-$B.is_list = function(obj){
+$B.is_list = function(obj) {
     return obj?.ob_type?.tp_flags & $B.TPFLAGS.LIST_SUBCLASS
 }
 
-$B.is_str = function(obj){
+$B.is_str = function(obj) {
     return typeof obj == 'string' ||
         obj?.ob_type?.tp_flags & $B.TPFLAGS.UNICODE_SUBCLASS
 }
 
-$B.is_tuple = function(obj){
+$B.is_tuple = function(obj) {
     return obj?.ob_type?.tp_flags & $B.TPFLAGS.TUPLE_SUBCLASS
 }
 
-$B.is_builtin_type = function(cls){
+$B.is_builtin_type = function(cls) {
     return ! (cls.tp_flags & $B.TPFLAGS.HEAPTYPE)
 }
 
-$B.is_big_int = function(obj){
+$B.is_big_int = function(obj) {
     return typeof $B.int_value(obj) === 'bigint'
 }
 
-$B.is_sequence = function(obj){
+$B.is_sequence = function(obj) {
     var type = $B.get_class(obj)
     var flags = $B.search_slot(type, 'tp_flags', $B.NULL)
-    if(flags !== $B.NULL){
+    if (flags !== $B.NULL) {
         return flags & $B.TPFLAGS.SEQUENCE
     }
     return false
 }
 
-$B._PyType_HasFeature = function(type, feature){
+$B._PyType_HasFeature = function(type, feature) {
     return type.tp_flags & feature != 0
 }
 
-$B.make_builtin_class = function(tp_name, tp_bases){
-    if(tp_name === undefined){
+$B.make_builtin_class = function(tp_name, tp_bases) {
+    if (tp_name === undefined) {
         console.log('no tp name')
         console.log(Error().stack)
     }
@@ -353,9 +366,9 @@ $B.make_builtin_class = function(tp_name, tp_bases){
         tp_base: tp_bases ? tp_bases[0] : _b_.object,
         tp_flags: $B.TPFLAGS.BASETYPE
     }
-    if(tp_bases){
+    if (tp_bases) {
         cls.tp_mro = [cls, ...tp_bases, _b_.object]
-    }else{
+    } else {
         cls.tp_mro = [cls, _b_.object]
     }
     $B.created_types[tp_name] = cls
@@ -363,8 +376,8 @@ $B.make_builtin_class = function(tp_name, tp_bases){
 }
 
 // same, but used in Javascript modules, not in core scripts
-$B.make_type = function(tp_name, tp_bases){
-    if(tp_name === undefined){
+$B.make_type = function(tp_name, tp_bases) {
+    if (tp_name === undefined) {
         console.log('no tp name')
         console.log(Error().stack)
     }
@@ -375,28 +388,43 @@ $B.make_type = function(tp_name, tp_bases){
         tp_base: tp_bases ? tp_bases[0] : _b_.object
     }
     $B.init_dict(cls)
-    if(tp_bases){
+    if (tp_bases) {
         cls.tp_mro = [cls, ...tp_bases, _b_.object]
-    }else{
+    } else {
         cls.tp_mro = [cls, _b_.object]
     }
     return cls
 }
 
-$B.obj_dict = function(obj, exclude){
+$B.obj_dict = function(obj, exclude) {
     return obj
 }
 
 // Set attributes of klass methods
-$B.set_func_names = function(klass, module){
-    for(var attr in klass){
-        if(typeof klass[attr] == 'function'){
+$B.set_func_names = function(klass, module) {
+    for (var attr in klass) {
+        if (typeof klass[attr] == 'function') {
             $B.add_function_infos(klass, attr, module)
+        }
+    }
+    // Also seed $function_infos on tp_funcs entries. Brython-native classes
+    // expose their methods through `tp_funcs` (the C-style slot table); when
+    // those methods are returned as bound methods, `method.tp_repr` reads
+    // `self.im_func.$function_infos[__qualname__]`. Without this loop, the
+    // tp_funcs functions had no $function_infos, so `repr(instance.method)`
+    // or any assertRaises-style report on a bound method would crash with
+    // `self.$function_infos is undefined`.
+    if (klass.tp_funcs) {
+        for (var attr in klass.tp_funcs) {
+            if (typeof klass.tp_funcs[attr] == 'function') {
+                $B.add_function_infos(klass.tp_funcs, attr, module,
+                    (klass.tp_name || '') + '.' + attr)
+            }
         }
     }
 }
 
-$B.add_function_infos = function(klass, attr, module, qualname){
+$B.add_function_infos = function(klass, attr, module, qualname) {
     module = module ?? klass.__module__
     qualname = qualname ?? module + '.' + attr
     $B.set_function_infos(klass[attr],
@@ -412,18 +440,18 @@ $B.add_function_infos = function(klass, attr, module, qualname){
 }
 
 // Set function attributes
-$B.set_function_infos = function(f, attrs){
+$B.set_function_infos = function(f, attrs) {
     f.$function_infos = f.$function_infos ?? []
-    for(var key in attrs){
-        if($B.func_attrs[key] === undefined){
+    for (var key in attrs) {
+        if ($B.func_attrs[key] === undefined) {
             throw Error('no function attribute ' + key)
         }
         f.$function_infos[$B.func_attrs[key]] = attrs[key]
     }
 }
 
-$B.set_function_attr = function(func, attr, value){
-    if($B.func_attrs[attr] === undefined){
+$B.set_function_attr = function(func, attr, value) {
+    if ($B.func_attrs[attr] === undefined) {
         throw Error('no function attribute ' + attr)
     }
     func.$function_infos[$B.func_attrs[attr]] = value
@@ -450,7 +478,7 @@ formatter = new Intl.DateTimeFormat($B.language, {timeZoneName: 'long'})
 var long = formatter.format(date)
 var ix = 0,
     minlen = Math.min(short.length, long.length)
-while(ix < minlen && short[ix] == long[ix]){
+while (ix < minlen && short[ix] == long[ix]) {
     ix++
 }
 $B.tz_name = long.substr(ix).trim()
@@ -640,23 +668,23 @@ $B.op2method = {
     boolean: {
         "or": "or", "and": "and", "in": "in", "not": "not", "is": "is"
     },
-    subset: function(){
+    subset: function() {
         var res = {},
             keys = []
-        if(arguments[0] == "all"){
+        if (arguments[0] == "all") {
             keys = Object.keys($B.op2method)
             keys.splice(keys.indexOf("subset"), 1)
-        }else{
-            for(var arg of arguments){
+        } else {
+            for (var arg of arguments) {
                 keys.push(arg)
             }
         }
-        for(var key of keys){
+        for (var key of keys) {
             var ops = $B.op2method[key]
-            if(ops === undefined){
+            if (ops === undefined) {
                 throw Error(key)
             }
-            for(var attr in ops){
+            for (var attr in ops) {
                 res[attr] = ops[attr]
             }
         }
@@ -665,8 +693,8 @@ $B.op2method = {
 }
 
 $B.method_to_op = {}
-for(var category in $B.op2method){
-    for(var op in $B.op2method[category]){
+for (var category in $B.op2method) {
+    for (var op in $B.op2method[category]) {
         var method = `__${$B.op2method[category][op]}__`
         $B.method_to_op[method] = op
     }
@@ -712,24 +740,24 @@ const func_attrs = ['__module__', '__name__', '__qualname__', '__file__',
 // Rank of function attributes in .$function_infos
 var i = 0
 $B.func_attrs = {}
-for(var func_attr of func_attrs){
+for (var func_attr of func_attrs) {
     $B.func_attrs[func_attr] = i++
 }
 
-$B.globals = function(){
+$B.globals = function() {
     // Can be used in Javascript console to inspect global namespace
     return $B.frame_obj.frame[3]
 }
 
 $B.$options = {}
 
-$B.builtins_repr_check = function(builtin, args){
+$B.builtins_repr_check = function(builtin, args) {
     // Called when entering method __repr__ of builtin classes, to check the
     // the number of arguments, and that the only argument is an instance of
     // the builtin class
     var $ = $B.args('__repr__', 1, {self: null}, args)
     var self = $.self
-    if(! $B.$isinstance(self, builtin)){
+    if (! $B.$isinstance(self, builtin)) {
         var _b_ = $B.builtins
         $B.RAISE(_b_.TypeError, "descriptor '__repr__' requires a " +
             `'${builtin.tp_name}' object but received a ` +
@@ -738,14 +766,14 @@ $B.builtins_repr_check = function(builtin, args){
 }
 
 // Update the Virtual File System
-$B.update_VFS = function(scripts){
+$B.update_VFS = function(scripts) {
     $B.VFS = $B.VFS || {}
     var vfs_timestamp = scripts.$timestamp
-    if(vfs_timestamp !== undefined){
+    if (vfs_timestamp !== undefined) {
         delete scripts.$timestamp
     }
-    for(var script in scripts){
-        if($B.VFS.hasOwnProperty(script)){
+    for (var script in scripts) {
+        if ($B.VFS.hasOwnProperty(script)) {
             console.warn("Virtual File System: duplicate entry " + script)
         }
         $B.VFS[script] = scripts[script]
@@ -754,27 +782,27 @@ $B.update_VFS = function(scripts){
     $B.stdlib_module_names = Object.keys($B.VFS)
 }
 
-$B.loadBrythonPackage = function(brythonPackage){
+$B.loadBrythonPackage = function(brythonPackage) {
     $B.use_VFS = true
     $B.update_VFS(brythonPackage)
 }
 
-$B.add_files = function(files){
+$B.add_files = function(files) {
     // Used to add files that programs can open with open()
     $B.files = $B.files || {}
-    for(var file in files){
+    for (var file in files) {
         $B.files[file] = files[file]
     }
 }
 
-$B.has_file = function(file){
+$B.has_file = function(file) {
     // Used to check if a file was added to $B.files
     return ($B.files && $B.files.hasOwnProperty(file))
 }
 
-$B.show_tokens = function(src, mode){
+$B.show_tokens = function(src, mode) {
     // show the tokens generated by python_tokenizer.js for source code src
-    for(var token of $B.tokenizer(src, '<string>', mode || 'file')){
+    for (var token of $B.tokenizer(src, '<string>', mode || 'file')) {
         console.log(token.type, $B.builtins.repr(token.string),
         `[${token.lineno}.${token.col_offset}-` +
         `${token.end_lineno}.${token.end_col_offset}]`,
@@ -782,8 +810,8 @@ $B.show_tokens = function(src, mode){
     }
 }
 
-function from_py(src, script_id){
-    if(! $B.options_parsed){
+function from_py(src, script_id) {
+    if (! $B.options_parsed) {
         // parse options so that imports succeed
         $B.parse_options()
     }
@@ -800,12 +828,12 @@ function from_py(src, script_id){
     return root.to_js()
 }
 
-$B.pythonToAST = function(python_code, filename, mode){
+$B.pythonToAST = function(python_code, filename, mode) {
     let parser = new $B.Parser(python_code, filename ?? 'test', mode ?? 'file')
     return $B._PyPegen.run_parser(parser)
 }
 
-$B.python_to_js = function(src, script_id){
+$B.python_to_js = function(src, script_id) {
     /*
 
     Meant to be used in a Javascript program to execute Python code
@@ -825,30 +853,30 @@ $B.python_to_js = function(src, script_id){
 
 $B.pythonToJS = $B.python_to_js
 
-var fakeScript = $B.fakeScript = function(filename){
+var fakeScript = $B.fakeScript = function(filename) {
     this.options = {}
 }
 
-fakeScript.prototype.getAttribute = function(key){
+fakeScript.prototype.getAttribute = function(key) {
     return this.options[key] ?? null
 }
 
-fakeScript.prototype.dispatchEvent = function(){
+fakeScript.prototype.dispatchEvent = function() {
     // ignore
 }
 
-$B.runPythonSource = function(src, options){
+$B.runPythonSource = function(src, options) {
     var script_id
 
-    if(options){
-        if(typeof options == 'string'){
+    if (options) {
+        if (typeof options == 'string') {
             script_id = options
-        }else if(options.constructor === Object){
-            if(options.hasOwnProperty('id')){
+        } else if (options.constructor === Object) {
+            if (options.hasOwnProperty('id')) {
                 script_id = options.id
                 delete options.id
             }
-        }else{
+        } else {
             console.debug('invalid options argument:', options)
         }
     }
@@ -856,8 +884,8 @@ $B.runPythonSource = function(src, options){
     var script = new fakeScript(),
         url = $B.script_path = globalThis.location.href.split('#')[0]
     // Set options to the fake <script> tag
-    if(options){
-        for(var [key, value] of Object.entries(options)){
+    if (options) {
+        for (var [key, value] of Object.entries(options)) {
             script.options[key] = value
         }
     }
@@ -867,17 +895,17 @@ $B.runPythonSource = function(src, options){
 }
 
 // return a reference to an already imported module
-$B.getPythonModule = function(name){
+$B.getPythonModule = function(name) {
     return $B.imported[name]
 }
 
-$B.importPythonModule = function(name, options){
+$B.importPythonModule = function(name, options) {
     return $B.runPythonSource('import ' + name, options)
 }
 
 // return the module with specified name
-$B.importModule = function(name, options){
-    if(! $B.imported.hasOwnProperty(name)){
+$B.importModule = function(name, options) {
+    if (! $B.imported.hasOwnProperty(name)) {
         $B.runPythonSource('import ' + name, options)
     }
     return $B.imported[name]

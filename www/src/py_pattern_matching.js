@@ -1,22 +1,22 @@
-(function($B){
+(function($B) {
 "use strict";
-$B.pattern_match = function(subject, pattern){
+$B.pattern_match = function(subject, pattern) {
     var _b_ = $B.builtins,
         frame = $B.frame_obj.frame,
         locals = frame[1]
 
-    function bind(pattern, subject){
-        if(pattern.alias){
+    function bind(pattern, subject) {
+        if (pattern.alias) {
             locals[pattern.alias] = subject
         }
     }
 
-    if(pattern.sequence){
+    if (pattern.sequence) {
         // iterate on subject and match each item in the sequence
 
         // First, check that the subject is an instance of a class that
         // supports sequence pattern matching
-        if($B.$isinstance(subject, [_b_.str, _b_.bytes, _b_.bytearray])){
+        if ($B.$isinstance(subject, [_b_.str, _b_.bytes, _b_.bytearray])) {
             // PEP 634 :
             // Although str, bytes, and bytearray are usually considered
             // sequences, they are not included in the above list and do not
@@ -24,32 +24,32 @@ $B.pattern_match = function(subject, pattern){
             return false
         }
         let Sequence
-        if($B.imported['collections.abc']){
+        if ($B.imported['collections.abc']) {
             Sequence = $B.module_getattr($B.imported['collections.abc'],
                 'Sequence')
         }
         let deque
-        if($B.imported['collections']){
+        if ($B.imported['collections']) {
             deque = $B.module_getattr($B.imported['collections'], 'deque')
         }
         let supported = false
         let klass = $B.get_class(subject)
-        for(let base of [klass].concat(klass.tp_bases || [])){
-            if(base.$match_sequence_pattern){
+        for (let base of [klass].concat(klass.tp_bases || [])) {
+            if (base.$match_sequence_pattern) {
                 // set for builtin classes list, tuple, range, memoryview
                 // and for array.array
                 supported = true
                 break
-            }else if(base === Sequence || base == deque){
+            } else if (base === Sequence || base == deque) {
                 supported = true
                 break
             }
         }
-        if((! supported) && Sequence){
+        if ((! supported) && Sequence) {
             // subclass of collections.abc.Sequence ?
             supported = _b_.issubclass(klass, Sequence)
         }
-        if(! supported){
+        if (! supported) {
             return false
         }
 
@@ -62,17 +62,17 @@ $B.pattern_match = function(subject, pattern){
 
         let subject_length = _b_.len(subject),
             nb_fixed_length = 0
-        for(let item of pattern.sequence){
-            if(! item.capture_starred){
+        for (let item of pattern.sequence) {
+            if (! item.capture_starred) {
                 nb_fixed_length++
             }
         }
 
         // shortcut
-        if(subject_length < nb_fixed_length){
+        if (subject_length < nb_fixed_length) {
             // no need to test items
             return false
-        }else if(subject_length == 0 && pattern.sequence.length == 0){
+        } else if (subject_length == 0 && pattern.sequence.length == 0) {
             // "case []" always match and doen't require to iterate on subject
             return true
         }
@@ -83,8 +83,8 @@ $B.pattern_match = function(subject, pattern){
             nxt = $B.$getattr($B.get_class(it), '__next__'),
             store_starred = [],
             nb_matched_in_subject = 0
-        for(let i = 0, len = pattern.sequence.length; i < len; i++){
-            if(pattern.sequence[i].capture_starred){
+        for (let i = 0, len = pattern.sequence.length; i < len; i++) {
+            if (pattern.sequence[i].capture_starred) {
                 // Starred identifier
                 // - there are nb_matches_in_subject items already matched
                 // - there are len - i - 1 remaining items in the sequence
@@ -99,48 +99,48 @@ $B.pattern_match = function(subject, pattern){
                 }
                 let starred_match_length = subject_length -
                         nb_matched_in_subject - len + i + 1
-                for(let j = 0; j < starred_match_length; j++){
+                for (let j = 0; j < starred_match_length; j++) {
                     store_starred.push(nxt(it))
                 }
                 // bind capture name
                 locals[pattern.sequence[i].capture_starred] =
                     $B.$list(store_starred)
                 nb_matched_in_subject += starred_match_length
-            }else{
+            } else {
                 let subject_item = nxt(it)
                 let m = $B.pattern_match(subject_item, pattern.sequence[i])
-                if(! m){
+                if (! m) {
                     return false
                 }
                 nb_matched_in_subject++
             }
         }
         // If there are still items in subject, match fails
-        if(nb_matched_in_subject != subject_length){
+        if (nb_matched_in_subject != subject_length) {
             return false
         }
         bind(pattern, subject)
         return true
     }
 
-    if(pattern.group){
-        if(pattern.group.length == 1){
+    if (pattern.group) {
+        if (pattern.group.length == 1) {
             // match the only item
-            if($B.pattern_match(subject, pattern.group[0])){
+            if ($B.pattern_match(subject, pattern.group[0])) {
                 bind(pattern, subject)
                 return true
             }
-        }else{
+        } else {
             // handle as a sequence
             pattern.sequence = pattern.group
             return $B.pattern_match(subject, pattern)
         }
     }
 
-    if(pattern.or){
+    if (pattern.or) {
         // If one of the alternative matches, the 'or' pattern matches
-        for(let item of pattern.or){
-            if($B.pattern_match(subject, item)){
+        for (let item of pattern.or) {
+            if ($B.pattern_match(subject, item)) {
                 bind(pattern, subject)
                 return true
             }
@@ -148,46 +148,46 @@ $B.pattern_match = function(subject, pattern){
         return false
     }
 
-    if(pattern.mapping){
+    if (pattern.mapping) {
         // First check that subject is an instance of a class that supports
         // mapping patterns
         let supported = false
         let Mapping
-        if($B.imported['collections.abc']){
+        if ($B.imported['collections.abc']) {
             Mapping = $B.module_getattr($B.imported['collections.abc'],
                 'Mapping')
         }
         let klass = $B.get_class(subject)
-        for(let base of [klass].concat(klass.tp_bases || [])){
+        for (let base of [klass].concat(klass.tp_bases || [])) {
             // $match_mapping_pattern is set for dict and mappingproxy
-            if(base.$match_mapping_pattern || base === Mapping){
+            if (base.$match_mapping_pattern || base === Mapping) {
                 supported = true
                 break
             }
         }
-        if((! supported) && Mapping){
+        if ((! supported) && Mapping) {
             supported = _b_.issubclass(klass, Mapping)
         }
 
-        if(! supported){
+        if (! supported) {
             return false
         }
 
         // value of pattern.mapping is a list of 2-element lists [key_pattern, value]
         let matched = [],
             keys = []
-        for(let item of pattern.mapping){
+        for (let item of pattern.mapping) {
             let key_pattern = item[0],
                 value_pattern = item[1],
                 key
-            if(key_pattern.hasOwnProperty('literal')){
+            if (key_pattern.hasOwnProperty('literal')) {
                 key = key_pattern.literal
-            }else if(key_pattern.hasOwnProperty('value')){
+            } else if (key_pattern.hasOwnProperty('value')) {
                 key = key_pattern.value
             }
             // Check that key is not already used. Use __contains__ to handle
             // corner cases like {0: _, False: _}
-            if(_b_.list.sq_contains(keys, key)){
+            if (_b_.list.sq_contains(keys, key)) {
                 $B.RAISE(_b_.ValueError, 'mapping pattern checks ' +
                     'duplicate key (' +
                     _b_.str.$factory(key) + ')')
@@ -197,45 +197,45 @@ $B.pattern_match = function(subject, pattern){
             // create a dummy class to pass as default value for get()
             let missing = $B.make_type('missing')
 
-            missing.$factory = function(){
+            missing.$factory = function() {
                 return {
                     ob_type: missing
                 }
             }
             $B.finalize_type(missing)
 
-            try{
+            try {
                 let v = $B.$call($B.$getattr(subject, "get"), key, missing)
-                if(v === missing){
+                if (v === missing) {
                     // pattern key not in subject : return false
                     return false
                 }
-                if(! $B.pattern_match(v, value_pattern)){
+                if (! $B.pattern_match(v, value_pattern)) {
                     return false
                 }
                 matched.push(key)
-            }catch(err){
-                if($B.is_exc(err, [_b_.KeyError])){
+            } catch (err) {
+                if ($B.is_exc(err, [_b_.KeyError])) {
                     return false
                 }
                 throw err
             }
         }
-        if(pattern.rest){
+        if (pattern.rest) {
             let rest = $B.empty_dict(),
                 it = _b_.iter(subject),
                 next_key
-            while(true){
-                try{
+            while (true) {
+                try {
                     next_key = _b_.next(it)
-                }catch(err){
-                    if($B.is_exc(err, [_b_.StopIteration])){
+                } catch (err) {
+                    if ($B.is_exc(err, [_b_.StopIteration])) {
                         locals[pattern.rest] = rest
                         return true
                     }
                     throw err
                 }
-                if(! _b_.list.sq_contains(matched, next_key)){
+                if (! _b_.list.sq_contains(matched, next_key)) {
                     _b_.dict.mp_ass_subscript(rest, next_key,
                         $B.$getitem(subject, next_key))
                 }
@@ -244,52 +244,52 @@ $B.pattern_match = function(subject, pattern){
         return true
     }
 
-    if(pattern.class){
+    if (pattern.class) {
         let klass = pattern.class
-        if(! $B.$isinstance(klass, _b_.type)){
+        if (! $B.$isinstance(klass, _b_.type)) {
             $B.RAISE(_b_.TypeError, 'called match pattern must be a type')
         }
-        if(! $B.$isinstance(subject, klass)){
+        if (! $B.$isinstance(subject, klass)) {
             return false
         }
-        if(pattern.args.length > 0){
+        if (pattern.args.length > 0) {
             if([_b_.bool, _b_.bytearray, _b_.bytes, _b_.dict,
                     _b_.float, _b_.frozenset, _b_.int, _b_.list, _b_.set,
                     _b_.str, _b_.tuple].indexOf(klass) > -1){
                 // a single positional subpattern is accepted which will match
                 // the entire subject
-                if(pattern.args.length > 1){
+                if (pattern.args.length > 1) {
                     $B.RAISE(_b_.TypeError, 'for builtin type ' +
                         $B.class_name(subject) + ', a single positional ' +
                         'subpattern is accepted')
                 }
                 return $B.pattern_match(subject, pattern.args[0])
-            }else{
+            } else {
                 // Conversion of positional arguments to keyword arguments
                 // Get attribute __match_args__ of class
                 let match_args = $B.$getattr(klass, '__match_args__',
                     $B.fast_tuple([]))
-                if(! $B.is_tuple(match_args)){
+                if (! $B.is_tuple(match_args)) {
                     $B.RAISE(_b_.TypeError,
                         '__match_args__() did not return a tuple')
                 }
-                if(pattern.args.length > match_args.length){
+                if (pattern.args.length > match_args.length) {
                     $B.RAISE(_b_.TypeError,
                         '__match_args__() returns ' + match_args.length +
                         ' names but ' + pattern.args.length + ' positional ' +
                         'arguments were passed')
                 }
-                for(let i = 0, len = pattern.args.length; i < len; i++){
+                for (let i = 0, len = pattern.args.length; i < len; i++) {
                     // If Class.__match_args__ is ("a", "b"),
                     // Class(x, y) is converted to Class(a=x, b=y)
                     let pattern_arg = pattern.args[i],
                         klass_arg = match_args[i]
-                    if(typeof klass_arg !== "string"){
+                    if (typeof klass_arg !== "string") {
                         $B.RAISE(_b_.TypeError, 'item in __match_args__ ' +
                             'is not a string: ' + klass_arg)
                     }
                     // Check duplicate pattern
-                    if(pattern.keywords.hasOwnProperty(klass_arg)){
+                    if (pattern.keywords.hasOwnProperty(klass_arg)) {
                         $B.RAISE(_b_.TypeError, '__match_arg__ item ' +
                             klass_arg + ' was passed as keyword pattern')
                     }
@@ -297,11 +297,11 @@ $B.pattern_match = function(subject, pattern){
                 }
             }
         }
-        for(let key in pattern.keywords){
+        for (let key in pattern.keywords) {
             let v = $B.$getattr(subject, key, null)
-            if(v === null){
+            if (v === null) {
                 return false
-            }else if(! $B.pattern_match(v, pattern.keywords[key])){
+            } else if (! $B.pattern_match(v, pattern.keywords[key])) {
                 return false
             }
         }
@@ -309,18 +309,18 @@ $B.pattern_match = function(subject, pattern){
         return true
     }
 
-    if(pattern.capture){
-        if(pattern.capture != '_'){
+    if (pattern.capture) {
+        if (pattern.capture != '_') {
             // capture identifier in local namespace
             locals[pattern.capture] = subject
         }
         bind(pattern, subject)
         return true
-    }else if(pattern.capture_starred){
+    } else if (pattern.capture_starred) {
         // bind name to a list, whatever the subject type
         locals[pattern.capture_starred] = $B.$list(subject)
         return true
-    }else if(pattern.hasOwnProperty('literal')){
+    } else if (pattern.hasOwnProperty('literal')) {
         let literal = pattern.literal
         if(literal === _b_.None || literal === _b_.True ||
                 literal === _b_.False){
@@ -328,17 +328,17 @@ $B.pattern_match = function(subject, pattern){
             return $B.$is(subject, literal)
         }
 
-        if($B.rich_comp('__eq__', subject, literal)){
+        if ($B.rich_comp('__eq__', subject, literal)) {
             bind(pattern, subject)
             return true
         }
         return false
-    }else if(pattern.hasOwnProperty('value')){
-        if($B.rich_comp('__eq__', subject, pattern.value)){
+    } else if (pattern.hasOwnProperty('value')) {
+        if ($B.rich_comp('__eq__', subject, pattern.value)) {
             bind(pattern, subject)
             return true
         }
-    }else if(subject == pattern){
+    } else if (subject == pattern) {
         return true
     }
     return false

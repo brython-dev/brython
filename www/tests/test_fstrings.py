@@ -135,4 +135,21 @@ a = 5
 b = 6
 assert f"{a=} {b=}" == 'a=5 b=6'
 
+# {} inside f-string expression
+x = f'{{}}'
+assert x == '{}'
+
+k, v = 9, 7
+assert f'{k}={v}' == '9=7'
+
+def func(*args):
+  pass
+
+x = f'{func({})}'
+
+# issue 2693
+typecode = 'u'
+s = f"array('{typecode}', '\\x00=\"\\'a\\\\b\\x80\xff\\x00\\x01\u1234')"
+
+
 print("passed all tests")
