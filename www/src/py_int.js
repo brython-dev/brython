@@ -892,7 +892,7 @@ int_funcs.to_bytes = function(self) {
         value = quotient
     }
     while (res.length < len) {
-        res.push(0n)
+        res.push(0)
     }
     if (byteorder == "big") {
         res.reverse()

@@ -67,11 +67,13 @@ function bytes2WordArray(obj) {
         throw _b_.TypeError("expected bytes, got " + $B.class_name(obj))
     }
 
-    var words = []
-    for (var i = 0; i < obj.source.length; i += 4) {
-        var word = obj.source.slice(i, i + 4)
-        while (word.length < 4) {word.push(0)}
-        var w = word[3] + (word[2] << 8) + (word[1] << 16) + (word[0] << 24)
+    let words = []
+    for (let i = 0; i < obj.source.length; i += 4) {
+        let word = obj.source.slice(i, i + 4)
+        while (word.length < 4) {
+            word.push(0)
+        }
+        let w = word[3] + (word[2] << 8) + (word[1] << 16) + (word[0] << 24)
         words.push(w)
     }
     return {words: words, sigBytes: obj.source.length}
@@ -80,7 +82,7 @@ function bytes2WordArray(obj) {
 var hash = $B.make_type('hash')
 
 hash.$factory = function(alg, obj) {
-    var res = {
+    let res = {
         ob_type: hash
     }
     $B.init_dict(res)
@@ -92,12 +94,12 @@ hash.$factory = function(alg, obj) {
       case 'sha256':
       case 'sha384':
       case 'sha512':
-        var ALG = alg.toUpperCase()
+        let ALG = alg.toUpperCase()
         if($B.Crypto === undefined ||
                 $B.CryptoJS.algo[ALG] === undefined){
             $get_CryptoJS_lib(alg)
         }
-        var _hash = $B.CryptoJS.algo[ALG].create()
+        let _hash = $B.CryptoJS.algo[ALG].create()
         if (obj !== undefined) {
             _hash.update(bytes2WordArray(obj))
         }
@@ -112,7 +114,7 @@ hash.$factory = function(alg, obj) {
 }
 
 hash.tp_new = function(cls, args, kw) {
-    var obj = hash.$factory(...args)
+    let obj = hash.$factory(...args)
     obj.ob_type = cls
     return obj
 }
@@ -128,10 +130,10 @@ hash_funcs.copy = function(self) {
 }
 
 hash_funcs.digest = function(self) {
-    var hash_value = $B.get_from_dict(self, 'hash')
-    var obj = hash_value.clone().finalize().toString(),
+    let hash_value = $B.get_from_dict(self, 'hash')
+    let obj = hash_value.clone().finalize().toString(),
         res = []
-    for (var i = 0; i < obj.length; i += 2) {
+    for (let i = 0; i < obj.length; i += 2) {
         res.push(parseInt(obj.substr(i, 2), 16))
     }
     return _b_.bytes.$factory(res)
