@@ -604,7 +604,7 @@ $B._FileIO.tp_init = function() {
     var s = mode
     var pos = 0
     while (pos < s.length) {
-        switch(s[pos]){
+        switch (s[pos]) {
             case 'x':
                 if (rwa) {
                     bad_mode()

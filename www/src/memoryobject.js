@@ -114,7 +114,7 @@ _b_.memoryview.tp_richcompare = function(self, other, op) {
         return _b_.NotImplemented
     }
     var res
-    switch(op){
+    switch (op) {
         case '__eq__':
             res = memoryview_eq(self, other)
             break
@@ -286,7 +286,7 @@ memoryview_funcs.cast = function(self, format, shape) {
                 'memoryview: product(shape) * itemsize != buffer size')
         }
     }
-    switch(format){
+    switch (format) {
         case "B":
             return memoryview.$factory(self.obj)
         case "I":

@@ -202,7 +202,7 @@ object.$factory = function() {
 _b_.object.tp_richcompare = function(self, other, op) {
     var res
 
-    switch(op){
+    switch (op) {
         case '__eq__':
             /* Return NotImplemented instead of False, so if two
                objects are compared, both get a chance at the

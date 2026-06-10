@@ -128,7 +128,7 @@ _b_.ascii = function(obj) {
 // used by bin, hex and oct functions
 function $builtin_base_convert_helper(obj, base) {
   var prefix = "";
-  switch(base){
+  switch (base) {
      case 2:
        prefix = '0b'; break
      case 8:
@@ -540,7 +540,7 @@ _b_.enumerate.tp_new = function(cls, args, kw) {
     var [iterable, start] = args
     $B.check_expected_keywords('enumerate', kw, ['iterable', 'start'])
     for (var entry of _b_.dict.$iter_items(kw)) {
-        switch(entry.key){
+        switch (entry.key) {
             case 'iterable':
                 if (iterable !== undefined) {
                     $B.RAISE(_b_.TypeError,
@@ -668,7 +668,7 @@ _b_.format = function() {
 function attr_error(attr, obj) {
     var cname = $B.get_class(obj)
     var msg = "bad operand type for unary #: '" + cname + "'"
-    switch(attr){
+    switch (attr) {
         case '__neg__':
             $B.RAISE(_b_.TypeError, msg.replace('#', '-'))
         case '__pos__':
@@ -789,7 +789,7 @@ $B.$getattr = function(obj, attr, _default) {
             var func = $B.get_from_dict(klass, attr, $B.NULL)
             if (func !== $B.NULL) {
                 var res = $B.NULL
-                switch(func.ob_type){
+                switch (func.ob_type) {
                     case $B.builtin_method:
                         res = function() {
                             return func(obj, ...arguments)
@@ -824,7 +824,7 @@ $B.$getattr = function(obj, attr, _default) {
                 if (attr == 'path') {
                     console.log('attr', attr, 'of obj', obj, 'in klass dict', in_klass_dict)
                 }
-                switch(in_klass_dict.ob_type){
+                switch (in_klass_dict.ob_type) {
                     case $B.function:
                         if (in_own_dict === $B.NULL) {
                             return $B.method.$factory(in_klass_dict, obj)
@@ -847,7 +847,7 @@ $B.$getattr = function(obj, attr, _default) {
         var in_dict = $B.get_dict(obj)[attr]
         if (in_dict && $B.get_class(obj) === _b_.type) {
             var res = $B.NULL
-            switch($B.get_class(in_dict)){
+            switch ($B.get_class(in_dict)) {
                 case $B.function:
                 case $B.wrapper_descriptor:
                 case $B.method_descriptor:
@@ -1385,7 +1385,7 @@ function $extreme(args, op) { // used by min() and max()
         func = false
     if (kw) {
         for (var key in kw) {
-            switch(key){
+            switch (key) {
                 case 'key':
                     func = kw.key
                     break
@@ -1534,7 +1534,7 @@ _b_.ord = function(c) {
         $B.RAISE(_b_.TypeError, 'ord() expected a character, but ' +
             'string of length ' + c.length + ' found')
     }
-    switch($B.get_class(c)){
+    switch ($B.get_class(c)) {
       case _b_.str:
         if (c.length == 1) {
             return c.charCodeAt(0)
@@ -1741,7 +1741,7 @@ reversed_funcs.__length_hint__ = function(self) {
 reversed_funcs.__reduce__ = function(self) {
     check_nb_args_no_kw('__reduce__', 1, arguments)
     var cls = self.ob_type
-    if(self.seq === undefined){
+    if (self.seq === undefined) {
         return $B.fast_tuple([cls, $B.fast_tuple([$B.fast_tuple([])])])
     }
     return $B.fast_tuple([cls, $B.fast_tuple([self.seq]), self.counter])
@@ -1749,9 +1749,9 @@ reversed_funcs.__reduce__ = function(self) {
 
 reversed_funcs.__setstate__ = function(self, state) {
     var n = typeof state === 'bigint' ? Number(state) : state
-    if(typeof n !== 'number'){ n = Number(n) }
-    if(n < -1){ n = -1 }
-    if(n > self.len){ n = self.len }
+    if (typeof n !== 'number') { n = Number(n) }
+    if (n < -1) { n = -1 }
+    if (n > self.len) { n = self.len }
     self.counter = n
     // Must return None: pickle's load_build treats a NULL/undefined result
     // from __setstate__ as a raised exception and corrupts the unpickle stack.

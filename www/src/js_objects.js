@@ -5,7 +5,7 @@
 var _b_ = $B.builtins
 
 function to_simple(value) {
-    switch(typeof value){
+    switch (typeof value) {
         case 'string':
         case 'number':
             return value
@@ -158,7 +158,7 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
     }
 
     // Immutable types
-    switch(typeof jsobj){
+    switch (typeof jsobj) {
         case 'boolean':
             return jsobj
 
@@ -316,7 +316,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj) {
     // conversion of a Python object into a Javascript object
     // Immutable types
 
-    switch(pyobj){
+    switch (pyobj) {
         case true:
         case false:
             return pyobj
@@ -612,7 +612,7 @@ function JSObj_eq(self, other) {
         }
     }
     return true
-    switch(typeof self){
+    switch (typeof self) {
         case "string":
             return self == other
         case "object":
@@ -663,7 +663,7 @@ $B.JSObj.sq_contains = function(self, key) {
 
 
 $B.JSObj.tp_richcompare = function(self, other, op) {
-    switch(op){
+    switch (op) {
         case '__eq__':
             return JSObj_eq(self, other)
         case '__ne__':
@@ -1125,7 +1125,7 @@ js_array.tp_richcompare = function(self, other, op) {
     if (! $B.$isinstance(other, [_b_.list, _b_.tuple, js_array])) {
         return _b_.NotImplemented
     }
-    switch(op){
+    switch (op) {
         case '__eq__':
             return js_array_eq(self, other)
         case '__ne__':

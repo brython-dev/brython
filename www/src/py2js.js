@@ -215,7 +215,7 @@ function test_escape(text, antislash_pos) {
     if (mo) {
         return [String.fromCharCode(parseInt(mo[0], 8)), 1 + mo[0].length]
     }
-    switch(text[antislash_pos + 1]){
+    switch (text[antislash_pos + 1]) {
         case "x":
             mo = /^[0-9A-F]{0,2}/i.exec(text.substr(antislash_pos + 2))
             if (mo[0].length != 2) {

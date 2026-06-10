@@ -48,7 +48,7 @@ function get_newlines(text, newline) {
 }
 
 function transform_newline(s, newline) {
-    switch(newline){
+    switch (newline) {
         case _b_.None:
             s = s.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
             break

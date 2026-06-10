@@ -681,7 +681,7 @@ function XMLDECL(parser, origin) {
 }
 
 XMLDECL.prototype.feed = function(char) {
-    switch(this.expect){
+    switch (this.expect) {
         case 'version_info':
             var res = expect_literal(this, 'version', char)
             if (res.value) {
@@ -715,7 +715,7 @@ XMLDECL.prototype.feed = function(char) {
             }
             break
         case 'encoding_or_sd_or_close':
-            switch(char){
+            switch (char) {
                 case 'e':
                     if (! this.hasOwnProperty('encoding')) {
                         this.expect = 'encoding'
@@ -801,7 +801,7 @@ function CDATA() {
 }
 
 CDATA.prototype.feed = function(char) {
-    switch(this.expect){
+    switch (this.expect) {
         case ']':
             if (char == '>') {
                 throw Error('closed without closing ]')
@@ -1143,7 +1143,7 @@ function GEDecl(parser, char) {
 }
 
 GEDecl.prototype.feed = function(char) {
-    switch(this.expect){
+    switch (this.expect) {
         case 'name_start':
             if (is_id_start(char)) {
                 if (this.state == 'NDATA') {

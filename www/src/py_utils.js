@@ -479,7 +479,7 @@ $B.get_class = function(obj) {
     }
 
     var klass
-    switch(typeof obj){
+    switch (typeof obj) {
         case "number":
             if (Number.isInteger(obj)) {
                 return _b_.int
@@ -1054,7 +1054,7 @@ $B.augm_assign = function(left, op, right) {
     var res_type = num_result_type(left, right)
     if (res_type.is_int || res_type.is_float) {
         var z
-        switch(op){
+        switch (op) {
             case '+=':
                 z = res_type.x + res_type.y
                 break
@@ -1110,7 +1110,7 @@ $B.augm_assign = function(left, op, right) {
 $B.$is = function(a, b) {
     // Used for Python "is". In most cases it's the same as Javascript ===,
     // Cf. issue 669
-    switch(typeof a){
+    switch (typeof a) {
         case "null":
         case "undefined":
         case "string":
@@ -1344,7 +1344,7 @@ $B.to_num = function(obj, methods) {
 
 
 $B.PyNumber_Index = function(item) {
-    switch(typeof item){
+    switch (typeof item) {
         case "boolean":
             return item ? 1 : 0
         case "number":
@@ -1371,7 +1371,7 @@ $B.PyNumber_Index = function(item) {
 }
 
 $B.int_or_bool = function(v) {
-    switch(typeof v){
+    switch (typeof v) {
         case "boolean":
             return v ? 1 : 0
         case "number":
@@ -1563,7 +1563,7 @@ $B.rich_comp = function(op, x, y) {
         y1 = y?.valueOf ? y.valueOf() : y
     if((typeof x1 == "number" || typeof x1 == "bigint") &&
             (typeof y1 == "number" || typeof y1 == "bigint")){
-        switch(op){
+        switch (op) {
             case "__eq__":
                 return x1 == y1
             case "__ne__":
@@ -1714,7 +1714,7 @@ $B.rich_op1 = function(op, x, y) {
     }
     if (res_is_int || res_is_float) {
         var z
-        switch(op){
+        switch (op) {
             case "__add__":
                 z = x_num + y_num
                 break

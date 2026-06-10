@@ -156,7 +156,7 @@ $B.method.tp_richcompare = function(self, other, op) {
         return _b_.NotImplemented
     }
     var res
-    switch(op){
+    switch (op) {
         case '__eq__':
             res = (self.im_self === other.im_self &&
                 self.im_func === other.im_func)

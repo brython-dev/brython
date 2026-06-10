@@ -59,7 +59,7 @@ function test_escape(p, token, context, text, string_start, antislash_pos) {
         }
         return [String.fromCharCode(parseInt(mo[0], 8)), 1 + mo[0].length]
     }
-    switch(text[antislash_pos + 1]){
+    switch (text[antislash_pos + 1]) {
         case "x":
             var mo = /^[0-9A-F]{0,2}/i.exec(text.substr(antislash_pos + 2))
             if (mo[0].length != 2) {
@@ -145,7 +145,7 @@ $B.prepare_string = function(p, token) {
         sm_length, // length of string modifier
         end = null;
     if (string_modifier) {
-        switch(string_modifier) {
+        switch (string_modifier) {
             case 'r': // raw string
                 raw = true
                 break

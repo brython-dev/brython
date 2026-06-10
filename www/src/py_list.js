@@ -183,7 +183,7 @@ function tp_richcompare(self, other, op) {
         return _b_.NotImplemented
     }
     var res
-    switch(op){
+    switch (op) {
         case '__eq__':
             res = eq(self, other)
             break

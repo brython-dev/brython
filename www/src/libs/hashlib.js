@@ -85,7 +85,7 @@ hash.$factory = function(alg, obj) {
     }
     $B.init_dict(res)
 
-    switch(alg) {
+    switch (alg) {
       case 'md5':
       case 'sha1':
       case 'sha224':

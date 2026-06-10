@@ -205,7 +205,7 @@ function m_sinpi(x) {
     var r,
         y = fmod(fabs(x), 2.0), // float
         n = _b_.round($B.fast_float(2.0 * y.value)) // int
-    switch(n){
+    switch (n) {
         case 0:
             r = sin(pi.value * y.value);
             break;

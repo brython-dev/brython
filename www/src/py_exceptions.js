@@ -1511,10 +1511,10 @@ function trace_from_stack(err) {
                 }
                 var expr = ast.body[0]
                 var marks = ''
-                switch(expr.constructor){
+                switch (expr.constructor) {
                     case $B.ast.Expr:
                         try {
-                            switch(expr.value.constructor){
+                            switch (expr.value.constructor) {
                                 case $B.ast.BinOp:
                                     trace.push(handle_BinOp_error(
                                         lines, lineno, expr.value, tokens))
