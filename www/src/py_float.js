@@ -564,12 +564,10 @@ function conv_float(...objs) {
             x = obj
         } else if ($B.is_int(obj)) {
             x = _b_.int.nb_float(obj)
-        } else {
-            var float_method = $B.$getattr($B.get_class(obj), '__float__', $B.NULL)
-            if (float_method !== $B.NULL) {
-                x = $B.$call(float_method, obj)
-            }
         }
+        // CPython's float binary ops (CONVERT_TO_DOUBLE) accept ONLY
+        // int/float — no __float__ coercion: Decimal(5) + 2.2 must raise
+        // TypeError, it computed 7.2.
         res.push(x)
     }
     return res
