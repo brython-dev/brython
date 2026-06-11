@@ -195,7 +195,7 @@ array_funcs.__sizeof__ = function() {
 array_funcs.append = function(self, value) {
     $B.args("append", 2, {self: null, value: null}, arguments)
     var pos = self.obj === null ? 0 : self.obj.length
-    return array.insert(self, pos, value)
+    return array_funcs.insert(self, pos, value)
 }
 
 array_funcs.buffer_info = function() {
@@ -241,7 +241,7 @@ array_funcs.extend = function(self, iterable) {
         while (true) {
             try {
                 var item = _b_.next(it)
-                array.append(self, item)
+                array_funcs.append(self, item)
             } catch (err) {
                 $B.RAISE_IF_NOT(err, _b_.StopIteration)
                 break
@@ -272,7 +272,7 @@ array_funcs.fromlist = function(self, list) {
         try {
             var item = _b_.next(it)
             try {
-                array.append(self, item)
+                array_funcs.append(self, item)
             } catch (err) {
                 console.log(err)
                 return _b_.None
@@ -344,7 +344,7 @@ array_funcs.remove = function(self, x) {
     if (res == -1) {
         $B.RAISE(_b_.ValueError, "array.remove(x): x not in array")
     }
-    array.pop(self, res)
+    array_funcs.pop(self, res)
     return _b_.None
 }
 

@@ -1605,6 +1605,8 @@ $B.set_func_names(bytearray, "builtins")
 //bytes() (built in function)
 var bytes = _b_.bytes
 bytes.$buffer_protocol = true
+// bytearray is THE canonical read-write buffer (readinto target)
+_b_.bytearray.$buffer_protocol = true
 bytes.$is_sequence = true
 
 function bytes_split_with_sep(cls, self, seps, maxsplit) {
