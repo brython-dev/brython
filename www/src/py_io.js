@@ -976,6 +976,15 @@ function _io_open_impl(file, mode, buffering, encoding, errors, newline,
     path_or_fd = file
 
     if (! $B.is_str(path_or_fd)) {
+        // os.PathLike support: CPython's open() accepts any object with
+        // __fspath__ (pathlib.Path, DirEntry, ...).
+        var fspath = $B.$getattr(file, '__fspath__', null)
+        if (fspath !== null) {
+            path_or_fd = $B.$call(fspath)
+        }
+    }
+
+    if (! $B.is_str(path_or_fd)) {
         $B.RAISE(_b_.TypeError, `invalid file: ${file}`)
     }
 
