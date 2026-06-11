@@ -661,7 +661,10 @@ object_funcs.__reduce_ex__ = function(self, protocol) {
     res.push(list_like_iterator)
     var key_value_iterator = _b_.None
     if ($B.is_dict(self)) {
-        key_value_iterator = _b_.dict.tp_funcs.items(self)
+        // CPython's reduce_2 passes an ITERATOR (PyObject_GetIter on the
+        // items view); pickle's C implementation rejects the bare view
+        // ("fifth item ... must be an iterator, not dict_items").
+        key_value_iterator = _b_.iter(_b_.dict.tp_funcs.items(self))
     }
     res.push(key_value_iterator)
     return $B.fast_tuple(res)
