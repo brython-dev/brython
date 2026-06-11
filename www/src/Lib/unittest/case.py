@@ -318,6 +318,13 @@ class _AssertWarnsContext(_AssertRaisesBaseContext):
         first_matching = None
         for m in self.warnings:
             w = m.message
+            # Brython's _warnings shim records str messages as-is; CPython
+            # materializes category(message). A raw str never
+            # isinstance-matches, so assertWarns reported "not triggered"
+            # even when the warning fired.
+            if isinstance(w, str) and isinstance(m.category, type) \
+                    and issubclass(m.category, self.expected):
+                w = m.category(w)
             if not isinstance(w, self.expected):
                 continue
             if first_matching is None:
