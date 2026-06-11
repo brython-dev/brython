@@ -621,8 +621,15 @@ function nb_multiply() {
 
     var self = $.self,
         value = $.value
+    // reflected path delivers the ORIGINAL arg order (2 * bytearray)
+    if (self.source === undefined && value && value.source !== undefined) {
+        var _t = self
+        self = value
+        value = _t
+    }
     var v = $B.PyNumber_Index(value)
-    var source = self.source.slice()
+    // exactly v repetitions: starting from a copy produced v+1
+    var source = []
     for (var i = 0; i < v; i++) {
         for (var item of self.source) {
             source[source.length] = item
@@ -2334,9 +2341,19 @@ _b_.bytes.tp_richcompare = function(self, other, op) {
 
 _b_.bytes.nb_multiply = function() {
     var $ = $B.args('__mul__', 2, {self: null, other: null}, arguments)
-    var other = $B.PyNumber_Index($.other)
+    // slot convention: arguments arrive in the ORIGINAL order, so on the
+    // reflected path (46 * b'!' -> __rmul__) self is the int — handle
+    // either side, like CPython's bytes_repeat.
+    var _self = $.self,
+        _other = $.other
+    if (_self.source === undefined && _other && _other.source !== undefined) {
+        var _t = _self
+        _self = _other
+        _other = _t
+    }
+    var other = $B.PyNumber_Index(_other)
     var t = [],
-        source = $.self.source,
+        source = _self.source,
         slen = source.length
     for (var i = 0; i < other; i++) {
         for (var j = 0; j < slen; j++) {
