@@ -1295,10 +1295,20 @@ _b_.locals = function() {
     var locals_obj = $B.frame_obj.frame[1]
     // In a class body, locals() is a proxy around a dict(-like) object
     var class_locals = locals_obj.$target
-    if (class_locals) {
+    if (class_locals && $B.get_class(class_locals) === _b_.dict) {
         return class_locals
     }
-    return locals_obj
+    // CPython's locals() returns a dict snapshot; the raw frame object is
+    // not a Python mapping ('x' in locals() raised "argument of type ...
+    // is not a container or iterable"). Skip frame infrastructure keys.
+    var d = $B.empty_dict()
+    for (var key in locals_obj) {
+        if (key.startsWith('$') || key == '__class__' || key == 'ob_type') {
+            continue
+        }
+        _b_.dict.$setitem(d, key, locals_obj[key])
+    }
+    return d
 }
 
 
