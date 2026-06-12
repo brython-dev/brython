@@ -2597,20 +2597,19 @@ _b_.bytes.sq_contains = function(self, other) {
     if (self.source.length < other.source.length) {
         return false
     }
-    var len = other.source.length
-    for (var i = 0; i < self.source.length - other.source.length + 1; i++) {
-        var flag = true
-        for (var j = 0; j < len; j++) {
-            if (other.source[i + j] != self.source[j]) {
-                flag = false
-                break
-            }
+    // subsequence search via native String.indexOf — the previous loop
+    // compared the needle shifted against the start of the haystack
+    // (swapped indices), so multi-byte needles never matched; bytes map
+    // 1:1 to latin-1 code units (chunked to respect the arg-count limit)
+    var to_str = function(src) {
+        var parts = []
+        for (var k = 0; k < src.length; k += 32768) {
+            parts.push(String.fromCharCode.apply(null,
+                Array.prototype.slice.call(src, k, k + 32768)))
         }
-        if (flag) {
-            return true
-        }
+        return parts.join('')
     }
-    return false
+    return to_str(self.source).indexOf(to_str(other.source)) > -1
 }
 
 _b_.bytes.bf_getbuffer = function(self, flags) {
