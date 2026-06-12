@@ -292,6 +292,12 @@ _b_.object.tp_setattro = function(self, attr, value) {
         }
     }
     var dict = $B.get_dict(self)
+    // a class whose __slots__ contains '__dict__' keeps a per-instance
+    // dict: create it lazily on the first out-of-slots setattr
+    if (! dict && klass.$slots_has_dict) {
+        self[$B.DICT] = $B.empty_dict()
+        dict = self[$B.DICT]
+    }
     if (dict) {
         $B.str_dict_set(dict, attr, value)
     } else {
