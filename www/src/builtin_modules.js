@@ -943,7 +943,9 @@
             var message = $.message,
                 category = $.category,
                 stacklevel = $.stacklevel
-            if ($B.$isinstance(message, _b_.Warning)) {
+            if ($B.$isinstance(message, _b_.str)) {
+                message = $B.$call(category, message)
+            } else if ($B.$isinstance(message, _b_.Warning)) {
                 category = $B.get_class(message)
             }
             var filters
