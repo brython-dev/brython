@@ -1078,6 +1078,11 @@ function set_slots(cl_dict, class_obj) {
     let slots = $B.str_dict_get(cl_dict, '__slots__', $B.NULL)
     if (slots !== $B.NULL) {
         for (let key of $B.make_js_iterator(slots)) {
+            // CPython mangles private slot names at class-creation time,
+            // matching the compiler's mangling of self.__private accesses
+            if (key.startsWith('__') && ! key.endsWith('__')) {
+                key = '_' + $B.get_name(class_obj).replace(/^_+/, '') + key
+            }
             var member = {
                 name: key,
                 type: $B.TYPES.OBJECT,
