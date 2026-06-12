@@ -814,9 +814,9 @@ int_funcs.from_bytes = function(self) {
             "byteorder must be either 'little' or 'big'")
     }
     var num = _bytes[0]
-    if (signed && num >= 128) {
-        num = num - 256
-    }
+    // the sign lives in the MOST significant byte — handled at the end
+    // via the final two's-complement; pre-complementing the low byte
+    // subtracted 256 from every signed value whose low byte was >= 128
     num = BigInt(num)
     var _mult = 256n
     for (let i = 1;  i < _len; i++) {
