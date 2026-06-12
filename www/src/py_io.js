@@ -355,7 +355,8 @@ $B.is_buffer = function(obj) {
     if ($B.get_class(obj).$buffer_protocol) {
         return true
     }
-    for (var klass of $B.get_class(obj).__mro__) {
+    // Brython 3.14 classes store their MRO in tp_mro, not __mro__
+    for (var klass of $B.get_mro($B.get_class(obj))) {
         if (klass.$buffer_protocol) {
             return true
         }
@@ -446,6 +447,14 @@ function _bufferedreader_read_all(_self) {
 
 function _bufferedreader_read_fast(_self, n) {
     var raw = _self.raw
+    // raw streams without a preloaded $bytes snapshot: delegate to raw.read
+    if (raw.$bytes === undefined) {
+        var res = $B.$call($B.$getattr(raw, 'read'), n)
+        if (res === _b_.None || _b_.len(res) === 0) {
+            return _b_.None
+        }
+        return res
+    }
     if (raw.$byte_pos >= raw.$bytes.length) {
         return _b_.None
     }
