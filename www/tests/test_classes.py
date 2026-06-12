@@ -1257,10 +1257,18 @@ assert_raises(TypeError, A)
 class C:
 
     def m(self):
-        def f(*, __x=1): 
+        def f(*, __x=1):
             return __x
         return f()
 
 assert C().m() == 1
+
+# PR 2729
+class C:
+  
+    def __reduce__(self):
+      return (C, ('marker',))
+
+assert C().__reduce_ex__(2) == (C, ('marker',))
 
 print('passed all tests..')

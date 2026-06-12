@@ -286,4 +286,10 @@ b = {"b": 2}
 m = ChainMap(a)
 assert dict(m, **b) == {'a': 1, 'b': 2}
 
+# PR 2730
+class D(dict):
+    pass
+
+assert type(D(a=1).__reduce_ex__(2)[4]) is type(iter({}.items()))
+
 print("passed all tests..")

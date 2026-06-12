@@ -871,4 +871,12 @@ assert 2 ** 53 == float(2 ** 53)
 # issue 2661
 assert_raises(ValueError, int, '+')
 
+# PR 2728
+assert 2 | True == 3
+assert 2 & True == 0
+assert 2 ^ True == 3
+assert 2 | False == 2
+assert 2 & False == 0
+assert 3 ^ False == 3
+
 print('passed all tests...')

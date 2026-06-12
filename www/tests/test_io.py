@@ -125,4 +125,12 @@ assert s.read() == b'abcd'
 assert s.tell() == 4
 assert s.getvalue() == b'abcd'
 
+# PR 2738
+io.BufferedReader(io.BytesIO(b'x')).raw
+
+# PR 2739
+array.array('Q', [1, 2])
+assert array.array('i').itemsize == 4
+assert array.array('i', [1]).tobytes() == b'\x01\x00\x00\x00'
+
 print('all tests passed...')

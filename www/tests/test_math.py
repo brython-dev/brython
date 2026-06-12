@@ -374,5 +374,8 @@ def f():
 
 assert_raises(TypeError, math.sqrt, f,
     msg = "must be real number, not function")
-    
+
+# PR 2727
+assert_raises(ValueError, math.fsum, [float('inf'), float('-inf')])
+
 print("passed all tests..")
