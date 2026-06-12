@@ -613,9 +613,12 @@ object_funcs.__reduce_ex__ = function(self, protocol) {
     var klass = $B.get_class(self)
     var reduce = $B.$getattr(klass, '__reduce__')
 
-    if(reduce !== object.tp_funcs.__reduce__ &&
-            ((reduce.ob_type === $B.method_descriptor) &&
-             (reduce.method !== object.tp_funcs.__reduce__))){
+    // Honor ANY non-default override: a Python-level __reduce__ is a plain
+    // function (not a method_descriptor) and was silently ignored.
+    var reduce_is_default = (reduce === object.tp_funcs.__reduce__) ||
+            (reduce.ob_type === $B.method_descriptor &&
+             reduce.method === object.tp_funcs.__reduce__)
+    if(! reduce_is_default){
         return $B.$call(reduce, self)
     }
     if ($B.imported.copyreg === undefined) {
