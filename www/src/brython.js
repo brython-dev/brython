@@ -724,8 +724,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-06-12 18:29:46.994033"
-__BRYTHON__.timestamp=1781281786993
+__BRYTHON__.compiled_date="2026-06-12 21:28:30.677443"
+__BRYTHON__.timestamp=1781292510677
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_kozh","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -2145,7 +2145,7 @@ return x1 >=y1
 case "__gt__":
 return x1 > y1}}
 var res
-if(x !==null && $B.is_type(x)){if(op=="__eq__"){return(x===y)}else if(op=="__ne__"){return !(x===y)}else{
+if(x !==null && $B.is_type(x)&& $B.get_class(x)===_b_.type){if(op=="__eq__"){return(x===y)}else if(op=="__ne__"){return !(x===y)}else{
 $B.RAISE(_b_.TypeError,"'"+method2comp[op]+
 "' not supported between instances of '"+$B.class_name(x)+
 "' and '"+$B.class_name(y)+"'")}}
@@ -2382,6 +2382,8 @@ return setter(in_mro,self,value)}}
 var slots=$B.get_from_dict(klass,'__slots__',$B.NULL)
 if(slots !==$B.NULL){if(_b_.tuple.sq_contains(slots,attr)){self.slot_values[attr]=value}}
 var dict=$B.get_dict(self)
+if(! dict && klass.$slots_has_dict){self[$B.DICT]=$B.empty_dict()
+dict=self[$B.DICT]}
 if(dict){$B.str_dict_set(dict,attr,value)}else{
 var exc=$B.attr_error(attr,self)
 exc.args[0]=`'${$B.get_name(klass)}' object has no attribute `+
@@ -2497,6 +2499,12 @@ if(spec !==""){$B.RAISE(_b_.TypeError,"non-empty format string passed to object.
 )}
 return _b_.str.$factory(self)}
 object_funcs.__getstate__=function(self){var dict=$B.get_dict(self)
+var sd=null
+for(var k in self){if(k.startsWith('slot_value_')&& self[k]!==undefined){if(sd===null){sd=$B.empty_dict()}
+_b_.dict.$setitem(sd,k.slice(11),self[k])}}
+if(sd !==null){var d1=(dict !==undefined && dict !==null &&
+_b_.dict.mp_length(dict)> 0)? dict :_b_.None
+return $B.fast_tuple([d1,sd])}
 return dict===undefined ? _b_.None :dict}
 object_funcs.__init_subclass__=function(self){
 var $=$B.args("__init_subclass__",1,{cls:null},arguments,null,"args","kwargs")
@@ -2939,7 +2947,11 @@ function reset_setattr(cls){$B.make_setattr(cls)
 if(cls.tp_subclasses===undefined){console.log('no subclasses',cls)}
 for(var kls of cls.tp_subclasses){reset_setattr(kls)}}
 function set_slots(cl_dict,class_obj){let slots=$B.str_dict_get(cl_dict,'__slots__',$B.NULL)
-if(slots !==$B.NULL){for(let key of $B.make_js_iterator(slots)){var member={name:key,type:$B.TYPES.OBJECT,attr:'slot_value_'+key,flags:0}
+if(slots !==$B.NULL){for(let key of $B.make_js_iterator(slots)){
+if(key.startsWith('__')&& ! key.endsWith('__')){key='_'+$B.get_name(class_obj).replace(/^_+/,'')+key}
+if(key=='__dict__' ||key=='__weakref__'){if(key=='__dict__'){class_obj.$slots_has_dict=true}
+continue}
+var member={name:key,type:$B.TYPES.OBJECT,attr:'slot_value_'+key,flags:0}
 var md={ob_type:$B.member_descriptor,d_type:class_obj,d_name:key,d_member:member}
 $B.str_dict_set(cl_dict,key,md)}}}
 _b_.type.tp_setattro=function(kls,attr,value){var $test=false 
@@ -7758,12 +7770,10 @@ return{
 ob_type:$B.get_class(self),source:self.source.concat(get_list_from_bytes_like(other))}}
 _b_.bytes.sq_contains=function(self,other){if(typeof other=="number"){return self.source.indexOf(other)>-1}
 if(self.source.length < other.source.length){return false}
-var len=other.source.length
-for(var i=0;i < self.source.length-other.source.length+1;i++){var flag=true
-for(var j=0;j < len;j++){if(other.source[i+j]!=self.source[j]){flag=false
-break}}
-if(flag){return true}}
-return false}
+var to_str=function(src){var parts=[]
+for(var k=0;k < src.length;k+=32768){parts.push(String.fromCharCode.apply(null,Array.prototype.slice.call(src,k,k+32768)))}
+return parts.join('')}
+return to_str(self.source).indexOf(to_str(other.source))>-1}
 _b_.bytes.bf_getbuffer=function(self,flags){return $B.$call(_b_.memoryview,self)}
 var bytes_funcs=_b_.bytes.tp_funcs={}
 bytes_funcs.__bytes__=function(self){if($B.exact_type(self,_b_.bytes)){return self}
@@ -10078,7 +10088,6 @@ _len=_bytes.length
 for(let i=0;i < _len;i++){_b_.bytes.$factory([_bytes[i]])}}
 if(byteorder=="big"){_bytes.reverse()}else if(byteorder !="little"){$B.RAISE(_b_.ValueError,"byteorder must be either 'little' or 'big'")}
 var num=_bytes[0]
-if(signed && num >=128){num=num-256}
 num=BigInt(num)
 var _mult=256n
 for(let i=1;i < _len;i++){num+=_mult*BigInt(_bytes[i])

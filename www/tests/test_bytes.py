@@ -342,4 +342,8 @@ except BufferError:
 # PR 2734
 assert 5 * b'!' == b'!!!!!'
 
+# PR 2744
+assert b'hell' in b'hello world'
+assert b'wor' in b'hello world'
+
 print('passed all tests...')
