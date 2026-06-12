@@ -1410,12 +1410,24 @@ function fsum(x) {
     */
     var partials = [],
         res = new Number(),
+        inf_sum = 0,
+        special_sum = 0,
         _it = _b_.iter(x)
     while (true) {
         try {
             var x = _b_.next(_it),
                 i = 0
             x = float_check(x)
+            if (! isFinite(x)) {
+                // Special values: track infinities and nans separately, as
+                // CPython's math_fsum does, so that inf + inf returns inf,
+                // nan propagates, and -inf + inf raises ValueError below.
+                if (x === Infinity || x === -Infinity) {
+                    inf_sum += x
+                }
+                special_sum += x
+                continue
+            }
             for (var j = 0, len = partials.length; j < len; j++) {
                 var y = float_check(partials[j])
                 if (Math.abs(x) < Math.abs(y)) {
@@ -1436,6 +1448,12 @@ function fsum(x) {
             if ($B.$isinstance(err, _b_.StopIteration)) {break}
             throw err
         }
+    }
+    if (special_sum !== 0) {
+        if (isNaN(inf_sum)) {
+            $B.RAISE(_b_.ValueError, '-inf + inf in fsum')
+        }
+        return $B.fast_float(special_sum)
     }
     var res = 0
     for (var i = 0; i < partials.length; i++) {
