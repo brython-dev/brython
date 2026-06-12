@@ -86,6 +86,7 @@ hash.$factory = function(alg, obj) {
         ob_type: hash
     }
     $B.init_dict(res)
+    let _hash
 
     switch (alg) {
       case 'md5':
@@ -99,7 +100,7 @@ hash.$factory = function(alg, obj) {
                 $B.CryptoJS.algo[ALG] === undefined){
             $get_CryptoJS_lib(alg)
         }
-        let _hash = $B.CryptoJS.algo[ALG].create()
+        _hash = $B.CryptoJS.algo[ALG].create()
         if (obj !== undefined) {
             _hash.update(bytes2WordArray(obj))
         }

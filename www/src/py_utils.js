@@ -1556,7 +1556,9 @@ $B.rich_comp = function(op, x, y) {
     }
     var res
 
-    if (x !== null && $B.is_type(x)) {
+    // classes compare by identity ONLY under plain `type`; a custom
+    // metaclass may define __eq__/__ne__
+    if (x !== null && $B.is_type(x) && $B.get_class(x) === _b_.type) {
         if (op == "__eq__") {
             return (x === y)
         } else if (op == "__ne__") {

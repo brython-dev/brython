@@ -1078,6 +1078,19 @@ function set_slots(cl_dict, class_obj) {
     let slots = $B.str_dict_get(cl_dict, '__slots__', $B.NULL)
     if (slots !== $B.NULL) {
         for (let key of $B.make_js_iterator(slots)) {
+            // CPython mangles private slot names at class-creation time,
+            // matching the compiler's mangling of self.__private accesses
+            if (key.startsWith('__') && ! key.endsWith('__')) {
+                key = '_' + $B.get_name(class_obj).replace(/^_+/, '') + key
+            }
+            // CPython: '__dict__' / '__weakref__' inside __slots__ are
+            // markers, not slots — '__dict__' keeps the per-instance dict
+            if (key == '__dict__' || key == '__weakref__') {
+                if (key == '__dict__') {
+                    class_obj.$slots_has_dict = true
+                }
+                continue
+            }
             var member = {
                 name: key,
                 type: $B.TYPES.OBJECT,

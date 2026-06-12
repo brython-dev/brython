@@ -1167,7 +1167,29 @@ js_array.mp_length = function(self) {
 }
 
 js_array.mp_subscript = function(self, i) {
+    if ($B.get_class(i) === _b_.slice) {
+        // Slice support: items keep their JS-side representations (like
+        // sq_concat does); access converts via jsobj2pyobj as usual.
+        var indices = _b_.slice.tp_funcs.indices(i, self.length),
+            start = indices[0],
+            stop = indices[1],
+            step = indices[2],
+            res = []
+        if (step > 0) {
+            for (var k = start; k < stop; k += step) {
+                res.push(self[k])
+            }
+        } else {
+            for (var k = start; k > stop; k += step) {
+                res.push(self[k])
+            }
+        }
+        return res
+    }
     i = $B.PyNumber_Index(i)
+    if (i < 0) {
+        i += self.length
+    }
     return jsobj2pyobj(self[i])
 }
 

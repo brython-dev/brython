@@ -225,7 +225,17 @@ _b_.memoryview.mp_subscript = function(self, key) {
         res = $B.$call(getitem, self.obj, key)
     }
     if ($B.get_class(key) === _b_.slice) {
-        return memoryview.$factory(res)
+        var mv = memoryview.$factory(res)
+        // A stepped slice (mv[::2], mv[::-1]) is not contiguous; record it so
+        // .c_contiguous / .f_contiguous / .contiguous and the buffer protocol
+        // report it as CPython does (e.g. struct.pack_into rejects it).
+        var step = key.step
+        if (step !== undefined && step !== _b_.None && step !== 1 && step !== 1n) {
+            mv.c_contiguous = false
+            mv.f_contiguous = false
+            mv.contiguous = false
+        }
+        return mv
     }
 }
 
@@ -257,7 +267,7 @@ memoryview_funcs._from_flags = function(self) {
 }
 
 memoryview_funcs.c_contiguous_get = function(self) {
-    return self.flags & (MEMORYVIEW.SCALAR | MEMORYVIEW.C)
+    return self.c_contiguous
 }
 
 memoryview_funcs.c_contiguous_set = _b_.None
@@ -303,7 +313,7 @@ memoryview_funcs.cast = function(self, format, shape) {
 }
 
 memoryview_funcs.contiguous_get = function(self) {
-    return self.flags & (MEMORYVIEW.SCALAR | MEMORYVIEW.C | MEMORYVIEW.FORTRAN)
+    return self.contiguous
 }
 
 memoryview_funcs.contiguous_set = _b_.None
@@ -323,7 +333,7 @@ memoryview_funcs.count = function(self) {
 }
 
 memoryview_funcs.f_contiguous_get = function(self) {
-    return self.flags & (MEMORYVIEW.SCALAR | MEMORYVIEW.FORTRAN)
+    return self.f_contiguous
 }
 
 memoryview_funcs.f_contiguous_set = _b_.None

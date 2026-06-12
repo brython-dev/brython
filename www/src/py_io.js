@@ -355,7 +355,8 @@ $B.is_buffer = function(obj) {
     if ($B.get_class(obj).$buffer_protocol) {
         return true
     }
-    for (var klass of $B.get_class(obj).__mro__) {
+    // Brython 3.14 classes store their MRO in tp_mro, not __mro__
+    for (var klass of $B.get_mro($B.get_class(obj))) {
         if (klass.$buffer_protocol) {
             return true
         }
@@ -446,6 +447,14 @@ function _bufferedreader_read_all(_self) {
 
 function _bufferedreader_read_fast(_self, n) {
     var raw = _self.raw
+    // raw streams without a preloaded $bytes snapshot: delegate to raw.read
+    if (raw.$bytes === undefined) {
+        var res = $B.$call($B.$getattr(raw, 'read'), n)
+        if (res === _b_.None || _b_.len(res) === 0) {
+            return _b_.None
+        }
+        return res
+    }
     if (raw.$byte_pos >= raw.$bytes.length) {
         return _b_.None
     }
@@ -475,6 +484,8 @@ function _bufferedreader_readline(_self) {
 
 $B._BufferedReader = $B.make_builtin_class('_BufferedReader',
     [$B._BufferedIOBase])
+// expose the underlying raw stream, like CPython (decomp._buffer.raw.tell())
+$B._BufferedReader.tp_getset = ['raw']
 
 $B._BufferedReader.tp_init = function(_self, raw, buffer_size=DEFAULT_BUFFER_SIZE) {
     _self.raw = raw
@@ -482,6 +493,10 @@ $B._BufferedReader.tp_init = function(_self, raw, buffer_size=DEFAULT_BUFFER_SIZ
 }
 
 var _BufferedReader_funcs = $B._BufferedReader.tp_funcs = {}
+
+_BufferedReader_funcs.raw_get = function(_self) {
+    return _self.raw
+}
 
 _BufferedReader_funcs.peek = function(_self, size) {
     var $ = $B.args('peek', 2, {self: null, size: null}, arguments,
@@ -974,6 +989,15 @@ function _io_open_impl(file, mode, buffering, encoding, errors, newline,
     var raw, modeobj, buffer, wrapper, result, path_or_fd
 
     path_or_fd = file
+
+    if (! $B.is_str(path_or_fd)) {
+        // os.PathLike support: CPython's open() accepts any object with
+        // __fspath__ (pathlib.Path, DirEntry, ...).
+        var fspath = $B.$getattr(file, '__fspath__', null)
+        if (fspath !== null) {
+            path_or_fd = $B.$call(fspath)
+        }
+    }
 
     if (! $B.is_str(path_or_fd)) {
         $B.RAISE(_b_.TypeError, `invalid file: ${file}`)
