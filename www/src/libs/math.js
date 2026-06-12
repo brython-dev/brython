@@ -1760,7 +1760,13 @@ function isfinite(x) {
 function isinf(x) {
     $B.check_nb_args('isinf', 1, arguments)
     $B.check_no_kw('isinf', x)
-    return _b_.float.$funcs.isinf(x)
+    if (_b_.float.$funcs.isinf(x)) {
+        return true
+    }
+    // Like isnan/isfinite, coerce through float_check so any __float__-able
+    // argument (e.g. Decimal('inf')) is handled, as in CPython.
+    var y = float_check(x)
+    return y === Infinity || y === -Infinity
 }
 
 function isnan(x) {
