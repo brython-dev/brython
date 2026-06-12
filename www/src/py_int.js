@@ -966,29 +966,33 @@ bool.$factory = function() {
 }
 
 /* bool start */
+// Guard BOTH operands: these slots are also reached through the reflected
+// dunders (bool.__ror__ & co, selected by the subclass-priority dispatch for
+// `int OP bool`), where self is the int. With the guard on `other` only,
+// `2 | True` hit the JS LOGICAL `self || other` and returned 2.
 _b_.bool.nb_and = function(self, other) {
-    if ($B.$isinstance(other, bool)) {
-        return self && other
-    } else if ($B.$isinstance(other, int)) {
-        return int.nb_and(int_value(self), other)
+    if (typeof self == 'boolean' && typeof other == 'boolean') {
+        return (self & other) ? true : false
+    } else if ($B.$isinstance(self, int) && $B.$isinstance(other, int)) {
+        return int.nb_and(int_value(self), int_value(other))
     }
     return _b_.NotImplemented
 }
 
 _b_.bool.nb_xor = function(self, other) {
-    if ($B.$isinstance(other, bool)) {
-        return self ^ other ? true : false
-    } else if ($B.$isinstance(other, int)) {
-        return int.nb_xor(int_value(self), other)
+    if (typeof self == 'boolean' && typeof other == 'boolean') {
+        return (self ^ other) ? true : false
+    } else if ($B.$isinstance(self, int) && $B.$isinstance(other, int)) {
+        return int.nb_xor(int_value(self), int_value(other))
     }
     return _b_.NotImplemented
 }
 
 _b_.bool.nb_or = function(self, other) {
-    if ($B.$isinstance(other, bool)) {
-        return self || other
-    } else if ($B.$isinstance(other, int)) {
-        return int.nb_or(int_value(self), other)
+    if (typeof self == 'boolean' && typeof other == 'boolean') {
+        return (self | other) ? true : false
+    } else if ($B.$isinstance(self, int) && $B.$isinstance(other, int)) {
+        return int.nb_or(int_value(self), int_value(other))
     }
     return _b_.NotImplemented
 }
