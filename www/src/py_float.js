@@ -99,7 +99,7 @@ const DBL_MANT_DIG = 53,
       DBL_MIN_EXP = -1021
 
 var format_sign = function(val, flags) {
-    switch(flags.sign){
+    switch (flags.sign) {
         case '+':
             // indicates that a sign should be used for both positive as well
             // as negative numbers
@@ -564,12 +564,10 @@ function conv_float(...objs) {
             x = obj
         } else if ($B.is_int(obj)) {
             x = _b_.int.nb_float(obj)
-        } else {
-            var float_method = $B.$getattr($B.get_class(obj), '__float__', $B.NULL)
-            if (float_method !== $B.NULL) {
-                x = $B.$call(float_method, obj)
-            }
         }
+        // CPython's float binary ops (CONVERT_TO_DOUBLE) accept ONLY
+        // int/float — no __float__ coercion: Decimal(5) + 2.2 must raise
+        // TypeError, it computed 7.2.
         res.push(x)
     }
     return res
@@ -581,7 +579,7 @@ float.$factory = function(value) {
         return fast_float(0)
     }
     $B.check_nb_args_no_kw('float', 1, arguments)
-    switch(value) {
+    switch (value) {
         case true:
             return fast_float(1)
         case false:
@@ -617,7 +615,7 @@ float.$factory = function(value) {
                    `could not convert string to float: ${_b_.repr(value)}`)
        }
        value = value.trim()   // remove leading and trailing whitespace
-       switch(value.toLowerCase()) {
+       switch (value.toLowerCase()) {
            case "+inf":
            case "inf":
            case "+infinity":
@@ -719,7 +717,7 @@ _b_.float.tp_richcompare = function(self, other, op) {
 
     var res
 
-    switch(op){
+    switch (op) {
         case '__eq__':
             res = self.value == other_value
             break
@@ -1189,7 +1187,7 @@ float_funcs.fromhex = function(klass, s) {
           throw parse_error()
       }
       if (negate) {
-          x = float.__neg__(x)
+          x = float.nb_negative(x)
       }
       return klass === _b_.float ? x : $B.$call(klass, x)
     }

@@ -91,4 +91,22 @@ assert list(gen) == list(range(5))
 # issue 1051
 assert next(iter([]), 'The End!') == 'The End!'
 
+# PR 2715
+class C:
+
+    def __len__(self):
+      return 9
+      
+    def __getitem__(self, i):
+        if i > 2:
+            raise OSError
+        return i
+
+try:
+  for i in C():
+    pass
+  raise Exception('should have raised OSError')
+except OSError:
+  assert i == 2
+
 print("passed all tests...")

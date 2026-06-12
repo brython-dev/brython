@@ -719,12 +719,13 @@ $B.unicode={"No_digits":[178,179,185,[4969,9],6618,8304,[8308,6],[8320,10],[9312
 $B.digits_starts=[48,1632,1776,1984,2406,2534,2662,2790,2918,3046,3174,3302,3430,3558,3664,3792,3872,4160,4240,6112,6160,6470,6608,6784,6800,6992,7088,7232,7248,42528,43216,43264,43472,43504,43600,44016,65296,66720,68912,68928,69734,69872,69942,70096,70384,70736,70864,71248,71360,71376,71386,71472,71904,72016,72688,72784,73040,73120,73184,73552,90416,92768,92864,93008,93552,118000,120782,120792,120802,120812,120822,123200,123632,124144,124401,125264,130032]
 $B.unicode_casefold={223:[115,115],304:[105,775],329:[700,110],496:[106,780],912:[953,776,769],944:[965,776,769],1415:[1381,1410],7830:[104,817],7831:[116,776],7832:[119,778],7833:[121,778],7834:[97,702],7838:[223],8016:[965,787],8018:[965,787,768],8020:[965,787,769],8022:[965,787,834],8064:[7936,953],8065:[7937,953],8066:[7938,953],8067:[7939,953],8068:[7940,953],8069:[7941,953],8070:[7942,953],8071:[7943,953],8072:[8064],8073:[8065],8074:[8066],8075:[8067],8076:[8068],8077:[8069],8078:[8070],8079:[8071],8080:[7968,953],8081:[7969,953],8082:[7970,953],8083:[7971,953],8084:[7972,953],8085:[7973,953],8086:[7974,953],8087:[7975,953],8088:[8080],8089:[8081],8090:[8082],8091:[8083],8092:[8084],8093:[8085],8094:[8086],8095:[8087],8096:[8032,953],8097:[8033,953],8098:[8034,953],8099:[8035,953],8100:[8036,953],8101:[8037,953],8102:[8038,953],8103:[8039,953],8104:[8096],8105:[8097],8106:[8098],8107:[8099],8108:[8100],8109:[8101],8110:[8102],8111:[8103],8114:[8048,953],8115:[945,953],8116:[940,953],8118:[945,834],8119:[945,834,953],8124:[8115],8130:[8052,953],8131:[951,953],8132:[942,953],8134:[951,834],8135:[951,834,953],8140:[8131],8146:[953,776,768],8147:[912],8150:[953,834],8151:[953,776,834],8162:[965,776,768],8163:[944],8164:[961,787],8166:[965,834],8167:[965,776,834],8178:[8060,953],8179:[969,953],8180:[974,953],8182:[969,834],8183:[969,834,953],8188:[8179],64256:[102,102],64257:[102,105],64258:[102,108],64259:[102,102,105],64260:[102,102,108],64261:[64262],64262:[115,116],64275:[1396,1398],64276:[1396,1381],64277:[1396,1387],64278:[1406,1398],64279:[1396,1389]}
 $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194,8195,8196,8197,8198,8199,8200,8201,8202,8232,8233,8287,12288]
+$B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8":"\u01c8","\u01c9":"\u01c8","\u01c7":"\u01c8","\u01cb":"\u01cb","\u01cc":"\u01cb","\u01ca":"\u01cb","\u01f2":"\u01f2","\u01f3":"\u01f2","\u01f1":"\u01f2","\u1f88":"\u1f88","\u1f80":"\u1f88","\u1f08\u0399":"\u1f88","\u1f89":"\u1f89","\u1f81":"\u1f89","\u1f09\u0399":"\u1f89","\u1f8a":"\u1f8a","\u1f82":"\u1f8a","\u1f0a\u0399":"\u1f8a","\u1f8b":"\u1f8b","\u1f83":"\u1f8b","\u1f0b\u0399":"\u1f8b","\u1f8c":"\u1f8c","\u1f84":"\u1f8c","\u1f0c\u0399":"\u1f8c","\u1f8d":"\u1f8d","\u1f85":"\u1f8d","\u1f0d\u0399":"\u1f8d","\u1f8e":"\u1f8e","\u1f86":"\u1f8e","\u1f0e\u0399":"\u1f8e","\u1f8f":"\u1f8f","\u1f87":"\u1f8f","\u1f0f\u0399":"\u1f8f","\u1f98":"\u1f98","\u1f90":"\u1f98","\u1f28\u0399":"\u1f98","\u1f99":"\u1f99","\u1f91":"\u1f99","\u1f29\u0399":"\u1f99","\u1f9a":"\u1f9a","\u1f92":"\u1f9a","\u1f2a\u0399":"\u1f9a","\u1f9b":"\u1f9b","\u1f93":"\u1f9b","\u1f2b\u0399":"\u1f9b","\u1f9c":"\u1f9c","\u1f94":"\u1f9c","\u1f2c\u0399":"\u1f9c","\u1f9d":"\u1f9d","\u1f95":"\u1f9d","\u1f2d\u0399":"\u1f9d","\u1f9e":"\u1f9e","\u1f96":"\u1f9e","\u1f2e\u0399":"\u1f9e","\u1f9f":"\u1f9f","\u1f97":"\u1f9f","\u1f2f\u0399":"\u1f9f","\u1fa8":"\u1fa8","\u1fa0":"\u1fa8","\u1f68\u0399":"\u1fa8","\u1fa9":"\u1fa9","\u1fa1":"\u1fa9","\u1f69\u0399":"\u1fa9","\u1faa":"\u1faa","\u1fa2":"\u1faa","\u1f6a\u0399":"\u1faa","\u1fab":"\u1fab","\u1fa3":"\u1fab","\u1f6b\u0399":"\u1fab","\u1fac":"\u1fac","\u1fa4":"\u1fac","\u1f6c\u0399":"\u1fac","\u1fad":"\u1fad","\u1fa5":"\u1fad","\u1f6d\u0399":"\u1fad","\u1fae":"\u1fae","\u1fa6":"\u1fae","\u1f6e\u0399":"\u1fae","\u1faf":"\u1faf","\u1fa7":"\u1faf","\u1f6f\u0399":"\u1faf","\u1fbc":"\u1fbc","\u1fb3":"\u1fbc","\u0391\u0399":"\u1fbc","\u1fcc":"\u1fcc","\u1fc3":"\u1fcc","\u0397\u0399":"\u1fcc","\u1ffc":"\u1ffc","\u1ff3":"\u1ffc","\u03a9\u0399":"\u1ffc"}
 ;
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-06-05 18:34:58.349086"
-__BRYTHON__.timestamp=1780677298348
+__BRYTHON__.compiled_date="2026-06-12 18:29:46.994033"
+__BRYTHON__.timestamp=1781281786993
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_kozh","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -2522,9 +2523,10 @@ res.push(d)
 return _b_.tuple.$factory(res)}
 object_funcs.__reduce_ex__=function(self,protocol){var klass=$B.get_class(self)
 var reduce=$B.$getattr(klass,'__reduce__')
-if(reduce !==object.tp_funcs.__reduce__ &&
-((reduce.ob_type===$B.method_descriptor)&&
-(reduce.method !==object.tp_funcs.__reduce__))){return $B.$call(reduce,self)}
+var reduce_is_default=(reduce===object.tp_funcs.__reduce__)||
+(reduce.ob_type===$B.method_descriptor &&
+reduce.method===object.tp_funcs.__reduce__)
+if(! reduce_is_default){return $B.$call(reduce,self)}
 if($B.imported.copyreg===undefined){$B.$import('copyreg')}
 if(protocol < 2){var _reduce_ex=$B.module_getattr($B.imported.copyreg,'_reduce_ex')
 return $B.$call(_reduce_ex,self,protocol)}
@@ -2546,7 +2548,8 @@ if($B.$getattr(klass,'append',null)!==null &&
 $B.$getattr(klass,'extend',null)!==null){list_like_iterator=_b_.iter(self)}
 res.push(list_like_iterator)
 var key_value_iterator=_b_.None
-if($B.is_dict(self)){key_value_iterator=_b_.dict.tp_funcs.items(self)}
+if($B.is_dict(self)){
+key_value_iterator=_b_.iter(_b_.dict.tp_funcs.items(self))}
 res.push(key_value_iterator)
 return $B.fast_tuple(res)}
 object_funcs.__sizeof__=function(self){}
@@ -4172,7 +4175,7 @@ $B._RawIOBase.tp_methods=["read","readall","readinto","write"
 $B.set_func_names($B._RawIOBase,"_io")
 $B._BufferedIOBase=$B.make_builtin_class('_BufferedIOBase',[_IOBase])
 $B.is_buffer=function(obj){if($B.get_class(obj).$buffer_protocol){return true}
-for(var klass of $B.get_class(obj).__mro__){if(klass.$buffer_protocol){return true}}
+for(var klass of $B.get_mro($B.get_class(obj))){if(klass.$buffer_protocol){return true}}
 return false}
 function _bufferediobase_readinto_generic(_self,buffer,readinto1){var len,data
 if(! $B.is_buffer(buffer)){$B.RAISE(_b_.TypeError," readinto() argument must be "+
@@ -4204,6 +4207,9 @@ $B._BufferedIOBase.tp_methods=["__enter__","__exit__","readinto","readinto1","cl
 $B.set_func_names($B._BufferedIOBase,'_io')
 function _bufferedreader_read_all(_self){return $B.$call($B.$getattr(_self.raw,'readall'))}
 function _bufferedreader_read_fast(_self,n){var raw=_self.raw
+if(raw.$bytes===undefined){var res=$B.$call($B.$getattr(raw,'read'),n)
+if(res===_b_.None ||_b_.len(res)===0){return _b_.None}
+return res}
 if(raw.$byte_pos >=raw.$bytes.length){return _b_.None}
 var b=raw.$bytes.slice(raw.$byte_pos,raw.$byte_pos+n)
 raw.$byte_pos+=n
@@ -4219,9 +4225,11 @@ raw.$byte_pos=eof+1
 raw.$byte_pos=Math.min(raw.$byte_pos,raw.$bytes.length)
 return $B.fast_bytes(b)}
 $B._BufferedReader=$B.make_builtin_class('_BufferedReader',[$B._BufferedIOBase])
+$B._BufferedReader.tp_getset=['raw']
 $B._BufferedReader.tp_init=function(_self,raw,buffer_size=DEFAULT_BUFFER_SIZE){_self.raw=raw
 _self.buffer_size=buffer_size}
 var _BufferedReader_funcs=$B._BufferedReader.tp_funcs={}
+_BufferedReader_funcs.raw_get=function(_self){return _self.raw}
 _BufferedReader_funcs.peek=function(_self,size){var $=$B.args('peek',2,{self:null,size:null},arguments,{size:0})
 var _self=$.self,size=$.size
 var raw=_self.raw
@@ -4425,6 +4433,9 @@ var rawmode='',m;
 var line_buffering,is_number,isatty=0;
 var raw,modeobj,buffer,wrapper,result,path_or_fd
 path_or_fd=file
+if(! $B.is_str(path_or_fd)){
+var fspath=$B.$getattr(file,'__fspath__',null)
+if(fspath !==null){path_or_fd=$B.$call(fspath)}}
 if(! $B.is_str(path_or_fd)){$B.RAISE(_b_.TypeError,`invalid file: ${file}`)}
 if(encoding=='locale'){
 encoding='utf-8'}
@@ -4960,12 +4971,14 @@ if(klass===classinfo ||mro.indexOf(classinfo)>-1){return true}
 var sch=$B.type_getattribute($B.get_class(classinfo),'__subclasscheck__',$B.NULL)
 if(sch===$B.NULL){return false}
 return $B.$call(sch,classinfo,klass)}
-$B.iterator.tp_iter=function(self){return self}
-$B.iterator.tp_iternext=function*(self){var ob_type=$B.get_class(self.it_seq)
-var len=$B.search_in_mro(ob_type,'__len__')(self.it_seq)
-var getitem=$B.search_in_mro(ob_type,'__getitem__')
-if(self.it_index <=len){yield getitem(self.it_seq,self.it_index)
-self.it_index++}}
+$B.iterator.tp_iter=function(self){var ob_type=$B.get_class(self.it_seq)
+self.len=$B.search_in_mro(ob_type,'__len__')(self.it_seq)
+self.getitem=$B.search_in_mro(ob_type,'__getitem__')
+self.it_index=0
+return self}
+$B.iterator.tp_iternext=function*(self){if(self.it_index <=self.len){var res=self.getitem(self.it_seq,self.it_index)
+self.it_index++
+yield res}}
 var iterator_funcs=$B.iterator.tp_funcs={}
 iterator_funcs.__length_hint__=function(self){}
 iterator_funcs.__reduce__=function(self){}
@@ -4997,8 +5010,8 @@ var getitem_func=$B.search_in_mro(klass,'__getitem__',$B.NULL)
 var len_func=$B.search_in_mro(klass,'__len__',$B.NULL)
 if(test){console.log('getitem_func',getitem_func)
 console.log('len_func',len_func)}
-if(getitem_func !==$B.NULL && len_func !==$B.NULL){return{
-ob_type:$B.iterator,it_seq:obj,it_index:0}}
+if(getitem_func !==$B.NULL && len_func !==$B.NULL){var it={ob_type:$B.iterator,it_seq:obj}
+return $B.iterator.tp_iter(it)}
 $B.RAISE(_b_.TypeError,`'${$B.class_name(obj)}' object is not iterable`
 )}else{
 return callable_iterator.$factory(obj,sentinel)}}
@@ -5021,8 +5034,11 @@ _b_.locals=function(){
 check_nb_args('locals',0,arguments)
 var locals_obj=$B.frame_obj.frame[1]
 var class_locals=locals_obj.$target
-if(class_locals){return class_locals}
-return locals_obj}
+if(class_locals && $B.get_class(class_locals)===_b_.dict){return class_locals}
+var d=$B.empty_dict()
+for(var key in locals_obj){if(key.startsWith('$')||key=='__class__' ||key=='ob_type'){continue}
+_b_.dict.$setitem(d,key,locals_obj[key])}
+return d}
 var map=_b_.map
 map.$factory=function(){var $=$B.args('map',2,{func:null,it1:null},arguments,null,'args',null),func=$.func
 var iter_args=[$B.make_js_iterator($.it1)]
@@ -5184,9 +5200,18 @@ var res={ob_type:cls,seq,len:seqlen,
 counter:seqlen,getitem:method}
 return res}
 var reversed_funcs=_b_.reversed.tp_funcs={}
-reversed_funcs.__length_hint__=function(self){}
-reversed_funcs.__reduce__=function(self){}
-reversed_funcs.__setstate__=function(self){}
+reversed_funcs.__length_hint__=function(self){var n=self.counter
+return n < 0 ? 0 :n}
+reversed_funcs.__reduce__=function(self){check_nb_args_no_kw('__reduce__',1,arguments)
+var cls=self.ob_type
+if(self.seq===undefined){return $B.fast_tuple([cls,$B.fast_tuple([$B.fast_tuple([])])])}
+return $B.fast_tuple([cls,$B.fast_tuple([self.seq]),self.counter])}
+reversed_funcs.__setstate__=function(self,state){var n=typeof state==='bigint' ? Number(state):state
+if(typeof n !=='number'){n=Number(n)}
+if(n <-1){n=-1 }
+if(n > self.len){n=self.len }
+self.counter=n
+return _b_.None}
 _b_.reversed.tp_methods=["__length_hint__","__reduce__","__setstate__"]
 $B.set_func_names(reversed,"builtins")
 _b_.round=function(){var $=$B.args('round',2,{number:null,ndigits:null},arguments,{ndigits:None},null,null)
@@ -7017,8 +7042,11 @@ for(var i=self.source.length-1;i >=0;i--){if(cars.indexOf(self.source[i])==-1){b
 return this.$factory(self.source.slice(0,i+1))}}
 function nb_multiply(){var $=$B.args('__mul__',2,{self:null,value:null},arguments)
 var self=$.self,value=$.value
+if(self.source===undefined && value && value.source !==undefined){var _t=self
+self=value
+value=_t}
 var v=$B.PyNumber_Index(value)
-var source=self.source.slice()
+var source=[]
 for(var i=0;i < v;i++){for(var item of self.source){source[source.length]=item}}
 var cls=$B.is_bytes(self)? _b_.bytes :_b_.bytearray
 return{
@@ -7359,6 +7387,7 @@ _b_.bytearray.staticmethods=["maketrans"]
 $B.set_func_names(bytearray,"builtins")
 var bytes=_b_.bytes
 bytes.$buffer_protocol=true
+_b_.bytearray.$buffer_protocol=true
 bytes.$is_sequence=true
 function bytes_split_with_sep(cls,self,seps,maxsplit){var parts=[],pos=0,source=self.source,len=source.length
 var sep_len=seps.length
@@ -7634,8 +7663,12 @@ _b_.bytes.tp_richcompare=function(self,other,op){if(! $B.is_bytes(other)){return
 return _b_.list.tp_richcompare(
 $B.$list(self.source),$B.$list(other.source),op)}
 _b_.bytes.nb_multiply=function(){var $=$B.args('__mul__',2,{self:null,other:null},arguments)
-var other=$B.PyNumber_Index($.other)
-var t=[],source=$.self.source,slen=source.length
+var _self=$.self,_other=$.other
+if(_self.source===undefined && _other && _other.source !==undefined){var _t=_self
+_self=_other
+_other=_t}
+var other=$B.PyNumber_Index(_other)
+var t=[],source=_self.source,slen=source.length
 for(var i=0;i < other;i++){for(var j=0;j < slen;j++){t.push(source[j])}}
 var res=bytes.$factory()
 res.source=t
@@ -7877,7 +7910,12 @@ return self.obj.source[key]}else{
 return self.obj.source[key]}}
 var getitem=$B.$getattr($B.get_class(self.obj),'__getitem__',$B.NULL)
 if(getitem !==$B.NULL){res=$B.$call(getitem,self.obj,key)}
-if($B.get_class(key)===_b_.slice){return memoryview.$factory(res)}}
+if($B.get_class(key)===_b_.slice){var mv=memoryview.$factory(res)
+var step=key.step
+if(step !==undefined && step !==_b_.None && step !==1 && step !==1n){mv.c_contiguous=false
+mv.f_contiguous=false
+mv.contiguous=false}
+return mv}}
 _b_.memoryview.bf_getbuffer=function(self){self.exports++
 return self}
 _b_.memoryview.bf_releasebuffer=function(self){self.exports--}
@@ -7886,7 +7924,7 @@ memoryview_funcs.__class_getitem__=function(){return $B.$class_getitem.apply(nul
 memoryview_funcs.__enter__=function(self){return self}
 memoryview_funcs.__exit__=function(self){memoryview.tp_funcs.release(self)}
 memoryview_funcs._from_flags=function(self){}
-memoryview_funcs.c_contiguous_get=function(self){return self.flags &(MEMORYVIEW.SCALAR |MEMORYVIEW.C)}
+memoryview_funcs.c_contiguous_get=function(self){return self.c_contiguous}
 memoryview_funcs.c_contiguous_set=_b_.None
 memoryview_funcs.cast=function(self,format,shape){if(! struct_format.hasOwnProperty(format)){$B.RAISE(_b_.ValueError,`unknown format: '${format}'`)}
 var new_itemsize=struct_format[format].size
@@ -7905,7 +7943,7 @@ res.format="I"
 if(objlen % 4 !=0){$B.RAISE(_b_.TypeError,"memoryview: length is not "+
 "a multiple of itemsize")}
 return res}}
-memoryview_funcs.contiguous_get=function(self){return self.flags &(MEMORYVIEW.SCALAR |MEMORYVIEW.C |MEMORYVIEW.FORTRAN)}
+memoryview_funcs.contiguous_get=function(self){return self.contiguous}
 memoryview_funcs.contiguous_set=_b_.None
 memoryview_funcs.count=function(self){var $=$B.args('count',2,{self:null,value:null},arguments)
 var self=$.self,value=$.value
@@ -7913,7 +7951,7 @@ var iter=_b_.memoryview.tp_iter(self)
 var count=0
 for(var item of $B.make_js_iterator(iter)){if($B.is_or_equals(item,value)){count++}}
 return count}
-memoryview_funcs.f_contiguous_get=function(self){return self.flags &(MEMORYVIEW.SCALAR |MEMORYVIEW.FORTRAN)}
+memoryview_funcs.f_contiguous_get=function(self){return self.f_contiguous}
 memoryview_funcs.f_contiguous_set=_b_.None
 memoryview_funcs.format_get=function(self){return self.format}
 memoryview_funcs.format_set=_b_.None
@@ -8725,12 +8763,11 @@ text+=car
 pos++}}
 if(text){parts.push(text)}
 return parts}
-var unicode_categories_contain_character=function(categories,cp){for(var cat of categories){if($B.in_unicode_category(cat,cp)){return true}}
+function unicode_categories_contain_character(categories,cp){for(let cat of categories){if($B.in_unicode_category(cat,cp)){return true}}
 return false}
-var alpha_categories=['Ll','Lu','Lm','Lt','Lo']
-var alnum_categories=['Ll','Lu','Lm','Lt','Lo','Nd']
+const alpha_categories=['Ll','Lu','Lm','Lt','Lo']
 const numeric_re=/\p{Nd}|\p{Nl}|\p{No}/u
-var unprintable_re=/\p{Cc}|\p{Cf}|\p{Co}|\p{Cs}|\p{Zl}|\p{Zp}|\p{Zs}/u
+const unprintable_re=/\p{Cc}|\p{Cf}|\p{Co}|\p{Cs}|\p{Zl}|\p{Zp}|\p{Zs}/u
 $B.make_str=function(arg){
 switch(typeof arg){case "int":
 case "bigint":
@@ -9263,7 +9300,8 @@ str_funcs.isalnum=function(self){
 $B.check_nb_args_no_kw('str.isalnum',1,arguments)
 var _self=to_string(self);
 if(_self.length==0){return false}
-for(var char of _self){if(!unicode_categories_contain_character(alnum_categories,_b_.ord(char))){return false}}
+for(var char of _self){if(!(str_funcs.isalpha(char)||str_funcs.isdecimal(char)||
+str_funcs.isdigit(char)||str_funcs.isnumeric(char))){return false}}
 return true}
 str_funcs.isalpha=function(self){
 $B.check_nb_args_no_kw('str.isalpha',1,arguments)
@@ -9327,8 +9365,15 @@ $B.unicode_bidi_whitespace.indexOf(cp)==-1){return false}}
 return _self.length > 0}
 str_funcs.istitle=function(self){
 $B.check_nb_args_no_kw('str.istitle',1,arguments)
-var _self=to_string(self)
-return _self.length > 0 && str_funcs.title(_self)==_self}
+var _self=to_string(self),cased=false,prev_cased=false
+for(var ch of _self){var cp=_b_.ord(ch)
+if($B.in_unicode_category('Lu',cp)||$B.in_unicode_category('Lt',cp)){if(prev_cased){return false}
+prev_cased=true
+cased=true}else if($B.in_unicode_category('Ll',cp)){if(!prev_cased){return false}
+prev_cased=true
+cased=true}else{
+prev_cased=false}}
+return cased}
 str_funcs.isupper=function(self){
 $B.check_nb_args_no_kw('str.isupper',1,arguments)
 var is_upper=false,cp,_self=to_string(self)
@@ -9591,11 +9636,12 @@ return res}
 str_funcs.title=function(self){$B.check_nb_args_no_kw('str.title',1,arguments)
 var state,cp,res="",_self=to_string(self)
 for(var char of _self){cp=_b_.ord(char)
-if($B.in_unicode_category('Ll',cp)){if(! state){res+=char.toUpperCase()
+if($B.in_unicode_category('Ll',cp)||
+$B.in_unicode_category('Lu',cp)||
+$B.in_unicode_category('Lt',cp)){if(! state){if(Object.hasOwn($B.unicode_titles,char)){res+=$B.unicode_titles[char]}else{
+res+=char.toUpperCase()}
 state="word"}else{
-res+=char}}else if($B.in_unicode_category('Lu',cp)||
-$B.in_unicode_category('Lt',cp)){res+=state ? char.toLowerCase():char
-state="word"}else{
+res+=char.toLowerCase()}}else{
 state=null
 res+=char}}
 return res}
@@ -10060,7 +10106,7 @@ while(value > 0n){var quotient=value/256n,rest=value-256n*quotient
 res.push(int_or_long(rest))
 if(res.length > len){$B.RAISE(_b_.OverflowError,"int too big to convert")}
 value=quotient}
-while(res.length < len){res.push(0n)}
+while(res.length < len){res.push(0)}
 if(byteorder=="big"){res.reverse()}
 return{
 ob_type:_b_.bytes,source:res}}
@@ -10090,11 +10136,11 @@ var bool=_b_.bool
 bool.$factory=function(){
 var $=$B.args("bool",1,{x:null},arguments,{x:false},null,null,1)
 return $B.$bool($.x,true)}
-_b_.bool.nb_and=function(self,other){if($B.$isinstance(other,bool)){return self && other}else if($B.$isinstance(other,int)){return int.nb_and(int_value(self),other)}
+_b_.bool.nb_and=function(self,other){if(typeof self=='boolean' && typeof other=='boolean'){return(self & other)? true :false}else if($B.$isinstance(self,int)&& $B.$isinstance(other,int)){return int.nb_and(int_value(self),int_value(other))}
 return _b_.NotImplemented}
-_b_.bool.nb_xor=function(self,other){if($B.$isinstance(other,bool)){return self ^ other ? true :false}else if($B.$isinstance(other,int)){return int.nb_xor(int_value(self),other)}
+_b_.bool.nb_xor=function(self,other){if(typeof self=='boolean' && typeof other=='boolean'){return(self ^ other)? true :false}else if($B.$isinstance(self,int)&& $B.$isinstance(other,int)){return int.nb_xor(int_value(self),int_value(other))}
 return _b_.NotImplemented}
-_b_.bool.nb_or=function(self,other){if($B.$isinstance(other,bool)){return self ||other}else if($B.$isinstance(other,int)){return int.nb_or(int_value(self),other)}
+_b_.bool.nb_or=function(self,other){if(typeof self=='boolean' && typeof other=='boolean'){return(self |other)? true :false}else if($B.$isinstance(self,int)&& $B.$isinstance(other,int)){return int.nb_or(int_value(self),int_value(other))}
 return _b_.NotImplemented}
 _b_.bool.tp_repr=function(self){$B.builtins_repr_check(bool,arguments)
 return self ? "True" :"False"}
@@ -10317,9 +10363,7 @@ Float.prototype.valueOf=function(){return this.value}
 const fast_float=$B.fast_float=function(value){return new Float(value)}
 function conv_float(...objs){var res=[]
 for(var obj of objs){var x=$B.NULL
-if($B.$isinstance(obj,_b_.float)){x=obj}else if($B.is_int(obj)){x=_b_.int.nb_float(obj)}else{
-var float_method=$B.$getattr($B.get_class(obj),'__float__',$B.NULL)
-if(float_method !==$B.NULL){x=$B.$call(float_method,obj)}}
+if($B.$isinstance(obj,_b_.float)){x=obj}else if($B.is_int(obj)){x=_b_.int.nb_float(obj)}
 res.push(x)}
 return res}
 float.$factory=function(value){if(value===undefined){return fast_float(0)}
@@ -10579,7 +10623,7 @@ float_funcs.fromhex=function(klass,s){function hex_from_char(char){return parseI
 function finished(){
 while(s[pos]&& s[pos].match(/\s/)){pos++;}
 if(pos !=s.length){throw parse_error()}
-if(negate){x=float.__neg__(x)}
+if(negate){x=float.nb_negative(x)}
 return klass===_b_.float ? x :$B.$call(klass,x)}
 function overflow_error(){$B.RAISE(_b_.OverflowError,"hexadecimal value too large to represent as a float");}
 function parse_error(){$B.RAISE(_b_.ValueError,"invalid hexadecimal floating-point string");}
@@ -12096,6 +12140,7 @@ return jsobj}
 if(pyobj !==undefined){return pyobj}
 if(jsobj instanceof Promise ||typeof jsobj.then=="function"){return jsobj}
 if(typeof jsobj==="function"){
+if(jsobj.ob_type !==undefined){return jsobj}
 _this=_this===undefined ? null :_this
 if(_this===null){const pyobj=jsobj[PYOBJFCT];
 if(pyobj !==undefined){return pyobj}}else{
@@ -12458,7 +12503,13 @@ return res}
 js_array.mp_ass_subscript=function(self,key,value){if(value===$B.NULL){self.splice(key,1)}else{
 self[key]=pyobj2jsobj(value)}}
 js_array.mp_length=function(self){return self.length}
-js_array.mp_subscript=function(self,i){i=$B.PyNumber_Index(i)
+js_array.mp_subscript=function(self,i){if($B.get_class(i)===_b_.slice){
+var indices=_b_.slice.tp_funcs.indices(i,self.length),start=indices[0],stop=indices[1],step=indices[2],res=[]
+if(step > 0){for(var k=start;k < stop;k+=step){res.push(self[k])}}else{
+for(var k=start;k > stop;k+=step){res.push(self[k])}}
+return res}
+i=$B.PyNumber_Index(i)
+if(i < 0){i+=self.length}
 return jsobj2pyobj(self[i])}
 js_array.sq_contains=function(self,item){item=pyobj2jsobj(item)
 for(var x of self){if($B.is_or_equals(x,item)){return true}}
@@ -12485,7 +12536,11 @@ js_array_funcs.extend=function(self){var $=$B.args("extend",2,{self:null,t:null}
 var self=$.self,t=$.t
 for(var item of $B.make_js_iterator(t)){self[self.length]=$B.pyobj2jsobj(item)}
 return _b_.None}
-js_array.tp_methods=["append","extend"]
+js_array_funcs.__reduce_ex__=function(self,protocol){
+var items=new Array(self.length)
+for(var i=0;i < self.length;i++){items[i]=jsobj2pyobj(self[i])}
+return $B.fast_tuple([_b_.list,$B.fast_tuple([$B.fast_tuple(items)])])}
+js_array.tp_methods=["append","extend","__reduce_ex__"]
 $B.set_func_names(js_array,'javascript')
 $B.get_jsobj_class=function(obj){if(typeof obj=='function'){return $B.JSObj}
 var proto=Object.getPrototypeOf(obj)
@@ -14537,7 +14592,7 @@ modules._warnings={_acquire_lock:function(){},_defaultaction:"default",_filters_
 ]),warn:function(){
 var $=$B.args('warn',4,{message:null,category:null,stacklevel:null,source:null},arguments,{category:_b_.UserWarning,stacklevel:1,source:_b_.None})
 var message=$.message,category=$.category,stacklevel=$.stacklevel
-if($B.$isinstance(message,_b_.Warning)){category=$B.get_class(message)}
+if($B.$isinstance(message,_b_.str)){message=$B.$call(category,message)}else if($B.$isinstance(message,_b_.Warning)){category=$B.get_class(message)}
 var filters
 if($B.imported.warnings){filters=$B.module_getattr($B.imported.warnings,'filters')}else{
 filters=$B.module_getattr(modules._warnings,'filters')}

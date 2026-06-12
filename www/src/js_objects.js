@@ -5,7 +5,7 @@
 var _b_ = $B.builtins
 
 function to_simple(value) {
-    switch(typeof value){
+    switch (typeof value) {
         case 'string':
         case 'number':
             return value
@@ -158,7 +158,7 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
     }
 
     // Immutable types
-    switch(typeof jsobj){
+    switch (typeof jsobj) {
         case 'boolean':
             return jsobj
 
@@ -210,6 +210,13 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
     }
 
     if (typeof jsobj === "function") {
+        // A function that already carries a Brython type (ob_type) is already
+        // a Python callable (e.g. a builtin_function_or_method such as `iter`);
+        // return it unchanged instead of building a fresh JavascriptFunction
+        // wrapper, which would lose its identity, __name__ and __module__.
+        if (jsobj.ob_type !== undefined) {
+            return jsobj
+        }
         // transform Python arguments to equivalent JS arguments
         _this = _this === undefined ? null : _this
 
@@ -309,7 +316,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj) {
     // conversion of a Python object into a Javascript object
     // Immutable types
 
-    switch(pyobj){
+    switch (pyobj) {
         case true:
         case false:
             return pyobj
@@ -605,7 +612,7 @@ function JSObj_eq(self, other) {
         }
     }
     return true
-    switch(typeof self){
+    switch (typeof self) {
         case "string":
             return self == other
         case "object":
@@ -656,7 +663,7 @@ $B.JSObj.sq_contains = function(self, key) {
 
 
 $B.JSObj.tp_richcompare = function(self, other, op) {
-    switch(op){
+    switch (op) {
         case '__eq__':
             return JSObj_eq(self, other)
         case '__ne__':
@@ -1118,7 +1125,7 @@ js_array.tp_richcompare = function(self, other, op) {
     if (! $B.$isinstance(other, [_b_.list, _b_.tuple, js_array])) {
         return _b_.NotImplemented
     }
-    switch(op){
+    switch (op) {
         case '__eq__':
             return js_array_eq(self, other)
         case '__ne__':
@@ -1160,7 +1167,29 @@ js_array.mp_length = function(self) {
 }
 
 js_array.mp_subscript = function(self, i) {
+    if ($B.get_class(i) === _b_.slice) {
+        // Slice support: items keep their JS-side representations (like
+        // sq_concat does); access converts via jsobj2pyobj as usual.
+        var indices = _b_.slice.tp_funcs.indices(i, self.length),
+            start = indices[0],
+            stop = indices[1],
+            step = indices[2],
+            res = []
+        if (step > 0) {
+            for (var k = start; k < stop; k += step) {
+                res.push(self[k])
+            }
+        } else {
+            for (var k = start; k > stop; k += step) {
+                res.push(self[k])
+            }
+        }
+        return res
+    }
     i = $B.PyNumber_Index(i)
+    if (i < 0) {
+        i += self.length
+    }
     return jsobj2pyobj(self[i])
 }
 
@@ -1235,7 +1264,19 @@ js_array_funcs.extend = function(self) {
     return _b_.None
 }
 
-js_array.tp_methods = ["append", "extend"]
+js_array_funcs.__reduce_ex__ = function(self, protocol) {
+    // A JavascriptArray (a JS-side / C-extension list) is otherwise
+    // unpicklable ("cannot pickle 'JavascriptArray' object"). Pickle it as a
+    // plain list: (list, (items_tuple,)). The items go in a tuple so pickling
+    // never recurses back into this method.
+    var items = new Array(self.length)
+    for (var i = 0; i < self.length; i++) {
+        items[i] = jsobj2pyobj(self[i])
+    }
+    return $B.fast_tuple([_b_.list, $B.fast_tuple([$B.fast_tuple(items)])])
+}
+
+js_array.tp_methods = ["append", "extend", "__reduce_ex__"]
 
 $B.set_func_names(js_array, 'javascript')
 

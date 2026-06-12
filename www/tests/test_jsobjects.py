@@ -462,4 +462,10 @@ window.func_js2474_3()
 # test functions to use Python code from Javascript
 window.test_use_python()
 
+# PR 2724
+js_array = window.eval(['a', 'b', 'c', 'd'])
+assert type(js_array[:2]) is javascript.Array
+assert js_array[:2] == ['a', 'b']
+
+
 print("all tests ok...")

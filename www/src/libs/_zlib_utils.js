@@ -38,7 +38,7 @@ _BitWriter.prototype.flush = function() {
 
 _BitWriter.prototype.writeInt = function(v, nb, order) {
     order = order ?? 'lsf'
-    switch(order){
+    switch (order) {
         case 'msf':
             var coef = 1 << (nb - 1)
             var n = 0
@@ -108,7 +108,7 @@ _BitReader.prototype.read = function(nb, order) {
     // read nb bits, convert to int
     order = order ?? 'lsf'
     var result = 0
-    switch(order){
+    switch (order) {
         case 'lsf':
             var coef = 0
             for (var i = 0; i < nb; i++) {

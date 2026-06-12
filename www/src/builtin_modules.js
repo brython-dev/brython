@@ -317,7 +317,7 @@
                                     get(target, prop){
                                         console.log('get IFRAME attr', prop)
                                         try {
-                                            switch(prop){
+                                            switch (prop) {
                                                 case 'ob_type':
                                                     return k
                                                 case '$target':
@@ -435,7 +435,7 @@
     var NullType = $B.NullType = $B.make_builtin_class('NullType')
 
     NullType.tp_richcompare = function(self, other, op) {
-        switch(op){
+        switch (op) {
             case '__eq__':
                 // in Javascript, null == undefined is true...
                 return other === null || other === undefined
@@ -943,7 +943,9 @@
             var message = $.message,
                 category = $.category,
                 stacklevel = $.stacklevel
-            if ($B.$isinstance(message, _b_.Warning)) {
+            if ($B.$isinstance(message, _b_.str)) {
+                message = $B.$call(category, message)
+            } else if ($B.$isinstance(message, _b_.Warning)) {
                 category = $B.get_class(message)
             }
             var filters
@@ -1593,7 +1595,7 @@
             return js_node.map($B.AST.$convert)
         } else if (js_node.type) {
             // literal constant
-            switch(js_node.type){
+            switch (js_node.type) {
                 case 'int':
                     console.log('AST convert, js_node', js_node)
                     var value = js_node.value[1],

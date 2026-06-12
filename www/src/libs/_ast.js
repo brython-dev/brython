@@ -60,7 +60,7 @@ function ensure_literal_complex(exp) {
         return false
     }
     // Check LHS is a real number (potentially signed)
-    switch(left.ob_type){
+    switch (left.ob_type) {
         case mod.Constant:
             if (!ensure_literal_number(left, true, false)) {
                 return false
@@ -75,7 +75,7 @@ function ensure_literal_complex(exp) {
             return false
     }
     // Check RHS is an imaginary number (no separate sign allowed)
-    switch(right.ob_type){
+    switch (right.ob_type) {
         case mod.Constant:
             if (!ensure_literal_number(right, false, true)) {
                 return false
@@ -112,7 +112,7 @@ function validate_arguments(args) {
 
 function validate_pattern(p, star_ok) {
     var ret = -1
-    switch(p.ob_type) {
+    switch (p.ob_type) {
         case mod.MatchValue:
             validate_pattern_match_value(p.value)
             break;
@@ -224,7 +224,7 @@ function validate_patterns(patterns, star_ok) {
 
 function validate_pattern_match_value(exp) {
     validate_expr(exp, Load)
-    switch (exp.ob_type){
+    switch (exp.ob_type) {
         case mod.Constant:
             /* Ellipsis and immutable sequences are not allowed.
                For True, False and None, MatchSingleton() should

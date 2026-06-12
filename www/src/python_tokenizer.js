@@ -264,7 +264,7 @@ function get_comment(parser, src, pos, line_num, line_start, token_name, line) {
 }
 
 function test_num(num_type, char) {
-    switch(num_type){
+    switch (num_type) {
         case '':
             return $B.in_unicode_category('Nd', ord(char))
         case 'x':
@@ -570,7 +570,7 @@ $B.tokenizer = function(src, filename, mode, parser) {
             }
         }
 
-        switch(state){
+        switch (state) {
 
             case "line_start":
                 line = get_line_at(pos - 1)
@@ -698,7 +698,7 @@ $B.tokenizer = function(src, filename, mode, parser) {
                 break
 
             case null:
-                switch(char){
+                switch (char) {
                     case '"':
                     case "'":
                         quote = char
@@ -1041,7 +1041,7 @@ $B.tokenizer = function(src, filename, mode, parser) {
                 break
 
             case 'STRING':
-                switch(char){
+                switch (char) {
                     case quote:
                         if (! escaped) {
                             // string end
@@ -1197,7 +1197,7 @@ $B.tokenizer = function(src, filename, mode, parser) {
         }
     }
 
-    switch(state){
+    switch (state) {
         case 'line_start':
             line_num++
             break

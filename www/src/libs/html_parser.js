@@ -37,7 +37,7 @@ function* tokenize(src){
         type = "text"
     while (pos < src.length) {
         var char = src[pos]
-        switch(type){
+        switch (type) {
             case "text":
                 if (char == "<") {
                     // starts a tag if immediately followed by a letter or by /

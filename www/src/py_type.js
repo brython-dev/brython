@@ -512,7 +512,7 @@ $B.make_module_annotate = function(locals) {
         }
     )
     locals.__annotate_func__ = function(format) {
-        switch(format){
+        switch (format) {
             case 1:
                 var ann_dict = $B.empty_dict()
                 for (var key in locals.$annotations) {
@@ -1082,6 +1082,13 @@ function set_slots(cl_dict, class_obj) {
             // matching the compiler's mangling of self.__private accesses
             if (key.startsWith('__') && ! key.endsWith('__')) {
                 key = '_' + $B.get_name(class_obj).replace(/^_+/, '') + key
+            // CPython: '__dict__' / '__weakref__' inside __slots__ are
+            // markers, not slots — '__dict__' keeps the per-instance dict
+            if (key == '__dict__' || key == '__weakref__') {
+                if (key == '__dict__') {
+                    class_obj.$slots_has_dict = true
+                }
+                continue
             }
             var member = {
                 name: key,
@@ -1140,7 +1147,7 @@ _b_.type.tp_setattro = function(kls, attr, value) {
             $B.set_to_dict(kls, attr, value)
         }
     }
-    switch(attr){
+    switch (attr) {
         case '__call__':
             reset_call(kls)
             break
@@ -2287,7 +2294,7 @@ $B.GenericAlias.tp_richcompare = function(self, other, op) {
         return _b_.NotImplemented
     }
     var res
-    switch(op){
+    switch (op) {
         case '__eq__':
             res = GenericAlias_eq(self, other)
             break
@@ -2465,7 +2472,7 @@ $B.UnionType.tp_richcompare = function(self, other, op) {
     if (! $B.$isinstance(other, $B.UnionType)) {
         return _b_.NotImplemented
     }
-    switch(op){
+    switch (op) {
         case '__eq__':
             return $B.list_eq(self.args, other.args)
         case '__ne__':

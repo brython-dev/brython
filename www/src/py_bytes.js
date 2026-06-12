@@ -460,7 +460,7 @@ function isspace() {
         len = src.length
 
     for (let i = 0; i < len; ++i) {
-        switch(src[i]){
+        switch (src[i]) {
             case 9:  // Horizontal tab
             case 10: // Line feed
             case 11: // Vertical tab
@@ -598,7 +598,7 @@ function strip(self, cars, lr) {
     } else {
         $B.RAISE(_b_.TypeError, "Type str doesn't support the buffer API")
     }
-    switch(lr){
+    switch (lr) {
         case 'l':
             for (var i = 0, len = self.source.length; i < len; i++) {
                 if (cars.indexOf(self.source[i]) == -1) {
@@ -621,8 +621,15 @@ function nb_multiply() {
 
     var self = $.self,
         value = $.value
+    // reflected path delivers the ORIGINAL arg order (2 * bytearray)
+    if (self.source === undefined && value && value.source !== undefined) {
+        var _t = self
+        self = value
+        value = _t
+    }
     var v = $B.PyNumber_Index(value)
-    var source = self.source.slice()
+    // exactly v repetitions: starting from a copy produced v+1
+    var source = []
     for (var i = 0; i < v; i++) {
         for (var item of self.source) {
             source[source.length] = item
@@ -1605,6 +1612,8 @@ $B.set_func_names(bytearray, "builtins")
 //bytes() (built in function)
 var bytes = _b_.bytes
 bytes.$buffer_protocol = true
+// bytearray is THE canonical read-write buffer (readinto target)
+_b_.bytearray.$buffer_protocol = true
 bytes.$is_sequence = true
 
 function bytes_split_with_sep(cls, self, seps, maxsplit) {
@@ -1986,7 +1995,7 @@ var decode = $B.decode = function(obj, encoding, errors) {
     var s = "",
         b = obj.source,
         enc = normalise(encoding)
-    switch(enc) {
+    switch (enc) {
       case "utf_8":
       case "utf-8":
       case "utf8":
@@ -2209,7 +2218,7 @@ var encode = $B.encode = function() {
         pos = 0,
         enc = normalise(encoding)
 
-    switch(enc) {
+    switch (enc) {
         case "utf-8":
         case "utf_8":
         case "utf8":
@@ -2334,9 +2343,19 @@ _b_.bytes.tp_richcompare = function(self, other, op) {
 
 _b_.bytes.nb_multiply = function() {
     var $ = $B.args('__mul__', 2, {self: null, other: null}, arguments)
-    var other = $B.PyNumber_Index($.other)
+    // slot convention: arguments arrive in the ORIGINAL order, so on the
+    // reflected path (46 * b'!' -> __rmul__) self is the int — handle
+    // either side, like CPython's bytes_repeat.
+    var _self = $.self,
+        _other = $.other
+    if (_self.source === undefined && _other && _other.source !== undefined) {
+        var _t = _self
+        _self = _other
+        _other = _t
+    }
+    var other = $B.PyNumber_Index(_other)
     var t = [],
-        source = $.self.source,
+        source = _self.source,
         slen = source.length
     for (var i = 0; i < other; i++) {
         for (var j = 0; j < slen; j++) {

@@ -8,12 +8,12 @@ var typecodes = {
     'u': Uint32Array,  // Py_UNICODE Unicode character, 2 (deprecated)
     'h': Int16Array,   // signed short, 2
     'H': Uint16Array,  // unsigned short, 2
-    'i': Int16Array,   //  signed int, 2
-    'I': Uint16Array,  // unsigned int, 2
+    'i': Int32Array,   //  signed int, 4 (CPython itemsize)
+    'I': Uint32Array,  // unsigned int, 4
     'l': Int32Array,   // signed long, 4
     'L': Uint32Array,  // unsigned long, 4
-    'q': null,         // signed long, 8 (not implemented)
-    'Q': null,         // unsigned long, 8 (not implemented)
+    'q': BigInt64Array,  // signed long long, 8
+    'Q': BigUint64Array, // unsigned long long, 8
     'f': Float32Array, // float, 4
     'd': Float64Array  // double float, 8
 }
@@ -195,7 +195,7 @@ array_funcs.__sizeof__ = function() {
 array_funcs.append = function(self, value) {
     $B.args("append", 2, {self: null, value: null}, arguments)
     var pos = self.obj === null ? 0 : self.obj.length
-    return array.insert(self, pos, value)
+    return array_funcs.insert(self, pos, value)
 }
 
 array_funcs.buffer_info = function() {
@@ -241,7 +241,7 @@ array_funcs.extend = function(self, iterable) {
         while (true) {
             try {
                 var item = _b_.next(it)
-                array.append(self, item)
+                array_funcs.append(self, item)
             } catch (err) {
                 $B.RAISE_IF_NOT(err, _b_.StopIteration)
                 break
@@ -257,7 +257,19 @@ array_funcs.frombytes = function(self, s) {
         $B.RAISE(_b_.TypeError, "a bytes-like object is required, " +
             "not '" + $B.class_name(s) + "'")
     }
-    self.obj = new typecodes[self.typecode](s.source)
+    var T = typecodes[self.typecode]
+    var u8 = new Uint8Array(s.source)
+    if (u8.length % T.BYTES_PER_ELEMENT !== 0) {
+        $B.RAISE(_b_.ValueError,
+            "bytes length not a multiple of item size")
+    }
+    // read itemsize-wide machine values, appending to existing content
+    var items = Array.from(new T(u8.buffer))
+    if (self.obj === null) {
+        self.obj = items
+    } else {
+        self.obj.push(...items)
+    }
     return _b_.None
 }
 
@@ -272,7 +284,7 @@ array_funcs.fromlist = function(self, list) {
         try {
             var item = _b_.next(it)
             try {
-                array.append(self, item)
+                array_funcs.append(self, item)
             } catch (err) {
                 console.log(err)
                 return _b_.None
@@ -344,7 +356,7 @@ array_funcs.remove = function(self, x) {
     if (res == -1) {
         $B.RAISE(_b_.ValueError, "array.remove(x): x not in array")
     }
-    array.pop(self, res)
+    array_funcs.pop(self, res)
     return _b_.None
 }
 
@@ -357,16 +369,16 @@ array_funcs.reverse = function(self) {
 
 array_funcs.tobytes = function(self) {
     $B.args("tobytes", 1, {self: null}, arguments)
-    var items = Array.prototype.slice.call(self.obj),
-        res = []
-    for (let item of items) {
-        while (item > 256) {
-            res.push(item % 256)
-            item = Math.floor(item / 256)
-        }
-        res.push(item)
+    // machine representation, itemsize bytes per item (little-endian),
+    // via the typecode's TypedArray (the previous variable-length
+    // encoding dropped the padding: array('i', [1]).tobytes() was b'\x01')
+    var T = typecodes[self.typecode]
+    var items = self.obj === null ? [] : Array.prototype.slice.call(self.obj)
+    if (T === BigInt64Array || T === BigUint64Array) {
+        items = items.map(BigInt)
     }
-    return _b_.bytes.$factory(res)
+    var ta = new T(items)
+    return _b_.bytes.$factory(Array.from(new Uint8Array(ta.buffer)))
 }
 
 array_funcs.tofile = function() {

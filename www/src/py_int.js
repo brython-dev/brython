@@ -42,7 +42,7 @@ var bigint_value = $B.to_bigint = function(obj) {
     // Instances of int subclasses that call int.__new__(cls, value)
     // have an attribute value set
     var res = obj = obj.value ?? obj
-    switch(typeof res){
+    switch (typeof res) {
         case "boolean":
             return res ? 1n : 0n
         case "number":
@@ -82,7 +82,7 @@ function preformat(self, fmt) {
             "' for object of type 'int'")
     }
     var res
-    switch(fmt.type){
+    switch (fmt.type) {
         case undefined:
         case "d":
             res = self.toString()
@@ -166,7 +166,7 @@ int.$factory = function(value, base) {
         }
     }
     var value
-    switch(args.length){
+    switch (args.length) {
         case 0:
             value = 0
             break
@@ -407,7 +407,7 @@ _b_.int.tp_richcompare = function(a, b, op) {
     a = int_value(a)
     b = int_value(b)
 
-    switch(op){
+    switch (op) {
         case '__eq__':
             res = a == b
             break
@@ -669,7 +669,7 @@ _b_.int.tp_new = function(cls, args, kw) {
         )
     }
     $B.check_expected_keywords('int', kw, ['base'])
-    switch(nb_args){
+    switch (nb_args) {
         case 0:
             return 0
         case 1:
@@ -892,7 +892,7 @@ int_funcs.to_bytes = function(self) {
         value = quotient
     }
     while (res.length < len) {
-        res.push(0n)
+        res.push(0)
     }
     if (byteorder == "big") {
         res.reverse()
@@ -923,7 +923,7 @@ $B.$bool = function(obj, bool_class) { // return true or false
     if (obj === null || obj === undefined ) {
         return false
     }
-    switch(typeof obj){
+    switch (typeof obj) {
         case "boolean":
             return obj
         case "number":
@@ -966,29 +966,33 @@ bool.$factory = function() {
 }
 
 /* bool start */
+// Guard BOTH operands: these slots are also reached through the reflected
+// dunders (bool.__ror__ & co, selected by the subclass-priority dispatch for
+// `int OP bool`), where self is the int. With the guard on `other` only,
+// `2 | True` hit the JS LOGICAL `self || other` and returned 2.
 _b_.bool.nb_and = function(self, other) {
-    if ($B.$isinstance(other, bool)) {
-        return self && other
-    } else if ($B.$isinstance(other, int)) {
-        return int.nb_and(int_value(self), other)
+    if (typeof self == 'boolean' && typeof other == 'boolean') {
+        return (self & other) ? true : false
+    } else if ($B.$isinstance(self, int) && $B.$isinstance(other, int)) {
+        return int.nb_and(int_value(self), int_value(other))
     }
     return _b_.NotImplemented
 }
 
 _b_.bool.nb_xor = function(self, other) {
-    if ($B.$isinstance(other, bool)) {
-        return self ^ other ? true : false
-    } else if ($B.$isinstance(other, int)) {
-        return int.nb_xor(int_value(self), other)
+    if (typeof self == 'boolean' && typeof other == 'boolean') {
+        return (self ^ other) ? true : false
+    } else if ($B.$isinstance(self, int) && $B.$isinstance(other, int)) {
+        return int.nb_xor(int_value(self), int_value(other))
     }
     return _b_.NotImplemented
 }
 
 _b_.bool.nb_or = function(self, other) {
-    if ($B.$isinstance(other, bool)) {
-        return self || other
-    } else if ($B.$isinstance(other, int)) {
-        return int.nb_or(int_value(self), other)
+    if (typeof self == 'boolean' && typeof other == 'boolean') {
+        return (self | other) ? true : false
+    } else if ($B.$isinstance(self, int) && $B.$isinstance(other, int)) {
+        return int.nb_or(int_value(self), int_value(other))
     }
     return _b_.NotImplemented
 }

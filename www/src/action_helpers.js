@@ -676,7 +676,7 @@ $B._PyPegen.key_value_pair = function(p, key, value) {
 }
 
 $B._PyPegen.get_expr_name = function(e) {
-    switch(e.constructor.$name){
+    switch (e.constructor.$name) {
         case 'Attribute':
         case 'Subscript':
         case 'Starred':
@@ -1010,7 +1010,7 @@ $B._PyPegen.join_sequences = function(p, a, b) {
 }
 
 function make_conversion_code(conv) {
-    switch(conv){
+    switch (conv) {
         case null:
             return -1
         case 'a':

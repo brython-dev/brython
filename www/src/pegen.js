@@ -601,7 +601,7 @@ $B._PyPegen.soft_keyword_token = function(p) {
 }
 
 function prepared_number_value(prepared) {
-    switch(prepared.type){
+    switch (prepared.type) {
         case 'float':
             return $B.fast_float(parseFloat(prepared.value))
         case 'imaginary':
@@ -611,7 +611,7 @@ function prepared_number_value(prepared) {
             if (! Number.isSafeInteger(res)) {
                 var base = prepared.value[0],
                     num_str = prepared.value[1]
-                switch(base){
+                switch (base) {
                     case 8:
                         return BigInt('0x' + num_str)
                     case 10:

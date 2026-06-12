@@ -191,7 +191,7 @@ $B._PySymtable_Build = function(mod, filename, future) {
     }
 
     st.top = st.cur
-    switch(mod.constructor){
+    switch (mod.constructor) {
         case $B.ast.Module:
             seq = mod.body
             for (let item of seq) {
@@ -1720,7 +1720,7 @@ visitor.type_param_bound_or_default = function(st, e, name, key) {
 }
 
 visitor.type_param = function(st, tp) {
-  switch(tp.constructor) {
+  switch (tp.constructor) {
     case $B.ast.TypeVar:
         if (! symtable_add_def(st, tp.name, SF.DEF_TYPE_PARAM | SF.DEF_LOCAL, LOCATION(tp))) {
             VISIT_QUIT(st, 0);
@@ -2000,7 +2000,7 @@ function symtable_handle_comprehension(st, e,
                               e.end_lineno, e.end_col_offset)) {
         return 0;
     }
-    switch(e.constructor) {
+    switch (e.constructor) {
         case $B.ast.ListComp:
             st.cur.comprehension = ListComprehension;
             break;

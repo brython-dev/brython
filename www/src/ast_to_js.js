@@ -3208,7 +3208,7 @@ $B.ast.match_case.prototype.to_js = function(scopes) {
 }
 
 function is_irrefutable(pattern) {
-    switch(pattern.constructor){
+    switch (pattern.constructor) {
         case $B.ast.MatchAs:
             if (pattern.pattern === undefined) {
                 return pattern
@@ -3238,7 +3238,7 @@ function irrefutable_error(pattern) {
 
 function pattern_bindings(pattern) {
     let bindings = []
-    switch(pattern.constructor){
+    switch (pattern.constructor) {
         case $B.ast.MatchSequence:
         case $B.ast.MatchMapping:
             if (pattern.rest) {

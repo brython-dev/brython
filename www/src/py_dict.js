@@ -152,7 +152,7 @@ function dictview_richcompare(self, other, op) {
     var len_other = _b_.len(other)
 
     var ok = false
-    switch(op) {
+    switch (op) {
         case '__eq__':
         case '__ne__':
             if (len_self == len_other) {
@@ -850,7 +850,7 @@ _b_.dict.tp_richcompare = function(self, other, op) {
         return _b_.NotImplemented
     }
     var res
-    switch(op){
+    switch (op) {
         case '__eq__':
             res = dict_eq(self, other)
             break
