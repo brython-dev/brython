@@ -1082,6 +1082,7 @@ function set_slots(cl_dict, class_obj) {
             // matching the compiler's mangling of self.__private accesses
             if (key.startsWith('__') && ! key.endsWith('__')) {
                 key = '_' + $B.get_name(class_obj).replace(/^_+/, '') + key
+            }
             // CPython: '__dict__' / '__weakref__' inside __slots__ are
             // markers, not slots — '__dict__' keeps the per-instance dict
             if (key == '__dict__' || key == '__weakref__') {
