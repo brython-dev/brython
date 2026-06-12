@@ -619,9 +619,16 @@ def stdev(data, xbar=None):
     if n < 2:
         raise StatisticsError('stdev requires at least two data points')
     mss = ss / (n - 1)
+    try:
+        # gh-140938: with inf/nan in the data, _ss propagates a float
+        # (which has no numerator/denominator) instead of a Fraction
+        mss_n = mss.numerator
+        mss_d = mss.denominator
+    except AttributeError:
+        raise ValueError('inf or nan encountered in data')
     if issubclass(T, Decimal):
-        return _decimal_sqrt_of_frac(mss.numerator, mss.denominator)
-    return _float_sqrt_of_frac(mss.numerator, mss.denominator)
+        return _decimal_sqrt_of_frac(mss_n, mss_d)
+    return _float_sqrt_of_frac(mss_n, mss_d)
 
 
 def pstdev(data, mu=None):
@@ -637,9 +644,15 @@ def pstdev(data, mu=None):
     if n < 1:
         raise StatisticsError('pstdev requires at least one data point')
     mss = ss / n
+    try:
+        # gh-140938: see stdev above
+        mss_n = mss.numerator
+        mss_d = mss.denominator
+    except AttributeError:
+        raise ValueError('inf or nan encountered in data')
     if issubclass(T, Decimal):
-        return _decimal_sqrt_of_frac(mss.numerator, mss.denominator)
-    return _float_sqrt_of_frac(mss.numerator, mss.denominator)
+        return _decimal_sqrt_of_frac(mss_n, mss_d)
+    return _float_sqrt_of_frac(mss_n, mss_d)
 
 
 ## Statistics for relations between two inputs #############################
