@@ -560,6 +560,23 @@ object_funcs.__format__ = function() {
 
 object_funcs.__getstate__ = function(self) {
     var dict = $B.get_dict(self)
+    // CPython 3.11+: instances with filled __slots__ return a 2-tuple
+    // (dict-or-None, {slot: value}); slot values live as the member
+    // descriptors' slot_value_* properties
+    var sd = null
+    for (var k in self) {
+        if (k.startsWith('slot_value_') && self[k] !== undefined) {
+            if (sd === null) {
+                sd = $B.empty_dict()
+            }
+            _b_.dict.$setitem(sd, k.slice(11), self[k])
+        }
+    }
+    if (sd !== null) {
+        var d1 = (dict !== undefined && dict !== null &&
+            _b_.dict.mp_length(dict) > 0) ? dict : _b_.None
+        return $B.fast_tuple([d1, sd])
+    }
     return dict === undefined ? _b_.None : dict
 }
 
