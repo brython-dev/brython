@@ -96,7 +96,7 @@ class C:
 
     def __len__(self):
       return 9
-      
+
     def __getitem__(self, i):
         if i > 2:
             raise OSError
@@ -109,4 +109,20 @@ try:
 except OSError:
   assert i == 2
 
+# another iterator with __len__ and __getitem__
+class A:
+
+  def __init__(self):
+      self.data = 'abcde'
+
+  def __len__(self):
+      return len(self.data)
+
+  def __getitem__(self, i):
+      return self.data[i]
+
+
+for char in A():
+    char
+    
 print("passed all tests...")

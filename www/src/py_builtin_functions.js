@@ -1143,7 +1143,7 @@ $B.iterator.tp_iter = function(self) {
 }
 
 $B.iterator.tp_iternext = function*(self){
-    if (self.it_index <= self.len) {
+    if (self.it_index < self.len) {
         var res = self.getitem(self.it_seq, self.it_index)
         self.it_index++
         yield res

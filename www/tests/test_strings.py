@@ -529,4 +529,11 @@ assert x.title() == '\u1f88'
 # PR 2722 : str.isalnum()
 assert '\u00bd'.isalnum()
 
+# issue 2747
+class SubStr(str):
+    pass
+
+toto = SubStr("toto")
+assert toto.find("o") == 1
+
 print("passed all tests...")

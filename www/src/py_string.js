@@ -2187,6 +2187,7 @@ str_funcs.find = function(self, sub, start, end) {
         start = $.start
         end = $.end
     }
+    self = to_string(self)
     check_str(sub)
     var res
     try {
