@@ -138,8 +138,8 @@
             load:function(script_url) {
                 // Load and eval() the Javascript file at script_url
                 var file_obj = $B.builtins.open(script_url)
-                var content = $B.$getattr(file_obj, 'read')();
-                eval(content);
+                var content = $B.$getattr(file_obj, 'read')()
+                eval(content)
             },
             load1:function(script_url, callback) {
                 // Load and eval() the Javascript file at script_url
@@ -185,12 +185,12 @@
                 }
             },
             URLParameter:function(name) {
-                name = name.replace(/[[]/, "\\[").replace(/[\]]/, "\\]");
+                name = name.replace(/[[]/, "\\[").replace(/[\]]/, "\\]")
                 var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
-                    results = regex.exec(location.search);
+                    results = regex.exec(location.search)
                 results = results === null ? "" :
-                    decodeURIComponent(results[1].replace(/\+/g, " "));
-                return $B.builtins.str.$factory(results);
+                    decodeURIComponent(results[1].replace(/\+/g, " "))
+                return $B.builtins.str.$factory(results)
             }
         })
 
@@ -1088,8 +1088,8 @@
         for (var b_index = 0; b_index < b.length; b_index++) {
             var code = b[b_index]
             // cost(b[:b_index], a[:0]) == b_index * MOVE_COST
-            var distance = result = b_index * MOVE_COST;
-            var minimum = SIZE_MAX;
+            var distance = result = b_index * MOVE_COST
+            var minimum = SIZE_MAX
             for (var index = 0; index < a.length; index++) {
                 // 1) Previous distance in this row is cost(b[:b_index], a[:index])
                 var substitute = distance + substitution_cost(code, a[index])

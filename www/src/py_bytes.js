@@ -363,9 +363,9 @@ function hex() {
         digits = "0123456789abcdef",
         bps = bytes_per_sep,
         jstart = bps,
-        len = self.source.length;
+        len = self.source.length
     if (bytes_per_sep < 0) {
-        bps = -bytes_per_sep;
+        bps = -bytes_per_sep
         jstart = bps
     } else if (bytes_per_sep == 0) {
         sep = ''

@@ -524,9 +524,9 @@ DOMNode.tp_getattro = function(self, attr) {
         case "headers":
           if (self.nodeType == Node.DOCUMENT_NODE) {
               // HTTP headers
-              let req = new XMLHttpRequest();
+              let req = new XMLHttpRequest()
               req.open("GET", document.location, false)
-              req.send(null);
+              req.send(null)
               var headers = req.getAllResponseHeaders()
               headers = headers.split("\r\n")
               let res = $B.empty_dict()
@@ -1119,12 +1119,12 @@ DOMNode_funcs.closest_get = function() {
                 arguments, {selector: $B.NULL})
     var self = $.self,
         selector = $.selector
+    console.log('closest', self, selector)
     if (self.closest === undefined) {
         $B.RAISE_ATTRIBUTE_ERROR(_b_.str.$factory(self) +
             " has no attribute 'closest'", self, 'closest')
     }
     if (selector === $B.NULL) {
-        console.log('closest arguments', arguments)
         $B.RAISE(_b_.TypeError,
             `${$B.class_name(self)}.closest() missing 1 required ` +
             `positional argument: 'selector'`

@@ -189,7 +189,7 @@ _IOBase_funcs.readline = function(_self, limit=-1) {
                 `not '${$B.class_name(b)}'`)
         }
         if (_b_.len(b) == 0) {
-            break;
+            break
         }
 
         _b_.bytearray.tp_funcs.extend(buffer, b)
@@ -206,7 +206,7 @@ _IOBase_funcs.readlines = function(_self, hint) {
                 {hint: -1})
     var _self=  $.self,
         hint = $.hint
-    var length = 0;
+    var length = 0
     var result, it
 
     if (hint === _b_.None) {
@@ -267,7 +267,7 @@ _IOBase_funcs.writable = function() {
 }
 
 _IOBase_funcs.writelines = function(_self, lines) {
-    var iter, res;
+    var iter, res
 
     if (_self.closed) {
         $B.RAISE(_b_.OSError, 'closed')
@@ -407,11 +407,11 @@ _BufferedIOBase_funcs.__exit__ = function(self, type, value, traceback) {
 }
 
 _BufferedIOBase_funcs.readinto = function(_self, buffer) {
-    return _bufferediobase_readinto_generic(_self, buffer, 0);
+    return _bufferediobase_readinto_generic(_self, buffer, 0)
 }
 
 _BufferedIOBase_funcs.readinto1 = function(_self, buffer) {
-    return _bufferediobase_readinto_generic(_self, buffer, 1);
+    return _bufferediobase_readinto_generic(_self, buffer, 1)
 }
 
 _BufferedIOBase_funcs.close = function(_self) {
@@ -648,7 +648,7 @@ $B._FileIO.tp_init = function() {
                 if (rwa) {
                     bad_mode()
                 }
-                rwa = 1;
+                rwa = 1
                 _self.writable = 1
                 _self.appending = 1
                 flags |= O_APPEND | O_CREAT
@@ -663,7 +663,7 @@ $B._FileIO.tp_init = function() {
                 plus = 1
                 break
             default:
-                $B.RAISE(_b_.ValueError, `invalid mode: ${mode}`);
+                $B.RAISE(_b_.ValueError, `invalid mode: ${mode}`)
         }
         pos++
     }
@@ -671,7 +671,7 @@ $B._FileIO.tp_init = function() {
         bad_mode()
     }
     if (_self.readable && _self.writable) {
-        flags |= O_RDWR;
+        flags |= O_RDWR
     } else if (_self.readable) {
         flags |= O_RDONLY
     } else {
@@ -979,12 +979,17 @@ function invalid_mode(mode) {
 
 function _io_open_impl(file, mode, buffering, encoding, errors, newline,
                        closefd, opener){
-    var i;
-    var creating = 0, reading = 0, writing = 0, appending = 0, updating = 0;
-    var text = 0, binary = 0;
+    var i
+    var creating = 0,
+        reading = 0,
+        writing = 0,
+        appending = 0,
+        updating = 0,
+        text = 0, 
+        binary = 0
 
-    var rawmode = '', m;
-    var line_buffering, is_number, isatty = 0;
+    var rawmode = '', m
+    var line_buffering, is_number, isatty = 0
 
     var raw, modeobj, buffer, wrapper, result, path_or_fd
 
@@ -1045,11 +1050,21 @@ function _io_open_impl(file, mode, buffering, encoding, errors, newline,
 
 
     m = ''
-    if (creating)  m += 'x';
-    if (reading)   m += 'r';
-    if (writing)   m += 'w';
-    if (appending) m += 'a';
-    if (updating)  m += '+';
+    if (creating) {
+        m += 'x'
+    }
+    if (reading) {
+        m += 'r'
+    }
+    if (writing) {
+         m += 'w'
+    }
+    if (appending) {
+        m += 'a'
+    }
+    if (updating) {
+        m += '+'
+    }
     rawmode = m
 
     /* Parameters validation */

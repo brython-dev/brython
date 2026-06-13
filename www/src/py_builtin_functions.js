@@ -127,14 +127,17 @@ _b_.ascii = function(obj) {
 
 // used by bin, hex and oct functions
 function $builtin_base_convert_helper(obj, base) {
-  var prefix = "";
+  var prefix = ""
   switch (base) {
      case 2:
-       prefix = '0b'; break
+       prefix = '0b'
+       break
      case 8:
-       prefix = '0o'; break
+       prefix = '0o'
+       break
      case 16:
-       prefix = '0x'; break
+       prefix = '0x'
+       break
      default:
          console.log('invalid base:' + base)
   }
@@ -1947,13 +1950,13 @@ function supercheck(type, obj) {
         }
     }
 
-    var type_or_instance, obj_str;
+    var type_or_instance, obj_str
 
     if ($B.is_type(obj)) {
-        type_or_instance = "type";
+        type_or_instance = "type"
         obj_str = obj.tp_name
     } else {
-        type_or_instance = "instance of";
+        type_or_instance = "instance of"
         obj_str = $B.class_name(obj)
     }
     $B.RAISE(_b_.TypeError,

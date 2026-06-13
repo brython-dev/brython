@@ -380,7 +380,7 @@ memoryview_funcs.index = function(self) {
                 return index
             }
         }
-        $B.RAISE(_b_.ValueError, "memoryview.index(x): x not found");
+        $B.RAISE(_b_.ValueError, "memoryview.index(x): x not found")
     }
     $B.RAISE(_b_.NotImplementedError,
         "multi-dimensional lookup is not implemented"

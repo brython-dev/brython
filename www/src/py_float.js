@@ -68,8 +68,8 @@ function _float_div_mod(vx, wx) {
     if (mod) {
         /* ensure the remainder has the same sign as the denominator */
         if ((wx < 0) != (mod < 0)) {
-            mod += wx;
-            div -= 1.0;
+            mod += wx
+            div -= 1.0
         }
     } else {
         /* the remainder is zero, and in the presence of signed zeroes
@@ -80,13 +80,13 @@ function _float_div_mod(vx, wx) {
     /* snap quotient to nearest integral value */
     var floordiv
     if (div) {
-        floordiv = Math.floor(div);
+        floordiv = Math.floor(div)
         if (div - floordiv > 0.5) {
-            floordiv += 1.0;
+            floordiv += 1.0
         }
     } else {
         /* div is zero - get the same sign as the true quotient */
-        floordiv = copysign(0.0, vx / wx); /* zero w/ sign of vx/wx */
+        floordiv = copysign(0.0, vx / wx) /* zero w/ sign of vx/wx */
     }
 
     return {floordiv, mod}
@@ -431,12 +431,12 @@ function ldexp(mantissa, exponent) {
     } else if (! isFinite(mantissa * Math.pow(2, exponent))) {
         $B.RAISE(_b_.OverflowError, 'overflow')
     }
-    var steps = Math.min(3, Math.ceil(Math.abs(exponent) / 1023));
-    var result = mantissa;
+    var steps = Math.min(3, Math.ceil(Math.abs(exponent) / 1023))
+    var result = mantissa
     for (var i = 0; i < steps; i++) {
-        result *= Math.pow(2, Math.floor((exponent + i) / steps));
+        result *= Math.pow(2, Math.floor((exponent + i) / steps))
     }
-    return fast_float(result);
+    return fast_float(result)
 }
 
 float.$funcs = {isinf, isninf, isnan, fabs, frexp, ldexp}
@@ -482,25 +482,25 @@ function float_round(x, ndigits) {
     var pow1,
         pow2,
         y,
-        z;
+        z
     if (ndigits >= 0) {
         if (ndigits > 22) {
             /* pow1 and pow2 are each safe from overflow, but
                pow1*pow2 ~= pow(10.0, ndigits) might overflow */
             pow1 = 10 ** (ndigits - 22)
-            pow2 = 1e22;
+            pow2 = 1e22
         } else {
             pow1 = 10 ** ndigits
-            pow2 = 1.0;
+            pow2 = 1.0
         }
-        y = (x.value * pow1) * pow2;
+        y = (x.value * pow1) * pow2
         /* if y overflows, then rounded value is exactly x */
         if (!isFinite(y)) {
             return x
         }
     } else {
-        pow1 = 10 ** -ndigits;
-        pow2 = 1.0; /* unused; silences a gcc compiler warning */
+        pow1 = 10 ** -ndigits
+        pow2 = 1.0 /* unused; silences a gcc compiler warning */
         if (isFinite(pow1)) {
             y = x.value / pow1
         } else {
@@ -508,23 +508,23 @@ function float_round(x, ndigits) {
         }
     }
 
-    z = Math.round(y);
+    z = Math.round(y)
     if (fabs(y - z).value == 0.5) {
         /* halfway between two integers; use round-half-even */
-        z = 2.0 * Math.round(y / 2);
+        z = 2.0 * Math.round(y / 2)
     }
     if (ndigits >= 0) {
-        z = (z / pow2) / pow1;
+        z = (z / pow2) / pow1
     } else {
-        z *= pow1;
+        z *= pow1
     }
     /* if computation resulted in overflow, raise OverflowError */
     if (! isFinite(z)) {
         $B.RAISE(_b_.OverflowError,
-                        "overflow occurred during round");
+                        "overflow occurred during round")
     }
 
-    return fast_float(z);
+    return fast_float(z)
 }
 
 function to_digits(s) {
@@ -1181,7 +1181,7 @@ float_funcs.fromhex = function(klass, s) {
     function finished() {
       /* optional trailing whitespace leading to the end of the string */
       while (s[pos] && s[pos].match(/\s/)) {
-          pos++;
+          pos++
       }
       if (pos != s.length) {
           throw parse_error()
@@ -1222,8 +1222,8 @@ float_funcs.fromhex = function(klass, s) {
         ldexp = _b_.float.$funcs.ldexp
 
     if (s[pos] == '-') {
-        pos++;
-        negate = 1;
+        pos++
+        negate = 1
     } else if (s[pos] == '+') {
         pos++
     }
@@ -1237,22 +1237,22 @@ float_funcs.fromhex = function(klass, s) {
     var coeff_start = pos,
         coeff_end
     while (hex_from_char(s[pos]) >= 0) {
-        pos++;
+        pos++
     }
-    var save_pos = pos;
+    var save_pos = pos
     if (s[pos] == '.') {
-        pos++;
+        pos++
         while (hex_from_char(s[pos]) >= 0) {
-            pos++;
+            pos++
         }
-        coeff_end = pos - 1;
+        coeff_end = pos - 1
     } else {
-        coeff_end = pos;
+        coeff_end = pos
     }
 
     /* ndigits = total # of hex digits; fdigits = # after point */
     var ndigits = coeff_end - coeff_start,
-        fdigits = coeff_end - save_pos;
+        fdigits = coeff_end - save_pos
     if (ndigits == 0) {
         throw parse_error()
     }
@@ -1263,21 +1263,21 @@ float_funcs.fromhex = function(klass, s) {
     /* [p <exponent>] */
     var exp
     if (s[pos] == 'p' || s[pos] == 'P') {
-        pos++;
-        var exp_start = pos;
+        pos++
+        var exp_start = pos
         if (s[pos] == '-' || s[pos ]== '+') {
-            pos++;
+            pos++
         }
         if (!('0' <= s[pos] && s[pos] <= '9')) {
             throw parse_error()
         }
         pos++;
         while ('0' <= s[pos] && s[pos] <= '9') {
-            pos++;
+            pos++
         }
-        exp = parseInt(s.substr(exp_start));
+        exp = parseInt(s.substr(exp_start))
     } else {
-        exp = 0;
+        exp = 0
     }
 
     /* for 0 <= j < ndigits, HEX_DIGIT(j) gives the jth most significant digit */
@@ -1295,23 +1295,23 @@ float_funcs.fromhex = function(klass, s) {
 
     /* Discard leading zeros, and catch extreme overflow and underflow */
     while (ndigits > 0 && HEX_DIGIT(ndigits-1) == 0) {
-        ndigits--;
+        ndigits--
     }
     if (ndigits == 0 || exp < LONG_MIN/2) {
-        x = ZERO;
+        x = ZERO
         return finished()
     }
     if (exp > LONG_MAX/2) {
         console.log('overflow, exp', exp)
-        throw overflow_error();
+        throw overflow_error()
     }
     /* Adjust exponent for fractional part. */
-    exp = exp - 4 * fdigits;
+    exp = exp - 4 * fdigits
 
     /* top_exp = 1 more than exponent of most sig. bit of coefficient */
-    var top_exp = exp + 4 * (ndigits - 1);
+    var top_exp = exp + 4 * (ndigits - 1)
     for (let digit = BigInt(HEX_DIGIT(ndigits - 1)); digit != 0; digit /= 2n) {
-        top_exp++;
+        top_exp++
     }
     /* catch almost all nonextreme cases of overflow and underflow here */
     if (top_exp < DBL_MIN_EXP - DBL_MANT_DIG) {
@@ -1323,9 +1323,9 @@ float_funcs.fromhex = function(klass, s) {
     }
     /* lsb = exponent of least significant bit of the *rounded* value.
        This is top_exp - DBL_MANT_DIG unless result is subnormal. */
-    var lsb = Math.max(top_exp, DBL_MIN_EXP) - DBL_MANT_DIG;
+    var lsb = Math.max(top_exp, DBL_MIN_EXP) - DBL_MANT_DIG
 
-    var x = 0.0;
+    var x = 0.0
     if (exp >= lsb) {
         /* no rounding required */
         for (let i = ndigits - 1; i >= 0; i--) {
@@ -1347,20 +1347,20 @@ float_funcs.fromhex = function(klass, s) {
     /* round-half-even: round up if bit lsb-1 is 1 and at least one of
        bits lsb, lsb-2, lsb-3, lsb-4, ... is 1. */
     if ((digit & half_eps) != 0) {
-        var round_up = 0;
+        var round_up = 0
         if ((digit & (3 * half_eps - 1)) != 0 || (half_eps == 8 &&
                 key_digit + 1 < ndigits && (HEX_DIGIT(key_digit+1) & 1) != 0)){
-            round_up = 1;
+            round_up = 1
         } else {
             for (let i = key_digit-1; i >= 0; i--) {
                 if (HEX_DIGIT(i) != 0) {
-                    round_up = 1;
-                    break;
+                    round_up = 1
+                    break
                 }
             }
         }
         if (round_up) {
-            x += 2 * half_eps;
+            x += 2 * half_eps
             if (top_exp == DBL_MAX_EXP &&
                 x == ldexp(2 * half_eps, DBL_MANT_DIG).value){
                 /* overflow corner case: pre-rounded value <
@@ -1369,7 +1369,7 @@ float_funcs.fromhex = function(klass, s) {
             }
         }
     }
-    x = ldexp(x, (exp + 4 * key_digit));
+    x = ldexp(x, (exp + 4 * key_digit))
     return finished()
 }
 

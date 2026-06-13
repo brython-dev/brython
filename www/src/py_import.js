@@ -1237,7 +1237,7 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist) {
        for(var i = 0, modsep = "", _mod_name = "", len = parsed_name.length - 1,
                 __path__ = _b_.None; i <= len; ++i){
 
-            var _parent_name = _mod_name;
+            var _parent_name = _mod_name
             _mod_name += modsep + parsed_name[i]
             modsep = "."
             modobj = $B.imported[_mod_name]
@@ -1335,7 +1335,7 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist) {
         // Return module object for top-level package
         let package_name = mod_name
         while (parsed_name.length > 1) {
-            var module = parsed_name.pop();
+            var module = parsed_name.pop()
             package_name = parsed_name.join('.')
             if ($B.imported[package_name] === undefined) {
                 // may happen if the modules defines __name__ = "X.Y" and package
@@ -1437,7 +1437,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum) {
                     "cannot perform relative import")
             }
         } else {
-            prefix = false;
+            prefix = false
             norm_parts.push(p)
         }
     }
@@ -1514,7 +1514,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum) {
                 //alert()
             }
             try {
-                __all__ = $B.$getattr(modobj, "__all__", thunk);
+                __all__ = $B.$getattr(modobj, "__all__", thunk)
             } catch (err) {
                 console.log('getattr __all__ raised', err)
                 throw err
