@@ -95,6 +95,17 @@ _IOBase.tp_finalize = function(self) {
 var _IOBase_funcs = _IOBase.tp_funcs = {}
 
 _IOBase_funcs.__enter__ = function(self) {
+    // CPython IOBase.__enter__ does _checkClosed() first. closed is read
+    // defensively: on some native classes the getset resolution crashes
+    var closed = false
+    try {
+        closed = $B.$bool($B.$getattr(self, 'closed'))
+    } catch (err) {
+        closed = !! self._closed
+    }
+    if (closed) {
+        $B.RAISE(_b_.ValueError, 'I/O operation on closed file')
+    }
     return self
 }
 
@@ -393,9 +404,6 @@ function _bufferediobase_readinto_generic(_self, buffer, readinto1) {
 
 var _BufferedIOBase_funcs = $B._BufferedIOBase.tp_funcs = {}
 
-_BufferedIOBase_funcs.__enter__ = function(self) {
-    return self
-}
 _BufferedIOBase_funcs.__exit__ = function(self, type, value, traceback) {
     try {
         $B.$call($B.$getattr(self, 'close'))
@@ -435,7 +443,7 @@ _BufferedIOBase_funcs.write = function() {
 }
 
 $B._BufferedIOBase.tp_methods = [
-    "__enter__", "__exit__", "readinto", "readinto1", "close", "detach",
+    "__exit__", "readinto", "readinto1", "close", "detach",
     "read", "read1", "write"
 ]
 
