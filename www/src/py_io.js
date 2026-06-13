@@ -75,7 +75,6 @@ _IOBase.tp_iternext = function*(self){
 
 _IOBase.tp_finalize = function(self) {
     // Destructor.  Calls close()
-    console.log('del', self)
     try {
         var closed = $B.$getattr(self, 'closed')
     } catch (err) {
@@ -89,7 +88,7 @@ _IOBase.tp_finalize = function(self) {
         return
     }
 
-    $B$call($B.$getattr(self, 'close'))
+    $B.$call($B.$getattr(self, 'close'))
 }
 
 var _IOBase_funcs = _IOBase.tp_funcs = {}
