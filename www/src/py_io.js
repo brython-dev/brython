@@ -561,8 +561,22 @@ _BufferedReader_funcs.readline = function(_self, size=-1) {
     return _bufferedreader_readline(_self)
 }
 
+// CPython's BufferedReader delegates these to the underlying raw stream;
+// without them it inherits _IOBase's seekable()/writable() = False.
+_BufferedReader_funcs.seekable = function(_self) {
+    return $B.$call($B.$getattr(_self.raw, 'seekable'))
+}
+
+_BufferedReader_funcs.readable = function(_self) {
+    return $B.$call($B.$getattr(_self.raw, 'readable'))
+}
+
+_BufferedReader_funcs.writable = function(_self) {
+    return $B.$call($B.$getattr(_self.raw, 'writable'))
+}
+
 $B._BufferedReader.tp_methods = [
-    "peek", "seek", "read", "readline"
+    "peek", "seek", "read", "readline", "seekable", "readable", "writable"
 ]
 
 $B.set_func_names($B._BufferedReader, '_io')
