@@ -724,8 +724,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,1,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-06-13 07:15:21.372349"
-__BRYTHON__.timestamp=1781327721372
+__BRYTHON__.compiled_date="2026-06-13 07:25:09.903000"
+__BRYTHON__.timestamp=1781328309902
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre_kozh","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1361,6 +1361,51 @@ $B.finalize_type(cls)
 return cls})(klass)}}
 var op2ast_class=$B.op2ast_class={},ast_types=[ast.BinOp,ast.BoolOp,ast.Compare,ast.UnaryOp]
 for(var i=0;i < 4;i++){for(var op in op_types[i]){op2ast_class[op]=[ast_types[i],ast[op_types[i][op]]]}}})(__BRYTHON__);
+;
+
+(function(global){'use strict';
+if(!global.__BRYTHON__){
+throw new Error(
+"wasthon-loader: __BRYTHON__ not found. "+
+"Load brython.js (and brython_stdlib.js if needed) before "+
+"loading wasthon-loader.js."
+);}
+async function wasthonLoad(name,mjsUrl,opts){console.log('washtonLoad',name,mjsUrl,opts)
+opts=opts ||{};
+const cInitName=opts.initName ||name;
+const factoryModule=await import(mjsUrl);
+const factory=factoryModule.default;
+if(typeof factory !=='function'){throw new Error(
+`wasthon: '${mjsUrl}' must export a default factory `+
+`(emcc -s MODULARIZE=1 -s EXPORT_ES6=1).`
+);}
+const M=await factory();
+M._wasthon_init();
+const initName='_PyInit_'+cInitName;
+const initFn=M[initName];
+if(typeof initFn !=='function'){throw new Error(
+`wasthon: ${initName} not found in '${mjsUrl}'. `+
+`Did you export it via EXPORTED_FUNCTIONS?`
+);}
+const defHandle=initFn();
+if(defHandle===0){throw new Error(`wasthon: ${initName}() returned 0 (init failed)`);}
+const modHandle=M._wasthon_module_create(defHandle);
+if(modHandle===0){const exc=M.wasthon && M.wasthon.pendingException;
+throw new Error(
+`wasthon: wasthon_module_create() returned 0`+
+(exc ? ` — ${exc.msg}` :'')
+);}
+const rt=M.wasthon;
+const modObj=rt.handles.get(modHandle);
+if(!modObj){throw new Error(
+`wasthon: module handle ${modHandle} did not resolve.`
+);}
+global.__BRYTHON__.imported[name]=modObj;
+global.__BRYTHON__.wasthon_modules=global.__BRYTHON__.wasthon_modules ||{};
+global.__BRYTHON__.wasthon_modules[name]={module:M,runtime:rt,obj:modObj };
+console.log('set $B.imported',name,__BRYTHON__.imported[name])
+return modObj;}
+global.wasthonLoad=wasthonLoad;})(window);
 ;
 
 "use strict";
@@ -7935,7 +7980,7 @@ if(nb*new_itemsize !=_b_.len(self)){$B.RAISE(_b_.TypeError,'memoryview: product(
 switch(format){case "B":
 return memoryview.$factory(self.obj)
 case "I":
-var res=memoryview.$factory(self.obj),objlen=len(self.obj)
+var res=memoryview.$factory(self.obj),objlen=_b_.len(self.obj)
 res.itemsize=4
 res.format="I"
 if(objlen % 4 !=0){$B.RAISE(_b_.TypeError,"memoryview: length is not "+
