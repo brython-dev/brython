@@ -755,7 +755,7 @@ BytesIO_funcs.seekable = function(_self) {
 BytesIO.tp_methods = [
     "__getstate__", "__setstate__", "getvalue", "getbuffer", "isatty", "close",
     "read", "read1", "readinto", "readline", "readlines", "write", "seek",
-    "tell", "truncate", "readable"
+    "tell", "truncate", "readable", "seekable", "writable"
 ]
 
 $B.set_func_names(BytesIO, '_io')
