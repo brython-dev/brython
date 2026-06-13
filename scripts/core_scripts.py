@@ -5,10 +5,10 @@ core_scripts = [
     'stdlib_paths',
     'unicode_data',
     'version_info',
-
     'py_tokens',
     'python_tokenizer',
     'py_ast',
+    'wasthon-loader',
     'loaders',
     'py_utils',
     'py_object',
