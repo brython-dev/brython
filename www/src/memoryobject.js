@@ -301,7 +301,7 @@ memoryview_funcs.cast = function(self, format, shape) {
             return memoryview.$factory(self.obj)
         case "I":
             var res = memoryview.$factory(self.obj),
-                objlen = len(self.obj)
+                objlen = _b_.len(self.obj)
             res.itemsize = 4
             res.format = "I"
             if (objlen % 4 != 0) {
