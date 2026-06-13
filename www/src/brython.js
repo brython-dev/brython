@@ -724,8 +724,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,2,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-06-13 15:59:45.988461"
-__BRYTHON__.timestamp=1781359185988
+__BRYTHON__.compiled_date="2026-06-13 21:22:14.981422"
+__BRYTHON__.timestamp=1781378534981
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_kozh","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -2649,7 +2649,7 @@ return metaclass}
 function calculate_metaclass(metatype,bases){
 var winner=metatype
 for(let tmp of bases){var tmptype=$B.get_class(tmp)
-if(_b_.issubclass(winner,tmptype)){continue;}
+if(_b_.issubclass(winner,tmptype)){continue}
 if(_b_.issubclass(tmptype,winner)){winner=tmptype
 continue}
 $B.RAISE(_b_.TypeError,"metaclass conflict: the metaclass of a derived class must be "+
@@ -3112,8 +3112,8 @@ class_obj.tp_base=ctx.base
 class_obj.tp_bases=ctx.bases
 $B.make_fast_iter(class_obj)
 if(test){console.log('result of type_new_get_bases',res)}
-if(res < 0){assert(PyErr_Occurred());
-return NULL;}
+if(res < 0){assert(PyErr_Occurred())
+return NULL}
 if(res==1){return class_obj}
 if(res instanceof Object){
 class_obj=res.type
@@ -3162,11 +3162,11 @@ var type_funcs=_b_.type.tp_funcs={}
 type_funcs.__abstractmethods___get=function(cls){if(cls !==type){var res=$B.get_from_dict(cls,'__abstractmethods__',$B.NULL)
 if(res !==$B.NULL){return res}}
 throw $B.attr_error('__abstractmethods__',cls)}
-type_funcs.__abstractmethods___set=function(cls,value){var abstract,res;
+type_funcs.__abstractmethods___set=function(cls,value){var abstract,res
 var dict=$B.get_dict(cls)
 if(value !=$B.NULL){abstract=$B.$bool(value)
 res=$B.str_dict_set(dict,'__abstractmethods__',value)}else{
-abstract=0;
+abstract=0
 res=$B.str_dict_pop(dict,'__abstractmethods__')
 if(res===$B.NULL){$B.RAISE(_b_.AttributeError,'__abstractmethods__')}}
 if(abstract){cls.tp_flags |=$B.TPFLAGS.IS_ABSTRACT}else{
@@ -3178,7 +3178,7 @@ var annotate=$B.get_from_dict(self,'__annotate__',$B.NULL)
 if(annotate===$B.NULL){annotate=$B.get_from_dict(self,'__annotate_func__',$B.NULL)}
 if(annotate !==$B.NULL){var get=$B.get_class(annotate).tp_descr_get
 if(get !==$B.NULL){annotate=get(annotate,$B.NULL,self)}}else{
-annotate=_b_.None;
+annotate=_b_.None
 $B.set_to_dict(self,'__annotate_func__',annotate)}
 return annotate}
 type_funcs.__annotate___set=function(cls,value){if(value===$B.NULL){$B.RAISE(_b_.TypeError,'cannot delete __annotate__ attribute')}
@@ -3334,7 +3334,7 @@ $B.$isinstance(t,[_b_.tuple,_b_.list])){
 subparams=_Py_make_parameters(t)}
 if(subparams && $B.is_tuple(subparams)){var len2=subparams.length
 var needed=len2-1-(iarg-iparam)
-if(needed > 0){len+=needed;
+if(needed > 0){len+=needed
 _PyTuple_Resize(parameters,len)}
 for(let t2 of subparams){parameters.push(t2)
 iparam++}}}}
@@ -3381,8 +3381,8 @@ if($B.get_class(param).tp_iter && $B.is_tuple(arg)){
 j=tuple_extend(subargs,j,arg[0],arg.length)
 continue}}
 subargs[j]=arg
-j++;}
-obj=PyObject_GetItem(obj,subargs);}
+j++}
+obj=PyObject_GetItem(obj,subargs)}
 return obj}
 function _Py_subs_parameters(self,args,parameters,item){var nparams=parameters.length
 if(nparams==0){$B.RAISE(_b_.TypeError,`${_b_.repr(self)} is not a generic class`
@@ -3413,11 +3413,11 @@ if($B.is_tuple(arg)){newargs[jarg]=subargs}else{
 newargs[jarg]=$B.$list(subargs)}
 jarg++
 continue}
-var unpack=_is_unpacked_typevartuple(arg);
+var unpack=_is_unpacked_typevartuple(arg)
 var subst=$B.$getattr(arg,'__typing_subst__',$B.NULL)
-if(subst !==$B.NULL){var iparam=tuple_index(parameters,nparams,arg);
+if(subst !==$B.NULL){var iparam=tuple_index(parameters,nparams,arg)
 arg=$B.$call(subst,argitems[iparam])}else{
-arg=subs_tvars(arg,parameters,argitems,nitems);}
+arg=subs_tvars(arg,parameters,argitems,nitems)}
 if(unpack){if(! $B.is_tuple(arg)){var original=args[iarg]
 $B.RAISE(_b_.TypeError,`expected __typing_subst__ of ${_b_.repr(original)} `+
 `objects to return a tuple, not ${_b_.repr(arg)}`
@@ -3471,7 +3471,7 @@ return{
 ob_type:cls,origin,args,starred:false }}
 $B.GenericAlias.mp_subscript=function(self,item){
 if(! self.hasOwnProperty('parameters')){self.parameters=_Py_make_parameters(self.args)}
-var newargs=_Py_subs_parameters(self,self.args,self.parameters,item);
+var newargs=_Py_subs_parameters(self,self.args,self.parameters,item)
 var res=$B.GenericAlias.$factory(alias.origin,newargs)
 res.starred=self.starred
 return res}
@@ -4485,8 +4485,8 @@ rawmode=m
 if(text && binary){$B.RAISE(_b_.ValueError,"can't have text and binary mode at once")}
 if(creating+reading+writing+appending > 1){$B.RAISE(_b_.ValueError,"must have exactly one of create/read/write/append mode")}
 if(binary && encoding !==_b_.None){$B.RAISE(_b_.ValueError,"binary mode doesn't take an encoding argument")}
-if(binary && errors !=_b_.None){$B.RAISE(_b_.ValueError,"binary mode doesn't take an errors argument");}
-if(binary && newline !==_b_.None){$B.RAISE(_b_.ValueError,"binary mode doesn't take a newline argument");}
+if(binary && errors !=_b_.None){$B.RAISE(_b_.ValueError,"binary mode doesn't take an errors argument")}
+if(binary && newline !==_b_.None){$B.RAISE(_b_.ValueError,"binary mode doesn't take a newline argument")}
 if(binary && buffering==1){$B.RAISE(_b_.RuntimeWarning,"line buffering (buffering=1) isn't supported in "+
 "binary mode, the default buffer size will be used")}
 var RawIO_class=$B._FileIO
@@ -5592,8 +5592,8 @@ var t=0
 if(al < bl){a*=POWERS_OF_TEN[bl-al-1]
 b/=10
 t=-1}else if(al > bl){b*=POWERS_OF_TEN[al-bl-1]
-a/=10;
-t=1;}
+a/=10
+t=1}
 if(a===b){return t}
 return a < b ?-1 :1}
 var aStr=String(a)
@@ -5605,7 +5605,7 @@ while(n >=DEFAULT_MIN_MERGE){r |=(n & 1)
 n >>=1}
 return n+r}
 function makeAscendingRun(array,lo,hi,compare){var runHi=lo+1
-if(runHi===hi){return 1;}
+if(runHi===hi){return 1}
 if(compare(array[runHi++],array[lo])< 0){while(runHi < hi && compare(array[runHi],array[runHi-1])< 0){runHi++}
 reverseRun(array,lo,runHi)}else{
 while(runHi < hi && compare(array[runHi],array[runHi-1])>=0){runHi++}}
@@ -5628,10 +5628,10 @@ case 2:
 array[left+2]=array[left+1]
 case 1:
 array[left+1]=array[left]
-break;
+break
 default:
 while(n > 0){array[left+n]=array[left+n-1]
-n--;}}
+n--}}
 array[left]=pivot}}
 function gallopLeft(value,array,start,length,hint,compare){var lastOffset=0,maxOffset=0,offset=1
 if(compare(value,array[start+hint])> 0){maxOffset=length-hint
@@ -5695,7 +5695,7 @@ mergeAt:function(i){var compare=this.compare,array=this.array,start1=this.runSta
 this.runLength[i]=length1+length2
 if(i===this.stackSize-3){this.runStart[i+1]=this.runStart[i+2]
 this.runLength[i+1]=this.runLength[i+2]}
-this.stackSize--;
+this.stackSize--
 var k=gallopRight(array[start2],array,start1,length1,0,compare)
 start1+=k
 length1-=k
@@ -5747,8 +5747,8 @@ break}}
 array[dest++]=tmp[cursor1++]
 if(--length1===1){exit=true
 break}
-minGallop--;}while(count1 >=DEFAULT_MIN_GALLOPING ||
-count2 >=DEFAULT_MIN_GALLOPING);
+minGallop--}while(count1 >=DEFAULT_MIN_GALLOPING ||
+count2 >=DEFAULT_MIN_GALLOPING)
 if(exit){break}
 if(minGallop < 0){minGallop=0}
 minGallop+=2}
@@ -5858,8 +5858,8 @@ lo+=runLength}while(remaining !==0)
 ts.forceMergeRuns()}
 function tim_sort_safe(array,compare){
 try{
-tim_sort(array,compare,0,array.length)}catch(e){if(e.name==TIM_SORT_ASSERTION){array.sort(compare);}else{
-throw e;}}}
+tim_sort(array,compare,0,array.length)}catch(e){if(e.name==TIM_SORT_ASSERTION){array.sort(compare)}else{
+throw e}}}
 $B.$TimSort=tim_sort_safe
 $B.$AlphabeticalCompare=alphabeticalCompare})(__BRYTHON__);
 ;
@@ -8053,14 +8053,14 @@ function set_difference(so,other){var other_size,other_is_dict
 if($B.$isinstance(other,[set,frozenset])){other_size=set.mp_length(other)}else if($B.is_dict(other)){other_size=_b_.dict.mp_length(other)
 other_is_dict=true}else{
 return set_copy_and_difference(so,other)}
-if(set.mp_length(so)>> 2 > other_size){return set_copy_and_difference(so,other);}
+if(set.mp_length(so)>> 2 > other_size){return set_copy_and_difference(so,other)}
 var result=make_new_set()
 if(other_is_dict){for(let entry of set_iter_with_hash(so)){if(! _b_.dict.$contains(other,entry.item,entry.hash)){set_add(result,entry.item,entry.hash)}}
 return result}
 for(let entry of set_iter_with_hash(so)){if(! set_contains(other,entry.item,entry.hash)){set_add(result,entry.item,entry.hash)}}
 result.ob_type=$B.get_class(so)
 return result}
-function set_difference_update(so,other){if(so===other){return set.tp_funcs.clear(so);}
+function set_difference_update(so,other){if(so===other){return set.tp_funcs.clear(so)}
 if($B.$isinstance(other,[set,frozenset])){for(let entry of set_iter_with_hash(other)){set_discard_entry(so,entry.item,entry.hash)}}else if($B.is_dict(other)){for(let entry of _b_.dict.$iter_items(other)){set_discard_entry(so,entry.key,entry.hash)}}else{
 var iterator=$B.make_js_iterator(other)
 for(let key of iterator){set_discard_key(so,key)}}}
@@ -8069,7 +8069,7 @@ function set_discard_entry(so,key,hash){var entry=set_lookkey(so,key,hash)
 if(! entry){return DISCARD_NOTFOUND}
 if(so.$store[entry.hash]!==undefined){
 set_remove(so,entry.hash,entry.index)}}
-function set_discard_key(so,key){return set_discard_entry(so,key);}
+function set_discard_key(so,key){return set_discard_entry(so,key)}
 function*set_iter(so){var ordered_keys=Object.keys(so.$store).sort()
 for(var hash of ordered_keys){if(so.$store[hash]!==undefined){for(var item of so.$store[hash]){yield item}}}}
 function*set_iter_with_hash(so){for(var hash in so.$store){if(so.$store[hash]!==undefined){for(var item of so.$store[hash]){yield{item,hash}}}}}
@@ -8090,7 +8090,7 @@ return result}
 function set_intersection_multi(so,args){var result=set_copy(so)
 if(args.length==0){return result}
 for(var other of args){result=set_intersection(result,other)}
-return result;}
+return result}
 function set_lookkey(so,key,hash){
 if(hash===undefined){try{
 hash=$B.$hash(key)}catch(err){if($B.$isinstance(key,set)){hash=$B.$hash(frozenset.$factory(key))}else{
@@ -8554,7 +8554,7 @@ res=parts.join(delim)}
 return format_padding(format_sign(val,flags)+res,flags)}
 var roundDownToFixed=$B.roundDownToFixed=function(v,d){if(d==0 && v.toString().indexOf('e')>-1){
 return BigInt(v).toString()}
-const mul=Math.pow(10,d);
+const mul=Math.pow(10,d)
 var is_neg=v < 0
 if(is_neg){v=-v}
 var res_floor=(Math.floor(v*mul)/mul).toFixed(d),res_ceil=(Math.ceil(v*mul)/mul).toFixed(d),res
@@ -8866,8 +8866,8 @@ car=spec.charAt(pos)}
 if(car=="z"){this.z=true
 pos++
 car=spec.charAt(pos)}
-if(car=="#"){this.alternate=true;
-pos++;
+if(car=="#"){this.alternate=true
+pos++
 car=spec.charAt(pos)}
 if(car=="0"){
 this.fill="0"
@@ -9091,15 +9091,15 @@ res="'"+res.replace(qesc,"\\'")+"'"
 return res}
 _b_.str.tp_hash=function(self){
 var s=to_string(self)
-let h1=0xdeadbeef,h2=0x41c6ce57;
-for(let i=0,ch;i < s.length;i++){ch=s.charCodeAt(i);
-h1=Math.imul(h1 ^ ch,2654435761);
-h2=Math.imul(h2 ^ ch,1597334677);}
-h1=Math.imul(h1 ^(h1 >>> 16),2246822507);
-h1 ^=Math.imul(h2 ^(h2 >>> 13),3266489909);
-h2=Math.imul(h2 ^(h2 >>> 16),2246822507);
-h2 ^=Math.imul(h1 ^(h1 >>> 13),3266489909);
-return 4294967296*(2097151 & h2)+(h1 >>> 0);}
+let h1=0xdeadbeef,h2=0x41c6ce57
+for(let i=0,ch;i < s.length;i++){ch=s.charCodeAt(i)
+h1=Math.imul(h1 ^ ch,2654435761)
+h2=Math.imul(h2 ^ ch,1597334677)}
+h1=Math.imul(h1 ^(h1 >>> 16),2246822507)
+h1 ^=Math.imul(h2 ^(h2 >>> 13),3266489909)
+h2=Math.imul(h2 ^(h2 >>> 16),2246822507)
+h2 ^=Math.imul(h1 ^(h1 >>> 13),3266489909)
+return 4294967296*(2097151 & h2)+(h1 >>> 0)}
 _b_.str.tp_str=function(self){self=to_string(self)
 var repl='',chars=to_chars(self)
 if(chars.length==self.length){return self.replace(combining_re,"\u200B$1")}
@@ -9210,7 +9210,7 @@ return _b_.bytes.tp_new(_b_.bytes,[$.self,$.encoding,$.errors],$B.empty_dict())}
 str_funcs.endswith=function(self,suffix){
 if(arguments.length==2 && typeof suffix=='string'){return self.endsWith(suffix)}
 var $=$B.args("endswith",4,{self:null,suffix:null,start:null,end:null},arguments,{start:0,end:null},null,null),_self
-normalize_start_end($);
+normalize_start_end($)
 _self=to_string($.self)
 var suffixes=$.suffix
 if(! $B.is_tuple(suffixes)){suffixes=[suffixes]}
@@ -9226,7 +9226,7 @@ var s=$B.PyNumber_Index($.tabsize),col=0,pos=0,res="",chars=to_chars(_self)
 if(s==1){return _self.replace(/\t/g," ")}
 while(pos < chars.length){var car=chars[pos]
 switch(car){case "\t":
-while(col % s > 0){res+=" ";
+while(col % s > 0){res+=" "
 col++}
 break
 case "\r":
@@ -9278,7 +9278,7 @@ getitem=function(key){return _b_.dict.$getitem(mapping,key)}}
 var _self=to_string($.self),parts=$B.split_format(_self)
 var res="",fmt
 for(let i=0;i < parts.length;i++){
-if(typeof parts[i]=="string"){res+=parts[i];
+if(typeof parts[i]=="string"){res+=parts[i]
 continue}
 fmt=parts[i]
 if(fmt.spec !==undefined){
@@ -9311,14 +9311,14 @@ if(res===-1){$B.RAISE(_b_.ValueError,"substring not found")}
 return res}
 str_funcs.isalnum=function(self){
 $B.check_nb_args_no_kw('str.isalnum',1,arguments)
-var _self=to_string(self);
+var _self=to_string(self)
 if(_self.length==0){return false}
 for(var char of _self){if(!(str_funcs.isalpha(char)||str_funcs.isdecimal(char)||
 str_funcs.isdigit(char)||str_funcs.isnumeric(char))){return false}}
 return true}
 str_funcs.isalpha=function(self){
 $B.check_nb_args_no_kw('str.isalpha',1,arguments)
-var _self=to_string(self);
+var _self=to_string(self)
 if(_self.length==0){return false}
 for(var char of _self){if(!unicode_categories_contain_character(alpha_categories,_b_.ord(char))){return false}}
 return true}
@@ -9409,7 +9409,7 @@ res.push(obj2)
 count++}catch(err){if($B.$isinstance(err,_b_.StopIteration)){break}else{
 throw err}}}
 return res.join(_self)}
-str_funcs.ljust=function(self){var $=$B.args("ljust",3,{self:null,width:null,fillchar:null},arguments,{fillchar:" "},null,null),_self=to_string($.self),len=str.mp_length(_self);
+str_funcs.ljust=function(self){var $=$B.args("ljust",3,{self:null,width:null,fillchar:null},arguments,{fillchar:" "},null,null),_self=to_string($.self),len=str.mp_length(_self)
 if($.width <=len){return _self}
 return _self+$.fillchar.repeat($.width-len)}
 str_funcs.lower=function(self){$B.check_nb_args_no_kw('str.lower',1,arguments)
@@ -9474,7 +9474,7 @@ check_str(_new,"replace() argument 2 ")
 if(! $B.$isinstance(count,[_b_.int,_b_.float])){$B.RAISE(_b_.TypeError,"'"+$B.class_name(count)+
 "' object cannot be interpreted as an integer")}else if($B.$isinstance(count,_b_.float)){$B.RAISE(_b_.TypeError,"integer argument expected, got float")}
 if(count==0){return _self}
-if($B.is_big_int(count)){count=parseInt($B.int_value(count))};
+if($B.is_big_int(count)){count=parseInt($B.int_value(count))}
 [old,_new]=to_string(old,_new)
 var elts
 if(old==""){if(_new==""){return _self}
@@ -9496,10 +9496,10 @@ pos=pos+_new.length
 count--}
 return res}
 str_funcs.rfind=function(){
-var $=$B.args("rfind",4,{self:null,sub:null,start:null,end:null},arguments,{start:0,end:null},null,null),_self,sub
+var $=$B.args("rfind",4,{self:null,sub:null,start:null,end:null},arguments,{start:0,end:null},null,null)
 normalize_start_end($)
-check_str($.sub);
-[_self,sub]=to_string($.self,$.sub)
+check_str($.sub)
+let[_self,sub]=to_string($.self,$.sub)
 var len=str.mp_length(_self),sub_len=str.mp_length(sub)
 if(sub_len==0){if($.js_start > len){return-1}else{
 return str.mp_length(_self)}}
@@ -9520,8 +9520,8 @@ var _self=reverse(self),sep=reverse(sep)
 var items=str_funcs.partition(_self,sep).reverse()
 for(var i=0;i < items.length;i++){items[i]=items[i].split("").reverse().join("")}
 return items}
-str_funcs.rsplit=function(){var $=$B.args("rsplit",3,{self:null,sep:null,maxsplit:null},arguments,{sep:_b_.None,maxsplit:-1},null,null),sep=$.sep,_self;
-[_self,sep]=to_string($.self,$.sep)
+str_funcs.rsplit=function(){var $=$B.args("rsplit",3,{self:null,sep:null,maxsplit:null},arguments,{sep:_b_.None,maxsplit:-1},null,null)
+let[_self,sep]=to_string($.self,$.sep)
 var rev_str=reverse(_self),rev_sep=sep===_b_.None ? sep :reverse(sep),rev_res=str.tp_funcs.split(rev_str,rev_sep,$.maxsplit)
 rev_res.reverse()
 for(var i=0;i < rev_res.length;i++){rev_res[i]=reverse(rev_res[i])}
@@ -10637,9 +10637,9 @@ while(s[pos]&& s[pos].match(/\s/)){pos++}
 if(pos !=s.length){throw parse_error()}
 if(negate){x=float.nb_negative(x)}
 return klass===_b_.float ? x :$B.$call(klass,x)}
-function overflow_error(){$B.RAISE(_b_.OverflowError,"hexadecimal value too large to represent as a float");}
-function parse_error(){$B.RAISE(_b_.ValueError,"invalid hexadecimal floating-point string");}
-function insane_length_error(){$B.RAISE(_b_.ValueError,"hexadecimal string too long to convert");}
+function overflow_error(){$B.RAISE(_b_.OverflowError,"hexadecimal value too large to represent as a float")}
+function parse_error(){$B.RAISE(_b_.ValueError,"invalid hexadecimal floating-point string")}
+function insane_length_error(){$B.RAISE(_b_.ValueError,"hexadecimal string too long to convert")}
 s=s.trim()
 if(s.match(/^\+?inf(inity)?$/i)){return INF}else if(s.match(/^-inf(inity)?$/i)){return NINF}else if(s.match(/^[+-]?nan$/i)){return NAN}
 var pos=0,negate,ldexp=_b_.float.$funcs.ldexp
@@ -10661,7 +10661,7 @@ if(s[pos]=='p' ||s[pos]=='P'){pos++
 var exp_start=pos
 if(s[pos]=='-' ||s[pos ]=='+'){pos++}
 if(!('0' <=s[pos]&& s[pos]<='9')){throw parse_error()}
-pos++;
+pos++
 while('0' <=s[pos]&& s[pos]<='9'){pos++}
 exp=parseInt(s.substr(exp_start))}else{
 exp=0}
@@ -11997,7 +11997,7 @@ $B.RAISE(_b_.TypeError,"'"+item.key+
 "' is an invalid keyword argument for this function")}}
 if(self.length==0){return _b_.None}
 self.$cl=$elts_class(self)
-var cmp=null;
+var cmp=null
 function basic_cmp(a,b){return $B.rich_comp("__lt__",a,b)?-1:
 $B.rich_comp('__eq__',a,b)? 0 :1}
 function reverse_cmp(a,b){return basic_cmp(b,a)}
@@ -15049,7 +15049,7 @@ line=lines[lineno-1]}
 return line}
 var VALID_FUTURES=["nested_scopes","generators","division","absolute_import","with_statement","print_function","unicode_literals","barry_as_FLUFL","generator_stop","annotations"]
 $B.future_features=function(mod,filename){var features=0
-var i=0;
+var i=0
 if(mod.body[0]instanceof $B.ast.Expr){if(mod.body[0].value instanceof $B.ast.Constant &&
 typeof mod.body[0].value.value=="string"){
 i++}}
@@ -15179,8 +15179,8 @@ if($B.$options.args){$B.__ARGV=$B.$options.args}else{
 $B.__ARGV=_b_.list.$factory([])}
 $B.options_parsed=true
 return options}
-if(!($B.isWebWorker ||$B.isNode)){var startup_observer=new MutationObserver(function(mutations){for(var mutation of mutations){for(var addedNode of mutation.addedNodes){addPythonScript(addedNode);}}});
-startup_observer.observe(document.documentElement,{childList:true,subtree:true});}
+if(!($B.isWebWorker ||$B.isNode)){var startup_observer=new MutationObserver(function(mutations){for(var mutation of mutations){for(var addedNode of mutation.addedNodes){addPythonScript(addedNode)}}})
+startup_observer.observe(document.documentElement,{childList:true,subtree:true})}
 var brython_options=$B.brython_options={}
 var python_scripts=[]
 if(!$B.isWebWorker){
@@ -15234,7 +15234,7 @@ var brython=$B.parser.brython=function(options){$B.$options=$B.parse_options(opt
 if(!($B.isWebWorker ||$B.isNode)){if(! status.brython_called){
 status.brython_called=true
 startup_observer.disconnect()
-var inject_observer=new MutationObserver(function(mutations){for(var mutation of mutations){for(var addedNode of mutation.addedNodes){injectPythonScript(addedNode);}}})
+var inject_observer=new MutationObserver(function(mutations){for(var mutation of mutations){for(var addedNode of mutation.addedNodes){injectPythonScript(addedNode)}}})
 inject_observer.observe(document.documentElement,{childList:true,subtree:true})}}else if($B.isNode){return}
 for(var python_script of python_scripts){set_script_id(python_script)}
 var scripts=[]
@@ -17478,10 +17478,10 @@ function ST_LOCATION(x){
 return[x.lineno,x.col_offset,x.end_lineno,x.end_col_offset]}
 function _Py_Mangle(privateobj,ident){
 var plen,ipriv
-if(privateobj==NULL ||! ident.startsWith('__')){return ident;}
+if(privateobj==NULL ||! ident.startsWith('__')){return ident}
 plen=privateobj.length
-if(ident.endsWith('__')||ident.search(/\./)!=-1){return ident;}
-ipriv=0;
+if(ident.endsWith('__')||ident.search(/\./)!=-1){return ident }
+ipriv=0
 while(privateobj[ipriv]=='_'){ipriv++}
 if(ipriv==plen){return ident }
 var prefix=privateobj.substr(ipriv)
@@ -17489,11 +17489,11 @@ return '_'+prefix+ident}
 var lambda=NULL
 var NoComprehension=0,ListComprehension=1,DictComprehension=2,SetComprehension=3,GeneratorExpression=4
 function GET_IDENTIFIER(VAR){return VAR}
-function Symtable(){this.filename=NULL;
+function Symtable(){this.filename=NULL
 this.stack=[]
 this.blocks=new Map()
-this.cur=NULL;
-this.private=NULL;}
+this.cur=NULL
+this.private=NULL}
 function id(obj){if(obj[$B.ID]!==undefined){return obj[$B.ID]}
 return obj[$B.ID]=$B.UUID()}
 function ste_new(st,name,block,key,lineno,col_offset,end_lineno,end_col_offset){var ste
@@ -17501,7 +17501,7 @@ ste={table:st,id:id(key),
 name:name,directives:NULL,type:block,nested:0,free:0,varargs:0,varkeywords:0,opt_lineno:0,opt_col_offset:0,lineno:lineno,col_offset:col_offset,end_lineno:end_lineno,end_col_offset:end_col_offset}
 if(st.cur !=NULL &&
 (st.cur.nested ||
-st.cur.type==FunctionBlock)){ste.nested=1;}
+st.cur.type==FunctionBlock)){ste.nested=1}
 ste.child_free=0
 ste.generator=0
 ste.coroutine=0
@@ -17517,10 +17517,10 @@ ste.children=[]
 st.blocks.set(ste.id,ste)
 return ste}
 $B._PySymtable_Build=function(mod,filename,future){var st=new Symtable(),seq
-st.filename=filename;
+st.filename=filename
 st.future=future ||{}
 st.type=SF.TYPE_MODULE
-if(!symtable_enter_block(st,'top',ModuleBlock,mod,0,0,0,0)){return NULL;}
+if(!symtable_enter_block(st,'top',ModuleBlock,mod,0,0,0,0)){return NULL}
 st.top=st.cur
 switch(mod.constructor){case $B.ast.Module:
 seq=mod.body
@@ -17534,14 +17534,14 @@ seq=mod.body
 for(let item of seq){visitor.stmt(st,item)}
 break}
 symtable_analyze(st)
-return st.top;}
+return st.top}
 function _PyST_GetSymbol(ste,name){return $B.str_dict_get(ste.symbols,name,0)}
-function _PyST_GetScope(ste,name){var symbol=_PyST_GetSymbol(ste,name);
-return(symbol >> SF.SCOPE_OFFSET)& SF.SCOPE_MASK;}
+function _PyST_GetScope(ste,name){var symbol=_PyST_GetSymbol(ste,name)
+return(symbol >> SF.SCOPE_OFFSET)& SF.SCOPE_MASK}
 function _PyST_IsFunctionLike(ste){return ste.type==FunctionBlock
 ||ste.type==TypeVarBoundBlock
 ||ste.type==TypeAliasBlock
-||ste.type==TypeParamBlock;}
+||ste.type==TypeParamBlock}
 function PyErr_Format(exc_type,message,arg){if(arg){message=_b_.str.nb_remainder(message,arg)}
 return $B.$call(exc_type,message)}
 function PyErr_SetString(exc_type,message){return exc_type.$factory(message)}
@@ -17564,21 +17564,20 @@ function is_free_in_any_child(entry,key){for(var child_ste of entry.ste_children
 if(scope==SF.FREE){return 1}}
 return 0}
 function inline_comprehension(ste,comp,scopes,comp_free,inlined_cells){for(var item of _b_.dict.$iter_items(comp.symbols)){
-var k=item.key,comp_flags=item.value;
-if(comp_flags & SF.DEF_PARAM){
-continue;}
-var scope=(comp_flags >> SF.SCOPE_OFFSET)& SF.SCOPE_MASK;
+var k=item.key,comp_flags=item.value
+if(comp_flags & SF.DEF_PARAM){continue}
+var scope=(comp_flags >> SF.SCOPE_OFFSET)& SF.SCOPE_MASK
 var only_flags=comp_flags &((1 << SF.SCOPE_OFFSET)-1)
 if(scope==SF.CELL ||only_flags & SF.DEF_COMP_CELL){inlined_cells.add(k)}
 var existing=$B.str_dict_contains(ste.symbols,k)
 if(!existing){
 var v_flags=only_flags
-_b_.dict.$setitem(ste.symbols,k,v_flags);
-SET_SCOPE(scopes,k,scope);}else{
+_b_.dict.$setitem(ste.symbols,k,v_flags)
+SET_SCOPE(scopes,k,scope)}else{
 if((existing & SF.DEF_BOUND)&&
 !is_free_in_any_child(comp,k)&&
 ste.type !==ClassBlock){_b_.set.tp_funcs.remove(comp_free,k)}}}
-return 1;}
+return 1}
 function analyze_name(ste,scopes,name,flags,bound,local,free,global,type_params,class_entry){if(flags & SF.DEF_GLOBAL){if(flags & SF.DEF_NONLOCAL){let exc=PyErr_Format(_b_.SyntaxError,"name '%s' is nonlocal and global",name)
 error_at_directive(exc,ste,name)
 throw exc}
@@ -17586,13 +17585,13 @@ SET_SCOPE(scopes,name,SF.GLOBAL_EXPLICIT)
 global.add(name)
 if(bound){bound.delete(name)}
 return 1}
-if(flags & SF.DEF_NONLOCAL){if(!bound){let exc=PyErr_Format(_b_.SyntaxError,"nonlocal declaration not allowed at module level");
+if(flags & SF.DEF_NONLOCAL){if(!bound){let exc=PyErr_Format(_b_.SyntaxError,"nonlocal declaration not allowed at module level")
 error_at_directive(exc,ste,name)
 throw exc}
 if(! bound.has(name)){let exc=PyErr_Format(_b_.SyntaxError,"no binding for nonlocal '%s' found",name)
 error_at_directive(exc,ste,name)
 throw exc}
-if(type_params.has(name)){let exc=PyErr_Format(_b_.SyntaxError,"nonlocal binding not allowed for type parameter '%s'",name);
+if(type_params.has(name)){let exc=PyErr_Format(_b_.SyntaxError,"nonlocal binding not allowed for type parameter '%s'",name)
 error_at_directive(exc,ste,name)
 throw exc}
 SET_SCOPE(scopes,name,SF.FREE)
@@ -17605,9 +17604,9 @@ global.delete(name)
 if(flags & SF.DEF_TYPE_PARAM){type_params.add(name)}else{
 type_params.delete(name)}
 return 1}
-if(class_entry !=NULL){var class_flags=_PyST_GetSymbol(class_entry,name);
+if(class_entry !=NULL){var class_flags=_PyST_GetSymbol(class_entry,name)
 if(class_flags & SF.DEF_GLOBAL){SET_SCOPE(scopes,name,SF.GLOBAL_EXPLICIT)
-return 1;}else if(class_flags & SF.DEF_BOUND &&
+return 1}else if(class_flags & SF.DEF_BOUND &&
 !(class_flags & SF.DEF_NONLOCAL)){SET_SCOPE(scopes,name,SF.GLOBAL_IMPLICIT)
 return 1}}
 if(bound && bound.has(name)){SET_SCOPE(scopes,name,SF.FREE)
@@ -17619,13 +17618,13 @@ return 1}
 if(ste.nested){ste.free=1}
 SET_SCOPE(scopes,name,SF.GLOBAL_IMPLICIT)
 return 1}
-function analyze_cells(scopes,free,inlined_cells){var v,v_cell;
-v_cell=SF.CELL;
-if(!v_cell){return 0;}
+function analyze_cells(scopes,free,inlined_cells){var v,v_cell
+v_cell=SF.CELL
+if(!v_cell){return 0}
 for(let name in scopes){v=scopes[name]
-var scope=v;
-if(scope !=SF.LOCAL){continue;}
-if(! free.has(name)&& ! inlined_cells.has(name)){continue;}
+var scope=v
+if(scope !=SF.LOCAL){continue}
+if(! free.has(name)&& ! inlined_cells.has(name)){continue}
 scopes[name]=v_cell
 free.delete(name)}
 return 1}
@@ -17645,18 +17644,18 @@ var scope=v_scope
 if(test){console.log('name',name,'scopes[name]',scopes[name],' flags |=',scope << SF.SCOPE_OFFSET)}
 flags |=(scope << SF.SCOPE_OFFSET)
 v_new=flags
-if(!v_new){return 0;}
+if(!v_new){return 0}
 if(test){console.log('set symbol',name,'v_new',v_new,'def comp cell',SF.DEF_COMP_CELL,v_new & SF.DEF_COMP_CELL)}
 $B.str_dict_set(symbols,name,v_new)}
 v_free=SF.FREE << SF.SCOPE_OFFSET
 for(let name of free){v=$B.str_dict_get(symbols,name)
 if(v !==$B.NULL){
 if(classflag &&
-v &(SF.DEF_BOUND |SF.DEF_GLOBAL)){let flags=v |SF.DEF_FREE_CLASS;
-v_new=flags;
-if(! v_new){return 0;}
+v &(SF.DEF_BOUND |SF.DEF_GLOBAL)){let flags=v |SF.DEF_FREE_CLASS
+v_new=flags
+if(! v_new){return 0}
 $B.str_dict_set(symbols,name,v_new)}
-continue;}
+continue}
 if(bound && !bound.has(name)){continue;}
 $B.str_dict_set(symbols,name,v_free)}
 return 1}
@@ -17674,22 +17673,22 @@ for(let entry of _b_.dict.$iter_items(ste.symbols)){var name=entry.key
 var flags=entry.value
 if(!analyze_name(ste,scopes,name,flags,bound,local,free,global,typeparams,class_entry)){return 0}}
 if(ste.type !=ClassBlock){
-if(_PyST_IsFunctionLike(ste)){Set_Union(newbound,local);}
+if(_PyST_IsFunctionLike(ste)){Set_Union(newbound,local)}
 if(bound){Set_Union(newbound,bound)}
-Set_Union(newglobal,global);}else{
+Set_Union(newglobal,global)}else{
 newbound.add('__class__')
 newbound.add('__classdict__')}
 for(var c of ste.children){var child_free=new Set()
 let entry=c
-var new_class_entry=NULL;
+var new_class_entry=NULL
 if(entry.can_see_class_scope){if(ste.type==ClassBlock){new_class_entry=ste}else if(class_entry){new_class_entry=class_entry}}
-var inline_comp=entry.comprehension && ! entry.generator;
+var inline_comp=entry.comprehension && ! entry.generator
 if(! analyze_child_block(entry,newbound,newfree,newglobal,typeparams,new_class_entry,child_free)){return 0}
 if(inline_comp){if(! inline_comprehension(ste,entry,scopes,child_free,inlined_cells)){}
-entry.comp_inlined=1;}
+entry.comp_inlined=1}
 Set_Union(newfree,child_free);
 if(entry.free ||entry.child_free){ste.child_free=1}}
-for(let i=ste.children.length-1;i >=0;i--){let entry=ste.children[i];
+for(let i=ste.children.length-1;i >=0;i--){let entry=ste.children[i]
 if(entry.comp_inlined){ste.children.splice(i,0,...entry.children)}}
 if(_PyST_IsFunctionLike(ste)&& !analyze_cells(scopes,newfree,inlined_cells)){return 0}else if(ste.type===ClassBlock && !drop_class_free(ste,newfree)){return 0}
 if(!update_symbols(ste.symbols,scopes,bound,newfree,inlined_cells,ste.type===ClassBlock ||ste.can_see_class_scope)){return 0}
@@ -17702,12 +17701,12 @@ function Set_Union(setA,setB){for(let elem of setB){setA.add(elem)}}
 function analyze_child_block(entry,bound,free,global,typeparams,class_entry,child_free){
 var temp_bound=PySet_New(bound),temp_free=PySet_New(free),temp_global=PySet_New(global),temp_typeparams=PySet_New(typeparams)
 if(!analyze_block(entry,temp_bound,temp_free,temp_global,temp_typeparams,class_entry)){return 0}
-Set_Union(child_free,temp_free);
-return 1;}
+Set_Union(child_free,temp_free)
+return 1}
 function symtable_analyze(st){var free=new Set(),global=new Set(),typeparams=new Set()
-return analyze_block(st.top,NULL,free,global,typeparams,NULL);}
+return analyze_block(st.top,NULL,free,global,typeparams,NULL)}
 function symtable_exit_block(st){var size=st.stack.length
-st.cur=NULL;
+st.cur=NULL
 if(size){st.stack.pop()
 if(--size){st.cur=st.stack[size-1]}}
 return 1}
@@ -17721,27 +17720,27 @@ st.cur=ste
 if(block===AnnotationBlock){return 1}
 if(block===ModuleBlock){st.global=st.cur.symbols}
 if(prev){prev.children.push(ste)}
-return 1;}
+return 1}
 function symtable_lookup(st,name){var mangled=_Py_Mangle(st.private,name)
-if(!mangled){return 0;}
+if(!mangled){return 0}
 var ret=_PyST_GetSymbol(st.cur,mangled)
-return ret;}
+return ret}
 function symtable_add_def_helper(st,name,flag,ste,_location){var o,dict,val,mangled=_Py_Mangle(st.private,name)
 if(!mangled){return 0}
 dict=ste.symbols
 var o=$B.str_dict_get(dict,mangled)
 if(o !==$B.NULL){val=o
 if((flag & SF.DEF_PARAM)&&(val & SF.DEF_PARAM)){
-let exc=PyErr_Format(_b_.SyntaxError,DUPLICATE_ARGUMENT,name);
+let exc=PyErr_Format(_b_.SyntaxError,DUPLICATE_ARGUMENT,name)
 set_exc_info(exc,st.filename,..._location)
 throw exc}
-if((flag & SF.DEF_TYPE_PARAM)&&(val & SF.DEF_TYPE_PARAM)){let exc=PyErr_Format(_b_.SyntaxError,DUPLICATE_TYPE_PARAM,name);
-set_exc_info(exc,st.filename,...location);
+if((flag & SF.DEF_TYPE_PARAM)&&(val & SF.DEF_TYPE_PARAM)){let exc=PyErr_Format(_b_.SyntaxError,DUPLICATE_TYPE_PARAM,name)
+set_exc_info(exc,st.filename,...location)
 throw exc}
 val |=flag}else{
 val=flag}
 if(ste.comp_iter_target){
-if(val &(SF.DEF_GLOBAL |SF.DEF_NONLOCAL)){let exc=PyErr_Format(_b_.SyntaxError,NAMED_EXPR_COMP_INNER_LOOP_CONFLICT,name);
+if(val &(SF.DEF_GLOBAL |SF.DEF_NONLOCAL)){let exc=PyErr_Format(_b_.SyntaxError,NAMED_EXPR_COMP_INNER_LOOP_CONFLICT,name)
 set_exc_info(exc,st.filename,..._location)
 throw exc}
 val |=SF.DEF_COMP_ITER}
@@ -17751,47 +17750,46 @@ _b_.dict.$setitem(dict,mangled,o)
 if(flag & SF.DEF_PARAM){ste.varnames.push(mangled)}else if(flag & SF.DEF_GLOBAL){
 val=flag
 var mangled_global=$B.str_dict_get(st.global,'mangled',$B.NULL)
-if(mangled_global !==$B.NULL){
-val |=mangled_global}
+if(mangled_global !==$B.NULL){val |=mangled_global}
 o=val
 if(o==NULL){return 0}
 _b_.dict.$setitem(st.global,'mangled',o)}
 return 1}
-function symtable_add_def(st,name,flag,_location){return symtable_add_def_helper(st,name,flag,st.cur,_location);}
-function symtable_enter_type_param_block(st,name,ast,has_defaults,has_kwdefaults,kind,_location){var prev=st.cur,current_type=st.cur.type;
-if(!symtable_enter_block(st,name,TypeParamBlock,ast,..._location)){return 0;}
+function symtable_add_def(st,name,flag,_location){return symtable_add_def_helper(st,name,flag,st.cur,_location)}
+function symtable_enter_type_param_block(st,name,ast,has_defaults,has_kwdefaults,kind,_location){var prev=st.cur,current_type=st.cur.type
+if(!symtable_enter_block(st,name,TypeParamBlock,ast,..._location)){return 0}
 prev.$type_param=st.cur
-if(current_type===ClassBlock){st.cur.can_see_class_scope=1;
-if(!symtable_add_def(st,"__classdict__",SF.USE,_location)){return 0;}}
+if(current_type===ClassBlock){st.cur.can_see_class_scope=1
+if(!symtable_add_def(st,"__classdict__",SF.USE,_location)){return 0}}
 if(kind==$B.ast.ClassDef){
-if(!symtable_add_def(st,"type_params",SF.DEF_LOCAL,_location)){return 0;}
-if(!symtable_add_def(st,"type_params",SF.USE,_location)){return 0;}
-st.st_private=name;
-var generic_base=".generic_base";
-if(!symtable_add_def(st,generic_base,SF.DEF_LOCAL,_location)){return 0;}
-if(!symtable_add_def(st,generic_base,SF.USE,_location)){return 0;}}
-if(has_defaults){var defaults=".defaults";
-if(!symtable_add_def(st,defaults,SF.DEF_PARAM,_location)){return 0;}}
-if(has_kwdefaults){var kwdefaults=".kwdefaults";
-if(!symtable_add_def(st,kwdefaults,SF.DEF_PARAM,_location)){return 0;}}
-return 1;}
+if(!symtable_add_def(st,"type_params",SF.DEF_LOCAL,_location)){return 0}
+if(!symtable_add_def(st,"type_params",SF.USE,_location)){return 0}
+st.st_private=name
+var generic_base=".generic_base"
+if(!symtable_add_def(st,generic_base,SF.DEF_LOCAL,_location)){return 0}
+if(!symtable_add_def(st,generic_base,SF.USE,_location)){return 0}}
+if(has_defaults){var defaults=".defaults"
+if(!symtable_add_def(st,defaults,SF.DEF_PARAM,_location)){return 0}}
+if(has_kwdefaults){var kwdefaults=".kwdefaults"
+if(!symtable_add_def(st,kwdefaults,SF.DEF_PARAM,_location)){return 0}}
+return 1}
 function VISIT_QUIT(ST,X){return X}
 function VISIT(ST,TYPE,V){var f=visitor[TYPE]
-if(!f(ST,V)){VISIT_QUIT(ST,0);}}
+if(!f(ST,V)){VISIT_QUIT(ST,0)}}
 function VISIT_SEQ(ST,TYPE,SEQ){for(var elt of SEQ){if(! visitor[TYPE](ST,elt)){VISIT_QUIT(ST,0)}}}
-function VISIT_SEQ_TAIL(ST,TYPE,SEQ,START){for(var i=START,len=SEQ.length;i < len;i++){var elt=SEQ[i];
+function VISIT_SEQ_TAIL(ST,TYPE,SEQ,START){for(var i=START,len=SEQ.length;i < len;i++){var elt=SEQ[i]
 if(! visitor[TYPE](ST,elt)){VISIT_QUIT(ST,0)}}}
 function VISIT_SEQ_WITH_NULL(ST,TYPE,SEQ){for(var elt of SEQ){if(! elt){continue }
 if(! visitor[TYPE](ST,elt)){VISIT_QUIT((ST),0)}}}
 function symtable_record_directive(st,name,lineno,col_offset,end_lineno,end_col_offset){var data,mangled
 if(!st.cur.directives){st.cur.directives=[]}
-mangled=_Py_Mangle(st.private,name);
-if(!mangled){return 0;}
+mangled=_Py_Mangle(st.private,name)
+if(!mangled){return 0}
 data=$B.fast_tuple([mangled,lineno,col_offset,end_lineno,end_col_offset])
-st.cur.directives.push(data);
+st.cur.directives.push(data)
 return true}
-function has_kwonlydefaults(kwonlyargs,kw_defaults){for(var i=0,len=kwonlyargs.length;i < len;i++){if(kw_defaults[i]){return 1;}}
-return 0;}
+function has_kwonlydefaults(kwonlyargs,kw_defaults){for(var i=0,len=kwonlyargs.length;i < len;i++){if(kw_defaults[i]){return 1}}
+return 0}
 var visitor={}
 visitor.stmt=function(st,s){switch(s.constructor){case $B.ast.FunctionDef:
 if(!symtable_add_def(st,s.name,SF.DEF_LOCAL,LOCATION(s)))
@@ -17801,8 +17799,8 @@ VISIT_SEQ(st,expr,s.args.defaults)
 if(s.args.kw_defaults)
 VISIT_SEQ_WITH_NULL(st,expr,s.args.kw_defaults)
 if(s.type_params.length > 0){if(!symtable_enter_type_param_block(
-st,s.name,s.type_params,s.args.defaults !=NULL,has_kwonlydefaults(s.args.kwonlyargs,s.args.kw_defaults),s.constructor,LOCATION(s))){VISIT_QUIT(st,0);}
-VISIT_SEQ(st,type_param,s.type_params);}
+st,s.name,s.type_params,s.args.defaults !=NULL,has_kwonlydefaults(s.args.kwonlyargs,s.args.kw_defaults),s.constructor,LOCATION(s))){VISIT_QUIT(st,0)}
+VISIT_SEQ(st,type_param,s.type_params)}
 if(!visitor.annotations(st,s,s.args,s.returns))
 VISIT_QUIT(st,0)
 if(s.decorator_list){VISIT_SEQ(st,expr,s.decorator_list)}
@@ -17811,46 +17809,42 @@ VISIT(st,'arguments',s.args)
 VISIT_SEQ(st,stmt,s.body)
 if(!symtable_exit_block(st)){VISIT_QUIT(st,0)}
 if(s.type_params.length > 0){if(!symtable_exit_block(st)){VISIT_QUIT(st,0)}}
-break;
+break
 case $B.ast.ClassDef:
-var tmp;
-if(!symtable_add_def(st,s.name,SF.DEF_LOCAL,LOCATION(s)))
-VISIT_QUIT(st,0)
+var tmp
+if(!symtable_add_def(st,s.name,SF.DEF_LOCAL,LOCATION(s))){VISIT_QUIT(st,0)}
 VISIT_SEQ(st,expr,s.bases)
 VISIT_SEQ(st,keyword,s.keywords)
-if(s.decorator_list)
-VISIT_SEQ(st,expr,s.decorator_list);
-if(s.type_params.length > 0){if(!symtable_enter_type_param_block(st,s.name,s.type_params,false,false,s.constructor,LOCATION(s))){VISIT_QUIT(st,0);}
-VISIT_SEQ(st,type_param,s.type_params);}
-VISIT_SEQ(st,expr,s.bases);
-VISIT_SEQ(st,keyword,s.keywords);
-if(!symtable_enter_block(st,s.name,ClassBlock,s,s.lineno,s.col_offset,s.end_lineno,s.end_col_offset))
-VISIT_QUIT(st,0)
+if(s.decorator_list){VISIT_SEQ(st,expr,s.decorator_list)}
+if(s.type_params.length > 0){if(!symtable_enter_type_param_block(st,s.name,s.type_params,false,false,s.constructor,LOCATION(s))){VISIT_QUIT(st,0)}
+VISIT_SEQ(st,type_param,s.type_params)}
+VISIT_SEQ(st,expr,s.bases)
+VISIT_SEQ(st,keyword,s.keywords)
+if(!symtable_enter_block(st,s.name,ClassBlock,s,s.lineno,s.col_offset,s.end_lineno,s.end_col_offset)){VISIT_QUIT(st,0)}
 tmp=st.private
 st.private=s.name
-if(s.type_params.length > 0){if(!symtable_add_def(st,'__type_params__',SF.DEF_LOCAL,LOCATION(s))){VISIT_QUIT(st,0);}
-if(!symtable_add_def(st,'type_params',SF.USE,LOCATION(s))){VISIT_QUIT(st,0);}}
+if(s.type_params.length > 0){if(!symtable_add_def(st,'__type_params__',SF.DEF_LOCAL,LOCATION(s))){VISIT_QUIT(st,0)}
+if(!symtable_add_def(st,'type_params',SF.USE,LOCATION(s))){VISIT_QUIT(st,0)}}
 VISIT_SEQ(st,stmt,s.body)
 st.private=tmp
 if(! symtable_exit_block(st))
 VISIT_QUIT(st,0)
 if(s.type_params.length > 0){if(!symtable_exit_block(st))
-VISIT_QUIT(st,0);}
+VISIT_QUIT(st,0)}
 break
 case $B.ast.TypeAlias:
-VISIT(st,expr,s.name);
-assert(s.name instanceof $B.ast.Name);
+VISIT(st,expr,s.name)
 var name=s.name.id,is_in_class=st.cur.type===ClassBlock,is_generic=s.type_params.length > 0
 if(is_generic){if(!symtable_enter_type_param_block(
-st,name,s.type_params,false,false,s.kind,LOCATION(s))){VISIT_QUIT(st,0);}
-VISIT_SEQ(st,type_param,s.type_params);}
-if(!symtable_enter_block(st,name,TypeAliasBlock,s,LOCATION(s))){VISIT_QUIT(st,0);}
-st.cur.can_see_class_scope=is_in_class;
-if(is_in_class && !symtable_add_def(st,'__classdict__',SF.USE,LOCATION(s.value))){VISIT_QUIT(st,0);}
-VISIT(st,expr,s.value);
-if(!symtable_exit_block(st)){VISIT_QUIT(st,0);}
+st,name,s.type_params,false,false,s.kind,LOCATION(s))){VISIT_QUIT(st,0)}
+VISIT_SEQ(st,type_param,s.type_params)}
+if(!symtable_enter_block(st,name,TypeAliasBlock,s,LOCATION(s))){VISIT_QUIT(st,0)}
+st.cur.can_see_class_scope=is_in_class
+if(is_in_class && !symtable_add_def(st,'__classdict__',SF.USE,LOCATION(s.value))){VISIT_QUIT(st,0)}
+VISIT(st,expr,s.value)
+if(!symtable_exit_block(st)){VISIT_QUIT(st,0)}
 if(is_generic){if(!symtable_exit_block(st))
-VISIT_QUIT(st,0);}
+VISIT_QUIT(st,0)}
 break
 case $B.ast.Return:
 if(s.value){VISIT(st,expr,s.value)
@@ -17922,7 +17916,7 @@ VISIT_SEQ(st,stmt,s.finalbody)
 break
 case $B.ast.Assert:
 VISIT(st,expr,s.test)
-if(s.msg){VISIT(st,expr,s.msg);}
+if(s.msg){VISIT(st,expr,s.msg)}
 break
 case $B.ast.Import:
 VISIT_SEQ(st,alias,s.names)
@@ -17946,7 +17940,7 @@ if(! symtable_record_directive(st,name,s.lineno,s.col_offset,s.end_lineno,s.end_
 VISIT_QUIT(st,0)}
 break
 case $B.ast.Nonlocal:
-var seq=s.names;
+var seq=s.names
 for(var name of seq){var cur=symtable_lookup(st,name)
 if(cur < 0){VISIT_QUIT(st,0)}
 if(cur &(SF.DEF_PARAM |SF.DEF_LOCAL |SF.USE |SF.DEF_ANNOT)){var msg
@@ -17983,19 +17977,16 @@ VISIT_QUIT(st,0)
 if(s.decorator_list)
 VISIT_SEQ(st,expr,s.decorator_list)
 if(s.type_params.length > 0){if(!symtable_enter_type_param_block(
-st,s.name,s.type_params,s.args.defaults !=NULL,has_kwonlydefaults(s.args.kwonlyargs,s.args.kw_defaults),s.constructor,LOCATION(s))){VISIT_QUIT(st,0);}
-VISIT_SEQ(st,type_param,s.type_params);}
-if(!visitor.annotations(st,s,s.args,s.returns))
-VISIT_QUIT(st,0);
-if(!symtable_enter_block(st,s.name,FunctionBlock,s,s.lineno,s.col_offset,s.end_lineno,s.end_col_offset))
-VISIT_QUIT(st,0)
+st,s.name,s.type_params,s.args.defaults !=NULL,has_kwonlydefaults(s.args.kwonlyargs,s.args.kw_defaults),s.constructor,LOCATION(s))){VISIT_QUIT(st,0)}
+VISIT_SEQ(st,type_param,s.type_params)}
+if(!visitor.annotations(st,s,s.args,s.returns)){VISIT_QUIT(st,0)}
+if(!symtable_enter_block(st,s.name,FunctionBlock,s,s.lineno,s.col_offset,s.end_lineno,s.end_col_offset)){VISIT_QUIT(st,0)}
 st.cur.coroutine=1
 VISIT(st,'arguments',s.args)
 VISIT_SEQ(st,stmt,s.body)
-if(! symtable_exit_block(st))
-VISIT_QUIT(st,0)
+if(! symtable_exit_block(st)){VISIT_QUIT(st,0)}
 if(s.type_params.length > 0){if(!symtable_exit_block(st))
-VISIT_QUIT(st,0);}
+VISIT_QUIT(st,0)}
 break
 case $B.ast.AsyncWith:
 VISIT_SEQ(st,withitem,s.items)
@@ -18018,174 +18009,154 @@ var i,size,ste
 size=st.stack.length
 assert(size)
 for(i=size-1;i >=0;i--){ste=st.stack[i]
-if(ste.comprehension){let target_in_scope=_PyST_GetSymbol(ste,target_name);
-if(target_in_scope & SF.DEF_COMP_ITER){let exc=PyErr_Format(_b_.SyntaxError,NAMED_EXPR_COMP_CONFLICT,target_name);
+if(ste.comprehension){let target_in_scope=_PyST_GetSymbol(ste,target_name)
+if(target_in_scope & SF.DEF_COMP_ITER){let exc=PyErr_Format(_b_.SyntaxError,NAMED_EXPR_COMP_CONFLICT,target_name)
 set_exc_info(exc,st.filename,e.lineno,e.col_offset,e.ed_lineno,e.end_col_offset)
 throw exc}
-continue;}
-if(_PyST_IsFunctionLike(ste)){let target_in_scope=_PyST_GetSymbol(ste,target_name);
-if(target_in_scope & SF.DEF_GLOBAL){if(!symtable_add_def(st,target_name,SF.DEF_GLOBAL,LOCATION(e)))
-VISIT_QUIT(st,0);}else{
-if(!symtable_add_def(st,target_name,SF.DEF_NONLOCAL,LOCATION(e)))
-VISIT_QUIT(st,0);}
-if(!symtable_record_directive(st,target_name,LOCATION(e)))
-VISIT_QUIT(st,0);
-return symtable_add_def_helper(st,target_name,SF.DEF_LOCAL,ste,LOCATION(e));}
-if(ste.type==ModuleBlock){if(!symtable_add_def(st,target_name,SF.DEF_GLOBAL,LOCATION(e)))
-VISIT_QUIT(st,0);
-if(!symtable_record_directive(st,target_name,LOCATION(e)))
-VISIT_QUIT(st,0);
-return symtable_add_def_helper(st,target_name,SF.DEF_GLOBAL,ste,LOCATION(e));}
-if(ste.type==ClassBlock){let exc=PyErr_Format(_b_.SyntaxError,NAMED_EXPR_COMP_IN_CLASS);
-set_exc_info(exc,st.filename,e.lineno,e.col_offset,e.end_lineno,e.end_col_offset);
+continue}
+if(_PyST_IsFunctionLike(ste)){let target_in_scope=_PyST_GetSymbol(ste,target_name)
+if(target_in_scope & SF.DEF_GLOBAL){if(!symtable_add_def(st,target_name,SF.DEF_GLOBAL,LOCATION(e))){VISIT_QUIT(st,0)}}else{
+if(!symtable_add_def(st,target_name,SF.DEF_NONLOCAL,LOCATION(e))){VISIT_QUIT(st,0)}}
+if(!symtable_record_directive(st,target_name,LOCATION(e))){VISIT_QUIT(st,0)}
+return symtable_add_def_helper(st,target_name,SF.DEF_LOCAL,ste,LOCATION(e))}
+if(ste.type==ModuleBlock){if(!symtable_add_def(st,target_name,SF.DEF_GLOBAL,LOCATION(e))){VISIT_QUIT(st,0)}
+if(!symtable_record_directive(st,target_name,LOCATION(e))){VISIT_QUIT(st,0)}
+return symtable_add_def_helper(st,target_name,SF.DEF_GLOBAL,ste,LOCATION(e))}
+if(ste.type==ClassBlock){let exc=PyErr_Format(_b_.SyntaxError,NAMED_EXPR_COMP_IN_CLASS)
+set_exc_info(exc,st.filename,e.lineno,e.col_offset,e.end_lineno,e.end_col_offset)
 throw exc}}
-assert(0);
-return 0;}
+return 0}
 function symtable_handle_namedexpr(st,e){if(st.cur.comp_iter_expr > 0){
-var exc=PyErr_Format(PyExc_SyntaxError,NAMED_EXPR_COMP_ITER_EXPR);
-set_exc_info(exc,st.filename,e.lineno,e.col_offset,e.end_lineno,e.end_col_offset);
+var exc=PyErr_Format(PyExc_SyntaxError,NAMED_EXPR_COMP_ITER_EXPR)
+set_exc_info(exc,st.filename,e.lineno,e.col_offset,e.end_lineno,e.end_col_offset)
 throw exc}
 if(st.cur.comprehension){
 if(!symtable_extend_namedexpr_scope(st,e.target))
-return 0;}
-VISIT(st,expr,e.value);
-VISIT(st,expr,e.target);
-return 1;}
+return 0}
+VISIT(st,expr,e.value)
+VISIT(st,expr,e.target)
+return 1}
 const alias='alias',comprehension='comprehension',excepthandler='excepthandler',expr='expr',keyword='keyword',match_case='match_case',pattern='pattern',stmt='stmt',type_param='type_param',withitem='withitem'
 visitor.expr=function(st,e){switch(e.constructor){case $B.ast.NamedExpr:
-if(!symtable_raise_if_annotation_block(st,"named expression",e)){VISIT_QUIT(st,0);}
-if(!symtable_handle_namedexpr(st,e))
-VISIT_QUIT(st,0);
-break;
+if(!symtable_raise_if_annotation_block(st,"named expression",e)){VISIT_QUIT(st,0)}
+if(!symtable_handle_namedexpr(st,e)){VISIT_QUIT(st,0)}
+break
 case $B.ast.BoolOp:
-VISIT_SEQ(st,expr,e.values);
-break;
+VISIT_SEQ(st,expr,e.values)
+break
 case $B.ast.BinOp:
-VISIT(st,expr,e.left);
-VISIT(st,expr,e.right);
-break;
+VISIT(st,expr,e.left)
+VISIT(st,expr,e.right)
+break
 case $B.ast.UnaryOp:
-VISIT(st,expr,e.operand);
-break;
-case $B.ast.Lambda:{if(!GET_IDENTIFIER('lambda'))
-VISIT_QUIT(st,0);
-if(e.args.defaults)
-VISIT_SEQ(st,expr,e.args.defaults);
-if(e.args.kw_defaults)
-VISIT_SEQ_WITH_NULL(st,expr,e.args.kw_defaults);
-if(!symtable_enter_block(st,lambda,FunctionBlock,e,e.lineno,e.col_offset,e.end_lineno,e.end_col_offset))
-VISIT_QUIT(st,0);
-VISIT(st,'arguments',e.args);
-VISIT(st,expr,e.body);
-if(!symtable_exit_block(st))
-VISIT_QUIT(st,0);
-break;}
+VISIT(st,expr,e.operand)
+break
+case $B.ast.Lambda:{if(!GET_IDENTIFIER('lambda')){VISIT_QUIT(st,0)}
+if(e.args.defaults){VISIT_SEQ(st,expr,e.args.defaults)}
+if(e.args.kw_defaults){VISIT_SEQ_WITH_NULL(st,expr,e.args.kw_defaults)}
+if(!symtable_enter_block(st,lambda,FunctionBlock,e,e.lineno,e.col_offset,e.end_lineno,e.end_col_offset)){VISIT_QUIT(st,0)}
+VISIT(st,'arguments',e.args)
+VISIT(st,expr,e.body)
+if(!symtable_exit_block(st)){VISIT_QUIT(st,0)}
+break}
 case $B.ast.IfExp:
-VISIT(st,expr,e.test);
-VISIT(st,expr,e.body);
-VISIT(st,expr,e.orelse);
-break;
+VISIT(st,expr,e.test)
+VISIT(st,expr,e.body)
+VISIT(st,expr,e.orelse)
+break
 case $B.ast.Dict:
-VISIT_SEQ_WITH_NULL(st,expr,e.keys);
-VISIT_SEQ(st,expr,e.values);
-break;
+VISIT_SEQ_WITH_NULL(st,expr,e.keys)
+VISIT_SEQ(st,expr,e.values)
+break
 case $B.ast.Set:
-VISIT_SEQ(st,expr,e.elts);
-break;
+VISIT_SEQ(st,expr,e.elts)
+break
 case $B.ast.GeneratorExp:
-if(!visitor.genexp(st,e))
-VISIT_QUIT(st,0);
-break;
+if(!visitor.genexp(st,e)){VISIT_QUIT(st,0)}
+break
 case $B.ast.ListComp:
-if(!visitor.listcomp(st,e))
-VISIT_QUIT(st,0);
-break;
+if(!visitor.listcomp(st,e)){VISIT_QUIT(st,0)}
+break
 case $B.ast.SetComp:
-if(!visitor.setcomp(st,e))
-VISIT_QUIT(st,0);
-break;
+if(!visitor.setcomp(st,e)){VISIT_QUIT(st,0)}
+break
 case $B.ast.DictComp:
-if(!visitor.dictcomp(st,e))
-VISIT_QUIT(st,0);
-break;
+if(!visitor.dictcomp(st,e)){VISIT_QUIT(st,0)}
+break
 case $B.ast.Yield:
-if(!symtable_raise_if_annotation_block(st,"yield expression",e)){VISIT_QUIT(st,0);}
+if(!symtable_raise_if_annotation_block(st,"yield expression",e)){VISIT_QUIT(st,0)}
 if(e.value){VISIT(st,expr,e.value)}
-st.cur.generator=1;
+st.cur.generator=1
 if(st.cur.comprehension){return symtable_raise_if_comprehension_block(st,e)}
-break;
+break
 case $B.ast.YieldFrom:
 if(!symtable_raise_if_annotation_block(st,"yield expression",e)){VISIT_QUIT(st,0)}
 VISIT(st,expr,e.value)
 st.cur.generator=1
 if(st.cur.comprehension){return symtable_raise_if_comprehension_block(st,e)}
-break;
+break
 case $B.ast.Await:
 if(!symtable_raise_if_annotation_block(st,"await expression",e)){VISIT_QUIT(st,0)}
 VISIT(st,expr,e.value)
 st.cur.coroutine=1
-break;
+break
 case $B.ast.Compare:
-VISIT(st,expr,e.left);
-VISIT_SEQ(st,expr,e.comparators);
-break;
+VISIT(st,expr,e.left)
+VISIT_SEQ(st,expr,e.comparators)
+break
 case $B.ast.Call:
-VISIT(st,expr,e.func);
-VISIT_SEQ(st,expr,e.args);
-VISIT_SEQ_WITH_NULL(st,keyword,e.keywords);
-break;
+VISIT(st,expr,e.func)
+VISIT_SEQ(st,expr,e.args)
+VISIT_SEQ_WITH_NULL(st,keyword,e.keywords)
+break
 case $B.ast.FormattedValue:
-VISIT(st,expr,e.value);
-if(e.format_spec){VISIT(st,expr,e.format_spec);}
-break;
+VISIT(st,expr,e.value)
+if(e.format_spec){VISIT(st,expr,e.format_spec)}
+break
 case $B.ast.Interpolation:
-VISIT(st,expr,e.value);
-if(e.format_spec){VISIT(st,expr,e.format_spec);}
-break;
+VISIT(st,expr,e.value)
+if(e.format_spec){VISIT(st,expr,e.format_spec)}
+break
 case $B.ast.JoinedStr:
-VISIT_SEQ(st,expr,e.values);
-break;
+VISIT_SEQ(st,expr,e.values)
+break
 case $B.ast.TemplateStr:
-VISIT_SEQ(st,expr,e.values);
-break;
+VISIT_SEQ(st,expr,e.values)
+break
 case $B.ast.Constant:
-break;
+break
 case $B.ast.Attribute:
-VISIT(st,expr,e.value);
-break;
+VISIT(st,expr,e.value)
+break
 case $B.ast.Subscript:
-VISIT(st,expr,e.value);
-VISIT(st,expr,e.slice);
-break;
+VISIT(st,expr,e.value)
+VISIT(st,expr,e.slice)
+break
 case $B.ast.Starred:
-VISIT(st,expr,e.value);
-break;
+VISIT(st,expr,e.value)
+break
 case $B.ast.Slice:
-if(e.lower)
-VISIT(st,expr,e.lower)
-if(e.upper)
-VISIT(st,expr,e.upper)
-if(e.step)
-VISIT(st,expr,e.step)
-break;
+if(e.lower){VISIT(st,expr,e.lower)}
+if(e.upper){VISIT(st,expr,e.upper)}
+if(e.step){VISIT(st,expr,e.step)}
+break
 case $B.ast.Name:
 var flag=e.ctx instanceof $B.ast.Load ? SF.USE :SF.DEF_LOCAL
-if(! symtable_add_def(st,e.id,flag,LOCATION(e)))
-VISIT_QUIT(st,0);
+if(! symtable_add_def(st,e.id,flag,LOCATION(e))){VISIT_QUIT(st,0)}
 if(e.ctx instanceof $B.ast.Load &&
 _PyST_IsFunctionLike(st.cur)&&
 e.id=="super"){if(!GET_IDENTIFIER('__class__')||
 !symtable_add_def(st,'__class__',SF.USE,LOCATION(e)))
-VISIT_QUIT(st,0);}
-break;
+VISIT_QUIT(st,0)}
+break
 case $B.ast.List:
-VISIT_SEQ(st,expr,e.elts);
-break;
+VISIT_SEQ(st,expr,e.elts)
+break
 case $B.ast.Tuple:
-VISIT_SEQ(st,expr,e.elts);
-break;}
-VISIT_QUIT(st,1);}
-visitor.type_param_bound_or_default=function(st,e,name,key){if(e){var is_in_class=st.cur.can_see_class_scope;
+VISIT_SEQ(st,expr,e.elts)
+break}
+VISIT_QUIT(st,1)}
+visitor.type_param_bound_or_default=function(st,e,name,key){if(e){var is_in_class=st.cur.can_see_class_scope
 if(! symtable_enter_block(st,name,TypeVarBoundBlock,key,LOCATION(e))){return 0}
 st.cur.can_see_class_scope=is_in_class
 if(is_in_class && !symtable_add_def(st,'__classdict__',SF.USE,LOCATION(e))){VISIT_QUIT(st,0)}
@@ -18193,53 +18164,53 @@ VISIT(st,expr,e)
 if(!symtable_exit_block(st)){return 0}}
 return 1}
 visitor.type_param=function(st,tp){switch(tp.constructor){case $B.ast.TypeVar:
-if(! symtable_add_def(st,tp.name,SF.DEF_TYPE_PARAM |SF.DEF_LOCAL,LOCATION(tp))){VISIT_QUIT(st,0);}
+if(! symtable_add_def(st,tp.name,SF.DEF_TYPE_PARAM |SF.DEF_LOCAL,LOCATION(tp))){VISIT_QUIT(st,0)}
 if(! visitor.type_param_bound_or_default(st,tp.bound,tp.name,tp)){VISIT_QUIT(st,0)}
 var _id={}
 _id[$B.ID]=$B.UUID()
 if(! visitor.type_param_bound_or_default(st,tp.default_value,tp.name,_id)){VISIT_QUIT(st,0)}
-break;
+break
 case $B.ast.TypeVarTuple:
 if(! symtable_add_def(st,tp.name,SF.DEF_TYPE_PARAM |SF.DEF_LOCAL,LOCATION(tp))){VISIT_QUIT(st,0)}
 if(! visitor.type_param_bound_or_default(st,tp.default_value,tp.name,tp)){VISIT_QUIT(st,0)}
-break;
+break
 case $B.ast.ParamSpec:
 if(! symtable_add_def(st,tp.name,SF.DEF_TYPE_PARAM |SF.DEF_LOCAL,LOCATION(tp))){VISIT_QUIT(st,0)}
 if(! visitor.type_param_bound_or_default(st,tp.default_value,tp.name,tp)){VISIT_QUIT(st,0)}
-break;}
-VISIT_QUIT(st,1);}
+break}
+VISIT_QUIT(st,1)}
 visitor.pattern=function(st,p){switch(p.constructor){case $B.ast.MatchValue:
-VISIT(st,expr,p.value);
-break;
+VISIT(st,expr,p.value)
+break
 case $B.ast.MatchSingleton:
-break;
+break
 case $B.ast.MatchSequence:
-VISIT_SEQ(st,pattern,p.patterns);
-break;
+VISIT_SEQ(st,pattern,p.patterns)
+break
 case $B.ast.MatchStar:
-if(p.name){symtable_add_def(st,p.name,SF.DEF_LOCAL,LOCATION(p));}
-break;
+if(p.name){symtable_add_def(st,p.name,SF.DEF_LOCAL,LOCATION(p))}
+break
 case $B.ast.MatchMapping:
-VISIT_SEQ(st,expr,p.keys);
-VISIT_SEQ(st,pattern,p.patterns);
-if(p.rest){symtable_add_def(st,p.rest,SF.DEF_LOCAL,LOCATION(p));}
-break;
+VISIT_SEQ(st,expr,p.keys)
+VISIT_SEQ(st,pattern,p.patterns)
+if(p.rest){symtable_add_def(st,p.rest,SF.DEF_LOCAL,LOCATION(p))}
+break
 case $B.ast.MatchClass:
-VISIT(st,expr,p.cls);
-VISIT_SEQ(st,pattern,p.patterns);
-VISIT_SEQ(st,pattern,p.kwd_patterns);
-break;
+VISIT(st,expr,p.cls)
+VISIT_SEQ(st,pattern,p.patterns)
+VISIT_SEQ(st,pattern,p.kwd_patterns)
+break
 case $B.ast.MatchAs:
-if(p.pattern){VISIT(st,pattern,p.pattern);}
-if(p.name){symtable_add_def(st,p.name,SF.DEF_LOCAL,LOCATION(p));}
-break;
+if(p.pattern){VISIT(st,pattern,p.pattern)}
+if(p.name){symtable_add_def(st,p.name,SF.DEF_LOCAL,LOCATION(p))}
+break
 case $B.ast.MatchOr:
-VISIT_SEQ(st,pattern,p.patterns);
-break;}
-VISIT_QUIT(st,1);}
+VISIT_SEQ(st,pattern,p.patterns)
+break}
+VISIT_QUIT(st,1)}
 function symtable_implicit_arg(st,pos){var id='.'+pos
-if(!symtable_add_def(st,id,SF.DEF_PARAM,ST_LOCATION(st.cur))){return 0;}
-return 1;}
+if(!symtable_add_def(st,id,SF.DEF_PARAM,ST_LOCATION(st.cur))){return 0}
+return 1}
 visitor.params=function(st,args){if(! args){return-1}
 for(var arg of args){if(! symtable_add_def(st,arg.arg,SF.DEF_PARAM,LOCATION(arg)))
 return 0}
@@ -18253,135 +18224,112 @@ return 1}
 visitor.argannotations=function(st,args){if(!args){return-1}
 for(var arg of args){if(arg.annotation){VISIT(st,expr,arg.annotation)}}
 return 1}
-visitor.annotations=function(st,o,a,returns){var future_annotations=st.future.ff_features & $B.CO_FUTURE_ANNOTATIONS;
+visitor.annotations=function(st,o,a,returns){var future_annotations=st.future.ff_features & $B.CO_FUTURE_ANNOTATIONS
 if(future_annotations &&
-!symtable_enter_block(st,'_annotation',AnnotationBlock,o,o.lineno,o.col_offset,o.end_lineno,o.end_col_offset)){VISIT_QUIT(st,0);}
-if(a.posonlyargs && !visitor.argannotations(st,a.posonlyargs))
-return 0;
-if(a.args && !visitor.argannotations(st,a.args))
-return 0;
-if(a.vararg && a.vararg.annotation)
-VISIT(st,expr,a.vararg.annotation);
-if(a.kwarg && a.kwarg.annotation)
-VISIT(st,expr,a.kwarg.annotation);
-if(a.kwonlyargs && !visitor.argannotations(st,a.kwonlyargs))
-return 0;
-if(future_annotations && !symtable_exit_block(st)){VISIT_QUIT(st,0);}
-if(returns && !visitor.annotation(st,returns)){VISIT_QUIT(st,0);}
-return 1;}
+!symtable_enter_block(st,'_annotation',AnnotationBlock,o,o.lineno,o.col_offset,o.end_lineno,o.end_col_offset)){VISIT_QUIT(st,0)}
+if(a.posonlyargs && !visitor.argannotations(st,a.posonlyargs)){return 0}
+if(a.args && !visitor.argannotations(st,a.args)){return 0}
+if(a.vararg && a.vararg.annotation){VISIT(st,expr,a.vararg.annotation)}
+if(a.kwarg && a.kwarg.annotation){VISIT(st,expr,a.kwarg.annotation)}
+if(a.kwonlyargs && !visitor.argannotations(st,a.kwonlyargs)){return 0}
+if(future_annotations && !symtable_exit_block(st)){VISIT_QUIT(st,0)}
+if(returns && !visitor.annotation(st,returns)){VISIT_QUIT(st,0)}
+return 1}
 visitor.arguments=function(st,a){
-if(a.posonlyargs && !visitor.params(st,a.posonlyargs))
-return 0;
-if(a.args && !visitor.params(st,a.args))
-return 0;
-if(a.kwonlyargs && !visitor.params(st,a.kwonlyargs))
-return 0;
-if(a.vararg){if(!symtable_add_def(st,a.vararg.arg,SF.DEF_PARAM,LOCATION(a.vararg)))
-return 0;
-st.cur.varargs=1;}
-if(a.kwarg){if(!symtable_add_def(st,a.kwarg.arg,SF.DEF_PARAM,LOCATION(a.kwarg)))
-return 0;
-st.cur.varkeywords=1;}
-return 1;}
-visitor.excepthandler=function(st,eh){if(eh.type)
-VISIT(st,expr,eh.type);
-if(eh.name)
-if(!symtable_add_def(st,eh.name,SF.DEF_LOCAL,LOCATION(eh)))
-return 0;
-VISIT_SEQ(st,stmt,eh.body);
-return 1;}
-visitor.withitem=function(st,item){VISIT(st,expr,item.context_expr);
-if(item.optional_vars){VISIT(st,expr,item.optional_vars);}
-return 1;}
-visitor.match_case=function(st,m){VISIT(st,pattern,m.pattern);
-if(m.guard){VISIT(st,expr,m.guard);}
-VISIT_SEQ(st,stmt,m.body);
-return 1;}
+if(a.posonlyargs && !visitor.params(st,a.posonlyargs)){return 0}
+if(a.args && !visitor.params(st,a.args)){return 0}
+if(a.kwonlyargs && !visitor.params(st,a.kwonlyargs)){return 0}
+if(a.vararg){if(!symtable_add_def(st,a.vararg.arg,SF.DEF_PARAM,LOCATION(a.vararg))){return 0}
+st.cur.varargs=1}
+if(a.kwarg){if(!symtable_add_def(st,a.kwarg.arg,SF.DEF_PARAM,LOCATION(a.kwarg))){return 0}
+st.cur.varkeywords=1}
+return 1}
+visitor.excepthandler=function(st,eh){if(eh.type){VISIT(st,expr,eh.type)}
+if(eh.name){if(!symtable_add_def(st,eh.name,SF.DEF_LOCAL,LOCATION(eh))){return 0}}
+VISIT_SEQ(st,stmt,eh.body)
+return 1}
+visitor.withitem=function(st,item){VISIT(st,expr,item.context_expr)
+if(item.optional_vars){VISIT(st,expr,item.optional_vars)}
+return 1}
+visitor.match_case=function(st,m){VISIT(st,pattern,m.pattern)
+if(m.guard){VISIT(st,expr,m.guard)}
+VISIT_SEQ(st,stmt,m.body)
+return 1}
 visitor.alias=function(st,a){
-var store_name,name=(a.asname==NULL)? a.name :a.asname;
-var dot=name.search('\\.');
-if(dot !=-1){store_name=name.substring(0,dot);
-if(!store_name)
-return 0;}else{
-store_name=name;}
-if(name !="*"){var r=symtable_add_def(st,store_name,SF.DEF_IMPORT,LOCATION(a));
-return r;}else{
-if(st.cur.type !=ModuleBlock){var lineno=a.lineno,col_offset=a.col_offset,end_lineno=a.end_lineno,end_col_offset=a.end_col_offset;
-var exc=PyErr_SetString(PyExc_SyntaxError,IMPORT_STAR_WARNING);
-set_exc_info(exc,st.filename,lineno,col_offset,end_lineno,end_col_offset);
+var store_name,name=(a.asname==NULL)? a.name :a.asname
+var dot=name.search('\\.')
+if(dot !=-1){store_name=name.substring(0,dot)
+if(!store_name){return 0}}else{
+store_name=name}
+if(name !="*"){var r=symtable_add_def(st,store_name,SF.DEF_IMPORT,LOCATION(a))
+return r}else{
+if(st.cur.type !=ModuleBlock){var lineno=a.lineno,col_offset=a.col_offset,end_lineno=a.end_lineno,end_col_offset=a.end_col_offset
+var exc=PyErr_SetString(PyExc_SyntaxError,IMPORT_STAR_WARNING)
+set_exc_info(exc,st.filename,lineno,col_offset,end_lineno,end_col_offset)
 throw exc}
 st.cur.$has_import_star=true
-return 1;}}
-visitor.comprehension=function(st,lc){st.cur.comp_iter_target=1;
-VISIT(st,expr,lc.target);
-st.cur.comp_iter_target=0;
-st.cur.comp_iter_expr++;
-VISIT(st,expr,lc.iter);
-st.cur.comp_iter_expr--;
-VISIT_SEQ(st,expr,lc.ifs);
-if(lc.is_async){st.cur.coroutine=1;}
-return 1;}
-visitor.keyword=function(st,k){VISIT(st,expr,k.value);
-return 1;}
-function symtable_handle_comprehension(st,e,scope_name,generators,elt,value){var is_generator=(e.constructor===$B.ast.GeneratorExp);
+return 1}}
+visitor.comprehension=function(st,lc){st.cur.comp_iter_target=1
+VISIT(st,expr,lc.target)
+st.cur.comp_iter_target=0
+st.cur.comp_iter_expr++
+VISIT(st,expr,lc.iter)
+st.cur.comp_iter_expr--
+VISIT_SEQ(st,expr,lc.ifs)
+if(lc.is_async){st.cur.coroutine=1}
+return 1}
+visitor.keyword=function(st,k){VISIT(st,expr,k.value)
+return 1}
+function symtable_handle_comprehension(st,e,scope_name,generators,elt,value){var is_generator=(e.constructor===$B.ast.GeneratorExp)
 var outermost=generators[0]
-st.cur.comp_iter_expr++;
-VISIT(st,expr,outermost.iter);
-st.cur.comp_iter_expr--;
+st.cur.comp_iter_expr++
+VISIT(st,expr,outermost.iter)
+st.cur.comp_iter_expr--
 if(!scope_name ||
-!symtable_enter_block(st,scope_name,FunctionBlock,e,e.lineno,e.col_offset,e.end_lineno,e.end_col_offset)){return 0;}
+!symtable_enter_block(st,scope_name,FunctionBlock,e,e.lineno,e.col_offset,e.end_lineno,e.end_col_offset)){return 0}
 switch(e.constructor){case $B.ast.ListComp:
-st.cur.comprehension=ListComprehension;
-break;
+st.cur.comprehension=ListComprehension
+break
 case $B.ast.SetComp:
-st.cur.comprehension=SetComprehension;
-break;
+st.cur.comprehension=SetComprehension
+break
 case $B.ast.DictComp:
-st.cur.comprehension=DictComprehension;
-break;
+st.cur.comprehension=DictComprehension
+break
 default:
-st.cur.comprehension=GeneratorExpression;
-break;}
-if(outermost.is_async){st.cur.coroutine=1;}
-if(!symtable_implicit_arg(st,0)){symtable_exit_block(st);
-return 0;}
-st.cur.comp_iter_target=1;
-VISIT(st,expr,outermost.target);
-st.cur.comp_iter_target=0;
-VISIT_SEQ(st,expr,outermost.ifs);
-VISIT_SEQ_TAIL(st,comprehension,generators,1);
-if(value)
-VISIT(st,expr,value);
-VISIT(st,expr,elt);
-st.cur.generator=is_generator;
-var is_async=st.cur.coroutine && !is_generator;
-if(!symtable_exit_block(st)){return 0;}
-if(is_async){st.cur.coroutine=1;}
-return 1;}
-visitor.genexp=function(st,e){return symtable_handle_comprehension(st,e,'genexpr',e.generators,e.elt,NULL);}
-visitor.listcomp=function(st,e){return symtable_handle_comprehension(st,e,'listcomp',e.generators,e.elt,NULL);}
-visitor.setcomp=function(st,e){return symtable_handle_comprehension(st,e,'setcomp',e.generators,e.elt,NULL);}
-visitor.dictcomp=function(st,e){return symtable_handle_comprehension(st,e,'dictcomp',e.generators,e.key,e.value);}
+st.cur.comprehension=GeneratorExpression
+break}
+if(outermost.is_async){st.cur.coroutine=1}
+if(!symtable_implicit_arg(st,0)){symtable_exit_block(st)
+return 0}
+st.cur.comp_iter_target=1
+VISIT(st,expr,outermost.target)
+st.cur.comp_iter_target=0
+VISIT_SEQ(st,expr,outermost.ifs)
+VISIT_SEQ_TAIL(st,comprehension,generators,1)
+if(value){VISIT(st,expr,value)}
+VISIT(st,expr,elt)
+st.cur.generator=is_generator
+var is_async=st.cur.coroutine && !is_generator
+if(!symtable_exit_block(st)){return 0}
+if(is_async){st.cur.coroutine=1}
+return 1}
+visitor.genexp=function(st,e){return symtable_handle_comprehension(st,e,'genexpr',e.generators,e.elt,NULL)}
+visitor.listcomp=function(st,e){return symtable_handle_comprehension(st,e,'listcomp',e.generators,e.elt,NULL)}
+visitor.setcomp=function(st,e){return symtable_handle_comprehension(st,e,'setcomp',e.generators,e.elt,NULL)}
+visitor.dictcomp=function(st,e){return symtable_handle_comprehension(st,e,'dictcomp',e.generators,e.key,e.value)}
 function symtable_raise_if_annotation_block(st,name,e){var type=st.cur.type,exc
-if(type==AnnotationBlock)
-exc=PyErr_Format(PyExc_SyntaxError,ANNOTATION_NOT_ALLOWED,name);
-else if(type==TypeVarBoundBlock)
-exc=PyErr_Format(PyExc_SyntaxError,TYPEVAR_BOUND_NOT_ALLOWED,name);
-else if(type==TypeAliasBlock)
-exc=PyErr_Format(PyExc_SyntaxError,TYPEALIAS_NOT_ALLOWED,name);
-else if(type==TypeParamBlock)
-exc=PyErr_Format(PyExc_SyntaxError,TYPEPARAM_NOT_ALLOWED,name);
-else
-return 1;
-set_exc_info(exc,st.filename,e.lineno,e.col_offset,e.end_lineno,e.end_col_offset);
+if(type==AnnotationBlock){exc=PyErr_Format(PyExc_SyntaxError,ANNOTATION_NOT_ALLOWED,name)}else if(type==TypeVarBoundBlock){exc=PyErr_Format(PyExc_SyntaxError,TYPEVAR_BOUND_NOT_ALLOWED,name)}else if(type==TypeAliasBlock){exc=PyErr_Format(PyExc_SyntaxError,TYPEALIAS_NOT_ALLOWED,name)}else if(type==TypeParamBlock){exc=PyErr_Format(PyExc_SyntaxError,TYPEPARAM_NOT_ALLOWED,name)}else{
+return 1}
+set_exc_info(exc,st.filename,e.lineno,e.col_offset,e.end_lineno,e.end_col_offset)
 throw exc}
-function symtable_raise_if_comprehension_block(st,e){var type=st.cur.comprehension;
+function symtable_raise_if_comprehension_block(st,e){var type=st.cur.comprehension
 var exc=PyErr_SetString(PyExc_SyntaxError,(type==ListComprehension)? "'yield' inside list comprehension" :
 (type==SetComprehension)? "'yield' inside set comprehension" :
 (type==DictComprehension)? "'yield' inside dict comprehension" :
-"'yield' inside generator expression");
+"'yield' inside generator expression")
 exc.$frame_obj=$B.frame_obj
-set_exc_info(exc,st.filename,e.lineno,e.col_offset,e.end_lineno,e.end_col_offset);
+set_exc_info(exc,st.filename,e.lineno,e.col_offset,e.end_lineno,e.end_col_offset)
 throw exc}})(__BRYTHON__);
 ;
 
@@ -19033,7 +18981,7 @@ var result={quote}
 var mods={r:'raw',f:'fstring',b:'bytes'}
 for(var mod of string_modifier){result[mods[mod]]=true}
 var raw=context.type=='str' && context.raw,string_start=pos+1,bytes=false,fstring=false,sm_length,
-end=null;
+end=null
 if(string_modifier){switch(string_modifier){case 'r':
 raw=true
 break
@@ -19121,7 +19069,7 @@ var elts=$B.parse_fstring(string_no_bs)}catch(err){string_error(p,token,err.mess
 if(bytes){result.value='b'+quote+string+quote
 result.bytes=to_bytes(string)}else if(fstring){result.value=elts}else{
 result.value=quote+string+quote}
-context.raw=raw;
+context.raw=raw
 return result}})(__BRYTHON__);
 ;
 "use strict";
@@ -19224,12 +19172,14 @@ return undefined},CHECK_VERSION:function(type,version,msg,node){return helper_fu
 return}else{
 return obj instanceof type ? obj :undefined}}
 return obj},INVALID_VERSION_CHECK:function(p,version,msg,node){if(node==NULL){p.error_indicator=1;
-return NULL;}
-if(p.feature_version < version){p.error_indicator=1;
-return helper_functions.RAISE_SYNTAX_ERROR("%s only supported in Python 3.%i and greater",msg,version);}
-return node;},NEW_TYPE_COMMENT:function(p,x){return x},PyErr_Occurred:function(){return false},RAISE_ERROR_KNOWN_LOCATION:function(p,errtype,lineno,col_offset,end_lineno,end_col_offset,errmsg){var va=[errmsg]
-$B._PyPegen.raise_error_known_location(p,errtype,lineno,col_offset,end_lineno,end_col_offset,errmsg,va);
-return NULL;},RAISE_ERROR:function(p,errtype,msg){var extra_args=[]
+return NULL}
+if(p.feature_version < version){p.error_indicator=1
+return helper_functions.RAISE_SYNTAX_ERROR(
+"%s only supported in Python 3.%i and greater",msg,version
+)}
+return node},NEW_TYPE_COMMENT:function(p,x){return x},PyErr_Occurred:function(){return false},RAISE_ERROR_KNOWN_LOCATION:function(p,errtype,lineno,col_offset,end_lineno,end_col_offset,errmsg){var va=[errmsg]
+$B._PyPegen.raise_error_known_location(p,errtype,lineno,col_offset,end_lineno,end_col_offset,errmsg,va)
+return NULL},RAISE_ERROR:function(p,errtype,msg){var extra_args=[]
 for(var i=1,len=arguments.length;i < len;i++){extra_args.push(arguments[i])}
 get_last_token(p)
 $B._PyPegen.raise_error(p,errtype,msg,...extra_args)},RAISE_SYNTAX_ERROR:function(p,msg){var extra_args=[]
@@ -19244,15 +19194,15 @@ get_last_token(p)
 $B._PyPegen.raise_error(p,_b_.IndentationError,msg)},RAISE_SYNTAX_ERROR_KNOWN_LOCATION:function(p,a,err_msg,arg){if(arg !==undefined){err_msg=_b_.str.nb_remainder(err_msg,arg)}
 helper_functions.RAISE_ERROR_KNOWN_LOCATION(p,_b_.SyntaxError,a.lineno,a.col_offset,a.end_lineno,a.end_col_offset,err_msg)},RAISE_SYNTAX_ERROR_KNOWN_RANGE:function(p,a,b,msg){var extra_args=arguments[4]
 if(extra_args){msg=_b_.str.nb_remainder(msg,extra_args)}
-helper_functions.RAISE_ERROR_KNOWN_LOCATION(p,_b_.SyntaxError,a.lineno,a.col_offset,b.end_lineno,b.end_col_offset,msg,extra_args)},RAISE_SYNTAX_ERROR_INVALID_TARGET:function(p,type,e){return helper_functions._RAISE_SYNTAX_ERROR_INVALID_TARGET(p,type,e)},_RAISE_SYNTAX_ERROR_INVALID_TARGET(p,type,e){var invalid_target=$B.helper_functions.CHECK_NULL_ALLOWED($B.ast.expr,$B._PyPegen.get_invalid_target(e,type));
+helper_functions.RAISE_ERROR_KNOWN_LOCATION(p,_b_.SyntaxError,a.lineno,a.col_offset,b.end_lineno,b.end_col_offset,msg,extra_args)},RAISE_SYNTAX_ERROR_INVALID_TARGET:function(p,type,e){return helper_functions._RAISE_SYNTAX_ERROR_INVALID_TARGET(p,type,e)},_RAISE_SYNTAX_ERROR_INVALID_TARGET(p,type,e){var invalid_target=$B.helper_functions.CHECK_NULL_ALLOWED($B.ast.expr,$B._PyPegen.get_invalid_target(e,type))
 if(invalid_target !=NULL){var msg;
 if(type==$B.parser_constants.STAR_TARGETS ||
-type==$B.parser_constants.FOR_TARGETS){msg="cannot assign to %s";}else{
-msg="cannot delete %s";}
+type==$B.parser_constants.FOR_TARGETS){msg="cannot assign to %s"}else{
+msg="cannot delete %s"}
 return helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(
 p,invalid_target,msg,$B._PyPegen.get_expr_name(invalid_target)
 )}
-return NULL;},RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN:function(p,msg){return helper_functions.RAISE_SYNTAX_ERROR(p,msg)},RAISE_SYNTAX_ERROR_STARTING_FROM:function(p,a,msg,...args){var last=p.tokens[p.tokens.length-1]
+return NULL},RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN:function(p,msg){return helper_functions.RAISE_SYNTAX_ERROR(p,msg)},RAISE_SYNTAX_ERROR_STARTING_FROM:function(p,a,msg,...args){var last=p.tokens[p.tokens.length-1]
 return helper_functions.RAISE_ERROR_KNOWN_LOCATION(p,_b_.SyntaxError,a.lineno,a.col_offset,last.end_lineno,last.end_col_offset-1,msg,...args)},asdl_seq_LEN:(t)=> t.length,asdl_seq_GET:(t,i)=> t[i]}
 $B.helper_functions=helper_functions
 function raise_error_known_location(type,filename,lineno,col_offset,end_lineno,end_col_offset,line,message){var exc=$B.EXC(type,message)
@@ -19333,7 +19283,7 @@ if(!segment){return-1}
 if(PyUnicode_IS_ASCII(segment)){return character_offset}
 var width_fn=_PyImport_GetModuleAttrString("unicodedata","east_asian_width")
 if(!width_fn){return-1}
-var width=0;
+var width=0
 var len=segment.length
 for(let i=0;i < len;i++){var chr=segment.substring(i,i+1)
 if(!chr){return-1}
@@ -19421,8 +19371,7 @@ return ret}
 $B._PyPegen.is_memoized=function(p,type,pres){if(p.mark==p.fill){if($B._PyPegen.fill_token(p)< 0){p.error_indicator=1
 return-1}}
 var t=p.tokens[p.mark]
-for(var m=t.memo;m !=NULL;m=m.next){if(m.type==type){
-p.mark=m.mark
+for(var m=t.memo;m !=NULL;m=m.next){if(m.type==type){p.mark=m.mark
 pres.value=m.node
 return 1}}
 return 0}
@@ -19478,7 +19427,7 @@ if(! PyUnicode_IS_ASCII(id)){var id2
 if(!init_normalization(p)){return error()}
 var form=PyUnicode_InternFromString("NFKC")
 if(form==NULL){return error()}
-var args={form,id};
+var args={form,id}
 id2=_PyObject_FastCall(p.normalize,args,2)
 if(!id2){return error()}
 if(!PyUnicode_Check(id2)){PyErr_Format(PyExc_TypeError,"unicodedata.normalize() must return a string, not "+
@@ -19531,7 +19480,7 @@ res=parsenumber_raw(dup)
 return res}
 $B._PyPegen.number_token=function(p){var t=$B._PyPegen.expect_token(p,NUMBER)
 if(t==NULL){return NULL}
-var num_raw=t.string 
+var num_raw=t.string
 if(num_raw==NULL){p.error_indicator=1
 return NULL}
 if(p.feature_version < 6 && strchr(num_raw,'_')!=NULL){p.error_indicator=1
@@ -19674,7 +19623,7 @@ if(tok==NULL){if(PyErr_Occurred()){_PyPegen_raise_tokenizer_init_error(filename_
 return NULL}
 tok.filename=Py_NewRef(filename_ob)
 var result=NULL
-var parser_flags=compute_parser_flags(flags);
+var parser_flags=compute_parser_flags(flags)
 var feature_version=flags &&(flags.cf_flags & PyCF_ONLY_AST)?
 flags.cf_feature_version :PY_MINOR_VERSION
 var p=$B._PyPegen.Parser_New(tok,start_rule,parser_flags,feature_version,NULL,str,arena)

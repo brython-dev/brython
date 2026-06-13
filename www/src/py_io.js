@@ -1085,12 +1085,12 @@ function _io_open_impl(file, mode, buffering, encoding, errors, newline,
 
     if (binary && errors != _b_.None) {
         $B.RAISE(_b_.ValueError,
-            "binary mode doesn't take an errors argument");
+            "binary mode doesn't take an errors argument")
     }
 
     if (binary && newline !== _b_.None) {
         $B.RAISE(_b_.ValueError,
-            "binary mode doesn't take a newline argument");
+            "binary mode doesn't take a newline argument")
     }
 
     if (binary && buffering == 1) {

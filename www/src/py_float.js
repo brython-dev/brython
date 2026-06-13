@@ -1193,16 +1193,16 @@ float_funcs.fromhex = function(klass, s) {
     }
     function overflow_error() {
         $B.RAISE(_b_.OverflowError,
-                      "hexadecimal value too large to represent as a float");
+                      "hexadecimal value too large to represent as a float")
     }
     function parse_error() {
         $B.RAISE(_b_.ValueError,
-                      "invalid hexadecimal floating-point string");
+                      "invalid hexadecimal floating-point string")
     }
 
     function insane_length_error() {
         $B.RAISE(_b_.ValueError,
-                      "hexadecimal string too long to convert");
+                      "hexadecimal string too long to convert")
     }
 
     // remove leading and trailing spaces
@@ -1271,7 +1271,7 @@ float_funcs.fromhex = function(klass, s) {
         if (!('0' <= s[pos] && s[pos] <= '9')) {
             throw parse_error()
         }
-        pos++;
+        pos++
         while ('0' <= s[pos] && s[pos] <= '9') {
             pos++
         }

@@ -86,7 +86,6 @@ $B._PyPegen.byte_offset_to_character_offset_raw = function(str, col_offset) {
     if (col_offset > len + 1) {
         col_offset = len + 1
     }
-    // assert(col_offset >= 0);
     var text = PyUnicode_DecodeUTF8(str, col_offset, "replace")
     if (!text) {
         return -1
@@ -113,7 +112,7 @@ $B._PyPegen.calculate_display_width = function(line, character_offset) {
         return -1
     }
 
-    var width = 0;
+    var width = 0
     var len = segment.length
     for (let i = 0; i < len; i++) {
         var chr = segment.substring(i, i + 1)
@@ -194,12 +193,7 @@ function growable_comment_array_add(arr, lineno, comment) {
 }
 
 function growable_comment_array_deallocate(arr) {
-    /*
-    for (unsigned i = 0; i < arr->num_items; i++) {
-        PyMem_Free(arr->items[i].comment);
-    }
-    PyMem_Free(arr->items);
-    */
+    // ignore
 }
 
 function _get_keyword_or_name_type(p, new_token) {
@@ -351,16 +345,6 @@ $B._PyPegen.is_memoized = function(p, type, pres) {
 
     for (var m = t.memo; m != NULL; m = m.next) {
         if (m.type == type) {
-            /* #if defined(PY_DEBUG)
-            if (0 <= type && type < NSTATISTICS) {
-                var count = m.mark - p.mark;
-                // A memoized negative result counts for one.
-                if (count <= 0) {
-                    count = 1;
-                }
-                memo_statistics[type] += count;
-            }
-            #endif */
             p.mark = m.mark
             pres.value = m.node
             return 1
@@ -482,8 +466,6 @@ $B._PyPegen.get_last_nonnwhitespace_token = function(p) {
 
 $B._PyPegen.new_identifier = function(p, n) {
     var id = n
-    /* PyUnicode_DecodeUTF8 should always return a ready string. */
-    // assert(PyUnicode_IS_READY(id));
     /* Check whether there are non-ASCII characters in the
        identifier; if so, normalize to NFKC. */
     if (! PyUnicode_IS_ASCII(id)) {
@@ -495,7 +477,7 @@ $B._PyPegen.new_identifier = function(p, n) {
         if (form == NULL) {
             return error()
         }
-        var args = {form, id};
+        var args = {form, id}
         id2 = _PyObject_FastCall(p.normalize, args, 2)
         if (!id2) {
             return error()
@@ -527,13 +509,7 @@ $B._PyPegen.name_from_token = function(p, t) {
         p.error_indicator = 1
         return NULL
     }
-    /*
-    var id = $B._PyPegen.new_identifier(p, s);
-    if (id == NULL) {
-        p.error_indicator = 1;
-        return NULL;
-    }
-    */
+
     var res = new $B.ast.Name(s, Load)
     set_position_from_token(res, t)
     return res
@@ -613,7 +589,7 @@ $B._PyPegen.number_token = function(p) {
         return NULL
     }
 
-    var num_raw = t.string // PyBytes_AsString(t.bytes);
+    var num_raw = t.string
     if (num_raw == NULL) {
         p.error_indicator = 1
         return NULL
@@ -723,15 +699,6 @@ $B._PyPegen.Parser_New = function(tok, start_rule, flags,
     p.tokens = [] 
     p.tokens[0] = PyMem_Calloc(1, sizeof(Token))
 
-    /*
-    if (!growable_comment_array_init(&p.type_ignore_comments, 10)) {
-        PyMem_Free(p.tokens[0]);
-        PyMem_Free(p.tokens);
-        PyMem_Free(p);
-        return (Parser *) PyErr_NoMemory();
-    }
-    */
-
     p.mark = 0
     p.fill = 0
     p.size = 1
@@ -757,14 +724,7 @@ $B._PyPegen.Parser_New = function(tok, start_rule, flags,
 }
 
 $B._PyPegen.Parser_Free = function(p) {
-    /*
-    for (int i = 0; i < p->size; i++) {
-        PyMem_Free(p->tokens[i]);
-    }
-    PyMem_Free(p->tokens);
-    growable_comment_array_deallocate(&p->type_ignore_comments);
-    PyMem_Free(p);
-    */
+    // ignore
 }
 
 function reset_parser_state_for_error_pass(p) {
@@ -773,9 +733,6 @@ function reset_parser_state_for_error_pass(p) {
     }
     p.mark = 0
     p.call_invalid_rules = 1
-    // Don't try to get extra tokens in interactive mode when trying to
-    // raise specialized errors in the second pass.
-    // p.tok.interactive_underflow = IUNDERFLOW_STOP;
 }
 
 function _is_end_of_source(p) {
@@ -902,7 +859,6 @@ $B._PyPegen.set_syntax_error_metadata = function(p, exc) {
 $B._PyPegen.run_parser = function(p) {
     var res = $B._PyPegen.parse(p)
     $B.python_keywords = p.keywords
-    // assert(p->level == 0);
     if (res == NULL) {
         if ((p.flags & $B.PyCF_ALLOW_INCOMPLETE_INPUT) &&  _is_end_of_source(p)) {
             return $B.helper_functions.RAISE_ERROR(p,
@@ -999,7 +955,7 @@ $B._PyPegen.run_parser_from_string = function(str, start_rule, filename_ob,
     // We need to clear up from here on
     var result = NULL
 
-    var parser_flags = compute_parser_flags(flags);
+    var parser_flags = compute_parser_flags(flags)
     var feature_version = flags && (flags.cf_flags & PyCF_ONLY_AST) ?
         flags.cf_feature_version : PY_MINOR_VERSION
     var p = $B._PyPegen.Parser_New(tok, start_rule, parser_flags, feature_version,
