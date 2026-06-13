@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "brython"
-version = "3.14.1"
+version = "3.14.2"
 authors = [
   { name="Pierre Quentel", email="pierre.quentel@gmail.com" },
 ]
