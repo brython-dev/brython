@@ -545,6 +545,11 @@ DOMNode.tp_getattro = function(self, attr) {
           return DOMNode.tp_getattro(self, "bind")
         case "removeEventListener":
           return DOMNode.tp_getattro(self, "unbind")
+        case "closest":
+          if (self.nodeType !== Node.DOCUMENT_NODE) {
+            return DOMNode.tp_funcs.closest_get.bind(self, self)
+          }
+          break
     }
 
     // Special case for attribute "select" of INPUT or TEXTAREA tags :
@@ -589,7 +594,7 @@ DOMNode.tp_getattro = function(self, attr) {
     }
 
     var klass = $B.get_class(self)
-    var test = false // attr == 'foo'
+    var test = false // attr == 'closest'
 
     var property = self[attr]
     if (test) {
@@ -607,7 +612,6 @@ DOMNode.tp_getattro = function(self, attr) {
                 return property.bind(self, self)
             }
         } else {
-
             // cf. issue #1543 : if an element has the attribute "attr" set and
             // its class has an attribute of the same name, show a warning that
             // the class attribute is ignored
@@ -1119,7 +1123,6 @@ DOMNode_funcs.closest_get = function() {
                 arguments, {selector: $B.NULL})
     var self = $.self,
         selector = $.selector
-    console.log('closest', self, selector)
     if (self.closest === undefined) {
         $B.RAISE_ATTRIBUTE_ERROR(_b_.str.$factory(self) +
             " has no attribute 'closest'", self, 'closest')
@@ -1130,8 +1133,6 @@ DOMNode_funcs.closest_get = function() {
             `positional argument: 'selector'`
         )
     }
-    console.log('closest, self', self, 'selector', selector,
-        'is NULL', selector === $B.NULL)
     var res = self.closest(selector)
     if (res === null) {
         $B.RAISE(_b_.KeyError, "no parent with selector " + selector)
