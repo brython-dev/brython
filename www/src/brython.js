@@ -724,8 +724,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,2,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-06-13 08:20:05.222579"
-__BRYTHON__.timestamp=1781331605222
+__BRYTHON__.compiled_date="2026-06-13 11:11:25.271952"
+__BRYTHON__.timestamp=1781341885271
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_kozh","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -11126,7 +11126,8 @@ if(d[VERSION]!==version){$B.RAISE(_b_.RuntimeError,'dictionary changed size duri
 var $copy_dict=function(left,right){
 right[VERSION]=right[VERSION]||0
 var right_version=right[VERSION]
-if(! right[KEYS]){if(! left[KEYS]){for(let key in right){left[key]=right[key]}}else{
+if(! right[KEYS]){if(! left[KEYS]){for(let key in right){left[key]=right[key]
+if(left[$B.JSOBJ]){left[$B.JSOBJ][key]=right[key]}}}else{
 for(let key in right){dict.$setitem(left,key,right[key])}}}else{
 for(var entry of dict.$iter_items(right)){dict.$setitem(left,entry.key,entry.value,entry.hash)
 if(right[VERSION]!=right_version){$B.RAISE(_b_.RuntimeError,"dict mutated during update")}}}}
@@ -11451,7 +11452,6 @@ for(let i=0,len=_keys.length;i < len;i++){var getitem=$B.$getattr(o,"__getitem__
 if(getitem !==$B.NULL){var _value=$B.$call(getitem,_keys[i])
 dict.$setitem(self,_keys[i],_value)}}}else{
 let it=_b_.iter(o),i=0,key_value
-console.log('o',o,'it',it)
 while(true){try{
 var item=_b_.next(it)}catch(err){if($B.is_exc(err,_b_.StopIteration)){break}
 throw err}

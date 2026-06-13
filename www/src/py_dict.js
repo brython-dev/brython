@@ -400,6 +400,9 @@ var $copy_dict = function(left, right) {
         if (! left[KEYS]) {
             for (let key in right) {
                 left[key] = right[key]
+                if (left[$B.JSOBJ]) {
+                    left[$B.JSOBJ][key] = right[key]
+                }
             }
         } else {
             for (let key in right) {
@@ -1257,7 +1260,6 @@ dict_funcs.update = function(self) {
             let it = _b_.iter(o),
                 i = 0,
                 key_value
-            console.log('o', o, 'it', it)
             while (true) {
                 try {
                     var item = _b_.next(it)
