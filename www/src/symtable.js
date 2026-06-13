@@ -713,7 +713,7 @@ function analyze_block(ste, bound, free, global, typeparams, class_entry) {
             }
             entry.comp_inlined = 1
         }
-        Set_Union(newfree, child_free);
+        Set_Union(newfree, child_free)
         /* Check if any children have free variables */
         if (entry.free || entry.child_free) {
             ste.child_free = 1
