@@ -65,7 +65,10 @@ _IOBase.tp_iter = function(self) {
 }
 
 _IOBase.tp_iternext = function*(self){
-    var line = $B.$call(self.readline, self)
+    // resolve readline here too: next(f) without a prior iter(f) crashed,
+    // self.readline is only assigned by tp_iter
+    var rl = self.readline || $B.search_in_mro($B.get_class(self), 'readline')
+    var line = $B.$call(rl, self)
 
     if (line == undefined || _b_.len(line) === 0) {
         return
