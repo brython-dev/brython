@@ -2,13 +2,13 @@
 (function($B){
 $B.builtin_class_flags = {
     builtins: {
-        1073763586: ['AssertionError', 'ResourceWarning', 'ConnectionAbortedError', 'PendingDeprecationWarning', 'ReferenceError', 'StopAsyncIteration', 'UnicodeWarning', 'ImportError', 'IOError', 'BaseException', 'RuntimeWarning', 'UnicodeEncodeError', 'IndentationError', 'WindowsError', 'ConnectionRefusedError', 'EnvironmentError', 'IsADirectoryError', 'Warning', 'ValueError', 'SyntaxWarning', 'TypeError', 'SystemExit', 'KeyError', 'GeneratorExit', 'OverflowError', 'RuntimeError', 'UnicodeTranslateError', 'BlockingIOError', 'Exception', 'ChildProcessError', 'MemoryError', 'SyntaxError', 'FutureWarning', 'ImportWarning', 'UnboundLocalError', 'PythonFinalizationError', 'UserWarning', 'BrokenPipeError', 'BytesWarning', 'SystemError', 'UnicodeDecodeError', 'UnicodeError', 'ConnectionResetError', 'BaseExceptionGroup', 'AttributeError', 'TimeoutError', 'ZeroDivisionError', 'KeyboardInterrupt', 'ConnectionError', 'EOFError', 'StopIteration', 'ArithmeticError', 'PermissionError', 'InterruptedError', 'BufferError', 'EncodingWarning', 'ModuleNotFoundError', 'FileExistsError', 'ProcessLookupError', 'LookupError', 'NameError', 'OSError', 'FloatingPointError', 'FileNotFoundError', '_IncompleteInputError', 'NotADirectoryError', 'DeprecationWarning', 'TabError', 'IndexError', 'NotImplementedError', 'RecursionError'],
+        1073763586: ['WindowsError', 'IsADirectoryError', 'TypeError', 'OverflowError', 'UnicodeTranslateError', 'BaseException', 'RuntimeError', 'ValueError', 'SyntaxWarning', 'Exception', 'UserWarning', 'NotImplementedError', 'SystemExit', 'StopAsyncIteration', 'RecursionError', 'NameError', 'SystemError', 'OSError', 'GeneratorExit', 'ConnectionError', 'ImportError', 'InterruptedError', 'ModuleNotFoundError', 'PythonFinalizationError', 'TimeoutError', 'FutureWarning', 'EncodingWarning', 'FileNotFoundError', 'ProcessLookupError', 'NotADirectoryError', 'Warning', 'BytesWarning', 'BufferError', 'BrokenPipeError', 'EnvironmentError', 'ChildProcessError', 'RuntimeWarning', 'ConnectionResetError', 'UnicodeEncodeError', 'PendingDeprecationWarning', 'BaseExceptionGroup', 'KeyError', 'AttributeError', 'ImportWarning', 'IOError', 'ConnectionRefusedError', 'UnboundLocalError', '_IncompleteInputError', 'ZeroDivisionError', 'BlockingIOError', 'FileExistsError', 'MemoryError', 'ReferenceError', 'IndentationError', 'PermissionError', 'EOFError', 'IndexError', 'FloatingPointError', 'LookupError', 'SyntaxError', 'DeprecationWarning', 'StopIteration', 'TabError', 'ConnectionAbortedError', 'KeyboardInterrupt', 'UnicodeDecodeError', 'UnicodeError', 'ResourceWarning', 'AssertionError', 'ArithmeticError', 'UnicodeWarning'],
         1073763848: ['ExceptionGroup'],
         20975874: ['bool'],
-        4199682: ['float', 'bytearray'],
+        4199682: ['bytearray', 'float'],
         138417410: ['bytes'],
-        21762: ['map', 'classmethod', 'filter', 'property', 'enumerate', 'reversed', 'super', 'staticmethod', 'zip'],
-        5378: ['complex', 'object'],
+        21762: ['property', 'super', 'filter', 'enumerate', 'zip', 'map', 'classmethod', 'reversed', 'staticmethod'],
+        5378: ['object', 'complex'],
         541087042: ['dict'],
         4216066: ['frozenset', 'set'],
         20976898: ['int'],
@@ -21,10 +21,10 @@ $B.builtin_class_flags = {
         2155896066: ['type'],
     },
     types: {
-        20866: ['async_generator', 'generator', 'classmethod_descriptor', 'PyCapsule', 'getset_descriptor', 'member_descriptor', 'frame', 'method-wrapper', 'coroutine'],
+        20866: ['frame', 'member_descriptor', 'classmethod_descriptor', 'async_generator', 'method-wrapper', 'coroutine', 'getset_descriptor', 'PyCapsule', 'generator'],
         22914: ['builtin_function_or_method'],
         20738: ['traceback', 'cell'],
-        4354: ['code', 'ellipsis', 'NoneType', 'NotImplementedType'],
+        4354: ['ellipsis', 'NotImplementedType', 'code', 'NoneType'],
         153858: ['function'],
         20802: ['mappingproxy'],
         153986: ['method_descriptor'],
