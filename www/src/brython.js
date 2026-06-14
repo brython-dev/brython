@@ -724,8 +724,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,2,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-06-13 21:32:04.333108"
-__BRYTHON__.timestamp=1781379124332
+__BRYTHON__.compiled_date="2026-06-14 09:12:05.237231"
+__BRYTHON__.timestamp=1781421125236
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_kozh","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1987,12 +1987,16 @@ var is_class=obj?.tp_name !==undefined
 if(! is_class){var klass=$B.get_class(obj)
 if(klass.tp_funcs &&
 Object.hasOwn(klass.tp_funcs,attr)){var func=klass.tp_funcs[attr]
-if($B.get_class(func)===$B.builtin_method){return func(obj,...args)}}
+if($B.get_class(func)===$B.builtin_method){try{
+return func(obj,...args)}catch(err){$B.set_inum(inum)
+throw err}}}
 var own_dict=$B.get_dict(obj)
 if($B.get_class(klass)===_b_.type){var in_klass_dict=$B.get_dict(klass)[attr]
 if(in_klass_dict?.ob_type===$B.function){$B.nb_call_attr++
 if(own_dict && Object.hasOwn(own_dict,attr)){return $B.$call_with_position(own_dict[attr],inum,...args)}else{
-return in_klass_dict.bind(null,obj)(...args)}}}}
+try{
+return in_klass_dict.bind(null,obj)(...args)}catch(err){$B.set_inum(inum)
+throw err}}}}}
 return $B.$call_with_position($B.$getattr(obj,attr),inum,...args)}
 var counter=0
 $B.nb_call_factory=0
@@ -4080,24 +4084,30 @@ var _IOBase=$B.make_builtin_class("_IOBase")
 _IOBase.tp_iter=function(self){if(self.closed){$B.RAISE(_b_.ValueError,'closed')}
 self.readline=$B.search_in_mro($B.get_class(self),'readline')
 return self}
-_IOBase.tp_iternext=function*(self){var line=$B.$call(self.readline,self)
+_IOBase.tp_iternext=function*(self){
+var rl=self.readline ||$B.search_in_mro($B.get_class(self),'readline')
+var line=$B.$call(rl,self)
 if(line==undefined ||_b_.len(line)===0){return}
 yield line}
 _IOBase.tp_finalize=function(self){
-console.log('del',self)
 try{
 var closed=$B.$getattr(self,'closed')}catch(err){if($B.is_exc(err,_b_.AttributeError)){
 return}}
 if(closed){return}
-$B$call($B.$getattr(self,'close'))}
+$B.$call($B.$getattr(self,'close'))}
 var _IOBase_funcs=_IOBase.tp_funcs={}
-_IOBase_funcs.__enter__=function(self){return self}
+_IOBase_funcs.__enter__=function(self){
+var closed=false
+try{
+closed=$B.$bool($B.$getattr(self,'closed'))}catch(err){closed=!! self._closed}
+if(closed){$B.RAISE(_b_.ValueError,'I/O operation on closed file.')}
+return self}
 _IOBase_funcs.__exit__=function(self){_IOBase_funcs.close(self)}
 _IOBase_funcs.close=function(self){self._closed=true}
 _IOBase_funcs.closed_get=function(self){return self._closed}
 _IOBase_funcs.closed_set=_b_.None
 _IOBase_funcs.fileno=function(_self){_io_unsupported('fileno')}
-_IOBase_funcs.flush=function(self){if(self._closed){$B.RAISE(_b_.ValueError,"I/O operation on closed file.")}
+_IOBase_funcs.flush=function(self){CHECK_CLOSED(self)
 return _b_.None}
 _IOBase_funcs.isatty=function(){return false}
 _IOBase_funcs.readable=function(){return false}
@@ -4136,11 +4146,7 @@ hint=$B.PyNumber_Index(hint)}
 result=$B.$list([])
 if(hint <=0){return _b_.list.$factory(_self)}
 var readline=$B.search_in_mro($B.get_class(_self),'readline')
-var nb=0
-while(true){nb++
-if(nb > 5000){console.log('overflow',result)
-break}
-var line=readline(_self)
+while(true){var line=readline(_self)
 var line_length=_b_.len(line)
 if(line_length==0){break}else{
 result[result.length]=line}
@@ -4202,19 +4208,17 @@ var setitem=$B.search_in_mro($B.get_class(buffer),'__setitem__')
 $B.$call(setitem,buffer,_b_.slice.$factory(0,len),data)
 return len}
 var _BufferedIOBase_funcs=$B._BufferedIOBase.tp_funcs={}
-_BufferedIOBase_funcs.__enter__=function(self){return self}
 _BufferedIOBase_funcs.__exit__=function(self,type,value,traceback){try{
 $B.$call($B.$getattr(self,'close'))
-self.__closed=true
 return true}catch(err){return false}}
 _BufferedIOBase_funcs.readinto=function(_self,buffer){return _bufferediobase_readinto_generic(_self,buffer,0)}
 _BufferedIOBase_funcs.readinto1=function(_self,buffer){return _bufferediobase_readinto_generic(_self,buffer,1)}
-_BufferedIOBase_funcs.close=function(_self){_self.closed=true}
+_BufferedIOBase_funcs.close=function(_self){_self._closed=true}
 _BufferedIOBase_funcs.detach=function(){_io_unsupported("detach")}
 _BufferedIOBase_funcs.read=function(){_io_unsupported("read")}
 _BufferedIOBase_funcs.read1=function(){_io_unsupported("read1")}
 _BufferedIOBase_funcs.write=function(){_io_unsupported("write")}
-$B._BufferedIOBase.tp_methods=["__enter__","__exit__","readinto","readinto1","close","detach","read","read1","write"
+$B._BufferedIOBase.tp_methods=["__exit__","readinto","readinto1","close","detach","read","read1","write"
 ]
 $B.set_func_names($B._BufferedIOBase,'_io')
 function _bufferedreader_read_all(_self){return $B.$call($B.$getattr(_self.raw,'readall'))}
@@ -4227,7 +4231,8 @@ var b=raw.$bytes.slice(raw.$byte_pos,raw.$byte_pos+n)
 raw.$byte_pos+=n
 raw.$byte_pos=Math.min(raw.$byte_pos,raw.$bytes.length)
 return $B.fast_bytes(b)}
-function _bufferedreader_readline(_self){var raw=_self.raw
+function _bufferedreader_readline(_self){CHECK_CLOSED(_self)
+var raw=_self.raw
 if(raw.$byte_pos >=raw.$bytes.length){return $B.fast_bytes()}
 var eof=raw.$byte_pos
 while(eof < raw.$bytes.length){if(raw.$bytes[eof]==10){break}
@@ -4248,11 +4253,11 @@ var raw=_self.raw
 return $B.fast_bytes(raw.$bytes.slice(raw.$byte_pos,raw.$byte_pos+size))}
 _BufferedReader_funcs.seek=function(_self,offset,whence){var $=$B.args('seek',2,{self:null,offset:null,whence:null},arguments,{whence:0})
 var _self=$.self,offset=$.offset,whence=$.whence
-if(_self.closed){$B.RAISE(_b_.ValueError,'I/O operation on closed file')}
+CHECK_CLOSED(_self)
 if(whence===undefined){whence=0}
 if(whence===0){_self.$byte_pos=offset}else if(whence===1){_self.$byte_pos+=offset}else if(whence===2){_self.$byte_pos=self.$bytes.length+offset}
 return _b_.None}
-function CHECK_CLOSED(fileobj,msg){if(fileobj.closed){$B.RAISE(_b_.ValueError,msg)}}
+function CHECK_CLOSED(fileobj,msg){if(fileobj._closed){$B.RAISE(_b_.ValueError,msg ?? 'I/O operation on closed file.')}}
 _BufferedReader_funcs.read=function(self,n=-1){var res
 if(n <-1){$B.RAISE(_b_.ValueError,"read length must be non-negative or -1")}
 CHECK_CLOSED(self,"read of closed file")
@@ -4269,7 +4274,7 @@ $B.set_func_names($B._BufferedReader,'_io')
 $B._FileIO=$B.make_builtin_class('_FileIO',[$B._RawIOBase])
 function bad_mode(){$B.RAISE(_b_.ValueError,"Must have exactly one of create/read/write/append "+
 "mode and at most one plus")}
-function err_closed(){$B.RAISE(_b_.ValueError,"I/O operation on closed file")}
+function err_closed(){$B.RAISE(_b_.ValueError,"I/O operation on closed file.")}
 const O_RDONLY=0,O_WRONLY=1,O_RDWR=2,O_EXCL=1024,O_CREAT=256,O_TRUNC=512,O_APPEND=8
 $B._FileIO.tp_new=function(cls,args,kw){var res={ob_type:cls,fd:-1,created:0,readable:0,writable:0,appending:0,seekable:-1,closefd:1}
 $B.init_dict(res)
@@ -4401,7 +4406,7 @@ _TextIOWrapper_funcs.buffer_get=function(_self){return _self.$buffer}
 _TextIOWrapper_funcs.fileno=function(_self){return-1}
 _TextIOWrapper_funcs.read=function(){var $=$B.args("read",2,{self:null,size:null},arguments,{size:-1})
 var _self=$.self,size=$B.PyNumber_Index($.size)
-if(_self.closed===true){$B.RAISE(_b_.ValueError,'I/O operation on closed file')}
+CHECK_CLOSED(_self)
 if(_self.$text===undefined){_self.$text=$B.decode(_self.$bytes,_self.$encoding,_self.$errors)
 _self.$text_pos=0}
 var len=_b_.len(_self.$text)
@@ -4412,7 +4417,7 @@ _self.$text_pos=Math.min(_self.$text_pos,_self.$text.length)
 return res}
 _TextIOWrapper_funcs.readline=function(){var $=$B.args("read",2,{self:null,size:null},arguments,{size:-1})
 var _self=$.self,size=$B.PyNumber_Index($.size)
-if(_self.closed===true){$B.RAISE(_b_.ValueError,'I/O operation on closed file')}
+CHECK_CLOSED(_self)
 if(_self.$text===undefined){_self.$text=$B.decode(_self.$bytes,_self.$encoding,_self.$errors)
 _self.$text_iterator=_self.$text[Symbol.iterator]()
 _self.$text_pos=0
@@ -4427,7 +4432,7 @@ res+=char.value
 nb++
 if(nb > size){break}}}
 return $B.String(res)}
-_TextIOWrapper_funcs.seek=function(_self,offset,whence){if(_self.closed){$B.RAISE(_b_.ValueError,'I/O operation on closed file')}
+_TextIOWrapper_funcs.seek=function(_self,offset,whence){CHECK_CLOSED(_self)
 if(whence===undefined){whence=0}
 if(whence===0){self.$text_pos=offset}else if(whence===1){self.$text_pos+=offset}else if(whence===2){self.$text_pos=self.$text_length+offset}
 return _b_.None}
@@ -10027,7 +10032,29 @@ return int_or_long(quot-1)}}}
 _b_.int.nb_true_divide=function(self,other){var[x,y]=[self,other].map(toBigInt)
 if(x===$B.NULL ||y===$B.NULL){return _b_.NotImplemented}
 if(y===0n){$B.RAISE(_b_.ZeroDivisionError,'division by zero')}
-return $B.fast_float(Number(x)/Number(y))}
+var negate=(x < 0n)!=(y < 0n)
+if(x < 0n){x=-x }
+if(y < 0n){y=-y }
+if(x===0n){return $B.fast_float(negate ?-0.0 :0.0)}
+var bx=x.toString(2).length,by=y.toString(2).length,diff=bx-by
+var shift=Math.max(diff,-1021)-55 
+var q,r
+if(shift >=0){var ys=y << BigInt(shift)
+q=x/ys
+r=x % ys}else{
+var xs=x << BigInt(-shift)
+q=xs/y
+r=xs % y}
+if(r !==0n){q |=1n }
+var qbits=q.toString(2).length
+var extra=Math.max(qbits,-1021-shift)-53 
+var half=1n << BigInt(extra-1),low=q &((half << 1n)-1n)
+q >>=BigInt(extra)
+if(low > half ||(low===half &&(q & 1n))){q+=1n }
+shift+=extra
+var res=Number(q)*2**shift
+if(! isFinite(res)){$B.RAISE(_b_.OverflowError,'integer division result too large for a float')}
+return $B.fast_float(negate ?-res :res)}
 _b_.int.nb_index=function(self){return int_value(self)}
 _b_.int.tp_new=function(cls,args,kw){var nb_kwargs=$B.str_dict_length(kw)
 var nb_args=args.length+nb_kwargs
@@ -10050,7 +10077,7 @@ break}
 if(! $B.$isinstance(cls,_b_.type)){$B.RAISE(_b_.TypeError,"int.__new__(X): X is not a type object")}
 if(cls===bool){$B.RAISE(_b_.TypeError,"int.__new__(bool) is not safe, use bool.__new__()")}
 if(cls===int){return int.$factory(value,base)}
-var res={ob_type:cls,value}
+var res={ob_type:cls,value:int.$factory(value,base)}
 $B.init_dict(res)
 return res}
 var int_funcs=_b_.int.tp_funcs={}

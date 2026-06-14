@@ -1,4 +1,5 @@
 from browser import document, html, window
+from tester import assert_raises
 
 with open('index.html') as f:
     f.read()
@@ -48,5 +49,10 @@ with open('files/biostats.csv', newline='') as f:
     for row in reader:
         nb += 1
     assert nb == 18, nb
-    
+
+# PR 2756
+f = open('index.html')
+f.close()
+assert_raises(ValueError, f.__enter__, msg="I/O operation on closed file.")
+
 print("passed all tests...")
