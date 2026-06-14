@@ -471,7 +471,7 @@ slice.$conv_for_seq = function(self, len) {
         if ($B.rich_comp('__gt__', 0, start)) {
             start = $B.rich_op('__add__', start, len)
             if ($B.rich_comp('__gt__', 0, start)) {
-                start = 0
+                start = step_is_neg ? -1 : 0
             }
         }
         if ($B.rich_comp('__ge__', start, len)) {
@@ -484,6 +484,9 @@ slice.$conv_for_seq = function(self, len) {
         stop = $B.PyNumber_Index(self.stop)
         if ($B.rich_comp('__gt__', 0, stop)) {
             stop = $B.rich_op('__add__', stop, len)
+            if ($B.rich_comp('__gt__', 0, stop)) {
+                stop = step_is_neg ? -1 : 0
+            }
         }
         if ($B.rich_comp('__ge__', stop, len)) {
             stop = step_is_neg ? len_1 : len
