@@ -1392,7 +1392,7 @@ float_funcs.hex = function(self) {
     _m = ldexp(fast_float(_m), _shift).value
     _e -= _shift
 
-    var _int2hex = "0123456789ABCDEF".split(""),
+    var _int2hex = "0123456789abcdef".split(""),
         _s = _int2hex[Math.floor(_m)]
     _s += '.'
     _m -= Math.floor(_m)
