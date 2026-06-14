@@ -724,8 +724,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,2,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-06-14 09:18:09.833282"
-__BRYTHON__.timestamp=1781421489832
+__BRYTHON__.compiled_date="2026-06-14 10:55:56.942255"
+__BRYTHON__.timestamp=1781427356941
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_kozh","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","_zlib_utils1","_zlib_utils_kozh","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","python_re_new","unicodedata","xml_helpers","xml_parser","xml_parser_backup"];
 ;
 
@@ -1977,9 +1977,13 @@ throw err}}}}else{
 $B.RAISE(_b_.TypeError,'argument of type '+
 `'${$B.class_name(obj)}' is not iterable`)}}}
 $B.$is_member=function(item,_set){var contains=$B.$getattr($B.get_class(_set),'__contains__',$B.NULL)
-if(contains===$B.NULL){$B.RAISE(_b_.TypeError,`argument of type '${$B.class_name(_set)}' `+
+if(contains===$B.NULL){let it
+try{
+it=$B.make_js_iterator(_set)}catch(err){$B.RAISE(_b_.TypeError,`argument of type '${$B.class_name(_set)}' `+
 'is not a container or iterable'
 )}
+for(let elt of it){if($B.is_or_equals(item,elt)){return true}}
+return false}
 return $B.$call(contains,_set,item)}
 $B.nb_call_attr=0
 $B.call_attr=function(obj,attr,inum,...args){

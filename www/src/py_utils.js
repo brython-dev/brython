@@ -1187,10 +1187,21 @@ $B.member_func = function(obj) {
 $B.$is_member = function(item, _set) {
     var contains = $B.$getattr($B.get_class(_set), '__contains__', $B.NULL)
     if (contains === $B.NULL) {
-        $B.RAISE(_b_.TypeError,
-            `argument of type '${$B.class_name(_set)}' ` +
-            'is not a container or iterable'
-        )
+        let it
+        try {
+            it = $B.make_js_iterator(_set)
+        } catch(err) {
+            $B.RAISE(_b_.TypeError,
+                `argument of type '${$B.class_name(_set)}' ` +
+                'is not a container or iterable'
+            )
+        }
+        for (let elt of it) {
+            if ($B.is_or_equals(item, elt)) {
+                return true
+            }
+        }
+        return false
     }
     return $B.$call(contains, _set, item)
 }
