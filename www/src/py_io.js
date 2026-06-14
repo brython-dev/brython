@@ -65,7 +65,10 @@ _IOBase.tp_iter = function(self) {
 }
 
 _IOBase.tp_iternext = function*(self){
-    var line = $B.$call(self.readline, self)
+    // resolve readline here too: next(f) without a prior iter(f) crashed,
+    // self.readline is only assigned by tp_iter
+    var rl = self.readline || $B.search_in_mro($B.get_class(self), 'readline')
+    var line = $B.$call(rl, self)
 
     if (line == undefined || _b_.len(line) === 0) {
         return
@@ -75,7 +78,6 @@ _IOBase.tp_iternext = function*(self){
 
 _IOBase.tp_finalize = function(self) {
     // Destructor.  Calls close()
-    console.log('del', self)
     try {
         var closed = $B.$getattr(self, 'closed')
     } catch (err) {
@@ -89,12 +91,23 @@ _IOBase.tp_finalize = function(self) {
         return
     }
 
-    $B$call($B.$getattr(self, 'close'))
+    $B.$call($B.$getattr(self, 'close'))
 }
 
 var _IOBase_funcs = _IOBase.tp_funcs = {}
 
 _IOBase_funcs.__enter__ = function(self) {
+    // CPython IOBase.__enter__ does _checkClosed() first. closed is read
+    // defensively: on some native classes the getset resolution crashes
+    var closed = false
+    try {
+        closed = $B.$bool($B.$getattr(self, 'closed'))
+    } catch (err) {
+        closed = !! self._closed
+    }
+    if (closed) {
+        $B.RAISE(_b_.ValueError, 'I/O operation on closed file')
+    }
     return self
 }
 
@@ -393,9 +406,6 @@ function _bufferediobase_readinto_generic(_self, buffer, readinto1) {
 
 var _BufferedIOBase_funcs = $B._BufferedIOBase.tp_funcs = {}
 
-_BufferedIOBase_funcs.__enter__ = function(self) {
-    return self
-}
 _BufferedIOBase_funcs.__exit__ = function(self, type, value, traceback) {
     try {
         $B.$call($B.$getattr(self, 'close'))
@@ -435,7 +445,7 @@ _BufferedIOBase_funcs.write = function() {
 }
 
 $B._BufferedIOBase.tp_methods = [
-    "__enter__", "__exit__", "readinto", "readinto1", "close", "detach",
+    "__exit__", "readinto", "readinto1", "close", "detach",
     "read", "read1", "write"
 ]
 
