@@ -1208,7 +1208,12 @@ $B.call_attr = function(obj, attr, inum, ...args) {
                 Object.hasOwn(klass.tp_funcs, attr)){
             var func = klass.tp_funcs[attr]
             if ($B.get_class(func) === $B.builtin_method) {
-                return func(obj, ...args)
+                try {
+                    return func(obj, ...args)
+                } catch(err) {
+                    $B.set_inum(inum)
+                    throw err
+                }
             }
         }
         var own_dict = $B.get_dict(obj)
@@ -1219,7 +1224,12 @@ $B.call_attr = function(obj, attr, inum, ...args) {
                 if (own_dict && Object.hasOwn(own_dict, attr)) {
                     return $B.$call_with_position(own_dict[attr], inum, ...args)
                 } else {
-                    return in_klass_dict.bind(null, obj)(...args)
+                    try {
+                        return in_klass_dict.bind(null, obj)(...args)
+                    } catch(err) {
+                        $B.set_inum(inum)
+                        throw err
+                    }
                 }
             }
         }
