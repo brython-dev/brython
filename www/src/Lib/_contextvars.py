@@ -14,7 +14,9 @@ class Context(object):
 
     keys = "<method 'keys' of 'Context' objects>"
 
-    run = "<method 'run' of 'Context' objects>"
+    def run(self, callable, *args, **kwargs):
+        # single-threaded environment: just call (no context switching)
+        return callable(*args, **kwargs)
 
     values = "<method 'values' of 'Context' objects>"
 
