@@ -13,12 +13,24 @@ def _compare_digest(a, b):
     Note: If a and b are of different lengths, or if an error occurs,
     a timing attack could theoretically reveal information about the
     types and lengths of a and b--but not their values."""
-    if isinstance(a, str) and isinstance(b, str) and \
-            a.isascii() and b.isascii():
-        return a == b
-    elif isinstance(a, bytes) and isinstance(b, bytes):
-        return a == b
-    raise TypeError("unsupported operand types")
+    if isinstance(a, str) and isinstance(b, str):
+        if not (a.isascii() and b.isascii()):
+            raise TypeError("unsupported operand types")
+        # a[:] forces a primitive str (a str subclass is not directly iterable)
+        va = [ord(c) for c in a[:]]
+        vb = [ord(c) for c in b[:]]
+    elif isinstance(a, (bytes, bytearray)) and isinstance(b, (bytes, bytearray)):
+        va = list(a)
+        vb = list(b)
+    else:
+        raise TypeError("unsupported operand types")
+    # constant-time: never use == (a bytes/str subclass may override __eq__)
+    result = len(va) ^ len(vb)
+    if len(va) != len(vb):
+        vb = va
+    for x, y in zip(va, vb):
+        result |= x ^ y
+    return result == 0
 
 def index(a):
     # See https://stackoverflow.com/questions/65551469/operator-index-with-custom-class-instance
