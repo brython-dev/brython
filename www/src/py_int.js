@@ -740,9 +740,11 @@ _b_.int.tp_new = function(cls, args, kw) {
     if (cls === int) {
         return int.$factory(value, base)
     }
+    // subclasses must convert the argument too: MyInt(Fraction(17))
+    // stored the raw Fraction as its value
     var res = {
         ob_type: cls,
-        value
+        value: int.$factory(value, base)
     }
     $B.init_dict(res)
     return res
