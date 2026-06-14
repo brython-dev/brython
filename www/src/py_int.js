@@ -652,7 +652,50 @@ _b_.int.nb_true_divide = function(self, other) {
     if (y === 0n) {
         $B.RAISE(_b_.ZeroDivisionError, 'division by zero')
     }
-    return $B.fast_float(Number(x) / Number(y))
+    // Correctly-rounded BigInt division, port of CPython's
+    // long_true_divide (Objects/longobject.c). Converting each operand
+    // first (Number(x) / Number(y)) returned nan for operands >= 2**1024
+    // (Inf / Inf), lost precision above 2**53 (double rounding), and
+    // underflowed subnormal results to 0.0.
+    var negate = (x < 0n) != (y < 0n)
+    if (x < 0n) { x = -x }
+    if (y < 0n) { y = -y }
+    if (x === 0n) {
+        return $B.fast_float(negate ? -0.0 : 0.0)
+    }
+    var bx = x.toString(2).length,
+        by = y.toString(2).length,
+        diff = bx - by
+    var shift = Math.max(diff, -1021) - 55      // -1021 = DBL_MIN_EXP
+    var q, r
+    if (shift >= 0) {
+        var ys = y << BigInt(shift)
+        q = x / ys
+        r = x % ys
+    } else {
+        var xs = x << BigInt(-shift)
+        q = xs / y
+        r = xs % y
+    }
+    if (r !== 0n) {
+        q |= 1n                                 // sticky bit
+    }
+    var qbits = q.toString(2).length
+    var extra = Math.max(qbits, -1021 - shift) - 53  // 53 = DBL_MANT_DIG
+    var half = 1n << BigInt(extra - 1),
+        low = q & ((half << 1n) - 1n)
+    q >>= BigInt(extra)
+    if (low > half || (low === half && (q & 1n))) {
+        q += 1n                                 // round-half-to-even
+    }
+    shift += extra
+    // both factors are exactly representable, so the product is exact
+    var res = Number(q) * 2 ** shift
+    if (! isFinite(res)) {
+        $B.RAISE(_b_.OverflowError,
+            'integer division result too large for a float')
+    }
+    return $B.fast_float(negate ? -res : res)
 }
 
 _b_.int.nb_index = function(self) {
@@ -697,9 +740,11 @@ _b_.int.tp_new = function(cls, args, kw) {
     if (cls === int) {
         return int.$factory(value, base)
     }
+    // subclasses must convert the argument too: MyInt(Fraction(17))
+    // stored the raw Fraction as its value
     var res = {
         ob_type: cls,
-        value
+        value: int.$factory(value, base)
     }
     $B.init_dict(res)
     return res

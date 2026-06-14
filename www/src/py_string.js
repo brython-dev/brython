@@ -485,7 +485,7 @@ var roundDownToFixed = $B.roundDownToFixed = function(v, d) {
         // with precision 0, never include "e"
         return BigInt(v).toString()
     }
-    const mul = Math.pow(10, d);
+    const mul = Math.pow(10, d)
     var is_neg = v < 0
     if (is_neg) {
         v = -v
@@ -1319,8 +1319,8 @@ $B.parse_format_spec = function(spec, obj) {
             car = spec.charAt(pos)
         }
         if (car == "#") {
-            this.alternate = true;
-            pos++;
+            this.alternate = true
+            pos++
             car = spec.charAt(pos)
         }
         if (car == "0") {
@@ -1793,18 +1793,18 @@ _b_.str.tp_hash = function(self) {
     // copied from
     // https://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript
     var s = to_string(self)
-    let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+    let h1 = 0xdeadbeef, h2 = 0x41c6ce57
     for (let i = 0, ch; i < s.length; i++) {
-        ch = s.charCodeAt(i);
-        h1 = Math.imul(h1 ^ ch, 2654435761);
-        h2 = Math.imul(h2 ^ ch, 1597334677);
+        ch = s.charCodeAt(i)
+        h1 = Math.imul(h1 ^ ch, 2654435761)
+        h2 = Math.imul(h2 ^ ch, 1597334677)
     }
-    h1  = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
-    h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
-    h2  = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
-    h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    h1  = Math.imul(h1 ^ (h1 >>> 16), 2246822507)
+    h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909)
+    h2  = Math.imul(h2 ^ (h2 >>> 16), 2246822507)
+    h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909)
 
-    return 4294967296 * (2097151 & h2) + (h1 >>> 0);
+    return 4294967296 * (2097151 & h2) + (h1 >>> 0)
 }
 
 _b_.str.tp_str = function(self) {
@@ -2103,7 +2103,7 @@ str_funcs.endswith = function(self, suffix) {
             arguments, {start: 0, end: null}, null, null),
         _self
 
-    normalize_start_end($);
+    normalize_start_end($)
 
     _self = to_string($.self)
 
@@ -2146,7 +2146,7 @@ str_funcs.expandtabs = function(self) {
         switch (car) {
             case "\t":
                 while (col % s > 0) {
-                    res += " ";
+                    res += " "
                     col++
                 }
                 break
@@ -2262,7 +2262,7 @@ str_funcs.format = function() {
     for (let i = 0; i < parts.length; i++) {
         // Literal text is added unchanged
         if (typeof parts[i] == "string") {
-            res += parts[i];
+            res += parts[i]
             continue
         }
 
@@ -2355,7 +2355,7 @@ str_funcs.isalnum = function(self) {
     if one of the following returns True: c.isalpha(), c.isdecimal(),
     c.isdigit(), or c.isnumeric(). */
     $B.check_nb_args_no_kw('str.isalnum', 1, arguments)
-    var _self = to_string(self);
+    var _self = to_string(self)
     if (_self.length == 0) {
         return false
     }
@@ -2375,7 +2375,7 @@ str_funcs.isalpha = function(self) {
     those with general category property being one of "Lm", "Lt", "Lu", "Ll",
     or "Lo". */
     $B.check_nb_args_no_kw('str.isalpha', 1, arguments)
-    var _self = to_string(self);
+    var _self = to_string(self)
     if (_self.length == 0) {
         return false
     }
@@ -2621,7 +2621,7 @@ str_funcs.ljust = function(self) {
     var $ = $B.args("ljust", 3, {self: null, width: null, fillchar:null},
                 arguments, {fillchar: " "}, null, null),
         _self = to_string($.self),
-        len = str.mp_length(_self);
+        len = str.mp_length(_self)
 
     if ($.width <= len) {
         return _self
@@ -2798,7 +2798,7 @@ str_funcs.replace = function() {
     }
     if ($B.is_big_int(count)) {
         count = parseInt($B.int_value(count))
-    };
+    }
     [old, _new] = to_string(old, _new)
     var elts
     if (old == "") {
@@ -2850,14 +2850,12 @@ str_funcs.rfind = function() {
     // start and end are interpreted as in slice notation. Return -1 on failure.
     var $ = $B.args("rfind", 4,
             {self: null, sub: null, start: null, end: null},
-            arguments, {start: 0, end: null}, null, null),
-        _self,
-        sub
+            arguments, {start: 0, end: null}, null, null)
 
     normalize_start_end($)
-    check_str($.sub);
+    check_str($.sub)
 
-    [_self, sub] = to_string($.self, $.sub)
+    let [_self, sub] = to_string($.self, $.sub)
 
     var len = str.mp_length(_self),
         sub_len = str.mp_length(sub)
@@ -2914,11 +2912,9 @@ str_funcs.rpartition = function(self, sep) {
 
 str_funcs.rsplit = function() {
     var $ = $B.args("rsplit", 3, {self: null, sep: null, maxsplit: null},
-                arguments, {sep: _b_.None, maxsplit: -1}, null, null),
-        sep = $.sep,
-        _self;
+                arguments, {sep: _b_.None, maxsplit: -1}, null, null)
 
-    [_self, sep] = to_string($.self, $.sep)
+    let [_self, sep] = to_string($.self, $.sep)
 
     // Use split on the reverse of the string and of separator
     var rev_str = reverse(_self),

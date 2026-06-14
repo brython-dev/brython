@@ -1163,10 +1163,21 @@ $B.member_func = function(obj) {
 $B.$is_member = function(item, _set) {
     var contains = $B.$getattr($B.get_class(_set), '__contains__', $B.NULL)
     if (contains === $B.NULL) {
-        $B.RAISE(_b_.TypeError,
-            `argument of type '${$B.class_name(_set)}' ` +
-            'is not a container or iterable'
-        )
+        let it
+        try {
+            it = $B.make_js_iterator(_set)
+        } catch(err) {
+            $B.RAISE(_b_.TypeError,
+                `argument of type '${$B.class_name(_set)}' ` +
+                'is not a container or iterable'
+            )
+        }
+        for (let elt of it) {
+            if ($B.is_or_equals(item, elt)) {
+                return true
+            }
+        }
+        return false
     }
     return $B.$call(contains, _set, item)
 }
@@ -1184,7 +1195,12 @@ $B.call_attr = function(obj, attr, inum, ...args) {
                 Object.hasOwn(klass.tp_funcs, attr)){
             var func = klass.tp_funcs[attr]
             if ($B.get_class(func) === $B.builtin_method) {
-                return func(obj, ...args)
+                try {
+                    return func(obj, ...args)
+                } catch(err) {
+                    $B.set_inum(inum)
+                    throw err
+                }
             }
         }
         var own_dict = $B.get_dict(obj)
@@ -1195,7 +1211,12 @@ $B.call_attr = function(obj, attr, inum, ...args) {
                 if (own_dict && Object.hasOwn(own_dict, attr)) {
                     return $B.$call_with_position(own_dict[attr], inum, ...args)
                 } else {
-                    return in_klass_dict.bind(null, obj)(...args)
+                    try {
+                        return in_klass_dict.bind(null, obj)(...args)
+                    } catch(err) {
+                        $B.set_inum(inum)
+                        throw err
+                    }
                 }
             }
         }

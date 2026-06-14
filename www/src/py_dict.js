@@ -115,7 +115,7 @@ function _PyDictView_Intersect(self, other) {
             break
         }
         var key = item.value
-        var rv = dict_contains(self, key);
+        var rv = dict_contains(self, key)
         if (rv) {
             $B.set_add(result, key)
         }
@@ -373,8 +373,6 @@ dict.$iter_items = function*(d){
         for (let key in d) {
             yield {key, value: d[key]}
             if (d[VERSION] !== version) {
-                console.log('d', d)
-                console.log('version', version, 'd[VERSION]', d[VERSION])
                 $B.RAISE(_b_.RuntimeError,
                     'dictionary changed size during iteration 1')
             }
@@ -400,6 +398,9 @@ var $copy_dict = function(left, right) {
         if (! left[KEYS]) {
             for (let key in right) {
                 left[key] = right[key]
+                if (left[$B.JSOBJ]) {
+                    left[$B.JSOBJ][key] = right[key]
+                }
             }
         } else {
             for (let key in right) {
@@ -1257,7 +1258,6 @@ dict_funcs.update = function(self) {
             let it = _b_.iter(o),
                 i = 0,
                 key_value
-            console.log('o', o, 'it', it)
             while (true) {
                 try {
                     var item = _b_.next(it)

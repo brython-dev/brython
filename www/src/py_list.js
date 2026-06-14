@@ -920,7 +920,7 @@ list_funcs.sort = function(self) {
     }
 
     self.$cl = $elts_class(self)
-    var cmp = null;
+    var cmp = null
 
     function basic_cmp(a, b) {
         return $B.rich_comp("__lt__", a, b) ? -1:

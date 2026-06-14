@@ -5,10 +5,11 @@
 import os
 import re
 import sys
+import shutil
 
 import javascript_minifier
 from version import version, implementation
-from directories import src_dir
+from directories import src_dir, root_dir
 from core_scripts import core_scripts
 
 cpython_version = sys.version_info
@@ -75,6 +76,14 @@ def run():
         sys.exit()
 
     make_VFS.process(os.path.join(src_dir, 'brython_stdlib.js'))
+
+    # also copy to setup/brython/data
+    setup_data_dir = os.path.join(root_dir, 'setup', 'brython', 'data')
+    shutil.copyfile(os.path.join(src_dir, 'brython_no_static.js'),
+        os.path.join(setup_data_dir, 'brython.js'))
+    for filename in ['brython_stdlib.js', 'unicode.txt']:
+        shutil.copyfile(os.path.join(src_dir, filename),
+            os.path.join(setup_data_dir, filename))
 
 
 if __name__ == "__main__":

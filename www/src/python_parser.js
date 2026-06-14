@@ -135,14 +135,15 @@ var helper_functions = {
     INVALID_VERSION_CHECK: function(p, version, msg, node) {
         if (node == NULL) {
             p.error_indicator = 1;  // Inline CHECK_CALL
-            return NULL;
+            return NULL
         }
         if (p.feature_version < version) {
-            p.error_indicator = 1;
-            return helper_functions.RAISE_SYNTAX_ERROR("%s only supported in Python 3.%i and greater",
-                                      msg, version);
+            p.error_indicator = 1
+            return helper_functions.RAISE_SYNTAX_ERROR(
+                "%s only supported in Python 3.%i and greater", msg, version
+            )
         }
-        return node;
+        return node
     },
 
     NEW_TYPE_COMMENT: function(p, x) {
@@ -159,8 +160,8 @@ var helper_functions = {
                                errmsg){
         var va = [errmsg]
         $B._PyPegen.raise_error_known_location(p, errtype,
-            lineno, col_offset, end_lineno, end_col_offset, errmsg, va);
-        return NULL;
+            lineno, col_offset, end_lineno, end_col_offset, errmsg, va)
+        return NULL
     },
 
     RAISE_ERROR: function(p, errtype, msg) {
@@ -231,14 +232,14 @@ var helper_functions = {
 
     _RAISE_SYNTAX_ERROR_INVALID_TARGET(p, type, e){
         var invalid_target = $B.helper_functions.CHECK_NULL_ALLOWED($B.ast.expr,
-            $B._PyPegen.get_invalid_target(e, type));
+            $B._PyPegen.get_invalid_target(e, type))
         if (invalid_target != NULL) {
             var msg;
             if (type == $B.parser_constants.STAR_TARGETS ||
                     type == $B.parser_constants.FOR_TARGETS) {
-                msg = "cannot assign to %s";
+                msg = "cannot assign to %s"
             } else {
-                msg = "cannot delete %s";
+                msg = "cannot delete %s"
             }
             return helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(
                 p,
@@ -247,7 +248,7 @@ var helper_functions = {
                 $B._PyPegen.get_expr_name(invalid_target)
             )
         }
-        return NULL;
+        return NULL
     },
 
     RAISE_SYNTAX_ERROR_ON_NEXT_TOKEN: function(p, msg) {

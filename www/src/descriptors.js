@@ -337,7 +337,7 @@ $B.classmethod_descriptor.tp_descr_get = function(self, obj, type) {
     }
     var cls = $B.NULL
     if (self.d_method.ml_flags & $B.METH_METHOD) {
-        cls = descr.d_common.d_type;
+        cls = descr.d_common.d_type
     }
     var f = function(...args) {
         return self.d_method.call(null, self.d_type, ...args)

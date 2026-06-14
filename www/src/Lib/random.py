@@ -333,6 +333,8 @@ class Random(_random.Random):
         """Return random integer in range [a, b], including both end points.
         """
 
+        a = _index(a)
+        b = _index(b)
         return self.randrange(a, b+1)
 
 

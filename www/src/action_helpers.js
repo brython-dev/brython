@@ -146,16 +146,16 @@ function _make_posonlyargs(p,
         set_list(posonlyargs, slash_without_default)
     } else if (slash_with_default != NULL) {
         var slash_with_default_names =
-                _get_names(p, slash_with_default.names_with_defaults);
+                _get_names(p, slash_with_default.names_with_defaults)
         if (!slash_with_default_names) {
-            return -1;
+            return -1
         }
         set_list(posonlyargs, $B._PyPegen.join_sequences(
                 p,
                 slash_with_default.plain_names,
                 slash_with_default_names))
     }
-    return posonlyargs == NULL ? -1 : 0;
+    return posonlyargs == NULL ? -1 : 0
 }
 
 function _make_posargs(p,
@@ -163,19 +163,19 @@ function _make_posargs(p,
               names_with_default,
               posargs) {
     if (plain_names != NULL && names_with_default != NULL) {
-        var names_with_default_names = _get_names(p, names_with_default);
+        var names_with_default_names = _get_names(p, names_with_default)
         if (!names_with_default_names) {
-            return -1;
+            return -1
         }
         var seqs = $B._PyPegen.join_sequences(
                 p, plain_names,  names_with_default_names)
-        set_list(posargs, seqs);
+        set_list(posargs, seqs)
     } else if (plain_names == NULL && names_with_default != NULL) {
         set_list(posargs, _get_names(p, names_with_default))
     } else if (plain_names != NULL && names_with_default == NULL) {
         set_list(posargs, plain_names)
     }
-    return posargs == NULL ? -1 : 0;
+    return posargs == NULL ? -1 : 0
 }
 
 function _make_posdefaults(p,
@@ -184,13 +184,13 @@ function _make_posdefaults(p,
                   posdefaults) {
     if (slash_with_default != NULL && names_with_default != NULL) {
         var slash_with_default_values =
-                _get_defaults(p, slash_with_default.names_with_defaults);
+                _get_defaults(p, slash_with_default.names_with_defaults)
         if (!slash_with_default_values) {
-            return -1;
+            return -1
         }
-        var names_with_default_values = _get_defaults(p, names_with_default);
+        var names_with_default_values = _get_defaults(p, names_with_default)
         if (!names_with_default_values) {
-            return -1;
+            return -1
         }
         set_list(posdefaults, $B._PyPegen.join_sequences(
                 p,
@@ -202,7 +202,7 @@ function _make_posdefaults(p,
         set_list(posdefaults,
              _get_defaults(p, slash_with_default.names_with_defaults))
     }
-    return posdefaults == NULL ? -1 : 0;
+    return posdefaults == NULL ? -1 : 0
 }
 
 function _make_kwargs(p, star_etc,
@@ -215,7 +215,7 @@ function _make_kwargs(p, star_etc,
     }
 
     if (kwonlyargs == NULL) {
-        return -1;
+        return -1
     }
 
     if (star_etc != NULL && star_etc.kwonlyargs != NULL) {
@@ -225,17 +225,17 @@ function _make_kwargs(p, star_etc,
     }
 
     if (kwdefaults == NULL) {
-        return -1;
+        return -1
     }
 
-    return 0;
+    return 0
 }
 
 function _seq_number_of_starred_exprs(seq) {
     var n = 0
     for (var k of seq) {
         if (! k.is_keyword) {
-            n++;
+            n++
         }
     }
     return n
@@ -259,7 +259,6 @@ $B._PyPegen.constant_from_string = function(p, token) {
         try {
             value = _b_.bytes.$factory(encode_bytestring(value))
         } catch (err) {
-            console.log('err', err)
             $B._PyPegen.raise_error_known_location(p,
                 _b_.SyntaxError,
                 token.lineno, token.col_offset,
@@ -296,7 +295,7 @@ function _get_interpolation_conversion(p, debug, conversion, format) {
         /* If no conversion is specified, use !r for debug expressions */
         return 'r'
     }
-    return -1;
+    return -1
 }
 
 function _strip_interpolation_expr(exprstr) {
@@ -320,29 +319,28 @@ $B._PyPegen.interpolation = function(p, expression,
         col_offset = position.col_offset,
         end_lineno = position.end_lineno,
         end_col_offset = position.end_col_offset
-    var conversion_val = _get_interpolation_conversion(p, debug, conversion, format);
+    var conversion_val = _get_interpolation_conversion(p, debug, conversion, format)
 
     /* Find the non whitespace token after the "=" */
-    var debug_end_line, debug_end_offset;
-    var debug_metadata;
-    var exprstr;
+    var debug_end_line, debug_end_offset
+    var debug_metadata
+    var exprstr
 
     if (conversion) {
         debug_end_line = conversion.result.lineno
-        debug_end_offset = conversion.result.col_offset;
-        debug_metadata = exprstr = conversion.metadata;
+        debug_end_offset = conversion.result.col_offset
+        debug_metadata = exprstr = conversion.metadata
     } else if (format) {
-        debug_end_line = format.result.lineno;
-        debug_end_offset = format.result.col_offset + 1;
-        debug_metadata = exprstr = format.metadata;
+        debug_end_line = format.result.lineno
+        debug_end_offset = format.result.col_offset + 1
+        debug_metadata = exprstr = format.metadata
     } else {
-        debug_end_line = end_lineno;
-        debug_end_offset = end_col_offset;
-        debug_metadata = exprstr = closing_brace.metadata;
+        debug_end_line = end_lineno
+        debug_end_offset = end_col_offset
+        debug_metadata = exprstr = closing_brace.metadata
     }
 
-    //assert(exprstr != NULL);
-    var final_exprstr = _strip_interpolation_expr(exprstr);
+    var final_exprstr = _strip_interpolation_expr(exprstr)
     if (final_exprstr) {
         p.arena.a_objects.push(final_exprstr)
     }
@@ -353,7 +351,7 @@ $B._PyPegen.interpolation = function(p, expression,
     set_position_from_obj(interpolation, position)
 
     if (!debug) {
-        return interpolation;
+        return interpolation
     }
 
     var debug_text = $B._PyAST.Constant(debug_metadata)
@@ -418,7 +416,7 @@ $B._PyPegen.formatted_value = function(p,
 $B._PyPegen.decode_fstring_part = function(p, is_raw, constant, token) {
     var bstr = constant.value
 
-    var len;
+    var len
     if (bstr == "{{" || bstr == "}}") {
         len = 1
     } else {
@@ -426,15 +424,15 @@ $B._PyPegen.decode_fstring_part = function(p, is_raw, constant, token) {
     }
 
     is_raw = is_raw || ! bstr.includes('\\')
-    var str = bstr // $B._PyPegen.decode_string(p, is_raw, bstr, len, token);
+    var str = bstr
     if (str == NULL) {
-        _Pypegen_raise_decode_error(p);
-        return NULL;
+        _Pypegen_raise_decode_error(p)
+        return NULL
     }
     p.arena.a_objects.push(str)
     return $B._PyAST.Constant(str, NULL,
         constant.lineno, constant.col_offset,
-        constant.end_lineno, constant.end_col_offset, p.arena);
+        constant.end_lineno, constant.end_col_offset, p.arena)
 }
 
 function _get_resized_exprs(p, a, raw_expressions, b, string_kind) {
@@ -442,19 +440,19 @@ function _get_resized_exprs(p, a, raw_expressions, b, string_kind) {
     var total_items = n_items
     for (var item of raw_expressions) {
         if (item instanceof $B.ast.JoinedStr) {
-            total_items += item.values.length - 1;
+            total_items += item.values.length - 1
         }
     }
 
     var quote_str = a.bytes
     if (quote_str == NULL) {
-        return NULL;
+        return NULL
     }
     var is_raw = quote_str.includes('r') || quote_str.includes('R')
 
     var seq = []
 
-    var index = 0;
+    var index = 0
     for (var i = 0; i < n_items; i++) {
         var item = raw_expressions[i]
 
@@ -469,49 +467,47 @@ function _get_resized_exprs(p, a, raw_expressions, b, string_kind) {
                              string_kind == TSTRING
                              ? "unexpected TemplateStr node without debug data in t-string at line %d"
                              : "unexpected JoinedStr node without debug data in f-string at line %d",
-                             item.lineno);
-                return NULL;
+                             item.lineno)
+                return NULL
             }
 
             var first = values[0]
-            //assert(first->kind == Constant_kind);
             seq[index++] = first
 
             var second = values[1]
-            // assert((string_kind == TSTRING && second->kind == Interpolation_kind) || second->kind == FormattedValue_kind);
             seq[index++] = second
 
-            continue;
+            continue
         }
 
         if (item instanceof $B.ast.Constant) {
-            item = $B._PyPegen.decode_fstring_part(p, is_raw, item, b);
+            item = $B._PyPegen.decode_fstring_part(p, is_raw, item, b)
             if (item == NULL) {
-                return NULL;
+                return NULL
             }
 
             /* Tokenizer emits string parts even when the underlying string
             might become an empty value (e.g. FSTRING_MIDDLE with the value \\n)
             so we need to check for them and simplify it here. */
             if (item.value.length == 0) {
-                continue;
+                continue
             }
         }
         seq[index++] = item
     }
     var resized_exprs
     if (index != total_items) {
-        resized_exprs = _Py_asdl_expr_seq_new(index, p.arena);
+        resized_exprs = _Py_asdl_expr_seq_new(index, p.arena)
         if (resized_exprs == NULL) {
-            return NULL;
+            return NULL
         }
         for (var i = 0; i < index; i++) {
             resized_exprs[i] = seq[i]
         }
     } else {
-        resized_exprs = seq;
+        resized_exprs = seq
     }
-    return resized_exprs;
+    return resized_exprs
 }
 
 $B._PyPegen.template_str = function(p, a, raw_expressions, b) {
@@ -556,7 +552,7 @@ $B._PyPegen.seq_count_dots = function(seq) {
     if (seq === undefined) {
         return 0
     }
-    var number_of_dots = 0;
+    var number_of_dots = 0
     for (var token of seq) {
         if (token.num_type == $B.py_tokens.DOT) {
             number_of_dots += token.string.length
@@ -565,7 +561,7 @@ $B._PyPegen.seq_count_dots = function(seq) {
         }
     }
 
-    return number_of_dots;
+    return number_of_dots
 }
 
 /* Creates a new asdl_seq* with the identifiers of all the names in seq */
@@ -576,7 +572,8 @@ $B._PyPegen.map_names_to_ids = function(p, seq) {
 $B._PyPegen.alias_for_star = function(p, lineno, col_offset, end_lineno,
                         end_col_offset, arena) {
     var str = "*"
-    return $B._PyAST.alias(str, NULL, lineno, col_offset, end_lineno, end_col_offset, arena);
+    return $B._PyAST.alias(str, NULL, lineno, col_offset, end_lineno,
+               end_col_offset, arena)
 }
 
 /* Constructs a CmpopExprPair */
@@ -617,57 +614,57 @@ function _set_tuple_context(p, e, ctx) {
     return $B._PyAST.Tuple(
             _set_seq_context(p, e.elts, ctx),
             ctx,
-            EXTRA_EXPR(e, e));
+            EXTRA_EXPR(e, e))
 }
 
 function _set_list_context(p, e, ctx) {
     return $B._PyAST.List(
             _set_seq_context(p, e.elts, ctx),
             ctx,
-            EXTRA_EXPR(e, e));
+            EXTRA_EXPR(e, e))
 }
 
 function _set_subscript_context(p, e, ctx) {
     return $B._PyAST.Subscript(e.value, e.slice,
-                            ctx, EXTRA_EXPR(e, e));
+                            ctx, EXTRA_EXPR(e, e))
 }
 
 function _set_attribute_context(p, e, ctx) {
     return $B._PyAST.Attribute(e.value, e.attr,
-                            ctx, EXTRA_EXPR(e, e));
+                            ctx, EXTRA_EXPR(e, e))
 }
 
 function _set_starred_context(p, e, ctx) {
     return $B._PyAST.Starred($B._PyPegen.set_expr_context(p, e.value, ctx),
-                          ctx, EXTRA_EXPR(e, e));
+                          ctx, EXTRA_EXPR(e, e))
 }
 
 /* Creates an `expr_ty` equivalent to `expr` but with `ctx` as context */
 $B._PyPegen.set_expr_context = function(p, expr, ctx) {
-    var _new = NULL;
+    var _new = NULL
     switch (expr.constructor) {
         case $B.ast.Name:
-            _new = _set_name_context(p, expr, ctx);
-            break;
+            _new = _set_name_context(p, expr, ctx)
+            break
         case $B.ast.Tuple:
-            _new = _set_tuple_context(p, expr, ctx);
-            break;
+            _new = _set_tuple_context(p, expr, ctx)
+            break
         case $B.ast.List:
-            _new = _set_list_context(p, expr, ctx);
-            break;
+            _new = _set_list_context(p, expr, ctx)
+            break
         case $B.ast.Subscript:
-            _new = _set_subscript_context(p, expr, ctx);
-            break;
+            _new = _set_subscript_context(p, expr, ctx)
+            break
         case $B.ast.Attribute:
-            _new = _set_attribute_context(p, expr, ctx);
-            break;
+            _new = _set_attribute_context(p, expr, ctx)
+            break
         case $B.ast.Starred:
-            _new = _set_starred_context(p, expr, ctx);
-            break;
+            _new = _set_starred_context(p, expr, ctx)
+            break
         default:
-            _new = expr;
+            _new = expr
     }
-    return _new;
+    return _new
 }
 
 /* Constructs a KeyValuePair that is used when parsing a dict's key value pairs */
@@ -692,48 +689,48 @@ $B._PyPegen.get_expr_name = function(e) {
         case 'UnaryOp':
             return "expression"
         case 'GeneratorExp':
-            return "generator expression";
+            return "generator expression"
         case 'Yield':
         case 'YieldFrom':
-            return "yield expression";
+            return "yield expression"
         case 'Await':
-            return "await expression";
+            return "await expression"
         case 'ListComp':
-            return "list comprehension";
+            return "list comprehension"
         case 'SetComp':
-            return "set comprehension";
+            return "set comprehension"
         case 'DictComp':
-            return "dict comprehension";
+            return "dict comprehension"
         case 'Dict':
-            return "dict literal";
+            return "dict literal"
         case 'Set':
-            return "set display";
+            return "set display"
         case 'JoinedStr':
         case 'FormattedValue':
-            return "f-string expression";
+            return "f-string expression"
         case 'Constant':
             var value = e.value
             if (value === _b_.None) {
-                return "None";
+                return "None"
             }
             if (value === false) {
-                return "False";
+                return "False"
             }
             if (value === true) {
-                return "True";
+                return "True"
             }
             if (value === _b_.Ellipsis) {
-                return "ellipsis";
+                return "ellipsis"
             }
-            return "literal";
+            return "literal"
         case 'Compare':
-            return "comparison";
+            return "comparison"
         case 'IfExp':
-            return "conditional expression";
+            return "conditional expression"
         case 'NamedExpr':
-            return "named expression";
+            return "named expression"
         default:
-            return NULL;
+            return NULL
     }
 }
 
@@ -767,10 +764,10 @@ $B._PyPegen.check_legacy_stmt = function(p, name) {
 }
 
 $B._PyPegen.dummy_name = function(p) {
-    var cache = NULL;
+    var cache = NULL
 
     if (cache != NULL) {
-        return cache;
+        return cache
     }
 
     var id = "dummy" + Math.random().toString(36).substr(2),
@@ -784,10 +781,10 @@ $B._PyPegen.add_type_comment_to_arg = function(p, a, tc) {
         return a
     }
     var bytes = _b_.bytes.$factory(tc),
-        tco = $B._PyPegen.new_type_comment(p, bytes);
+        tco = $B._PyPegen.new_type_comment(p, bytes)
     var ast_obj = $B._PyAST.arg(a.arg, a.annotation, tco,
                       a.lineno, a.col_offset, a.end_lineno, a.end_col_offset,
-                      p.arena);
+                      p.arena)
     return ast_obj
 }
 
@@ -848,33 +845,33 @@ $B._PyPegen.make_arguments = function(p, slash_without_default,
     /* Constructs an arguments_ty object out of all the parsed constructs in the parameters rule */
     var posonlyargs = []
     if (_make_posonlyargs(p, slash_without_default, slash_with_default, posonlyargs) == -1) {
-        return NULL;
+        return NULL
     }
 
     var posargs = []
     if (_make_posargs(p, plain_names, names_with_default, posargs) == -1) {
-        return NULL;
+        return NULL
     }
 
     var posdefaults = []
     if (_make_posdefaults(p,slash_with_default, names_with_default, posdefaults) == -1) {
-        return NULL;
+        return NULL
     }
 
-    var vararg = NULL;
+    var vararg = NULL
     if (star_etc != NULL && star_etc.vararg != NULL) {
-        vararg = star_etc.vararg;
+        vararg = star_etc.vararg
     }
 
     var kwonlyargs = [],
-        kwdefaults = [];
+        kwdefaults = []
     if (_make_kwargs(p, star_etc, kwonlyargs, kwdefaults) == -1) {
-        return NULL;
+        return NULL
     }
 
-    var kwarg = NULL;
+    var kwarg = NULL
     if (star_etc != NULL && star_etc.kwarg != NULL) {
-        kwarg = star_etc.kwarg;
+        kwarg = star_etc.kwarg
     }
 
     var ast_obj = $B._PyAST.arguments(posonlyargs, posargs, vararg, kwonlyargs,
@@ -892,14 +889,14 @@ $B._PyPegen.name_default_pair = function(p, arg, value, tc) {
 $B._PyPegen.raise_error = function(p, errtype, errmsg) {
     if (p.fill == 0) {
         var va = [errmsg]
-        $B._PyPegen.raise_error_known_location(p, errtype, 0, 0, 0, -1, errmsg, va);
+        $B._PyPegen.raise_error_known_location(p, errtype, 0, 0, 0, -1, errmsg, va)
         return NULL
     }
 
-    var t = p.known_err_token != NULL ? p.known_err_token : p.tokens[p.fill - 1];
+    var t = p.known_err_token != NULL ? p.known_err_token : p.tokens[p.fill - 1]
     var va = errmsg
     $B._PyPegen.raise_error_known_location(p, errtype,
-        t.lineno, t.col_offset, t.end_lineno, t.end_col_offset, errmsg, va);
+        t.lineno, t.col_offset, t.end_lineno, t.end_col_offset, errmsg, va)
 }
 
 $B._PyPegen.raise_error_known_location = function(p, errtype,
@@ -936,7 +933,7 @@ $B._PyPegen.seq_delete_starred_exprs = function(p, kwargs) {
     var len = kwargs.length,
         new_len = len - _seq_number_of_starred_exprs(kwargs)
     if (new_len == 0) {
-        return NULL;
+        return NULL
     }
     var new_seq = []
 
@@ -949,13 +946,13 @@ $B._PyPegen.seq_delete_starred_exprs = function(p, kwargs) {
 }
 
 $B._PyPegen.seq_extract_starred_exprs = function(p, kwargs) {
-    var new_len = _seq_number_of_starred_exprs(kwargs);
+    var new_len = _seq_number_of_starred_exprs(kwargs)
     if (new_len == 0) {
-        return NULL;
+        return NULL
     }
     var new_seq = []
 
-    var idx = 0;
+    var idx = 0
     for (var k of kwargs) {
         if (! k.is_keyword) {
             new_seq[idx++] = k.element
@@ -977,15 +974,15 @@ $B._PyPegen.collect_call_seqs = function(p, a, b,
                      lineno, col_offset, end_lineno,
                      end_col_offset, arena) {
     var args_len = a.length,
-        total_len = args_len;
+        total_len = args_len
 
     if (b == NULL) {
         return $B._PyAST.Call($B._PyPegen.dummy_name(p), a, [], lineno, col_offset,
-                        end_lineno, end_col_offset, arena);
+                        end_lineno, end_col_offset, arena)
     }
 
     var starreds = $B._PyPegen.seq_extract_starred_exprs(p, b),
-        keywords = $B._PyPegen.seq_delete_starred_exprs(p, b);
+        keywords = $B._PyPegen.seq_delete_starred_exprs(p, b)
 
     if (starreds) {
         total_len += starreds.length
@@ -1002,7 +999,7 @@ $B._PyPegen.collect_call_seqs = function(p, a, b,
     }
 
     return $B._PyAST.Call($B._PyPegen.dummy_name(p), args, keywords, lineno,
-                       col_offset, end_lineno, end_col_offset, arena);
+                       col_offset, end_lineno, end_col_offset, arena)
 }
 
 $B._PyPegen.join_sequences = function(p, a, b) {
@@ -1051,7 +1048,7 @@ function make_formatted_value(p, fmt_values) {
 function _build_concatenated_str(p, strings) {
     var len = strings.length
 
-    var n_flattened_elements = 0;
+    var n_flattened_elements = 0
     for (var elem of strings) {
         if(elem instanceof $B.ast.JoinedStr ||
                 elem instanceof $B.ast.TemplateStr){
@@ -1063,7 +1060,7 @@ function _build_concatenated_str(p, strings) {
     var flattened = []
 
     /* build flattened list */
-    var current_pos = 0;
+    var current_pos = 0
     for (var elem of strings) {
         if(elem instanceof $B.ast.JoinedStr ||
                 elem instanceof $B.ast.TemplateStr){
@@ -1088,7 +1085,7 @@ function _build_concatenated_str(p, strings) {
             continue
         }
         if (!prev_is_constant || ! (elem instanceof $B.ast.Constant)) {
-            n_elements++;
+            n_elements++
         }
         prev_is_constant = elem instanceof $B.ast.Constant
     }
@@ -1096,7 +1093,7 @@ function _build_concatenated_str(p, strings) {
     var values = []
 
     /* build folded list */
-    current_pos = 0;
+    current_pos = 0
     for (var i = 0, len = flattened.length; i < len; i++) {
         var elem = flattened[i]
         /* if the current elem and the following are constants,
@@ -1104,7 +1101,7 @@ function _build_concatenated_str(p, strings) {
         if (elem instanceof $B.ast.Constant) {
             if (i + 1 < n_flattened_elements &&
                     flattened[i + 1] instanceof $B.ast.Constant){
-                var first_elem = elem;
+                var first_elem = elem
 
                 /* When a string is getting concatenated, the kind of the string
                    is determined by the first string in the concatenation
@@ -1115,15 +1112,15 @@ function _build_concatenated_str(p, strings) {
                 var kind = $B.get_class(elem.value)
 
                 var concat_str = ''
-                var last_elem = elem;
+                var last_elem = elem
                 var j
                 for (j = i; j < n_flattened_elements; j++) {
                     var current_elem = flattened[j]
                     if (current_elem instanceof $B.ast.Constant) {
                         concat_str += current_elem.value
-                        last_elem = current_elem;
+                        last_elem = current_elem
                     } else {
-                        break;
+                        break
                     }
                 }
                 i = j - 1
@@ -1131,7 +1128,7 @@ function _build_concatenated_str(p, strings) {
                 elem = new $B.ast.Constant(concat_str, kind)
                 set_position_from_list(elem,
                     [first_elem.lineno, first_elem.col_offset,
-                     last_elem.end_lineno, last_elem.end_col_offset]);
+                     last_elem.end_lineno, last_elem.end_col_offset])
             }
 
             /* Drop all empty contanst strings */
@@ -1304,11 +1301,12 @@ $B._PyPegen.checked_future_import = function(p, module,
         for (var i = 0; i < names.length; i++) {
             var alias = names[i]
             if (alias.name == "barry_as_FLUFL") {
-                p.flags |= PyPARSE_BARRY_AS_BDFL;
+                p.flags |= PyPARSE_BARRY_AS_BDFL
             }
         }
     }
-    return $B._PyAST.ImportFrom(module, names, level, lineno, col_offset, end_lineno, end_col_offset, arena);
+    return $B._PyAST.ImportFrom(module, names, level, lineno, col_offset, 
+        end_lineno, end_col_offset, arena)
 }
 
 $B._PyPegen.register_stmts = function(p, stmts) {
@@ -1331,7 +1329,7 @@ $B._PyPegen.ensure_imaginary = function(p, exp) {
     if (! (exp instanceof $B.ast.Constant) ||
             ! $B.exact_type(exp.value, _b_.complex)){
         $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, exp,
-            "imaginary number required in complex literal");
+            "imaginary number required in complex literal")
         return NULL
     }
     return exp
@@ -1342,7 +1340,7 @@ $B._PyPegen.ensure_real = function(p, exp) {
        $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(
             p,
             exp,
-            "real number required in complex literal");
+            "real number required in complex literal")
         return NULL
     }
     return exp
@@ -1392,27 +1390,27 @@ $B._PyPegen.new_type_comment = function(p, s) {
 
 $B._PyPegen.get_last_comprehension_item = function(comprehension) {
     if (comprehension.ifs == NULL || comprehension.ifs.length == 0) {
-        return comprehension.iter;
+        return comprehension.iter
     }
-    return $B.last(comprehension.ifs);
+    return $B.last(comprehension.ifs)
 }
 
 $B._PyPegen.arguments_parsing_error = function(p, e) {
-    var kwarg_unpacking = 0;
+    var kwarg_unpacking = 0
     for (let keyword of e.keywords) {
         if (! keyword.arg) {
-            kwarg_unpacking = 1;
+            kwarg_unpacking = 1
         }
     }
 
-    var msg = NULL;
+    var msg = NULL
     if (kwarg_unpacking) {
-        msg = "positional argument follows keyword argument unpacking";
+        msg = "positional argument follows keyword argument unpacking"
     } else {
-        msg = "positional argument follows keyword argument";
+        msg = "positional argument follows keyword argument"
     }
 
-    return $B.helper_functions.RAISE_SYNTAX_ERROR(p, msg);
+    return $B.helper_functions.RAISE_SYNTAX_ERROR(p, msg)
 }
 
 $B._PyPegen.nonparen_genexp_in_call = function(p, args, comprehensions) {
@@ -1425,28 +1423,28 @@ $B._PyPegen.nonparen_genexp_in_call = function(p, args, comprehensions) {
        error */
     var len = args.args.length
     if (len <= 1) {
-        return NULL;
+        return NULL
     }
 
-    var last_comprehension = $B.last(comprehensions);
+    var last_comprehension = $B.last(comprehensions)
 
     return $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_RANGE(p,
         args.args[len - 1],
         $B._PyPegen.get_last_comprehension_item(last_comprehension),
         "Generator expression must be parenthesized"
-    );
+    )
 }
 
 $B._PyPegen.get_invalid_target = function(e, targets_type) {
     if (e == NULL) {
-        return NULL;
+        return NULL
     }
 
     function VISIT_CONTAINER(CONTAINER, TYPE) {
         for (var elt of CONTAINER.elts) {
-            var child = $B._PyPegen.get_invalid_target(elt, targets_type);
+            var child = $B._PyPegen.get_invalid_target(elt, targets_type)
             if (child != NULL) {
-                return child;
+                return child
             }
         }
     }
@@ -1460,12 +1458,12 @@ $B._PyPegen.get_invalid_target = function(e, targets_type) {
     switch (e.constructor) {
         case $B.ast.List:
         case $B.ast.Tuple:
-            return VISIT_CONTAINER(e, e.constructor);
+            return VISIT_CONTAINER(e, e.constructor)
         case $B.ast.Starred:
             if (targets_type == DEL_TARGETS) {
-                return e;
+                return e
             }
-            return $B._PyPegen.get_invalid_target(e.value, targets_type);
+            return $B._PyPegen.get_invalid_target(e.value, targets_type)
         case $B.ast.Compare:
             // This is needed, because the `a in b` in `for a in b` gets parsed
             // as a comparison, and so we need to search the left side of the comparison
@@ -1473,17 +1471,17 @@ $B._PyPegen.get_invalid_target = function(e, targets_type) {
             if (targets_type == FOR_TARGETS) {
                 var cmpop = e.ops[0]
                 if (cmpop instanceof $B.ast.In) {
-                    return $B._PyPegen.get_invalid_target(e.left, targets_type);
+                    return $B._PyPegen.get_invalid_target(e.left, targets_type)
                 }
-                return NULL;
+                return NULL
             }
-            return e;
+            return e
         case $B.ast.Name:
         case $B.ast.Subscript:
         case $B.ast.Attribute:
-            return NULL;
+            return NULL
         default:
-            return e;
+            return e
     }
 }
 

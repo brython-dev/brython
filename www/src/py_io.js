@@ -65,7 +65,10 @@ _IOBase.tp_iter = function(self) {
 }
 
 _IOBase.tp_iternext = function*(self){
-    var line = $B.$call(self.readline, self)
+    // resolve readline here too: next(f) without a prior iter(f) crashed,
+    // self.readline is only assigned by tp_iter
+    var rl = self.readline || $B.search_in_mro($B.get_class(self), 'readline')
+    var line = $B.$call(rl, self)
 
     if (line == undefined || _b_.len(line) === 0) {
         return
@@ -75,7 +78,6 @@ _IOBase.tp_iternext = function*(self){
 
 _IOBase.tp_finalize = function(self) {
     // Destructor.  Calls close()
-    console.log('del', self)
     try {
         var closed = $B.$getattr(self, 'closed')
     } catch (err) {
@@ -89,12 +91,23 @@ _IOBase.tp_finalize = function(self) {
         return
     }
 
-    $B$call($B.$getattr(self, 'close'))
+    $B.$call($B.$getattr(self, 'close'))
 }
 
 var _IOBase_funcs = _IOBase.tp_funcs = {}
 
 _IOBase_funcs.__enter__ = function(self) {
+    // CPython IOBase.__enter__ does _checkClosed() first. closed is read
+    // defensively: on some native classes the getset resolution crashes
+    var closed = false
+    try {
+        closed = $B.$bool($B.$getattr(self, 'closed'))
+    } catch (err) {
+        closed = !! self._closed
+    }
+    if (closed) {
+        $B.RAISE(_b_.ValueError, 'I/O operation on closed file.')
+    }
     return self
 }
 
@@ -117,9 +130,7 @@ _IOBase_funcs.fileno = function(_self) {
 }
 
 _IOBase_funcs.flush = function(self) {
-    if (self._closed) {
-        $B.RAISE(_b_.ValueError, "I/O operation on closed file.")
-    }
+    CHECK_CLOSED(self)
     return _b_.None
 }
 
@@ -189,7 +200,7 @@ _IOBase_funcs.readline = function(_self, limit=-1) {
                 `not '${$B.class_name(b)}'`)
         }
         if (_b_.len(b) == 0) {
-            break;
+            break
         }
 
         _b_.bytearray.tp_funcs.extend(buffer, b)
@@ -206,7 +217,7 @@ _IOBase_funcs.readlines = function(_self, hint) {
                 {hint: -1})
     var _self=  $.self,
         hint = $.hint
-    var length = 0;
+    var length = 0
     var result, it
 
     if (hint === _b_.None) {
@@ -222,14 +233,7 @@ _IOBase_funcs.readlines = function(_self, hint) {
 
     var readline = $B.search_in_mro($B.get_class(_self), 'readline')
 
-    var nb = 0
-
     while (true) {
-        nb++
-        if (nb > 5000) {
-            console.log('overflow', result)
-            break
-        }
         var line = readline(_self)
         var line_length = _b_.len(line)
 
@@ -267,7 +271,7 @@ _IOBase_funcs.writable = function() {
 }
 
 _IOBase_funcs.writelines = function(_self, lines) {
-    var iter, res;
+    var iter, res
 
     if (_self.closed) {
         $B.RAISE(_b_.OSError, 'closed')
@@ -393,13 +397,9 @@ function _bufferediobase_readinto_generic(_self, buffer, readinto1) {
 
 var _BufferedIOBase_funcs = $B._BufferedIOBase.tp_funcs = {}
 
-_BufferedIOBase_funcs.__enter__ = function(self) {
-    return self
-}
 _BufferedIOBase_funcs.__exit__ = function(self, type, value, traceback) {
     try {
         $B.$call($B.$getattr(self, 'close'))
-        self.__closed = true
         return true
     } catch (err) {
         return false
@@ -407,15 +407,15 @@ _BufferedIOBase_funcs.__exit__ = function(self, type, value, traceback) {
 }
 
 _BufferedIOBase_funcs.readinto = function(_self, buffer) {
-    return _bufferediobase_readinto_generic(_self, buffer, 0);
+    return _bufferediobase_readinto_generic(_self, buffer, 0)
 }
 
 _BufferedIOBase_funcs.readinto1 = function(_self, buffer) {
-    return _bufferediobase_readinto_generic(_self, buffer, 1);
+    return _bufferediobase_readinto_generic(_self, buffer, 1)
 }
 
 _BufferedIOBase_funcs.close = function(_self) {
-    _self.closed = true
+    _self._closed = true
 }
 
 _BufferedIOBase_funcs.detach = function() {
@@ -435,7 +435,7 @@ _BufferedIOBase_funcs.write = function() {
 }
 
 $B._BufferedIOBase.tp_methods = [
-    "__enter__", "__exit__", "readinto", "readinto1", "close", "detach",
+    "__exit__", "readinto", "readinto1", "close", "detach",
     "read", "read1", "write"
 ]
 
@@ -465,6 +465,7 @@ function _bufferedreader_read_fast(_self, n) {
 }
 
 function _bufferedreader_readline(_self) {
+    CHECK_CLOSED(_self)
     var raw = _self.raw
     if (raw.$byte_pos >= raw.$bytes.length) {
         return $B.fast_bytes()
@@ -513,9 +514,7 @@ _BufferedReader_funcs.seek = function(_self, offset, whence) {
     var _self = $.self,
         offset = $.offset,
         whence = $.whence
-    if (_self.closed) {
-        $B.RAISE(_b_.ValueError, 'I/O operation on closed file')
-    }
+    CHECK_CLOSED(_self)
     if (whence === undefined) {
         whence = 0
     }
@@ -530,8 +529,8 @@ _BufferedReader_funcs.seek = function(_self, offset, whence) {
 }
 
 function CHECK_CLOSED(fileobj, msg) {
-    if (fileobj.closed) {
-        $B.RAISE(_b_.ValueError, msg)
+    if (fileobj._closed) {
+        $B.RAISE(_b_.ValueError, msg ?? 'I/O operation on closed file.')
     }
 }
 
@@ -561,8 +560,22 @@ _BufferedReader_funcs.readline = function(_self, size=-1) {
     return _bufferedreader_readline(_self)
 }
 
+// CPython's BufferedReader delegates these to the underlying raw stream;
+// without them it inherits _IOBase's seekable()/writable() = False.
+_BufferedReader_funcs.seekable = function(_self) {
+    return $B.$call($B.$getattr(_self.raw, 'seekable'))
+}
+
+_BufferedReader_funcs.readable = function(_self) {
+    return $B.$call($B.$getattr(_self.raw, 'readable'))
+}
+
+_BufferedReader_funcs.writable = function(_self) {
+    return $B.$call($B.$getattr(_self.raw, 'writable'))
+}
+
 $B._BufferedReader.tp_methods = [
-    "peek", "seek", "read", "readline"
+    "peek", "seek", "read", "readline", "seekable", "readable", "writable"
 ]
 
 $B.set_func_names($B._BufferedReader, '_io')
@@ -576,7 +589,7 @@ function bad_mode() {
 }
 
 function err_closed() {
-    $B.RAISE(_b_.ValueError, "I/O operation on closed file")
+    $B.RAISE(_b_.ValueError, "I/O operation on closed file.")
 }
 
 const O_RDONLY = 0,
@@ -648,7 +661,7 @@ $B._FileIO.tp_init = function() {
                 if (rwa) {
                     bad_mode()
                 }
-                rwa = 1;
+                rwa = 1
                 _self.writable = 1
                 _self.appending = 1
                 flags |= O_APPEND | O_CREAT
@@ -663,7 +676,7 @@ $B._FileIO.tp_init = function() {
                 plus = 1
                 break
             default:
-                $B.RAISE(_b_.ValueError, `invalid mode: ${mode}`);
+                $B.RAISE(_b_.ValueError, `invalid mode: ${mode}`)
         }
         pos++
     }
@@ -671,7 +684,7 @@ $B._FileIO.tp_init = function() {
         bad_mode()
     }
     if (_self.readable && _self.writable) {
-        flags |= O_RDWR;
+        flags |= O_RDWR
     } else if (_self.readable) {
         flags |= O_RDONLY
     } else {
@@ -887,9 +900,7 @@ _TextIOWrapper_funcs.read = function() {
                 {size: -1})
     var _self = $.self,
         size = $B.PyNumber_Index($.size)
-    if (_self.closed === true) {
-        $B.RAISE(_b_.ValueError, 'I/O operation on closed file')
-    }
+    CHECK_CLOSED(_self)
     if (_self.$text === undefined) {
         _self.$text = $B.decode(_self.$bytes, _self.$encoding, _self.$errors)
         _self.$text_pos = 0
@@ -911,9 +922,7 @@ _TextIOWrapper_funcs.readline = function() {
                 {size: -1})
     var _self = $.self,
         size = $B.PyNumber_Index($.size)
-    if (_self.closed === true) {
-        $B.RAISE(_b_.ValueError, 'I/O operation on closed file')
-    }
+    CHECK_CLOSED(_self)
     if (_self.$text === undefined) {
         _self.$text = $B.decode(_self.$bytes, _self.$encoding, _self.$errors)
         _self.$text_iterator = _self.$text[Symbol.iterator]()
@@ -944,9 +953,7 @@ _TextIOWrapper_funcs.readline = function() {
 }
 
 _TextIOWrapper_funcs.seek = function(_self, offset, whence) {
-    if (_self.closed) {
-        $B.RAISE(_b_.ValueError, 'I/O operation on closed file')
-    }
+    CHECK_CLOSED(_self)
     if (whence === undefined) {
         whence = 0
     }
@@ -979,12 +986,17 @@ function invalid_mode(mode) {
 
 function _io_open_impl(file, mode, buffering, encoding, errors, newline,
                        closefd, opener){
-    var i;
-    var creating = 0, reading = 0, writing = 0, appending = 0, updating = 0;
-    var text = 0, binary = 0;
+    var i
+    var creating = 0,
+        reading = 0,
+        writing = 0,
+        appending = 0,
+        updating = 0,
+        text = 0,
+        binary = 0
 
-    var rawmode = '', m;
-    var line_buffering, is_number, isatty = 0;
+    var rawmode = '', m
+    var line_buffering, is_number, isatty = 0
 
     var raw, modeobj, buffer, wrapper, result, path_or_fd
 
@@ -1045,11 +1057,21 @@ function _io_open_impl(file, mode, buffering, encoding, errors, newline,
 
 
     m = ''
-    if (creating)  m += 'x';
-    if (reading)   m += 'r';
-    if (writing)   m += 'w';
-    if (appending) m += 'a';
-    if (updating)  m += '+';
+    if (creating) {
+        m += 'x'
+    }
+    if (reading) {
+        m += 'r'
+    }
+    if (writing) {
+         m += 'w'
+    }
+    if (appending) {
+        m += 'a'
+    }
+    if (updating) {
+        m += '+'
+    }
     rawmode = m
 
     /* Parameters validation */
@@ -1070,12 +1092,12 @@ function _io_open_impl(file, mode, buffering, encoding, errors, newline,
 
     if (binary && errors != _b_.None) {
         $B.RAISE(_b_.ValueError,
-            "binary mode doesn't take an errors argument");
+            "binary mode doesn't take an errors argument")
     }
 
     if (binary && newline !== _b_.None) {
         $B.RAISE(_b_.ValueError,
-            "binary mode doesn't take a newline argument");
+            "binary mode doesn't take a newline argument")
     }
 
     if (binary && buffering == 1) {

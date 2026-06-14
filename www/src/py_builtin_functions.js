@@ -127,14 +127,17 @@ _b_.ascii = function(obj) {
 
 // used by bin, hex and oct functions
 function $builtin_base_convert_helper(obj, base) {
-  var prefix = "";
+  var prefix = ""
   switch (base) {
      case 2:
-       prefix = '0b'; break
+       prefix = '0b'
+       break
      case 8:
-       prefix = '0o'; break
+       prefix = '0o'
+       break
      case 16:
-       prefix = '0x'; break
+       prefix = '0x'
+       break
      default:
          console.log('invalid base:' + base)
   }
@@ -740,7 +743,7 @@ $B.time_builtin_getattr = 0
 
 $B.$getattr = function(obj, attr, _default) {
     // Used internally to avoid having to parse the arguments
-    var test = false // attr == 'data'
+    var test = false // attr == 'closest'
     if (test) {
         console.log('$getattr', obj, attr)
     }
@@ -775,8 +778,6 @@ $B.$getattr = function(obj, attr, _default) {
     if (test) {
         console.log("attr", attr, "of", obj, "class", $B.get_class(obj),
         "isclass", is_class)
-        console.log('typeof Node', typeof Node)
-        console.log('is Event ?', obj instanceof Event)
     }
 
     if (! is_class) {
@@ -786,6 +787,9 @@ $B.$getattr = function(obj, attr, _default) {
         }
         if (klass.tp_funcs && klass.$getattribute === _b_.object.tp_getattro) {
             // built-in type
+            if (test) {
+                console.log('builtin type')
+            }
             var func = $B.get_from_dict(klass, attr, $B.NULL)
             if (func !== $B.NULL) {
                 var res = $B.NULL
@@ -820,10 +824,11 @@ $B.$getattr = function(obj, attr, _default) {
                     ? own_dict[attr]
                     : $B.NULL
                 : $B.NULL
+            if (test) {
+                console.log('in klass dict', in_klass_dict)
+                console.log('in own dict', in_own_dict)
+            }
             if (in_klass_dict) {
-                if (attr == 'path') {
-                    console.log('attr', attr, 'of obj', obj, 'in klass dict', in_klass_dict)
-                }
                 switch (in_klass_dict.ob_type) {
                     case $B.function:
                         if (in_own_dict === $B.NULL) {
@@ -842,7 +847,7 @@ $B.$getattr = function(obj, attr, _default) {
             console.log('obj', obj, 'klass', klass)
             throw err
         }
-        var res =  $B.object_getattribute(obj, klass, attr)
+        var res = $B.object_getattribute(obj, klass, attr)
     } else {
         var in_dict = $B.get_dict(obj)[attr]
         if (in_dict && $B.get_class(obj) === _b_.type) {
@@ -1910,13 +1915,13 @@ function supercheck(type, obj) {
         }
     }
 
-    var type_or_instance, obj_str;
+    var type_or_instance, obj_str
 
     if ($B.is_type(obj)) {
-        type_or_instance = "type";
+        type_or_instance = "type"
         obj_str = obj.tp_name
     } else {
-        type_or_instance = "instance of";
+        type_or_instance = "instance of"
         obj_str = $B.class_name(obj)
     }
     $B.RAISE(_b_.TypeError,

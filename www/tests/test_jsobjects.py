@@ -467,5 +467,12 @@ js_array = window.eval(['a', 'b', 'c', 'd'])
 assert type(js_array[:2]) is javascript.Array
 assert js_array[:2] == ['a', 'b']
 
+# issue 2732
+d = {}
+javascript.pyobj2jsobj(d)
+assert type(d) is dict
+d.update({'a': 1})
+assert d.get('a') == 1
+assert d['a'] == 1
 
 print("all tests ok...")

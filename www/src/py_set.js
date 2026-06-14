@@ -86,7 +86,7 @@ function set_difference(so, other) {
     /* If len(so) much more than len(other), it's more efficient to simply copy
      * so and then iterate other looking for common elements. */
     if (set.mp_length(so) >> 2 > other_size) {
-        return set_copy_and_difference(so, other);
+        return set_copy_and_difference(so, other)
     }
 
     var result = make_new_set()
@@ -113,7 +113,7 @@ function set_difference(so, other) {
 
 function set_difference_update(so, other) {
     if (so === other) {
-        return set.tp_funcs.clear(so);
+        return set.tp_funcs.clear(so)
     }
     if ($B.$isinstance(other, [set, frozenset])) {
         for (let entry of set_iter_with_hash(other)) {
@@ -145,7 +145,7 @@ function set_discard_entry(so, key, hash) {
 }
 
 function set_discard_key(so, key) {
-    return set_discard_entry(so, key);
+    return set_discard_entry(so, key)
 }
 
 function* set_iter(so){
@@ -225,7 +225,7 @@ function set_intersection_multi(so, args) {
     for (var other of args) {
         result = set_intersection(result, other)
     }
-    return result;
+    return result
 }
 
 function set_lookkey(so, key, hash) {
