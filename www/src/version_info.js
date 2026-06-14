@@ -1,8 +1,8 @@
 "use strict";
 __BRYTHON__.implementation = [3, 14, 2, 'dev', 0]
 __BRYTHON__.version_info = [3, 14, 0, 'final', 0]
-__BRYTHON__.compiled_date = "2026-06-14 10:55:56.942255"
-__BRYTHON__.timestamp = 1781427356941
+__BRYTHON__.compiled_date = "2026-06-14 11:24:20.071394"
+__BRYTHON__.timestamp = 1781429060071
 __BRYTHON__.builtin_module_names = ["_ajax",
     "_ast",
     "_base64",
@@ -16,7 +16,6 @@ __BRYTHON__.builtin_module_names = ["_ajax",
     "_profile",
     "_random",
     "_sre",
-    "_sre_kozh",
     "_sre_utils",
     "_string",
     "_svg",
@@ -25,8 +24,6 @@ __BRYTHON__.builtin_module_names = ["_ajax",
     "_webcomponent",
     "_webworker",
     "_zlib_utils",
-    "_zlib_utils1",
-    "_zlib_utils_kozh",
     "array",
     "builtins",
     "dis",
@@ -40,8 +37,6 @@ __BRYTHON__.builtin_module_names = ["_ajax",
     "posix",
     "pyexpat",
     "python_re",
-    "python_re_new",
     "unicodedata",
     "xml_helpers",
-    "xml_parser",
-    "xml_parser_backup"];
+    "xml_parser"];
