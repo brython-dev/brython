@@ -143,7 +143,7 @@ $B.prepare_string = function(p, token) {
         bytes = false,
         fstring = false,
         sm_length, // length of string modifier
-        end = null;
+        end = null
     if (string_modifier) {
         switch (string_modifier) {
             case 'r': // raw string
@@ -333,7 +333,7 @@ $B.prepare_string = function(p, token) {
     } else {
         result.value = quote + string + quote
     }
-    context.raw = raw;
+    context.raw = raw
     return result
 }
 

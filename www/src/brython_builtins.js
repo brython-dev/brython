@@ -62,13 +62,13 @@ if (has_storage) {
     $B.has_session_storage = false
 }
 
-var _window = globalThis;
+var _window = globalThis
 
 _window.location ||= {
             href:'',
             origin: '',
             pathname: ''
-        };
+        }
 
 _window.navigator ||= {userLanguage: ''}
 
@@ -78,9 +78,9 @@ _window.document  ||= {
     querySelectorAll: () => []
 }
 
-_window.HTMLElement ||= class HTMLElement {};
-_window.MutationObserver ||= function() { this.observe = () => {};  };
-_window.customElements   ||= {define: () => {} };
+_window.HTMLElement ||= class HTMLElement {}
+_window.MutationObserver ||= function() { this.observe = () => {};  }
+_window.customElements   ||= {define: () => {} }
 
 var href = _window.location.href
 $B.protocol = href.split(':')[0]
@@ -89,9 +89,9 @@ $B.indexedDB = _window.indexedDB
 
 if ($B.brython_path === undefined) {
     // Get url of this script brython_builtins.js
-    var this_url;
+    var this_url
     if ($B.isWebWorker) {
-        this_url = _window.location.href;
+        this_url = _window.location.href
         if (this_url.startsWith("blob:")) {
             this_url = this_url.substr(5)
         }
@@ -99,7 +99,7 @@ if ($B.brython_path === undefined) {
         this_url = document.currentScript.src
     }
 
-    var elts = this_url.split('/');
+    var elts = this_url.split('/')
     elts.pop()
     // brython_path is the url of the directory holding brython core scripts
     // It is used to import modules of the standard library

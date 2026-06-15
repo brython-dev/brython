@@ -106,8 +106,8 @@ function alphabeticalCompare(a, b) {
             t = -1
         } else if (al > bl) {
             b *= POWERS_OF_TEN[al - bl - 1]
-            a /= 10;
-            t = 1;
+            a /= 10
+            t = 1
         }
 
         if (a === b) {
@@ -158,7 +158,7 @@ function makeAscendingRun(array, lo, hi, compare) {
     var runHi = lo + 1
 
     if (runHi === hi) {
-        return 1;
+        return 1
     }
 
     // Descending
@@ -247,11 +247,11 @@ function binaryInsertionSort(array, lo, hi, start, compare) {
             /* falls through */
             case 1:
                 array[left + 1] = array[left]
-                break;
+                break
             default:
                 while (n > 0) {
                     array[left + n] = array[left + n - 1]
-                    n--;
+                    n--
                 }
         }
 
@@ -512,7 +512,7 @@ var TimSort = function(array, compare) {
                 this.runLength[i + 1] = this.runLength[i + 2]
             }
 
-            this.stackSize--;
+            this.stackSize--
 
             /*
             * Find where the first element in the second run goes in run1. Previous
@@ -671,10 +671,10 @@ var TimSort = function(array, compare) {
                         break
                     }
 
-                    minGallop--;
+                    minGallop--
 
                 }while(count1 >= DEFAULT_MIN_GALLOPING ||
-                        count2 >= DEFAULT_MIN_GALLOPING);
+                        count2 >= DEFAULT_MIN_GALLOPING)
 
                 if (exit) {
                     break
@@ -981,9 +981,9 @@ function tim_sort_safe(array, compare) {
         tim_sort(array, compare, 0, array.length)
     } catch (e) {
         if (e.name == TIM_SORT_ASSERTION) {
-            array.sort(compare);
+            array.sort(compare)
         } else {
-            throw e;
+            throw e
         }
     }
 }

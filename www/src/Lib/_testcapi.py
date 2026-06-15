@@ -42,6 +42,8 @@ ULONG_MAX = 4294967295
 
 USHRT_MAX = 65535
 
+nan_msb_is_signaling = False
+
 __loader__ = "<_frozen_importlib.ExtensionFileLoader object at 0x00C98DD0>"
 
 def _pending_threadfunc(*args,**kw):

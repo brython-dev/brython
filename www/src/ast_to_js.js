@@ -794,8 +794,8 @@ function dedent(n) {
 }
 
 function add_body(body, scopes) {
-    var res = '';
-    let js;
+    let res = ''
+    let js
     for (var item of body) {
         js = $B.js_from_ast(item, scopes)
         if (js.length > 0) {
@@ -2795,7 +2795,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
         `${this.args.posonlyargs.length}, ` +
         `[${varnames}], ` +
         `${annotations}, ` +
-        `${has_type_params ? 'type_params' : '[]'}, frame]\n`;
+        `${has_type_params ? 'type_params' : '[]'}, frame]\n`
     js += prefix + `${name2}.ob_type = $B.function\n`
 
     if (anns && ! postponed) {

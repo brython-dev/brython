@@ -805,7 +805,7 @@ $B.tokenizer = function(src, filename, mode, parser) {
                             line_start = pos + 1
                             line = get_line_at(pos)
                         } else {
-                            pos++;
+                            pos++
                             var msg = 'unexpected character after line ' +
                                 'continuation character'
                             raise_error(_b_.SyntaxError,

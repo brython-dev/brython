@@ -292,6 +292,12 @@ _b_.object.tp_setattro = function(self, attr, value) {
         }
     }
     var dict = $B.get_dict(self)
+    // a class whose __slots__ contains '__dict__' keeps a per-instance
+    // dict: create it lazily on the first out-of-slots setattr
+    if (! dict && klass.$slots_has_dict) {
+        self[$B.DICT] = $B.empty_dict()
+        dict = self[$B.DICT]
+    }
     if (dict) {
         $B.str_dict_set(dict, attr, value)
     } else {
@@ -554,6 +560,23 @@ object_funcs.__format__ = function() {
 
 object_funcs.__getstate__ = function(self) {
     var dict = $B.get_dict(self)
+    // CPython 3.11+: instances with filled __slots__ return a 2-tuple
+    // (dict-or-None, {slot: value}); slot values live as the member
+    // descriptors' slot_value_* properties
+    var sd = null
+    for (var k in self) {
+        if (k.startsWith('slot_value_') && self[k] !== undefined) {
+            if (sd === null) {
+                sd = $B.empty_dict()
+            }
+            _b_.dict.$setitem(sd, k.slice(11), self[k])
+        }
+    }
+    if (sd !== null) {
+        var d1 = (dict !== undefined && dict !== null &&
+            _b_.dict.mp_length(dict) > 0) ? dict : _b_.None
+        return $B.fast_tuple([d1, sd])
+    }
     return dict === undefined ? _b_.None : dict
 }
 
@@ -613,9 +636,12 @@ object_funcs.__reduce_ex__ = function(self, protocol) {
     var klass = $B.get_class(self)
     var reduce = $B.$getattr(klass, '__reduce__')
 
-    if(reduce !== object.tp_funcs.__reduce__ &&
-            ((reduce.ob_type === $B.method_descriptor) &&
-             (reduce.method !== object.tp_funcs.__reduce__))){
+    // Honor ANY non-default override: a Python-level __reduce__ is a plain
+    // function (not a method_descriptor) and was silently ignored.
+    var reduce_is_default = (reduce === object.tp_funcs.__reduce__) ||
+            (reduce.ob_type === $B.method_descriptor &&
+             reduce.method === object.tp_funcs.__reduce__)
+    if(! reduce_is_default){
         return $B.$call(reduce, self)
     }
     if ($B.imported.copyreg === undefined) {
@@ -661,7 +687,10 @@ object_funcs.__reduce_ex__ = function(self, protocol) {
     res.push(list_like_iterator)
     var key_value_iterator = _b_.None
     if ($B.is_dict(self)) {
-        key_value_iterator = _b_.dict.tp_funcs.items(self)
+        // CPython's reduce_2 passes an ITERATOR (PyObject_GetIter on the
+        // items view); pickle's C implementation rejects the bare view
+        // ("fifth item ... must be an iterator, not dict_items").
+        key_value_iterator = _b_.iter(_b_.dict.tp_funcs.items(self))
     }
     res.push(key_value_iterator)
     return $B.fast_tuple(res)

@@ -324,7 +324,7 @@ create_mm(b)
 b.extend(b'ij')
 assert b == bytearray(b'abcdefghij')
 
-# bytearray.extends and all the resizing operations on bytearrays check if 
+# bytearray.extends and all the resizing operations on bytearrays check if
 # there is a reference to a memoryview on self
 b = bytearray(b'abc')
 memoryview(b)
@@ -339,5 +339,11 @@ except BufferError:
     # expected since there is a reference 'x' to the memoryview
     pass
 
+# PR 2734
+assert 5 * b'!' == b'!!!!!'
+
+# PR 2744
+assert b'hell' in b'hello world'
+assert b'wor' in b'hello world'
 
 print('passed all tests...')

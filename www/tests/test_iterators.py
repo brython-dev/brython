@@ -96,7 +96,7 @@ class C:
 
     def __len__(self):
       return 9
-      
+
     def __getitem__(self, i):
         if i > 2:
             raise OSError
@@ -108,5 +108,41 @@ try:
   raise Exception('should have raised OSError')
 except OSError:
   assert i == 2
+
+# another iterator with __len__ and __getitem__
+class A:
+
+  def __init__(self):
+      self.data = 'abcde'
+
+  def __len__(self):
+      return len(self.data)
+
+  def __getitem__(self, i):
+      return self.data[i]
+
+
+for char in A():
+    char
+
+# issue 2761
+it = iter("abc")
+print(type(it))
+assert "z" not in it
+assert not all(c in it for c in "xyz")
+
+class A:
+
+  def __init__(self):
+    self.data = 'abcd'
+
+  def __len__(self):
+    return len(self.data)
+
+  def __getitem__(self, num):
+    return self.data[num]
+
+assert 'd' in A()
+assert 'z' not in A()
 
 print("passed all tests...")

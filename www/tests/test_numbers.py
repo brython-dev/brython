@@ -871,4 +871,26 @@ assert 2 ** 53 == float(2 ** 53)
 # issue 2661
 assert_raises(ValueError, int, '+')
 
+# PR 2728
+assert 2 | True == 3
+assert 2 & True == 0
+assert 2 ^ True == 3
+assert 2 | False == 2
+assert 2 & False == 0
+assert 3 ^ False == 3
+
+# PR 2745
+assert int.from_bytes(b'\xff\xff', 'little', signed=True) == -1
+
+# PR 2749
+assert (2**1200) / (2**1100) == 1.2676506002282294e+30
+assert 1 / 2**1074 == 5e-324
+
+# PR 2750
+class MyInt(int): 
+    pass
+
+from fractions import Fraction
+assert MyInt(Fraction(17)) == 17
+
 print('passed all tests...')

@@ -363,9 +363,9 @@ function hex() {
         digits = "0123456789abcdef",
         bps = bytes_per_sep,
         jstart = bps,
-        len = self.source.length;
+        len = self.source.length
     if (bytes_per_sep < 0) {
-        bps = -bytes_per_sep;
+        bps = -bytes_per_sep
         jstart = bps
     } else if (bytes_per_sep == 0) {
         sep = ''
@@ -621,8 +621,15 @@ function nb_multiply() {
 
     var self = $.self,
         value = $.value
+    // reflected path delivers the ORIGINAL arg order (2 * bytearray)
+    if (self.source === undefined && value && value.source !== undefined) {
+        var _t = self
+        self = value
+        value = _t
+    }
     var v = $B.PyNumber_Index(value)
-    var source = self.source.slice()
+    // exactly v repetitions: starting from a copy produced v+1
+    var source = []
     for (var i = 0; i < v; i++) {
         for (var item of self.source) {
             source[source.length] = item
@@ -1605,6 +1612,8 @@ $B.set_func_names(bytearray, "builtins")
 //bytes() (built in function)
 var bytes = _b_.bytes
 bytes.$buffer_protocol = true
+// bytearray is THE canonical read-write buffer (readinto target)
+_b_.bytearray.$buffer_protocol = true
 bytes.$is_sequence = true
 
 function bytes_split_with_sep(cls, self, seps, maxsplit) {
@@ -2334,9 +2343,19 @@ _b_.bytes.tp_richcompare = function(self, other, op) {
 
 _b_.bytes.nb_multiply = function() {
     var $ = $B.args('__mul__', 2, {self: null, other: null}, arguments)
-    var other = $B.PyNumber_Index($.other)
+    // slot convention: arguments arrive in the ORIGINAL order, so on the
+    // reflected path (46 * b'!' -> __rmul__) self is the int — handle
+    // either side, like CPython's bytes_repeat.
+    var _self = $.self,
+        _other = $.other
+    if (_self.source === undefined && _other && _other.source !== undefined) {
+        var _t = _self
+        _self = _other
+        _other = _t
+    }
+    var other = $B.PyNumber_Index(_other)
     var t = [],
-        source = $.self.source,
+        source = _self.source,
         slen = source.length
     for (var i = 0; i < other; i++) {
         for (var j = 0; j < slen; j++) {
@@ -2578,20 +2597,19 @@ _b_.bytes.sq_contains = function(self, other) {
     if (self.source.length < other.source.length) {
         return false
     }
-    var len = other.source.length
-    for (var i = 0; i < self.source.length - other.source.length + 1; i++) {
-        var flag = true
-        for (var j = 0; j < len; j++) {
-            if (other.source[i + j] != self.source[j]) {
-                flag = false
-                break
-            }
+    // subsequence search via native String.indexOf — the previous loop
+    // compared the needle shifted against the start of the haystack
+    // (swapped indices), so multi-byte needles never matched; bytes map
+    // 1:1 to latin-1 code units (chunked to respect the arg-count limit)
+    var to_str = function(src) {
+        var parts = []
+        for (var k = 0; k < src.length; k += 32768) {
+            parts.push(String.fromCharCode.apply(null,
+                Array.prototype.slice.call(src, k, k + 32768)))
         }
-        if (flag) {
-            return true
-        }
+        return parts.join('')
     }
-    return false
+    return to_str(self.source).indexOf(to_str(other.source)) > -1
 }
 
 _b_.bytes.bf_getbuffer = function(self, flags) {

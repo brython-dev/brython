@@ -230,7 +230,7 @@ function calculate_metaclass(metatype, bases) {
     for (let tmp of bases) {
         var tmptype = $B.get_class(tmp)
         if (_b_.issubclass(winner, tmptype)) {
-            continue;
+            continue
         }
         if (_b_.issubclass(tmptype, winner)) {
             winner = tmptype
@@ -1078,6 +1078,19 @@ function set_slots(cl_dict, class_obj) {
     let slots = $B.str_dict_get(cl_dict, '__slots__', $B.NULL)
     if (slots !== $B.NULL) {
         for (let key of $B.make_js_iterator(slots)) {
+            // CPython mangles private slot names at class-creation time,
+            // matching the compiler's mangling of self.__private accesses
+            if (key.startsWith('__') && ! key.endsWith('__')) {
+                key = '_' + $B.get_name(class_obj).replace(/^_+/, '') + key
+            }
+            // CPython: '__dict__' / '__weakref__' inside __slots__ are
+            // markers, not slots — '__dict__' keeps the per-instance dict
+            if (key == '__dict__' || key == '__weakref__') {
+                if (key == '__dict__') {
+                    class_obj.$slots_has_dict = true
+                }
+                continue
+            }
             var member = {
                 name: key,
                 type: $B.TYPES.OBJECT,
@@ -1404,7 +1417,6 @@ _b_.type.tp_new = function(cls, args, kw) {
         bases
     }
 
-    // PyObject *type = NULL;
     var class_obj = {
         ob_type: metatype,
         tp_bases: bases,
@@ -1446,8 +1458,8 @@ _b_.type.tp_new = function(cls, args, kw) {
 
 
     if (res < 0) {
-        assert(PyErr_Occurred());
-        return NULL;
+        assert(PyErr_Occurred())
+        return NULL
     }
     if (res == 1) {
         return class_obj
@@ -1562,13 +1574,13 @@ type_funcs.__abstractmethods___get = function(cls) {
 }
 
 type_funcs.__abstractmethods___set = function(cls, value) {
-    var abstract, res;
+    var abstract, res
     var dict = $B.get_dict(cls)
     if (value != $B.NULL) {
         abstract = $B.$bool(value)
         res = $B.str_dict_set(dict, '__abstractmethods__', value)
     } else {
-        abstract = 0;
+        abstract = 0
         res = $B.str_dict_pop(dict, '__abstractmethods__')
         if (res === $B.NULL) {
             $B.RAISE(_b_.AttributeError, '__abstractmethods__')
@@ -1599,7 +1611,7 @@ type_funcs.__annotate___get = function(self) {
             annotate = get(annotate, $B.NULL, self)
         }
     } else {
-        annotate = _b_.None;
+        annotate = _b_.None
         $B.set_to_dict(self, '__annotate_func__', annotate)
     }
     return annotate
@@ -2058,7 +2070,7 @@ function _Py_make_parameters(args) {
                 var len2 = subparams.length
                 var needed = len2 - 1 - (iarg - iparam)
                 if (needed > 0) {
-                    len += needed;
+                    len += needed
                     _PyTuple_Resize(parameters, len)
                 }
                 for (let t2 of subparams) {
@@ -2149,9 +2161,9 @@ function subs_tvars(obj, params, argitems, nargs) {
                 }
             }
             subargs[j] = arg
-            j++;
+            j++
         }
-        obj = PyObject_GetItem(obj, subargs);
+        obj = PyObject_GetItem(obj, subargs)
     }
     return obj
 }
@@ -2216,13 +2228,13 @@ function _Py_subs_parameters(self, args, parameters, item) {
             jarg++
             continue
         }
-        var unpack = _is_unpacked_typevartuple(arg);
+        var unpack = _is_unpacked_typevartuple(arg)
         var subst = $B.$getattr(arg, '__typing_subst__', $B.NULL)
         if (subst !== $B.NULL) {
-            var iparam = tuple_index(parameters, nparams, arg);
+            var iparam = tuple_index(parameters, nparams, arg)
             arg = $B.$call(subst, argitems[iparam])
         } else {
-            arg = subs_tvars(arg, parameters, argitems, nitems);
+            arg = subs_tvars(arg, parameters, argitems, nitems)
         }
         if (unpack) {
             if (! $B.is_tuple(arg)) {
@@ -2365,7 +2377,7 @@ $B.GenericAlias.mp_subscript = function(self, item) {
         self.parameters = _Py_make_parameters(self.args)
     }
 
-    var newargs = _Py_subs_parameters(self, self.args, self.parameters, item);
+    var newargs = _Py_subs_parameters(self, self.args, self.parameters, item)
 
     var res = $B.GenericAlias.$factory(alias.origin, newargs)
     res.starred = self.starred

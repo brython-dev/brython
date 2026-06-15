@@ -3371,6 +3371,18 @@ def f2683():
 assert f2683.__annotate__ is None
 assert f2683.__annotations__ == {}
 
+# PR 2731
+open(pathlib.Path('index.html'))
+
+# PR 2735
+def f2735(x):
+  assert 'x' in locals()
+  locals()['y'] = 0
+  assert 'y' not in locals()
+  assert_raises(NameError, eval, 'y')
+
+f2735(0)
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

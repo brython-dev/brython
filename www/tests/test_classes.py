@@ -1257,10 +1257,52 @@ assert_raises(TypeError, A)
 class C:
 
     def m(self):
-        def f(*, __x=1): 
+        def f(*, __x=1):
             return __x
         return f()
 
 assert C().m() == 1
+
+# PR 2729
+class C:
+
+    def __reduce__(self):
+      return (C, ('marker',))
+
+assert C().__reduce_ex__(2) == (C, ('marker',))
+
+# PR 2741
+class S:
+    __slots__ = ('a', '__dict__')
+
+S().b = 2
+
+# PR 2742
+class P:
+    __slots__ = ('__priv',)
+    def __init__(self, v):
+        self.__priv = v
+
+assert P(5)._P__priv == 5
+
+# PR 2743
+class T:
+    __slots__ = ('a',)
+
+t = T()
+assert t.__getstate__() is None  # after
+
+t.a = 1
+assert t.__getstate__() == (None, {'a': 1})  # after
+
+# PR 2746
+class Meta(type):
+
+    def __eq__(self, other):
+        return self.tag == other.tag
+
+A = Meta('X', (), {'tag': 1})
+B = Meta('X', (), {'tag': 1})
+assert A == B
 
 print('passed all tests..')

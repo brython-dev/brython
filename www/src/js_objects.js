@@ -41,9 +41,9 @@ $B.pyobj2structuredclone = function(obj, strict) {
     }else if(Array.isArray(obj) || $B.exact_type(obj, _b_.list) ||
             $B.exact_type(obj, _b_.tuple) ||
             $B.exact_type(obj, js_array)){
-        let res = new Array(obj.length);
+        let res = new Array(obj.length)
         for (var i = 0, len = obj.length; i < len; ++i) {
-            res[i] = $B.pyobj2structuredclone(obj[i]);
+            res[i] = $B.pyobj2structuredclone(obj[i])
         }
         return res
     } else if ($B.is_dict(obj)) {
@@ -184,7 +184,7 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
         // set it as non-enumerable, prevents issues when looping on it in JS.
         /*
         try {
-            Object.defineProperty(jsobj, "$is_js_array", {value: true});
+            Object.defineProperty(jsobj, "$is_js_array", {value: true})
         } catch (err) {
             // ignore; cf. issue #2379
         }
@@ -221,7 +221,7 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
         _this = _this === undefined ? null : _this
 
         if (_this === null) {
-            const pyobj = jsobj[PYOBJFCT];
+            const pyobj = jsobj[PYOBJFCT]
             if (pyobj !== undefined) {
                 return pyobj
             }
@@ -264,7 +264,7 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
         }
 
         if (_this === null) {
-            jsobj[PYOBJFCT] = res;
+            jsobj[PYOBJFCT] = res
         } else if (_this[PYOBJFCTS] !== undefined) {
             _this[PYOBJFCTS].set(jsobj, res)
         }
@@ -474,7 +474,7 @@ function convert_to_python(obj) {
 }
 
 function pyargs2jsargs(pyargs) {
-    var args = new Array(pyargs.length);
+    var args = new Array(pyargs.length)
     for (var i = 0, len = pyargs.length; i < len; i++) {
         var arg = pyargs[i]
         if(arg !== undefined && arg !== null &&
@@ -733,7 +733,7 @@ $B.JSObj.tp_getattro = function(_self, attr) {
             if (typeof class_attr == "function") {
                 return function() {
                     var args = new Array(arguments.length + 1)
-                    args[0] = _self;
+                    args[0] = _self
                     for (var i = 0, len = arguments.length; i < len; i++) {
                         args[i + 1] = arguments[i]
                     }
@@ -1167,7 +1167,29 @@ js_array.mp_length = function(self) {
 }
 
 js_array.mp_subscript = function(self, i) {
+    if ($B.get_class(i) === _b_.slice) {
+        // Slice support: items keep their JS-side representations (like
+        // sq_concat does); access converts via jsobj2pyobj as usual.
+        var indices = _b_.slice.tp_funcs.indices(i, self.length),
+            start = indices[0],
+            stop = indices[1],
+            step = indices[2],
+            res = []
+        if (step > 0) {
+            for (var k = start; k < stop; k += step) {
+                res.push(self[k])
+            }
+        } else {
+            for (var k = start; k > stop; k += step) {
+                res.push(self[k])
+            }
+        }
+        return res
+    }
     i = $B.PyNumber_Index(i)
+    if (i < 0) {
+        i += self.length
+    }
     return jsobj2pyobj(self[i])
 }
 

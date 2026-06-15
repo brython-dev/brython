@@ -67,7 +67,7 @@ var VALID_FUTURES = ["nested_scopes",
 
 $B.future_features = function(mod, filename) {
     var features = 0
-    var i = 0;
+    var i = 0
     if (mod.body[0] instanceof $B.ast.Expr) {
         if(mod.body[0].value instanceof $B.ast.Constant &&
                 typeof mod.body[0].value.value == "string"){
@@ -401,15 +401,15 @@ if (!($B.isWebWorker || $B.isNode)) {
     var startup_observer = new MutationObserver(function(mutations) {
       for (var mutation of mutations) {
         for (var addedNode of mutation.addedNodes) {
-          addPythonScript(addedNode);
+          addPythonScript(addedNode)
         }
       }
-    });
+    })
 
     startup_observer.observe(document.documentElement, {
       childList: true,
       subtree: true
-    });
+    })
 }
 
 var brython_options = $B.brython_options = {}
@@ -556,7 +556,7 @@ var brython = $B.parser.brython = function(options) {
             var inject_observer = new MutationObserver(function(mutations) {
               for (var mutation of mutations) {
                 for (var addedNode of mutation.addedNodes) {
-                  injectPythonScript(addedNode);
+                  injectPythonScript(addedNode)
                 }
               }
             })

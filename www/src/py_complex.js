@@ -111,7 +111,7 @@ function c_quot(a, b) {
     } else if (abs_bimag >= abs_breal) {
         /* divide tops and bottom by b.imag */
         let ratio = b.real.value / b.imag.value,
-            denom = b.real.value * ratio + b.imag.value;
+            denom = b.real.value * ratio + b.imag.value
         if (b.imag.value == 0.0) {
             $B.RAISE(_b_.ZeroDivisionError, )
         }

@@ -9,7 +9,7 @@ vnum = '.'.join(str(num) for num in version.version[:2])
 
 import urllib.request
 
-f = open('Python.asdl', encoding='utf-8')
+f = open(f'Python{vnum}.asdl', encoding='utf-8')
 type_def = False
 ast_options = []
 ast_types = {}

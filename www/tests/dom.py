@@ -191,5 +191,8 @@ body <= ifr
 # print(ifr.contentWindow)
 #del ifr
 
+# issue 2748
+body = document.select_one("body")
+assert_raises(KeyError, body.closest, 'toto')
 
 print('all tests pass...')
