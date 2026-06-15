@@ -62,12 +62,26 @@ error.$factory = function(message) {
     return {
         ob_type: error,
         msg: message,
-        args: $B.fast_tuple([]),
+        args: $B.fast_tuple([message]),
         __cause__: _b_.None,
         __context__: _b_.None,
         __suppress_context__: false
     }
 }
+
+// JS-side instance props (msg, pattern, pos, lineno, colno) are invisible
+// to Python's attribute lookup — only entries in tp_funcs / tp_getset
+// surface. Without these getters, `re.error("x").msg` raises
+// `AttributeError`. CPython exposes these as direct read-only attributes.
+var error_funcs = error.tp_funcs = {}
+;["msg", "pattern", "pos", "lineno", "colno"].forEach(function(name){
+    var dflt = (name == "lineno" || name == "colno") ? 1 : _b_.None
+    error_funcs[name + "_get"] = function(self){
+        return self[name] === undefined ? dflt : self[name]
+    }
+    error_funcs[name + "_set"] = _b_.None
+})
+error.tp_getset = ["msg", "pattern", "pos", "lineno", "colno"]
 
 error.tp_repr = function(self) {
     var s = self.msg + ' at position ' + self.pos
