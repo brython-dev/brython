@@ -924,23 +924,30 @@ $B.$hash = function(obj) {
     if (obj.__hashvalue__ !== undefined) {
         return obj.__hashvalue__
     }
+    var res
     if (typeof obj === "boolean") {
         return obj ? 1 : 0
     } else if (typeof obj === "number") {
-        return obj
-    }
-    var klass = $B.get_class(obj)
-    var hash_func = $B.search_slot(klass, 'tp_hash', $B.NULL)
-    if (hash_func !== $B.NULL && hash_func !== _b_.None) {
-        var res = hash_func(obj)
-        if (! $B.is_int(res)) {
-            $B.RAISE(_b_.TypeError, '__hash__ method should return an integer')
+        res = obj
+    } else {
+        var klass = $B.get_class(obj)
+        var hash_func = $B.search_slot(klass, 'tp_hash', $B.NULL)
+        if (hash_func !== $B.NULL && hash_func !== _b_.None) {
+            res = hash_func(obj)
+            if (! $B.is_int(res)) {
+                $B.RAISE(_b_.TypeError, '__hash__ method should return an integer')
+            }
+        } else {
+            $B.RAISE(_b_.TypeError, "unhashable type: '" +
+                    _b_.str.$factory($B.jsobj2pyobj(obj)) + "'"
+            )
         }
-        return res
     }
-    $B.RAISE(_b_.TypeError, "unhashable type: '" +
-            _b_.str.$factory($B.jsobj2pyobj(obj)) + "'"
-    )
+    // CPython reserves -1 as the "hash failed" sentinel, so any value that
+    // would hash to -1 is remapped to -2 (hash(-1) == -2, and likewise
+    // hash(Decimal('-1')) etc.).
+    if (res === -1) { res = -2 }
+    return res
 }
 
 var help = _b_.help = function(obj) {
