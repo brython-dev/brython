@@ -1336,6 +1336,30 @@ Pattern_funcs.groupindex_get = function(self) {
 
 Pattern_funcs.groupindex_set = _b_.None
 
+// CPython's re.Pattern exposes `pattern`, `flags` and `groups` as read-only
+// attributes (declared as PyMemberDef on the C type). They're set as JS
+// props in `$factory`, but Brython's attribute lookup only sees descriptors
+// listed in `tp_getset` / `tp_methods` — not raw JS instance props — so
+// without these getters `re.compile('x').pattern` raises `AttributeError`.
+// unittest's `assertRaisesRegex` relies on `expected_regex.pattern` when
+// the regex doesn't match and reports the failure, masking real test
+// failures with this AttributeError.
+
+Pattern_funcs.pattern_get = function(self){
+    return self.pattern
+}
+Pattern_funcs.pattern_set = _b_.None
+
+Pattern_funcs.flags_get = function(self){
+    return self.flags
+}
+Pattern_funcs.flags_set = _b_.None
+
+Pattern_funcs.groups_get = function(self){
+    return self.groups
+}
+Pattern_funcs.groups_set = _b_.None
+
 Pattern_funcs.match = function(self, string) {
     var $ = $B.args("match", 4,
                 {self: null, string: null, pos: null, endpos: null},
@@ -1403,7 +1427,7 @@ Pattern.tp_methods = [
     "finditer", "fullmatch", "match", "scanner", "search", "split", "sub"
 ]
 
-Pattern.tp_getset = ["groupindex"]
+Pattern.tp_getset = ["groupindex", "pattern", "flags", "groups"]
 
 $B.set_func_names(Pattern, "re")
 $B.finalize_type(Pattern)
