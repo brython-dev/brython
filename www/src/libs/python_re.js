@@ -132,7 +132,11 @@ function warn(klass, message, pos, text) {
         }
         var col_offset = pos - line_start
     }
-    var warning = klass.$factory(message)
+    // Was `klass.$factory(message)` — fails for built-in exception classes
+    // like DeprecationWarning / FutureWarning that are made via
+    // `make_builtin_exception` and don't expose a $factory. $B.$call
+    // handles both paths (tp_call OR $factory).
+    var warning = $B.$call(klass, message)
     warning.pos = pos
     warning.args[1] = [file, lineno, col_offset, lineno, col_offset,
         line]
