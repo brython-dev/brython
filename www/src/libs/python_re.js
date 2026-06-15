@@ -3343,9 +3343,15 @@ GroupMO.prototype.groups = function(_default) {
 var MatchObject = $B.make_type("Match")
 
 MatchObject.$factory = function(mo) {
+    // Populate the JS instance props referenced by tp_members (endpos /
+    // pos / re). Previously only `mo` was set, so member-descriptor
+    // access for any of those returned UndefinedType.
     return {
         ob_type: MatchObject,
-        mo
+        mo,
+        endpos: mo && mo.endpos !== undefined ? mo.endpos : _b_.None,
+        pos: mo && mo.start !== undefined ? mo.start : 0,
+        re: mo && mo.node && mo.node.pattern !== undefined ? mo.node.pattern : _b_.None
     }
 }
 
@@ -3373,9 +3379,10 @@ MatchObject.tp_new = function(cls, args, kw) {
     var [mo] = $B.unpack_args('MatchObject', args, ['mo'], {})
     var res = MatchObject.$factory(mo)
     res.ob_type = cls
-    res.endpos = self.mo.endpos
-    res.pos = self.mo.start
-    res.re = self.mo.node.pattern
+    // Previously: `self.mo.endpos` etc. — `self` is undefined in tp_new
+    // (only `cls` and the args are in scope). The assignments threw
+    // ReferenceError; instances had no endpos/pos/re. `$factory` above
+    // now populates these from `mo`.
     return res
 }
 
