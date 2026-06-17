@@ -625,6 +625,7 @@ $B._FileIO.tp_init = function() {
         mode = $.mode,
         closefd = $.closefd,
         opener = $.opener
+    _self.$name = name
 
     var flags = 0
     var ret = 0
@@ -750,6 +751,11 @@ $B._FileIO.tp_init = function() {
 }
 
 var _FileIO_funcs = $B._FileIO.tp_funcs = {}
+
+_FileIO_funcs.name_get = function(_self) {
+    return _self.$name
+}
+$B._FileIO.tp_getset = ["name"]
 
 _FileIO_funcs.readable = function(_self) {
     if (_self.fd < 0) {
