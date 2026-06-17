@@ -467,6 +467,29 @@ function _bufferedreader_read_fast(_self, n) {
 function _bufferedreader_readline(_self) {
     CHECK_CLOSED(_self)
     var raw = _self.raw
+    if (raw.$bytes === undefined) {
+        // stream raw without a $bytes snapshot: buffer read() output and hand
+        // out one line at a time
+        if (_self.$linebuf === undefined) {
+            _self.$linebuf = []
+            _self.$linebuf_eof = false
+        }
+        var lbuf = _self.$linebuf
+        var lnl = lbuf.indexOf(10)
+        while (lnl === -1 && !_self.$linebuf_eof) {
+            var ldata = $B.$call($B.$getattr(raw, 'read'), DEFAULT_BUFFER_SIZE)
+            if (ldata === _b_.None || _b_.len(ldata) === 0) {
+                _self.$linebuf_eof = true
+                break
+            }
+            for (var lsrc = ldata.source, li = 0, lL = lsrc.length; li < lL; li++) {
+                lbuf.push(lsrc[li])
+            }
+            lnl = lbuf.indexOf(10)
+        }
+        var lend = lnl === -1 ? lbuf.length : lnl + 1
+        return $B.fast_bytes(lbuf.splice(0, lend))
+    }
     if (raw.$byte_pos >= raw.$bytes.length) {
         return $B.fast_bytes()
     }
