@@ -520,7 +520,7 @@ BytesIO_funcs.close = function(_self) {
         $B.$call($B.$getattr(_self._buffer, 'clear'))
     }
     _self.exports = 0
-    $B._BufferedIOBase.close(_self)
+    $B._BufferedIOBase.tp_funcs.close(_self)
 }
 
 BytesIO_funcs.read = function() {
