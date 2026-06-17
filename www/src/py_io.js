@@ -509,7 +509,7 @@ _BufferedReader_funcs.peek = function(_self, size) {
 }
 
 _BufferedReader_funcs.seek = function(_self, offset, whence) {
-    var $ = $B.args('seek', 2, {self: null, offset: null, whence: null},
+    var $ = $B.args('seek', 3, {self: null, offset: null, whence: null},
                 arguments, {whence: 0})
     var _self = $.self,
         offset = $.offset,
@@ -518,14 +518,20 @@ _BufferedReader_funcs.seek = function(_self, offset, whence) {
     if (whence === undefined) {
         whence = 0
     }
-    if (whence === 0) {
-        _self.$byte_pos = offset
-    } else if (whence === 1) {
-        _self.$byte_pos += offset
-    } else if (whence === 2) {
-        _self.$byte_pos = self.$bytes.length + offset
+    var raw = _self.raw
+    // a raw stream without a $bytes snapshot seeks itself; otherwise move the
+    // cursor read() consults on the raw object
+    if (raw.$bytes === undefined) {
+        return $B.$call($B.$getattr(raw, 'seek'), offset, whence)
     }
-    return _b_.None
+    if (whence === 0) {
+        raw.$byte_pos = offset
+    } else if (whence === 1) {
+        raw.$byte_pos = (raw.$byte_pos || 0) + offset
+    } else if (whence === 2) {
+        raw.$byte_pos = raw.$bytes.length + offset
+    }
+    return raw.$byte_pos
 }
 
 function CHECK_CLOSED(fileobj, msg) {
