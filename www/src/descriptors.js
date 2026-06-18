@@ -405,7 +405,9 @@ $B.getset_descriptor.$factory = function(klass, attr, getset) {
 
 /* getset_descriptor start */
 $B.getset_descriptor.tp_descr_set = function(self, obj, value) {
-    if (self.setter === _b_.None) {
+    // a getset with no callable setter (None, or omitted/undefined like the
+    // read-only 'raw' getset) is read-only: raise AttributeError, never call it
+    if (typeof self.setter !== 'function') {
         $B.RAISE_ATTRIBUTE_ERROR(
             `attribute '${self.d_name}' of '${self.d_type.tp_name}' objects is not writable`,
             self,
