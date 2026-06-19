@@ -925,18 +925,23 @@ function startswith() {
         }
         return res
     } else if ($B.is_tuple(prefix)) {
-        let items = []
-        for (let i = 0; i < prefix.length; i++) {
-            if ($B.$isinstance(prefix[i], [bytes, bytearray])) {
-                items = items.concat(prefix[i].source)
-            } else {
+        // A tuple of prefixes matches if ANY one matches (CPython semantics).
+        // The old code concatenated every tuple item into a single bytes and
+        // tested that — wrong — and a block-hoisted `let prefix` shadow put the
+        // param in the temporal dead zone, so the branch threw "can't access
+        // 'prefix' before initialization" before ever returning the wrong
+        // answer (bytes.startswith with a tuple, as in json.detect_encoding,
+        // hit it). Mirror endswith: test each prefix individually.
+        for (let sub of prefix) {
+            if (! $B.$isinstance(sub, [bytes, bytearray])) {
                 $B.RAISE(_b_.TypeError, "startswith first arg must be " +
-                    "bytes or a tuple of bytes, not " +
-                    $B.class_name(prefix))
+                    "bytes or a tuple of bytes, not " + $B.class_name(prefix))
+            }
+            if (startswith.call(cls, self, sub, start)) {
+                return true
             }
         }
-        let prefix = cls.$factory(items)
-        return startswith.call(cls, self, prefix, start)
+        return false
     } else {
         $B.RAISE(_b_.TypeError, "startswith first arg must be bytes " +
             "or a tuple of bytes, not " + $B.class_name(prefix))
