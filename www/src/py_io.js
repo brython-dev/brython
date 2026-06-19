@@ -944,11 +944,16 @@ _TextIOWrapper_funcs.readline = function() {
     if (size < 0) {
         size = _self.$text_length
     }
+    // honor the newline argument as a single-char separator ('\n' or '\r');
+    // None/'' or a multi-char value fall back to '\n' — does NOT fix the
+    // multi-character case (e.g. '\r\n') or universal newline recognition
+    var nl = _self.$newline
+    var term = (nl === _b_.None || nl.length !== 1) ? '\n' : nl
     while (1) {
         var char = _self.$text_iterator.next()
         if (char.done) {
             break
-        } else if (char.value == '\n') {
+        } else if (char.value == term) {
             res += char.value
             break
         } else {
