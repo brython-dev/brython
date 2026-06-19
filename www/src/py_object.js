@@ -656,7 +656,12 @@ object_funcs.__reduce_ex__ = function(self, protocol) {
     var arg2 = [klass]
     var newargs = getNewArguments(self, klass)
     if (newargs) {
-        arg2 = arg2.concat(newargs.args)
+        if (newargs.kwargs && _b_.dict.mp_length(newargs.kwargs) > 0) {
+            res = [$B.module_getattr($B.imported.copyreg, '__newobj_ex__')]
+            arg2 = [klass, newargs.args, newargs.kwargs]
+        } else {
+            arg2 = arg2.concat(newargs.args)
+        }
     }
     res.push($B.fast_tuple(arg2))
     var getstate = $B.search_in_mro(klass, '__getstate__')
