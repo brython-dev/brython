@@ -2142,6 +2142,7 @@ var decode = $B.decode = function(obj, encoding, errors) {
           }
           return s
       case "latin_1":
+      case "iso8859":
       case "windows1252":
       case "iso-8859-1":
       case "iso8859-1":
@@ -2258,6 +2259,7 @@ var encode = $B.encode = function() {
         case "latin-1":
         case "latin_1":
         case "L1":
+        case "iso8859":
         case "iso8859_1":
         case "iso_8859_1":
         case "8859":
