@@ -486,7 +486,7 @@ function _bufferedreader_readline(_self) {
 $B._BufferedReader = $B.make_builtin_class('_BufferedReader',
     [$B._BufferedIOBase])
 // expose the underlying raw stream, like CPython (decomp._buffer.raw.tell())
-$B._BufferedReader.tp_getset = ['raw']
+$B._BufferedReader.tp_getset = ['raw', 'name']
 
 $B._BufferedReader.tp_init = function(_self, raw, buffer_size=DEFAULT_BUFFER_SIZE) {
     _self.raw = raw
@@ -499,9 +499,10 @@ _BufferedReader_funcs.raw_get = function(_self) {
     return _self.raw
 }
 
-// CPython BufferedReader.fileno() forwards to the wrapped raw stream
-_BufferedReader_funcs.fileno = function(_self) {
-    return $B.$call($B.$getattr(_self.raw, 'fileno'))
+// CPython BufferedReader.name forwards to the wrapped raw stream (read-only,
+// like the sibling 'raw' getset: no setter)
+_BufferedReader_funcs.name_get = function(_self) {
+    return $B.$getattr(_self.raw, 'name')
 }
 
 _BufferedReader_funcs.peek = function(_self, size) {
