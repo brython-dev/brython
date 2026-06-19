@@ -1,6 +1,8 @@
 // Regular expression
 (function($B) {
 
+var re_module =  $B.imported.re
+
 var _debug = {value: 0}
 
 var _b_ = $B.builtins
@@ -56,29 +58,7 @@ var $error_2 = {
     __module__: "re"
 }
 
-var error = $B.make_type("error", [_b_.Exception])
-
-error.$factory = function(message) {
-    return {
-        ob_type: error,
-        msg: message,
-        args: $B.fast_tuple([]),
-        __cause__: _b_.None,
-        __context__: _b_.None,
-        __suppress_context__: false
-    }
-}
-
-error.tp_repr = function(self) {
-    var s = self.msg + ' at position ' + self.pos
-    if (self.lineno > 1) {
-        s += ` (line ${self.lineno}, column ${self.colno})`
-    }
-    return s
-}
-
-$B.set_func_names(error, "re")
-$B.finalize_type(error)
+var error = $B.module_getattr(re_module, "error")
 
 function $last(t) {
     return t[t.length - 1]
@@ -3394,7 +3374,7 @@ MatchObject_funcs.__deepcopy__ = function(self) {
 }
 
 MatchObject_funcs.end = function(self) {
-    var $ = $B.args('end', 2, {self: null, group: null}, arguments, 
+    var $ = $B.args('end', 2, {self: null, group: null}, arguments,
                 {group: 0})
     var group = MatchObject.tp_funcs.group(self, $.group)
     if (group === _b_.None) {
@@ -3551,7 +3531,7 @@ MatchObject_funcs.span = function() {
 }
 
 MatchObject_funcs.start = function(self) {
-    var $ = $B.args('end', 2, {self: null, group: null}, 
+    var $ = $B.args('end', 2, {self: null, group: null},
                 arguments, {group: 0})
     var group = MatchObject.tp_funcs.group(self, $.group)
     if (group === _b_.None) {
