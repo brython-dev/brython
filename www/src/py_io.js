@@ -516,6 +516,12 @@ $B._BufferedReader.tp_init = function(_self, raw, buffer_size=DEFAULT_BUFFER_SIZ
 
 var _BufferedReader_funcs = $B._BufferedReader.tp_funcs = {}
 
+
+// CPython BufferedReader.fileno() forwards to the wrapped raw stream
+_BufferedReader_funcs.fileno = function(_self) {
+    return $B.$call($B.$getattr(_self.raw, 'fileno'))
+}
+
 _BufferedReader_funcs.raw_get = function(_self) {
     return _self.raw
 }
