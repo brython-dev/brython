@@ -225,7 +225,14 @@ builtin_function_or_method_funcs.__qualname___get = function(self) {
 builtin_function_or_method_funcs.__qualname___set = _b_.None
 
 builtin_function_or_method_funcs.__reduce__ = function(self) {
-    return self.$function_infos[$B.func_attrs.__name__]
+    var name = self.ml ? self.ml.ml_name :
+        self.$function_infos[$B.func_attrs.__name__]
+    if(self.m_self !== undefined && self.m_self !== null &&
+            ! $B.$isinstance(self.m_self, $B.module)){
+        return $B.fast_tuple([_b_.getattr,
+            $B.fast_tuple([self.m_self, name])])
+    }
+    return name
 }
 
 builtin_function_or_method_funcs.__self___get = function(self) {
