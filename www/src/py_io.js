@@ -43,7 +43,7 @@ const DEFAULT_BUFFER_SIZE = (128 * 1024)  /* bytes */
 
 $B.make_IOUnsupported = function() {
     if ($B._IOUnsupported === undefined) {
-        $B._IOUnsupported = $B.make_type('UnsupportedOperation', [_b_.OSError])
+        $B._IOUnsupported = $B.make_type('UnsupportedOperation', [_b_.OSError, _b_.ValueError])
         $B._IOUnsupported.__module__ = '_io'
         $B.finalize_type($B._IOUnsupported)
     }
@@ -486,7 +486,7 @@ function _bufferedreader_readline(_self) {
 $B._BufferedReader = $B.make_builtin_class('_BufferedReader',
     [$B._BufferedIOBase])
 // expose the underlying raw stream, like CPython (decomp._buffer.raw.tell())
-$B._BufferedReader.tp_getset = ['raw']
+$B._BufferedReader.tp_getset = ['raw', 'name']
 
 $B._BufferedReader.tp_init = function(_self, raw, buffer_size=DEFAULT_BUFFER_SIZE) {
     _self.raw = raw
@@ -497,6 +497,12 @@ var _BufferedReader_funcs = $B._BufferedReader.tp_funcs = {}
 
 _BufferedReader_funcs.raw_get = function(_self) {
     return _self.raw
+}
+
+// CPython BufferedReader.name forwards to the wrapped raw stream (read-only,
+// like the sibling 'raw' getset: no setter)
+_BufferedReader_funcs.name_get = function(_self) {
+    return $B.$getattr(_self.raw, 'name')
 }
 
 _BufferedReader_funcs.peek = function(_self, size) {
@@ -537,6 +543,10 @@ function CHECK_CLOSED(fileobj, msg) {
 _BufferedReader_funcs.read = function(self, n=-1) {
     var res
 
+    if (n === _b_.None) {
+        n = -1
+    }
+    n = $B.PyNumber_Index(n)
     if (n < -1) {
         $B.RAISE(_b_.ValueError, "read length must be non-negative or -1")
     }
@@ -575,7 +585,7 @@ _BufferedReader_funcs.writable = function(_self) {
 }
 
 $B._BufferedReader.tp_methods = [
-    "peek", "seek", "read", "readline", "seekable", "readable", "writable"
+    "peek", "seek", "read", "readline", "seekable", "readable", "writable", "fileno"
 ]
 
 $B.set_func_names($B._BufferedReader, '_io')
@@ -1011,6 +1021,15 @@ function _io_open_impl(file, mode, buffering, encoding, errors, newline,
         }
     }
 
+    var name_obj = path_or_fd
+    if (! $B.is_str(path_or_fd) &&
+            $B.$isinstance(path_or_fd, [_b_.bytes, _b_.bytearray])) {
+        // CPython's open() accepts a bytes filename (decoded via os.fsdecode),
+        // but keeps the original bytes as the file's name; fsdecode only feeds
+        // the actual open.
+        path_or_fd = $B.$call($B.$getattr(path_or_fd, 'decode'), 'utf-8')
+    }
+
     if (! $B.is_str(path_or_fd)) {
         $B.RAISE(_b_.TypeError, `invalid file: ${file}`)
     }
@@ -1111,6 +1130,9 @@ function _io_open_impl(file, mode, buffering, encoding, errors, newline,
     raw = $B.$call(RawIO_class, path_or_fd, rawmode,
                                 closefd ? true : false,
                                 opener)
+    if (name_obj !== path_or_fd) {
+        raw.$name = name_obj
+    }
     result = raw
 
     modeobj = mode
