@@ -1018,7 +1018,7 @@ _b_.float.nb_int = function(self) {
 }
 
 _b_.float.nb_float = function(self) {
-    return self
+    return float_value(self)
 }
 
 _b_.float.nb_floor_divide = function(self, other) {
