@@ -537,6 +537,10 @@ function CHECK_CLOSED(fileobj, msg) {
 _BufferedReader_funcs.read = function(self, n=-1) {
     var res
 
+    if (n === _b_.None) {
+        n = -1
+    }
+    n = $B.PyNumber_Index(n)
     if (n < -1) {
         $B.RAISE(_b_.ValueError, "read length must be non-negative or -1")
     }
