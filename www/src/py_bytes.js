@@ -2007,7 +2007,7 @@ var decode = $B.decode = function(obj, encoding, errors) {
       case "U8":
       case "UTF":
           if (globalThis.TextDecoder) {
-              var decoder = new TextDecoder('utf-8', {fatal: true}),
+              var decoder = new TextDecoder('utf-8', {fatal: true, ignoreBOM: true}),
                   array = new Uint8Array(b)
               try {
                   return decoder.decode(array)

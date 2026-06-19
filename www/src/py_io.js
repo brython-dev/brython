@@ -398,12 +398,10 @@ function _bufferediobase_readinto_generic(_self, buffer, readinto1) {
 var _BufferedIOBase_funcs = $B._BufferedIOBase.tp_funcs = {}
 
 _BufferedIOBase_funcs.__exit__ = function(self, type, value, traceback) {
-    try {
-        $B.$call($B.$getattr(self, 'close'))
-        return true
-    } catch (err) {
-        return false
-    }
+    // like CPython IOBase.__exit__ = self.close(): returns None, never
+    // suppresses the with-block exception
+    $B.$call($B.$getattr(self, 'close'))
+    return _b_.None
 }
 
 _BufferedIOBase_funcs.readinto = function(_self, buffer) {
@@ -467,6 +465,29 @@ function _bufferedreader_read_fast(_self, n) {
 function _bufferedreader_readline(_self) {
     CHECK_CLOSED(_self)
     var raw = _self.raw
+    if (raw.$bytes === undefined) {
+        // stream raw without a $bytes snapshot: buffer read() output and hand
+        // out one line at a time
+        if (_self.$linebuf === undefined) {
+            _self.$linebuf = []
+            _self.$linebuf_eof = false
+        }
+        var lbuf = _self.$linebuf
+        var lnl = lbuf.indexOf(10)
+        while (lnl === -1 && !_self.$linebuf_eof) {
+            var ldata = $B.$call($B.$getattr(raw, 'read'), DEFAULT_BUFFER_SIZE)
+            if (ldata === _b_.None || _b_.len(ldata) === 0) {
+                _self.$linebuf_eof = true
+                break
+            }
+            for (var lsrc = ldata.source, li = 0, lL = lsrc.length; li < lL; li++) {
+                lbuf.push(lsrc[li])
+            }
+            lnl = lbuf.indexOf(10)
+        }
+        var lend = lnl === -1 ? lbuf.length : lnl + 1
+        return $B.fast_bytes(lbuf.splice(0, lend))
+    }
     if (raw.$byte_pos >= raw.$bytes.length) {
         return $B.fast_bytes()
     }
@@ -515,7 +536,7 @@ _BufferedReader_funcs.peek = function(_self, size) {
 }
 
 _BufferedReader_funcs.seek = function(_self, offset, whence) {
-    var $ = $B.args('seek', 2, {self: null, offset: null, whence: null},
+    var $ = $B.args('seek', 3, {self: null, offset: null, whence: null},
                 arguments, {whence: 0})
     var _self = $.self,
         offset = $.offset,
@@ -524,14 +545,20 @@ _BufferedReader_funcs.seek = function(_self, offset, whence) {
     if (whence === undefined) {
         whence = 0
     }
-    if (whence === 0) {
-        _self.$byte_pos = offset
-    } else if (whence === 1) {
-        _self.$byte_pos += offset
-    } else if (whence === 2) {
-        _self.$byte_pos = self.$bytes.length + offset
+    var raw = _self.raw
+    // a raw stream without a $bytes snapshot seeks itself; otherwise move the
+    // cursor read() consults on the raw object
+    if (raw.$bytes === undefined) {
+        return $B.$call($B.$getattr(raw, 'seek'), offset, whence)
     }
-    return _b_.None
+    if (whence === 0) {
+        raw.$byte_pos = offset
+    } else if (whence === 1) {
+        raw.$byte_pos = (raw.$byte_pos || 0) + offset
+    } else if (whence === 2) {
+        raw.$byte_pos = raw.$bytes.length + offset
+    }
+    return raw.$byte_pos
 }
 
 function CHECK_CLOSED(fileobj, msg) {
@@ -635,6 +662,7 @@ $B._FileIO.tp_init = function() {
         mode = $.mode,
         closefd = $.closefd,
         opener = $.opener
+    _self.$name = name
 
     var flags = 0
     var ret = 0
@@ -760,6 +788,11 @@ $B._FileIO.tp_init = function() {
 }
 
 var _FileIO_funcs = $B._FileIO.tp_funcs = {}
+
+_FileIO_funcs.name_get = function(_self) {
+    return _self.$name
+}
+$B._FileIO.tp_getset = ["name"]
 
 _FileIO_funcs.readable = function(_self) {
     if (_self.fd < 0) {
@@ -944,11 +977,16 @@ _TextIOWrapper_funcs.readline = function() {
     if (size < 0) {
         size = _self.$text_length
     }
+    // honor the newline argument as a single-char separator ('\n' or '\r');
+    // None/'' or a multi-char value fall back to '\n' — does NOT fix the
+    // multi-character case (e.g. '\r\n') or universal newline recognition
+    var nl = _self.$newline
+    var term = (nl === _b_.None || nl.length !== 1) ? '\n' : nl
     while (1) {
         var char = _self.$text_iterator.next()
         if (char.done) {
             break
-        } else if (char.value == '\n') {
+        } else if (char.value == term) {
             res += char.value
             break
         } else {
