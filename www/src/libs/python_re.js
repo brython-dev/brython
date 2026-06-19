@@ -1205,7 +1205,7 @@ Pattern.tp_richcompare = function(self, other, op) {
             res = Pattern_eq(self, other)
             break
         case '__ne__':
-            res = ! Patttern_eq(self, other)
+            res = ! Pattern_eq(self, other)
             break
         default:
             res = _b_.NotImplemented
@@ -1231,7 +1231,7 @@ Pattern.tp_repr = function(self) {
     var text = self.$pattern.text,
         s = text
     if (self.$pattern.type == "bytes") {
-        s = _b_.str.$factory(_b_.str.encode(s, 'latin-1'))
+        s = _b_.str.$factory(_b_.str.tp_funcs.encode(s, 'latin-1'))
     } else {
         s = _b_.repr(s)
     }
@@ -3129,7 +3129,7 @@ function subn(pattern, repl, string, count, flags) {
         res += from_codepoint_list(string.codepoints.slice(pos))
     }
     if (pattern.type === "bytes") {
-        res = _b_.str.encode(res, "latin-1")
+        res = _b_.str.tp_funcs.encode(res, "latin-1")
     }
     return [res, nb_sub]
 }
@@ -3883,7 +3883,7 @@ var module = {
         }
         res = from_codepoint_list(res, data.type)
         if (data.type == "bytes" && $B.is_str(res)) {
-            res = _b_.str.encode(res, 'latin1')
+            res = _b_.str.tp_funcs.encode(res, 'latin1')
         }
         return res
     },
@@ -4147,7 +4147,7 @@ var module = {
                 function(x) {
                     return $B.is_bytes(x) ?
                                x :
-                               _b_.str.encode(x, "latin-1")
+                               _b_.str.tp_funcs.encode(x, "latin-1")
                 }
             )
         }
