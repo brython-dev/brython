@@ -398,12 +398,10 @@ function _bufferediobase_readinto_generic(_self, buffer, readinto1) {
 var _BufferedIOBase_funcs = $B._BufferedIOBase.tp_funcs = {}
 
 _BufferedIOBase_funcs.__exit__ = function(self, type, value, traceback) {
-    try {
-        $B.$call($B.$getattr(self, 'close'))
-        return true
-    } catch (err) {
-        return false
-    }
+    // like CPython IOBase.__exit__ = self.close(): returns None, never
+    // suppresses the with-block exception
+    $B.$call($B.$getattr(self, 'close'))
+    return _b_.None
 }
 
 _BufferedIOBase_funcs.readinto = function(_self, buffer) {
