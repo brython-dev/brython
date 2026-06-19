@@ -1,6 +1,6 @@
 // brython.js brython.info
 // version [3, 14, 0, 'final', 0]
-// implementation [3, 14, 2, 'dev', 0]
+// implementation [3, 14, 3, 'dev', 0]
 // version compiled from commented, indented source files at
 // github.com/brython-dev/brython
 "use strict";
@@ -722,10 +722,10 @@ $B.unicode_bidi_whitespace=[9,10,11,12,13,28,29,30,31,32,133,5760,8192,8193,8194
 $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8":"\u01c8","\u01c9":"\u01c8","\u01c7":"\u01c8","\u01cb":"\u01cb","\u01cc":"\u01cb","\u01ca":"\u01cb","\u01f2":"\u01f2","\u01f3":"\u01f2","\u01f1":"\u01f2","\u1f88":"\u1f88","\u1f80":"\u1f88","\u1f08\u0399":"\u1f88","\u1f89":"\u1f89","\u1f81":"\u1f89","\u1f09\u0399":"\u1f89","\u1f8a":"\u1f8a","\u1f82":"\u1f8a","\u1f0a\u0399":"\u1f8a","\u1f8b":"\u1f8b","\u1f83":"\u1f8b","\u1f0b\u0399":"\u1f8b","\u1f8c":"\u1f8c","\u1f84":"\u1f8c","\u1f0c\u0399":"\u1f8c","\u1f8d":"\u1f8d","\u1f85":"\u1f8d","\u1f0d\u0399":"\u1f8d","\u1f8e":"\u1f8e","\u1f86":"\u1f8e","\u1f0e\u0399":"\u1f8e","\u1f8f":"\u1f8f","\u1f87":"\u1f8f","\u1f0f\u0399":"\u1f8f","\u1f98":"\u1f98","\u1f90":"\u1f98","\u1f28\u0399":"\u1f98","\u1f99":"\u1f99","\u1f91":"\u1f99","\u1f29\u0399":"\u1f99","\u1f9a":"\u1f9a","\u1f92":"\u1f9a","\u1f2a\u0399":"\u1f9a","\u1f9b":"\u1f9b","\u1f93":"\u1f9b","\u1f2b\u0399":"\u1f9b","\u1f9c":"\u1f9c","\u1f94":"\u1f9c","\u1f2c\u0399":"\u1f9c","\u1f9d":"\u1f9d","\u1f95":"\u1f9d","\u1f2d\u0399":"\u1f9d","\u1f9e":"\u1f9e","\u1f96":"\u1f9e","\u1f2e\u0399":"\u1f9e","\u1f9f":"\u1f9f","\u1f97":"\u1f9f","\u1f2f\u0399":"\u1f9f","\u1fa8":"\u1fa8","\u1fa0":"\u1fa8","\u1f68\u0399":"\u1fa8","\u1fa9":"\u1fa9","\u1fa1":"\u1fa9","\u1f69\u0399":"\u1fa9","\u1faa":"\u1faa","\u1fa2":"\u1faa","\u1f6a\u0399":"\u1faa","\u1fab":"\u1fab","\u1fa3":"\u1fab","\u1f6b\u0399":"\u1fab","\u1fac":"\u1fac","\u1fa4":"\u1fac","\u1f6c\u0399":"\u1fac","\u1fad":"\u1fad","\u1fa5":"\u1fad","\u1f6d\u0399":"\u1fad","\u1fae":"\u1fae","\u1fa6":"\u1fae","\u1f6e\u0399":"\u1fae","\u1faf":"\u1faf","\u1fa7":"\u1faf","\u1f6f\u0399":"\u1faf","\u1fbc":"\u1fbc","\u1fb3":"\u1fbc","\u0391\u0399":"\u1fbc","\u1fcc":"\u1fcc","\u1fc3":"\u1fcc","\u0397\u0399":"\u1fcc","\u1ffc":"\u1ffc","\u1ff3":"\u1ffc","\u03a9\u0399":"\u1ffc"}
 ;
 "use strict";
-__BRYTHON__.implementation=[3,14,2,'dev',0]
+__BRYTHON__.implementation=[3,14,3,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-06-14 11:24:20.071394"
-__BRYTHON__.timestamp=1781429060071
+__BRYTHON__.compiled_date="2026-06-19 14:28:42.184535"
+__BRYTHON__.timestamp=1781872122184
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -6746,11 +6746,12 @@ var start,stop
 if(self.start===None){start=step_is_neg ? len_1 :0}else{
 start=$B.$call(_b_.int,self.start)
 if($B.rich_comp('__gt__',0,start)){start=$B.rich_op('__add__',start,len)
-if($B.rich_comp('__gt__',0,start)){start=0}}
+if($B.rich_comp('__gt__',0,start)){start=step_is_neg ?-1 :0}}
 if($B.rich_comp('__ge__',start,len)){start=step < 0 ? len_1 :len}}
 if(self.stop===None){stop=step_is_neg ?-1 :len}else{
 stop=$B.PyNumber_Index(self.stop)
-if($B.rich_comp('__gt__',0,stop)){stop=$B.rich_op('__add__',stop,len)}
+if($B.rich_comp('__gt__',0,stop)){stop=$B.rich_op('__add__',stop,len)
+if($B.rich_comp('__gt__',0,stop)){stop=step_is_neg ?-1 :0}}
 if($B.rich_comp('__ge__',stop,len)){stop=step_is_neg ? len_1 :len}}
 return{start,stop,step}}
 slice.$factory=function(start,stop,step){var[args,kw]=$B.parse_args_kw('slice',arguments)
@@ -14334,7 +14335,7 @@ $B.assign_dict(_importlib_module,{__name__ :"_importlib",Loader:Loader,VFSFinder
 $B.imported["_importlib"]=_importlib_module})(__BRYTHON__);
 ;
 
-(function($B){$B.builtin_class_flags={builtins:{1073763586:['WindowsError','IsADirectoryError','TypeError','OverflowError','UnicodeTranslateError','BaseException','RuntimeError','ValueError','SyntaxWarning','Exception','UserWarning','NotImplementedError','SystemExit','StopAsyncIteration','RecursionError','NameError','SystemError','OSError','GeneratorExit','ConnectionError','ImportError','InterruptedError','ModuleNotFoundError','PythonFinalizationError','TimeoutError','FutureWarning','EncodingWarning','FileNotFoundError','ProcessLookupError','NotADirectoryError','Warning','BytesWarning','BufferError','BrokenPipeError','EnvironmentError','ChildProcessError','RuntimeWarning','ConnectionResetError','UnicodeEncodeError','PendingDeprecationWarning','BaseExceptionGroup','KeyError','AttributeError','ImportWarning','IOError','ConnectionRefusedError','UnboundLocalError','_IncompleteInputError','ZeroDivisionError','BlockingIOError','FileExistsError','MemoryError','ReferenceError','IndentationError','PermissionError','EOFError','IndexError','FloatingPointError','LookupError','SyntaxError','DeprecationWarning','StopIteration','TabError','ConnectionAbortedError','KeyboardInterrupt','UnicodeDecodeError','UnicodeError','ResourceWarning','AssertionError','ArithmeticError','UnicodeWarning'],1073763848:['ExceptionGroup'],20975874:['bool'],4199682:['bytearray','float'],138417410:['bytes'],21762:['property','super','filter','enumerate','zip','map','classmethod','reversed','staticmethod'],5378:['object','complex'],541087042:['dict'],4216066:['frozenset','set'],20976898:['int'],37770530:['list'],20770:['memoryview'],4386:['range'],20738:['slice'],272635138:['str'],71324962:['tuple'],2155896066:['type'],},types:{20866:['frame','member_descriptor','classmethod_descriptor','async_generator','method-wrapper','coroutine','getset_descriptor','PyCapsule','generator'],22914:['builtin_function_or_method'],20738:['traceback','cell'],4354:['ellipsis','NotImplementedType','code','NoneType'],153858:['function'],20802:['mappingproxy'],153986:['method_descriptor'],22786:['method'],21762:['module'],151938:['wrapper_descriptor'],}}})(__BRYTHON__);
+(function($B){$B.builtin_class_flags={builtins:{1073763586:['ConnectionResetError','GeneratorExit','NotImplementedError','ConnectionRefusedError','AssertionError','KeyError','PermissionError','SystemExit','IndentationError','TimeoutError','BufferError','OSError','BaseExceptionGroup','RecursionError','ReferenceError','SyntaxError','EnvironmentError','ConnectionError','BlockingIOError','NameError','SystemError','TabError','IndexError','UnboundLocalError','OverflowError','ValueError','IsADirectoryError','WindowsError','BrokenPipeError','PendingDeprecationWarning','KeyboardInterrupt','AttributeError','ImportError','UserWarning','ImportWarning','InterruptedError','BytesWarning','EncodingWarning','FloatingPointError','MemoryError','UnicodeWarning','ModuleNotFoundError','LookupError','_IncompleteInputError','RuntimeWarning','ChildProcessError','NotADirectoryError','RuntimeError','ResourceWarning','TypeError','PythonFinalizationError','UnicodeError','FileNotFoundError','ProcessLookupError','DeprecationWarning','FileExistsError','ZeroDivisionError','UnicodeDecodeError','Exception','FutureWarning','StopIteration','Warning','StopAsyncIteration','IOError','UnicodeTranslateError','UnicodeEncodeError','ConnectionAbortedError','EOFError','SyntaxWarning','ArithmeticError','BaseException'],1073763848:['ExceptionGroup'],20975874:['bool'],4199682:['bytearray','float'],138417410:['bytes'],21762:['super','enumerate','classmethod','reversed','zip','map','staticmethod','filter','property'],5378:['complex','object'],541087042:['dict'],4216066:['set','frozenset'],20976898:['int'],37770530:['list'],20770:['memoryview'],4386:['range'],20738:['slice'],272635138:['str'],71324962:['tuple'],2155896066:['type'],},types:{20866:['getset_descriptor','async_generator','method-wrapper','generator','member_descriptor','frame','classmethod_descriptor','coroutine','PyCapsule'],22914:['builtin_function_or_method'],20738:['cell','traceback'],4354:['NoneType','NotImplementedType','code','ellipsis'],153858:['function'],20802:['mappingproxy'],153986:['method_descriptor'],22786:['method'],21762:['module'],151938:['wrapper_descriptor'],}}})(__BRYTHON__);
 ;
 "use strict";
 (function($B){var _b_=$B.builtins

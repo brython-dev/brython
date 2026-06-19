@@ -887,6 +887,15 @@ int_funcs.is_integer = function(self) {
     return true
 }
 
+int_funcs.__float__ = function(self) {
+    // CPython exposes int.__float__ (long_float); without it the C number
+    // protocol's nb_float slot fails on an int ("'int' object has no
+    // attribute '__float__'", e.g. cmath of an int argument). Reuse the
+    // nb_float conversion directly: `float.$factory(self)` would recurse
+    // (float.$factory re-dispatches to __float__ when the operand has one).
+    return $B.fast_float(Number(int_value(self)))
+}
+
 int_funcs.numerator_get = function(self) {
     return int_value(self)
 }
@@ -953,7 +962,7 @@ _b_.int.functions_or_methods = ["__new__"]
 _b_.int.tp_methods = [
     "conjugate", "bit_length", "bit_count", "to_bytes", "as_integer_ratio",
     "__trunc__", "__floor__", "__ceil__", "__round__", "__getnewargs__",
-    "__format__", "__sizeof__", "is_integer"]
+    "__format__", "__sizeof__", "is_integer", "__float__"]
 
 _b_.int.classmethods = ["from_bytes"]
 

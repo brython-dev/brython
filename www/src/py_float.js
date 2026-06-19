@@ -652,6 +652,14 @@ float.$factory = function(value) {
                if (isFinite(value)) {
                    return fast_float(parseFloat(value))
                } else {
+                   // Number(value) is NaN (not a valid float literal) or
+                   // ±Infinity (a valid literal that overflows the double
+                   // range). CPython returns inf for the latter — float('1e999')
+                   // is inf, not a ValueError — so only NaN is an error here.
+                   var num = Number(value)
+                   if (num === Infinity || num === -Infinity) {
+                       return fast_float(num)
+                   }
                    $B.RAISE(_b_.ValueError,
                        "could not convert string to float: " +
                        _b_.repr(original_value))
