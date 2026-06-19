@@ -3894,6 +3894,11 @@ var module = {
         return Pattern.$factory(jspat)
     },
     error: error,
+    // CPython 3.13+ alias — `re.error` was renamed to `re.PatternError`,
+    // with the old name kept as an alias. Tests written against 3.13+ use
+    // the new name (e.g. `assertRaises(re.PatternError, re.compile, …)`)
+    // and miss without this.
+    PatternError: error,
     escape: function() {
         var $ = $B.args("escape", 1, {pattern: null}, arguments)
         var data = prepare({pattern: $.pattern}),
