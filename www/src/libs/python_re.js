@@ -1113,11 +1113,19 @@ Scanner.$factory = function(pattern, string, pos, endpos) {
     }
 }
 
-Scanner.match = function(self) {
+// Scanner methods used to sit directly on the JS class object
+// (Scanner.match, Scanner.search). Brython's instance attribute lookup
+// goes through the type-protocol machinery (tp_funcs / tp_methods) and
+// didn't pick those up — `s = re.Scanner(...)` then `s.search()` raised
+// `AttributeError: 'Scanner' object has no attribute 'search'`. Move them
+// into the standard tp_funcs / tp_methods shape so Brython exposes them.
+var Scanner_funcs = Scanner.tp_funcs = {}
+
+Scanner_funcs.match = function(self) {
     return Pattern.tp_funcs.match(self.pattern, self.$string)
 }
 
-Scanner.search = function(self) {
+Scanner_funcs.search = function(self) {
     if (! self.$iterator) {
         self.$iterator = module.finditer(self.pattern, self.$string)
     }
@@ -1128,6 +1136,8 @@ Scanner.search = function(self) {
     }
     return mo
 }
+
+Scanner.tp_methods = ["match", "search"]
 
 $B.set_func_names(Scanner, 're')
 $B.finalize_type(Scanner)
