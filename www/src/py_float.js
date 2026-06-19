@@ -1055,6 +1055,11 @@ float_funcs.__ceil__ = function(self) {
     return Math.ceil(self.value)
 }
 
+float_funcs.__float__ = function(self) {
+    check_self_is_float(self, '__float__')
+    return self
+}
+
 float_funcs.__floor__ = function(self) {
     check_self_is_float(self, '__floor__')
     if (isnan(self)) {
@@ -1435,7 +1440,8 @@ _b_.float.classmethods = ["from_number", "fromhex", "__getformat__"]
 
 _b_.float.tp_methods = [
     "conjugate", "__trunc__", "__floor__", "__ceil__", "__round__",
-    "as_integer_ratio", "hex", "is_integer", "__getnewargs__", "__format__"
+    "as_integer_ratio", "hex", "is_integer", "__getnewargs__", "__format__",
+    "__float__"
 ]
 
 _b_.float.tp_getset = ["real", "imag"]
