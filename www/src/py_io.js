@@ -499,6 +499,11 @@ _BufferedReader_funcs.raw_get = function(_self) {
     return _self.raw
 }
 
+// CPython BufferedReader.fileno() forwards to the wrapped raw stream
+_BufferedReader_funcs.fileno = function(_self) {
+    return $B.$call($B.$getattr(_self.raw, 'fileno'))
+}
+
 _BufferedReader_funcs.peek = function(_self, size) {
     var $ = $B.args('peek', 2, {self: null, size: null}, arguments,
                 {size: 0})
@@ -579,7 +584,7 @@ _BufferedReader_funcs.writable = function(_self) {
 }
 
 $B._BufferedReader.tp_methods = [
-    "peek", "seek", "read", "readline", "seekable", "readable", "writable"
+    "peek", "seek", "read", "readline", "seekable", "readable", "writable", "fileno"
 ]
 
 $B.set_func_names($B._BufferedReader, '_io')
