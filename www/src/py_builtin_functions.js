@@ -852,6 +852,15 @@ $B.$getattr = function(obj, attr, _default) {
         var in_dict = $B.get_dict(obj)[attr]
         if (in_dict && $B.get_class(obj) === _b_.type) {
             var res = $B.NULL
+            // A data descriptor on the metatype wins over the type's own
+            // same-named attribute: type's __name__/__qualname__/... are data
+            // getsets, so e.g. method_descriptor.__name__ is 'method_descriptor'
+            // (the metatype getset), not the member it defines for instances.
+            var tset = _b_.type.tp_funcs[attr + '_set']
+            if (_b_.type.tp_funcs.hasOwnProperty(attr + '_get') &&
+                    tset !== undefined && tset !== _b_.None) {
+                return _b_.type.tp_funcs[attr + '_get'](obj)
+            }
             switch ($B.get_class(in_dict)) {
                 case $B.function:
                 case $B.wrapper_descriptor:
