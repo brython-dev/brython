@@ -1169,11 +1169,12 @@ iterator_funcs.__length_hint__ = function(self) {
 }
 
 iterator_funcs.__reduce__ = function(self) {
-
+    return $B.fast_tuple([_b_.iter,
+        $B.fast_tuple([self.it_seq]), self.it_index])
 }
 
-iterator_funcs.__setstate__ = function(self) {
-
+iterator_funcs.__setstate__ = function(self, state) {
+    self.it_index = state < 0 ? 0 : state
 }
 
 $B.iterator.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]
