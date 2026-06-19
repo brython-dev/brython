@@ -636,7 +636,7 @@ BytesIO_funcs.readlines = function() {
             break
         }
     }
-    return lines
+    return $B.$list(lines)
 }
 
 BytesIO_funcs.write = function(_self, b) {
