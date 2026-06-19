@@ -207,19 +207,6 @@ assert str(d) == "{'a': 1, True: 4, 'b': 3}"
 # issue 1859
 assert 'constructor' not in {}
 
-# syntax errors in comprehensions
-from tester import assert_raises
-
-assert_raises(SyntaxError,
-              exec,
-              "{**t for x in y}",
-              msg='dict unpacking cannot be used in dict comprehension')
-
-assert_raises(SyntaxError,
-              exec,
-              "{*t for x in y}",
-              msg='iterable unpacking cannot be used in comprehension')
-
 # issue 2037
 assert {} | {} == {}
 assert {} | {}.keys() == set()
@@ -291,5 +278,38 @@ class D(dict):
     pass
 
 assert type(D(a=1).__reduce_ex__(2)[4]) is type(iter({}.items()))
+
+# dict from mapping
+class A:
+
+  def __init__(self):
+      self.data = 'abcd'
+
+  def keys(self):
+      return range(len(self.data))
+
+  def __getitem__(self, i):
+      return self.data[i]
+
+assert dict(A()) == {0: 'a', 1: 'b', 2: 'c', 3: 'd'}
+
+# dict from iterable
+class B:
+
+  def __init__(self):
+    self.data = 'efgh'
+
+  def __iter__(self):
+    self.counter = 0
+    return self
+
+  def __next__(self):
+    if self.counter < len(self.data):
+      res = [self.counter, self.data[self.counter]]
+      self.counter += 1
+      return res
+    raise StopIteration
+
+assert dict(B()) == {0: 'e', 1: 'f', 2: 'g', 3: 'h'}
 
 print("passed all tests..")

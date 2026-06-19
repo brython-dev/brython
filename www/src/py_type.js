@@ -440,7 +440,8 @@ $B.make_annotate_func = function(dict, annotations, class_frame) {
             __name__: '__annotate__',
             __module__: class_frame[2],
             __qualname__: class_frame[0] + '.__annotate__',
-            __file__: class_frame.__file__
+            __file__: class_frame.__file__,
+            free_vars: $B.fast_tuple(['__classdict__'])
         }
     )
 }

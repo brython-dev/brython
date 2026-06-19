@@ -323,9 +323,9 @@ $B.function.$factory = function() {
     var $ = $B.args('FunctionType', 2, {code: null, globals: null},
                 arguments, null, null, 'kw')
     var code = $.code
-    var __name__ = $.name === _b_.None ? code.co_name : $.name
+    var __name__ = $B.str_dict_get($.kw, 'name', code.co_name) // function name
     var frame = $B.frame_obj.frame
-    var globals_name = 'locals_' + frame[2]
+    var globals_name = 'locals_' + __name__
     var __file__ = frame.__file__
     var func = new Function('_b_', '__file__', globals_name, 'return ' + code.co_code)
     var f = func(_b_, __file__, $.globals)
@@ -416,6 +416,9 @@ function_funcs.__builtins___get = function(self) {
 function_funcs.__builtins___set = _b_.None
 
 function_funcs.__closure___get = function(self) {
+    if (self.$closure) {
+        return self.$closure
+    }
     var free_vars = self.$function_infos[$B.func_attrs.free_vars]
     if (free_vars === undefined || free_vars.length == 0) {
         return _b_.None

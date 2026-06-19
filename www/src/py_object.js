@@ -332,7 +332,7 @@ _b_.object.tp_hash = function(self) {
 }
 
 _b_.object.tp_str = function(self) {
-    if (self === undefined) {
+    if (arguments.length === 0) {
         $B.RAISE(_b_.TypeError, "descriptor '__str__' of 'object' " +
             "object needs an argument")
     }

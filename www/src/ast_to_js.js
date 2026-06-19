@@ -400,7 +400,7 @@ function local_scope(name, scope) {
 
 function name_scope(name, scopes) {
     // return the scope where name is bound, or undefined
-    var test = false // name == 'nb' && scopes[scopes.length - 1].name == "g"
+    var test = false // name == 'Literal' // && scopes[scopes.length - 1].name == "g"
     if (test) {
         console.log('name scope', name, scopes.slice())
         //alert()
@@ -901,7 +901,7 @@ function make_comp(scopes) {
     var initial_nb_await_in_scope = upper_comp_scope.nb_await === undefined ? 0 :
                             upper_comp_scope.nb_await
 
-    for (var [key, value] of Object.entries(symtable_block.symbols)) {
+    for (let [key, value] of Object.entries(symtable_block.symbols)) {
         if (value & SF.DEF_COMP_ITER) {
             comp_iter = key
         }
@@ -1233,9 +1233,12 @@ function annotation_code(scopes, scope, ref) {
     // Object is passed to py_type.js/$B.class_constructor and handled in
     // py_type.js / make_annotate_func()
     if (scope.annotate) {
+        var globals_name = make_scope_name(scopes, scope)
         var annotate = prefix + `var annotate = function(format) {\n`
         indent()
         annotate += prefix + `$B.check_annotate_format(format)\n` +
+            prefix + `var FR = $B.module_getattr($B.imported.annotationlib, 'ForwardRef')\n` +
+            prefix + `var int_format = $B.int_value(format)\n` +
             prefix + `var current_frame = $B.frame_obj.frame\n` +
             prefix + `var frame = ['__annotate__', {}, current_frame[2], current_frame[3]]\n` +
             prefix + `$B.enter_frame(frame, "${scopes.filename}", ${scope.ast.lineno})\n` +
@@ -1265,6 +1268,7 @@ function annotation_code(scopes, scope, ref) {
             prefix + `return res\n`
         dedent()
         annotate += prefix + '}\n'
+        annotate += prefix + `annotate.$closure = [$B.cell.$factory(${globals_name})]\n`
         return annotate
     } else {
         return prefix + `var annotate\n`
@@ -1310,13 +1314,17 @@ $B.ast.AnnAssign.prototype.to_js = function(scopes) {
             if (scope.type != "def") {
                 // Update __annotations__ only for classes and modules
                 if (! scopes.postpone_annotations) {
+                    let ann_str = annotation_to_str(this.annotation, scopes)
+                    ann_str = `$B.$call(FR, '${ann_str}', {$kw:[{is_class:true}]})`
+
                     if (scope.type == 'class') {
                         scope.annotate.push(`${mangled}: [${this.lineno}, ` +
-                            `() => ${ann_value}]`)
+                            `() => int_format == 2 ? ${ann_str} : ${ann_value}]`)
                     } else {
                         js += prefix +
                             `locals.$annotations.${mangled} = ` +
-                            `[${this.lineno}, () => ${ann_value}]\n`
+                            `[${this.lineno}, () => ==> int_format == 2 ? ` +
+                            `${ann_str} :${ann_value}]\n`
                     }
                 } else {
                     js += prefix + `$B.$setitem(locals.__annotations__, ` +

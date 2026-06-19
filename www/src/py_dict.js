@@ -600,6 +600,72 @@ function dict_eq(self, other) {
     return true
 }
 
+function dict_init(self, args, kw) {
+    if(args === undefined){
+        console.log('args undef')
+        console.log(Error('trace').stack)
+    }
+    if (args.length > 1) {
+        $B.RAISE(_b_.TypeError, "dict expected at most 1 argument" +
+            `, got ${args.length}`)
+    } else if (args.length == 1) {
+        args = args[0]
+        if ($B.exact_type(args, dict)) {
+            for (let entry of dict.$iter_items(args)) {
+                dict.$setitem(self, entry.key, entry.value, entry.hash)
+            }
+        } else {
+            var keys = $B.$getattr($B.get_class(args), "keys", $B.NULL)
+            if (keys !== $B.NULL) {
+                var gi = $B.$getattr($B.get_class(args), "__getitem__", $B.NULL)
+                if (gi !== $B.NULL) {
+                    // has keys and __getitem__ : it's a mapping, iterate on
+                    // keys and values
+                    for (var key of $B.make_js_iterator($B.$call(keys, args))) {
+                        try {
+                            let value = $B.$call(gi, args, key)
+                            dict.$setitem(self, key, value)
+                        } catch (err) {
+                            if ($B.is_exc(err, _b_.StopIteration)) {
+                                break
+                            }
+                            throw err
+                        }
+                    }
+                }
+            } else {
+                let i = 0
+                for (var item of $B.make_js_iterator(args)) {
+                    if (item.length != 2) {
+                        $B.RAISE(_b_.ValueError, "dictionary " +
+                            `update sequence element #${i} has length ` +
+                            `${item.length}; 2 is required`)
+                    }
+                    dict.$setitem(self, item[0], item[1])
+                    i++
+                }
+            }
+        }
+    }
+
+    for (let item of _b_.dict.$iter_items(kw)) {
+        dict.$setitem(self, item.key, item.value)
+    }
+    return _b_.None
+}
+
+function dict_repr(self) {
+    if ($B.repr.enter(self)) {
+        return "{...}"
+    }
+    let res = []
+    for (let entry of dict.$iter_items(self)) {
+        res.push(_b_.repr(entry.key) + ": " + _b_.repr(entry.value))
+    }
+    $B.repr.leave(self)
+    return "{" + res.join(", ") + "}"
+}
+
 dict.$delete_string = function(self, key) {
     // Used for dicts where all keys are strings
     if (! self[KEYS]) {
@@ -877,15 +943,7 @@ _b_.dict.nb_or = function(self, other) {
 
 _b_.dict.tp_repr = function(self) {
     $B.builtins_repr_check(dict, arguments) // in brython_builtins.js
-    if ($B.repr.enter(self)) {
-        return "{...}"
-    }
-    let res = []
-    for (let entry of dict.$iter_items(self)) {
-        res.push(_b_.repr(entry.key) + ": " + _b_.repr(entry.value))
-    }
-    $B.repr.leave(self)
-    return "{" + res.join(", ") + "}"
+    return dict_repr(self)
 }
 
 _b_.dict.tp_hash = _b_.None
@@ -898,7 +956,11 @@ _b_.dict.tp_iter = function(self) {
     }
 }
 
-_b_.dict.tp_init = function(self, first, second) {
+_b_.dict.tp_init = function(self) {
+    let [args, kw] = $B.parse_args_kw('__init__', arguments)
+    args = Array.from(args).slice(1)
+    return dict_init(self, args, kw)
+    /*
     if (first === undefined) {
         self[SIZE] = 0
         return _b_.None
@@ -998,6 +1060,7 @@ _b_.dict.tp_init = function(self, first, second) {
         dict.$setitem(self, item.key, item.value)
     }
     return _b_.None
+    */
 }
 
 _b_.dict.nb_inplace_or = function(self, other) {
@@ -1684,6 +1747,90 @@ dict.$from_js = function(jsobj) {
     }
     return res
 }
+
+/* frozendict start */
+_b_.frozendict.tp_richcompare = function(self) {
+
+}
+
+_b_.frozendict.nb_or = function(self) {
+
+}
+
+_b_.frozendict.tp_repr = function(self) {
+    $B.builtins_repr_check(_b_.frozendict, arguments) // in brython_builtins.js
+    return `frozendict(${dict_repr(self)})`
+}
+
+_b_.frozendict.tp_hash = function(self) {
+
+}
+
+_b_.frozendict.tp_iter = function(self) {
+
+}
+
+_b_.frozendict.tp_new = function(cls, args, kw) {
+    var instance = $B.empty_dict()
+    instance[$B.OB_TYPE] = cls
+    dict_init(instance, args, kw)
+    return instance
+}
+
+_b_.frozendict.mp_length = function(self) {
+
+}
+
+_b_.frozendict.mp_subscript = _b_.dict.mp_subscript
+
+_b_.frozendict.sq_contains = _b_.dict.sq_contains
+
+var frozendict_funcs = _b_.frozendict.tp_funcs = {}
+
+frozendict_funcs.__class_getitem__ = $B.$class_getitem
+
+frozendict_funcs.__getnewargs__ = function(self) {
+    let d = dict.$factory(self)
+    return $B.fast_tuple([d])
+}
+
+frozendict_funcs.__reversed__ = dict_funcs.__reversed__
+
+frozendict_funcs.__sizeof__ = dict_funcs.__sizeof__
+
+frozendict_funcs.copy = function(self) {
+    // Return a shallow copy of the dictionary
+    var $ = $B.args("copy", 1, {self: null}, arguments)
+    var self = $.self,
+        res = $B.empty_dict()
+    res[$B.OB_TYPE] = _b_.frozendict
+
+    if ($B.exact_type(self, _b_.frozendict)) {
+        $copy_dict(res, self)
+    }
+    return res
+}
+
+frozendict_funcs.fromkeys = dict_funcs.values
+
+frozendict_funcs.get = dict_funcs.get
+
+frozendict_funcs.items = dict_funcs.items
+
+frozendict_funcs.keys = dict_funcs.keys
+
+frozendict_funcs.values = dict_funcs.values
+
+_b_.frozendict.tp_methods = [
+    "__sizeof__", "get", "keys", "items", "values", "copy", "__reversed__", 
+    "__getnewargs__"]
+
+_b_.frozendict.classmethods = ["fromkeys", "__class_getitem__"]
+
+/* frozendict end */
+
+$B.set_func_names(_b_.frozendict, 'builtins')
+
 
 // Class for attribute __dict__ of classes
 var mappingproxy = $B.mappingproxy

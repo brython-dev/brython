@@ -69,3 +69,5 @@ def release_lock(*args,**kw):
 
 def source_hash(*args,**kw):
     pass
+
+pyc_magic_number_token = 168627794
