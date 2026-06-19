@@ -724,8 +724,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,3,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-06-19 14:26:47.238595"
-__BRYTHON__.timestamp=1781872007237
+__BRYTHON__.compiled_date="2026-06-19 14:28:42.184535"
+__BRYTHON__.timestamp=1781872122184
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -6746,11 +6746,12 @@ var start,stop
 if(self.start===None){start=step_is_neg ? len_1 :0}else{
 start=$B.$call(_b_.int,self.start)
 if($B.rich_comp('__gt__',0,start)){start=$B.rich_op('__add__',start,len)
-if($B.rich_comp('__gt__',0,start)){start=0}}
+if($B.rich_comp('__gt__',0,start)){start=step_is_neg ?-1 :0}}
 if($B.rich_comp('__ge__',start,len)){start=step < 0 ? len_1 :len}}
 if(self.stop===None){stop=step_is_neg ?-1 :len}else{
 stop=$B.PyNumber_Index(self.stop)
-if($B.rich_comp('__gt__',0,stop)){stop=$B.rich_op('__add__',stop,len)}
+if($B.rich_comp('__gt__',0,stop)){stop=$B.rich_op('__add__',stop,len)
+if($B.rich_comp('__gt__',0,stop)){stop=step_is_neg ?-1 :0}}
 if($B.rich_comp('__ge__',stop,len)){stop=step_is_neg ? len_1 :len}}
 return{start,stop,step}}
 slice.$factory=function(start,stop,step){var[args,kw]=$B.parse_args_kw('slice',arguments)
