@@ -609,12 +609,7 @@ var signed_hex_format = function(val, upper, flags) {
         val = val ? 1 : 0
     }
 
-    if ($B.is_big_int(val)) {
-       ret = $B.int_value(val).toString(16)
-    } else {
-       ret = parseInt(val)
-       ret = ret.toString(16)
-    }
+    ret = $B.int_value(val).toString(16)
     ret = format_int_precision(ret, flags)
     if (upper) {ret = ret.toUpperCase()}
     if (flags.pad_char === "0") {
@@ -642,12 +637,7 @@ var octal_format = function(val, flags) {
     number_check(val, flags)
     var ret
 
-    if ($B.is_big_int(val)) {
-        ret = $B.int_value(val).toString(8)
-    } else {
-        ret = parseInt(val)
-        ret = ret.toString(8)
-    }
+    ret = $B.int_value(val).toString(8)
 
     ret = format_int_precision(ret, flags)
 
