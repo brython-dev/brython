@@ -1011,6 +1011,15 @@ function _io_open_impl(file, mode, buffering, encoding, errors, newline,
         }
     }
 
+    var name_obj = path_or_fd
+    if (! $B.is_str(path_or_fd) &&
+            $B.$isinstance(path_or_fd, [_b_.bytes, _b_.bytearray])) {
+        // CPython's open() accepts a bytes filename (decoded via os.fsdecode),
+        // but keeps the original bytes as the file's name; fsdecode only feeds
+        // the actual open.
+        path_or_fd = $B.$call($B.$getattr(path_or_fd, 'decode'), 'utf-8')
+    }
+
     if (! $B.is_str(path_or_fd)) {
         $B.RAISE(_b_.TypeError, `invalid file: ${file}`)
     }
@@ -1111,6 +1120,9 @@ function _io_open_impl(file, mode, buffering, encoding, errors, newline,
     raw = $B.$call(RawIO_class, path_or_fd, rawmode,
                                 closefd ? true : false,
                                 opener)
+    if (name_obj !== path_or_fd) {
+        raw.$name = name_obj
+    }
     result = raw
 
     modeobj = mode
