@@ -555,8 +555,9 @@ BytesIO_funcs.read = function() {
         return _b_.bytes.$factory()
     }
     var newpos = Math.min(_b_.len(_self._buffer), _self._pos + size)
-    var b = _b_.bytes.mp_subscript(_self._buffer,
-        _b_.slice.$factory(_self._pos, newpos))
+    // _buffer is a bytearray; read() must return bytes, not a bytearray slice
+    var b = _b_.bytes.$factory(_b_.bytes.mp_subscript(_self._buffer,
+        _b_.slice.$factory(_self._pos, newpos)))
     _self._pos = newpos
     return b
 }
