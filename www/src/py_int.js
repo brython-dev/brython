@@ -522,6 +522,10 @@ _b_.int.nb_power = function(self, other, z) {
             return int_or_long(result)
         } else {
             if (y < 0n) {
+                if (x == 0n) {
+                    $B.RAISE(_b_.ZeroDivisionError,
+                        "zero to a negative power")
+                }
                 // raising a BigInt to a negative values raises a JS error
                 return $B.fast_float(Number(x) ** Number(y))
             }
