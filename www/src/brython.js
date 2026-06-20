@@ -724,8 +724,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,3,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-06-19 14:28:42.184535"
-__BRYTHON__.timestamp=1781872122184
+__BRYTHON__.compiled_date="2026-06-19 15:57:24.932969"
+__BRYTHON__.timestamp=1781877444932
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -3672,7 +3672,8 @@ $B.set_func_names($B.classmethod_descriptor,'builtins')
 $B.getset_descriptor.$factory=function(klass,attr,getset){var[getter,setter]=getset
 var res={ob_type:$B.getset_descriptor,__doc__:_b_.None,d_type:klass,d_name:attr,getter,setter}
 return res}
-$B.getset_descriptor.tp_descr_set=function(self,obj,value){if(self.setter===_b_.None){$B.RAISE_ATTRIBUTE_ERROR(
+$B.getset_descriptor.tp_descr_set=function(self,obj,value){
+if(typeof self.setter !=='function'){$B.RAISE_ATTRIBUTE_ERROR(
 `attribute '${self.d_name}' of '${self.d_type.tp_name}' objects is not writable`,self,self.d_name)}
 return self.setter(obj,value)}
 $B.getset_descriptor.tp_repr=function(self){return `<attribute '${self.d_name}' of '${$B.get_name(self.d_type)}' objects>`}
@@ -4079,7 +4080,7 @@ pos=ix+1}}
 self.$lines=lines}}}
 var IOUnsupported
 const DEFAULT_BUFFER_SIZE=(128*1024)
-$B.make_IOUnsupported=function(){if($B._IOUnsupported===undefined){$B._IOUnsupported=$B.make_type('UnsupportedOperation',[_b_.OSError])
+$B.make_IOUnsupported=function(){if($B._IOUnsupported===undefined){$B._IOUnsupported=$B.make_type('UnsupportedOperation',[_b_.OSError,_b_.ValueError])
 $B._IOUnsupported.__module__='_io'
 $B.finalize_type($B._IOUnsupported)}}
 function _io_unsupported(value){$B.make_IOUnsupported()
@@ -4212,9 +4213,9 @@ var setitem=$B.search_in_mro($B.get_class(buffer),'__setitem__')
 $B.$call(setitem,buffer,_b_.slice.$factory(0,len),data)
 return len}
 var _BufferedIOBase_funcs=$B._BufferedIOBase.tp_funcs={}
-_BufferedIOBase_funcs.__exit__=function(self,type,value,traceback){try{
+_BufferedIOBase_funcs.__exit__=function(self,type,value,traceback){
 $B.$call($B.$getattr(self,'close'))
-return true}catch(err){return false}}
+return _b_.None}
 _BufferedIOBase_funcs.readinto=function(_self,buffer){return _bufferediobase_readinto_generic(_self,buffer,0)}
 _BufferedIOBase_funcs.readinto1=function(_self,buffer){return _bufferediobase_readinto_generic(_self,buffer,1)}
 _BufferedIOBase_funcs.close=function(_self){_self._closed=true}
@@ -4237,6 +4238,18 @@ raw.$byte_pos=Math.min(raw.$byte_pos,raw.$bytes.length)
 return $B.fast_bytes(b)}
 function _bufferedreader_readline(_self){CHECK_CLOSED(_self)
 var raw=_self.raw
+if(raw.$bytes===undefined){
+if(_self.$linebuf===undefined){_self.$linebuf=[]
+_self.$linebuf_eof=false}
+var lbuf=_self.$linebuf
+var lnl=lbuf.indexOf(10)
+while(lnl===-1 && !_self.$linebuf_eof){var ldata=$B.$call($B.$getattr(raw,'read'),DEFAULT_BUFFER_SIZE)
+if(ldata===_b_.None ||_b_.len(ldata)===0){_self.$linebuf_eof=true
+break}
+for(var lsrc=ldata.source,li=0,lL=lsrc.length;li < lL;li++){lbuf.push(lsrc[li])}
+lnl=lbuf.indexOf(10)}
+var lend=lnl===-1 ? lbuf.length :lnl+1
+return $B.fast_bytes(lbuf.splice(0,lend))}
 if(raw.$byte_pos >=raw.$bytes.length){return $B.fast_bytes()}
 var eof=raw.$byte_pos
 while(eof < raw.$bytes.length){if(raw.$bytes[eof]==10){break}
@@ -4246,23 +4259,29 @@ raw.$byte_pos=eof+1
 raw.$byte_pos=Math.min(raw.$byte_pos,raw.$bytes.length)
 return $B.fast_bytes(b)}
 $B._BufferedReader=$B.make_builtin_class('_BufferedReader',[$B._BufferedIOBase])
-$B._BufferedReader.tp_getset=['raw']
+$B._BufferedReader.tp_getset=['raw','name']
 $B._BufferedReader.tp_init=function(_self,raw,buffer_size=DEFAULT_BUFFER_SIZE){_self.raw=raw
 _self.buffer_size=buffer_size}
 var _BufferedReader_funcs=$B._BufferedReader.tp_funcs={}
+_BufferedReader_funcs.fileno=function(_self){return $B.$call($B.$getattr(_self.raw,'fileno'))}
 _BufferedReader_funcs.raw_get=function(_self){return _self.raw}
+_BufferedReader_funcs.name_get=function(_self){return $B.$getattr(_self.raw,'name')}
 _BufferedReader_funcs.peek=function(_self,size){var $=$B.args('peek',2,{self:null,size:null},arguments,{size:0})
 var _self=$.self,size=$.size
 var raw=_self.raw
 return $B.fast_bytes(raw.$bytes.slice(raw.$byte_pos,raw.$byte_pos+size))}
-_BufferedReader_funcs.seek=function(_self,offset,whence){var $=$B.args('seek',2,{self:null,offset:null,whence:null},arguments,{whence:0})
+_BufferedReader_funcs.seek=function(_self,offset,whence){var $=$B.args('seek',3,{self:null,offset:null,whence:null},arguments,{whence:0})
 var _self=$.self,offset=$.offset,whence=$.whence
 CHECK_CLOSED(_self)
 if(whence===undefined){whence=0}
-if(whence===0){_self.$byte_pos=offset}else if(whence===1){_self.$byte_pos+=offset}else if(whence===2){_self.$byte_pos=self.$bytes.length+offset}
-return _b_.None}
+var raw=_self.raw
+if(raw.$bytes===undefined){return $B.$call($B.$getattr(raw,'seek'),offset,whence)}
+if(whence===0){raw.$byte_pos=offset}else if(whence===1){raw.$byte_pos=(raw.$byte_pos ||0)+offset}else if(whence===2){raw.$byte_pos=raw.$bytes.length+offset}
+return raw.$byte_pos}
 function CHECK_CLOSED(fileobj,msg){if(fileobj._closed){$B.RAISE(_b_.ValueError,msg ?? 'I/O operation on closed file.')}}
 _BufferedReader_funcs.read=function(self,n=-1){var res
+if(n===_b_.None){n=-1}
+n=$B.PyNumber_Index(n)
 if(n <-1){$B.RAISE(_b_.ValueError,"read length must be non-negative or -1")}
 CHECK_CLOSED(self,"read of closed file")
 if(n==-1){
@@ -4275,7 +4294,7 @@ _BufferedReader_funcs.readline=function(_self,size=-1){return _bufferedreader_re
 _BufferedReader_funcs.seekable=function(_self){return $B.$call($B.$getattr(_self.raw,'seekable'))}
 _BufferedReader_funcs.readable=function(_self){return $B.$call($B.$getattr(_self.raw,'readable'))}
 _BufferedReader_funcs.writable=function(_self){return $B.$call($B.$getattr(_self.raw,'writable'))}
-$B._BufferedReader.tp_methods=["peek","seek","read","readline","seekable","readable","writable"
+$B._BufferedReader.tp_methods=["peek","seek","read","readline","seekable","readable","writable","fileno"
 ]
 $B.set_func_names($B._BufferedReader,'_io')
 $B._FileIO=$B.make_builtin_class('_FileIO',[$B._RawIOBase])
@@ -4288,6 +4307,7 @@ $B.init_dict(res)
 return res}
 $B._FileIO.tp_init=function(){var $=$B.args('__init__',5,{self:null,name:null,mode:null,closefd:null,opener:null},arguments,{mode:'r',closefd:true,opener:_b_.None})
 var _self=$.self,name=$.name,mode=$.mode,closefd=$.closefd,opener=$.opener
+_self.$name=name
 var flags=0
 var ret=0
 var rwa=0,plus=0
@@ -4362,6 +4382,8 @@ _self.fd.open('GET',encodeURI(name+fake_qs),false)
 _self.fd.send()
 if(_self.fd.error){throw _self.fd.error}}
 var _FileIO_funcs=$B._FileIO.tp_funcs={}
+_FileIO_funcs.name_get=function(_self){return _self.$name}
+$B._FileIO.tp_getset=["name"]
 _FileIO_funcs.readable=function(_self){if(_self.fd < 0){err_closed()}
 return $B.$bool(_self.readable)}
 _FileIO_funcs.readall=function(_self){var buffer=_b_.bytearray.$factory()
@@ -4432,8 +4454,10 @@ _self.$text_length=_b_.len(_self.$text)}
 var res=''
 var nb=0
 if(size < 0){size=_self.$text_length}
+var nl=_self.$newline
+var term=(nl===_b_.None ||nl.length !==1)? '\n' :nl
 while(1){var char=_self.$text_iterator.next()
-if(char.done){break}else if(char.value=='\n'){res+=char.value
+if(char.done){break}else if(char.value==term){res+=char.value
 break}else{
 res+=char.value
 nb++
@@ -4459,6 +4483,10 @@ path_or_fd=file
 if(! $B.is_str(path_or_fd)){
 var fspath=$B.$getattr(file,'__fspath__',null)
 if(fspath !==null){path_or_fd=$B.$call(fspath)}}
+var name_obj=path_or_fd
+if(! $B.is_str(path_or_fd)&&
+$B.$isinstance(path_or_fd,[_b_.bytes,_b_.bytearray])){
+path_or_fd=$B.$call($B.$getattr(path_or_fd,'decode'),'utf-8')}
 if(! $B.is_str(path_or_fd)){$B.RAISE(_b_.TypeError,`invalid file: ${file}`)}
 if(encoding=='locale'){
 encoding='utf-8'}
@@ -4503,6 +4531,7 @@ if(binary && buffering==1){$B.RAISE(_b_.RuntimeWarning,"line buffering (bufferin
 "binary mode, the default buffer size will be used")}
 var RawIO_class=$B._FileIO
 raw=$B.$call(RawIO_class,path_or_fd,rawmode,closefd ? true :false,opener)
+if(name_obj !==path_or_fd){raw.$name=name_obj}
 result=raw
 modeobj=mode
 if(buffering < 0){isatty=false}
@@ -4921,15 +4950,17 @@ return true}catch(err){return false}}
 _b_.hash=function(obj){check_nb_args_no_kw('hash',1,arguments)
 return $B.$hash(obj)}
 $B.$hash=function(obj){if(obj.__hashvalue__ !==undefined){return obj.__hashvalue__}
-if(typeof obj==="boolean"){return obj ? 1 :0}else if(typeof obj==="number"){return obj}
+var res
+if(typeof obj==="boolean"){return obj ? 1 :0}else if(typeof obj==="number"){res=obj}else{
 var klass=$B.get_class(obj)
 var hash_func=$B.search_slot(klass,'tp_hash',$B.NULL)
-if(hash_func !==$B.NULL && hash_func !==_b_.None){var res=hash_func(obj)
-if(! $B.is_int(res)){$B.RAISE(_b_.TypeError,'__hash__ method should return an integer')}
-return res}
+if(hash_func !==$B.NULL && hash_func !==_b_.None){res=hash_func(obj)
+if(! $B.is_int(res)){$B.RAISE(_b_.TypeError,'__hash__ method should return an integer')}}else{
 $B.RAISE(_b_.TypeError,"unhashable type: '"+
 _b_.str.$factory($B.jsobj2pyobj(obj))+"'"
-)}
+)}}
+if(res===-1){res=-2 }
+return res}
 var help=_b_.help=function(obj){if(obj===undefined){obj='help'}
 if(typeof obj=='string'){var lib_url='https://docs.python.org/3/library'
 var parts=obj.split('.'),head=[],url
@@ -6244,6 +6275,10 @@ return _b_.None}
 $B.offer_suggestions_for_unexpected_keyword_error=function(arg_names,key){if(key===_b_.None){return _b_.None}
 var suggestions=calculate_suggestions(arg_names,key)
 return suggestions ||_b_.None}
+$B.offer_suggestions_for_modulenotfound=function(name){var dir=Object.keys($B.imported)
+if($B.stdlib){dir=dir.concat(Object.keys($B.stdlib))}
+var suggestions=calculate_suggestions(dir,name)
+return suggestions ||_b_.None}
 _b_.BaseExceptionGroup.$factory=function(msg,excs){var res=_b_.BaseExceptionGroup.tp_new(
 _b_.BaseExceptionGroup,[msg,$B.fast_tuple(excs)],$B.empty_dict()
 )
@@ -6541,7 +6576,9 @@ if($B.is_exc(err,_b_.NameError)){let suggestion=$B.offer_suggestions_for_name_er
 if(suggestion !==_b_.None && suggestion !==err.name){trace+=`. Did you mean: '${suggestion}'?`}
 if($B.stdlib_module_names.indexOf(err.name)>-1){
 trace+=`. Did you forget to import '${err.name}'?`}}else if($B.is_exc(err,_b_.AttributeError)){let suggestion=$B.offer_suggestions_for_attribute_error(err)
-if(suggestion !==_b_.None){trace+=`. Did you mean: '${suggestion}'?`}}else if($B.is_exc(err,_b_.ImportError)){if(err.$suggestion !==_b_.None){trace+=`. Did you mean: '${err.$suggestion}'?`}}}else{
+if(suggestion !==_b_.None){trace+=`. Did you mean: '${suggestion}'?`}}else if($B.is_exc(err,_b_.ImportError)){if($B.exact_type(err,_b_.ModuleNotFoundError)){if(err.name){var suggestion=$B.offer_suggestions_for_modulenotfound(
+err.name)
+if(suggestion !==_b_.None){trace+=`. Did you mean: '${suggestion}'?`}}}}}else{
 trace=err+""}
 if(err.$js_exc){trace+='\n'
 if($B.get_option('debug',err)> 1){trace+=err.$js_exc.stack}}
@@ -7192,13 +7229,11 @@ var self=$.self,prefix=$.prefix,start=$.start
 var cls=this 
 if($B.$isinstance($.prefix,[bytes,bytearray])){let res=true
 for(let i=0;i < prefix.source.length && res;i++){res=self.source[start+i]==prefix.source[i]}
-return res}else if($B.is_tuple(prefix)){let items=[]
-for(let i=0;i < prefix.length;i++){if($B.$isinstance(prefix[i],[bytes,bytearray])){items=items.concat(prefix[i].source)}else{
-$B.RAISE(_b_.TypeError,"startswith first arg must be "+
-"bytes or a tuple of bytes, not "+
-$B.class_name(prefix))}}
-let prefix=cls.$factory(items)
-return startswith.call(cls,self,prefix,start)}else{
+return res}else if($B.is_tuple(prefix)){
+for(let sub of prefix){if(! $B.$isinstance(sub,[bytes,bytearray])){$B.RAISE(_b_.TypeError,"startswith first arg must be "+
+"bytes or a tuple of bytes, not "+$B.class_name(prefix))}
+if(startswith.call(cls,self,sub,start)){return true}}
+return false}else{
 $B.RAISE(_b_.TypeError,"startswith first arg must be bytes "+
 "or a tuple of bytes, not "+$B.class_name(prefix))}}
 function upper(){var self=self_arg('upper',arguments)
@@ -7534,7 +7569,7 @@ case "utf-8":
 case "utf8":
 case "U8":
 case "UTF":
-if(globalThis.TextDecoder){var decoder=new TextDecoder('utf-8',{fatal:true}),array=new Uint8Array(b)
+if(globalThis.TextDecoder){var decoder=new TextDecoder('utf-8',{fatal:true,ignoreBOM:true}),array=new Uint8Array(b)
 try{
 return decoder.decode(array)}catch(err){}}
 var pos=0,err_info
@@ -7591,6 +7626,7 @@ byte.toString(16)+" in position "+pos+
 ": invalid start byte")}}}
 return s
 case "latin_1":
+case "iso8859":
 case "windows1252":
 case "iso-8859-1":
 case "iso8859-1":
@@ -7652,6 +7688,7 @@ case "latin1":
 case "latin-1":
 case "latin_1":
 case "L1":
+case "iso8859":
 case "iso8859_1":
 case "iso_8859_1":
 case "8859":
@@ -8000,7 +8037,10 @@ memoryview_funcs.itemsize_get=function(self){return self.itemsize}
 memoryview_funcs.itemsize_set=_b_.None
 memoryview_funcs.nbytes_get=function(self){var product=1
 for(var x of self.shape){product*=x}
-return x*self.itemsize}
+var isize=self.itemsize
+if(isize===1){var src=$B.$getattr(self.obj,'itemsize',null)
+if(src !==null && $B.is_int(src)){isize=src}}
+return product*isize}
 memoryview_funcs.nbytes_set=_b_.None
 memoryview_funcs.ndim_get=function(self){return self.ndim}
 memoryview_funcs.ndim_set=_b_.None
@@ -10136,6 +10176,8 @@ return int_or_long(num-_mult)}
 int_funcs.imag_get=function(self){return 0}
 int_funcs.imag_set=_b_.None
 int_funcs.is_integer=function(self){return true}
+int_funcs.__float__=function(self){
+return $B.fast_float(Number(int_value(self)))}
 int_funcs.numerator_get=function(self){return int_value(self)}
 int_funcs.numerator_set=_b_.None
 int_funcs.real_get=function(self){return int_value(self)}
@@ -10158,7 +10200,7 @@ if(byteorder=="big"){res.reverse()}
 return{
 ob_type:_b_.bytes,source:res}}
 _b_.int.functions_or_methods=["__new__"]
-_b_.int.tp_methods=["conjugate","bit_length","bit_count","to_bytes","as_integer_ratio","__trunc__","__floor__","__ceil__","__round__","__getnewargs__","__format__","__sizeof__","is_integer"]
+_b_.int.tp_methods=["conjugate","bit_length","bit_count","to_bytes","as_integer_ratio","__trunc__","__floor__","__ceil__","__round__","__getnewargs__","__format__","__sizeof__","is_integer","__float__"]
 _b_.int.classmethods=["from_bytes"]
 _b_.int.tp_getset=["real","imag","numerator","denominator"]
 $B.$bool=function(obj,bool_class){
@@ -10452,6 +10494,8 @@ value)}
 value=value.charAt(0)+value.substr(1).replace(/_/g,"")
 value=to_digits(value)
 if(isFinite(value)){return fast_float(parseFloat(value))}else{
+var num=Number(value)
+if(num===Infinity ||num===-Infinity){return fast_float(num)}
 $B.RAISE(_b_.ValueError,"could not convert string to float: "+
 _b_.repr(original_value))}}}
 let klass=$B.get_class(value),float_method=$B.$getattr(klass,'__float__',null)
@@ -10603,7 +10647,7 @@ return Number.isSafeInteger(res_num)?
 res_num :
 BigInt(res)}
 return Math.trunc(self.value)}
-_b_.float.nb_float=function(self){return self}
+_b_.float.nb_float=function(self){return float_value(self)}
 _b_.float.nb_floor_divide=function(self,other){var[x,y]=conv_float(self,other)
 if(x===$B.NULL ||y===$B.NULL){return _b_.NotImplemented}
 var divmod=_float_div_mod(x.value,y.value)
@@ -14966,7 +15010,7 @@ $B.set_to_dict(cls,rdunder,$B.wrapper_descriptor.$factory(
 cls,rdunder,func
 ))}}
 $B.wrapper_methods=Object.create(null)
-Object.assign($B.wrapper_methods,{am_aiter:wrap('__aiter__'),am_anext:wrap('__anext__'),bf_getbuffer:wrap('__buffer__'),bf_releasebuffer:wrap('__release_buffer__'),mp_length:wrap('__len__'),mp_subscript:wrap('__getitem__'),mp_ass_subscript:make_setitem_delitem,nb_absolute:wrap('__abs__'),nb_add:wrap_with_reflected('__add__','__radd__'),nb_and:wrap_with_reflected('__and__','__rand__'),nb_bool:wrap('__bool__'),nb_divmod:wrap_with_reflected('__divmod__','__rdivmod__'),nb_floor_divide:wrap_with_reflected('__floordiv__','__rfloordiv__'),nb_index:wrap('__index__'),nb_lshift:wrap_with_reflected('__lshift__','__rlshift__'),nb_inplace_add :wrap('__iadd__'),nb_inplace_and :wrap('__iand__'),nb_inplace_floor_divide :wrap('__ifloordiv__'),nb_inplace_lshift :wrap('__ilshift__'),nb_inplace_matrix_multiply :wrap('__imatmul__'),nb_inplace_multiply :wrap('__imul__'),nb_inplace_or :wrap('__ior__'),nb_inplace_remainder :wrap('__imod__'),nb_inplace_power :wrap('__ipow__'),nb_inplace_subtract :wrap('__isub__'),nb_inplace_true_divide :wrap('__itruediv__'),nb_inplace_rshift :wrap('__irshift__'),nb_inplace_xor :wrap('__ixor__'),nb_int :wrap('__int__'),nb_invert:wrap('__invert__'),nb_matrix_multiply:wrap_with_reflected('__matmul__','__rmatmul__'),nb_multiply:wrap_with_reflected('__mul__','__rmul__'),nb_negative:wrap('__neg__'),nb_or:wrap_with_reflected('__or__','__ror__'),nb_positive:wrap('__pos__'),nb_power:wrap_with_reflected('__pow__','__rpow__'),nb_remainder:wrap_with_reflected('__mod__','__rmod__'),nb_subtract:wrap_with_reflected('__sub__','__rsub__'),nb_rshift:wrap_with_reflected('__rshift__','__rrshift__'),nb_true_divide:wrap_with_reflected('__truediv__','__rtruediv__'),nb_xor:wrap_with_reflected('__xor__','__rxor__'),sq_ass_item:make_setitem_delitem,sq_concat:wrap('__add__'),sq_contains:wrap('__contains__'),sq_length:wrap('__len__'),sq_repeat:wrap_with_same_reflected('__mul__','__rmul__'),tp_call:wrap('__call__'),tp_descr_get:wrap('__get__'),tp_descr_set:make_set_del,tp_doc:make_doc,tp_getattro:make_getattribute,tp_finalize:wrap('__del__'),tp_hash:wrap('__hash__'),tp_init:wrap('__init__'),tp_iter:wrap('__iter__'),tp_iternext:make_next,tp_new:make_new,tp_repr:wrap('__repr__',1),tp_str :wrap('__str__',1),tp_setattro:make_setattr_delattr,tp_richcompare:make_richcompare}
+Object.assign($B.wrapper_methods,{am_aiter:wrap('__aiter__'),am_anext:wrap('__anext__'),bf_getbuffer:wrap('__buffer__'),bf_releasebuffer:wrap('__release_buffer__'),mp_length:wrap('__len__'),mp_subscript:wrap('__getitem__'),mp_ass_subscript:make_setitem_delitem,nb_absolute:wrap('__abs__'),nb_add:wrap_with_reflected('__add__','__radd__'),nb_and:wrap_with_reflected('__and__','__rand__'),nb_bool:wrap('__bool__'),nb_divmod:wrap_with_reflected('__divmod__','__rdivmod__'),nb_floor_divide:wrap_with_reflected('__floordiv__','__rfloordiv__'),nb_float:wrap('__float__'),nb_index:wrap('__index__'),nb_lshift:wrap_with_reflected('__lshift__','__rlshift__'),nb_inplace_add :wrap('__iadd__'),nb_inplace_and :wrap('__iand__'),nb_inplace_floor_divide :wrap('__ifloordiv__'),nb_inplace_lshift :wrap('__ilshift__'),nb_inplace_matrix_multiply :wrap('__imatmul__'),nb_inplace_multiply :wrap('__imul__'),nb_inplace_or :wrap('__ior__'),nb_inplace_remainder :wrap('__imod__'),nb_inplace_power :wrap('__ipow__'),nb_inplace_subtract :wrap('__isub__'),nb_inplace_true_divide :wrap('__itruediv__'),nb_inplace_rshift :wrap('__irshift__'),nb_inplace_xor :wrap('__ixor__'),nb_int :wrap('__int__'),nb_invert:wrap('__invert__'),nb_matrix_multiply:wrap_with_reflected('__matmul__','__rmatmul__'),nb_multiply:wrap_with_reflected('__mul__','__rmul__'),nb_negative:wrap('__neg__'),nb_or:wrap_with_reflected('__or__','__ror__'),nb_positive:wrap('__pos__'),nb_power:wrap_with_reflected('__pow__','__rpow__'),nb_remainder:wrap_with_reflected('__mod__','__rmod__'),nb_subtract:wrap_with_reflected('__sub__','__rsub__'),nb_rshift:wrap_with_reflected('__rshift__','__rrshift__'),nb_true_divide:wrap_with_reflected('__truediv__','__rtruediv__'),nb_xor:wrap_with_reflected('__xor__','__rxor__'),sq_ass_item:make_setitem_delitem,sq_concat:wrap('__add__'),sq_contains:wrap('__contains__'),sq_length:wrap('__len__'),sq_repeat:wrap_with_same_reflected('__mul__','__rmul__'),tp_call:wrap('__call__'),tp_descr_get:wrap('__get__'),tp_descr_set:make_set_del,tp_doc:make_doc,tp_getattro:make_getattribute,tp_finalize:wrap('__del__'),tp_hash:wrap('__hash__'),tp_init:wrap('__init__'),tp_iter:wrap('__iter__'),tp_iternext:make_next,tp_new:make_new,tp_repr:wrap('__repr__',1),tp_str :wrap('__str__',1),tp_setattro:make_setattr_delattr,tp_richcompare:make_richcompare}
 )
 function make_doc(cls){var in_dict=$B.get_from_dict(cls,'__doc__',$B.NULL)
 if(in_dict===$B.NULL){$B.set_to_dict(cls,'__doc__',cls.tp_doc)}}

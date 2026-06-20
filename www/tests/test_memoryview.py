@@ -15,3 +15,7 @@ assert v.itemsize == 1
 assert v.tolist() == [97, 98, 99, 101, 102, 103]
 assert v.shape == (6,)
 assert v.strides == (1,)
+
+# PR 2787
+import array
+assert memoryview(array.array('Q', [1, 2, 3, 4, 5])).nbytes == 40
