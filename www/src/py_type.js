@@ -1736,7 +1736,10 @@ type_funcs.__prepare__ = function(cls) {
 }
 
 type_funcs.__qualname___get = function(cls) {
-    return $B.get_from_dict(cls, '__qualname__', $B.get_name(cls))
+    // builtin descriptor types store their instance __qualname__ getset under
+    // the same dict key; use the dict value only when it is the qualname string
+    var q = $B.get_from_dict(cls, '__qualname__', $B.NULL)
+    return typeof q === 'string' ? q : $B.get_name(cls)
 }
 
 type_funcs.__qualname___set = function(cls, value) {
