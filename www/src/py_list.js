@@ -45,16 +45,13 @@ function sq_repeat(self, other) {
         $B.RAISE(_b_.TypeError, "'" + $B.class_name(other) +
                 "' object cannot be interpreted as an integer")
     }
-    if (self.length == 0) {
-        return cls.tp_new(cls)
-    }
     try {
         other = $B.PyNumber_Index(other)
     } catch (err) {
         return _b_.NotImplemented
     }
     if (typeof other == 'number') {
-        if (other < 0) {
+        if (self.length == 0 || other < 0) {
             return cls.tp_new(cls)
         }
         if (self.length > $B.max_array_size / other) {
