@@ -17,3 +17,31 @@ for proto in range(pickle.HIGHEST_PROTOCOL + 1):
     it = pickle.loads(d)
     del data[drop]
     assert sorted(it) == sorted(data)
+
+# PR 2794
+class C:
+
+    def __getnewargs_ex__(self):
+        return (), {}
+
+assert isinstance(pickle.dumps(C(), 2), bytes)
+
+# PR 2799
+class S:
+
+    def __len__(self):
+        return 5
+
+    def __getitem__(self, i):
+        if i > 4:
+            raise IndexError
+        return i * 10
+
+it = iter(S())
+
+import pickle
+it1 = pickle.loads(pickle.dumps(it))
+
+next(it1)
+next(it1)
+assert next(it1) == 20

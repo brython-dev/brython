@@ -146,7 +146,7 @@ object.$no_new_init = function(cls) {
 function getNewArguments(self, klass) {
     var newargs_ex = $B.$getattr(self, '__getnewargs_ex__', null)
     if (newargs_ex !== null) {
-        let newargs = newargs_ex()
+        let newargs = $B.$call(newargs_ex)
         if ((! newargs) || $B.get_class(newargs) !== _b_.tuple) {
             $B.RAISE(_b_.TypeError, "__getnewargs_ex__ should " +
                 `return a tuple, not '${$B.class_name(newargs)}'`)
@@ -656,7 +656,12 @@ object_funcs.__reduce_ex__ = function(self, protocol) {
     var arg2 = [klass]
     var newargs = getNewArguments(self, klass)
     if (newargs) {
-        arg2 = arg2.concat(newargs.args)
+        if (newargs.kwargs && _b_.dict.mp_length(newargs.kwargs) > 0) {
+            res = [$B.module_getattr($B.imported.copyreg, '__newobj_ex__')]
+            arg2 = [klass, newargs.args, newargs.kwargs]
+        } else {
+            arg2 = arg2.concat(newargs.args)
+        }
     }
     res.push($B.fast_tuple(arg2))
     var getstate = $B.search_in_mro(klass, '__getstate__')

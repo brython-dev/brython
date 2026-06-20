@@ -981,6 +981,15 @@ $B.offer_suggestions_for_unexpected_keyword_error = function(arg_names, key) {
     return suggestions || _b_.None
 }
 
+$B.offer_suggestions_for_modulenotfound = function(name) {
+    var dir = Object.keys($B.imported)
+    if ($B.stdlib) {
+        dir = dir.concat(Object.keys($B.stdlib))
+    }
+    var suggestions = calculate_suggestions(dir, name)
+    return suggestions || _b_.None
+}
+
 // PEP 654
 
 _b_.BaseExceptionGroup.$factory = function(msg, excs) {
@@ -1706,11 +1715,17 @@ $B.error_trace = function(err) {
         } else if ($B.is_exc(err, _b_.AttributeError)) {
             let suggestion = $B.offer_suggestions_for_attribute_error(err)
             if (suggestion !== _b_.None) {
-                trace += `. Did you mean: '${suggestion}'?`
+                trace += `. Did you mean '.${suggestion}' instead of '.${err.name}'?`
             }
         } else if ($B.is_exc(err, _b_.ImportError)) {
-            if (err.$suggestion !== _b_.None) {
-                trace += `. Did you mean: '${err.$suggestion}'?`
+            if ($B.exact_type(err, _b_.ModuleNotFoundError)) {
+                if (err.name) {
+                    var suggestion = $B.offer_suggestions_for_modulenotfound(
+                            err.name)
+                    if (suggestion !== _b_.None) {
+                        trace += `. Did you mean: '${suggestion}'?`
+                    }
+                }
             }
         }
     } else {

@@ -534,10 +534,6 @@ dict.$delitem  = function(self, key) {
 $B.dict_delitem = dict.$delitem
 
 function dict_eq(self, other) {
-    if (! $B.$isinstance(other, dict)) {
-        return _b_.NotImplemented
-    }
-
     if (! self[KEYS] && ! other[KEYS]) {
         if (dict.mp_length(self) !== dict.mp_length(other)) {
             return false
@@ -913,7 +909,7 @@ dict.$from_array = function(arrays) {
 /* dict start */
 
 _b_.dict.tp_richcompare = function(self, other, op) {
-    if (! $B.is_dict(other)) {
+    if (! $B.is_dict(other) && ! $B.$isinstance(other, _b_.frozendict)) {
         return _b_.NotImplemented
     }
     var res
@@ -1748,10 +1744,69 @@ dict.$from_js = function(jsobj) {
     return res
 }
 
-/* frozendict start */
-_b_.frozendict.tp_richcompare = function(self) {
+// utilities for frozendict
 
+function is_any_dict(obj) {
+    return $B.is_dict(obj) || $B.exact_type(obj, _b_.frozendict)
 }
+
+function frozendict_or(self, other) {
+    if ($B.exact_type(self, _b_.frozendict)) {
+        // frozendict() | frozendict(...) => frozendict(...)
+        if (_b_.frozendict.mp_length(self) == 0
+            && $B.exact_type(other, _b_.frozendict)) {
+            return other
+        }
+
+        // frozendict(...) | frozendict() => frozendict(...)
+        if (is_any_dict(other) && _b_.dict.mp_length(other) == 0) {
+            return self
+        }
+    }
+
+    return _b_.dict.nb_or(self, other)
+}
+
+const _PyTuple_HASH_XXPRIME_1 = 2654435761
+const _PyTuple_HASH_XXPRIME_2 = 2246822519
+const _PyTuple_HASH_XXPRIME_5 = 374761393
+const _PyTuple_HASH_XXROTATE = (x) => ((x << 13) | (x >> 19))
+
+function frozendict_pair_hash(key_hash, value){
+
+    const len = 2
+    let acc = _PyTuple_HASH_XXPRIME_5
+
+    let lane = key_hash
+    acc += lane * _PyTuple_HASH_XXPRIME_2
+    acc = _PyTuple_HASH_XXROTATE(acc)
+    acc *= _PyTuple_HASH_XXPRIME_1
+
+    lane = $B.$hash(value)
+    if (lane == -1) {
+        return -1
+    }
+    acc += lane * _PyTuple_HASH_XXPRIME_2
+    acc = _PyTuple_HASH_XXROTATE(acc)
+    acc *= _PyTuple_HASH_XXPRIME_1
+
+    /* Add input length, mangled to keep the historical value of hash(()). */
+    acc += len ^ (_PyTuple_HASH_XXPRIME_5 ^ 3527539)
+
+    if (acc == -1) {
+        acc = 1546275796
+    }
+    return acc
+}
+
+function _shuffle_bits(h) {
+    return ((h ^ 89869747) ^ (h << 16)) * 3644798167
+}
+
+const HASHVALUE = Symbol('HASHVALUE')
+
+/* frozendict start */
+_b_.frozendict.tp_richcompare = _b_.dict.tp_richcompare
 
 _b_.frozendict.nb_or = function(self) {
 
@@ -1763,12 +1818,40 @@ _b_.frozendict.tp_repr = function(self) {
 }
 
 _b_.frozendict.tp_hash = function(self) {
+    if (Object.hasOwn(self, HASHVALUE)) {
+        return self[HASHVALUE]
+    }
+    let hash = 0
+    let value
+    let pos
+    let key_hash
 
+    for (var entry of _b_.dict.$iter_items(self)) {
+        let pair_hash = frozendict_pair_hash(entry.key, entry.value)
+        if (pair_hash == -1) {
+            return -1
+        }
+        hash ^= _shuffle_bits(pair_hash)
+    }
+
+    /* Factor in the number of active entries */
+    var ma_used = _b_.dict.mp_length(self)
+    hash ^= (ma_used + 1) * 1927868237
+
+    /* Disperse patterns arising in nested frozendicts */
+    hash ^= (hash >> 11) ^ (hash >> 25)
+    hash = hash * 69069 + 907133923
+
+    /* -1 is reserved as an error code */
+    if (hash == -1) {
+        hash = 590923713
+    }
+    console.log('hash', hash)
+    self[HASHVALUE] = hash
+    return hash
 }
 
-_b_.frozendict.tp_iter = function(self) {
-
-}
+_b_.frozendict.tp_iter = _b_.dict.tp_iter
 
 _b_.frozendict.tp_new = function(cls, args, kw) {
     var instance = $B.empty_dict()
@@ -1822,7 +1905,7 @@ frozendict_funcs.keys = dict_funcs.keys
 frozendict_funcs.values = dict_funcs.values
 
 _b_.frozendict.tp_methods = [
-    "__sizeof__", "get", "keys", "items", "values", "copy", "__reversed__", 
+    "__sizeof__", "get", "keys", "items", "values", "copy", "__reversed__",
     "__getnewargs__"]
 
 _b_.frozendict.classmethods = ["fromkeys", "__class_getitem__"]

@@ -1,6 +1,8 @@
 // Regular expression
 (function($B) {
 
+var re_module =  $B.imported.re
+
 var _debug = {value: 0}
 
 var _b_ = $B.builtins
@@ -56,29 +58,7 @@ var $error_2 = {
     __module__: "re"
 }
 
-var error = $B.make_type("error", [_b_.Exception])
-
-error.$factory = function(message) {
-    return {
-        ob_type: error,
-        msg: message,
-        args: $B.fast_tuple([]),
-        __cause__: _b_.None,
-        __context__: _b_.None,
-        __suppress_context__: false
-    }
-}
-
-error.tp_repr = function(self) {
-    var s = self.msg + ' at position ' + self.pos
-    if (self.lineno > 1) {
-        s += ` (line ${self.lineno}, column ${self.colno})`
-    }
-    return s
-}
-
-$B.set_func_names(error, "re")
-$B.finalize_type(error)
+var error = $B.module_getattr(re_module, "error")
 
 function $last(t) {
     return t[t.length - 1]
@@ -132,7 +112,11 @@ function warn(klass, message, pos, text) {
         }
         var col_offset = pos - line_start
     }
-    var warning = klass.$factory(message)
+    // Was `klass.$factory(message)` — fails for built-in exception classes
+    // like DeprecationWarning / FutureWarning that are made via
+    // `make_builtin_exception` and don't expose a $factory. $B.$call
+    // handles both paths (tp_call OR $factory).
+    var warning = $B.$call(klass, message)
     warning.pos = pos
     warning.args[1] = [file, lineno, col_offset, lineno, col_offset,
         line]
@@ -1113,11 +1097,19 @@ Scanner.$factory = function(pattern, string, pos, endpos) {
     }
 }
 
-Scanner.match = function(self) {
+// Scanner methods used to sit directly on the JS class object
+// (Scanner.match, Scanner.search). Brython's instance attribute lookup
+// goes through the type-protocol machinery (tp_funcs / tp_methods) and
+// didn't pick those up — `s = re.Scanner(...)` then `s.search()` raised
+// `AttributeError: 'Scanner' object has no attribute 'search'`. Move them
+// into the standard tp_funcs / tp_methods shape so Brython exposes them.
+var Scanner_funcs = Scanner.tp_funcs = {}
+
+Scanner_funcs.match = function(self) {
     return Pattern.tp_funcs.match(self.pattern, self.$string)
 }
 
-Scanner.search = function(self) {
+Scanner_funcs.search = function(self) {
     if (! self.$iterator) {
         self.$iterator = module.finditer(self.pattern, self.$string)
     }
@@ -1128,6 +1120,8 @@ Scanner.search = function(self) {
     }
     return mo
 }
+
+Scanner.tp_methods = ["match", "search"]
 
 $B.set_func_names(Scanner, 're')
 $B.finalize_type(Scanner)
@@ -1195,7 +1189,7 @@ Pattern.tp_richcompare = function(self, other, op) {
             res = Pattern_eq(self, other)
             break
         case '__ne__':
-            res = ! Patttern_eq(self, other)
+            res = ! Pattern_eq(self, other)
             break
         default:
             res = _b_.NotImplemented
@@ -1221,7 +1215,7 @@ Pattern.tp_repr = function(self) {
     var text = self.$pattern.text,
         s = text
     if (self.$pattern.type == "bytes") {
-        s = _b_.str.$factory(_b_.str.encode(s, 'latin-1'))
+        s = _b_.str.$factory(_b_.str.tp_funcs.encode(s, 'latin-1'))
     } else {
         s = _b_.repr(s)
     }
@@ -1336,6 +1330,30 @@ Pattern_funcs.groupindex_get = function(self) {
 
 Pattern_funcs.groupindex_set = _b_.None
 
+// CPython's re.Pattern exposes `pattern`, `flags` and `groups` as read-only
+// attributes (declared as PyMemberDef on the C type). They're set as JS
+// props in `$factory`, but Brython's attribute lookup only sees descriptors
+// listed in `tp_getset` / `tp_methods` — not raw JS instance props — so
+// without these getters `re.compile('x').pattern` raises `AttributeError`.
+// unittest's `assertRaisesRegex` relies on `expected_regex.pattern` when
+// the regex doesn't match and reports the failure, masking real test
+// failures with this AttributeError.
+
+Pattern_funcs.pattern_get = function(self){
+    return self.pattern
+}
+Pattern_funcs.pattern_set = _b_.None
+
+Pattern_funcs.flags_get = function(self){
+    return self.flags
+}
+Pattern_funcs.flags_set = _b_.None
+
+Pattern_funcs.groups_get = function(self){
+    return self.groups
+}
+Pattern_funcs.groups_set = _b_.None
+
 Pattern_funcs.match = function(self, string) {
     var $ = $B.args("match", 4,
                 {self: null, string: null, pos: null, endpos: null},
@@ -1403,7 +1421,7 @@ Pattern.tp_methods = [
     "finditer", "fullmatch", "match", "scanner", "search", "split", "sub"
 ]
 
-Pattern.tp_getset = ["groupindex"]
+Pattern.tp_getset = ["groupindex", "pattern", "flags", "groups"]
 
 $B.set_func_names(Pattern, "re")
 $B.finalize_type(Pattern)
@@ -3119,7 +3137,7 @@ function subn(pattern, repl, string, count, flags) {
         res += from_codepoint_list(string.codepoints.slice(pos))
     }
     if (pattern.type === "bytes") {
-        res = _b_.str.encode(res, "latin-1")
+        res = _b_.str.tp_funcs.encode(res, "latin-1")
     }
     return [res, nb_sub]
 }
@@ -3343,9 +3361,15 @@ GroupMO.prototype.groups = function(_default) {
 var MatchObject = $B.make_type("Match")
 
 MatchObject.$factory = function(mo) {
+    // Populate the JS instance props referenced by tp_members (endpos /
+    // pos / re). Previously only `mo` was set, so member-descriptor
+    // access for any of those returned UndefinedType.
     return {
         ob_type: MatchObject,
-        mo
+        mo,
+        endpos: mo && mo.endpos !== undefined ? mo.endpos : _b_.None,
+        pos: mo && mo.start !== undefined ? mo.start : 0,
+        re: mo && mo.node && mo.node.pattern !== undefined ? mo.node.pattern : _b_.None
     }
 }
 
@@ -3373,9 +3397,10 @@ MatchObject.tp_new = function(cls, args, kw) {
     var [mo] = $B.unpack_args('MatchObject', args, ['mo'], {})
     var res = MatchObject.$factory(mo)
     res.ob_type = cls
-    res.endpos = self.mo.endpos
-    res.pos = self.mo.start
-    res.re = self.mo.node.pattern
+    // Previously: `self.mo.endpos` etc. — `self` is undefined in tp_new
+    // (only `cls` and the args are in scope). The assignments threw
+    // ReferenceError; instances had no endpos/pos/re. `$factory` above
+    // now populates these from `mo`.
     return res
 }
 
@@ -3394,7 +3419,7 @@ MatchObject_funcs.__deepcopy__ = function(self) {
 }
 
 MatchObject_funcs.end = function(self) {
-    var $ = $B.args('end', 2, {self: null, group: null}, arguments, 
+    var $ = $B.args('end', 2, {self: null, group: null}, arguments,
                 {group: 0})
     var group = MatchObject.tp_funcs.group(self, $.group)
     if (group === _b_.None) {
@@ -3551,7 +3576,7 @@ MatchObject_funcs.span = function() {
 }
 
 MatchObject_funcs.start = function(self) {
-    var $ = $B.args('end', 2, {self: null, group: null}, 
+    var $ = $B.args('end', 2, {self: null, group: null},
                 arguments, {group: 0})
     var group = MatchObject.tp_funcs.group(self, $.group)
     if (group === _b_.None) {
@@ -3860,6 +3885,11 @@ var module = {
         return Pattern.$factory(jspat)
     },
     error: error,
+    // CPython 3.13+ alias — `re.error` was renamed to `re.PatternError`,
+    // with the old name kept as an alias. Tests written against 3.13+ use
+    // the new name (e.g. `assertRaises(re.PatternError, re.compile, …)`)
+    // and miss without this.
+    PatternError: error,
     escape: function() {
         var $ = $B.args("escape", 1, {pattern: null}, arguments)
         var data = prepare({pattern: $.pattern}),
@@ -3873,7 +3903,7 @@ var module = {
         }
         res = from_codepoint_list(res, data.type)
         if (data.type == "bytes" && $B.is_str(res)) {
-            res = _b_.str.encode(res, 'latin1')
+            res = _b_.str.tp_funcs.encode(res, 'latin1')
         }
         return res
     },
@@ -4137,7 +4167,7 @@ var module = {
                 function(x) {
                     return $B.is_bytes(x) ?
                                x :
-                               _b_.str.encode(x, "latin-1")
+                               _b_.str.tp_funcs.encode(x, "latin-1")
                 }
             )
         }

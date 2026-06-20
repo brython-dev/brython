@@ -520,7 +520,7 @@ BytesIO_funcs.close = function(_self) {
         $B.$call($B.$getattr(_self._buffer, 'clear'))
     }
     _self.exports = 0
-    $B._BufferedIOBase.close(_self)
+    $B._BufferedIOBase.tp_funcs.close(_self)
 }
 
 BytesIO_funcs.read = function() {
@@ -555,8 +555,9 @@ BytesIO_funcs.read = function() {
         return _b_.bytes.$factory()
     }
     var newpos = Math.min(_b_.len(_self._buffer), _self._pos + size)
-    var b = _b_.bytes.mp_subscript(_self._buffer,
-        _b_.slice.$factory(_self._pos, newpos))
+    // _buffer is a bytearray; read() must return bytes, not a bytearray slice
+    var b = _b_.bytes.$factory(_b_.bytes.mp_subscript(_self._buffer,
+        _b_.slice.$factory(_self._pos, newpos)))
     _self._pos = newpos
     return b
 }
@@ -636,7 +637,7 @@ BytesIO_funcs.readlines = function() {
             break
         }
     }
-    return lines
+    return $B.$list(lines)
 }
 
 BytesIO_funcs.write = function(_self, b) {

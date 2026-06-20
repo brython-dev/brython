@@ -1785,7 +1785,17 @@ $B.rich_op1 = function(op, x, y) {
                 "for " + opname2opsign[op] + ": '" + kl_name + "' and '" +
                 kl_name + "'")
         }
-        return $B.$call(method, x, y)
+        var same_res = $B.$call(method, x, y)
+        if (same_res === _b_.NotImplemented) {
+            if (op == '__mul__' && x_type.$is_sequence) {
+                $B.RAISE(_b_.TypeError, "can't multiply sequence by " +
+                    `non-int of type '${$B.class_name(y)}'`)
+            }
+            $B.RAISE(_b_.TypeError, "unsupported operand type(s) " +
+                "for " + $B.method_to_op[op] + ": '" + $B.class_name(x) +
+                "' and '" + $B.class_name(y) + "'")
+        }
+        return same_res
     }
 
     if (_b_.issubclass(y_type, x_type)) {

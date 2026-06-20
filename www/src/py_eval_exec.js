@@ -14,6 +14,10 @@ var $$eval = _b_.eval = function() {
         _locals = $.locals,
         mode = $.mode
 
+    var test = false // typeof src == 'string' && src.startsWith('import pickle')
+    if (test) {
+        console.log('exec\n', src)
+    }
     if($.src.mode && $.src.mode == "single" &&
             ["<console>", "<stdin>"].indexOf($.src.filename) > -1){
         // echo input in interactive mode
@@ -103,6 +107,9 @@ var $$eval = _b_.eval = function() {
         }
         // _globals is used for both globals and locals
         exec_globals = $B.dict_as_jsobj(_globals)
+        // set module associated with __name__
+        $B.imported[__name__] = $B.module.$factory(__name__)
+        $B.set_dict($B.imported[__name__], exec_globals)
         if (exec_globals.__builtins__ === undefined) {
             exec_globals.__builtins__ = _b_.__builtins__
         }

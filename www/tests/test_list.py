@@ -516,5 +516,8 @@ assert example_tuple[-16:] == (1, 2, 3, 4, 5, 6, 7, 8, 9)
 assert example_tuple[-16:-14] == ()
 assert tuple.__getitem__(example_tuple, slice(-16, None)) == \
     (1, 2, 3, 4, 5, 6, 7, 8, 9)
-    
+
+# PR 2764
+assert [1, 2, 3][0:-31:-1] == [1]
+
 print("passed all tests..")
