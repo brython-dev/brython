@@ -724,8 +724,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,3,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-06-19 15:57:24.932969"
-__BRYTHON__.timestamp=1781877444932
+__BRYTHON__.compiled_date="2026-06-20 13:10:16.888502"
+__BRYTHON__.timestamp=1781953816888
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -2325,7 +2325,7 @@ res.ob_type=cls
 if(cls !==object){$B.set_dict(res,$B.obj_dict({}))}
 return res}
 function getNewArguments(self,klass){var newargs_ex=$B.$getattr(self,'__getnewargs_ex__',null)
-if(newargs_ex !==null){let newargs=newargs_ex()
+if(newargs_ex !==null){let newargs=$B.$call(newargs_ex)
 if((! newargs)||$B.get_class(newargs)!==_b_.tuple){$B.RAISE(_b_.TypeError,"__getnewargs_ex__ should "+
 `return a tuple, not '${$B.class_name(newargs)}'`)}
 if(newargs.length !=2){$B.RAISE(_b_.ValueError,"__getnewargs_ex__ should "+
@@ -2549,7 +2549,9 @@ return $B.$call(_reduce_ex,self,protocol)}
 var res=[$B.module_getattr($B.imported.copyreg,'__newobj__')]
 var arg2=[klass]
 var newargs=getNewArguments(self,klass)
-if(newargs){arg2=arg2.concat(newargs.args)}
+if(newargs){if(newargs.kwargs && _b_.dict.mp_length(newargs.kwargs)> 0){res=[$B.module_getattr($B.imported.copyreg,'__newobj_ex__')]
+arg2=[klass,newargs.args,newargs.kwargs]}else{
+arg2=arg2.concat(newargs.args)}}
 res.push($B.fast_tuple(arg2))
 var getstate=$B.search_in_mro(klass,'__getstate__')
 if(getstate){var d=$B.$call(getstate,self)}else{
@@ -3229,7 +3231,9 @@ type_funcs.__mro___set=function(self){}
 type_funcs.__name___get=function(cls){return $B.get_name(cls)}
 type_funcs.__name___set=function(cls,value){cls.tp_name=value}
 type_funcs.__prepare__=function(cls){return $B.empty_dict()}
-type_funcs.__qualname___get=function(cls){return $B.get_from_dict(cls,'__qualname__',$B.get_name(cls))}
+type_funcs.__qualname___get=function(cls){
+var q=$B.get_from_dict(cls,'__qualname__',$B.NULL)
+return typeof q==='string' ? q :$B.get_name(cls)}
 type_funcs.__qualname___set=function(cls,value){cls.tp_name=value}
 type_funcs.__sizeof__=function(self){}
 type_funcs.__subclasscheck__=function(self,subclass){
@@ -3543,7 +3547,7 @@ method_wrapper_funcs.__objclass___get=function(self){return self.self.__objclass
 method_wrapper_funcs.__objclass___set=function(self){}
 method_wrapper_funcs.__qualname___get=function(self){}
 method_wrapper_funcs.__qualname___set=function(self){}
-method_wrapper_funcs.__reduce__=function(self){}
+method_wrapper_funcs.__reduce__=function(self){return $B.fast_tuple([_b_.getattr,$B.fast_tuple([self.self,self.d_name])])}
 method_wrapper_funcs.__text_signature___get=function(self){}
 method_wrapper_funcs.__text_signature___set=function(self){}
 $B.method_wrapper.tp_methods=["__reduce__"]
@@ -3565,7 +3569,7 @@ return obj[attr]}
 var member_descriptor_funcs=$B.member_descriptor.tp_funcs={}
 member_descriptor_funcs.__qualname___get=function(self){return self.name}
 member_descriptor_funcs.__qualname___set=_b_.None
-member_descriptor_funcs.__reduce__=function(self){}
+member_descriptor_funcs.__reduce__=function(self){return $B.fast_tuple([_b_.getattr,$B.fast_tuple([self.d_type,self.d_name])])}
 $B.member_descriptor.tp_methods=["__reduce__"]
 $B.member_descriptor.tp_members=[["__objclass__",$B.TYPES.OBJECT,"d_type",1],["__name__",$B.TYPES.OBJECT,"d_name",1]
 ]
@@ -3610,7 +3614,7 @@ var res={ob_type:cls,im_func:func,im_self:obj}
 $B.init_dict(res)
 return res}
 var method_funcs=$B.method.tp_funcs={}
-method_funcs.__reduce__=function(self){}
+method_funcs.__reduce__=function(self){return $B.fast_tuple([_b_.getattr,$B.fast_tuple([self.im_self,$B.$getattr(self.im_func,'__name__')])])}
 $B.method.functions_or_methods=["__new__"]
 $B.method.tp_methods=["__reduce__"]
 $B.method.tp_members=[["__func__",$B.TYPES.OBJECT,"im_func",1],["__self__",$B.TYPES.OBJECT,"im_self",1]
@@ -3637,7 +3641,7 @@ return f}
 var method_descriptor_funcs=$B.method_descriptor.tp_funcs={}
 method_descriptor_funcs.__qualname___get=function(self){return self.d_name}
 method_descriptor_funcs.__qualname___set=function(self,value){self.name=value}
-method_descriptor_funcs.__reduce__=function(self){}
+method_descriptor_funcs.__reduce__=function(self){return $B.fast_tuple([_b_.getattr,$B.fast_tuple([self.d_type,self.d_name])])}
 method_descriptor_funcs.__text_signature___get=function(self){}
 method_descriptor_funcs.__text_signature___set=function(self){}
 $B.method_descriptor.tp_methods=["__reduce__"]
@@ -3712,7 +3716,7 @@ return res}
 var wrapper_descriptor_funcs=$B.wrapper_descriptor.tp_funcs={}
 wrapper_descriptor_funcs.__qualname___get=function(self){return self.d_name}
 wrapper_descriptor_funcs.__qualname___set=function(self,value){self.d_name=value}
-wrapper_descriptor_funcs.__reduce__=function(self){}
+wrapper_descriptor_funcs.__reduce__=function(self){return $B.fast_tuple([_b_.getattr,$B.fast_tuple([self.d_type,self.d_name])])}
 wrapper_descriptor_funcs.__text_signature___get=function(self){return '(self, /, *args, **kwargs)'}
 wrapper_descriptor_funcs.__text_signature___set=function(self){}
 $B.wrapper_descriptor.tp_methods=["__reduce__"]
@@ -3795,7 +3799,11 @@ return self.$function_infos[$B.func_attrs.__name__]}
 builtin_function_or_method_funcs.__name___set=_b_.None
 builtin_function_or_method_funcs.__qualname___get=function(self){return self.$function_infos[$B.func_attrs.__qualname__]}
 builtin_function_or_method_funcs.__qualname___set=_b_.None
-builtin_function_or_method_funcs.__reduce__=function(self){return self.$function_infos[$B.func_attrs.__name__]}
+builtin_function_or_method_funcs.__reduce__=function(self){var name=self.ml ? self.ml.ml_name :
+self.$function_infos[$B.func_attrs.__name__]
+if(self.m_self !==undefined && self.m_self !==null &&
+! $B.$isinstance(self.m_self,$B.module)){return $B.fast_tuple([_b_.getattr,$B.fast_tuple([self.m_self,name])])}
+return name}
 builtin_function_or_method_funcs.__self___get=function(self){return $B.imported.builtins}
 builtin_function_or_method_funcs.__self___set=_b_.None
 builtin_function_or_method_funcs.__text_signature___get=function(self){}
@@ -4911,6 +4919,9 @@ throw err}
 var res=$B.object_getattribute(obj,klass,attr)}else{
 var in_dict=$B.get_dict(obj)[attr]
 if(in_dict && $B.get_class(obj)===_b_.type){var res=$B.NULL
+var tset=_b_.type.tp_funcs[attr+'_set']
+if(_b_.type.tp_funcs.hasOwnProperty(attr+'_get')&&
+tset !==undefined && tset !==_b_.None){return _b_.type.tp_funcs[attr+'_get'](obj)}
 switch($B.get_class(in_dict)){case $B.function:
 case $B.wrapper_descriptor:
 case $B.method_descriptor:
@@ -5038,8 +5049,8 @@ self.it_index++
 yield res}}
 var iterator_funcs=$B.iterator.tp_funcs={}
 iterator_funcs.__length_hint__=function(self){}
-iterator_funcs.__reduce__=function(self){}
-iterator_funcs.__setstate__=function(self){}
+iterator_funcs.__reduce__=function(self){return $B.fast_tuple([_b_.iter,$B.fast_tuple([self.it_seq]),self.it_index])}
+iterator_funcs.__setstate__=function(self,state){self.it_index=state < 0 ? 0 :state}
 $B.iterator.tp_methods=["__length_hint__","__reduce__","__setstate__"]
 const callable_iterator=$B.callable_iterator
 callable_iterator.$factory=function(func,sentinel){return{
@@ -5506,6 +5517,8 @@ $B.set_func_names(code,"builtins")})(__BRYTHON__)
 ;
 (function($B){var _b_=$B.builtins
 var $$eval=_b_.eval=function(){var $=$B.args("eval",4,{src:null,globals:null,locals:null,mode:null},arguments,{globals:_b_.None,locals:_b_.None,mode:'eval'},null,null,4),src=$.src,_globals=$.globals,_locals=$.locals,mode=$.mode
+var test=false 
+if(test){console.log('exec\n',src)}
 if($.src.mode && $.src.mode=="single" &&
 ["<console>","<stdin>"].indexOf($.src.filename)>-1){
 _b_.print(">",$.src.source.trim())}
@@ -5541,6 +5554,8 @@ exec_globals=frame[3]}}}else{
 if($B.get_class(_globals)!==_b_.dict){$B.RAISE(_b_.TypeError,`${mode}() globals must be `+
 "a dict, not "+$B.class_name(_globals))}
 exec_globals=$B.dict_as_jsobj(_globals)
+$B.imported[__name__]=$B.module.$factory(__name__)
+$B.set_dict($B.imported[__name__],exec_globals)
 if(exec_globals.__builtins__===undefined){exec_globals.__builtins__=_b_.__builtins__}
 if(_locals===_b_.None){exec_locals=exec_globals}else{
 if(_locals===_globals){
@@ -8656,9 +8671,7 @@ format_float_precision(val,upper,flags,_floating_exp_helper),flags)}
 $B.formatters={floating_point_format,floating_point_decimal_format,floating_point_exponential_format}
 var signed_hex_format=function(val,upper,flags){var ret
 if(! $B.is_int(val)){$B.RAISE(_b_.TypeError,`%X format: an integer is required, not ${$B.class_name(val)}`)}else if($B.$isinstance(val,_b_.bool)){val=val ? 1 :0}
-if($B.is_big_int(val)){ret=$B.int_value(val).toString(16)}else{
-ret=parseInt(val)
-ret=ret.toString(16)}
+ret=$B.int_value(val).toString(16)
 ret=format_int_precision(ret,flags)
 if(upper){ret=ret.toUpperCase()}
 if(flags.pad_char==="0"){if(val < 0){ret=ret.substring(1)
@@ -8670,9 +8683,7 @@ if(upper){ret="0X"+ret}else{ret="0x"+ret}}}
 return format_padding(format_sign(val,flags)+ret,flags)}
 var octal_format=function(val,flags){number_check(val,flags)
 var ret
-if($B.is_big_int(val)){ret=$B.int_value(val).toString(8)}else{
-ret=parseInt(val)
-ret=ret.toString(8)}
+ret=$B.int_value(val).toString(8)
 ret=format_int_precision(ret,flags)
 if(flags.pad_char==="0"){if(val < 0){ret=ret.substring(1)
 ret="-"+format_padding(ret,flags,true)}
@@ -9827,29 +9838,29 @@ int.$to_bigint=bigint_value
 function preformat(self,fmt){if(fmt.empty){return _b_.str.$factory(self)}
 if(fmt.type && 'bcdoxXn'.indexOf(fmt.type)==-1){$B.RAISE(_b_.ValueError,"Unknown format code '"+fmt.type+
 "' for object of type 'int'")}
-var res
+var res,value=$B.int_value(self)
 switch(fmt.type){case undefined:
 case "d":
-res=self.toString()
+res=value.toString()
 break
 case "b":
-res=(fmt.alternate ? "0b" :"")+self.toString(2)
+res=(fmt.alternate ? "0b" :"")+value.toString(2)
 break
 case "c":
-res=_b_.chr(self)
+res=_b_.chr(value)
 break
 case "o":
-res=(fmt.alternate ? "0o" :"")+self.toString(8)
+res=(fmt.alternate ? "0o" :"")+value.toString(8)
 break
 case "x":
-res=(fmt.alternate ? "0x" :"")+self.toString(16)
+res=(fmt.alternate ? "0x" :"")+value.toString(16)
 break
 case "X":
-res=(fmt.alternate ? "0X" :"")+self.toString(16).toUpperCase()
+res=(fmt.alternate ? "0X" :"")+value.toString(16).toUpperCase()
 break
 case "n":
 return self }
-if(fmt.sign !==undefined){if((fmt.sign==" " ||fmt.sign=="+" )&& self >=0){res=fmt.sign+res}}
+if(fmt.sign !==undefined){if((fmt.sign==" " ||fmt.sign=="+" )&& value >=0){res=fmt.sign+res}}
 return res}
 function extended_euclidean(a,b){
 var d,u,v
@@ -10066,7 +10077,9 @@ _b_.int.nb_bool=function(self){return int_value(self)==0 ? false :true}
 _b_.int.nb_invert=function(self){var x=toBigInt(self)
 return int_or_long(~x)}
 _b_.int.nb_int=function(self){return int_value(self)}
-_b_.int.nb_float=function(self){return $B.fast_float(Number(int_value(self)))}
+_b_.int.nb_float=function(self){var x=Number(int_value(self))
+if(! isFinite(x)){$B.RAISE(_b_.OverflowError,"int too large to convert to float")}
+return $B.fast_float(x)}
 _b_.int.nb_floor_divide=function(self,other){var[x,y]=[self,other].map(toBigInt)
 if(x===$B.NULL ||y===$B.NULL){return _b_.NotImplemented}
 if(y===0n){$B.RAISE(_b_.ZeroDivisionError,'division by zero')}
@@ -10177,7 +10190,9 @@ int_funcs.imag_get=function(self){return 0}
 int_funcs.imag_set=_b_.None
 int_funcs.is_integer=function(self){return true}
 int_funcs.__float__=function(self){
-return $B.fast_float(Number(int_value(self)))}
+var x=Number(int_value(self))
+if(! isFinite(x)){$B.RAISE(_b_.OverflowError,"int too large to convert to float")}
+return $B.fast_float(x)}
 int_funcs.numerator_get=function(self){return int_value(self)}
 int_funcs.numerator_set=_b_.None
 int_funcs.real_get=function(self){return int_value(self)}
