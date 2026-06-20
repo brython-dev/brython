@@ -1839,7 +1839,8 @@ property.$factory = function(fget, fset, fdel, doc) {
 /* property start */
 _b_.property.tp_descr_set = function(self, obj, value) {
     if (self.prop_set === _b_.None) {
-        var name = self.prop_get.$function_infos[$B.func_attrs.__name__]
+        var fi = self.prop_get.$function_infos
+        var name = fi ? fi[$B.func_attrs.__name__] : (self.prop_name ?? self.__name__)
         var msg = `property '${name}' of '${$B.class_name(obj)}' object ` +
                   'has no setter'
         $B.RAISE_ATTRIBUTE_ERROR(msg, self, '__set__')
