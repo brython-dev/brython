@@ -740,6 +740,7 @@ $B._FileIO.tp_init = function() {
     }
 
     if ($B.file_cache.hasOwnProperty(name)) {
+        _self.fd = 31 + Object.keys($B.file_cache).indexOf(name)
         _self.$bytes = $B.to_bytes($B.encode($B.file_cache[name], 'utf-8'))
         _self.$byte_pos = 0
         _self.$line_pos = 0
@@ -750,6 +751,7 @@ $B._FileIO.tp_init = function() {
     } else if ($B.files && $B.files.hasOwnProperty(name)) {
         // Virtual file system created by
         // python -m brython --make_file_system
+        _self.fd = 31313131 + Object.keys($B.files).indexOf(name)
         var $res = atob($B.files[name].content)
         var bytes = []
         for (const char of $res) {
@@ -1223,7 +1225,7 @@ function _io_open_impl(file, mode, buffering, encoding, errors, newline,
     }
 
     result = $B.$call(Buffered_class, raw, buffering)
-
+    
     /* if binary, returns the buffered file */
     if (binary) {
         return result

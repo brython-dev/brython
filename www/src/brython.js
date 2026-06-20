@@ -724,8 +724,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,3,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-06-20 13:10:16.888502"
-__BRYTHON__.timestamp=1781953816888
+__BRYTHON__.compiled_date="2026-06-20 15:07:16.556851"
+__BRYTHON__.timestamp=1781960836556
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -2227,7 +2227,13 @@ if(method===$B.NULL){var kl_name=$B.class_name(x)
 $B.RAISE(_b_.TypeError,"unsupported operand type(s) "+
 "for "+opname2opsign[op]+": '"+kl_name+"' and '"+
 kl_name+"'")}
-return $B.$call(method,x,y)}
+var same_res=$B.$call(method,x,y)
+if(same_res===_b_.NotImplemented){if(op=='__mul__' && x_type.$is_sequence){$B.RAISE(_b_.TypeError,"can't multiply sequence by "+
+`non-int of type '${$B.class_name(y)}'`)}
+$B.RAISE(_b_.TypeError,"unsupported operand type(s) "+
+"for "+$B.method_to_op[op]+": '"+$B.class_name(x)+
+"' and '"+$B.class_name(y)+"'")}
+return same_res}
 if(_b_.issubclass(y_type,x_type)){
 var reflected_left=$B.$getattr(x_type,rop,false),reflected_right=$B.$getattr(y_type,rop,false)
 if(reflected_right && reflected_left &&
@@ -3262,7 +3268,8 @@ ob_type:_b_.property,prop_get:fget,prop_set:fset ?? _b_.None,prop_del:_b_.None,d
 property.$factory=function(fget,fset,fdel,doc){var res={ob_type:property}
 property.tp_init(res,fget,fset ?? _b_.None,fdel ?? _b_.None,doc ?? _b_.None)
 return res}
-_b_.property.tp_descr_set=function(self,obj,value){if(self.prop_set===_b_.None){var name=self.prop_get.$function_infos[$B.func_attrs.__name__]
+_b_.property.tp_descr_set=function(self,obj,value){if(self.prop_set===_b_.None){var fi=self.prop_get.$function_infos
+var name=fi ? fi[$B.func_attrs.__name__]:(self.prop_name ?? self.__name__)
 var msg=`property '${name}' of '${$B.class_name(obj)}' object `+
 'has no setter'
 $B.RAISE_ATTRIBUTE_ERROR(msg,self,'__set__')}
@@ -4282,6 +4289,7 @@ _BufferedReader_funcs.seek=function(_self,offset,whence){var $=$B.args('seek',3,
 var _self=$.self,offset=$.offset,whence=$.whence
 CHECK_CLOSED(_self)
 if(whence===undefined){whence=0}
+if(! $B.$bool($B.$call($B.$getattr(_self,'seekable')))){_io_unsupported('File or stream is not seekable.')}
 var raw=_self.raw
 if(raw.$bytes===undefined){return $B.$call($B.$getattr(raw,'seek'),offset,whence)}
 if(whence===0){raw.$byte_pos=offset}else if(whence===1){raw.$byte_pos=(raw.$byte_pos ||0)+offset}else if(whence===2){raw.$byte_pos=raw.$bytes.length+offset}
@@ -4359,13 +4367,15 @@ pos++}
 if(!rwa){bad_mode()}
 if(_self.readable && _self.writable){flags |=O_RDWR}else if(_self.readable){flags |=O_RDONLY}else{
 flags |=O_WRONLY}
-if($B.file_cache.hasOwnProperty(name)){_self.$bytes=$B.to_bytes($B.encode($B.file_cache[name],'utf-8'))
+if($B.file_cache.hasOwnProperty(name)){_self.fd=31+Object.keys($B.file_cache).indexOf(name)
+_self.$bytes=$B.to_bytes($B.encode($B.file_cache[name],'utf-8'))
 _self.$byte_pos=0
 _self.$line_pos=0
 _self.$text=$B.file_cache[name]
 _self.$text_iterator=_self.$text[Symbol.iterator]()
 _self.$text_length=_b_.len(_self.$text)
 return}else if($B.files && $B.files.hasOwnProperty(name)){
+_self.fd=31313131+Object.keys($B.files).indexOf(name)
 var $res=atob($B.files[name].content)
 var bytes=[]
 for(const char of $res){bytes.push(char.charCodeAt(0))}
@@ -7820,14 +7830,15 @@ if(arg < 0){pos=self.source.length+pos}
 if(pos >=0 && pos < self.source.length){return self.source[pos]}
 $B.RAISE(_b_.IndexError,"index out of range")}else if($B.$isinstance(arg,_b_.slice)){let s=_b_.slice.$conv_for_seq(arg,self.source.length)
 var start=s.start,stop=s.stop,step=s.step
+var cls=$B.$isinstance(self,bytearray)? bytearray :bytes
 let res=[],pos=0
 if(step > 0){stop=Math.min(stop,self.source.length)
-if(stop <=start){return bytes.$factory([])}
+if(stop <=start){return cls.$factory([])}
 for(let i=start;i < stop;i+=step){res[pos++]=self.source[i]}}else{
-if(stop >=start){return bytes.$factory([])}
+if(stop >=start){return cls.$factory([])}
 stop=Math.max(0,stop)
 for(let i=start;i >=stop;i+=step){res[pos++]=self.source[i]}}
-return bytes.$factory(res)}
+return cls.$factory(res)}
 $B.RAISE(_b_.TypeError,`byte indices must be integers or slices, not ${$B.class_name(arg)}`
 )}
 _b_.bytes.sq_concat=function(self,other){var $=$B.args('__add__',2,{self:null,other:null},arguments)
@@ -10042,7 +10053,7 @@ while(exponent > 0n){if(exponent % 2n==1n){result=(result*base)% z}
 exponent=exponent >> 1n
 base=(base*base)% z}
 return int_or_long(result)}else{
-if(y < 0n){
+if(y < 0n){if(x==0n){$B.RAISE(_b_.ZeroDivisionError,"zero to a negative power")}
 return $B.fast_float(Number(x)**Number(y))}
 return int_or_long(x**y)}}}
 _b_.int.nb_lshift=function(self,other){var[x,y]=[self,other].map(toBigInt)
@@ -11753,10 +11764,9 @@ return res}
 function sq_repeat(self,other){var cls=$B.is_list(self)? _b_.list :_b_.tuple
 if($B.$isinstance(other,[_b_.float,_b_.complex])){$B.RAISE(_b_.TypeError,"'"+$B.class_name(other)+
 "' object cannot be interpreted as an integer")}
-if(self.length==0){return cls.tp_new(cls)}
 try{
 other=$B.PyNumber_Index(other)}catch(err){return _b_.NotImplemented}
-if(typeof other=='number'){if(other < 0){return cls.tp_new(cls)}
+if(typeof other=='number'){if(self.length==0 ||other < 0){return cls.tp_new(cls)}
 if(self.length > $B.max_array_size/other){$B.RAISE(_b_.OverflowError,`cannot fit `+
 `'${$B.class_name(other)}' into an index-sized integer`)}
 var res=[],$temp=self.slice(),len=$temp.length
