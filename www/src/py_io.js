@@ -551,6 +551,10 @@ _BufferedReader_funcs.seek = function(_self, offset, whence) {
     if (whence === undefined) {
         whence = 0
     }
+    // like CPython, seeking an unseekable stream raises UnsupportedOperation
+    if (! $B.$bool($B.$call($B.$getattr(_self, 'seekable')))) {
+        _io_unsupported('File or stream is not seekable.')
+    }
     var raw = _self.raw
     // a raw stream without a $bytes snapshot seeks itself; otherwise move the
     // cursor read() consults on the raw object
