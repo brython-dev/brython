@@ -2558,26 +2558,28 @@ _b_.bytes.mp_subscript = function(self, arg) {
         var start = s.start,
             stop = s.stop,
             step = s.step
+        // a bytearray slice yields a bytearray, a bytes slice yields bytes
+        var cls = $B.$isinstance(self, bytearray) ? bytearray : bytes
         let res = [],
             pos = 0
         if (step > 0) {
             stop = Math.min(stop, self.source.length)
             if (stop <= start) {
-                return bytes.$factory([])
+                return cls.$factory([])
             }
             for (let i = start; i < stop; i += step) {
                 res[pos++] = self.source[i]
             }
         } else {
             if (stop >= start) {
-                return bytes.$factory([])
+                return cls.$factory([])
             }
             stop = Math.max(0, stop)
             for (let i = start; i >= stop; i += step) {
                 res[pos++] = self.source[i]
             }
         }
-        return bytes.$factory(res)
+        return cls.$factory(res)
     }
     $B.RAISE(_b_.TypeError,
         `byte indices must be integers or slices, not ${$B.class_name(arg)}`
