@@ -911,4 +911,8 @@ class Int(int):
 assert Int(4).__int__() == 4
 assert type(Int(4).__int__()) is int
 
+# PR 2801
+assert_raises(OverflowError, float, 10**1000,
+  msg="int too large to convert to float")
+  
 print('passed all tests...')
