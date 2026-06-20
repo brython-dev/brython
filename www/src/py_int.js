@@ -81,33 +81,33 @@ function preformat(self, fmt) {
         $B.RAISE(_b_.ValueError, "Unknown format code '" + fmt.type +
             "' for object of type 'int'")
     }
-    var res
+    var res, value = $B.int_value(self)
     switch (fmt.type) {
         case undefined:
         case "d":
-            res = self.toString()
+            res = value.toString()
             break
         case "b":
-            res = (fmt.alternate ? "0b" : "") + self.toString(2)
+            res = (fmt.alternate ? "0b" : "") + value.toString(2)
             break
         case "c":
-            res = _b_.chr(self)
+            res = _b_.chr(value)
             break
         case "o":
-            res = (fmt.alternate ? "0o" : "") + self.toString(8)
+            res = (fmt.alternate ? "0o" : "") + value.toString(8)
             break
         case "x":
-            res = (fmt.alternate ? "0x" : "") + self.toString(16)
+            res = (fmt.alternate ? "0x" : "") + value.toString(16)
             break
         case "X":
-            res = (fmt.alternate ? "0X" : "") + self.toString(16).toUpperCase()
+            res = (fmt.alternate ? "0X" : "") + value.toString(16).toUpperCase()
             break
         case "n":
             return self // fix me
     }
 
     if (fmt.sign !== undefined) {
-        if ((fmt.sign == " " || fmt.sign == "+" ) && self >= 0) {
+        if ((fmt.sign == " " || fmt.sign == "+" ) && value >= 0) {
             res = fmt.sign + res
         }
     }
