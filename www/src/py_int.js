@@ -81,33 +81,33 @@ function preformat(self, fmt) {
         $B.RAISE(_b_.ValueError, "Unknown format code '" + fmt.type +
             "' for object of type 'int'")
     }
-    var res
+    var res, value = $B.int_value(self)
     switch (fmt.type) {
         case undefined:
         case "d":
-            res = self.toString()
+            res = value.toString()
             break
         case "b":
-            res = (fmt.alternate ? "0b" : "") + self.toString(2)
+            res = (fmt.alternate ? "0b" : "") + value.toString(2)
             break
         case "c":
-            res = _b_.chr(self)
+            res = _b_.chr(value)
             break
         case "o":
-            res = (fmt.alternate ? "0o" : "") + self.toString(8)
+            res = (fmt.alternate ? "0o" : "") + value.toString(8)
             break
         case "x":
-            res = (fmt.alternate ? "0x" : "") + self.toString(16)
+            res = (fmt.alternate ? "0x" : "") + value.toString(16)
             break
         case "X":
-            res = (fmt.alternate ? "0X" : "") + self.toString(16).toUpperCase()
+            res = (fmt.alternate ? "0X" : "") + value.toString(16).toUpperCase()
             break
         case "n":
             return self // fix me
     }
 
     if (fmt.sign !== undefined) {
-        if ((fmt.sign == " " || fmt.sign == "+" ) && self >= 0) {
+        if ((fmt.sign == " " || fmt.sign == "+" ) && value >= 0) {
             res = fmt.sign + res
         }
     }
@@ -522,6 +522,10 @@ _b_.int.nb_power = function(self, other, z) {
             return int_or_long(result)
         } else {
             if (y < 0n) {
+                if (x == 0n) {
+                    $B.RAISE(_b_.ZeroDivisionError,
+                        "zero to a negative power")
+                }
                 // raising a BigInt to a negative values raises a JS error
                 return $B.fast_float(Number(x) ** Number(y))
             }
@@ -616,7 +620,11 @@ _b_.int.nb_int = function(self) {
 }
 
 _b_.int.nb_float = function(self) {
-    return $B.fast_float(Number(int_value(self)))
+    var x = Number(int_value(self))
+    if(! isFinite(x)){
+        $B.RAISE(_b_.OverflowError, "int too large to convert to float")
+    }
+    return $B.fast_float(x)
 }
 
 _b_.int.nb_floor_divide = function(self, other) {
@@ -887,6 +895,19 @@ int_funcs.is_integer = function(self) {
     return true
 }
 
+int_funcs.__float__ = function(self) {
+    // CPython exposes int.__float__ (long_float); without it the C number
+    // protocol's nb_float slot fails on an int ("'int' object has no
+    // attribute '__float__'", e.g. cmath of an int argument). Reuse the
+    // nb_float conversion directly: `float.$factory(self)` would recurse
+    // (float.$factory re-dispatches to __float__ when the operand has one).
+    var x = Number(int_value(self))
+    if(! isFinite(x)){
+        $B.RAISE(_b_.OverflowError, "int too large to convert to float")
+    }
+    return $B.fast_float(x)
+}
+
 int_funcs.numerator_get = function(self) {
     return int_value(self)
 }
@@ -953,7 +974,7 @@ _b_.int.functions_or_methods = ["__new__"]
 _b_.int.tp_methods = [
     "conjugate", "bit_length", "bit_count", "to_bytes", "as_integer_ratio",
     "__trunc__", "__floor__", "__ceil__", "__round__", "__getnewargs__",
-    "__format__", "__sizeof__", "is_integer"]
+    "__format__", "__sizeof__", "is_integer", "__float__"]
 
 _b_.int.classmethods = ["from_bytes"]
 

@@ -398,7 +398,16 @@ memoryview_funcs.nbytes_get = function(self) {
     for (var x of self.shape) {
         product *= x
     }
-    return x * self.itemsize
+    // factory stores itemsize 1 even over a multi-byte buffer (e.g. array('Q')):
+    // fall back to the source object's real itemsize so nbytes is the byte length
+    var isize = self.itemsize
+    if (isize === 1) {
+        var src = $B.$getattr(self.obj, 'itemsize', null)
+        if (src !== null && $B.is_int(src)) {
+            isize = src
+        }
+    }
+    return product * isize
 }
 
 memoryview_funcs.nbytes_set = _b_.None

@@ -89,6 +89,7 @@ Object.assign($B.wrapper_methods,
         nb_bool: wrap('__bool__'),
         nb_divmod: wrap_with_reflected('__divmod__', '__rdivmod__'),
         nb_floor_divide: wrap_with_reflected('__floordiv__', '__rfloordiv__'),
+        nb_float: wrap('__float__'),
         nb_index: wrap('__index__'),
         nb_lshift: wrap_with_reflected('__lshift__', '__rlshift__'),
         nb_inplace_add : wrap('__iadd__'),
@@ -220,7 +221,7 @@ function make_set_del(cls) {
 function make_setitem_delitem(cls) {
     var setitem = cls.sq_ass_item ?? cls.mp_ass_subscript
     var setitem_func = function() {
-        var $ = $B.args("__setitem__", 3, 
+        var $ = $B.args("__setitem__", 3,
                     {self: null, key: null, value: null}, arguments)
         return setitem($.self, $.key, $.value)
     }

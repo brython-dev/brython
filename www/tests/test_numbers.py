@@ -887,10 +887,32 @@ assert (2**1200) / (2**1100) == 1.2676506002282294e+30
 assert 1 / 2**1074 == 5e-324
 
 # PR 2750
-class MyInt(int): 
+class MyInt(int):
     pass
 
 from fractions import Fraction
 assert MyInt(Fraction(17)) == 17
 
+# float.__float__
+assert (0.5).__float__() == 0.5
+assert (5.2).__float__() == 5.2
+assert (5).__float__() == 5.0
+
+class Float(float):
+  pass
+
+assert Float(8.4).__float__()
+assert type(Float(8.4).__float__()) is float
+
+# int.__int__
+class Int(int):
+  pass
+
+assert Int(4).__int__() == 4
+assert type(Int(4).__int__()) is int
+
+# PR 2801
+assert_raises(OverflowError, float, 10**1000,
+  msg="int too large to convert to float")
+  
 print('passed all tests...')

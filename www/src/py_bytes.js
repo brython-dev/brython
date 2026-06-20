@@ -925,18 +925,23 @@ function startswith() {
         }
         return res
     } else if ($B.is_tuple(prefix)) {
-        let items = []
-        for (let i = 0; i < prefix.length; i++) {
-            if ($B.$isinstance(prefix[i], [bytes, bytearray])) {
-                items = items.concat(prefix[i].source)
-            } else {
+        // A tuple of prefixes matches if ANY one matches (CPython semantics).
+        // The old code concatenated every tuple item into a single bytes and
+        // tested that — wrong — and a block-hoisted `let prefix` shadow put the
+        // param in the temporal dead zone, so the branch threw "can't access
+        // 'prefix' before initialization" before ever returning the wrong
+        // answer (bytes.startswith with a tuple, as in json.detect_encoding,
+        // hit it). Mirror endswith: test each prefix individually.
+        for (let sub of prefix) {
+            if (! $B.$isinstance(sub, [bytes, bytearray])) {
                 $B.RAISE(_b_.TypeError, "startswith first arg must be " +
-                    "bytes or a tuple of bytes, not " +
-                    $B.class_name(prefix))
+                    "bytes or a tuple of bytes, not " + $B.class_name(prefix))
+            }
+            if (startswith.call(cls, self, sub, start)) {
+                return true
             }
         }
-        let prefix = cls.$factory(items)
-        return startswith.call(cls, self, prefix, start)
+        return false
     } else {
         $B.RAISE(_b_.TypeError, "startswith first arg must be bytes " +
             "or a tuple of bytes, not " + $B.class_name(prefix))
@@ -2002,7 +2007,7 @@ var decode = $B.decode = function(obj, encoding, errors) {
       case "U8":
       case "UTF":
           if (globalThis.TextDecoder) {
-              var decoder = new TextDecoder('utf-8', {fatal: true}),
+              var decoder = new TextDecoder('utf-8', {fatal: true, ignoreBOM: true}),
                   array = new Uint8Array(b)
               try {
                   return decoder.decode(array)
@@ -2137,6 +2142,7 @@ var decode = $B.decode = function(obj, encoding, errors) {
           }
           return s
       case "latin_1":
+      case "iso8859":
       case "windows1252":
       case "iso-8859-1":
       case "iso8859-1":
@@ -2253,6 +2259,7 @@ var encode = $B.encode = function() {
         case "latin-1":
         case "latin_1":
         case "L1":
+        case "iso8859":
         case "iso8859_1":
         case "iso_8859_1":
         case "8859":
@@ -2551,26 +2558,28 @@ _b_.bytes.mp_subscript = function(self, arg) {
         var start = s.start,
             stop = s.stop,
             step = s.step
+        // a bytearray slice yields a bytearray, a bytes slice yields bytes
+        var cls = $B.$isinstance(self, bytearray) ? bytearray : bytes
         let res = [],
             pos = 0
         if (step > 0) {
             stop = Math.min(stop, self.source.length)
             if (stop <= start) {
-                return bytes.$factory([])
+                return cls.$factory([])
             }
             for (let i = start; i < stop; i += step) {
                 res[pos++] = self.source[i]
             }
         } else {
             if (stop >= start) {
-                return bytes.$factory([])
+                return cls.$factory([])
             }
             stop = Math.max(0, stop)
             for (let i = start; i >= stop; i += step) {
                 res[pos++] = self.source[i]
             }
         }
-        return bytes.$factory(res)
+        return cls.$factory(res)
     }
     $B.RAISE(_b_.TypeError,
         `byte indices must be integers or slices, not ${$B.class_name(arg)}`

@@ -43,7 +43,7 @@ const DEFAULT_BUFFER_SIZE = (128 * 1024)  /* bytes */
 
 $B.make_IOUnsupported = function() {
     if ($B._IOUnsupported === undefined) {
-        $B._IOUnsupported = $B.make_type('UnsupportedOperation', [_b_.OSError])
+        $B._IOUnsupported = $B.make_type('UnsupportedOperation', [_b_.OSError, _b_.ValueError])
         $B._IOUnsupported.__module__ = '_io'
         $B.finalize_type($B._IOUnsupported)
     }
@@ -398,12 +398,10 @@ function _bufferediobase_readinto_generic(_self, buffer, readinto1) {
 var _BufferedIOBase_funcs = $B._BufferedIOBase.tp_funcs = {}
 
 _BufferedIOBase_funcs.__exit__ = function(self, type, value, traceback) {
-    try {
-        $B.$call($B.$getattr(self, 'close'))
-        return true
-    } catch (err) {
-        return false
-    }
+    // like CPython IOBase.__exit__ = self.close(): returns None, never
+    // suppresses the with-block exception
+    $B.$call($B.$getattr(self, 'close'))
+    return _b_.None
 }
 
 _BufferedIOBase_funcs.readinto = function(_self, buffer) {
@@ -467,6 +465,29 @@ function _bufferedreader_read_fast(_self, n) {
 function _bufferedreader_readline(_self) {
     CHECK_CLOSED(_self)
     var raw = _self.raw
+    if (raw.$bytes === undefined) {
+        // stream raw without a $bytes snapshot: buffer read() output and hand
+        // out one line at a time
+        if (_self.$linebuf === undefined) {
+            _self.$linebuf = []
+            _self.$linebuf_eof = false
+        }
+        var lbuf = _self.$linebuf
+        var lnl = lbuf.indexOf(10)
+        while (lnl === -1 && !_self.$linebuf_eof) {
+            var ldata = $B.$call($B.$getattr(raw, 'read'), DEFAULT_BUFFER_SIZE)
+            if (ldata === _b_.None || _b_.len(ldata) === 0) {
+                _self.$linebuf_eof = true
+                break
+            }
+            for (var lsrc = ldata.source, li = 0, lL = lsrc.length; li < lL; li++) {
+                lbuf.push(lsrc[li])
+            }
+            lnl = lbuf.indexOf(10)
+        }
+        var lend = lnl === -1 ? lbuf.length : lnl + 1
+        return $B.fast_bytes(lbuf.splice(0, lend))
+    }
     if (raw.$byte_pos >= raw.$bytes.length) {
         return $B.fast_bytes()
     }
@@ -486,7 +507,7 @@ function _bufferedreader_readline(_self) {
 $B._BufferedReader = $B.make_builtin_class('_BufferedReader',
     [$B._BufferedIOBase])
 // expose the underlying raw stream, like CPython (decomp._buffer.raw.tell())
-$B._BufferedReader.tp_getset = ['raw']
+$B._BufferedReader.tp_getset = ['raw', 'name']
 
 $B._BufferedReader.tp_init = function(_self, raw, buffer_size=DEFAULT_BUFFER_SIZE) {
     _self.raw = raw
@@ -495,8 +516,20 @@ $B._BufferedReader.tp_init = function(_self, raw, buffer_size=DEFAULT_BUFFER_SIZ
 
 var _BufferedReader_funcs = $B._BufferedReader.tp_funcs = {}
 
+
+// CPython BufferedReader.fileno() forwards to the wrapped raw stream
+_BufferedReader_funcs.fileno = function(_self) {
+    return $B.$call($B.$getattr(_self.raw, 'fileno'))
+}
+
 _BufferedReader_funcs.raw_get = function(_self) {
     return _self.raw
+}
+
+// CPython BufferedReader.name forwards to the wrapped raw stream (read-only,
+// like the sibling 'raw' getset: no setter)
+_BufferedReader_funcs.name_get = function(_self) {
+    return $B.$getattr(_self.raw, 'name')
 }
 
 _BufferedReader_funcs.peek = function(_self, size) {
@@ -509,7 +542,7 @@ _BufferedReader_funcs.peek = function(_self, size) {
 }
 
 _BufferedReader_funcs.seek = function(_self, offset, whence) {
-    var $ = $B.args('seek', 2, {self: null, offset: null, whence: null},
+    var $ = $B.args('seek', 3, {self: null, offset: null, whence: null},
                 arguments, {whence: 0})
     var _self = $.self,
         offset = $.offset,
@@ -518,14 +551,24 @@ _BufferedReader_funcs.seek = function(_self, offset, whence) {
     if (whence === undefined) {
         whence = 0
     }
-    if (whence === 0) {
-        _self.$byte_pos = offset
-    } else if (whence === 1) {
-        _self.$byte_pos += offset
-    } else if (whence === 2) {
-        _self.$byte_pos = self.$bytes.length + offset
+    // like CPython, seeking an unseekable stream raises UnsupportedOperation
+    if (! $B.$bool($B.$call($B.$getattr(_self, 'seekable')))) {
+        _io_unsupported('File or stream is not seekable.')
     }
-    return _b_.None
+    var raw = _self.raw
+    // a raw stream without a $bytes snapshot seeks itself; otherwise move the
+    // cursor read() consults on the raw object
+    if (raw.$bytes === undefined) {
+        return $B.$call($B.$getattr(raw, 'seek'), offset, whence)
+    }
+    if (whence === 0) {
+        raw.$byte_pos = offset
+    } else if (whence === 1) {
+        raw.$byte_pos = (raw.$byte_pos || 0) + offset
+    } else if (whence === 2) {
+        raw.$byte_pos = raw.$bytes.length + offset
+    }
+    return raw.$byte_pos
 }
 
 function CHECK_CLOSED(fileobj, msg) {
@@ -537,6 +580,10 @@ function CHECK_CLOSED(fileobj, msg) {
 _BufferedReader_funcs.read = function(self, n=-1) {
     var res
 
+    if (n === _b_.None) {
+        n = -1
+    }
+    n = $B.PyNumber_Index(n)
     if (n < -1) {
         $B.RAISE(_b_.ValueError, "read length must be non-negative or -1")
     }
@@ -575,7 +622,7 @@ _BufferedReader_funcs.writable = function(_self) {
 }
 
 $B._BufferedReader.tp_methods = [
-    "peek", "seek", "read", "readline", "seekable", "readable", "writable"
+    "peek", "seek", "read", "readline", "seekable", "readable", "writable", "fileno"
 ]
 
 $B.set_func_names($B._BufferedReader, '_io')
@@ -625,6 +672,7 @@ $B._FileIO.tp_init = function() {
         mode = $.mode,
         closefd = $.closefd,
         opener = $.opener
+    _self.$name = name
 
     var flags = 0
     var ret = 0
@@ -692,6 +740,7 @@ $B._FileIO.tp_init = function() {
     }
 
     if ($B.file_cache.hasOwnProperty(name)) {
+        _self.fd = 31 + Object.keys($B.file_cache).indexOf(name)
         _self.$bytes = $B.to_bytes($B.encode($B.file_cache[name], 'utf-8'))
         _self.$byte_pos = 0
         _self.$line_pos = 0
@@ -702,6 +751,7 @@ $B._FileIO.tp_init = function() {
     } else if ($B.files && $B.files.hasOwnProperty(name)) {
         // Virtual file system created by
         // python -m brython --make_file_system
+        _self.fd = 31313131 + Object.keys($B.files).indexOf(name)
         var $res = atob($B.files[name].content)
         var bytes = []
         for (const char of $res) {
@@ -750,6 +800,11 @@ $B._FileIO.tp_init = function() {
 }
 
 var _FileIO_funcs = $B._FileIO.tp_funcs = {}
+
+_FileIO_funcs.name_get = function(_self) {
+    return _self.$name
+}
+$B._FileIO.tp_getset = ["name"]
 
 _FileIO_funcs.readable = function(_self) {
     if (_self.fd < 0) {
@@ -934,11 +989,16 @@ _TextIOWrapper_funcs.readline = function() {
     if (size < 0) {
         size = _self.$text_length
     }
+    // honor the newline argument as a single-char separator ('\n' or '\r');
+    // None/'' or a multi-char value fall back to '\n' — does NOT fix the
+    // multi-character case (e.g. '\r\n') or universal newline recognition
+    var nl = _self.$newline
+    var term = (nl === _b_.None || nl.length !== 1) ? '\n' : nl
     while (1) {
         var char = _self.$text_iterator.next()
         if (char.done) {
             break
-        } else if (char.value == '\n') {
+        } else if (char.value == term) {
             res += char.value
             break
         } else {
@@ -1009,6 +1069,15 @@ function _io_open_impl(file, mode, buffering, encoding, errors, newline,
         if (fspath !== null) {
             path_or_fd = $B.$call(fspath)
         }
+    }
+
+    var name_obj = path_or_fd
+    if (! $B.is_str(path_or_fd) &&
+            $B.$isinstance(path_or_fd, [_b_.bytes, _b_.bytearray])) {
+        // CPython's open() accepts a bytes filename (decoded via os.fsdecode),
+        // but keeps the original bytes as the file's name; fsdecode only feeds
+        // the actual open.
+        path_or_fd = $B.$call($B.$getattr(path_or_fd, 'decode'), 'utf-8')
     }
 
     if (! $B.is_str(path_or_fd)) {
@@ -1111,6 +1180,9 @@ function _io_open_impl(file, mode, buffering, encoding, errors, newline,
     raw = $B.$call(RawIO_class, path_or_fd, rawmode,
                                 closefd ? true : false,
                                 opener)
+    if (name_obj !== path_or_fd) {
+        raw.$name = name_obj
+    }
     result = raw
 
     modeobj = mode
@@ -1153,7 +1225,7 @@ function _io_open_impl(file, mode, buffering, encoding, errors, newline,
     }
 
     result = $B.$call(Buffered_class, raw, buffering)
-
+    
     /* if binary, returns the buffered file */
     if (binary) {
         return result
