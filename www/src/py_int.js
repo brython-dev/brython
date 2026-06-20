@@ -616,7 +616,11 @@ _b_.int.nb_int = function(self) {
 }
 
 _b_.int.nb_float = function(self) {
-    return $B.fast_float(Number(int_value(self)))
+    var x = Number(int_value(self))
+    if(! isFinite(x)){
+        $B.RAISE(_b_.OverflowError, "int too large to convert to float")
+    }
+    return $B.fast_float(x)
 }
 
 _b_.int.nb_floor_divide = function(self, other) {
@@ -893,7 +897,11 @@ int_funcs.__float__ = function(self) {
     // attribute '__float__'", e.g. cmath of an int argument). Reuse the
     // nb_float conversion directly: `float.$factory(self)` would recurse
     // (float.$factory re-dispatches to __float__ when the operand has one).
-    return $B.fast_float(Number(int_value(self)))
+    var x = Number(int_value(self))
+    if(! isFinite(x)){
+        $B.RAISE(_b_.OverflowError, "int too large to convert to float")
+    }
+    return $B.fast_float(x)
 }
 
 int_funcs.numerator_get = function(self) {
