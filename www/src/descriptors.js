@@ -50,7 +50,8 @@ method_wrapper_funcs.__qualname___set = function(self) {
 }
 
 method_wrapper_funcs.__reduce__ = function(self) {
-
+    return $B.fast_tuple([_b_.getattr,
+        $B.fast_tuple([self.self, self.d_name])])
 }
 
 method_wrapper_funcs.__text_signature___get = function(self) {
@@ -112,7 +113,8 @@ member_descriptor_funcs.__qualname___get = function(self) {
 member_descriptor_funcs.__qualname___set = _b_.None
 
 member_descriptor_funcs.__reduce__ = function(self) {
-
+    return $B.fast_tuple([_b_.getattr,
+        $B.fast_tuple([self.d_type, self.d_name])])
 }
 
 $B.member_descriptor.tp_methods = ["__reduce__"]
@@ -218,7 +220,8 @@ $B.method.tp_new = function(cls, args, kw) {
 var method_funcs = $B.method.tp_funcs = {}
 
 method_funcs.__reduce__ = function(self) {
-
+    return $B.fast_tuple([_b_.getattr,
+        $B.fast_tuple([self.im_self, $B.$getattr(self.im_func, '__name__')])])
 }
 
 $B.method.functions_or_methods = ["__new__"]
@@ -284,7 +287,8 @@ method_descriptor_funcs.__qualname___set = function(self, value) {
 }
 
 method_descriptor_funcs.__reduce__ = function(self) {
-
+    return $B.fast_tuple([_b_.getattr,
+        $B.fast_tuple([self.d_type, self.d_name])])
 }
 
 method_descriptor_funcs.__text_signature___get = function(self) {
@@ -530,7 +534,8 @@ wrapper_descriptor_funcs.__qualname___set = function(self, value) {
 }
 
 wrapper_descriptor_funcs.__reduce__ = function(self) {
-
+    return $B.fast_tuple([_b_.getattr,
+        $B.fast_tuple([self.d_type, self.d_name])])
 }
 
 wrapper_descriptor_funcs.__text_signature___get = function(self) {
