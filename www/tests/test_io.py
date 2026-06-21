@@ -133,4 +133,25 @@ array.array('Q', [1, 2])
 assert array.array('i').itemsize == 4
 assert array.array('i', [1]).tobytes() == b'\x01\x00\x00\x00'
 
+# PR 2782
+class R(io.RawIOBase):
+
+    def readable(self):
+        return True
+
+    def fileno(self):
+        return 42
+
+assert io.BufferedReader(R()).fileno() == 42
+
+# PR 2783
+class R(io.RawIOBase):
+
+    name = 'myname'
+
+    def readable(self):
+        return True
+
+assert io.BufferedReader(R()).name == 'myname'
+
 print('all tests passed...')

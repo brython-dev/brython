@@ -1736,7 +1736,10 @@ type_funcs.__prepare__ = function(cls) {
 }
 
 type_funcs.__qualname___get = function(cls) {
-    return $B.get_from_dict(cls, '__qualname__', $B.get_name(cls))
+    // builtin descriptor types store their instance __qualname__ getset under
+    // the same dict key; use the dict value only when it is the qualname string
+    var q = $B.get_from_dict(cls, '__qualname__', $B.NULL)
+    return typeof q === 'string' ? q : $B.get_name(cls)
 }
 
 type_funcs.__qualname___set = function(cls, value) {
@@ -1839,7 +1842,8 @@ property.$factory = function(fget, fset, fdel, doc) {
 /* property start */
 _b_.property.tp_descr_set = function(self, obj, value) {
     if (self.prop_set === _b_.None) {
-        var name = self.prop_get.$function_infos[$B.func_attrs.__name__]
+        var fi = self.prop_get.$function_infos
+        var name = fi ? fi[$B.func_attrs.__name__] : (self.prop_name ?? self.__name__)
         var msg = `property '${name}' of '${$B.class_name(obj)}' object ` +
                   'has no setter'
         $B.RAISE_ATTRIBUTE_ERROR(msg, self, '__set__')
