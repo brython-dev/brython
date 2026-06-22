@@ -794,6 +794,39 @@ $B._PyPegen.check_barry_as_flufl = function(p, t) {
     return false
 }
 
+$B._PyPegen.check_legacy_stmt = function(p, name) {
+    return ["print", "exec"].includes(name)
+}
+
+$B._PyPegen.raise_error_for_missing_comma = function(p, a, b) {
+    console.log('missing comma ?')
+    console.log(Error('trace').stack)
+    if ($B._PyPegen.check_legacy_stmt(p, a)) {
+        return NULL
+    }
+    // Only raise inside parentheses/brackets (level > 0)
+    if (p.tokens[p.mark - 1].level == 0) {
+        return NULL
+    }
+    // For multi-line expressions (like string concatenations), point to the
+    // last line instead of the first for a more helpful error message.
+    // Use a->col_offset as the starting column since all strings in the
+    // concatenation typically share the same indentation.
+    if (a.end_lineno > a.lineno) {
+        $B._PyPegen.raise_error_known_location(
+            p, _b_.SyntaxError, a.end_lineno, a.col_offset,
+            a.end_lineno, a.end_col_offset,
+            "invalid syntax. Perhaps you forgot a comma?"
+        )
+    }
+    return $B._PyPegen.raise_error_known_location(
+        p, _b_.SyntaxError, a.lineno, a.col_offset,
+        b.end_lineno, b.end_col_offset,
+        "invalid syntax. Perhaps you forgot a comma?"
+    )
+}
+
+
 $B._PyPegen.empty_arguments = function(p) {
     return $B._PyAST.arguments([], [], NULL, [], [], NULL, [], p.arena)
 }
@@ -1305,7 +1338,7 @@ $B._PyPegen.checked_future_import = function(p, module,
             }
         }
     }
-    return $B._PyAST.ImportFrom(module, names, level, lineno, col_offset, 
+    return $B._PyAST.ImportFrom(module, names, level, lineno, col_offset,
         end_lineno, end_col_offset, arena)
 }
 
