@@ -723,8 +723,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-06-20 17:34:01.378977"
-__BRYTHON__.timestamp=1781969641378
+__BRYTHON__.compiled_date="2026-06-22 09:44:19.273722"
+__BRYTHON__.timestamp=1782114259273
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -13929,7 +13929,8 @@ mod_name+"'")}}}
 _window.clearTimeout(timer)
 if(res==null){$B.RAISE(_b_.ModuleNotFoundError,"No module named '"+
 mod_name+"' (res is null)")}
-if($B.$isinstance(res,_b_.BaseException)){throw res}
+if($B.$isinstance(res,_b_.BaseException)){throw res }
+res=res.replace(/\r\n/g,'\n')
 return res}
 $B.$download_module=$download_module
 $B.addToImported=function(name,modobj){var module=$B.imported[name]
@@ -14490,9 +14491,6 @@ $B.assign_dict(_importlib_module,{__name__ :"_importlib",Loader:Loader,VFSFinder
 )
 $B.imported["_importlib"]=_importlib_module})(__BRYTHON__);
 ;
-
-(function($B){$B.builtin_class_flags={builtins:{1073763586:['ConnectionResetError','GeneratorExit','NotImplementedError','ConnectionRefusedError','AssertionError','KeyError','PermissionError','SystemExit','IndentationError','TimeoutError','BufferError','OSError','BaseExceptionGroup','RecursionError','ReferenceError','SyntaxError','EnvironmentError','ConnectionError','BlockingIOError','NameError','SystemError','TabError','IndexError','UnboundLocalError','OverflowError','ValueError','IsADirectoryError','WindowsError','BrokenPipeError','PendingDeprecationWarning','KeyboardInterrupt','AttributeError','ImportError','UserWarning','ImportWarning','InterruptedError','BytesWarning','EncodingWarning','FloatingPointError','MemoryError','UnicodeWarning','ModuleNotFoundError','LookupError','_IncompleteInputError','RuntimeWarning','ChildProcessError','NotADirectoryError','RuntimeError','ResourceWarning','TypeError','PythonFinalizationError','UnicodeError','FileNotFoundError','ProcessLookupError','DeprecationWarning','FileExistsError','ZeroDivisionError','UnicodeDecodeError','Exception','FutureWarning','StopIteration','Warning','StopAsyncIteration','IOError','UnicodeTranslateError','UnicodeEncodeError','ConnectionAbortedError','EOFError','SyntaxWarning','ArithmeticError','BaseException'],1073763848:['ExceptionGroup'],20975874:['bool'],4199682:['bytearray','float'],138417410:['bytes'],21762:['super','enumerate','classmethod','reversed','zip','map','staticmethod','filter','property'],5378:['complex','object'],541087042:['dict'],4216066:['set','frozenset'],20976898:['int'],37770530:['list'],20770:['memoryview'],4386:['range'],20738:['slice'],272635138:['str'],71324962:['tuple'],2155896066:['type'],},types:{20866:['getset_descriptor','async_generator','method-wrapper','generator','member_descriptor','frame','classmethod_descriptor','coroutine','PyCapsule'],22914:['builtin_function_or_method'],20738:['cell','traceback'],4354:['NoneType','NotImplementedType','code','ellipsis'],153858:['function'],20802:['mappingproxy'],153986:['method_descriptor'],22786:['method'],21762:['module'],151938:['wrapper_descriptor'],}}})(__BRYTHON__);
-;
 "use strict";
 (function($B){var _b_=$B.builtins
 $B.imported[$B.OB_TYPE]=_b_.dict
@@ -15028,7 +15026,6 @@ cell_funcs.cell_contents_set=function(self){self.$cell_contents=value}
 $B.cell.functions_or_methods=["__new__"]
 $B.cell.tp_getset=["cell_contents"]
 $B.set_func_names($B.cell,"builtins")
-for(let flag in $B.builtin_class_flags.types){for(let key of $B.builtin_class_flags.types[flag]){if($B[key]){$B[key].__flags__=parseInt(flag)}}}
 $B.AST=$B.make_type('AST')
 $B.AST.$convert=function(js_node){if(js_node===undefined){return _b_.None}
 var constr=js_node.constructor

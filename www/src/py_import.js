@@ -281,8 +281,10 @@ function $download_module(mod, url) {
     }
 
     if ($B.$isinstance(res, _b_.BaseException)) {
-        throw res
-    } // module not found
+        throw res // module not found
+    }
+    // normalize line ends
+    res = res.replace(/\r\n/g, '\n')
     return res
 }
 

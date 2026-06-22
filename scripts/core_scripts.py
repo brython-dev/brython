@@ -38,7 +38,6 @@ core_scripts = [
     'py_pattern_matching',
     'async',
     'py_import',
-    'py_flags',
     'builtin_modules',
     'finalize_builtin_types',
     'py2js',

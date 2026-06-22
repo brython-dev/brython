@@ -15,7 +15,6 @@ if brython_version != cpython_version:
         'but Cpython version is', cpython_version)
 
 import make_ast_classes       # generates /src/py_ast_classes.js
-import make_class_flags       # generate __flags__ for builtin classes
 import make_unicode_tables    # generates /src/unicode_data.js
 import make_unicode_file      # generates /src/unicode.txt
 
