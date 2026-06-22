@@ -1574,14 +1574,6 @@
 
     $B.set_func_names($B.cell, "builtins")
 
-    for (let flag in $B.builtin_class_flags.types) {
-        for (let key of $B.builtin_class_flags.types[flag]) {
-            if ($B[key]) {
-                $B[key].__flags__ = parseInt(flag)
-            }
-        }
-    }
-
     $B.AST = $B.make_type('AST')
     $B.AST.$convert = function(js_node) {
         if (js_node === undefined) {
