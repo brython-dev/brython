@@ -723,8 +723,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-06-22 09:44:19.273722"
-__BRYTHON__.timestamp=1782114259273
+__BRYTHON__.compiled_date="2026-06-22 15:32:49.515390"
+__BRYTHON__.timestamp=1782135169514
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -11304,7 +11304,7 @@ function dict_init(self,args,kw){if(args===undefined){console.log('args undef')
 console.log(Error('trace').stack)}
 if(args.length > 1){$B.RAISE(_b_.TypeError,"dict expected at most 1 argument"+
 `, got ${args.length}`)}else if(args.length==1){args=args[0]
-if($B.exact_type(args,dict)){for(let entry of dict.$iter_items(args)){dict.$setitem(self,entry.key,entry.value,entry.hash)}}else{
+if($B.exact_type(args,dict)){for(let entry of dict.$iter_items(args)){dict.$setitem(self,entry.key,entry.value,entry.hash)}}else if($B.get_class(args)===$B.JSObj){for(let key in args){$B.str_dict_set(self,key,$B.jsobj2pyobj(args[key]))}}else{
 var keys=$B.$getattr($B.get_class(args),"keys",$B.NULL)
 if(keys !==$B.NULL){var gi=$B.$getattr($B.get_class(args),"__getitem__",$B.NULL)
 if(gi !==$B.NULL){
@@ -12332,8 +12332,7 @@ case 'bigint':
 return jsobj
 case 'string':
 return $B.String(jsobj)}
-if(Array.isArray(jsobj)){
-return jsobj}
+if(Array.isArray(jsobj)){return jsobj}
 let pyobj
 try{
 pyobj=jsobj[PYOBJ]}catch(err){
@@ -12357,7 +12356,6 @@ $B.RAISE(_b_.TypeError,'keyword arguments are not supported for '+
 'Javascript functions')}
 args[i]=pyobj2jsobj(arg)}
 try{
-if(args[0]==="===================="){console.log(Error().stack)}
 return jsobj2pyobj(jsobj.apply(_this,args))}catch(err){throw $B.exception(err)}}
 if(_this===null){jsobj[PYOBJFCT]=res}else if(_this[PYOBJFCTS]!==undefined){_this[PYOBJFCTS].set(jsobj,res)}
 res[JSOBJ]=jsobj
@@ -18878,6 +18876,17 @@ var bytes=_b_.bytes.$factory(tc),tco=$B._PyPegen.new_type_comment(p,bytes)
 var ast_obj=$B._PyAST.arg(a.arg,a.annotation,tco,a.lineno,a.col_offset,a.end_lineno,a.end_col_offset,p.arena)
 return ast_obj}
 $B._PyPegen.check_barry_as_flufl=function(p,t){return false}
+$B._PyPegen.check_legacy_stmt=function(p,name){return["print","exec"].includes(name)}
+$B._PyPegen.raise_error_for_missing_comma=function(p,a,b){console.log('missing comma ?')
+console.log(Error('trace').stack)
+if($B._PyPegen.check_legacy_stmt(p,a)){return NULL}
+if(p.tokens[p.mark-1].level==0){return NULL}
+if(a.end_lineno > a.lineno){$B._PyPegen.raise_error_known_location(
+p,_b_.SyntaxError,a.end_lineno,a.col_offset,a.end_lineno,a.end_col_offset,"invalid syntax. Perhaps you forgot a comma?"
+)}
+return $B._PyPegen.raise_error_known_location(
+p,_b_.SyntaxError,a.lineno,a.col_offset,b.end_lineno,b.end_col_offset,"invalid syntax. Perhaps you forgot a comma?"
+)}
 $B._PyPegen.empty_arguments=function(p){return $B._PyAST.arguments([],[],NULL,[],[],NULL,[],p.arena)}
 $B._PyPegen.augoperator=function(p,kind){return{kind}}
 $B._PyPegen.function_def_decorators=function(p,decorators,function_def){var constr=function_def instanceof $B.ast.AsyncFunctionDef ?

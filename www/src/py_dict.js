@@ -610,6 +610,10 @@ function dict_init(self, args, kw) {
             for (let entry of dict.$iter_items(args)) {
                 dict.$setitem(self, entry.key, entry.value, entry.hash)
             }
+        } else if($B.get_class(args) === $B.JSObj) {
+            for (let key in args) {
+                $B.str_dict_set(self, key, $B.jsobj2pyobj(args[key]))
+            }
         } else {
             var keys = $B.$getattr($B.get_class(args), "keys", $B.NULL)
             if (keys !== $B.NULL) {

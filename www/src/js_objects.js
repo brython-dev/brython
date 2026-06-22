@@ -181,14 +181,6 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
     }
 
     if (Array.isArray(jsobj)) {
-        // set it as non-enumerable, prevents issues when looping on it in JS.
-        /*
-        try {
-            Object.defineProperty(jsobj, "$is_js_array", {value: true})
-        } catch (err) {
-            // ignore; cf. issue #2379
-        }
-        */
         return jsobj
     }
 
@@ -254,9 +246,6 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
                 args[i] = pyobj2jsobj(arg)
             }
             try {
-                if (args[0] === "====================") {
-                    console.log(Error().stack)
-                }
                 return jsobj2pyobj(jsobj.apply(_this, args))
             } catch (err) {
                 throw $B.exception(err)
