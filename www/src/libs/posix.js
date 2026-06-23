@@ -142,6 +142,15 @@ var module = {
         return stat_result.$factory(filename)
     },
     urandom: function(n) {
+        n = $B.PyNumber_Index(n) // integer only: TypeError on float
+        if (n < 0) {
+            $B.RAISE(_b_.ValueError, "negative argument not allowed")
+        }
+        n = Number(n)
+        if (! Number.isSafeInteger(n)) {
+            $B.RAISE(_b_.OverflowError,
+                "cannot fit 'int' into an index-sized integer")
+        }
         const randbytes = new Uint8Array(n);
         crypto.getRandomValues(randbytes);
         return _b_.bytes.$factory(Array.from(randbytes))
