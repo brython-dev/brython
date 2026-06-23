@@ -2128,6 +2128,9 @@ str_funcs.expandtabs = function(self) {
         pos = 0,
         res = "",
         chars = to_chars(_self)
+    if (s <= 0) {
+        return _self.replace(/\t/g, "")
+    }
     if (s == 1) {
         return _self.replace(/\t/g," ")
     }
@@ -2135,10 +2138,12 @@ str_funcs.expandtabs = function(self) {
         var car = chars[pos]
         switch (car) {
             case "\t":
-                while (col % s > 0) {
+                // expand to the NEXT tabstop, so a tab sitting on a tabstop
+                // still advances a full tabsize instead of zero columns
+                do {
                     res += " "
                     col++
-                }
+                } while (col % s != 0)
                 break
             case "\r":
             case "\n":
