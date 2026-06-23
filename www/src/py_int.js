@@ -866,6 +866,9 @@ int_funcs.from_bytes = function(self) {
         $B.RAISE(_b_.ValueError,
             "byteorder must be either 'little' or 'big'")
     }
+    if (_len == 0) {
+        return 0
+    }
     var num = _bytes[0]
     // the sign lives in the MOST significant byte — handled at the end
     // via the final two's-complement; pre-complementing the low byte
