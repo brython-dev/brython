@@ -1230,4 +1230,7 @@ class C:
 
 C().f()
 
+# PR 2800
+assert type(str.count).__name__ == 'method_descriptor'
+
 print('passed all tests...')
