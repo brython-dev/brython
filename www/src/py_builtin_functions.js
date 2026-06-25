@@ -1610,14 +1610,19 @@ _b_.pow = function() {
                 } else if (! $B.is_int(z)) {
                     throw all_ints()
                 }
+                return _b_.int.nb_power(x, y, z)
             }
-            return _b_.int.nb_power(x, y, z)
         } else if ($B.$isinstance(x, _b_.float)) {
             throw all_ints()
         } else if ($B.$isinstance(x, _b_.complex)) {
             throw complex_modulo()
         }
     }
+    var res = $B.$call($B.$getattr(x, '__pow__'), y, z)
+    if (res !== _b_.NotImplemented) {
+        return res
+    }
+    return $B.$call($B.$getattr(y, '__rpow__'), x, z)
 }
 
 var $print = _b_.print = function() {
