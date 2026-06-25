@@ -1246,4 +1246,7 @@ assert {*s for s in sets} == {1, 2, 3, 4}
 gen = (*L for L in lists)  # equivalent to (x for L in lists for x in L)
 assert list(gen) == [1, 2, 3, 4]
 
+# PR 2800
+assert type(str.count).__name__ == 'method_descriptor'
+
 print('passed all tests...')

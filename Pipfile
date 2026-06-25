@@ -4,9 +4,9 @@ name = "pypi"
 url = "https://pypi.python.org/simple"
 
 [dev-packages]
-aiohttp = ">=3.13.4"
+aiohttp = ">=3.14.1"
 
 [packages]
 
 [requires]
-python_version = "3.11"
+python_version = "3.14"
