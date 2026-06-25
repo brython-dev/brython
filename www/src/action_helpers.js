@@ -354,15 +354,14 @@ $B._PyPegen.interpolation = function(p, expression,
         return interpolation
     }
 
-    var debug_text = $B._PyAST.Constant(debug_metadata)
+    var debug_text = new $B.ast.Constant(debug_metadata)
     set_position_from_list(debug_text,
         [lineno, col_offset + 1, debug_end_line, debug_end_offset - 1])
 
     var values = [debug_text, interpolation]
-    var ast_obj = $B._PyAST.JoinedStr(values)
+    var ast_obj = new $B.ast.JoinedStr(values)
     set_position_from_list(ast_obj,
         [lineno, col_offset, debug_end_line, debug_end_offset])
-    console.log('JoinedStr', ast_obj)
     return ast_obj
 }
 
