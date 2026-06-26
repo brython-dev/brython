@@ -3134,7 +3134,10 @@ $B.ast.JoinedStr.prototype.to_js = function(scopes) {
     if (items.length == 0) {
         return "''"
     }
-    return items.join(' + ')
+    // Re-box with $B.String (like str.sq_concat): joining with JS '+' drops the
+    // surrogate marking of an astral codepoint, so len() / indexing would treat
+    // it as 2 characters.
+    return '$B.String(' + items.join(' + ') + ')'
 }
 
 $B.ast.Lambda.prototype.to_js = function(scopes) {
