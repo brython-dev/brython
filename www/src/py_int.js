@@ -354,6 +354,9 @@ int.$factory = function(value, base) {
                 invalid(base)
             }
         }
+        if (sign == '-') {
+            res = $B.rich_op('__mul__', res, -1)
+        }
         return res
     } else {
         _value = _value.replace(/_/g, "")
