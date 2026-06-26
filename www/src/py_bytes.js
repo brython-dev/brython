@@ -2141,6 +2141,42 @@ var decode = $B.decode = function(obj, encoding, errors) {
               }
           }
           return s
+      case "utf_8_sig": {
+          // The Lib/_codecs.py fall-backs for utf-16 / utf-32 / utf-8-sig are
+          // broken, so decode these encodings here, like utf-8 / latin-1 above.
+          let bom = b[0] == 0xef && b[1] == 0xbb && b[2] == 0xbf
+          return decode({source: bom ? b.slice(3) : b}, 'utf-8', errors)
+      }
+      case "utf_16":
+      case "utf_16_le":
+      case "utf_16_be": {
+          let label = enc == 'utf_16_be' ? 'utf-16be' : 'utf-16le',
+              strip = enc == 'utf_16'
+          if (strip && b[0] == 0xfe && b[1] == 0xff) {
+              label = 'utf-16be'
+          }
+          return new TextDecoder(label,
+              {fatal: errors == 'strict', ignoreBOM: !strip}).decode(new Uint8Array(b))
+      }
+      case "utf_32":
+      case "utf_32_le":
+      case "utf_32_be": {
+          let little = enc != 'utf_32_be',
+              start = 0
+          if (enc == 'utf_32') {
+              if (b[2] == 0xfe && b[3] == 0xff) {
+                  little = false
+                  start = 4
+              } else if (b[0] == 0xff && b[1] == 0xfe) {
+                  start = 4
+              }
+          }
+          let view = new DataView(new Uint8Array(b).buffer)
+          for (let i = start; i + 3 < b.length; i += 4) {
+              s += String.fromCodePoint(view.getUint32(i, little))
+          }
+          return s
+      }
       case "latin_1":
       case "iso8859":
       case "windows1252":
@@ -2254,6 +2290,48 @@ var encode = $B.encode = function() {
                 }
             }
             break
+        case "utf_8_sig":
+            t.push(0xef, 0xbb, 0xbf)
+            for (let byte of encode(s, 'utf-8', errors).source) {
+                t.push(byte)
+            }
+            break
+        case "utf_16":
+        case "utf_16_le":
+        case "utf_16_be": {
+            let be = enc == 'utf_16_be'
+            if (enc == 'utf_16') {
+                t.push(0xff, 0xfe)
+            }
+            for (let i = 0; i < s.length; i++) {
+                let u = s.charCodeAt(i)
+                if (be) {
+                    t.push((u >> 8) & 0xff, u & 0xff)
+                } else {
+                    t.push(u & 0xff, (u >> 8) & 0xff)
+                }
+            }
+            break
+        }
+        case "utf_32":
+        case "utf_32_le":
+        case "utf_32_be": {
+            let be = enc == 'utf_32_be'
+            if (enc == 'utf_32') {
+                t.push(0xff, 0xfe, 0, 0)
+            }
+            for (let ch of s) {
+                let cp = ch.codePointAt(0)
+                if (be) {
+                    t.push((cp >> 24) & 0xff, (cp >> 16) & 0xff,
+                           (cp >> 8) & 0xff, cp & 0xff)
+                } else {
+                    t.push(cp & 0xff, (cp >> 8) & 0xff,
+                           (cp >> 16) & 0xff, (cp >> 24) & 0xff)
+                }
+            }
+            break
+        }
         case "latin":
         case "latin1":
         case "latin-1":
