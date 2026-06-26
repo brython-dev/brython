@@ -1608,6 +1608,17 @@ _b_.pow = function() {
                 if ($B.$isinstance(z, _b_.complex)) {
                     throw complex_modulo()
                 } else if (! $B.is_int(z)) {
+                    // CPython dispatches three-arg power on the modulus's type
+                    // too (pow(10, 2, Decimal(7)) -> Decimal); a float modulus
+                    // has no three-arg power and still raises.
+                    var zpow = $B.$isinstance(z, _b_.float) ? null :
+                        $B.$getattr($B.get_class(z), '__pow__', null)
+                    if (zpow) {
+                        try {
+                            var zr = $B.$call(zpow, x, y, z)
+                            if (zr !== _b_.NotImplemented) { return zr }
+                        } catch (_err) {}
+                    }
                     throw all_ints()
                 }
             }
