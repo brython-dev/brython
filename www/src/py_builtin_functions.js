@@ -849,6 +849,9 @@ $B.$getattr = function(obj, attr, _default) {
         }
         var res = $B.object_getattribute(obj, klass, attr)
     } else {
+        if (attr === '__class__') {
+            return $B.get_class(obj)
+        }
         var in_dict = $B.get_dict(obj)[attr]
         if (in_dict && $B.get_class(obj) === _b_.type) {
             var res = $B.NULL
