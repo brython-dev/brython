@@ -1622,7 +1622,13 @@ _b_.pow = function() {
     if (res !== _b_.NotImplemented) {
         return res
     }
-    return $B.$call($B.$getattr(y, '__rpow__'), x, z)
+    var rres = $B.$call($B.$getattr(y, '__rpow__'), x, z)
+    if (rres !== _b_.NotImplemented) {
+        return rres
+    }
+    throw $B.EXC(_b_.TypeError,
+        "unsupported operand type(s) for pow(): '" + $B.class_name(x) +
+        "', '" + $B.class_name(y) + "', '" + $B.class_name(z) + "'")
 }
 
 var $print = _b_.print = function() {
