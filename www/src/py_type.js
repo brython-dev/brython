@@ -47,7 +47,9 @@ $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
         stack.push(frame_obj.frame[0] + '.')
         frame_obj = frame_obj.prev
     }
-    var qualname = `${stack.join('')}${class_name}`
+    // the frames were walked innermost-first; the qualname prefix is
+    // outermost-first (Outer.Inner.Deep, not Inner.Outer.Deep)
+    var qualname = `${stack.reverse().join('')}${class_name}`
     $B.str_dict_set(dict, '__qualname__', qualname)
 
     // A class that overrides __eq__() and does not define __hash__()
