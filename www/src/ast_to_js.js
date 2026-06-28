@@ -444,14 +444,6 @@ function name_scope(name, scopes) {
     if (up_scope.ast instanceof $B.ast.ClassDef && name == up_scope.name) {
         return {found: false, resolve: 'own_class_name'}
     }
-    // special case
-    if (name == '__annotations__') {
-        if (block.type == SF.TYPE_CLASS && up_scope.has_annotation) {
-            is_local = true
-        } else if (block.type == SF.TYPE_MODULE) {
-            is_local = true
-        }
-    }
     if (test) {
         console.log('is local ???', is_local, 'scope', scope)
     }
@@ -1323,7 +1315,7 @@ $B.ast.AnnAssign.prototype.to_js = function(scopes) {
                     } else {
                         js += prefix +
                             `locals.$annotations.${mangled} = ` +
-                            `[${this.lineno}, () => ==> int_format == 2 ? ` +
+                            `[${this.lineno}, () => int_format == 2 ? ` +
                             `${ann_str} :${ann_value}]\n`
                     }
                 } else {
