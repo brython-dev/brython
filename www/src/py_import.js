@@ -138,7 +138,11 @@ module_funcs.__dir__ = function(self) {
     }
     var names = []
     for (var item of _b_.dict.$iter_items($B.get_dict(self))) {
-        names.push(item.key)
+        // Skip internal names such as $annotations, which the compiler adds
+        // to a module that has annotations; no Python identifier starts with $.
+        if (item.key[0] !== '$') {
+            names.push(item.key)
+        }
     }
     return $B.$list(names.sort())
 }

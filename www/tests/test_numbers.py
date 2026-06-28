@@ -634,6 +634,8 @@ class Int(int):
 
 assert hash(Int(2**61)) == 1
 
+assert type(Int()) is Int # PR 2811
+
 class IntH(int):
 
   def __hash__(self):
@@ -914,5 +916,5 @@ assert type(Int(4).__int__()) is int
 # PR 2801
 assert_raises(OverflowError, float, 10**1000,
   msg="int too large to convert to float")
-  
+
 print('passed all tests...')

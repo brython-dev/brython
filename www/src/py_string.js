@@ -14,29 +14,16 @@ var escape2cp = $B.escape2cp = {
 }
 
 $B.surrogates = function(s) {
-    var s1 = '',
-        escaped = false
-    for (var char of s) {
-        if (escaped) {
-            var echar = escape2cp[char]
-            if (echar !== undefined) {
-                s1 += echar
-            } else {
-                s1 += '\\' + char
-            }
-            escaped = false
-        } else if (char == '\\') {
-            escaped = true
-        } else {
-            s1 += char
-        }
-    }
-
+    // Code point positions of the astral characters in s (each takes two
+    // UTF-16 units). s is the actual string value; the positions are
+    // recomputed here, on the evaluated value, rather than on the escaped
+    // source form, where re-resolving escapes diverged from JS string-literal
+    // evaluation ('\\' was counted as two code points instead of one,
+    // shifting every later astral position by one).
     var surrogates = [],
         j = 0
-
-    for (var i = 0, len = s1.length; i < len; i++) {
-        var cp = s1.codePointAt(i)
+    for (var i = 0, len = s.length; i < len; i++) {
+        var cp = s.codePointAt(i)
         if (cp >= 0x10000) {
             surrogates.push(j)
             i++
@@ -1199,8 +1186,9 @@ str.$factory = function() {
         if (typeof res == "string" || $B.$isinstance(res, str)) {
             return res
         }
-        $B.RAISE(_b_.TypeError, "__str__ returned non-string " +
-            `(type ${$B.class_name(res)})`)
+        $B.RAISE(_b_.TypeError, `${$B.class_name(args[0])}.__str__() must ` +
+            `return a str, not ${$B.class_name(res)}`
+        )
     }
     for (var entry of _b_.dict.$iter_items(kw)) {
         switch (entry.key) {
@@ -2128,6 +2116,9 @@ str_funcs.expandtabs = function(self) {
         pos = 0,
         res = "",
         chars = to_chars(_self)
+    if (s <= 0) {
+        return _self.replace(/\t/g, "")
+    }
     if (s == 1) {
         return _self.replace(/\t/g," ")
     }
@@ -2135,10 +2126,12 @@ str_funcs.expandtabs = function(self) {
         var car = chars[pos]
         switch (car) {
             case "\t":
-                while (col % s > 0) {
+                // expand to the NEXT tabstop, so a tab sitting on a tabstop
+                // still advances a full tabsize instead of zero columns
+                do {
                     res += " "
                     col++
-                }
+                } while (col % s != 0)
                 break
             case "\r":
             case "\n":

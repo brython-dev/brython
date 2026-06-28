@@ -65,11 +65,9 @@ memoryview.$not_basetype = true // cannot be a base class
 memoryview.$is_sequence = true
 
 function memoryview_eq(self, other) {
-    if ($B.get_class(other) !== memoryview) {
-        return false
-    }
+    var other_obj = $B.get_class(other) === memoryview ? other.obj : other
     var eq = $B.$getattr($B.get_class(self.obj), '__eq__')
-    return $B.$call(eq, self.obj, other.obj)
+    return $B.$call(eq, self.obj, other_obj) === true
 }
 
 var struct_format = {
@@ -110,7 +108,7 @@ memoryview.tp_dealloc = function(self) {
 }
 
 _b_.memoryview.tp_richcompare = function(self, other, op) {
-    if (! $B.$isinstance(other, _b_.memoryview)) {
+    if (! $B.$isinstance(other, [_b_.memoryview, _b_.bytes, _b_.bytearray])) {
         return _b_.NotImplemented
     }
     var res

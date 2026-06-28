@@ -26,7 +26,7 @@ $B.method_wrapper.tp_call = function(self, ...args) {
 var method_wrapper_funcs = $B.method_wrapper.tp_funcs = {}
 
 method_wrapper_funcs.__name___get = function(self) {
-    return self.self.__name__
+    return self.d_name
 }
 
 method_wrapper_funcs.__name___set = function(self) {

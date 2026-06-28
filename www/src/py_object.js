@@ -234,6 +234,10 @@ _b_.object.tp_richcompare = function(self, other, op) {
 _b_.object.tp_setattro = function(self, attr, value) {
     var test = false // attr == 'x' // && value === $B.NULL
     var klass = $B.get_class(self)
+    if (! $B.is_str(attr)) {
+        $B.RAISE(_b_.TypeError, "attribute name must be string, not '" +
+            $B.class_name(attr) + "'")
+    }
     var in_mro = $B.search_in_mro(klass, attr, $B.NULL)
     if (test) {
         console.log('object.tp_setattro', self, attr, value)

@@ -198,6 +198,19 @@ int.$factory = function(value, base) {
             $B.RAISE(_b_.TypeError,
                 "int() can't convert non-string with explicit base")
         } else {
+            if ($B.$isinstance(value, _b_.float)) {
+                // float has no __int__, so int() would fall through to
+                // __trunc__ and return NaN/Infinity unchanged
+                var _fv = typeof value == 'number' ? value : value.value
+                if (isNaN(_fv)) {
+                    $B.RAISE(_b_.ValueError,
+                        'cannot convert float NaN to integer')
+                }
+                if (! isFinite(_fv)) {
+                    $B.RAISE(_b_.OverflowError,
+                        'cannot convert float infinity to integer')
+                }
+            }
             // booleans, bigints, objects with method __index__
             for (let special_method of ['__int__', '__index__', '__trunc__']) {
                 let num_value = $B.$getattr($B.get_class(value),
@@ -353,6 +366,9 @@ int.$factory = function(value, base) {
             } else {
                 invalid(base)
             }
+        }
+        if (sign == '-') {
+            res = $B.rich_op('__mul__', res, -1)
         }
         return res
     } else {
@@ -722,7 +738,14 @@ _b_.int.tp_new = function(cls, args, kw) {
     $B.check_expected_keywords('int', kw, ['base'])
     switch (nb_args) {
         case 0:
-            return 0
+            if (cls === int) {
+                return 0
+            }
+            // a subclass with no argument (MyInt()) must build a distinct
+            // instance, not the shared literal 0
+            value = 0
+            base = _b_.None
+            break
         case 1:
             if (args.length == 0) {
                 $B.RAISE(_b_.TypeError, "int() missing string argument")
@@ -865,6 +888,9 @@ int_funcs.from_bytes = function(self) {
     } else if (byteorder != "little") {
         $B.RAISE(_b_.ValueError,
             "byteorder must be either 'little' or 'big'")
+    }
+    if (_len == 0) {
+        return 0
     }
     var num = _bytes[0]
     // the sign lives in the MOST significant byte — handled at the end

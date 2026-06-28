@@ -1938,8 +1938,8 @@ mappingproxy.$factory = function(obj) {
 mappingproxy.$match_mapping_pattern = true // for pattern matching (PEP 634)
 
 /* mappingproxy start */
-$B.mappingproxy.tp_richcompare = function(self) {
-
+$B.mappingproxy.tp_richcompare = function(self, other, op) {
+    return $B.rich_comp(op, self.mapping, other)
 }
 
 $B.mappingproxy.nb_or = function(self) {
@@ -2000,18 +2000,15 @@ $B.mappingproxy.nb_inplace_or = function(self) {
 }
 
 $B.mappingproxy.mp_length = function(self) {
-    return Object.keys(self.mapping).length
+    return dict.mp_length(self.mapping)
 }
 
 $B.mappingproxy.mp_subscript = function(self, key) {
-    if (self.mapping.hasOwnProperty(key)) {
-        return self.mapping[key]
-    }
-    $B.RAISE(_b_.KeyError, key)
+    return dict.$getitem(self.mapping, key)
 }
 
 $B.mappingproxy.sq_contains = function(self, key) {
-    return self.mapping.hasOwnProperty(key)
+    return dict.$contains(self.mapping, key)
 }
 
 var mappingproxy_funcs = $B.mappingproxy.tp_funcs = {}
@@ -2030,8 +2027,8 @@ mappingproxy_funcs.copy = function(self) {
 }
 
 mappingproxy_funcs.get = function(self, key, _default) {
-    if (self.mapping.hasOwnProperty(key)) {
-        return self.mapping[key]
+    if (dict.$contains(self.mapping, key)) {
+        return dict.$getitem(self.mapping, key)
     }
     return _default ?? _b_.None
 }
@@ -2063,8 +2060,8 @@ $B.mappingproxy.classmethods = ["__class_getitem__"]
 $B.set_func_names(mappingproxy, "builtins")
 
 function* mappingproxy_iter_items(self){
-    for (var key in self.mapping) {
-        yield {key, value: self.mapping[key]}
+    for (var item of dict.$iter_items(self.mapping)) {
+        yield {key: item.key, value: item.value}
     }
 }
 

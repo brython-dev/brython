@@ -316,4 +316,8 @@ assert '\xf5' in {'\xf5'}
 
 # issue 2477
 assert_raises(TypeError, {1}.pop, 1)
+
+# PR 2818
+assert set([0, 2**61 - 1]) == {0, 2305843009213693951}
+
 print("passed all tests..")
