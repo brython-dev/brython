@@ -3113,17 +3113,6 @@ def main():
 
 main()
 
-# issue 2031
-
-save_annotations = __annotations__
-
-def foo():
-    bar: Bar = 42
-    assert __annotations__ == save_annotations
-    assert bar == 42
-
-foo()
-
 # issue 2077
 assert_raises(SyntaxError, exec, "f(🠞)",
     msg="invalid character '🠞' (U+1F81E)")

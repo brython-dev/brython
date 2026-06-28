@@ -407,6 +407,9 @@ $B.set_func_names = function(klass, module) {
             $B.add_function_infos(klass, attr, module)
         }
     }
+    if ($B.get_dict && $B.get_dict(klass)) {
+        $B.set_to_dict(klass, '__module__', module)
+    }
     // Also seed $function_infos on tp_funcs entries. Brython-native classes
     // expose their methods through `tp_funcs` (the C-style slot table); when
     // those methods are returned as bound methods, `method.tp_repr` reads
