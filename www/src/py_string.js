@@ -14,29 +14,16 @@ var escape2cp = $B.escape2cp = {
 }
 
 $B.surrogates = function(s) {
-    var s1 = '',
-        escaped = false
-    for (var char of s) {
-        if (escaped) {
-            var echar = escape2cp[char]
-            if (echar !== undefined) {
-                s1 += echar
-            } else {
-                s1 += '\\' + char
-            }
-            escaped = false
-        } else if (char == '\\') {
-            escaped = true
-        } else {
-            s1 += char
-        }
-    }
-
+    // Code point positions of the astral characters in s (each takes two
+    // UTF-16 units). s is the actual string value; the positions are
+    // recomputed here, on the evaluated value, rather than on the escaped
+    // source form, where re-resolving escapes diverged from JS string-literal
+    // evaluation ('\\' was counted as two code points instead of one,
+    // shifting every later astral position by one).
     var surrogates = [],
         j = 0
-
-    for (var i = 0, len = s1.length; i < len; i++) {
-        var cp = s1.codePointAt(i)
+    for (var i = 0, len = s.length; i < len; i++) {
+        var cp = s.codePointAt(i)
         if (cp >= 0x10000) {
             surrogates.push(j)
             i++

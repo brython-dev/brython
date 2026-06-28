@@ -11,7 +11,7 @@ function check_not_tuple(self, attr) {
 }
 
 _b_.list[$B.FAST_ITER] = _b_.tuple[$B.FAST_ITER] = function(t, set_lineno, frame, lineno) {
-    var obj = {ix: -1, stop: t.length}
+    var obj = {ix: -1}
     return {
         [Symbol.iterator](){
             return this
@@ -19,7 +19,10 @@ _b_.list[$B.FAST_ITER] = _b_.tuple[$B.FAST_ITER] = function(t, set_lineno, frame
         next(){
             set_lineno(frame, lineno)
             obj.ix++
-            if (obj.ix >= obj.stop) {
+            // re-read t.length each step: a list can shrink during iteration
+            // (del / pop in the loop body), so stop at the current length
+            // instead of the one captured when iteration started.
+            if (obj.ix >= t.length) {
                 return {done: true, value: null}
             }
             var value = t[obj.ix]

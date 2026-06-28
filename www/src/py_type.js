@@ -946,7 +946,13 @@ function make_factory(cls) {
                 ob_type: cls
             }
             $B.init_dict(res)
-            cls.tp_init.call(null, res, ...arguments)
+            if (typeof cls.tp_init == 'function') {
+                cls.tp_init.call(null, res, ...arguments)
+            } else if (_b_.callable(cls.tp_init)) {
+                // __init__ is a non-function callable (e.g. a Mock): CPython
+                // calls it without binding the instance as first argument.
+                $B.$call(cls.tp_init, ...arguments)
+            }
             return res
         }
     } else {
@@ -1269,6 +1275,16 @@ _b_.type.tp_call = function(cls) {
                 }
             } catch (err) {
                 throw err
+            }
+        } else if (init_func !== $B.NULL && init_func !== _b_.object.tp_init &&
+                init_func !== undefined && _b_.callable(init_func)) {
+            // __init__ replaced by a callable that is neither a function nor a
+            // descriptor (e.g. a Mock): CPython calls it without binding, i.e.
+            // without the instance as first argument.
+            if (kw_len > 0) {
+                $B.$call(init_func, ...$.args, $B.dict2kwarg(kw))
+            } else {
+                $B.$call(init_func, ...$.args)
             }
         }
     }
