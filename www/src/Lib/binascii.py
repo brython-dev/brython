@@ -8,21 +8,16 @@ PyPy provides an RPython version too.
 
 import _base64 # Javascript module in libs
 
-from _binascii import *
-
 class Error(ValueError):
-    def __init__(self, msg=''):
-        self._msg = msg
-
-    def __str__(self):
-        return " binascii.Error: "+self._msg
-
+    pass
 
 class Done(Exception):
     pass
 
 class Incomplete(Error):
     pass
+
+from _binascii import *
 
 def a2b_uu(s):
     if not s:
@@ -149,6 +144,12 @@ def XXXb2a_base64(s, newline=True):
 
     a = triples_gen(s[ :length - final_length])
 
+    for A, B, C in a:
+        print(A, B, C)
+
+    a = triples_gen(s[ :length - final_length])
+
+
     result = [''.join(
         [table_b2a_base64[( A >> 2                    ) & 0x3F],
          table_b2a_base64[((A << 4) | ((B >> 4) & 0xF)) & 0x3F],
@@ -173,7 +174,7 @@ def XXXb2a_base64(s, newline=True):
     result = ''.join(result) + snippet
     if newline:
         result += '\n'
-    return bytes(result, __BRYTHON__.charset)
+    return bytes(result, 'utf-8')
 
 def a2b_qp(s, header=False):
     inp = 0
