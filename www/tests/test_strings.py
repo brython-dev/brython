@@ -507,7 +507,7 @@ assert list(b) == [97, 0, 0, 0, 17, 244, 1, 0, 32, 0, 0, 0, 58, 0, 0, 0]
 assert b.decode('utf_32_le') == "a🐑 :"
 
 b = "a🐑 :".encode("utf_16")
-assert list(b) == [254, 255, 97, 0, 61, 216, 17, 220, 32, 0, 58, 0], list(b)
+assert list(b) == [255, 254, 97, 0, 61, 216, 17, 220, 32, 0, 58, 0], list(b)
 assert b.decode('utf_16') == "a🐑 :"
 
 # issue 2619
