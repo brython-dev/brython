@@ -9,8 +9,21 @@ range.$match_sequence_pattern = true // for Pattern Matching (PEP 634)
 range.$is_sequence = true
 
 _b_.range[$B.FAST_ITER] = function(self, set_lineno, frame, lineno) {
-    var obj = {ix: self.start}
-    if (self.step > 0) {
+    // start and step must share a type for `ix += step`: on a range that is not
+    // $safe (a bound outside the safe-integer range) a bigint start with a
+    // Number step throws "can't convert BigInt to number". stop is only used in
+    // the comparison below, which accepts a mixed bigint/Number, so it is left
+    // unconverted.
+    var start, step
+    if (self.$safe) {
+        start = self.start
+        step = self.step
+    } else {
+        start = $B.to_bigint(self.start)
+        step = $B.to_bigint(self.step)
+    }
+    var obj = {ix: start}
+    if (step > 0) {
         return {
             [Symbol.iterator](){
                 return this
@@ -21,8 +34,8 @@ _b_.range[$B.FAST_ITER] = function(self, set_lineno, frame, lineno) {
                     return {done: true, value: null}
                 }
                 var value = obj.ix
-                obj.ix += self.step
-                return {done: false, value}
+                obj.ix += step
+                return {done: false, value: self.$safe ? value : _b_.int.$int_or_long(value)}
             }
         }
     } else {
@@ -36,8 +49,8 @@ _b_.range[$B.FAST_ITER] = function(self, set_lineno, frame, lineno) {
                     return {done: true, value: null}
                 }
                 var value = obj.ix
-                obj.ix += self.step
-                return {done: false, value}
+                obj.ix += step
+                return {done: false, value: self.$safe ? value : _b_.int.$int_or_long(value)}
             }
         }
     }
