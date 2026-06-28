@@ -1542,6 +1542,14 @@ NotImplementedType.tp_repr = function() {
     return "NotImplemented"
 }
 
+// pickled as a global reference, like CPython (notimplemented_reduce)
+NotImplementedType.tp_funcs = {
+    __reduce__: function() {
+        return 'NotImplemented'
+    }
+}
+NotImplementedType.tp_methods = ['__reduce__']
+
 $B.set_func_names(NotImplementedType, "builtins")
 
 var NotImplemented = _b_.NotImplemented = {
@@ -2322,6 +2330,13 @@ var Ellipsis = _b_.Ellipsis = {
     ob_type: ellipsis
 }
 
+// pickled as a global reference, like CPython (ellipsis_reduce)
+ellipsis.tp_funcs = {
+    __reduce__: function() {
+        return 'Ellipsis'
+    }
+}
+ellipsis.tp_methods = ['__reduce__']
 
 $B.set_func_names(ellipsis)
 
