@@ -47,7 +47,9 @@ $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
         stack.push(frame_obj.frame[0] + '.')
         frame_obj = frame_obj.prev
     }
-    var qualname = `${stack.join('')}${class_name}`
+    // the frames were walked innermost-first; the qualname prefix is
+    // outermost-first (Outer.Inner.Deep, not Inner.Outer.Deep)
+    var qualname = `${stack.reverse().join('')}${class_name}`
     $B.str_dict_set(dict, '__qualname__', qualname)
 
     // A class that overrides __eq__() and does not define __hash__()
@@ -1532,11 +1534,11 @@ _b_.type.tp_new = function(cls, args, kw) {
                 if (v.$function_infos === undefined) {
                     // internal functions have $infos
                     if (v.$infos) {
-                        v.$infos.__qualname__ = name + '.' + v.$infos.__name__
+                        v.$infos.__qualname__ = qualname + '.' + v.$infos.__name__
                     }
                 } else {
                     v.$function_infos[$B.func_attrs.method_class] = class_obj
-                    v.$function_infos[$B.func_attrs.__qualname__] = name + '.' +
+                    v.$function_infos[$B.func_attrs.__qualname__] = qualname + '.' +
                         v.$function_infos[$B.func_attrs.__name__]
                 }
             }

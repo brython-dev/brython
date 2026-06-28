@@ -934,6 +934,16 @@ $B.tokenizer = function(src, filename, mode, parser) {
                             }
                         } else if (char == ' ' || char == '\t') {
                             // ignore
+                        } else if (char == '$' || char == '?' || char == '`') {
+                            // CPython tokenizes these as OP tokens; the parser
+                            // (not the tokenizer) rejects them. Emitting them
+                            // here lets tokenize() handle them instead of
+                            // raising — e.g. inspect.signature reads a clinic
+                            // '$self'/'$module' marker through tokenize.
+                            t.push(Token('OP', char,
+                                line_num, pos - line_start,
+                                line_num, pos - line_start + 1,
+                                line))
                         } else {
                             // invalid character
                             var cp = char.codePointAt(0),
@@ -946,9 +956,6 @@ $B.tokenizer = function(src, filename, mode, parser) {
                                 unicode = '0' + unicode
                             }
                             err_msg += ` character '${char}' (U+${unicode})`
-                            if (char == '$' || char == '`') {
-                                err_msg = 'invalid syntax'
-                            }
                             var err_token = Token('ERRORTOKEN', char,
                                 line_num, pos - line_start,
                                 line_num, pos - line_start + 1,
