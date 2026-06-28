@@ -1518,11 +1518,11 @@ _b_.type.tp_new = function(cls, args, kw) {
                 if (v.$function_infos === undefined) {
                     // internal functions have $infos
                     if (v.$infos) {
-                        v.$infos.__qualname__ = name + '.' + v.$infos.__name__
+                        v.$infos.__qualname__ = qualname + '.' + v.$infos.__name__
                     }
                 } else {
                     v.$function_infos[$B.func_attrs.method_class] = class_obj
-                    v.$function_infos[$B.func_attrs.__qualname__] = name + '.' +
+                    v.$function_infos[$B.func_attrs.__qualname__] = qualname + '.' +
                         v.$function_infos[$B.func_attrs.__name__]
                 }
             }
