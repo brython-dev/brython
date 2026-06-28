@@ -548,7 +548,8 @@ _b_.BaseException.tp_repr = function(self) {
     if (self.args.length > 0 && self.args[0] !== _b_.None) {
         args = _b_.repr(self.args[0])
     }
-    return `${$B.class_name(self)}(${args})`
+    var qualname = $B.$getattr($B.get_class(self), '__qualname__')
+    return `${qualname}(${args})`
 }
 
 _b_.BaseException.tp_str = function(self) {
@@ -1699,7 +1700,7 @@ $B.error_trace = function(err) {
 
         trace += `${$B.get_name($B.get_class(err))}: ${err.args[0] ?? '<no detail available>'}`
     } else if ($B.get_class(err) !== $B.JSObj) {
-        var name = $B.class_name(err)
+        var name = $B.$getattr($B.get_class(err), '__qualname__')
         trace += trace_from_stack(err)
         var args_str = _b_.str.$factory(err)
         trace += name + (args_str ? ': ' + args_str : '')
