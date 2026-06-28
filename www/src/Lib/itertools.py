@@ -392,7 +392,7 @@ class repeat:
     def __init__(self, obj, times=None):
         self._obj = obj
         if times is not None:
-            range(times) # Raise a TypeError
+            times = operator.index(times) # coerce via __index__, TypeError otherwise
             if times < 0:
                 times = 0
         self._times = times
