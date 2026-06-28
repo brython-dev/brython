@@ -2070,7 +2070,12 @@ $B.ast.Constant.prototype.to_js = function() {
         if (srg.length == 0) {
             return `'${s}'`
         }
-        return `$B.make_String('${s}', [${srg}])`
+        // Box at runtime so the surrogate positions are computed on the
+        // evaluated string literal, not on the escaped source s (see
+        // $B.surrogates): emitting the positions here used the escaped form
+        // and put them off by one for any literal with a backslash before an
+        // astral character.
+        return `$B.String('${s}')`
     }
     var klass = $B.get_class(this.value)
     if (klass === _b_.bytes) {
