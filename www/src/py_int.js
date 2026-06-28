@@ -722,7 +722,14 @@ _b_.int.tp_new = function(cls, args, kw) {
     $B.check_expected_keywords('int', kw, ['base'])
     switch (nb_args) {
         case 0:
-            return 0
+            if (cls === int) {
+                return 0
+            }
+            // a subclass with no argument (MyInt()) must build a distinct
+            // instance, not the shared literal 0
+            value = 0
+            base = _b_.None
+            break
         case 1:
             if (args.length == 0) {
                 $B.RAISE(_b_.TypeError, "int() missing string argument")
