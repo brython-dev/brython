@@ -397,7 +397,7 @@ function run_py(module_contents, path, module, compiled) {
         js = compiled ? module_contents : root.to_js()
         if ($B.get_option('debug') == 10) {
            console.log("code for module " + module_name)
-           console.log($B.format_indent(js, 0))
+           console.log(js)
         }
         src = js
         js = "var $module = (function() {\n" + js

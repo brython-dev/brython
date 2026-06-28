@@ -744,7 +744,7 @@ $B.time_builtin_getattr = 0
 
 $B.$getattr = function(obj, attr, _default) {
     // Used internally to avoid having to parse the arguments
-    var test = false // attr == 'closest'
+    var test = false // attr == '__qualname__'
     if (test) {
         console.log('$getattr', obj, attr)
     }
@@ -851,6 +851,9 @@ $B.$getattr = function(obj, attr, _default) {
         var res = $B.object_getattribute(obj, klass, attr)
     } else {
         var in_dict = $B.get_dict(obj)[attr]
+        if (test) {
+            console.log('in dict of class', in_dict)
+        }
         if (in_dict && $B.get_class(obj) === _b_.type) {
             var res = $B.NULL
             // A data descriptor on the metatype wins over the type's own
