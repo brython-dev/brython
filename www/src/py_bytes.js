@@ -2264,6 +2264,26 @@ var encode = $B.encode = function() {
         case "utf-8":
         case "utf_8":
         case "utf8":
+            if (errors == 'surrogatepass') {
+                // TextEncoder replaces a lone surrogate with U+FFFD; encode it
+                // as its 3-byte WTF-8 instead (for...of yields a lone surrogate
+                // and combines valid pairs into an astral code point).
+                for (var ch of s) {
+                    var cp = ch.codePointAt(0)
+                    if (cp <= 0x7f) {
+                        t.push(cp)
+                    } else if (cp <= 0x7ff) {
+                        t.push(0xc0 + (cp >> 6), 0x80 + (cp & 0x3f))
+                    } else if (cp <= 0xffff) {
+                        t.push(0xe0 + (cp >> 12), 0x80 + ((cp >> 6) & 0x3f),
+                                 0x80 + (cp & 0x3f))
+                    } else {
+                        t.push(0xf0 + (cp >> 18), 0x80 + ((cp >> 12) & 0x3f),
+                                 0x80 + ((cp >> 6) & 0x3f), 0x80 + (cp & 0x3f))
+                    }
+                }
+                break
+            }
             if (globalThis.TextEncoder) {
                 var encoder = new TextEncoder('utf-8', {fatal: true})
                 try {
