@@ -1199,8 +1199,9 @@ str.$factory = function() {
         if (typeof res == "string" || $B.$isinstance(res, str)) {
             return res
         }
-        $B.RAISE(_b_.TypeError, "__str__ returned non-string " +
-            `(type ${$B.class_name(res)})`)
+        $B.RAISE(_b_.TypeError, `${$B.class_name(args[0])}.__str__() must ` +
+            `return a str, not ${$B.class_name(res)}`
+        )
     }
     for (var entry of _b_.dict.$iter_items(kw)) {
         switch (entry.key) {
