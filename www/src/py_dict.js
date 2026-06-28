@@ -1704,8 +1704,8 @@ mappingproxy.$factory = function(obj) {
 mappingproxy.$match_mapping_pattern = true // for pattern matching (PEP 634)
 
 /* mappingproxy start */
-$B.mappingproxy.tp_richcompare = function(self) {
-
+$B.mappingproxy.tp_richcompare = function(self, other, op) {
+    return $B.rich_comp(op, self.mapping, other)
 }
 
 $B.mappingproxy.nb_or = function(self) {
