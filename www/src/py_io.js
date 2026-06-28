@@ -44,7 +44,7 @@ const DEFAULT_BUFFER_SIZE = (128 * 1024)  /* bytes */
 $B.make_IOUnsupported = function() {
     if ($B._IOUnsupported === undefined) {
         $B._IOUnsupported = $B.make_type('UnsupportedOperation', [_b_.OSError, _b_.ValueError])
-        $B._IOUnsupported.__module__ = '_io'
+        $B.set_to_dict($B._IOUnsupported, '__module__', 'io')
         $B.finalize_type($B._IOUnsupported)
     }
 }

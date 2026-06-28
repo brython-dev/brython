@@ -461,7 +461,7 @@ class A:
         return 1
 
 assert_raises(TypeError, str, A(),
-    msg="__str__ returned non-string (type int)")
+    msg="A.__str__() must return a str, not int")
 
 # issue 2132
 text = codecs.encode("Beautiful is better than ugly.", "rot13")
@@ -507,7 +507,7 @@ assert list(b) == [97, 0, 0, 0, 17, 244, 1, 0, 32, 0, 0, 0, 58, 0, 0, 0]
 assert b.decode('utf_32_le') == "a🐑 :"
 
 b = "a🐑 :".encode("utf_16")
-assert list(b) == [254, 255, 97, 0, 61, 216, 17, 220, 32, 0, 58, 0], list(b)
+assert list(b) == [255, 254, 97, 0, 61, 216, 17, 220, 32, 0, 58, 0], list(b)
 assert b.decode('utf_16') == "a🐑 :"
 
 # issue 2619
@@ -535,5 +535,8 @@ class SubStr(str):
 
 toto = SubStr("toto")
 assert toto.find("o") == 1
+
+# PR 2812
+assert '\t'.expandtabs(4) == '    '
 
 print("passed all tests...")

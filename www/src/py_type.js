@@ -47,7 +47,9 @@ $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
         stack.push(frame_obj.frame[0] + '.')
         frame_obj = frame_obj.prev
     }
-    var qualname = `${stack.join('')}${class_name}`
+    // the frames were walked innermost-first; the qualname prefix is
+    // outermost-first (Outer.Inner.Deep, not Inner.Outer.Deep)
+    var qualname = `${stack.reverse().join('')}${class_name}`
     $B.str_dict_set(dict, '__qualname__', qualname)
 
     // A class that overrides __eq__() and does not define __hash__()
@@ -946,7 +948,13 @@ function make_factory(cls) {
                 ob_type: cls
             }
             $B.init_dict(res)
-            cls.tp_init.call(null, res, ...arguments)
+            if (typeof cls.tp_init == 'function') {
+                cls.tp_init.call(null, res, ...arguments)
+            } else if (_b_.callable(cls.tp_init)) {
+                // __init__ is a non-function callable (e.g. a Mock): CPython
+                // calls it without binding the instance as first argument.
+                $B.$call(cls.tp_init, ...arguments)
+            }
             return res
         }
     } else {
@@ -1270,6 +1278,16 @@ _b_.type.tp_call = function(cls) {
             } catch (err) {
                 throw err
             }
+        } else if (init_func !== $B.NULL && init_func !== _b_.object.tp_init &&
+                init_func !== undefined && _b_.callable(init_func)) {
+            // __init__ replaced by a callable that is neither a function nor a
+            // descriptor (e.g. a Mock): CPython calls it without binding, i.e.
+            // without the instance as first argument.
+            if (kw_len > 0) {
+                $B.$call(init_func, ...$.args, $B.dict2kwarg(kw))
+            } else {
+                $B.$call(init_func, ...$.args)
+            }
         }
     }
     if (test) {
@@ -1516,11 +1534,11 @@ _b_.type.tp_new = function(cls, args, kw) {
                 if (v.$function_infos === undefined) {
                     // internal functions have $infos
                     if (v.$infos) {
-                        v.$infos.__qualname__ = name + '.' + v.$infos.__name__
+                        v.$infos.__qualname__ = qualname + '.' + v.$infos.__name__
                     }
                 } else {
                     v.$function_infos[$B.func_attrs.method_class] = class_obj
-                    v.$function_infos[$B.func_attrs.__qualname__] = name + '.' +
+                    v.$function_infos[$B.func_attrs.__qualname__] = qualname + '.' +
                         v.$function_infos[$B.func_attrs.__name__]
                 }
             }

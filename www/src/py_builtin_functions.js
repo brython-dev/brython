@@ -849,6 +849,9 @@ $B.$getattr = function(obj, attr, _default) {
         }
         var res = $B.object_getattribute(obj, klass, attr)
     } else {
+        if (attr === '__class__') {
+            return $B.get_class(obj)
+        }
         var in_dict = $B.get_dict(obj)[attr]
         if (in_dict && $B.get_class(obj) === _b_.type) {
             var res = $B.NULL
@@ -1539,6 +1542,14 @@ NotImplementedType.tp_repr = function() {
     return "NotImplemented"
 }
 
+// pickled as a global reference, like CPython (notimplemented_reduce)
+NotImplementedType.tp_funcs = {
+    __reduce__: function() {
+        return 'NotImplemented'
+    }
+}
+NotImplementedType.tp_methods = ['__reduce__']
+
 $B.set_func_names(NotImplementedType, "builtins")
 
 var NotImplemented = _b_.NotImplemented = {
@@ -1608,16 +1619,38 @@ _b_.pow = function() {
                 if ($B.$isinstance(z, _b_.complex)) {
                     throw complex_modulo()
                 } else if (! $B.is_int(z)) {
+                    // CPython dispatches three-arg power on the modulus's type
+                    // too (pow(10, 2, Decimal(7)) -> Decimal); a float modulus
+                    // has no three-arg power and still raises.
+                    var zpow = $B.$isinstance(z, _b_.float) ? null :
+                        $B.$getattr($B.get_class(z), '__pow__', null)
+                    if (zpow) {
+                        try {
+                            var zr = $B.$call(zpow, x, y, z)
+                            if (zr !== _b_.NotImplemented) { return zr }
+                        } catch (_err) {}
+                    }
                     throw all_ints()
                 }
+                return _b_.int.nb_power(x, y, z)
             }
-            return _b_.int.nb_power(x, y, z)
         } else if ($B.$isinstance(x, _b_.float)) {
             throw all_ints()
         } else if ($B.$isinstance(x, _b_.complex)) {
             throw complex_modulo()
         }
     }
+    var res = $B.$call($B.$getattr(x, '__pow__'), y, z)
+    if (res !== _b_.NotImplemented) {
+        return res
+    }
+    var rres = $B.$call($B.$getattr(y, '__rpow__'), x, z)
+    if (rres !== _b_.NotImplemented) {
+        return rres
+    }
+    throw $B.EXC(_b_.TypeError,
+        "unsupported operand type(s) for pow(): '" + $B.class_name(x) +
+        "', '" + $B.class_name(y) + "', '" + $B.class_name(z) + "'")
 }
 
 var $print = _b_.print = function() {
@@ -2260,6 +2293,13 @@ var Ellipsis = _b_.Ellipsis = {
     ob_type: ellipsis
 }
 
+// pickled as a global reference, like CPython (ellipsis_reduce)
+ellipsis.tp_funcs = {
+    __reduce__: function() {
+        return 'Ellipsis'
+    }
+}
+ellipsis.tp_methods = ['__reduce__']
 
 $B.set_func_names(ellipsis)
 

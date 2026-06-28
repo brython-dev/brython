@@ -63,8 +63,8 @@ function $get_CryptoJS_lib(alg) {
 function bytes2WordArray(obj) {
     // Transform a bytes object into an instance of class WordArray
     // defined in CryptoJS
-    if (!$B.is_bytes(obj)) {
-        throw _b_.TypeError("expected bytes, got " + $B.class_name(obj))
+    if (! $B.$isinstance(obj, [_b_.bytes, _b_.bytearray])) {
+        $B.RAISE(_b_.TypeError, "expected bytes, got " + $B.class_name(obj))
     }
 
     let words = []

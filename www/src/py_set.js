@@ -34,14 +34,20 @@ function make_new_set_base_type(so) {
 function set_add(so, item, hash) {
     hash = hash ?? $B.$hash(item)
     var stored = so.$store[hash]
-    if (stored && set_contains(so, item, hash)) {
-        return
-    } else {
-        stored = so.$store[hash] = []
+    if (stored) {
+        // A bucket already holds items with this hash. If the item is already
+        // there, nothing to do; otherwise it is a hash collision with a
+        // distinct item (e.g. -1 and -2, which both hash to -2), so append it
+        // instead of replacing the bucket and dropping what it already held.
+        if (set_contains(so, item, hash)) {
+            return
+        }
         stored[stored.length] = item
-        so.$used++
-        so.$version++
+    } else {
+        so.$store[hash] = [item]
     }
+    so.$used++
+    so.$version++
 }
 
 $B.set_add = set_add
