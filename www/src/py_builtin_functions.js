@@ -849,6 +849,9 @@ $B.$getattr = function(obj, attr, _default) {
         }
         var res = $B.object_getattribute(obj, klass, attr)
     } else {
+        if (attr === '__class__') {
+            return $B.get_class(obj)
+        }
         var in_dict = $B.get_dict(obj)[attr]
         if (in_dict && $B.get_class(obj) === _b_.type) {
             var res = $B.NULL
@@ -1610,14 +1613,25 @@ _b_.pow = function() {
                 } else if (! $B.is_int(z)) {
                     throw all_ints()
                 }
+                return _b_.int.nb_power(x, y, z)
             }
-            return _b_.int.nb_power(x, y, z)
         } else if ($B.$isinstance(x, _b_.float)) {
             throw all_ints()
         } else if ($B.$isinstance(x, _b_.complex)) {
             throw complex_modulo()
         }
     }
+    var res = $B.$call($B.$getattr(x, '__pow__'), y, z)
+    if (res !== _b_.NotImplemented) {
+        return res
+    }
+    var rres = $B.$call($B.$getattr(y, '__rpow__'), x, z)
+    if (rres !== _b_.NotImplemented) {
+        return rres
+    }
+    throw $B.EXC(_b_.TypeError,
+        "unsupported operand type(s) for pow(): '" + $B.class_name(x) +
+        "', '" + $B.class_name(y) + "', '" + $B.class_name(z) + "'")
 }
 
 var $print = _b_.print = function() {
