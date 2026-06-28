@@ -1018,6 +1018,11 @@ $B.IterableJSObj.sq_length = function(self) {
 }
 
 $B.IterableJSObj.tp_iternext = function*(self){
+    if (self.it === undefined) {
+        // next(it) can be called without iter(it) first — __iter__ (tp_iter) is
+        // what normally sets self.it, but __next__ must stand on its own.
+        self.it = self[Symbol.iterator]()
+    }
     for (var value of self.it) {
         yield value
     }
