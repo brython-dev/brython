@@ -253,8 +253,8 @@ implementation = SimpleNamespace(
     )
 
 hash_info = make_dataclass('hash_info')(
-      width = 32,
-      modulus = 2147483647,
+      width = 64,
+      modulus = 2305843009213693951,
       inf = 314159,
       nan = 0,
       imag = 1000003,
