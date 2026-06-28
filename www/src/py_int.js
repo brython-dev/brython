@@ -198,6 +198,19 @@ int.$factory = function(value, base) {
             $B.RAISE(_b_.TypeError,
                 "int() can't convert non-string with explicit base")
         } else {
+            if ($B.$isinstance(value, _b_.float)) {
+                // float has no __int__, so int() would fall through to
+                // __trunc__ and return NaN/Infinity unchanged
+                var _fv = typeof value == 'number' ? value : value.value
+                if (isNaN(_fv)) {
+                    $B.RAISE(_b_.ValueError,
+                        'cannot convert float NaN to integer')
+                }
+                if (! isFinite(_fv)) {
+                    $B.RAISE(_b_.OverflowError,
+                        'cannot convert float infinity to integer')
+                }
+            }
             // booleans, bigints, objects with method __index__
             for (let special_method of ['__int__', '__index__', '__trunc__']) {
                 let num_value = $B.$getattr($B.get_class(value),
@@ -872,6 +885,9 @@ int_funcs.from_bytes = function(self) {
     } else if (byteorder != "little") {
         $B.RAISE(_b_.ValueError,
             "byteorder must be either 'little' or 'big'")
+    }
+    if (_len == 0) {
+        return 0
     }
     var num = _bytes[0]
     // the sign lives in the MOST significant byte — handled at the end
