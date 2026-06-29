@@ -486,7 +486,9 @@ _b_.object.tp_new = function(cls, args, kw) {
         ob_type: cls
     }
     if(cls !== object &&
-            $B.get_from_dict(cls, '__slots__', $B.NULL) === $B.NULL){
+            ($B.get_from_dict(cls, '__slots__', $B.NULL) === $B.NULL ||
+             cls.$slots_has_dict)){
+        // no __slots__, or '__dict__' is in __slots__ -> instance gets a __dict__
         $B.init_dict(res)
     }
     return res

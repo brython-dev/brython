@@ -126,6 +126,119 @@ function main_type(obj) {
     return $B.$isinstance(obj, _b_.bytearray) ? _b_.bytearray : _b_.bytes
 }
 
+function dict_or_not(cls, instance) {
+    if ([_b_.bytes, _b_.bytearray].includes(cls)) {
+        $B.init_dict(instance)
+    }
+    return instance
+}
+
+function _new(cls, args, kw) {
+    let [source, encoding, errors] = $B.unpack_args($B.get_name(cls), args,
+        ['source', 'encoding', 'errors'],
+        {source: $B.NULL, encoding: $B.NULL, errors: $B.NULL}
+    )
+
+    if (source === $B.NULL) {
+        let instance = {
+            ob_type: cls,
+            source: []
+        }
+        return dict_or_not(cls, instance)
+    }
+
+    var kw_encoding = $B.str_dict_get(kw, 'encoding', $B.NULL)
+    if (encoding !== $B.NULL) {
+        if (kw_encoding !== $B.NULL) {
+            $B.RAISE(_b_.TypeError,
+                `argument for bytes() given by name ('encoding') ` +
+                `and position (2)`
+            )
+        }
+    } else {
+        encoding = kw_encoding
+    }
+    var kw_errors = $B.str_dict_get(kw, 'errors', $B.NULL)
+    if (errors !== $B.NULL) {
+        if (kw_errors !== $B.NULL) {
+            $B.RAISE(_b_.TypeError,
+                `argument for bytes() given by name ('errors') ` +
+                `and position (3)`
+            )
+        }
+    } else {
+        errors = kw_errors === $B.NULL ? 'strict' : kw_errors
+    }
+
+    if (typeof source == "string" || $B.is_str(source)) {
+        if (encoding === $B.NULL) {
+             $B.RAISE(_b_.TypeError, 'string argument without an encoding')
+        }
+        let res = encode(source, encoding, errors)
+        if (! $B.$isinstance(res, bytes)) {
+            $B.RAISE(_b_.TypeError, `'${encoding}' codec returns ` +
+                `${$B.class_name(res)}, not bytes`)
+        }
+        // encode returns bytes
+        res.ob_type = cls
+        return dict_or_not(cls, res)
+    }
+    if (encoding !== $B.NULL) {
+        $B.RAISE(_b_.TypeError, "encoding without a string argument")
+    }
+    if (typeof source == "number" || $B.is_int(source)) {
+        var size = $B.PyNumber_Index(source)
+        source = []
+        for (var i = 0; i < size; i++) {
+            source[i] = 0
+        }
+    } else if ($B.$isinstance(source, [_b_.bytes, _b_.bytearray])) {
+        source = source.source
+    } else if ($B.$isinstance(source, _b_.memoryview)) {
+        source = source.obj.source
+    }else if($B.imported.array &&
+            $B.$isinstance(source, $B.module_getattr($B.imported.array, 'array'))){
+        var array = $B.module_getattr($B.imported.array, 'array')
+        source = array.tp_funcs.tobytes(source).source
+    } else {
+        var int_list
+        if (Array.isArray(source)) {
+            int_list = source
+        } else {
+            try {
+                int_list = _b_.list.$factory(source)
+            } catch (err) {
+                var bytes_method = $B.$getattr(source, '__bytes__', _b_.None)
+                if (bytes_method === _b_.None) {
+                    $B.RAISE(_b_.TypeError, "cannot convert " +
+                        `'${$B.class_name(source)}' object to bytes`)
+                }
+                let res = $B.$call(bytes_method)
+                if (! $B.is_bytes(res)) {
+                    $B.RAISE(_b_.TypeError, `__bytes__ returned ` +
+                        `non-bytes (type ${$B.class_name(res)})`)
+                }
+                return dict_or_not(cls, res)
+            }
+        }
+        source = []
+        for (var item of int_list) {
+            item = $B.PyNumber_Index(item)
+            if (item >= 0 && item < 256) {
+                source.push(item)
+            } else {
+                $B.RAISE(_b_.ValueError,
+                    "bytes must be in range (0, 256)")
+            }
+        }
+    }
+    let instance = {
+        ob_type: cls,
+        source
+    }
+    return dict_or_not(cls, instance)
+}
+
 function bytearray_delitem(self, arg) {
     if (self.exports) {
         if ($B.$isinstance(arg, _b_.slice)) {
@@ -1215,9 +1328,7 @@ _b_.bytearray.tp_init = function(self) {
 }
 
 _b_.bytearray.tp_new = function(cls, args, kw) {
-    var b = _b_.bytes.tp_new(cls, args, kw)
-    b.ob_type = cls
-    return b
+    return _new(cls, args, kw)
 }
 
 _b_.bytearray.nb_inplace_add = function(self, other) {
@@ -1841,10 +1952,11 @@ var _upper = function(char_code) {
     }
 }
 
-function $UnicodeEncodeError(encoding, code_point, position) {
+function $UnicodeEncodeError(encoding, code_point, position, reason) {
     $B.RAISE(_b_.UnicodeEncodeError, "'" + encoding +
         "' codec can't encode character " + _b_.hex(code_point) +
-        " in position " + position)
+        " in position " + position +
+        (reason ? ": " + reason : ""))
 }
 
 function _hex(_int) {
@@ -2264,6 +2376,38 @@ var encode = $B.encode = function() {
         case "utf-8":
         case "utf_8":
         case "utf8":
+            if (errors == 'surrogatepass') {
+                // TextEncoder replaces a lone surrogate with U+FFFD; encode it
+                // as its 3-byte WTF-8 instead (for...of yields a lone surrogate
+                // and combines valid pairs into an astral code point).
+                for (var ch of s) {
+                    var cp = ch.codePointAt(0)
+                    if (cp <= 0x7f) {
+                        t.push(cp)
+                    } else if (cp <= 0x7ff) {
+                        t.push(0xc0 + (cp >> 6), 0x80 + (cp & 0x3f))
+                    } else if (cp <= 0xffff) {
+                        t.push(0xe0 + (cp >> 12), 0x80 + ((cp >> 6) & 0x3f),
+                                 0x80 + (cp & 0x3f))
+                    } else {
+                        t.push(0xf0 + (cp >> 18), 0x80 + ((cp >> 12) & 0x3f),
+                                 0x80 + ((cp >> 6) & 0x3f), 0x80 + (cp & 0x3f))
+                    }
+                }
+                break
+            }
+            if (errors == 'strict') {
+                // TextEncoder yields U+FFFD for a lone surrogate; CPython raises.
+                // A valid pair is consumed by the first alternative, so group 1
+                // captures only a lone surrogate.
+                var m, re = /[\ud800-\udbff][\udc00-\udfff]|([\ud800-\udfff])/g
+                while (m = re.exec(s)) {
+                    if (m[1]) {
+                        $UnicodeEncodeError(encoding, m[1].charCodeAt(0),
+                            m.index, "surrogates not allowed")
+                    }
+                }
+            }
             if (globalThis.TextEncoder) {
                 var encoder = new TextEncoder('utf-8', {fatal: true})
                 try {
@@ -2509,111 +2653,7 @@ _b_.bytes.tp_iter = function(self) {
 }
 
 _b_.bytes.tp_new = function(cls, args, kw) {
-    var [source, encoding, errors] = $B.unpack_args('bytes', args,
-        ['source', 'encoding', 'errors'],
-        {source: $B.NULL, encoding: $B.NULL, errors: $B.NULL}
-    )
-    if (source === $B.NULL) {
-        return {
-            ob_type: cls,
-            source: []
-        }
-    }
-    var kw_encoding = $B.str_dict_get(kw, 'encoding', $B.NULL)
-    if (encoding !== $B.NULL) {
-        if (kw_encoding !== $B.NULL) {
-            $B.RAISE(_b_.TypeError,
-                `argument for bytes() given by name ('encoding') ` +
-                `and position (2)`
-            )
-        }
-    } else {
-        encoding = kw_encoding
-    }
-    var kw_errors = $B.str_dict_get(kw, 'errors', $B.NULL)
-    if (errors !== $B.NULL) {
-        if (kw_errors !== $B.NULL) {
-            $B.RAISE(_b_.TypeError,
-                `argument for bytes() given by name ('errors') ` +
-                `and position (3)`
-            )
-        }
-    } else {
-        errors = kw_errors === $B.NULL ? 'strict' : kw_errors
-    }
-
-    if (typeof source == "string" || $B.is_str(source)) {
-        if (encoding === $B.NULL) {
-             $B.RAISE(_b_.TypeError, 'string argument without an encoding')
-        }
-        let res = encode(source, encoding, errors)
-        if (! $B.$isinstance(res, bytes)) {
-            $B.RAISE(_b_.TypeError, `'${encoding}' codec returns ` +
-                `${$B.class_name(res)}, not bytes`)
-        }
-        // encode returns bytes
-        res.ob_type = cls
-        return res
-    }
-    if (encoding !== $B.NULL) {
-        $B.RAISE(_b_.TypeError, "encoding without a string argument")
-    }
-    if (typeof source == "number" || $B.is_int(source)) {
-        var size = $B.PyNumber_Index(source)
-        source = []
-        for (var i = 0; i < size; i++) {
-            source[i] = 0
-        }
-    } else if ($B.$isinstance(source, [_b_.bytes, _b_.bytearray])) {
-        source = source.source
-    } else if ($B.$isinstance(source, _b_.memoryview)) {
-        source = source.obj.source
-    }else if($B.imported.array &&
-            $B.$isinstance(source, $B.module_getattr($B.imported.array, 'array'))){
-        var array = $B.module_getattr($B.imported.array, 'array')
-        source = array.tp_funcs.tobytes(source).source
-    } else {
-        var int_list
-        if (Array.isArray(source)) {
-            int_list = source
-        } else {
-            try {
-                int_list = _b_.list.$factory(source)
-            } catch (err) {
-                var bytes_method = $B.$getattr(source, '__bytes__', _b_.None)
-                if (bytes_method === _b_.None) {
-                    $B.RAISE(_b_.TypeError, "cannot convert " +
-                        `'${$B.class_name(source)}' object to bytes`)
-                }
-                let res = $B.$call(bytes_method)
-                if (! $B.is_bytes(res)) {
-                    $B.RAISE(_b_.TypeError, `__bytes__ returned ` +
-                        `non-bytes (type ${$B.class_name(res)})`)
-                }
-                if (res.source === undefined) {
-                    console.log('!!!!!!!', source)
-                }
-                return res
-            }
-        }
-        source = []
-        for (var item of int_list) {
-            item = $B.PyNumber_Index(item)
-            if (item >= 0 && item < 256) {
-                source.push(item)
-            } else {
-                $B.RAISE(_b_.ValueError,
-                    "bytes must be in range (0, 256)")
-            }
-        }
-    }
-    if (source === undefined) {
-        console.log('bytes.__new__, no source', source)
-    }
-    return {
-        ob_type: cls,
-        source
-    }
+    return _new(cls, args, kw)
 }
 
 _b_.bytes.mp_length = function(self) {

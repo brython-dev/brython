@@ -297,8 +297,6 @@ float.$getnewargs = function(self) {
 
 var nan_hash = $B.$py_next_hash--
 
-var mp2_31 = Math.pow(2, 31)
-
 $B.float_hash_cache = new Map()
 
 float.$hash_func = function(self) {
@@ -324,12 +322,40 @@ float.$hash_func = function(self) {
         return _b_.int.tp_hash(_v)
     }
 
-    var r = frexp(self)
-    r[0] *= mp2_31
-    var hipart = parseInt(r[0])
-    r[0] = (r[0] - hipart) * mp2_31
-    var x = hipart + parseInt(r[0]) + (r[1] << 15)
-    x &= 0xFFFFFFFF
+    // A non-integer float must hash like the numerically equal Fraction or
+    // Decimal: a modular hash in base 2 ** 61 - 1 (CPython's _Py_HashDouble).
+    // The previous 32-bit hash disagreed with int_hash, e.g.
+    // hash(2.5) != hash(Fraction(5, 2)).
+    var P = 2305843009213693951n
+    var r = frexp(self),
+        m = r[0],
+        e = r[1],
+        sign = 1n
+    if (m < 0) {
+        sign = -1n
+        m = -m
+    }
+    var hx = 0n
+    while (m != 0) {
+        hx = ((hx << 28n) & P) | (hx >> 33n)
+        m *= 268435456
+        e -= 28
+        var y = BigInt(Math.floor(m))
+        m -= Number(y)
+        hx += y
+        if (hx >= P) {
+            hx -= P
+        }
+    }
+    var em = e >= 0 ? BigInt(e % 61) : BigInt(61 - 1 - ((-1 - e) % 61))
+    hx = ((hx << em) & P) | (hx >> (61n - em))
+    if (sign < 0n) {
+        hx = -hx
+    }
+    if (hx == -1n) {
+        hx = -2n
+    }
+    var x = _b_.int.$int_or_long(hx)
     $B.float_hash_cache.set(_v, x)
     if ($B.float_hash_cache.size > 10000) {
         // avoid memory issues

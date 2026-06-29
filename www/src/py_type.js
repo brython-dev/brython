@@ -1723,7 +1723,10 @@ type_funcs.__instancecheck__ = function(cls, instance) {
 type_funcs.__module___get = function(self) {
     if ($B.get_dict(self)) {
         var module = $B.get_from_dict(self, '__module__', $B.NULL)
-        if (module !== $B.NULL) {
+        // type.__dict__['__module__'] is the getset descriptor itself, and
+        // type is its own metaclass, so a bare lookup would return the
+        // descriptor; a module name is always a string.
+        if (typeof module === 'string') {
             return module
         }
     }
@@ -1771,6 +1774,9 @@ type_funcs.__qualname___get = function(cls) {
 }
 
 type_funcs.__qualname___set = function(cls, value) {
+    // write the dict, where __qualname___get reads it (tp_name alone left the
+    // getter returning the stale auto-computed qualname); keep tp_name for repr
+    $B.set_to_dict(cls, '__qualname__', value)
     cls.tp_name = value
 }
 

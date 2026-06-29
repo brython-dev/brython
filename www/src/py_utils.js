@@ -435,7 +435,7 @@ $B.unpack_args = function(name, args, vars, defaults) {
     for (var i = 0, len = vars.length; i < len; i++) {
         if (i >= args.length) {
             if (! defaults || ! defaults.hasOwnProperty(vars[i])) {
-                $B.RAISE(_b_.TypeError, `${name} missing argument ${vars[i]}`)
+                $B.RAISE(_b_.TypeError, `${name}() missing argument '${vars[i]}'`)
             }
             args[i] = defaults[vars[i]]
         }
