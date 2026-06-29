@@ -1825,6 +1825,8 @@ $B.ast.ClassDef.prototype.to_js = function(scopes) {
             break
         }
     }
+    // record the full dotted qualname so a nested method/class can prefix its own
+    class_scope.qualname = qualname
 
     var bases = this.bases.map(x => $B.js_from_ast(x, scopes))
     var has_type_params = this.type_params.length > 0
@@ -2657,7 +2659,9 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
 
     scopes.pop()
 
-    var qualname = in_class ? `${func_name_scope.name}.${this.name}` :
+    // use the enclosing class's full qualname so a method of a nested class
+    // gets its full dotted __qualname__, not just its immediate class
+    var qualname = in_class ? `${func_name_scope.qualname}.${this.name}` :
                               this.name
 
     // Flags
