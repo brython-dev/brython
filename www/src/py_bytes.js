@@ -1841,10 +1841,11 @@ var _upper = function(char_code) {
     }
 }
 
-function $UnicodeEncodeError(encoding, code_point, position) {
+function $UnicodeEncodeError(encoding, code_point, position, reason) {
     $B.RAISE(_b_.UnicodeEncodeError, "'" + encoding +
         "' codec can't encode character " + _b_.hex(code_point) +
-        " in position " + position)
+        " in position " + position +
+        (reason ? ": " + reason : ""))
 }
 
 function _hex(_int) {
@@ -2283,6 +2284,18 @@ var encode = $B.encode = function() {
                     }
                 }
                 break
+            }
+            if (errors == 'strict') {
+                // TextEncoder yields U+FFFD for a lone surrogate; CPython raises.
+                // A valid pair is consumed by the first alternative, so group 1
+                // captures only a lone surrogate.
+                var m, re = /[\ud800-\udbff][\udc00-\udfff]|([\ud800-\udfff])/g
+                while (m = re.exec(s)) {
+                    if (m[1]) {
+                        $UnicodeEncodeError(encoding, m[1].charCodeAt(0),
+                            m.index, "surrogates not allowed")
+                    }
+                }
             }
             if (globalThis.TextEncoder) {
                 var encoder = new TextEncoder('utf-8', {fatal: true})
