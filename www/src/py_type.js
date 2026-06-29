@@ -1704,7 +1704,10 @@ type_funcs.__instancecheck__ = function(cls, instance) {
 type_funcs.__module___get = function(self) {
     if ($B.get_dict(self)) {
         var module = $B.get_from_dict(self, '__module__', $B.NULL)
-        if (module !== $B.NULL) {
+        // type.__dict__['__module__'] is the getset descriptor itself, and
+        // type is its own metaclass, so a bare lookup would return the
+        // descriptor; a module name is always a string.
+        if (typeof module === 'string') {
             return module
         }
     }
