@@ -438,7 +438,7 @@ class defaultdict(dict):
 
         #   This API is used by pickle.py and copy.py.
         #
-        return (type(self), (self.default_factory,), None, None, self.items())
+        return (type(self), (self.default_factory,), None, None, iter(self.items()))
 
 # defaultdict is exposed as collections.defaultdict (CPython sets __module__
 # to 'collections', not the implementation module).
