@@ -2649,6 +2649,20 @@ _b_.bytes.tp_new = function(cls, args, kw) {
     }
 }
 
+;(function(orig) {
+    // A heap subclass of bytes/bytearray gets an instance __dict__, like list,
+    // dict, float and tuple do in their tp_new; without it MyBytes().__dict__
+    // was undefined. bytearray.tp_new delegates here, so this covers both;
+    // the base types keep no __dict__. (Multiple return points → wrap.)
+    _b_.bytes.tp_new = function(cls, args, kw) {
+        var res = orig(cls, args, kw)
+        if (res && cls !== _b_.bytes && cls !== _b_.bytearray) {
+            $B.init_dict(res)
+        }
+        return res
+    }
+})(_b_.bytes.tp_new)
+
 _b_.bytes.mp_length = function(self) {
     return self.source.length
 }
