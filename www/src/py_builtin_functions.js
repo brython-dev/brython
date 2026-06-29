@@ -1384,14 +1384,16 @@ _b_.map.tp_new = function(cls, args, kw) {
     return {
         ob_type: cls,
         args: iter_args,
-        func: func
+        func: func,
+        iterables: [it1, ...extra_args]
     }
 }
 
 var map_funcs = _b_.map.tp_funcs = {}
 
 map_funcs.__reduce__ = function(self) {
-
+    return $B.fast_tuple([$B.get_class(self),
+        $B.fast_tuple([self.func, ...(self.iterables || [])])])
 }
 
 map_funcs.__setstate__ = function(self) {
