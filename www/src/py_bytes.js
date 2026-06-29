@@ -126,6 +126,119 @@ function main_type(obj) {
     return $B.$isinstance(obj, _b_.bytearray) ? _b_.bytearray : _b_.bytes
 }
 
+function dict_or_not(cls, instance) {
+    if ([_b_.bytes, _b_.bytearray].includes(cls)) {
+        $B.init_dict(instance)
+    }
+    return instance
+}
+
+function _new(cls, args, kw) {
+    let [source, encoding, errors] = $B.unpack_args($B.get_name(cls), args,
+        ['source', 'encoding', 'errors'],
+        {source: $B.NULL, encoding: $B.NULL, errors: $B.NULL}
+    )
+
+    if (source === $B.NULL) {
+        let instance = {
+            ob_type: cls,
+            source: []
+        }
+        return dict_or_not(cls, instance)
+    }
+
+    var kw_encoding = $B.str_dict_get(kw, 'encoding', $B.NULL)
+    if (encoding !== $B.NULL) {
+        if (kw_encoding !== $B.NULL) {
+            $B.RAISE(_b_.TypeError,
+                `argument for bytes() given by name ('encoding') ` +
+                `and position (2)`
+            )
+        }
+    } else {
+        encoding = kw_encoding
+    }
+    var kw_errors = $B.str_dict_get(kw, 'errors', $B.NULL)
+    if (errors !== $B.NULL) {
+        if (kw_errors !== $B.NULL) {
+            $B.RAISE(_b_.TypeError,
+                `argument for bytes() given by name ('errors') ` +
+                `and position (3)`
+            )
+        }
+    } else {
+        errors = kw_errors === $B.NULL ? 'strict' : kw_errors
+    }
+
+    if (typeof source == "string" || $B.is_str(source)) {
+        if (encoding === $B.NULL) {
+             $B.RAISE(_b_.TypeError, 'string argument without an encoding')
+        }
+        let res = encode(source, encoding, errors)
+        if (! $B.$isinstance(res, bytes)) {
+            $B.RAISE(_b_.TypeError, `'${encoding}' codec returns ` +
+                `${$B.class_name(res)}, not bytes`)
+        }
+        // encode returns bytes
+        res.ob_type = cls
+        return dict_or_not(cls, res)
+    }
+    if (encoding !== $B.NULL) {
+        $B.RAISE(_b_.TypeError, "encoding without a string argument")
+    }
+    if (typeof source == "number" || $B.is_int(source)) {
+        var size = $B.PyNumber_Index(source)
+        source = []
+        for (var i = 0; i < size; i++) {
+            source[i] = 0
+        }
+    } else if ($B.$isinstance(source, [_b_.bytes, _b_.bytearray])) {
+        source = source.source
+    } else if ($B.$isinstance(source, _b_.memoryview)) {
+        source = source.obj.source
+    }else if($B.imported.array &&
+            $B.$isinstance(source, $B.module_getattr($B.imported.array, 'array'))){
+        var array = $B.module_getattr($B.imported.array, 'array')
+        source = array.tp_funcs.tobytes(source).source
+    } else {
+        var int_list
+        if (Array.isArray(source)) {
+            int_list = source
+        } else {
+            try {
+                int_list = _b_.list.$factory(source)
+            } catch (err) {
+                var bytes_method = $B.$getattr(source, '__bytes__', _b_.None)
+                if (bytes_method === _b_.None) {
+                    $B.RAISE(_b_.TypeError, "cannot convert " +
+                        `'${$B.class_name(source)}' object to bytes`)
+                }
+                let res = $B.$call(bytes_method)
+                if (! $B.is_bytes(res)) {
+                    $B.RAISE(_b_.TypeError, `__bytes__ returned ` +
+                        `non-bytes (type ${$B.class_name(res)})`)
+                }
+                return dict_or_not(cls, res)
+            }
+        }
+        source = []
+        for (var item of int_list) {
+            item = $B.PyNumber_Index(item)
+            if (item >= 0 && item < 256) {
+                source.push(item)
+            } else {
+                $B.RAISE(_b_.ValueError,
+                    "bytes must be in range (0, 256)")
+            }
+        }
+    }
+    let instance = {
+        ob_type: cls,
+        source
+    }
+    return dict_or_not(cls, instance)
+}
+
 function bytearray_delitem(self, arg) {
     if (self.exports) {
         if ($B.$isinstance(arg, _b_.slice)) {
@@ -1215,9 +1328,7 @@ _b_.bytearray.tp_init = function(self) {
 }
 
 _b_.bytearray.tp_new = function(cls, args, kw) {
-    var b = _b_.bytes.tp_new(cls, args, kw)
-    b.ob_type = cls
-    return b
+    return _new(cls, args, kw)
 }
 
 _b_.bytearray.nb_inplace_add = function(self, other) {
@@ -2542,126 +2653,8 @@ _b_.bytes.tp_iter = function(self) {
 }
 
 _b_.bytes.tp_new = function(cls, args, kw) {
-    var [source, encoding, errors] = $B.unpack_args('bytes', args,
-        ['source', 'encoding', 'errors'],
-        {source: $B.NULL, encoding: $B.NULL, errors: $B.NULL}
-    )
-    if (source === $B.NULL) {
-        return {
-            ob_type: cls,
-            source: []
-        }
-    }
-    var kw_encoding = $B.str_dict_get(kw, 'encoding', $B.NULL)
-    if (encoding !== $B.NULL) {
-        if (kw_encoding !== $B.NULL) {
-            $B.RAISE(_b_.TypeError,
-                `argument for bytes() given by name ('encoding') ` +
-                `and position (2)`
-            )
-        }
-    } else {
-        encoding = kw_encoding
-    }
-    var kw_errors = $B.str_dict_get(kw, 'errors', $B.NULL)
-    if (errors !== $B.NULL) {
-        if (kw_errors !== $B.NULL) {
-            $B.RAISE(_b_.TypeError,
-                `argument for bytes() given by name ('errors') ` +
-                `and position (3)`
-            )
-        }
-    } else {
-        errors = kw_errors === $B.NULL ? 'strict' : kw_errors
-    }
-
-    if (typeof source == "string" || $B.is_str(source)) {
-        if (encoding === $B.NULL) {
-             $B.RAISE(_b_.TypeError, 'string argument without an encoding')
-        }
-        let res = encode(source, encoding, errors)
-        if (! $B.$isinstance(res, bytes)) {
-            $B.RAISE(_b_.TypeError, `'${encoding}' codec returns ` +
-                `${$B.class_name(res)}, not bytes`)
-        }
-        // encode returns bytes
-        res.ob_type = cls
-        return res
-    }
-    if (encoding !== $B.NULL) {
-        $B.RAISE(_b_.TypeError, "encoding without a string argument")
-    }
-    if (typeof source == "number" || $B.is_int(source)) {
-        var size = $B.PyNumber_Index(source)
-        source = []
-        for (var i = 0; i < size; i++) {
-            source[i] = 0
-        }
-    } else if ($B.$isinstance(source, [_b_.bytes, _b_.bytearray])) {
-        source = source.source
-    } else if ($B.$isinstance(source, _b_.memoryview)) {
-        source = source.obj.source
-    }else if($B.imported.array &&
-            $B.$isinstance(source, $B.module_getattr($B.imported.array, 'array'))){
-        var array = $B.module_getattr($B.imported.array, 'array')
-        source = array.tp_funcs.tobytes(source).source
-    } else {
-        var int_list
-        if (Array.isArray(source)) {
-            int_list = source
-        } else {
-            try {
-                int_list = _b_.list.$factory(source)
-            } catch (err) {
-                var bytes_method = $B.$getattr(source, '__bytes__', _b_.None)
-                if (bytes_method === _b_.None) {
-                    $B.RAISE(_b_.TypeError, "cannot convert " +
-                        `'${$B.class_name(source)}' object to bytes`)
-                }
-                let res = $B.$call(bytes_method)
-                if (! $B.is_bytes(res)) {
-                    $B.RAISE(_b_.TypeError, `__bytes__ returned ` +
-                        `non-bytes (type ${$B.class_name(res)})`)
-                }
-                if (res.source === undefined) {
-                    console.log('!!!!!!!', source)
-                }
-                return res
-            }
-        }
-        source = []
-        for (var item of int_list) {
-            item = $B.PyNumber_Index(item)
-            if (item >= 0 && item < 256) {
-                source.push(item)
-            } else {
-                $B.RAISE(_b_.ValueError,
-                    "bytes must be in range (0, 256)")
-            }
-        }
-    }
-    if (source === undefined) {
-        console.log('bytes.__new__, no source', source)
-    }
-    return {
-        ob_type: cls,
-        source
-    }
+    return _new(cls, args, kw)
 }
-
-;(function(orig) {
-    // A heap subclass of bytes/bytearray gets an instance __dict__, like list,
-    // dict, float and tuple do in their tp_new; without it MyBytes().__dict__
-    // was undefined. bytearray.tp_new delegates here, so this covers both;
-    // the base types keep no __dict__. (Multiple return points → wrap.)
-    _b_.bytes.tp_new = function(cls, args, kw) {
-        var res = orig(cls, args, kw)
-        if (res && cls !== _b_.bytes && cls !== _b_.bytearray) {
-            $B.init_dict(res)
-        }
-        return res
-    }
-})(_b_.bytes.tp_new)
 
 _b_.bytes.mp_length = function(self) {
     return self.source.length

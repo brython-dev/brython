@@ -346,4 +346,14 @@ assert 5 * b'!' == b'!!!!!'
 assert b'hell' in b'hello world'
 assert b'wor' in b'hello world'
 
+# PR 2847
+class B(bytes):
+  pass
+
+b = bytes.__new__(B, [98, 99])
+assert b.__dict__ == {}
+b = bytes.__new__(bytes, [100, 101])
+
+assert_raises(AttributeError, getattr, b, '__dict__')
+
 print('passed all tests...')
