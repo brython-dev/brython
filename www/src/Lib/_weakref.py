@@ -86,6 +86,19 @@ class ProxyType:
     def __rmul__(self, other):
         return other * object.__getattribute__(self, "obj")
 
+    # Pickling: __reduce_ex__/__reduce__ and __class__ are found on object
+    # (the class), so __getattr__ never sees them — forward them explicitly,
+    # so a proxy pickles to a copy of the referent built from its __class__.
+    def __reduce_ex__(self, proto):
+        return object.__getattribute__(self, "obj").__reduce_ex__(proto)
+
+    def __reduce__(self):
+        return object.__getattribute__(self, "obj").__reduce__()
+
+    @property
+    def __class__(self):
+        return type(object.__getattribute__(self, "obj"))
+
 CallableProxyType = ProxyType
 ProxyTypes = [ProxyType, CallableProxyType]
 
