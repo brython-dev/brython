@@ -440,6 +440,10 @@ class defaultdict(dict):
         #
         return (type(self), (self.default_factory,), None, None, self.items())
 
+# defaultdict is exposed as collections.defaultdict (CPython sets __module__
+# to 'collections', not the implementation module).
+defaultdict.__module__ = 'collections'
+
 from operator import itemgetter as _itemgetter
 from keyword import iskeyword as _iskeyword
 import sys as _sys
