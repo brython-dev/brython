@@ -1764,6 +1764,9 @@ type_funcs.__qualname___get = function(cls) {
 }
 
 type_funcs.__qualname___set = function(cls, value) {
+    // write the dict, where __qualname___get reads it (tp_name alone left the
+    // getter returning the stale auto-computed qualname); keep tp_name for repr
+    $B.set_to_dict(cls, '__qualname__', value)
     cls.tp_name = value
 }
 
