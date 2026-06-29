@@ -566,7 +566,12 @@ _b_.set.tp_init = function(self, iterable) {
 _b_.set.tp_new = function(cls, args, kw) {
     var [iterable] = $B.unpack_args('set', args, ['iterable'],
         {iterable: _b_.None})
-    return make_new_set(cls)
+    var res = make_new_set(cls)
+    // a subclass instance gets a __dict__, like list/dict/float/tuple
+    if (cls !== _b_.set) {
+        $B.init_dict(res)
+    }
+    return res
 }
 
 _b_.set.nb_inplace_subtract = function(self, other) {
@@ -944,6 +949,9 @@ frozenset.tp_new = function(cls, args, kw) {
     var [iterable] = $B.unpack_args('frozenset', args, ['iterable'],
         {iterable: _b_.None})
     var self = make_new_set(cls)
+    if (cls !== frozenset) {
+        $B.init_dict(self)
+    }
 
     if (iterable === _b_.None) {
         return self
