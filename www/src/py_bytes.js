@@ -1841,10 +1841,11 @@ var _upper = function(char_code) {
     }
 }
 
-function $UnicodeEncodeError(encoding, code_point, position) {
+function $UnicodeEncodeError(encoding, code_point, position, reason) {
     $B.RAISE(_b_.UnicodeEncodeError, "'" + encoding +
         "' codec can't encode character " + _b_.hex(code_point) +
-        " in position " + position)
+        " in position " + position +
+        (reason ? ": " + reason : ""))
 }
 
 function _hex(_int) {
@@ -2264,6 +2265,38 @@ var encode = $B.encode = function() {
         case "utf-8":
         case "utf_8":
         case "utf8":
+            if (errors == 'surrogatepass') {
+                // TextEncoder replaces a lone surrogate with U+FFFD; encode it
+                // as its 3-byte WTF-8 instead (for...of yields a lone surrogate
+                // and combines valid pairs into an astral code point).
+                for (var ch of s) {
+                    var cp = ch.codePointAt(0)
+                    if (cp <= 0x7f) {
+                        t.push(cp)
+                    } else if (cp <= 0x7ff) {
+                        t.push(0xc0 + (cp >> 6), 0x80 + (cp & 0x3f))
+                    } else if (cp <= 0xffff) {
+                        t.push(0xe0 + (cp >> 12), 0x80 + ((cp >> 6) & 0x3f),
+                                 0x80 + (cp & 0x3f))
+                    } else {
+                        t.push(0xf0 + (cp >> 18), 0x80 + ((cp >> 12) & 0x3f),
+                                 0x80 + ((cp >> 6) & 0x3f), 0x80 + (cp & 0x3f))
+                    }
+                }
+                break
+            }
+            if (errors == 'strict') {
+                // TextEncoder yields U+FFFD for a lone surrogate; CPython raises.
+                // A valid pair is consumed by the first alternative, so group 1
+                // captures only a lone surrogate.
+                var m, re = /[\ud800-\udbff][\udc00-\udfff]|([\ud800-\udfff])/g
+                while (m = re.exec(s)) {
+                    if (m[1]) {
+                        $UnicodeEncodeError(encoding, m[1].charCodeAt(0),
+                            m.index, "surrogates not allowed")
+                    }
+                }
+            }
             if (globalThis.TextEncoder) {
                 var encoder = new TextEncoder('utf-8', {fatal: true})
                 try {
