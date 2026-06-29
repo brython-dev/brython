@@ -625,9 +625,11 @@ set_funcs.__class_getitem__ = function(cls, items) {
 }
 
 set_funcs.__reduce__ = function(self) {
+    // carry the instance __dict__ as state (like CPython's set_reduce), not None
+    var d = $B.get_dict(self)
     return $B.fast_tuple([$B.get_class(self),
                          $B.fast_tuple([set_make_items(self)]),
-                         _b_.None])
+                         d && _b_.len(d) ? d : _b_.None])
 }
 
 set_funcs.__sizeof__ = function(self) {
