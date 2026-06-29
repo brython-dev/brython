@@ -724,8 +724,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,3,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-06-28 21:28:28.475537"
-__BRYTHON__.timestamp=1782674908475
+__BRYTHON__.compiled_date="2026-06-29 16:37:06.198605"
+__BRYTHON__.timestamp=1782743826198
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -1695,7 +1695,7 @@ $B.RAISE(_b_.TypeError,name+"() takes exactly "+
 expected+" argument"+(expected < 2 ? '' :'s')+
 " ("+len+" given)")}}}
 $B.unpack_args=function(name,args,vars,defaults){var args_length=args.length
-for(var i=0,len=vars.length;i < len;i++){if(i >=args.length){if(! defaults ||! defaults.hasOwnProperty(vars[i])){$B.RAISE(_b_.TypeError,`${name} missing argument ${vars[i]}`)}
+for(var i=0,len=vars.length;i < len;i++){if(i >=args.length){if(! defaults ||! defaults.hasOwnProperty(vars[i])){$B.RAISE(_b_.TypeError,`${name}() missing argument '${vars[i]}'`)}
 args[i]=defaults[vars[i]]}}
 return args}
 $B.check_kw_empty=function(name,kw){if(kw && _b_.dict.mp_length(kw)> 0){$B.RAISE(_b_.TypeError,`${name}() takes no keyword arguments`)}}
@@ -2483,7 +2483,9 @@ $B.RAISE(_b_.TypeError,`Can't instantiate abstract class ${$B.get_name(cls)} `+
 )}
 var res={ob_type:cls}
 if(cls !==object &&
-$B.get_from_dict(cls,'__slots__',$B.NULL)===$B.NULL){$B.init_dict(res)}
+($B.get_from_dict(cls,'__slots__',$B.NULL)===$B.NULL ||
+cls.$slots_has_dict)){
+$B.init_dict(res)}
 return res}
 var object_funcs=_b_.object.tp_funcs={}
 object_funcs.__class___get=function(self){return $B.get_class(self)}
@@ -3235,7 +3237,7 @@ var mro=$B.get_mro(kl)
 for(var klass of mro){if(klass===cls){return true}}
 return false}
 type_funcs.__module___get=function(self){if($B.get_dict(self)){var module=$B.get_from_dict(self,'__module__',$B.NULL)
-if(module !==$B.NULL){return module}}
+if(typeof module==='string'){return module}}
 return 'builtins'}
 type_funcs.__module___set=function(self,value){$B.set_to_dict(self,'__module__',value)}
 type_funcs.__mro___get=function(self){return $B.fast_tuple($B.get_mro(self))}
@@ -3246,7 +3248,9 @@ type_funcs.__prepare__=function(cls){return $B.empty_dict()}
 type_funcs.__qualname___get=function(cls){
 var q=$B.get_from_dict(cls,'__qualname__',$B.NULL)
 return typeof q==='string' ? q :$B.get_name(cls)}
-type_funcs.__qualname___set=function(cls,value){cls.tp_name=value}
+type_funcs.__qualname___set=function(cls,value){
+$B.set_to_dict(cls,'__qualname__',value)
+cls.tp_name=value}
 type_funcs.__sizeof__=function(self){}
 type_funcs.__subclasscheck__=function(self,subclass){
 var klass=self
@@ -5142,9 +5146,9 @@ var[func,it1,...extra_args]=args
 var iter_args=[$B.make_js_iterator(it1)]
 for(var arg of extra_args){iter_args.push($B.make_js_iterator(arg))}
 return{
-ob_type:cls,args:iter_args,func:func}}
+ob_type:cls,args:iter_args,func:func,iterables:[it1,...extra_args]}}
 var map_funcs=_b_.map.tp_funcs={}
-map_funcs.__reduce__=function(self){}
+map_funcs.__reduce__=function(self){return $B.fast_tuple([$B.get_class(self),$B.fast_tuple([self.func,...(self.iterables ||[])])])}
 map_funcs.__setstate__=function(self){}
 _b_.map.tp_methods=["__reduce__","__setstate__"]
 $B.set_func_names(map,"builtins")
@@ -6968,6 +6972,50 @@ function self_other_args(func_name,args){var $=$B.args(func_name,2,{self:null,ot
 return[$.self,$.other]}
 function main_type(obj){
 return $B.$isinstance(obj,_b_.bytearray)? _b_.bytearray :_b_.bytes}
+function dict_or_not(cls,instance){if([_b_.bytes,_b_.bytearray].includes(cls)){$B.init_dict(instance)}
+return instance}
+function _new(cls,args,kw){let[source,encoding,errors]=$B.unpack_args($B.get_name(cls),args,['source','encoding','errors'],{source:$B.NULL,encoding:$B.NULL,errors:$B.NULL}
+)
+if(source===$B.NULL){let instance={ob_type:cls,source:[]}
+return dict_or_not(cls,instance)}
+var kw_encoding=$B.str_dict_get(kw,'encoding',$B.NULL)
+if(encoding !==$B.NULL){if(kw_encoding !==$B.NULL){$B.RAISE(_b_.TypeError,`argument for bytes() given by name ('encoding') `+
+`and position (2)`
+)}}else{
+encoding=kw_encoding}
+var kw_errors=$B.str_dict_get(kw,'errors',$B.NULL)
+if(errors !==$B.NULL){if(kw_errors !==$B.NULL){$B.RAISE(_b_.TypeError,`argument for bytes() given by name ('errors') `+
+`and position (3)`
+)}}else{
+errors=kw_errors===$B.NULL ? 'strict' :kw_errors}
+if(typeof source=="string" ||$B.is_str(source)){if(encoding===$B.NULL){$B.RAISE(_b_.TypeError,'string argument without an encoding')}
+let res=encode(source,encoding,errors)
+if(! $B.$isinstance(res,bytes)){$B.RAISE(_b_.TypeError,`'${encoding}' codec returns `+
+`${$B.class_name(res)}, not bytes`)}
+res.ob_type=cls
+return dict_or_not(cls,res)}
+if(encoding !==$B.NULL){$B.RAISE(_b_.TypeError,"encoding without a string argument")}
+if(typeof source=="number" ||$B.is_int(source)){var size=$B.PyNumber_Index(source)
+source=[]
+for(var i=0;i < size;i++){source[i]=0}}else if($B.$isinstance(source,[_b_.bytes,_b_.bytearray])){source=source.source}else if($B.$isinstance(source,_b_.memoryview)){source=source.obj.source}else if($B.imported.array &&
+$B.$isinstance(source,$B.module_getattr($B.imported.array,'array'))){var array=$B.module_getattr($B.imported.array,'array')
+source=array.tp_funcs.tobytes(source).source}else{
+var int_list
+if(Array.isArray(source)){int_list=source}else{
+try{
+int_list=_b_.list.$factory(source)}catch(err){var bytes_method=$B.$getattr(source,'__bytes__',_b_.None)
+if(bytes_method===_b_.None){$B.RAISE(_b_.TypeError,"cannot convert "+
+`'${$B.class_name(source)}' object to bytes`)}
+let res=$B.$call(bytes_method)
+if(! $B.is_bytes(res)){$B.RAISE(_b_.TypeError,`__bytes__ returned `+
+`non-bytes (type ${$B.class_name(res)})`)}
+return dict_or_not(cls,res)}}
+source=[]
+for(var item of int_list){item=$B.PyNumber_Index(item)
+if(item >=0 && item < 256){source.push(item)}else{
+$B.RAISE(_b_.ValueError,"bytes must be in range (0, 256)")}}}
+let instance={ob_type:cls,source}
+return dict_or_not(cls,instance)}
 function bytearray_delitem(self,arg){if(self.exports){if($B.$isinstance(arg,_b_.slice)){var slice=_b_.slice.$conv_for_seq(arg,self.source.length)
 if(slice.stop-slice.start > 0){no_resizing()}}else{
 no_resizing()}}
@@ -7373,9 +7421,7 @@ _b_.bytearray.tp_str=function(self){return _b_.bytearray.tp_repr(self)}
 _b_.bytearray.tp_iter=function(self){return{
 ob_type:$B.bytearray_iterator,obj:self,len:self.source.length,index:-1}}
 _b_.bytearray.tp_init=function(self){}
-_b_.bytearray.tp_new=function(cls,args,kw){var b=_b_.bytes.tp_new(cls,args,kw)
-b.ob_type=cls
-return b}
+_b_.bytearray.tp_new=function(cls,args,kw){return _new(cls,args,kw)}
 _b_.bytearray.nb_inplace_add=function(self,other){if(! $B.$isinstance(other,[_b_.bytearray,_b_.bytes])){$B.RAISE(_b_.TypeError,`can't concat ${$B.class_name(other)} to bytearray`
 )}
 self.source=self.source.concat(other.source)
@@ -7593,9 +7639,10 @@ var _lower=function(char_code){if(char_code >=65 && char_code <=90){return char_
 return char_code}}
 var _upper=function(char_code){if(char_code >=97 && char_code <=122){return char_code-32}else{
 return char_code}}
-function $UnicodeEncodeError(encoding,code_point,position){$B.RAISE(_b_.UnicodeEncodeError,"'"+encoding+
+function $UnicodeEncodeError(encoding,code_point,position,reason){$B.RAISE(_b_.UnicodeEncodeError,"'"+encoding+
 "' codec can't encode character "+_b_.hex(code_point)+
-" in position "+position)}
+" in position "+position+
+(reason ? ": "+reason :""))}
 function _hex(_int){var h=_int.toString(16)
 return '0x'+'0'.repeat(2-h.length)+h}
 var aliases={ascii:['646','us-ascii'],big5:['big5-tw','csbig5'],big5hkscs:['big5-hkscs','hkscs'],cp037:['IBM037','IBM039'],cp273:['273','IBM273','csIBM273'],cp424:['EBCDIC-CP-HE','IBM424'],cp437:['437','IBM437'],cp500:['EBCDIC-CP-BE','EBCDIC-CP-CH','IBM500'],cp775:['IBM775'],cp850:['850','IBM850'],cp852:['852','IBM852'],cp855:['855','IBM855'],cp857:['857','IBM857'],cp858:['858','IBM858'],cp860:['860','IBM860'],cp861:['861','CP-IS','IBM861'],cp862:['862','IBM862'],cp863:['863','IBM863'],cp864:['IBM864'],cp865:['865','IBM865'],cp866:['866','IBM866'],cp869:['869','CP-GR','IBM869'],cp932:['932','ms932','mskanji','ms-kanji'],cp949:['949','ms949','uhc'],cp950:['950','ms950'],cp1026:['ibm1026'],cp1125:['1125','ibm1125','cp866u','ruscii'],cp1140:['ibm1140'],cp1250:['windows-1250'],cp1251:['windows-1251'],cp1252:['windows-1252'],cp1253:['windows-1253'],cp1254:['windows-1254'],cp1255:['windows-1255'],cp1256:['windows-1256'],cp1257:['windows-1257'],cp1258:['windows-1258'],euc_jp:['eucjp','ujis','u-jis'],euc_jis_2004:['jisx0213','eucjis2004'],euc_jisx0213:['eucjisx0213'],euc_kr:['euckr','korean','ksc5601','ks_c-5601','ks_c-5601-1987','ksx1001','ks_x-1001'],gb2312:['chinese','csiso58gb231280','euc-cn','euccn','eucgb2312-cn','gb2312-1980','gb2312-80','iso-ir-58'],gbk:['936','cp936','ms936'],gb18030:['gb18030-2000'],hz:['hzgb','hz-gb','hz-gb-2312'],iso2022_jp:['csiso2022jp','iso2022jp','iso-2022-jp'],iso2022_jp_1:['iso2022jp-1','iso-2022-jp-1'],iso2022_jp_2:['iso2022jp-2','iso-2022-jp-2'],iso2022_jp_2004:['iso2022jp-2004','iso-2022-jp-2004'],iso2022_jp_3:['iso2022jp-3','iso-2022-jp-3'],iso2022_jp_ext:['iso2022jp-ext','iso-2022-jp-ext'],iso2022_kr:['csiso2022kr','iso2022kr','iso-2022-kr'],latin_1:['iso-8859-1','iso8859-1','8859','cp819','latin','latin1','L1'],iso8859_2:['iso-8859-2','latin2','L2'],iso8859_3:['iso-8859-3','latin3','L3'],iso8859_4:['iso-8859-4','latin4','L4'],iso8859_5:['iso-8859-5','cyrillic'],iso8859_6:['iso-8859-6','arabic'],iso8859_7:['iso-8859-7','greek','greek8'],iso8859_8:['iso-8859-8','hebrew'],iso8859_9:['iso-8859-9','latin5','L5'],iso8859_10:['iso-8859-10','latin6','L6'],iso8859_11:['iso-8859-11','thai'],iso8859_13:['iso-8859-13','latin7','L7'],iso8859_14:['iso-8859-14','latin8','L8'],iso8859_15:['iso-8859-15','latin9','L9'],iso8859_16:['iso-8859-16','latin10','L10'],johab:['cp1361','ms1361'],kz1048:['kz_1048','strk1048_2002','rk1048'],mac_cyrillic:['maccyrillic'],mac_greek:['macgreek'],mac_iceland:['maciceland'],mac_latin2:['maclatin2','maccentraleurope','mac_centeuro'],mac_roman:['macroman','macintosh'],mac_turkish:['macturkish'],ptcp154:['csptcp154','pt154','cp154','cyrillic-asian'],shift_jis:['csshiftjis','shiftjis','sjis','s_jis'],shift_jis_2004:['shiftjis2004','sjis_2004','sjis2004'],shift_jisx0213:['shiftjisx0213','sjisx0213','s_jisx0213'],utf_32:['U32','utf32'],utf_32_be:['UTF-32BE'],utf_32_le:['UTF-32LE'],utf_16:['U16','utf16'],utf_16_be:['UTF-16BE'],utf_16_le:['UTF-16LE'],utf_7:['U7','unicode-1-1-utf-7'],utf_8:['U8','UTF','utf8','cp65001'],mbcs:['ansi','dbcs'],bz2_codec:['bz2'],hex_codec:['hex'],quopri_codec:['quopri','quotedprintable','quoted_printable'],uu_codec:['uu'],zlib_codec:['zip','zlib'],rot_13:['rot13']}
@@ -7745,6 +7792,14 @@ var t=[],pos=0,enc=normalise(encoding)
 switch(enc){case "utf-8":
 case "utf_8":
 case "utf8":
+if(errors=='surrogatepass'){
+for(var ch of s){var cp=ch.codePointAt(0)
+if(cp <=0x7f){t.push(cp)}else if(cp <=0x7ff){t.push(0xc0+(cp >> 6),0x80+(cp & 0x3f))}else if(cp <=0xffff){t.push(0xe0+(cp >> 12),0x80+((cp >> 6)& 0x3f),0x80+(cp & 0x3f))}else{
+t.push(0xf0+(cp >> 18),0x80+((cp >> 12)& 0x3f),0x80+((cp >> 6)& 0x3f),0x80+(cp & 0x3f))}}
+break}
+if(errors=='strict'){
+var m,re=/[\ud800-\udbff][\udc00-\udfff]|([\ud800-\udfff])/g
+while(m=re.exec(s)){if(m[1]){$UnicodeEncodeError(encoding,m[1].charCodeAt(0),m.index,"surrogates not allowed")}}}
 if(globalThis.TextEncoder){var encoder=new TextEncoder('utf-8',{fatal:true})
 try{
 var array=encoder.encode(s)
@@ -7844,50 +7899,7 @@ return hash}
 _b_.bytes.tp_str=function(self){return _b_.bytes.tp_repr(self)}
 _b_.bytes.tp_iter=function(self){return{
 ob_type:bytes_iterator,obj:self,len:self.source.length,index:-1}}
-_b_.bytes.tp_new=function(cls,args,kw){var[source,encoding,errors]=$B.unpack_args('bytes',args,['source','encoding','errors'],{source:$B.NULL,encoding:$B.NULL,errors:$B.NULL}
-)
-if(source===$B.NULL){return{
-ob_type:cls,source:[]}}
-var kw_encoding=$B.str_dict_get(kw,'encoding',$B.NULL)
-if(encoding !==$B.NULL){if(kw_encoding !==$B.NULL){$B.RAISE(_b_.TypeError,`argument for bytes() given by name ('encoding') `+
-`and position (2)`
-)}}else{
-encoding=kw_encoding}
-var kw_errors=$B.str_dict_get(kw,'errors',$B.NULL)
-if(errors !==$B.NULL){if(kw_errors !==$B.NULL){$B.RAISE(_b_.TypeError,`argument for bytes() given by name ('errors') `+
-`and position (3)`
-)}}else{
-errors=kw_errors===$B.NULL ? 'strict' :kw_errors}
-if(typeof source=="string" ||$B.is_str(source)){if(encoding===$B.NULL){$B.RAISE(_b_.TypeError,'string argument without an encoding')}
-let res=encode(source,encoding,errors)
-if(! $B.$isinstance(res,bytes)){$B.RAISE(_b_.TypeError,`'${encoding}' codec returns `+
-`${$B.class_name(res)}, not bytes`)}
-res.ob_type=cls
-return res}
-if(encoding !==$B.NULL){$B.RAISE(_b_.TypeError,"encoding without a string argument")}
-if(typeof source=="number" ||$B.is_int(source)){var size=$B.PyNumber_Index(source)
-source=[]
-for(var i=0;i < size;i++){source[i]=0}}else if($B.$isinstance(source,[_b_.bytes,_b_.bytearray])){source=source.source}else if($B.$isinstance(source,_b_.memoryview)){source=source.obj.source}else if($B.imported.array &&
-$B.$isinstance(source,$B.module_getattr($B.imported.array,'array'))){var array=$B.module_getattr($B.imported.array,'array')
-source=array.tp_funcs.tobytes(source).source}else{
-var int_list
-if(Array.isArray(source)){int_list=source}else{
-try{
-int_list=_b_.list.$factory(source)}catch(err){var bytes_method=$B.$getattr(source,'__bytes__',_b_.None)
-if(bytes_method===_b_.None){$B.RAISE(_b_.TypeError,"cannot convert "+
-`'${$B.class_name(source)}' object to bytes`)}
-let res=$B.$call(bytes_method)
-if(! $B.is_bytes(res)){$B.RAISE(_b_.TypeError,`__bytes__ returned `+
-`non-bytes (type ${$B.class_name(res)})`)}
-if(res.source===undefined){console.log('!!!!!!!',source)}
-return res}}
-source=[]
-for(var item of int_list){item=$B.PyNumber_Index(item)
-if(item >=0 && item < 256){source.push(item)}else{
-$B.RAISE(_b_.ValueError,"bytes must be in range (0, 256)")}}}
-if(source===undefined){console.log('bytes.__new__, no source',source)}
-return{
-ob_type:cls,source}}
+_b_.bytes.tp_new=function(cls,args,kw){return _new(cls,args,kw)}
 _b_.bytes.mp_length=function(self){return self.source.length}
 _b_.bytes.mp_subscript=function(self,arg){if($B.is_int(arg)){arg=$B.int_value(arg)
 let pos=arg
@@ -8370,7 +8382,9 @@ if(Object.keys(self.$store).length > 0){set.clear(self)}
 set_funcs.update(self,iterable)
 return _b_.None}
 _b_.set.tp_new=function(cls,args,kw){var[iterable]=$B.unpack_args('set',args,['iterable'],{iterable:_b_.None})
-return make_new_set(cls)}
+var res=make_new_set(cls)
+if(cls !==_b_.set){$B.init_dict(res)}
+return res}
 _b_.set.nb_inplace_subtract=function(self,other){if(! $B.$isinstance(self,_b_.set)||
 ! $B.$isinstance(other,[set,frozenset])){return _b_.NotImplemented}
 set_difference_update(self,other)
@@ -8391,7 +8405,9 @@ _b_.set.mp_length=function(self){return self.$used}
 _b_.set.sq_contains=function(self,item){return set_contains(self,item)}
 var set_funcs=_b_.set.tp_funcs={}
 set_funcs.__class_getitem__=function(cls,items){return $B.$class_getitem(cls,items)}
-set_funcs.__reduce__=function(self){return $B.fast_tuple([$B.get_class(self),$B.fast_tuple([set_make_items(self)]),_b_.None])}
+set_funcs.__reduce__=function(self){
+var d=$B.get_dict(self)
+return $B.fast_tuple([$B.get_class(self),$B.fast_tuple([set_make_items(self)]),d && _b_.len(d)? d :_b_.None])}
 set_funcs.__sizeof__=function(self){}
 set_funcs.add=function(self,item){$B.check_nb_args_no_kw('set.add',2,arguments)
 set_add(self,item)
@@ -8519,6 +8535,7 @@ frozenset.tp_init=function(){
 return _b_.None}
 frozenset.tp_new=function(cls,args,kw){var[iterable]=$B.unpack_args('frozenset',args,['iterable'],{iterable:_b_.None})
 var self=make_new_set(cls)
+if(cls !==frozenset){$B.init_dict(self)}
 if(iterable===_b_.None){return self}
 if(cls===frozenset && $B.get_class(iterable)===frozenset){return iterable}
 set_funcs.update(self,iterable)
@@ -10452,7 +10469,6 @@ raw[0]=chunks.join(",")}
 return $B.format_width(raw.join("."),fmt)}
 float.$getnewargs=function(self){return $B.fast_tuple([float_value(self)])}
 var nan_hash=$B.$py_next_hash--
-var mp2_31=Math.pow(2,31)
 $B.float_hash_cache=new Map()
 float.$hash_func=function(self){if(self.__hashvalue__ !==undefined){return self.__hashvalue__}
 var _v=self.value
@@ -10460,12 +10476,23 @@ var in_cache=$B.float_hash_cache.get(_v)
 if(in_cache !==undefined){return in_cache}
 if(_v===Infinity){return 314159}else if(_v===-Infinity){return-314159}else if(isNaN(_v)){return self.__hashvalue__=nan_hash}else if(_v===Number.MAX_VALUE){return self.__hashvalue__=2234066890152476671n}
 if(Number.isInteger(_v)){return _b_.int.tp_hash(_v)}
-var r=frexp(self)
-r[0]*=mp2_31
-var hipart=parseInt(r[0])
-r[0]=(r[0]-hipart)*mp2_31
-var x=hipart+parseInt(r[0])+(r[1]<< 15)
-x &=0xFFFFFFFF
+var P=2305843009213693951n
+var r=frexp(self),m=r[0],e=r[1],sign=1n
+if(m < 0){sign=-1n
+m=-m}
+var hx=0n
+while(m !=0){hx=((hx << 28n)& P)|(hx >> 33n)
+m*=268435456
+e-=28
+var y=BigInt(Math.floor(m))
+m-=Number(y)
+hx+=y
+if(hx >=P){hx-=P}}
+var em=e >=0 ? BigInt(e % 61):BigInt(61-1-((-1-e)% 61))
+hx=((hx << em)& P)|(hx >>(61n-em))
+if(sign < 0n){hx=-hx}
+if(hx==-1n){hx=-2n}
+var x=_b_.int.$int_or_long(hx)
 $B.float_hash_cache.set(_v,x)
 if($B.float_hash_cache.size > 10000){
 $B.float_hash_cache.clear()}
