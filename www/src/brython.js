@@ -724,8 +724,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,3,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-06-30 07:50:31.512325"
-__BRYTHON__.timestamp=1782798631512
+__BRYTHON__.compiled_date="2026-06-30 07:51:43.690287"
+__BRYTHON__.timestamp=1782798703690
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -17194,8 +17194,10 @@ $B.ast.Set.prototype.to_js=function(scopes){var elts=[]
 for(var elt of this.elts){var js
 if(elt instanceof $B.ast.Constant){var v=elt.value
 if(typeof v=='string'){v=remove_escapes(v)}
+let _hash=$B.$hash(v)
+if(typeof _hash==='bigint'){_hash=_hash+'n'}
 js=`{constant: [${$B.js_from_ast(elt, scopes)}, `+
-`${$B.$hash(v)}]}`}else if(elt instanceof $B.ast.Starred){js=`{starred: ${$B.js_from_ast(elt.value, scopes)}}`}else{
+`${_hash}]}`}else if(elt instanceof $B.ast.Starred){js=`{starred: ${$B.js_from_ast(elt.value, scopes)}}`}else{
 js=`{item: ${$B.js_from_ast(elt, scopes)}}`}
 elts.push(js)}
 return `_b_.set.$literal([${elts.join(', ')}])`}

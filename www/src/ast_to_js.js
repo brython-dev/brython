@@ -3636,8 +3636,12 @@ $B.ast.Set.prototype.to_js = function(scopes) {
             if (typeof v == 'string') {
                 v = remove_escapes(v)
             }
+            let _hash = $B.$hash(v)
+            if (typeof _hash === 'bigint') {
+                _hash = _hash + 'n'
+            }
             js = `{constant: [${$B.js_from_ast(elt, scopes)}, ` +
-                 `${$B.$hash(v)}]}`
+                 `${_hash}]}`
         } else if (elt instanceof $B.ast.Starred) {
             js = `{starred: ${$B.js_from_ast(elt.value, scopes)}}`
         } else {
