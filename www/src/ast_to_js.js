@@ -315,8 +315,12 @@ function get_binding_scope(name, scopes) {
         scope = scopes[0]
     } else if (up_scope.nonlocals.has(name)) {
         for (var i = scopes.indexOf(up_scope) - 1; i >= 0; i--) {
-            if(scopes[i].locals.has(name) ||
-                    (scopes[i].maybe_locals && scopes[i].maybe_locals.has(name))){
+            if (scopes[i].parent) {
+                // ignore "sub-scopes" for if / for / with etc.
+                continue
+            }
+            let block = scopes.symtable.table.blocks.get(fast_id(scopes[i].ast))
+            if (block && Object.hasOwn(block.symbols, name)) {
                 return [name, scopes[i], up_scope]
             }
         }
