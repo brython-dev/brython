@@ -127,7 +127,7 @@ function main_type(obj) {
 }
 
 function dict_or_not(cls, instance) {
-    if ([_b_.bytes, _b_.bytearray].includes(cls)) {
+    if (! [_b_.bytes, _b_.bytearray].includes(cls)) {
         $B.init_dict(instance)
     }
     return instance
