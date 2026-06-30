@@ -493,7 +493,11 @@ memoryview_funcs.tolist = function(self) {
 }
 
 memoryview_funcs.toreadonly = function(self) {
-    self.readonly = 1
+    // return a new read-only view; the original stays writable (it mutated
+    // self and returned None, so memoryview(b).toreadonly() was unusable)
+    var res = memoryview.$factory(self.obj)
+    res.readonly = 1
+    return res
 }
 
 _b_.memoryview.tp_methods = ["release", "tobytes", "hex", "tolist", "cast", "toreadonly", "count", "index", "__enter__", "__exit__"]
