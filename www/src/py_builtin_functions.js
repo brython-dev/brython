@@ -1049,6 +1049,9 @@ _b_.__import__ = function() {
         arguments,
         {globals:None, locals:None, fromlist:_b_.tuple.$factory(), level:0},
         null, null)
+    if ($.name === '' && $.level === 0) {
+        $B.RAISE(_b_.ValueError, "Empty module name")
+    }
     return $B.$__import__($.name, $.globals, $.locals, $.fromlist)
 }
 
