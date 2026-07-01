@@ -1350,7 +1350,8 @@ map.$factory = function() {
     return {
         ob_type: map,
         args: iter_args,
-        func: func
+        func: func,
+        iterables: [$.it1, ...$.args]
     }
 }
 
