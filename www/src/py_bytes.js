@@ -2319,9 +2319,13 @@ var decode = $B.decode = function(obj, encoding, errors) {
           if ([bytes, bytearray].includes($B.get_class(obj))) {
               obj = decode(obj, "latin-1", "strict")
           }
-          return obj.replace(/\\u([a-fA-F0-9]{4})/g, function(mo) {
-              let cp = parseInt(mo.substr(2), 16)
-              return String.fromCharCode(cp)
+          return obj.replace(/\\U([a-fA-F0-9]{8})|\\u([a-fA-F0-9]{4})/g,
+              function(mo, u8, u4) {
+                  let cp = parseInt(u8 || u4, 16)
+                  if (cp > 0x10ffff) {
+                      $B.RAISE(_b_.UnicodeDecodeError, '\\Uxxxxxxxx out of range')
+                  }
+                  return String.fromCodePoint(cp)
           })
       case "ascii":
           for (let i = 0, len = b.length; i < len; i++) {
