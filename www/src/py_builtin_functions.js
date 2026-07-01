@@ -1291,7 +1291,7 @@ var len = _b_.len = function(obj) {
     var method = $B.search_in_mro(klass, '__len__', null)
     if (method === null) {
         $B.RAISE(_b_.TypeError, "object of type '" +
-            $B.class_name(obj) + "' has no len() VVV")
+            $B.class_name(obj) + "' has no len()")
     }
 
     let res = $B.$call(method, obj)
