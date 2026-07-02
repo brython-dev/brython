@@ -384,6 +384,17 @@ for (var ns of [$B.builtin_types, $B.created_types]) {
 
 
 // builtin functions
+// bound builtin methods compare like CPython meth_richcompare: equal if
+// they wrap the same method of the same object (each access mints a new
+// bound wrapper, so identity is never enough)
+$B.set_to_dict($B.builtin_method, '__eq__', function(self, other){
+    if(self === other){return true}
+    if($B.get_class(other) !== $B.builtin_method){return _b_.NotImplemented}
+    if(self.m_self === undefined || other.m_self === undefined){return false}
+    return self.m_self === other.m_self &&
+        self.ml && other.ml && self.ml.ml_name === other.ml.ml_name
+})
+
 for (var builtin_func of $B.builtin_funcs) {
     if (_b_[builtin_func]) {
         _b_[builtin_func].ob_type = $B.builtin_function_or_method
