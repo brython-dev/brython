@@ -144,9 +144,11 @@ object.$no_new_init = function(cls) {
 }
 
 function getNewArguments(self, klass) {
-    var newargs_ex = $B.$getattr(self, '__getnewargs_ex__', null)
+    // type-only lookup, like every implicit dunder: an instance getattr
+    // falls into a class __getattr__ hook on a miss
+    var newargs_ex = $B.$getattr(klass, '__getnewargs_ex__', null)
     if (newargs_ex !== null) {
-        let newargs = $B.$call(newargs_ex)
+        let newargs = $B.$call(newargs_ex, self)
         if ((! newargs) || $B.get_class(newargs) !== _b_.tuple) {
             $B.RAISE(_b_.TypeError, "__getnewargs_ex__ should " +
                 `return a tuple, not '${$B.class_name(newargs)}'`)
