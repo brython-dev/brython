@@ -1191,6 +1191,9 @@ function import_error(mod_name) {
 
 // Default __import__ function
 $B.$__import__ = function(mod_name, globals, locals, fromlist) {
+    if(typeof mod_name !== 'string' && ! $B.is_str(mod_name)){
+        $B.RAISE(_b_.TypeError, 'module name must be a string')
+    }
     var $test = false // mod_name == "posix._path_normpath"
     if ($test) {console.log("__import__", mod_name, 'fromlist', fromlist)}
     // Main entry point for __import__
