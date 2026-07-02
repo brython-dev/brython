@@ -378,6 +378,9 @@ class struct_time:
     def __iter__(self):
         return iter(self.args)
 
+    def __len__(self):
+        return 9
+
     def __reduce_ex__(self, protocol):
         return (struct_time, (self.args, {}))
 
