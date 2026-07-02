@@ -4179,10 +4179,11 @@ $B.ast.With.prototype.to_js = function(scopes) {
         dedent()
         s += prefix + `} catch (err) {\n`
         indent()
+        let msg = `' object does not support the context manager protocol` +
+                  ' (missed __exit__ method)'
         s += prefix + `var klass_name = $B.class_name(mgr_${id})\n` +
              prefix + `frame.inum = ${inum}\n` +
-             prefix + `$B.RAISE(_b_.TypeError, "'" + klass_name + ` +
-                      `"' object does not support the context manager protocol")\n`
+             prefix + `$B.RAISE(_b_.TypeError, "'" + klass_name + "${msg}")\n`
         dedent()
         s += prefix + `}\n` +
              prefix + `var value_${id} = $B.$call(enter_${id}, mgr_${id}),\n` +
