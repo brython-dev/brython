@@ -384,6 +384,22 @@ for (var ns of [$B.builtin_types, $B.created_types]) {
 
 
 // builtin functions
+// UnicodeEncodeError/UnicodeDecodeError expose encoding/object/start/end/
+// reason, derived from the constructor arguments (done here, after every
+// type and getset_descriptor exists)
+for (const ucls of [_b_.UnicodeEncodeError, _b_.UnicodeDecodeError]) {
+    const attrs = ["encoding", "object", "start", "end", "reason"]
+    for (let pos = 0; pos < attrs.length; pos++) {
+        const name = attrs[pos],
+              rank = pos
+        $B.set_to_dict(ucls, name, $B.getset_descriptor.$factory(ucls, name,
+            [function(self){
+                const a = self.args
+                return (a && a.length === 5) ? a[rank] : _b_.None
+            }, _b_.None]))
+    }
+}
+
 for (var builtin_func of $B.builtin_funcs) {
     if (_b_[builtin_func]) {
         _b_[builtin_func].ob_type = $B.builtin_function_or_method
