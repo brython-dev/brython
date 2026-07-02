@@ -334,7 +334,7 @@ $B.parse_kwargs = function(kw_args, fname) {
             try {
                 var keys_method = $B.$getattr(cls, 'keys')
             } catch (err) {
-                $B.RAISE(_b_.TypeError, `${fname} argument ` +
+                $B.RAISE(_b_.TypeError, `${fname}() argument ` +
                     `after ** must be a mapping, not ${$B.class_name(kw_arg)}`)
             }
             var keys_iter = $B.make_js_iterator($B.$call(keys_method, kw_arg)),
