@@ -233,24 +233,14 @@ $B.list_delitem = function(self, arg) {
             " index out of range")
     }
     if (isinstance(arg, _b_.slice)) {
-        var step = arg.step
-        if (step === _b_.None) {
-            step = 1
-        }
-        var start = arg.start
-        if (start === _b_.None) {
-            start = step > 0 ? 0 : self.length
-        }
-        var stop = arg.stop
-        if (stop === _b_.None) {
-            stop = step > 0 ? self.length : 0
-        }
-        if (start < 0) {
-            start = self.length + start
-        }
-        if (stop < 0) {
-            stop = self.length + stop
-        }
+        // normalize like $getitem_slice does: the hand-rolled version got
+        // every negative-step default wrong (start=len not len-1, stop=0
+        // excludes index 0), so del L[::-1] left the first element behind
+        // and del L[::-2] deleted the complement of the right elements
+        var s = _b_.slice.$conv_for_seq(arg, self.length)
+        var start = s.start,
+            stop = s.stop,
+            step = s.step
         let res = [],
             pos = 0
         if (step > 0) {
