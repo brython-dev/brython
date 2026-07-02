@@ -513,7 +513,19 @@ $B.list_reverseiterator.tp_methods = ["__length_hint__", "__reduce__", "__setsta
 // Set list key or slice
 function set_list_slice(obj, start, stop, value) {
     var res = _b_.list.$factory(value)
-    obj.splice.apply(obj,[start, stop - start].concat(res))
+    if (res.length > 16384) {
+        // same argument-limit hazard as the bytearray slice-assign
+        var tail = obj.slice(stop)
+        obj.length = start
+        for (var k = 0; k < res.length; k += 16384) {
+            obj.push.apply(obj, res.slice(k, k + 16384))
+        }
+        for (var k = 0; k < tail.length; k += 16384) {
+            obj.push.apply(obj, tail.slice(k, k + 16384))
+        }
+    } else {
+        obj.splice.apply(obj, [start, stop - start].concat(res))
+    }
 }
 
 function set_list_slice_step(obj, start, stop, step, value) {
