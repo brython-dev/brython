@@ -242,6 +242,16 @@ function qualified_scope_name(scopes, scope) {
     return names.join('_').replace(/\./g, '_')
 }
 
+function show_flags(name, flag) {
+    let res = []
+    for (let key in $B.SYMBOL_FLAGS) {
+        if (flag & $B.SYMBOL_FLAGS[key]) {
+            res.push(key)
+        }
+    }
+    console.log(name, res.join( ' | '))
+}
+
 function module_name(scopes) {
     var _scopes = scopes.slice()
     var names = []
