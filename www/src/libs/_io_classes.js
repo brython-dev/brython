@@ -790,10 +790,12 @@ BufferedRWPair.$factory = function() {
 
 $B.finalize_type(BufferedRWPair)
 
-var BufferedRandom = $B.make_type("BufferedRandom", [$B._TextIOBase])
+var BufferedRandom = $B.make_type("BufferedRandom", [$B._BufferedIOBase])
 
-BufferedRandom.$factory = function() {
-    return "fileio"
+BufferedRandom.$factory = function(raw) {
+    // pass-through: the raw is already a usable read/write seekable file
+    // in the browser; buffer_size only affects chunking
+    return raw
 }
 
 $B.finalize_type(BufferedRandom)
