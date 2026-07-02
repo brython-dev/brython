@@ -2398,6 +2398,23 @@ function type_param_in_def(tp, ref, scopes) {
 }
 
 
+// PEP 3155: enclosing classes add 'C.', enclosing functions add
+// 'f.<locals>.'; a name declared global gets a bare qualname
+function lexical_qualname(name, scopes){
+    var qualname = name
+    for(var i = scopes.length - 1; i >= 0; i--){
+        var scope = scopes[i]
+        if(scope.parent){continue}
+        if(scope.globals.has(name)){break}
+        var in_func = scope.ast instanceof $B.ast.FunctionDef ||
+                      scope.ast instanceof $B.ast.AsyncFunctionDef
+        if(! in_func && ! (scope.ast instanceof $B.ast.ClassDef)){break}
+        qualname = scope.name + (in_func ? '.<locals>.' : '.') + qualname
+        name = scope.name
+    }
+    return qualname
+}
+
 $B.ast.FunctionDef.prototype.to_js = function(scopes) {
     compiler_check(this)
     var symtable_block = scopes.symtable.table.blocks.get(fast_id(this))
@@ -2661,8 +2678,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
 
     scopes.pop()
 
-    var qualname = in_class ? `${func_name_scope.name}.${this.name}` :
-                              this.name
+    var qualname = lexical_qualname(this.name, scopes)
 
     // Flags
     var flags = $B.COMPILER_FLAGS.OPTIMIZED | $B.COMPILER_FLAGS.NEWLOCALS
