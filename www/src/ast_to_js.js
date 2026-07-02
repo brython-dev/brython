@@ -3664,12 +3664,12 @@ $B.ast.Set.prototype.to_js = function(scopes) {
     var elts = []
     for (var elt of this.elts) {
         var js
-        if (elt instanceof $B.ast.Constant) {
-            var v = elt.value
-            if (typeof v == 'string') {
-                v = remove_escapes(v)
-            }
-            let _hash = $B.$hash(v)
+        if (elt instanceof $B.ast.Constant && typeof elt.value != 'string') {
+            // a string constant would be stored under a compile-time hash of
+            // remove_escapes(value), which diverges from the value actually
+            // stored (js_from_ast) and from its runtime hash; route it through
+            // the item path so set_add hashes the stored value
+            let _hash = $B.$hash(elt.value)
             if (typeof _hash === 'bigint') {
                 _hash = _hash + 'n'
             }
