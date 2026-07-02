@@ -1296,7 +1296,22 @@ _b_.bytearray.sq_ass_item = function(self, arg, value) {
             }
         }
         // One splice only -> O(N+M) instead of O(N*M)
-        self.source.splice.apply(self.source, [start, 0].concat($temp))
+        if ($temp.length > 16384) {
+            // splice.apply passes every element as a JS argument: a big
+            // write (eg a 1 MB pickle frame through BytesIO) blows the
+            // engine's argument limit ("too many arguments provided for
+            // a function call"). Rebuild through 16K chunks instead.
+            var tail = self.source.slice(start)
+            self.source.length = start
+            for (var k = 0; k < $temp.length; k += 16384) {
+                self.source.push.apply(self.source, $temp.slice(k, k + 16384))
+            }
+            for (var k = 0; k < tail.length; k += 16384) {
+                self.source.push.apply(self.source, tail.slice(k, k + 16384))
+            }
+        } else {
+            self.source.splice.apply(self.source, [start, 0].concat($temp))
+        }
     } else {
         $B.RAISE(_b_.TypeError, 'list indices must be integer, not ' +
             $B.class_name(arg))
