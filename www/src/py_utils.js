@@ -684,8 +684,19 @@ $B.unpacker = function(obj, nb_targets, has_starred) {
         inum_rank++
     }
     var inum = arguments[inum_rank]
-    var t = _b_.list.$factory(obj),
-        right_length = t.length,
+    var t
+    try{
+        t = _b_.list.$factory(obj)
+    }catch(err){
+        var kl = $B.get_class(obj)
+        if($B.search_in_mro(kl, '__iter__', $B.NULL) === $B.NULL &&
+                $B.search_in_mro(kl, '__getitem__', $B.NULL) === $B.NULL){
+            $B.RAISE(_b_.TypeError,
+                `cannot unpack non-iterable ${$B.class_name(obj)} object`)
+        }
+        throw err
+    }
+    var right_length = t.length,
         left_length = nb_targets + (has_starred ? nb_after_starred - 1 : 0)
     if (test) {
         console.log('list from obj', t)
