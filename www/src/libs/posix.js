@@ -14,6 +14,7 @@ function _randint(a, b) {
 }
 
 var stat_result = $B.make_type("stat_result")
+$B.set_to_dict(stat_result, "__module__", "os")
 
 stat_result.$factory = function(filename) {
     filename = _b_.str.$factory(filename)
@@ -138,9 +139,7 @@ var module = {
     stat: function(filename) {
         return stat_result.$factory(filename)
     },
-    stat_result: function(filename) {
-        return stat_result.$factory(filename)
-    },
+    stat_result: stat_result,
     urandom: function(n) {
         n = $B.PyNumber_Index(n) // integer only: TypeError on float
         if (n < 0) {
