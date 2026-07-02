@@ -540,7 +540,8 @@ function_funcs.__kwdefaults___set = function(self, value) {
 }
 
 function_funcs.__module___get = function(self) {
-    return self.$function_infos[$B.func_attrs.__module__]
+    var res = self.$function_infos[$B.func_attrs.__module__]
+    return res === $B.NULL || res === undefined ? _b_.None : res
 }
 
 function_funcs.__module___set = function(self, value) {
