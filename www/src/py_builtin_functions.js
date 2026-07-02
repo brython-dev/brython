@@ -828,7 +828,8 @@ $B.$getattr = function(obj, attr, _default) {
                 console.log('in klass dict', in_klass_dict)
                 console.log('in own dict', in_own_dict)
             }
-            if (in_klass_dict) {
+            if (in_klass_dict &&
+                    klass.$getattribute === _b_.object.tp_getattro) {
                 switch (in_klass_dict.ob_type) {
                     case $B.function:
                         if (in_own_dict === $B.NULL) {
