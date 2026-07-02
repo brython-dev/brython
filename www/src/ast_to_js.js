@@ -1789,7 +1789,7 @@ function make_args(scopes) {
     for (let arg of this.args) {
         if (arg instanceof $B.ast.Starred) {
             var starred_arg = $B.js_from_ast(arg.value, scopes)
-            args_list.push(`...$B.make_js_iterator(${starred_arg})`)
+            args_list.push(`..._b_.list.$unpack(${starred_arg})`)
         } else {
             args_list.push($B.js_from_ast(arg, scopes))
         }
