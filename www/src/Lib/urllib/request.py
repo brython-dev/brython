@@ -42,3 +42,42 @@ def urlopen(url, data=None, timeout=None):
 
         return FileIO(result.text()) #, url, {'status': result.status}
     raise error.HTTPError('file not found')
+
+
+def getproxies():
+    return {}
+
+
+def url2pathname(pathname):
+    from urllib.parse import unquote
+    return unquote(pathname)
+
+
+def pathname2url(pathname):
+    from urllib.parse import quote
+    return quote(pathname)
+
+
+_url_tempfiles = []
+
+
+def urlcleanup():
+    import os
+    for _t in _url_tempfiles:
+        try:
+            os.unlink(_t)
+        except OSError:
+            pass
+    del _url_tempfiles[:]
+
+
+def urlretrieve(url, filename=None, reporthook=None, data=None):
+    import tempfile
+    with urlopen(url, data) as fp:
+        content = fp.read()
+    if filename is None:
+        filename = tempfile.mktemp()
+        _url_tempfiles.append(filename)
+    with open(filename, 'wb') as f:
+        f.write(content if isinstance(content, bytes) else content.encode())
+    return filename, {}
