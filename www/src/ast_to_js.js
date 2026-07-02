@@ -1817,18 +1817,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes) {
     }
 
     js += prefix + `$B.set_lineno(frame, ${this.lineno}, 'ClassDef')\n`
-    var qualname = this.name
-    var ix = scopes.length - 1
-    while (ix >= 0) {
-        if (scopes[ix].parent) {
-            ix--
-        } else if (scopes[ix].ast instanceof $B.ast.ClassDef) {
-            qualname = scopes[ix].name + '.' + qualname
-            ix--
-        } else {
-            break
-        }
-    }
+    var qualname = lexical_qualname(this.name, scopes)
 
     var bases = this.bases.map(x => $B.js_from_ast(x, scopes))
     var has_type_params = this.type_params.length > 0

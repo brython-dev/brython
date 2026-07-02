@@ -29,28 +29,13 @@ $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
 
     delete extra_kwargs.metaclass
 
-    // set __module__ and __qualname__ before calling metaclass.__new__
+    // set __module__ before calling metaclass.__new__
     var classdef_frame = $B.frame_obj.prev.frame
     var module = classdef_frame[2]
     if (Object.hasOwn(classdef_frame[1], '__name__')) {
         module = classdef_frame[1].__name__
     }
     $B.str_dict_set(dict, '__module__', module)
-
-    var stack = []
-    var frame_obj = $B.frame_obj.prev
-    while (frame_obj.prev) {
-        var frame = frame_obj.frame
-        if (frame[0] == frame[2]) {
-            break
-        }
-        stack.push(frame_obj.frame[0] + '.')
-        frame_obj = frame_obj.prev
-    }
-    // the frames were walked innermost-first; the qualname prefix is
-    // outermost-first (Outer.Inner.Deep, not Inner.Outer.Deep)
-    var qualname = `${stack.reverse().join('')}${class_name}`
-    $B.str_dict_set(dict, '__qualname__', qualname)
 
     // A class that overrides __eq__() and does not define __hash__()
     // will have its __hash__() implicitly set to None
@@ -398,6 +383,7 @@ $B.make_class_namespace = function(metaclass, class_name, qualname,
         $B.warn(_b_.RuntimeWarning,
             `non-string key in the __dict__ of class ${class_name}`)
     }
+    $B.str_dict_set(class_dict, '__qualname__', qualname)
     return class_dict
 }
 
