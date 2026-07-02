@@ -460,6 +460,10 @@ _b_.object.tp_init = function() {
 }
 
 _b_.object.tp_new = function(cls, args, kw) {
+    if (! $B.is_type(cls)) {
+        $B.RAISE(_b_.TypeError,
+            `object.__new__(X): X is not a type object (${$B.class_name(cls)})`)
+    }
     if (args.length > 0 || ! $B.str_dict_empty(kw)) {
         if (cls.tp_new !== _b_.object.tp_new) {
             $B.RAISE(_b_.TypeError,
