@@ -1450,6 +1450,24 @@ JSFunction_funcs.__getattr__ = function(self, attr) {
     return self[attr] ?? $B.NULL
 }
 
+JSFunction_funcs.__reduce__ = function(self) {
+    // a builtin-class staticmethod (eg bytearray.maketrans) is the bare JS
+    // function stored in the class tp_funcs; pickle it by reference like
+    // the method descriptors do
+    var infos = self.$function_infos,
+        qualname = infos && infos[$B.func_attrs.__qualname__]
+    if (typeof qualname == 'string') {
+        var parts = qualname.split('.'),
+            owner = parts.length == 2 && _b_[parts[0]]
+        if (owner && owner.tp_funcs && owner.tp_funcs[parts[1]] === self) {
+            return $B.fast_tuple([_b_.getattr,
+                $B.fast_tuple([owner, parts[1]])])
+        }
+    }
+    $B.RAISE(_b_.TypeError,
+        `cannot pickle '${$B.class_name(self)}' object`)
+}
+
 JSFunction_funcs.new = function(self, ...args) {
     var new_func
     var attr = 'new'
@@ -1482,7 +1500,7 @@ JSFunction_funcs.new = function(self, ...args) {
     return new_func
 }
 
-$B.JSFunction.tp_methods = ["__getattr__", "new"]
+$B.JSFunction.tp_methods = ["__getattr__", "new", "__reduce__"]
 
 })(__BRYTHON__);
 
