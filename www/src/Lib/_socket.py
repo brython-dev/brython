@@ -235,8 +235,6 @@ SO_TYPE = 4104
 
 SO_USELOOPBACK = 64
 
-class SocketType:
-    pass
 
 TCP_MAXSEG = 4
 
@@ -390,3 +388,5 @@ class socket:
 
 class timeout:
     pass
+
+SocketType = socket
