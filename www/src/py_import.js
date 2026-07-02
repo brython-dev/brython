@@ -1105,7 +1105,7 @@ function import_engine(mod_name, _path, from_stdlib) {
 
     if (_loader === undefined) {
         // No import spec found
-        var message = mod_name
+        var message = `No module named '${mod_name}'`
         if ($B.protocol == "file") {
             message += " (warning: cannot import local files with protocol 'file')"
         }
@@ -1117,7 +1117,7 @@ function import_engine(mod_name, _path, from_stdlib) {
     // Import spec represents a match
     if ($B.is_none(module)) {
         if (spec === _b_.None) {
-            $B.RAISE(_b_.ModuleNotFoundError, mod_name)
+            $B.RAISE(_b_.ModuleNotFoundError, `No module named '${mod_name}'`)
         }
         var _spec_name = $B.$getattr(spec, "name")
 
