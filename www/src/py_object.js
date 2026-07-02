@@ -661,6 +661,12 @@ object_funcs.__reduce_ex__ = function(self, protocol) {
     var res = [$B.module_getattr($B.imported.copyreg, '__newobj__')]
     var arg2 = [klass]
     var newargs = getNewArguments(self, klass)
+    if (! newargs && klass !== object && $B.is_builtin_type(klass)) {
+        // a non-heap builtin with no __getnewargs__ has no reconstruction
+        // path; copyreg._reduce_ex raises likewise for protocol < 2
+        $B.RAISE(_b_.TypeError,
+            `cannot pickle '${$B.class_name(self)}' object`)
+    }
     if (newargs) {
         if (newargs.kwargs && _b_.dict.mp_length(newargs.kwargs) > 0) {
             res = [$B.module_getattr($B.imported.copyreg, '__newobj_ex__')]

@@ -31,11 +31,17 @@ memoryview.$factory = function(obj) {
     // type exposes the buffer protocol (PEP 688 `__buffer__`, the
     // `bf_getbuffer` slot, or the `$buffer_protocol = true` marker that
     // Brython-native types set on themselves).
-    var cls_obj = $B.get_class(obj)
-    var has_buffer = $B.$getattr(obj, '__buffer__', $B.NULL) !== $B.NULL
-                  || (cls_obj && cls_obj.bf_getbuffer)
-                  || (cls_obj && cls_obj.$buffer_protocol)
-    if (!has_buffer) {
+    if (! $B.is_buffer(obj)) {
+        // PEP 688: no native buffer, delegate to __buffer__
+        var buffer_meth = $B.$getattr(obj, '__buffer__', $B.NULL)
+        if (buffer_meth !== $B.NULL) {
+            var mv = $B.$call(buffer_meth, 0)
+            if ($B.get_class(mv) !== memoryview) {
+                $B.RAISE(_b_.TypeError,
+                    `__buffer__ should return memoryview, not ${$B.class_name(mv)}`)
+            }
+            return mv
+        }
         $B.RAISE(_b_.TypeError, "memoryview: a bytes-like object " +
             "is required, not '" + $B.class_name(obj) + "'"
         )
@@ -154,42 +160,9 @@ _b_.memoryview.tp_iter = function(self) {
 }
 
 _b_.memoryview.tp_new = function(cls, args, kw) {
-    var obj = args[0]
-    if ($B.get_class(obj) === memoryview) {
-        return obj
-    }
-    // Accept any object exposing the buffer protocol: the PEP 688
-    // `__buffer__` hook, the `bf_getbuffer` slot, or the
-    // `$buffer_protocol = true` marker. CPython's memoryview() accepts
-    // anything with bf_getbuffer; restricting to `__buffer__` made
-    // `memoryview(array.array('i', ...))` raise TypeError.
-    var cls_obj = $B.get_class(obj)
-    var has_buffer = $B.$getattr(obj, '__buffer__', $B.NULL) !== $B.NULL
-                  || (cls_obj && cls_obj.bf_getbuffer)
-                  || (cls_obj && cls_obj.$buffer_protocol)
-    if (has_buffer) {
-        obj.exports = obj.exports ?? 0
-        obj.exports++ // used to prevent resizing
-        var res = {
-            ob_type: cls,
-            obj: obj,
-            mbuf: null,
-            format: 'B',
-            itemsize: 1,
-            ndim: 1,
-            shape: _b_.tuple.$factory([_b_.len(obj)]),
-            strides: _b_.tuple.$factory([1]),
-            suboffsets: _b_.tuple.$factory([]),
-            c_contiguous: true,
-            f_contiguous: true,
-            contiguous: true
-        }
-        return res
-    } else {
-        $B.RAISE(_b_.TypeError, "memoryview: a bytes-like object " +
-            "is required, not '" + $B.class_name(obj) + "'")
-    }
+    return memoryview.$factory.apply(null, args)
 }
+
 
 _b_.memoryview.mp_length = function(self) {
     return _b_.len(self.obj) / self.itemsize
@@ -493,7 +466,11 @@ memoryview_funcs.tolist = function(self) {
 }
 
 memoryview_funcs.toreadonly = function(self) {
-    self.readonly = 1
+    // return a new read-only view; the original stays writable (it mutated
+    // self and returned None, so memoryview(b).toreadonly() was unusable)
+    var res = memoryview.$factory(self.obj)
+    res.readonly = 1
+    return res
 }
 
 _b_.memoryview.tp_methods = ["release", "tobytes", "hex", "tolist", "cast", "toreadonly", "count", "index", "__enter__", "__exit__"]

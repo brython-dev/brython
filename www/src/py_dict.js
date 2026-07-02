@@ -374,7 +374,7 @@ dict.$iter_items = function*(d){
             yield {key, value: d[key]}
             if (d[VERSION] !== version) {
                 $B.RAISE(_b_.RuntimeError,
-                    'dictionary changed size during iteration 1')
+                    'dictionary changed size during iteration')
             }
         }
         return
@@ -384,7 +384,7 @@ dict.$iter_items = function*(d){
             yield {key: d[KEYS][i], value: d[VALUES][i], hash: d[HASHES][i]}
             if (d[VERSION] !== version) {
                 $B.RAISE(_b_.RuntimeError,
-                    'dictionary changed size during iteration 2')
+                    'dictionary changed size during iteration')
             }
         }
     }
@@ -713,7 +713,7 @@ dict.$iter_items_reversed = function*(d){
         for (var item of Object.entries(d).reverse()) {
             yield $B.fast_tuple(item)
             if (d[VERSION] !== version) {
-                $B.RAISE(_b_.RuntimeError, 'changed in iteration')
+                $B.RAISE(_b_.RuntimeError, 'dictionary changed size during iteration')
             }
         }
     } else {
@@ -722,13 +722,13 @@ dict.$iter_items_reversed = function*(d){
             if (key !== undefined) {
                 yield $B.fast_tuple([key, d[VALUES][i]])
                 if (d[VERSION] !== version) {
-                    $B.RAISE(_b_.RuntimeError, 'changed in iteration')
+                    $B.RAISE(_b_.RuntimeError, 'dictionary changed size during iteration')
                 }
             }
         }
     }
     if (d[VERSION] !== version) {
-        $B.RAISE(_b_.RuntimeError, 'changed in iteration')
+        $B.RAISE(_b_.RuntimeError, 'dictionary changed size during iteration')
     }
 }
 

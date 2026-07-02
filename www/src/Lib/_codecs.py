@@ -49,8 +49,39 @@ def encode(obj, encoding="utf-8", errors="strict"):
     codecs.register_error that can handle ValueErrors."""
     return __BRYTHON__.encode(obj, encoding, errors)
 
-def escape_decode(*args,**kw):
-    pass
+def escape_decode(data, errors=None):
+    if isinstance(data, str):
+        data = data.encode('latin-1')
+    simple = {110: 10, 116: 9, 114: 13, 92: 92, 39: 39, 34: 34,
+              97: 7, 98: 8, 102: 12, 118: 11}
+    res = bytearray()
+    i, n = 0, len(data)
+    while i < n:
+        c = data[i]
+        i += 1
+        if c != 92:                        # not a backslash
+            res.append(c)
+        elif i == n:
+            raise ValueError("Trailing \\ in string")
+        elif data[i] in simple:
+            res.append(simple[data[i]])
+            i += 1
+        elif data[i] == 120:               # \xHH
+            if i + 3 > n:
+                raise ValueError("invalid \\x escape")
+            res.append(int(data[i + 1:i + 3].decode('latin-1'), 16))
+            i += 3
+        elif 48 <= data[i] <= 55:          # octal, up to 3 digits
+            j = i + 1
+            while j < n and j < i + 3 and 48 <= data[j] <= 55:
+                j += 1
+            res.append(int(data[i:j], 8) & 255)
+            i = j
+        else:                              # unknown escape kept literally
+            res.append(92)
+            res.append(data[i])
+            i += 1
+    return bytes(res), n
 
 def escape_encode(*args,**kw):
     pass

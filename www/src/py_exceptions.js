@@ -854,6 +854,8 @@ $B.attr_error = function(name, obj) {
     var msg
     if ($B.is_type(obj)) {
         msg = `type object '${obj.tp_name}'`
+    } else if ($B.exact_type(obj, $B.module)) {
+        msg = `module '${$B.module_getattr(obj, '__name__')}'`
     } else {
         msg = `'${$B.class_name(obj)}' object`
     }

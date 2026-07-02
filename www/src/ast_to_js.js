@@ -1827,18 +1827,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes) {
     }
 
     js += prefix + `$B.set_lineno(frame, ${this.lineno}, 'ClassDef')\n`
-    var qualname = this.name
-    var ix = scopes.length - 1
-    while (ix >= 0) {
-        if (scopes[ix].parent) {
-            ix--
-        } else if (scopes[ix].ast instanceof $B.ast.ClassDef) {
-            qualname = scopes[ix].name + '.' + qualname
-            ix--
-        } else {
-            break
-        }
-    }
+    var qualname = lexical_qualname(this.name, scopes)
 
     var bases = this.bases.map(x => $B.js_from_ast(x, scopes))
     var has_type_params = this.type_params.length > 0
@@ -2408,6 +2397,23 @@ function type_param_in_def(tp, ref, scopes) {
 }
 
 
+// PEP 3155: enclosing classes add 'C.', enclosing functions add
+// 'f.<locals>.'; a name declared global gets a bare qualname
+function lexical_qualname(name, scopes){
+    var qualname = name
+    for(var i = scopes.length - 1; i >= 0; i--){
+        var scope = scopes[i]
+        if(scope.parent){continue}
+        if(scope.globals.has(name)){break}
+        var in_func = scope.ast instanceof $B.ast.FunctionDef ||
+                      scope.ast instanceof $B.ast.AsyncFunctionDef
+        if(! in_func && ! (scope.ast instanceof $B.ast.ClassDef)){break}
+        qualname = scope.name + (in_func ? '.<locals>.' : '.') + qualname
+        name = scope.name
+    }
+    return qualname
+}
+
 $B.ast.FunctionDef.prototype.to_js = function(scopes) {
     compiler_check(this)
     var symtable_block = scopes.symtable.table.blocks.get(fast_id(this))
@@ -2583,6 +2589,28 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
               `$B.args_parser(${name2}, arguments)\n`
     }
 
+    // Fixes #2855: closure free variables are not keys of the function's
+    // locals object; define them as live getters on it so locals() and
+    // bare eval()/exec() see them
+    var free_idents = []
+    for (var [ident, flag] of Object.entries(symtable_block.symbols)) {
+        if (((flag >> SF.SCOPE_OFF) & SF.SCOPE_MASK) == SF.FREE) {
+            free_idents.push(ident)
+        }
+    }
+    for (var free_ident of free_idents) {
+        var free_scope = name_scope(free_ident, scopes)
+        if (free_scope.found) {
+            var free_ns = make_scope_name(scopes, free_scope.found)
+            // the no-op setter mirrors CPython: a write through bare
+            // eval() goes to the f_locals snapshot and is discarded
+            js += prefix + `Object.defineProperty(locals, '${free_ident}', ` +
+                  `{get: function(){return ${free_ns}.${free_ident}}, ` +
+                  `set: function(){}, ` +
+                  `enumerable: true, configurable: true})\n`
+        }
+    }
+
     js += prefix + `var frame = ["${this.$is_lambda ? '<lambda>': this.name}", ` +
           `locals, "${gname}", ${globals_name}, ${name2}]\n` +
           prefix + `$B.enter_frame(frame, __file__, ${this.lineno})\n`
@@ -2671,8 +2699,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
 
     scopes.pop()
 
-    var qualname = in_class ? `${func_name_scope.name}.${this.name}` :
-                              this.name
+    var qualname = lexical_qualname(this.name, scopes)
 
     // Flags
     var flags = $B.COMPILER_FLAGS.OPTIMIZED | $B.COMPILER_FLAGS.NEWLOCALS
@@ -2692,12 +2719,8 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
     var parameters = [],
         locals = []
 
-    var free_vars = []
+    var free_vars = free_idents.map(x => `'${x}'`)
     for (var [ident, flag] of Object.entries(symtable_block.symbols)) {
-        var _scope = (flag >> SF.SCOPE_OFF) & SF.SCOPE_MASK
-        if (_scope == SF.FREE) {
-            free_vars.push(`'${ident}'`)
-        }
         if (flag & SF.DEF_PARAM) {
             parameters.push(`'${ident}'`)
         } else if (flag & SF.DEF_LOCAL) {
