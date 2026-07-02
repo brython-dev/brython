@@ -2579,6 +2579,28 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
               `$B.args_parser(${name2}, arguments)\n`
     }
 
+    // Fixes #2855: closure free variables are not keys of the function's
+    // locals object; define them as live getters on it so locals() and
+    // bare eval()/exec() see them
+    var free_idents = []
+    for (var [ident, flag] of Object.entries(symtable_block.symbols)) {
+        if (((flag >> SF.SCOPE_OFF) & SF.SCOPE_MASK) == SF.FREE) {
+            free_idents.push(ident)
+        }
+    }
+    for (var free_ident of free_idents) {
+        var free_scope = name_scope(free_ident, scopes)
+        if (free_scope.found) {
+            var free_ns = make_scope_name(scopes, free_scope.found)
+            // the no-op setter mirrors CPython: a write through bare
+            // eval() goes to the f_locals snapshot and is discarded
+            js += prefix + `Object.defineProperty(locals, '${free_ident}', ` +
+                  `{get: function(){return ${free_ns}.${free_ident}}, ` +
+                  `set: function(){}, ` +
+                  `enumerable: true, configurable: true})\n`
+        }
+    }
+
     js += prefix + `var frame = ["${this.$is_lambda ? '<lambda>': this.name}", ` +
           `locals, "${gname}", ${globals_name}, ${name2}]\n` +
           prefix + `$B.enter_frame(frame, __file__, ${this.lineno})\n`
@@ -2687,12 +2709,8 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
     var parameters = [],
         locals = []
 
-    var free_vars = []
+    var free_vars = free_idents.map(x => `'${x}'`)
     for (var [ident, flag] of Object.entries(symtable_block.symbols)) {
-        var _scope = (flag >> SF.SCOPE_OFF) & SF.SCOPE_MASK
-        if (_scope == SF.FREE) {
-            free_vars.push(`'${ident}'`)
-        }
         if (flag & SF.DEF_PARAM) {
             parameters.push(`'${ident}'`)
         } else if (flag & SF.DEF_LOCAL) {
