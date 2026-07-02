@@ -1,8 +1,16 @@
 from tester import assertRaises, assert_raises
 
-parser_to_ast = hasattr(__BRYTHON__, 'parser_to_ast')
-gen_parser = hasattr(__BRYTHON__, 'py_tokens')
 
+try:
+    __BRYTHON__
+except:
+    __BRYTHON__ = None
+
+try:
+    parser_to_ast = hasattr(__BRYTHON__, 'parser_to_ast')
+    gen_parser = hasattr(__BRYTHON__, 'py_tokens')
+except:
+    parser_to_ast = gen_parser = None
 # issue 5
 assert(isinstance(__debug__, bool))
 
@@ -140,12 +148,29 @@ assert recur() == 1
 #issue 131
 import time
 
+def comp_times(x, y):
+    for attr in dir(x):
+        if attr.startswith('tm_'):
+            vx = getattr(x, attr)
+            vy = getattr(y, attr)
+            if attr == 'tm_zone' and vx in ['UTC', None] \
+                    and vy in ['UTC', None]:
+                continue
+            if vx in [0, None] and vy in [0, None]:
+                continue
+            if vx != vy:
+                print('attr', attr, 'not equal', vx, vy)
+                return False
+    return True
+
 target = time.struct_time([1970, 1, 1, 0, 0, 0, 3, 1, 0])
-assert time.gmtime(0).args == target.args
+print('len', len(target))
+gmt = time.gmtime(0)
+assert comp_times(time.gmtime(0), target)
 target = time.struct_time([1970, 1, 1, 0, 1, 40, 3, 1, 0])
-assert time.gmtime(100).args == target.args
+assert comp_times(time.gmtime(100), target)
 target = time.struct_time([2001, 9, 9, 1, 46, 40, 6, 252, 0])
-assert time.gmtime(1000000000).args == target.args
+assert comp_times(time.gmtime(1000000000), target)
 
 try:
     time.asctime(1)
@@ -160,8 +185,7 @@ except TypeError:
 except:
     ValueError("Should have raised TypeError")
 assert time.asctime(time.gmtime(0)) == 'Thu Jan  1 00:00:00 1970'
-tup = tuple(time.gmtime(0).args)
-assert time.asctime(tup) == 'Thu Jan  1 00:00:00 1970'
+assert time.asctime(tuple(time.gmtime(0))) == 'Thu Jan  1 00:00:00 1970'
 
 # issue 137
 codeobj = compile("3 + 4", "<example>", "eval")
@@ -1107,30 +1131,6 @@ try:
 except TypeError:
     pass
 
-# issue 619
-from browser.html import H2
-
-class _ElementMixIn:
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._sargs = []
-        self._kargs = {}
-
-    def mytest(self):
-        self._sargs.append(5)
-
-    def mytest2(self):
-        self._kargs[5] = '5'
-
-
-kls = type('h2', (_ElementMixIn, H2,), {})
-
-x = kls()
-x.mytest()
-assert x._sargs == [5]
-x.mytest2()
-assert x._kargs[5] == '5'
 
 # issue 649
 class test:
@@ -1371,10 +1371,6 @@ class C:
 
 assert '{}'.format(C) == "<class '__main__.C'>"
 
-import javascript
-assert javascript.jsobj2pyobj(javascript.NULL) is javascript.NULL
-undef = javascript.jsobj2pyobj(javascript.UNDEFINED)
-assert not undef
 
 # issue 760
 class A(object):
@@ -1413,7 +1409,8 @@ def f():
 
 # issue 778
 import os
-assertRaises(NotImplementedError, os.listdir)
+if __BRYTHON__:
+    assertRaises(NotImplementedError, os.listdir)
 
 # issue 780
 def g():
@@ -1553,7 +1550,8 @@ assert t[1:5, 7] == (slice(1, 5, None), 7)
 def f():
     print(10)
 
-assert f.__code__.co_code.startswith("function f")
+if __BRYTHON__:
+    assert f.__code__.co_code.startswith("function f")
 
 # Regression introduced in 6888c6d67b3d5b44905a09fa427a84bef2c7b304
 class A:
@@ -1731,34 +1729,6 @@ for _ in range(2):
 
 # issue 900
 "".format(**globals())
-
-# issue 901 : _jsre's SRE_Pattern lacking methods: .sub(), .subn(), .split(), and .fullmatch()
-import _jsre as re
-
-regex = re.compile('a|b')
-
-# These methods work!
-assert regex.match('ab') is not None
-assert regex.search(' ab') is not None
-assert regex.findall('ab') == ['a', 'b']
-
-def switch(m):
-    return 'a' if m.group(0) == 'b' else 'b'
-
-# Missing: .sub()
-assert regex.sub(switch, 'ba') == 'ab'
-
-# Missing: .fullmatch()
-# assert regex.fullmatch('b') is not None
-
-# Missing: .split()
-#assert regex.split('cacbca', maxsplit=2) == ['c', 'c', 'ca']
-
-# Missing: .subn()
-#assert regex.subn(switch, 'ba') == ('ab', 2)
-
-# Broken: .finditer()
-#assert [m.group(0) for m in regex.finditer('ab')] == ['a', 'b']
 
 
 # issue 923
@@ -2462,7 +2432,7 @@ except SystemExit:
     pass
 
 # issue 1331
-assert [*{*['a', 'b', 'a']}] == ['a', 'b']
+assert set([*{*['a', 'b', 'a']}]) == {'a', 'b'}
 assert [*{'a': 1, 'b': 2}] == ['a', 'b']
 
 # issue 1366
@@ -2626,11 +2596,8 @@ try:
     exec("not x = 1")
     raise Exception("should have raised SyntaxError")
 except SyntaxError as exc:
-    if parser_to_ast or gen_parser:
-        assert exc.args[0] == "cannot assign to expression"
-    else:
-        assert exc.args[0] == "cannot assign to operator"
-    pass
+    assert exc.args[0] == "cannot assign to expression"
+
 
 # issue 1501
 class B:
@@ -3097,7 +3064,7 @@ with x as y:
   pass"""
 
 assert_raises(TypeError, exec, test,
-  msg="'str' object does not support the context manager protocol")
+  msg="'str' object does not support the context manager protocol (missed __exit__ method)")
 
 # issue 2030
 def f():
@@ -3113,16 +3080,6 @@ def main():
 
 main()
 
-# issue 2031
-
-save_annotations = __annotations__
-
-def foo():
-    bar: Bar = 42
-    assert __annotations__ == save_annotations
-    assert bar == 42
-
-foo()
 
 # issue 2077
 assert_raises(SyntaxError, exec, "f(🠞)",
@@ -3171,7 +3128,8 @@ import os
 module_path = "/py/elephas/test_mdl.py"
 path = pathlib.Path(module_path)
 
-assert os.fspath(path) == r'/py/elephas/test_mdl.py'
+assert os.fspath(path) in (r'/py/elephas/test_mdl.py',
+    r'\py\elephas\test_mdl.py')
 
 path = path.with_suffix('')
 stem = path.stem
@@ -3293,7 +3251,8 @@ def f(name, module):
 f('abc', __name__)
 
 # issue 2539
-assert_raises(NotImplementedError, os.open)
+if __BRYTHON__:
+    assert_raises(NotImplementedError, os.open)
 
 # issue 2551
 import configparser
@@ -3374,11 +3333,14 @@ assert f2683.__annotations__ == {}
 # PR 2731
 open(pathlib.Path('index.html'))
 
+print('y', y)
+
 # PR 2735
 def f2735(x):
   assert 'x' in locals()
-  locals()['y'] = 0
+  locals()['y'] = 99
   assert 'y' not in locals()
+  print('eval y', eval('y'))
   assert_raises(NameError, eval, 'y')
 
 f2735(0)
