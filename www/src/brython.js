@@ -724,8 +724,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-07-05 08:15:16.374282"
-__BRYTHON__.timestamp=1783232116374
+__BRYTHON__.compiled_date="2026-07-05 11:46:02.348080"
+__BRYTHON__.timestamp=1783244762347
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -7069,7 +7069,7 @@ var ws_cars=[]
 var ws='\r\n \t'
 for(let i=0,len=ws.length;i < len;i++){ws_cars.push(ws.charCodeAt(i))}
 function invalid(other){return ! $B.$isinstance(other,[bytes,bytearray])}
-var is_bytes_like=$B.is_bytes_like=function(obj){return $B.$getattr(obj,'__buffer__',$B.NULL)!==$B.NULL}
+var is_bytes_like=$B.is_bytes_like=function(obj){return $B.$getattr($B.get_class(obj),'__buffer__',$B.NULL)!==$B.NULL}
 function get_list_from_bytes_like(obj){var buf=$B.$call($B.$getattr(obj,'__buffer__'),0)
 if(! $B.exact_type(buf,_b_.memoryview)){$B.RAISE(_b_.TypeError,`__buffer__ should return memoryview, not ${$B.class_name(buf)}`
 )}
@@ -17472,8 +17472,6 @@ $B.ast.Slice.prototype.to_js=function(scopes){var lower=this.lower ? $B.js_from_
 return `_b_.slice.$fast_slice(${lower}, ${upper}, ${step})`}
 $B.ast.Starred.prototype.to_js=function(scopes){if(this.$handled){return `_b_.list.$unpack(${$B.js_from_ast(this.value, scopes)})`}
 if(this.ctx instanceof $B.ast.Store){compiler_error(this,"starred assignment target must be in a list or tuple")}else{
-console.log('starred',this)
-console.log(Error('trace').stack)
 compiler_error(this,"can't use starred expression here")}}
 $B.ast.Subscript.prototype.to_js=function(scopes){var value=$B.js_from_ast(this.value,scopes),slice=$B.js_from_ast(this.slice,scopes)
 var inum=add_to_positions(scopes,this)
