@@ -1106,7 +1106,7 @@ Scanner.$factory = function(pattern, string, pos, endpos) {
 var Scanner_funcs = Scanner.tp_funcs = {}
 
 Scanner_funcs.match = function(self) {
-    return Pattern.tp_funcs.match(self.pattern, self.$string)
+    return Pattern.tp_funcs.prefixmatch(self.pattern, self.$string)
 }
 
 Scanner_funcs.search = function(self) {
@@ -1304,7 +1304,7 @@ Pattern_funcs.finditer = function(self) {
 }
 
 Pattern_funcs.fullmatch = function(self, string) {
-    var $ = $B.args("match", 4,
+    var $ = $B.args("fullmatch", 4,
                 {self: null, string: null, pos: null, endpos: null},
                 arguments, {pos: 0, endpos: _b_.None})
     if ($.endpos === _b_.None) {
@@ -1316,7 +1316,7 @@ Pattern_funcs.fullmatch = function(self, string) {
             "and string")
     }
     var fullmatch_pattern = create_fullmatch_pattern($.self.$pattern)
-    var mo = match(fullmatch_pattern, data.string, $.pos, $.endpos)
+    var mo = prefixmatch(fullmatch_pattern, data.string, $.pos, $.endpos)
     if (mo && mo.end - mo.start == $.endpos - $.pos) {
         return MatchObject.$factory(mo)
     } else {
@@ -1354,8 +1354,8 @@ Pattern_funcs.groups_get = function(self){
 }
 Pattern_funcs.groups_set = _b_.None
 
-Pattern_funcs.match = function(self, string) {
-    var $ = $B.args("match", 4,
+Pattern_funcs.prefixmatch = function(self, string) {
+    var $ = $B.args("prefixmatch", 4,
                 {self: null, string: null, pos: null, endpos: null},
                 arguments, {pos: 0, endpos: _b_.None})
     if ($.endpos === _b_.None) {
@@ -1366,7 +1366,7 @@ Pattern_funcs.match = function(self, string) {
         $B.RAISE(_b_.TypeError, "not the same type for pattern " +
             "and string")
     }
-    var mo = match($.self.$pattern, data.string, $.pos,
+    var mo = prefixmatch($.self.$pattern, data.string, $.pos,
         $.endpos)
     return mo ? MatchObject.$factory(mo) : _b_.None
 }
@@ -1376,7 +1376,7 @@ Pattern_funcs.scanner = function(self, string, pos, endpos) {
 }
 
 Pattern_funcs.search = function(self, string) {
-    var $ = $B.args("match", 4,
+    var $ = $B.args("search", 4,
                 {self: null, string: null, pos: null, endpos: null},
                 arguments, {pos: 0, endpos: _b_.None})
     var data = prepare({string: $.string})
@@ -1389,7 +1389,7 @@ Pattern_funcs.search = function(self, string) {
     }
     var pos = $.pos
     while (pos <= $.endpos) {
-        var mo = match(self.$pattern, data.string, pos)
+        var mo = prefixmatch(self.$pattern, data.string, pos)
         if (mo) {
             return MatchObject.$factory(mo)
         } else {
@@ -1404,7 +1404,7 @@ Pattern_funcs.split = function() {
 }
 
 Pattern_funcs.sub = function() {
-    var $ = $B.args("match", 4,
+    var $ = $B.args("sub", 4,
                 {self: null, repl: null, string: null, count: null},
                 arguments, {count: 0})
     var data = prepare({string: $.string})
@@ -1416,9 +1416,12 @@ Pattern_funcs.sub = function() {
     return module.sub($.self, $.repl, $.string, $.count)
 }
 
+Pattern_funcs.match = Pattern_funcs.prefixmatch // soft deprecated in version 3.15
+
 Pattern.tp_methods = [
     "__copy__", "__deepcopy__", "__reduce__", "__reduce_ex__", "findall",
-    "finditer", "fullmatch", "match", "scanner", "search", "split", "sub"
+    "finditer", "fullmatch", "match", "prefixmatch", "scanner", "search",
+    "split", "sub"
 ]
 
 Pattern.tp_getset = ["groupindex", "pattern", "flags", "groups"]
@@ -2262,7 +2265,7 @@ ConditionalBackref.prototype.match = function(string, pos, endpos, groups) {
     var re = groups[this.group_ref] ? this.re_if_exists :
             this.re_if_not_exists,
         pattern = {node: re, text: re + ''},
-        mo = match(pattern, string, pos, endpos, false, groups)
+        mo = prefixmatch(pattern, string, pos, endpos, false, groups)
     if (mo) {
         return {nb_min: mo.end - mo.start, nb_max: mo.end - mo.start}
     }
@@ -2351,7 +2354,7 @@ Lookbehind.prototype.match = function(string, pos, endpos, groups) {
     if (pos - length < 0) {
         mo = false
     } else {
-        mo = match(pattern, string, pos - length, endpos, false, groups)
+        mo = prefixmatch(pattern, string, pos - length, endpos, false, groups)
     }
     if (mo) {
         return this.neg ? false : ok
@@ -3171,13 +3174,13 @@ function* iterator(pattern, string, flags, original_string, pos, endpos){
         cp,
         accept_one = true // used to test one position after string end
     while ((cp = string.cp_at(pos)) !== undefined || accept_one) {
-        var mo = match(pattern, string, pos, endpos)
+        var mo = prefixmatch(pattern, string, pos, endpos)
         if (mo) {
             yield MatchObject.$factory(mo)
             if (mo.end == mo.start) {
                 // If match has zero with, retry at the same position but
                 // with the flag no_zero_width set, to avoid infinite loops
-                mo = match(pattern, string, pos, endpos, true)
+                mo = prefixmatch(pattern, string, pos, endpos, true)
                 if (mo) {
                     yield MatchObject.$factory(mo)
                     pos = mo.end
@@ -3279,7 +3282,7 @@ GroupMO.prototype.backtrack = function(string, groups) {
             if (mo.node instanceof Case) {
                 var rank = mo.node.parent.items.indexOf(mo.node)
                 for (var _case of mo.node.parent.items.slice(rank + 1)) {
-                    var _mo = match({node: _case, text: _case.text},
+                    var _mo = prefixmatch({node: _case, text: _case.text},
                         string, mo.start)
                     if (_mo) {
                         // update GroupMO object
@@ -3642,7 +3645,7 @@ function create_fullmatch_pattern(pattern) {
     return new_pattern
 }
 
-function match(pattern, string, pos, endpos, no_zero_width, groups) {
+function prefixmatch(pattern, string, pos, endpos, no_zero_width, groups) {
     // Follow the pattern tree structure
     if (_debug.value) {
         console.log('match pattern', pattern.text, 'pos', pos, string.substring(pos))
@@ -3675,7 +3678,7 @@ function match(pattern, string, pos, endpos, no_zero_width, groups) {
         if (node instanceof Choice) {
             mo = false
             for (var _case of node.items) {
-                mo = match({node: _case, text: _case.text}, string, pos,
+                mo = prefixmatch({node: _case, text: _case.text}, string, pos,
                     endpos, no_zero_width, groups)
                 if (mo) {
                     // remove groups inside choice and before successful case
@@ -3733,8 +3736,8 @@ function match(pattern, string, pos, endpos, no_zero_width, groups) {
                         console.log('item', i, '/', node.items.length - 1,
                             'of pattern', pattern.text)
                     }
-                    var mo = match({node: item, text: item + ''}, string, pos,
-                        endpos, no_zero_width, groups)
+                    var mo = prefixmatch({node: item, text: item + ''},
+                        string, pos, endpos, no_zero_width, groups)
                     if (mo) {
                         if(item instanceof Group &&
                                 item.type == "lookahead_assertion"){
@@ -4011,7 +4014,7 @@ var module = {
         var new_pattern = create_fullmatch_pattern(pattern)
 
         // match transformed RE
-        var res = match(new_pattern, data.string, 0)
+        var res = prefixmatch(new_pattern, data.string, 0)
         var bmo = res === false ? _b_.None : MatchObject.$factory(res)
         if (bmo !== _b_.None) {
             if (bmo.mo.string.codepoints.length != bmo.mo.end - bmo.mo.start) {
@@ -4023,14 +4026,16 @@ var module = {
         return _b_.None
     },
     Match: MatchObject,
-    match: function() {
-        var $ = $B.args("match", 3, {pattern: null, string: null, flags: null},
+    Pattern,
+    prefixmatch: function() {
+        let $ = $B.args("prefixmatch", 3,
+                    {pattern: null, string: null, flags: null},
                     arguments, {flags: no_flag})
-        var pattern = $.pattern,
+        let pattern = $.pattern,
             string = $.string,
             flags = $.flags
         pattern = check_pattern_flags(pattern, flags)
-        var data
+        let data
         if ($B.exact_type(pattern, Pattern)) {
             data = prepare({string})
             pattern = pattern.$pattern
@@ -4038,10 +4043,9 @@ var module = {
             data = prepare({pattern, string})
             pattern = compile(data.pattern, flags)
         }
-        var res = match(pattern, data.string, 0)
+        let res = prefixmatch(pattern, data.string, 0)
         return res === false ? _b_.None : MatchObject.$factory(res)
     },
-    Pattern,
     purge: function() {
         var $ = $B.args("purge", 0, {}, arguments)
         cache.clear()
@@ -4068,7 +4072,7 @@ var module = {
         if(pattern.pattern.startsWith('\\A') ||
                 pattern.pattern.startsWith('^')){
             if (! (pattern.$pattern.node.items[0] instanceof Choice)) {
-                var mo = match(data.pattern.$pattern, data.string, 0)
+                var mo = prefixmatch(data.pattern.$pattern, data.string, 0)
                 if (mo) {
                     return MatchObject.$factory(mo)
                 } else if (pattern.flags.value & MULTILINE.value) {
@@ -4076,7 +4080,7 @@ var module = {
                         cp
                     while ((cp = data.string.cp_at(pos)) !== undefined) {
                         if (cp == LINEFEED) {
-                            mo = match(data.pattern.$pattern, data.string, pos + 1)
+                            mo = prefixmatch(data.pattern.$pattern, data.string, pos + 1)
                             if (mo) {
                                 return MatchObject.$factory(mo)
                             }
@@ -4092,7 +4096,7 @@ var module = {
                 isFinite(pattern.$pattern.fixed_length) &&
                 pattern.pattern.endsWith('$') &&
                 ! (pattern.flags.value & MULTILINE.value)){
-            var mo = match(data.pattern.$pattern, data.string,
+            var mo = prefixmatch(data.pattern.$pattern, data.string,
                 data.string.length - pattern.$pattern.fixed_length)
             if (mo) {
                 return MatchObject.$factory(mo)
@@ -4101,14 +4105,14 @@ var module = {
         }
         var pos = 0
         if (data.string.codepoints.length == 0) {
-            mo = match(data.pattern.$pattern, data.string, 0)
+            mo = prefixmatch(data.pattern.$pattern, data.string, 0)
             if (mo) {
                 mo.start = mo.end = 0
             }
             return mo ? MatchObject.$factory(mo) : _b_.None
         }
         while (pos < data.string.codepoints.length) {
-            var mo = match(data.pattern.$pattern, data.string, pos)
+            var mo = prefixmatch(data.pattern.$pattern, data.string, pos)
             if (mo) {
                 return MatchObject.$factory(mo)
             } else {
@@ -4236,7 +4240,9 @@ var MULTILINE = module.M = module.MULTILINE = Flag.$factory(8)
 var DOTALL = module.S = module.DOTALL = Flag.$factory(16)
 var U = module.U = module.UNICODE = Flag.$factory(32)
 var VERBOSE = module.X = module.VERBOSE = Flag.$factory(64)
+
 module.cache = cache
+module.match = module.prefixmatch // soft deprecated in version 3.15
 
 $B.set_func_names(module, '_re')
 
