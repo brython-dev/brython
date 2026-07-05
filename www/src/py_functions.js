@@ -88,6 +88,7 @@ $B.set_func_names(classmethod, "builtins")
 
 // staticmethod() built in function
 var staticmethod = _b_.staticmethod
+
 staticmethod.$factory = function(func) {
     return {
         ob_type: staticmethod,
@@ -174,18 +175,21 @@ $B.set_func_names(staticmethod, "builtins")
 /* builtin_function_or_method start */
 $B.builtin_function_or_method.tp_richcompare = function(self, other, op) {
     if((op != '__eq__' && op != '__ne__') ||
-        ! $B.$isinstance(self, $B.builtin_function_or_method) ||
-        ! $B.$isinstance(other, $B.builtin_function_or_method)){
+            ! $B.$isinstance(self, $B.builtin_function_or_method) ||
+            ! $B.$isinstance(other, $B.builtin_function_or_method)){
         return _b_.NotImplemented
     }
-    var res
-    var eq = self === other
-    if (op == '__eq__') {
-        res = eq
+    let res
+    if (self === other) {
+        res = true
+    } else if( self.m_self === undefined || other.m_self === undefined) {
+        res = false
     } else {
-        res = ! eq
+        res = self.m_self === other.m_self &&
+                  self.ml && other.ml
+                  && self.ml.ml_name === other.ml.ml_name
     }
-    return res
+    return op == '__eq__' ? res : ! res
 }
 
 $B.builtin_function_or_method.tp_repr = function(self) {
@@ -540,7 +544,8 @@ function_funcs.__kwdefaults___set = function(self, value) {
 }
 
 function_funcs.__module___get = function(self) {
-    return self.$function_infos[$B.func_attrs.__module__]
+    var res = self.$function_infos[$B.func_attrs.__module__]
+    return res === $B.NULL || res === undefined ? _b_.None : res
 }
 
 function_funcs.__module___set = function(self, value) {

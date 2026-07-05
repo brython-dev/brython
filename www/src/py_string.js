@@ -1947,7 +1947,23 @@ str_funcs.__getnewargs__ = function(self) {
 }
 
 str_funcs.__sizeof__ = function(self) {
-    return 62
+    // CPython's 64-bit sizes (the platform Brython emulates — its hash
+    // width is 64): ASCII is a PyASCIIObject (40 bytes) + len + 1,
+    // otherwise PyCompactUnicodeObject (56 bytes) + (len + 1) * kind
+    var len = 0,
+        maxchar = 0
+    for (var c of to_string(self)) {
+        c = c.codePointAt(0)
+        if (c > maxchar) {
+            maxchar = c
+        }
+        len++
+    }
+    if (maxchar < 0x80) {
+        return 40 + len + 1
+    }
+    var kind = maxchar < 0x100 ? 1 : maxchar < 0x10000 ? 2 : 4
+    return 56 + (len + 1) * kind
 }
 
 str_funcs.capitalize = function(self) {

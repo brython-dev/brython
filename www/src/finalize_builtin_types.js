@@ -349,8 +349,12 @@ $B.finalize_type = function(cls) {
     }
     if (cls.staticmethods) {
         for (var descr of cls.staticmethods) {
+            let func = cls.tp_funcs[descr]
+            $B.set_type(func, $B.builtin_function_or_method)
+            func.ml = {ml_name: descr}
+            func.m_self = cls
             $B.set_to_dict(cls, descr,
-                _b_.staticmethod.$factory(cls.tp_funcs[descr]))
+                _b_.staticmethod.$factory(func))
         }
     }
 

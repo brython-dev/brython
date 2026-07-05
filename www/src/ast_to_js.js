@@ -90,9 +90,10 @@ function compiler_error(ast_obj, message, end) {
     prefix = ''
     var exc = $B.EXC(_b_.SyntaxError, message)
     exc.filename = state.filename
-    if (exc.filename != '<string>') {
-        var src = $B.file_cache[exc.filename],
-            lines = src.split('\n'),
+    var src = exc.filename == '<string>' ?
+        undefined : $B.file_cache[exc.filename]
+    if (src !== undefined) {
+        var lines = src.split('\n'),
             line = lines[ast_obj.lineno - 1]
         exc.text = line
     } else {
@@ -242,6 +243,16 @@ function qualified_scope_name(scopes, scope) {
     return names.join('_').replace(/\./g, '_')
 }
 
+function show_flags(name, flag) {
+    let res = []
+    for (let key in $B.SYMBOL_FLAGS) {
+        if (flag & $B.SYMBOL_FLAGS[key]) {
+            res.push(key)
+        }
+    }
+    console.log(name, res.join( ' | '))
+}
+
 function module_name(scopes) {
     var _scopes = scopes.slice()
     var names = []
@@ -315,8 +326,12 @@ function get_binding_scope(name, scopes) {
         scope = scopes[0]
     } else if (up_scope.nonlocals.has(name)) {
         for (var i = scopes.indexOf(up_scope) - 1; i >= 0; i--) {
-            if(scopes[i].locals.has(name) ||
-                    (scopes[i].maybe_locals && scopes[i].maybe_locals.has(name))){
+            if (scopes[i].parent) {
+                // ignore "sub-scopes" for if / for / with etc.
+                continue
+            }
+            let block = scopes.symtable.table.blocks.get(fast_id(scopes[i].ast))
+            if (block && Object.hasOwn(block.symbols, name)) {
                 return [name, scopes[i], up_scope]
             }
         }
@@ -1517,12 +1532,14 @@ $B.ast.AsyncWith.prototype.to_js = function(scopes) {
         dedent()
         s += prefix + `} catch (err_${id}) {\n`
         indent()
-        s += prefix + `frame.$lineno = ${lineno}\n` +
-             prefix + `exc_${id} = false\n` +
+        s += prefix + `exc_${id} = false\n` +
              prefix + `err_${id} = $B.exception(err_${id}, frame)\n` +
+             prefix + `var lineno_${id} = frame.$lineno\n` +
+             prefix + `frame.$lineno = ${lineno}\n` +
              prefix + `var $b = await $B.promise(aexit_${id}(mgr_${id}, $B.get_class(err_${id}), \n` +
              prefix + tab.repeat(4) + `err_${id}, $B.$getattr(err_${id}, '__traceback__')))\n` +
              prefix + `if (! $B.$bool($b)) {\n` +
+             prefix + tab + `frame.$lineno = lineno_${id}\n` +
              prefix + tab + `throw err_${id}\n` +
              prefix + `}\n`
         dedent()
@@ -1530,8 +1547,8 @@ $B.ast.AsyncWith.prototype.to_js = function(scopes) {
         dedent()
         s += prefix + `}finally{\n`
         indent()
-        s += prefix + `frame.$lineno = ${lineno}\n` +
-             prefix + `if (exc_${id}) {\n` +
+        s += prefix + `if (exc_${id}) {\n` +
+             prefix + tab + `frame.$lineno = ${lineno}\n` +
              prefix + tab + `await $B.promise(aexit_${id}(mgr_${id}, _b_.None, _b_.None, _b_.None))\n` +
              prefix + `}\n`
         dedent()
@@ -1775,7 +1792,7 @@ function make_args(scopes) {
     for (let arg of this.args) {
         if (arg instanceof $B.ast.Starred) {
             var starred_arg = $B.js_from_ast(arg.value, scopes)
-            args_list.push(`...$B.make_js_iterator(${starred_arg})`)
+            args_list.push(`..._b_.list.$unpack(${starred_arg})`)
         } else {
             args_list.push($B.js_from_ast(arg, scopes))
         }
@@ -1813,20 +1830,12 @@ $B.ast.ClassDef.prototype.to_js = function(scopes) {
     }
 
     js += prefix + `$B.set_lineno(frame, ${this.lineno}, 'ClassDef')\n`
-    var qualname = this.name
-    var ix = scopes.length - 1
-    while (ix >= 0) {
-        if (scopes[ix].parent) {
-            ix--
-        } else if (scopes[ix].ast instanceof $B.ast.ClassDef) {
-            qualname = scopes[ix].name + '.' + qualname
-            ix--
-        } else {
-            break
-        }
-    }
+    var qualname = lexical_qualname(this.name, scopes)
 
-    var bases = this.bases.map(x => $B.js_from_ast(x, scopes))
+    var bases = this.bases.map(x =>
+        x instanceof $B.ast.Starred ?
+            `...$B.make_js_iterator(${$B.js_from_ast(x.value, scopes)})` :
+            $B.js_from_ast(x, scopes))
     var has_type_params = this.type_params.length > 0
     if (has_type_params) {
         check_type_params(this)
@@ -1851,7 +1860,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes) {
             js += prefix + `$B.$import('typing')\n` +
                   prefix + 'var typing = $B.imported.typing\n' +
                   prefix + `var Unpack = $B.module_getattr(typing, 'Unpack')\n` +
-                  prefix + `var unpack = $B.$call(Unpack, '__getitem__'))\n`
+                  prefix + `var unpack = x => $B.$getitem(Unpack, x)\n`
         }
         var name_map = new Map()
         for (let item of this.type_params) {
@@ -2394,6 +2403,23 @@ function type_param_in_def(tp, ref, scopes) {
 }
 
 
+// PEP 3155: enclosing classes add 'C.', enclosing functions add
+// 'f.<locals>.'; a name declared global gets a bare qualname
+function lexical_qualname(name, scopes){
+    var qualname = name
+    for(var i = scopes.length - 1; i >= 0; i--){
+        var scope = scopes[i]
+        if(scope.parent){continue}
+        if(scope.globals.has(name)){break}
+        var in_func = scope.ast instanceof $B.ast.FunctionDef ||
+                      scope.ast instanceof $B.ast.AsyncFunctionDef
+        if(! in_func && ! (scope.ast instanceof $B.ast.ClassDef)){break}
+        qualname = scope.name + (in_func ? '.<locals>.' : '.') + qualname
+        name = scope.name
+    }
+    return qualname
+}
+
 $B.ast.FunctionDef.prototype.to_js = function(scopes) {
     compiler_check(this)
     var symtable_block = scopes.symtable.table.blocks.get(fast_id(this))
@@ -2569,6 +2595,28 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
               `$B.args_parser(${name2}, arguments)\n`
     }
 
+    // Fixes #2855: closure free variables are not keys of the function's
+    // locals object; define them as live getters on it so locals() and
+    // bare eval()/exec() see them
+    var free_idents = []
+    for (var [ident, flag] of Object.entries(symtable_block.symbols)) {
+        if (((flag >> SF.SCOPE_OFF) & SF.SCOPE_MASK) == SF.FREE) {
+            free_idents.push(ident)
+        }
+    }
+    for (var free_ident of free_idents) {
+        var free_scope = name_scope(free_ident, scopes)
+        if (free_scope.found) {
+            var free_ns = make_scope_name(scopes, free_scope.found)
+            // the no-op setter mirrors CPython: a write through bare
+            // eval() goes to the f_locals snapshot and is discarded
+            js += prefix + `Object.defineProperty(locals, '${free_ident}', ` +
+                  `{get: function(){return ${free_ns}.${free_ident}}, ` +
+                  `set: function(){}, ` +
+                  `enumerable: true, configurable: true})\n`
+        }
+    }
+
     js += prefix + `var frame = ["${this.$is_lambda ? '<lambda>': this.name}", ` +
           `locals, "${gname}", ${globals_name}, ${name2}]\n` +
           prefix + `$B.enter_frame(frame, __file__, ${this.lineno})\n`
@@ -2657,8 +2705,8 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
 
     scopes.pop()
 
-    var qualname = in_class ? `${func_name_scope.name}.${this.name}` :
-                              this.name
+    var qualname = lexical_qualname(this.$is_lambda ? '<lambda>' : this.name,
+        scopes)
 
     // Flags
     var flags = $B.COMPILER_FLAGS.OPTIMIZED | $B.COMPILER_FLAGS.NEWLOCALS
@@ -2678,12 +2726,8 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
     var parameters = [],
         locals = []
 
-    var free_vars = []
+    var free_vars = free_idents.map(x => `'${x}'`)
     for (var [ident, flag] of Object.entries(symtable_block.symbols)) {
-        var _scope = (flag >> SF.SCOPE_OFF) & SF.SCOPE_MASK
-        if (_scope == SF.FREE) {
-            free_vars.push(`'${ident}'`)
-        }
         if (flag & SF.DEF_PARAM) {
             parameters.push(`'${ident}'`)
         } else if (flag & SF.DEF_LOCAL) {
@@ -2749,7 +2793,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
     js += prefix + `${name2}.$function_infos = [` +
         `'${gname}', ` +
         `'${this.$is_lambda ? '<lambda>': this.name}', ` +
-        `'${this.$is_lambda ? '<lambda>': qualname}', ` +
+        `'${qualname}', ` +
         `__file__, ` +
         `${defaults}, ` +
         `${kw_defaults}, ` +
@@ -3627,13 +3671,17 @@ $B.ast.Set.prototype.to_js = function(scopes) {
     var elts = []
     for (var elt of this.elts) {
         var js
-        if (elt instanceof $B.ast.Constant) {
-            var v = elt.value
-            if (typeof v == 'string') {
-                v = remove_escapes(v)
+        if (elt instanceof $B.ast.Constant && typeof elt.value != 'string') {
+            // a string constant would be stored under a compile-time hash of
+            // remove_escapes(value), which diverges from the value actually
+            // stored (js_from_ast) and from its runtime hash; route it through
+            // the item path so set_add hashes the stored value
+            let _hash = $B.$hash(elt.value)
+            if (typeof _hash === 'bigint') {
+                _hash = _hash + 'n'
             }
             js = `{constant: [${$B.js_from_ast(elt, scopes)}, ` +
-                 `${$B.$hash(v)}]}`
+                 `${_hash}]}`
         } else if (elt instanceof $B.ast.Starred) {
             js = `{starred: ${$B.js_from_ast(elt.value, scopes)}}`
         } else {
@@ -4138,10 +4186,11 @@ $B.ast.With.prototype.to_js = function(scopes) {
         dedent()
         s += prefix + `} catch (err) {\n`
         indent()
+        let msg = `' object does not support the context manager protocol` +
+                  ' (missed __exit__ method)'
         s += prefix + `var klass_name = $B.class_name(mgr_${id})\n` +
              prefix + `frame.inum = ${inum}\n` +
-             prefix + `$B.RAISE(_b_.TypeError, "'" + klass_name + ` +
-                      `"' object does not support the context manager protocol")\n`
+             prefix + `$B.RAISE(_b_.TypeError, "'" + klass_name + "${msg}")\n`
         dedent()
         s += prefix + `}\n` +
              prefix + `var value_${id} = $B.$call(enter_${id}, mgr_${id}),\n` +
@@ -4167,13 +4216,15 @@ $B.ast.With.prototype.to_js = function(scopes) {
         dedent()
         s += prefix + `} catch (err_${id}) {\n`
         indent()
-        s += prefix + `frame.$lineno = ${lineno}\n` +
-             prefix + `exc_${id} = false\n` +
+        s += prefix + `exc_${id} = false\n` +
              prefix + `err_${id} = $B.exception(err_${id}, frame)\n` +
+             prefix + `var lineno_${id} = frame.$lineno\n` +
+             prefix + `frame.$lineno = ${lineno}\n` +
              prefix + `var $b = $B.$call(exit_${id}, $B.get_class(err_${id}), ` +
                   `err_${id}, \n` +
              prefix + tab.repeat(4) + `$B.$getattr(err_${id}, '__traceback__'))\n` +
              prefix + `if (! $B.$bool($b)) {\n` +
+             prefix + tab + `frame.$lineno = lineno_${id}\n` +
              prefix + tab + `throw err_${id}\n` +
              prefix + `}\n`
         dedent()
@@ -4181,9 +4232,9 @@ $B.ast.With.prototype.to_js = function(scopes) {
         dedent()
         s += prefix + `}finally{\n`
         indent()
-        s += prefix + `frame.$lineno = ${lineno}\n` +
-             (in_generator ? prefix + `locals.$context_managers.pop()\n` : '') +
-             prefix + `if (exc_${id}) {\n`
+        s += (in_generator ? prefix + `locals.$context_managers.pop()\n` : '') +
+             prefix + `if (exc_${id}) {\n` +
+             prefix + tab + `frame.$lineno = ${lineno}\n`
         indent()
         s += prefix + `try {\n` +
              prefix + tab + `$B.$call(exit_${id}, _b_.None, _b_.None, _b_.None)\n` +

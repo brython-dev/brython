@@ -292,4 +292,10 @@ class D(dict):
 
 assert type(D(a=1).__reduce_ex__(2)[4]) is type(iter({}.items()))
 
+# from PR 2880
+d = {1: 1}
+
+assert d.keys == d.keys
+
+
 print("passed all tests..")

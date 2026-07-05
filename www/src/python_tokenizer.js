@@ -502,6 +502,13 @@ $B.tokenizer = function(src, filename, mode, parser) {
                     ft_buffer += '\\'
                 }
                 if (ft_escape) {
+                    if (char == '\n') {
+                        // backslash-newline is a line continuation: it does
+                        // not reach the string value (f"a\<newline>b" is 'ab')
+                        line_num++
+                        ft_escape = false
+                        continue
+                    }
                     ft_buffer += '\\'
                 }
                 ft_buffer += char

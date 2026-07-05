@@ -724,8 +724,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,3,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-06-30 06:55:04.595534"
-__BRYTHON__.timestamp=1782795304595
+__BRYTHON__.compiled_date="2026-07-05 08:06:40.617405"
+__BRYTHON__.timestamp=1783231600617
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -935,7 +935,11 @@ continue}else{
 if(char=="'" && ! ft_escape &&
 ft_buffer[ft_buffer.length-1]=='\\'){
 ft_buffer+='\\'}
-if(ft_escape){ft_buffer+='\\'}
+if(ft_escape){if(char=='\n'){
+line_num++
+ft_escape=false
+continue}
+ft_buffer+='\\'}
 ft_buffer+=char
 ft_escape=false
 if(char=='\n'){line_num++}
@@ -1706,7 +1710,7 @@ key+"'")}else{
 kwa[key]=entry.value}}}else{
 var cls=$B.get_class(kw_arg)
 try{
-var keys_method=$B.$getattr(cls,'keys')}catch(err){$B.RAISE(_b_.TypeError,`${fname} argument `+
+var keys_method=$B.$getattr(cls,'keys')}catch(err){$B.RAISE(_b_.TypeError,`${fname}() argument `+
 `after ** must be a mapping, not ${$B.class_name(kw_arg)}`)}
 var keys_iter=$B.make_js_iterator($B.$call(keys_method,kw_arg)),getitem
 for(var k of keys_iter){if(typeof k !=="string"){$B.RAISE(_b_.TypeError,fname+
@@ -1718,6 +1722,22 @@ if(! getitem){try{
 getitem=$B.$getattr(cls,'__getitem__')}catch(err){$B.RAISE(_b_.TypeError,`'${$B.class_name(kw_arg)}' object is not subscriptable`)}}
 kwa[k]=getitem(kw_arg,k)}}}
 return kwa}
+$B.parse_tuple=function(args,start,types){
+if(args.length-start !==types.length){$B.RAISE(_b_.TypeError,`function takes exactly ${types.length} arguments `+
+`(${args.length - start} given)`
+)}
+for(let i=0,len=types.length;i < len;i++){let type=types[i]
+let arg=args[start+i]
+switch(type){case 'O':
+break
+case 'U':
+if(! $B.is_str(arg)){$B.RAISE(_b_.TypeError,`argument ${i + 1} must be str, `+
+`not ${$B.class_name(arg)}`
+)}
+break
+case 'n':
+$B.PyNumber_Index(arg)
+break}}}
 $B.check_nb_args=function(name,expected,args){
 var len=args.length,last=args[len-1]
 if(last && last.$kw){var kw=last.$kw
@@ -1833,18 +1853,20 @@ return{done:false,value}}catch(err){if($B.is_exc(err,[_b_.StopIteration])){retur
 if(iterator[$B.INUM]){$B.set_inum(iterator[$B.INUM])}
 throw err}}}}}
 $B.unpacker=function(obj,nb_targets,has_starred){
-var test=false 
-if(test){console.log('unpacker',obj,nb_targets,has_starred)}
 var inum_rank=3
 if(has_starred){var nb_after_starred=arguments[3]
 inum_rank++}
 var inum=arguments[inum_rank]
-var t=_b_.list.$factory(obj),right_length=t.length,left_length=nb_targets+(has_starred ? nb_after_starred-1 :0)
-if(test){console.log('list from obj',t)}
+let it
+try{
+it=$B.make_js_iterator(obj)}catch(err){$B.set_inum(inum)
+$B.RAISE(_b_.TypeError,`cannot unpack non-iterable ${$B.class_name(obj)} object`
+)}
+var t=Array.from(it),right_length=t.length,left_length=nb_targets+(has_starred ? nb_after_starred-1 :0)
 if((! has_starred &&(right_length < nb_targets))||
 (has_starred &&(right_length < nb_targets-1))){$B.set_inum(inum)
 var exc=$B.EXC(_b_.ValueError,`not enough values to unpack `+
-`(expected ${has_starred ? ' at least ' : ''} `+
+`(expected ${has_starred ? 'at least ' : ''}`+
 `${left_length}, got ${right_length})`)
 throw exc}
 if((! has_starred)&& right_length > left_length){var exc=$B.EXC(_b_.ValueError,"too many values to unpack "+
@@ -2373,8 +2395,9 @@ var res=Object.create(null)
 res.ob_type=cls
 if(cls !==object){$B.set_dict(res,$B.obj_dict({}))}
 return res}
-function getNewArguments(self,klass){var newargs_ex=$B.$getattr(self,'__getnewargs_ex__',null)
-if(newargs_ex !==null){let newargs=$B.$call(newargs_ex)
+function getNewArguments(self,klass){
+var newargs_ex=$B.$getattr(klass,'__getnewargs_ex__',null)
+if(newargs_ex !==null){let newargs=$B.$call(newargs_ex,self)
 if((! newargs)||$B.get_class(newargs)!==_b_.tuple){$B.RAISE(_b_.TypeError,"__getnewargs_ex__ should "+
 `return a tuple, not '${$B.class_name(newargs)}'`)}
 if(newargs.length !=2){$B.RAISE(_b_.ValueError,"__getnewargs_ex__ should "+
@@ -2512,7 +2535,8 @@ if($B.search_slot(type,'tp_new',$B.NULL)===object.tp_new){$B.RAISE(_b_.TypeError
 `argument (the instance to initialize)`
 )}}
 return _b_.None}
-_b_.object.tp_new=function(cls,args,kw){if(args.length > 0 ||! $B.str_dict_empty(kw)){if(cls.tp_new !==_b_.object.tp_new){$B.RAISE(_b_.TypeError,"object.__new__() takes exactly one argument "+
+_b_.object.tp_new=function(cls,args,kw){if(! $B.is_type(cls)){$B.RAISE(_b_.TypeError,`object.__new__(X): X is not a type object (${$B.class_name(cls)})`)}
+if(args.length > 0 ||! $B.str_dict_empty(kw)){if(cls.tp_new !==_b_.object.tp_new){$B.RAISE(_b_.TypeError,"object.__new__() takes exactly one argument "+
 "(the type to instantiate)"
 )}
 if(cls.tp_init===_b_.object.tp_init){$B.RAISE(_b_.TypeError,`${$B.get_name(cls)} takes no arguments`)}}
@@ -2522,7 +2546,7 @@ am.sort()
 var plural=am.length==1 ? '' :'s'
 $B.RAISE(_b_.TypeError,`Can't instantiate abstract class ${$B.get_name(cls)} `+
 `without an implementation for abstract method${plural} `+
-` '${am.join(', ')}'`
+am.map(m=> `'${m}'`).join(', ')
 )}
 var res={ob_type:cls}
 if(cls !==object &&
@@ -2602,6 +2626,8 @@ return $B.$call(_reduce_ex,self,protocol)}
 var res=[$B.module_getattr($B.imported.copyreg,'__newobj__')]
 var arg2=[klass]
 var newargs=getNewArguments(self,klass)
+if(! newargs && klass !==object && $B.is_builtin_type(klass)){
+$B.RAISE(_b_.TypeError,`cannot pickle '${$B.class_name(self)}' object`)}
 if(newargs){if(newargs.kwargs && _b_.dict.mp_length(newargs.kwargs)> 0){res=[$B.module_getattr($B.imported.copyreg,'__newobj_ex__')]
 arg2=[klass,newargs.args,newargs.kwargs]}else{
 arg2=arg2.concat(newargs.args)}}
@@ -2623,7 +2649,8 @@ if($B.is_dict(self)){
 key_value_iterator=_b_.iter(_b_.dict.tp_funcs.items(self))}
 res.push(key_value_iterator)
 return $B.fast_tuple(res)}
-object_funcs.__sizeof__=function(self){}
+object_funcs.__sizeof__=function(self){
+return 16}
 object_funcs.__subclasshook__=function(self){return _b_.NotImplemented}
 _b_.object.functions_or_methods=["__new__"]
 _b_.object.tp_methods=["__reduce_ex__","__reduce__","__getstate__","__subclasshook__","__init_subclass__","__format__","__sizeof__","__dir__"
@@ -2647,14 +2674,6 @@ var classdef_frame=$B.frame_obj.prev.frame
 var module=classdef_frame[2]
 if(Object.hasOwn(classdef_frame[1],'__name__')){module=classdef_frame[1].__name__}
 $B.str_dict_set(dict,'__module__',module)
-var stack=[]
-var frame_obj=$B.frame_obj.prev
-while(frame_obj.prev){var frame=frame_obj.frame
-if(frame[0]==frame[2]){break}
-stack.push(frame_obj.frame[0]+'.')
-frame_obj=frame_obj.prev}
-var qualname=`${stack.reverse().join('')}${class_name}`
-$B.str_dict_set(dict,'__qualname__',qualname)
 if($B.str_dict_get(dict,'__eq__',$B.NULL)!==$B.NULL &&
 $B.str_dict_get(dict,'__hash__',$B.NULL)===$B.NULL){$B.str_dict_set(dict,'__hash__',_b_.None)}
 var slots=$B.str_dict_get(dict,'__slots__',$B.NULL)
@@ -2776,6 +2795,7 @@ $B.RAISE(_b_.TypeError,`${$B.get_name(metaclass)}.__prepare__() must return a ma
 `not ${$B.class_name(class_dict)}`)}
 if(orig_bases !==bases){$B.str_dict_set(class_dict,'__orig_bases__',orig_bases)}
 if(! $B.hasOnlyStringKeys(class_dict)){$B.warn(_b_.RuntimeWarning,`non-string key in the __dict__ of class ${class_name}`)}
+$B.str_dict_set(class_dict,'__qualname__',qualname)
 return class_dict}
 $B.resolve_mro_entries=function(bases){
 var new_bases=[],has_mro_entries=false
@@ -3075,7 +3095,7 @@ qualname=(module===$B.NULL ||module=='builtins')? name :
 module+"."+name}else{
 qualname=name}
 return "<class '"+qualname+"'>"}
-_b_.type.tp_call=function(cls){var $=$B.args('__call__',1,{cls:null},arguments,null,'args','kw'),cls=$.cls,args=$.args,kw=$.kw,kw_len=_b_.dict.mp_length(kw)
+_b_.type.tp_call=function(cls){var $=$B.args(cls?.tp_name ?? '__call__',1,{cls:null},arguments,null,'args','kw'),cls=$.cls,args=$.args,kw=$.kw,kw_len=_b_.dict.mp_length(kw)
 var test=false 
 if(test){console.log('type.tp_call',cls,args)
 console.log(Error('trace').stack)}
@@ -3842,11 +3862,12 @@ $B.set_func_names(staticmethod,"builtins")
 $B.builtin_function_or_method.tp_richcompare=function(self,other,op){if((op !='__eq__' && op !='__ne__')||
 ! $B.$isinstance(self,$B.builtin_function_or_method)||
 ! $B.$isinstance(other,$B.builtin_function_or_method)){return _b_.NotImplemented}
-var res
-var eq=self===other
-if(op=='__eq__'){res=eq}else{
-res=! eq}
-return res}
+let res
+if(self===other){res=true}else if(self.m_self===undefined ||other.m_self===undefined){res=false}else{
+res=self.m_self===other.m_self &&
+self.ml && other.ml
+&& self.ml.ml_name===other.ml.ml_name}
+return op=='__eq__' ? res :! res}
 $B.builtin_function_or_method.tp_repr=function(self){if(self.m_self){return `<built-in method ${self.ml.ml_name} `+
 `of ${$B.class_name(self.m_self)} object>`}else{
 var name=self.$function_infos[$B.func_attrs.__name__]
@@ -3979,7 +4000,8 @@ var kwd={}
 for(var item of _b_.dict.$iter_items(value)){kwd[item.key]=item.value}
 self.$function_infos[$B.func_attrs.__kwdefaults__]=kwd
 reset_args_parser(self)}
-function_funcs.__module___get=function(self){return self.$function_infos[$B.func_attrs.__module__]}
+function_funcs.__module___get=function(self){var res=self.$function_infos[$B.func_attrs.__module__]
+return res===$B.NULL ||res===undefined ? _b_.None :res}
 function_funcs.__module___set=function(self,value){self.$function_infos[$B.func_attrs.__module__]=value}
 function_funcs.__name___get=function(self){return self.$function_infos[$B.func_attrs.__name__]}
 function_funcs.__name___set=function(self,value){self.$function_infos[$B.func_attrs.__name__]=value}
@@ -4971,7 +4993,8 @@ var in_own_dict=own_dict
 :$B.NULL
 if(test){console.log('in klass dict',in_klass_dict)
 console.log('in own dict',in_own_dict)}
-if(in_klass_dict){switch(in_klass_dict.ob_type){case $B.function:
+if(in_klass_dict &&
+klass.$getattribute===_b_.object.tp_getattro){switch(in_klass_dict.ob_type){case $B.function:
 if(in_own_dict===$B.NULL){return $B.method.$factory(in_klass_dict,obj)}
 break
 case _b_.staticmethod:
@@ -5063,10 +5086,16 @@ help.__repr__=help.__str__=function(){return "Type help() for interactive help, 
 _b_.hex=function(obj){check_nb_args_no_kw('hex',1,arguments)
 return bin_hex_oct(16,obj)}
 _b_.id=function(obj){check_nb_args_no_kw('id',1,arguments)
-if(obj[$B.ID]!==undefined){return obj[$B.ID]}else if($B.$isinstance(obj,[_b_.str,_b_.int,_b_.float])){return $B.$call($B.$getattr(_b_.str.$factory(obj),'__hash__'))}else{
-return obj[$B.ID]=$B.UUID()}}
+if(obj[$B.ID]!==undefined){return obj[$B.ID]}
+var t=typeof obj
+if(t==='string' ||t==='number' ||t==='bigint' ||
+t==='boolean' ||$B.get_class(obj)===_b_.float){
+return $B.$call($B.$getattr(
+_b_.str.$factory($B.class_name(obj)+':'+_b_.str.$factory(obj)),'__hash__'))}
+return obj[$B.ID]=$B.UUID()}
 _b_.__import__=function(){
 var $=$B.args('__import__',5,{name:null,globals:null,locals:null,fromlist:null,level:null},arguments,{globals:None,locals:None,fromlist:_b_.tuple.$factory(),level:0},null,null)
+if($.name==='' && $.level===0){$B.RAISE(_b_.ValueError,"Empty module name")}
 return $B.$__import__($.name,$.globals,$.locals,$.fromlist)}
 _b_.input=function(msg){var res=prompt(msg ||'')||''
 if($B.imported["sys"]&&
@@ -5155,7 +5184,7 @@ var len=_b_.len=function(obj){check_nb_args_no_kw('len',1,arguments)
 var klass=$B.get_class(obj)
 var method=$B.search_in_mro(klass,'__len__',null)
 if(method===null){$B.RAISE(_b_.TypeError,"object of type '"+
-$B.class_name(obj)+"' has no len() VVV")}
+$B.class_name(obj)+"' has no len()")}
 let res=$B.$call(method,obj)
 if(res===undefined){console.log('call',method,'with obj',obj,'returns undef')}
 if(!$B.is_int(res)){$B.RAISE(_b_.TypeError,`'${$B.class_name(res)}' object cannot be interpreted as an integer`
@@ -5176,7 +5205,7 @@ map.$factory=function(){var $=$B.args('map',2,{func:null,it1:null},arguments,nul
 var iter_args=[$B.make_js_iterator($.it1)]
 for(var arg of $.args){iter_args.push($B.make_js_iterator(arg))}
 return{
-ob_type:map,args:iter_args,func:func}}
+ob_type:map,args:iter_args,func:func,iterables:[$.it1,...$.args]}}
 _b_.map.tp_iter=function(self){return self}
 _b_.map.tp_iternext=function*(self){var args=[]
 for(var iter of self.args){var arg=iter.next()
@@ -6308,7 +6337,7 @@ _b_.AttributeError.tp_members=[["name",$B.TYPES.OBJECT,"name",0],["obj",$B.TYPES
 ]
 $B.set_func_names(_b_.AttributeError,'builtins')
 $B.attr_error=function(name,obj){var msg
-if($B.is_type(obj)){msg=`type object '${obj.tp_name}'`}else{
+if($B.is_type(obj)){msg=`type object '${obj.tp_name}'`}else if($B.exact_type(obj,$B.module)){msg=`module '${$B.module_getattr(obj, '__name__')}'`}else{
 msg=`'${$B.class_name(obj)}' object`}
 msg+=` has no attribute '${name}'`
 return $B.$call(_b_.AttributeError,msg,[],{$kw:[{name,obj}]})}
@@ -6323,6 +6352,94 @@ _b_.UnboundLocalError.tp_repr=function(self){return self.args[0]}
 $B.set_func_names(_b_.UnboundLocalError,'builtins')
 _b_.IndexError.tp_new=function(cls,args,kw){return _b_.BaseException.tp_new(cls,args,kw)}
 var IndexError_funcs=_b_.IndexError.tp_funcs={}
+const unicode_error_members=[["encoding",$B.TYPES.OBJECT,"encoding",0],["object",$B.TYPES.OBJECT,"object",0],["start",$B.TYPES.OBJECT,"start",0],["end",$B.TYPES.OBJECT,"end",0],["reason",$B.TYPES.OBJECT,"reason",0]
+]
+_b_.UnicodeDecodeError.tp_str=function(self){let len=_b_.bytes.mp_length(self.object);
+let start=self.start
+let end=self.end
+let result
+if((start >=0 && start < len)&&
+(end >=0 && end <=len)&&
+end==start+1){let badbyte=_b_.bytes.mp_subscript(self.object,start)& 0xff
+let b=badbyte.toString(16)
+b='0'.repeat(2-b.length)+b
+result=`'${self.encoding}' codec can't decode byte 0x${b}`+
+` in position ${start}: ${self.reason}`}else{
+result=`'${self.encoding}' codec can't decode bytes `+
+`in position ${start}-${end}: ${self.reason}`}
+return result}
+_b_.UnicodeDecodeError.tp_init=function(self){let[args,kw]=$B.parse_args_kw('UnicodeDecodeError',arguments)
+if(_b_.dict.mp_length(kw)> 0){$B.RAISE(_b_.TypeError,'UnicodeDecodeError() takes no keyword arguments'
+)}
+$B.parse_tuple(args,1,'UOnnU')
+let[_,encoding,object,start,end,reason]=args
+self.encoding=encoding
+if(! $B.is_bytes(object)){let buf=$B.$call($B.$getattr(object,'__buffer__',$B.NULL))
+object=buf.obj}
+self.object=object
+self.start=start
+self.end=end
+self.reason=reason}
+_b_.UnicodeDecodeError.tp_new=function(cls,args,kw){let obj={ob_type:cls}
+$B.init_dict(obj)
+return obj}
+_b_.UnicodeDecodeError.tp_members=unicode_error_members
+_b_.UnicodeEncodeError.tp_str=function(self){let obj=self.object
+let char
+let pos
+if(self.end-self.start==1){let c=_b_.str.mp_subscript(obj,self.start)
+let cp=_b_.ord(c)
+let s=cp.toString(16)
+if(cp < 0xff){s='0'.repeat(2-s.length)+s}else if(cp < 0xffff){s='0'.repeat(4-s.length)+s}else{
+s='0'.repeat(8-s.length)+s}
+char=`character '\\x${s}'`
+pos=self.start}else{
+char=`characters`
+pos=`${self.start}-${self.end - 1}`}
+return `'${self.encoding}' codec can't encode `+
+`${char} in position ${pos}: ${self.reason}`}
+_b_.UnicodeEncodeError.tp_init=function(self){let[args,kw]=$B.parse_args_kw('UnicodeEncodeError',arguments)
+if(_b_.dict.mp_length(kw)> 0){$B.RAISE(_b_.TypeError,'UnicodeEncodeError() takes no keyword arguments'
+)}
+$B.parse_tuple(args,1,'UUnnU')
+let[_,encoding,object,start,end,reason]=args
+self.encoding=encoding
+self.object=object
+self.start=start
+self.end=end
+self.reason=reason}
+_b_.UnicodeEncodeError.tp_new=function(cls,args,kw){let obj={ob_type:cls}
+$B.init_dict(obj)
+return obj}
+_b_.UnicodeEncodeError.tp_members=unicode_error_members
+_b_.UnicodeTranslateError.tp_str=function(self){let obj=self.object
+let char
+let pos
+if(self.end-self.start==1){let c=_b_.str.mp_subscript(obj,self.start)
+let cp=_b_.ord(c)
+let s=cp.toString(16)
+if(cp < 0xff){s='0'.repeat(2-s.length)+s}else if(cp < 0xffff){s='0'.repeat(4-s.length)+s}else{
+s='0'.repeat(8-s.length)+s}
+char=`character '\\x${s}'`
+pos=self.start}else{
+char=`characters`
+pos=`${self.start}-${self.end - 1}`}
+return `'${self.encoding}' codec can't translate `+
+`${char} in position ${pos}: ${self.reason}`}
+_b_.UnicodeTranslateError.tp_init=function(self){let[args,kw]=$B.parse_args_kw('UnicodeTranslateError',arguments)
+if(_b_.dict.mp_length(kw)> 0){$B.RAISE(_b_.TypeError,'UnicodeTranslateError() takes no keyword arguments'
+)}
+$B.parse_tuple(args,1,"UnnU")
+let[_,encoding,object,start,end,reason]=args
+self.encoding=encoding
+self.object=object
+self.start=start
+self.end=end
+self.reason=reason}
+_b_.UnicodeTranslateError.tp_new=function(cls,args,kw){let obj={ob_type:cls}
+$B.init_dict(obj)
+return obj}
+_b_.UnicodeTranslateError.tp_members=unicode_error_members
 $B.name_error=function(name){var exc=$B.$call(_b_.NameError,`name '${name}' is not defined`)
 exc.name=name
 return exc}
@@ -6503,9 +6620,8 @@ token.lineno==ast_obj.func.end_lineno &&
 token.col_offset >=ast_obj.func.end_col_offset){opening_parenth=reset_lineno(token)}else if(token.string==')'){closing_parenth=reset_lineno(token)}}}
 var func=reset_lineno(ast_obj.func)
 return fill_marks(lines,lineno,func.col_offset,'~',opening_parenth.lineno,opening_parenth.col_offset,'^',closing_parenth.end_lineno,closing_parenth.end_col_offset)}
-function handle_Expr_error(lines,lineno,ast_obj){var reset_lineno=make_line_setter(lineno)
-var expr=reset_lineno(ast_obj)
-return fill_marks(lines,lineno,expr.col_offset,'^',expr.end_lineno,expr.end_col_offset)}
+function handle_Expr_error(lines,positions){let[lineno,end_lineno,col_offset,end_col_offset]=positions
+return fill_marks(lines,lineno,col_offset,'^',end_lineno,end_col_offset)}
 function is_before(obj,lineno,col){
 return lineno < obj.lineno ||
 (lineno==obj.lineno && col < obj.col_offset)}
@@ -6580,7 +6696,7 @@ lines,lineno,expr.value,tokens))
 break
 default:
 trace.push(handle_Expr_error(
-lines,lineno,expr.value))
+lines,positions))
 break}}catch(err){if($B.get_option('debug')> 1){console.log('error in error handlers',err)}
 trace.push(make_trace_lines(lines,lineno,expr))}
 break
@@ -7079,16 +7195,6 @@ for(var j=0;j < seq_len;j++){if(self.source[i+j]!=seq[j]){found=0
 break}}
 nb+=found}
 return nb}
-function decode(self){var $=$B.args("decode",3,{self:null,encoding:null,errors:null},arguments,{encoding:"utf-8",errors:"strict"},null,null)
-switch($.errors){case 'strict':
-case 'ignore':
-case 'replace':
-case 'surrogateescape':
-case 'surrogatepass':
-case 'xmlcharrefreplace':
-case 'backslashreplace':
-return decode($.self,$.encoding,$.errors)
-default:}}
 function endswith(){var $=$B.args('endswith',4,{self:null,suffix:null,start:null,end:null},arguments,{start:-1,end:-1},null,null)
 var self=$.self,suffix=$.suffix,start=$.start,end=$.end
 if(is_bytes_like(suffix)){var seq=get_list_from_bytes_like(suffix)
@@ -7419,6 +7525,9 @@ break}}catch(err){}}
 frame_obj=frame_obj.prev}
 if(has_exports){if(self.exports){no_resizing()}}else{
 self.exports=0}}
+function decode_error(obj,encoding,start,end,reason){let exc=_b_.UnicodeDecodeError.tp_new(_b_.UnicodeDecodeError)
+_b_.UnicodeDecodeError.tp_init(exc,encoding,obj,start,end,reason)
+return exc}
 bytearray.$factory=function(){var res=bytearray.tp_new(bytearray,Array.from(arguments),$B.empty_dict())
 res.exports=0
 return res}
@@ -7444,7 +7553,12 @@ try{
 var $temp=_b_.list.$factory(value)}catch(err){$B.RAISE(_b_.TypeError,"can only assign an iterable")}
 if($temp.length !=stop-start){check_exports(self)}
 for(var i=$temp.length-1;i >=0;i--){if(! $B.is_int($temp[i])){$B.RAISE(_b_.TypeError,'an integer is required')}else if($temp[i]> 255){$B.RAISE(_b_.ValueError,"byte must be in range(0, 256)")}}
-self.source.splice.apply(self.source,[start,0].concat($temp))}else{
+if($temp.length > 16384){
+var tail=self.source.slice(start)
+self.source.length=start
+for(var k=0;k < $temp.length;k+=16384){self.source.push.apply(self.source,$temp.slice(k,k+16384))}
+for(var k=0;k < tail.length;k+=16384){self.source.push.apply(self.source,tail.slice(k,k+16384))}}else{
+self.source.splice.apply(self.source,[start,0].concat($temp))}}else{
 $B.RAISE(_b_.TypeError,'list indices must be integer, not '+
 $B.class_name(arg))}}
 _b_.bytearray.tp_repr=function(self){var b=_b_.bytes.tp_repr(self)
@@ -7714,11 +7828,8 @@ s+=String.fromCodePoint(byte)
 pos++}else if((byte >> 5)==6){
 if(b[pos+1]===undefined){err_info=[byte,pos,"end"]}else if((b[pos+1]& 0xc0)!=0x80){err_info=[byte,pos,"continuation"]}
 if(err_info !==null){if(errors=="ignore"){pos++}else{
-$B.RAISE(_b_.UnicodeDecodeError,"'utf-8' codec can't decode byte 0x"+
-err_info[0].toString(16)+"  in position "+
-err_info[1]+
-(err_info[2]=="end" ? ": unexpected end of data" :
-": invalid continuation byte"))}}else{
+throw decode_error(obj,enc,err_info[1],err_info[1]+1,err_info[2]=="end" ? ": unexpected end of data" :
+": invalid continuation byte")}}else{
 let cp=byte & 0x1f
 cp <<=6
 cp+=b[pos+1]& 0x3f
@@ -7727,11 +7838,8 @@ pos+=2}}else if((byte >> 4)==14){
 if(b[pos+1]===undefined){err_info=[byte,pos,"end",pos+1]}else if((b[pos+1]& 0xc0)!=0x80){err_info=[byte,pos,"continuation",pos+2]}else if(b[pos+2]===undefined){err_info=[byte,pos+'-'+(pos+1),"end",pos+2]}else if((b[pos+2]& 0xc0)!=0x80){err_info=[byte,pos,"continuation",pos+3]}
 if(err_info !==null){if(errors=="ignore"){pos=err_info[3]}else if(errors=="surrogateescape"){for(let i=pos;i < err_info[3];i++){s+=String.fromCodePoint(0xdc80+b[i]-0x80)}
 pos=err_info[3]}else{
-$B.RAISE(_b_.UnicodeDecodeError,"'utf-8' codec can't decode byte 0x"+
-err_info[0].toString(16)+"  in position "+
-err_info[1]+
-(err_info[2]=="end" ? ": unexpected end of data" :
-": invalid continuation byte"))}}else{
+throw decode_error(obj,enc,err_info[3],err_info[3]+1,err_info[2]=="end" ? ": unexpected end of data" :
+": invalid continuation byte")}}else{
 let cp=byte & 0xf
 cp=cp << 12
 cp+=(b[pos+1]& 0x3f)<< 6
@@ -7741,11 +7849,8 @@ pos+=3}}else if((byte >> 3)==30){
 if(b[pos+1]===undefined){err_info=[byte,pos,"end",pos+1]}else if((b[pos+1]& 0xc0)!=0x80){err_info=[byte,pos,"continuation",pos+2]}else if(b[pos+2]===undefined){err_info=[byte,pos+'-'+(pos+1),"end",pos+2]}else if((b[pos+2]& 0xc0)!=0x80){err_info=[byte,pos,"continuation",pos+3]}else if(b[pos+3]===undefined){err_info=[byte,pos+'-'+(pos+1)+'-'+(pos+2),"end",pos+3]}
 if(err_info !==null){if(errors=="ignore"){pos=err_info[3]}else if(errors=="surrogateescape"){for(let i=pos;i < err_info[3];i++){s+=String.fromCodePoint(0xdc80+b[i]-0x80)}
 pos=err_info[3]}else{
-$B.RAISE(_b_.UnicodeDecodeError,"'utf-8' codec can't decode byte 0x"+
-err_info[0].toString(16)+"  in position "+
-err_info[1]+
-(err_info[2]=="end" ? ": unexpected end of data" :
-": invalid continuation byte"))}}else{
+throw decode_error(obj,enc,err_info[3],err_info[3]+1,err_info[2]=="end" ? ": unexpected end of data" :
+": invalid continuation byte")}}else{
 let cp=byte & 0xf
 cp=cp << 18
 cp+=(b[pos+1]& 0x3f)<< 12
@@ -7755,9 +7860,7 @@ s+=String.fromCodePoint(cp)
 pos+=4}}else{
 if(errors=="ignore"){pos++}else if(errors=="surrogateescape"){s+=String.fromCodePoint(0xdc80+b[pos]-0x80)
 pos++}else{
-$B.RAISE(_b_.UnicodeDecodeError,"'utf-8' codec can't decode byte 0x"+
-byte.toString(16)+" in position "+pos+
-": invalid start byte")}}}
+throw decode_error(obj,enc,pos,pos+1,'invalid start byte')}}}
 return s
 case "utf_8_sig":{
 let bom=b[0]==0xef && b[1]==0xbb && b[2]==0xbf
@@ -7797,17 +7900,26 @@ replace(/\\t/g,"\t").
 replace(/\\'/g,"'").
 replace(/\\"/g,'"')
 case "raw_unicode_escape":
-if([bytes,bytearray].includes($B.get_class(obj))){obj=decode(obj,"latin-1","strict")}
-return obj.replace(/\\u([a-fA-F0-9]{4})/g,function(mo){let cp=parseInt(mo.substr(2),16)
-return String.fromCharCode(cp)})
+let str=decode(obj,"latin-1","strict")
+let uni_re=/(\\U)([a-fA-F0-9]{0,8})|(\\u)([a-fA-F0-9]{0,4})/g
+let start=0
+for(let mo of str.matchAll(uni_re)){s+=str.substring(start,mo.index)
+if(mo[1]=='\\U'){if(mo[2].length < 8){throw decode_error(obj,enc,mo.index,mo.index+mo[0].length-1,'truncated \\UXXXXXXXX escape')}
+let cp=parseInt(mo[2],16)
+if(cp > 0x10ffff){throw decode_error(obj,enc,mo.index,mo.index+mo[0].length-1,'\\Uxxxxxxxx out of range')}
+s+=String.fromCodePoint(cp)
+start=mo.index+mo[0].length}else{
+if(mo[4].length < 4){throw decode_error(obj,enc,mo.index,mo.index+mo[0].length-1,'truncated \\uXXXX escape')}
+let cp=parseInt(mo[4],16)
+s+=String.fromCodePoint(cp)
+start=mo.index+mo[0].length}}
+s+=str.substr(start)
+return s
 case "ascii":
 for(let i=0,len=b.length;i < len;i++){let cp=b[i]
 if(cp <=127){s+=String.fromCharCode(cp)}else{
 if(errors=="ignore"){}else if(errors=="backslashreplace"){s+='\\x'+cp.toString(16)}else{
-let msg="'ascii' codec can't decode byte 0x"+
-cp.toString(16)+" in position "+i+
-": ordinal not in range(128)"
-$B.RAISE(_b_.UnicodeDecodeError,msg)}}}
+throw decode_error(obj,enc,i,i+1,'ordinal not in range(128)')}}}
 break
 default:
 try{
@@ -7964,6 +8076,8 @@ return parts.join('')}
 return to_str(self.source).indexOf(to_str(other.source))>-1}
 _b_.bytes.bf_getbuffer=function(self,flags){return $B.$call(_b_.memoryview,self)}
 var bytes_funcs=_b_.bytes.tp_funcs={}
+bytes_funcs.__sizeof__=function(self){
+return 33+(self.source ? self.source.length :0)}
 bytes_funcs.__bytes__=function(self){if($B.exact_type(self,_b_.bytes)){return self}
 return{
 ob_type:_b_.bytes,source:self.source.slice()}}
@@ -8025,7 +8139,7 @@ bytes_funcs.title=function(){return title.apply(_b_.bytes,arguments)}
 bytes_funcs.translate=function(){return translate.apply(_b_.bytes,arguments)}
 bytes_funcs.upper=function(){return upper.apply(null,arguments)}
 bytes_funcs.zfill=function(){return zfill.apply(_b_.bytes,arguments)}
-_b_.bytes.tp_methods=["__getnewargs__","__bytes__","capitalize","center","count","decode","endswith","expandtabs","find","hex","index","isalnum","isalpha","isascii","isdigit","islower","isspace","istitle","isupper","join","ljust","lower","lstrip","partition","replace","removeprefix","removesuffix","rfind","rindex","rjust","rpartition","rsplit","rstrip","split","splitlines","startswith","strip","swapcase","title","translate","upper","zfill"
+_b_.bytes.tp_methods=["__sizeof__","__getnewargs__","__bytes__","capitalize","center","count","decode","endswith","expandtabs","find","hex","index","isalnum","isalpha","isascii","isdigit","islower","isspace","istitle","isupper","join","ljust","lower","lstrip","partition","replace","removeprefix","removesuffix","rfind","rindex","rjust","rpartition","rsplit","rstrip","split","splitlines","startswith","strip","swapcase","title","translate","upper","zfill"
 ]
 _b_.bytes.classmethods=["fromhex"]
 _b_.bytes.staticmethods=["maketrans"]
@@ -8039,11 +8153,12 @@ var memory_iterator_funcs=$B.memory_iterator.tp_funcs={}
 var memoryview=_b_.memoryview
 memoryview.$factory=function(obj){$B.check_nb_args_no_kw('memoryview',1,arguments)
 if($B.get_class(obj)===memoryview){return obj}
-var cls_obj=$B.get_class(obj)
-var has_buffer=$B.$getattr(obj,'__buffer__',$B.NULL)!==$B.NULL
-||(cls_obj && cls_obj.bf_getbuffer)
-||(cls_obj && cls_obj.$buffer_protocol)
-if(!has_buffer){$B.RAISE(_b_.TypeError,"memoryview: a bytes-like object "+
+if(! $B.is_buffer(obj)){
+var buffer_meth=$B.$getattr(obj,'__buffer__',$B.NULL)
+if(buffer_meth !==$B.NULL){var mv=$B.$call(buffer_meth,0)
+if($B.get_class(mv)!==memoryview){$B.RAISE(_b_.TypeError,`__buffer__ should return memoryview, not ${$B.class_name(mv)}`)}
+return mv}
+$B.RAISE(_b_.TypeError,"memoryview: a bytes-like object "+
 "is required, not '"+$B.class_name(obj)+"'"
 )}
 obj.exports=obj.exports ?? 0
@@ -8084,18 +8199,7 @@ return "<memory>"}}
 _b_.memoryview.tp_hash=function(self){$B.RAISE(_b_.NotImplementedError,'__hash__')}
 _b_.memoryview.tp_iter=function(self){return{
 ob_type:$B.memory_iterator,it:$B.make_js_iterator(self.obj)}}
-_b_.memoryview.tp_new=function(cls,args,kw){var obj=args[0]
-if($B.get_class(obj)===memoryview){return obj}
-var cls_obj=$B.get_class(obj)
-var has_buffer=$B.$getattr(obj,'__buffer__',$B.NULL)!==$B.NULL
-||(cls_obj && cls_obj.bf_getbuffer)
-||(cls_obj && cls_obj.$buffer_protocol)
-if(has_buffer){obj.exports=obj.exports ?? 0
-obj.exports++
-var res={ob_type:cls,obj:obj,mbuf:null,format:'B',itemsize:1,ndim:1,shape:_b_.tuple.$factory([_b_.len(obj)]),strides:_b_.tuple.$factory([1]),suboffsets:_b_.tuple.$factory([]),c_contiguous:true,f_contiguous:true,contiguous:true}
-return res}else{
-$B.RAISE(_b_.TypeError,"memoryview: a bytes-like object "+
-"is required, not '"+$B.class_name(obj)+"'")}}
+_b_.memoryview.tp_new=function(cls,args,kw){return memoryview.$factory.apply(null,args)}
 _b_.memoryview.mp_length=function(self){return _b_.len(self.obj)/self.itemsize}
 _b_.memoryview.mp_subscript=function(self,key){var res
 if($B.is_int(key)){var start=key*self.itemsize
@@ -8204,7 +8308,10 @@ for(var j=1;j < 4;j++){item+=coef*self.obj.source[i+j]
 coef*=256}
 res.push(item)}
 return res}}}
-memoryview_funcs.toreadonly=function(self){self.readonly=1}
+memoryview_funcs.toreadonly=function(self){
+var res=memoryview.$factory(self.obj)
+res.readonly=1
+return res}
 _b_.memoryview.tp_methods=["release","tobytes","hex","tolist","cast","toreadonly","count","index","__enter__","__exit__"]
 _b_.memoryview.classmethods=["_from_flags","__class_getitem__"]
 _b_.memoryview.tp_getset=["obj","nbytes","readonly","itemsize","format","ndim","shape","strides","suboffsets","c_contiguous","f_contiguous","contiguous"]
@@ -9350,7 +9457,14 @@ if(fmt.precision){self=self.substr(0,fmt.precision)}
 fmt.align=fmt.align ||"<"
 return $B.format_width(preformat(self,fmt),fmt)}
 str_funcs.__getnewargs__=function(self){return str.$getnewargs($B.single_arg('__getnewargs__','self',arguments))}
-str_funcs.__sizeof__=function(self){return 62}
+str_funcs.__sizeof__=function(self){
+var len=0,maxchar=0
+for(var c of to_string(self)){c=c.codePointAt(0)
+if(c > maxchar){maxchar=c}
+len++}
+if(maxchar < 0x80){return 40+len+1}
+var kind=maxchar < 0x100 ? 1 :maxchar < 0x10000 ? 2 :4
+return 56+(len+1)*kind}
 str_funcs.capitalize=function(self){$B.check_nb_args_no_kw('str.capitalize',1,arguments)
 var _self=to_string(self)
 if(_self.length==0){return ""}
@@ -10338,7 +10452,7 @@ $B.class_name(len))}
 if(["little","big"].indexOf(byteorder)==-1){$B.RAISE(_b_.ValueError,"byteorder must be either 'little' or 'big'")}
 var x=toBigInt(self)
 if(x < 0n){if(! signed){$B.RAISE(_b_.OverflowError,"can't convert negative int to unsigned")}
-x=BigInt(Math.pow(256,len))+x}
+x=(256n**BigInt(len))+x}
 var res=[],value=x
 while(value > 0n){var quotient=value/256n,rest=value-256n*quotient
 res.push(int_or_long(rest))
@@ -11357,10 +11471,10 @@ for(var entry of dict.$iter_items(d)){res[entry.key]=entry.value}
 return res}
 dict.$iter_items=function*(d){var version=d[VERSION]
 if(! d[KEYS]){for(let key in d){yield{key,value:d[key]}
-if(d[VERSION]!==version){$B.RAISE(_b_.RuntimeError,'dictionary changed size during iteration 1')}}
+if(d[VERSION]!==version){$B.RAISE(_b_.RuntimeError,'dictionary changed size during iteration')}}
 return}
 for(var i=0,len=d[KEYS].length;i < len;i++){if(d[KEYS][i]!==undefined){yield{key:d[KEYS][i],value:d[VALUES][i],hash:d[HASHES][i]}
-if(d[VERSION]!==version){$B.RAISE(_b_.RuntimeError,'dictionary changed size during iteration 2')}}}}
+if(d[VERSION]!==version){$B.RAISE(_b_.RuntimeError,'dictionary changed size during iteration')}}}}
 var $copy_dict=function(left,right){
 right[VERSION]=right[VERSION]||0
 var right_version=right[VERSION]
@@ -11473,11 +11587,11 @@ dict.$setitem(d,items[0],items[1])
 i++}}
 dict.$iter_items_reversed=function*(d){var version=d[VERSION]
 if(! d[TABLE]){for(var item of Object.entries(d).reverse()){yield $B.fast_tuple(item)
-if(d[VERSION]!==version){$B.RAISE(_b_.RuntimeError,'changed in iteration')}}}else{
+if(d[VERSION]!==version){$B.RAISE(_b_.RuntimeError,'dictionary changed size during iteration')}}}else{
 for(var i=d[KEYS].length-1;i >=0;i--){var key=d[KEYS][i]
 if(key !==undefined){yield $B.fast_tuple([key,d[VALUES][i]])
-if(d[VERSION]!==version){$B.RAISE(_b_.RuntimeError,'changed in iteration')}}}}
-if(d[VERSION]!==version){$B.RAISE(_b_.RuntimeError,'changed in iteration')}}
+if(d[VERSION]!==version){$B.RAISE(_b_.RuntimeError,'dictionary changed size during iteration')}}}}
+if(d[VERSION]!==version){$B.RAISE(_b_.RuntimeError,'dictionary changed size during iteration')}}
 function convert_all_str(d){
 d[TABLE]=Object.create(null)
 d[KEYS]=[]
@@ -11978,14 +12092,9 @@ if(pos >=0 && pos < self.length){self.splice(pos,1)
 return _b_.None}
 $B.RAISE(_b_.IndexError,$B.class_name(self)+
 " index out of range")}
-if(isinstance(arg,_b_.slice)){var step=arg.step
-if(step===_b_.None){step=1}
-var start=arg.start
-if(start===_b_.None){start=step > 0 ? 0 :self.length}
-var stop=arg.stop
-if(stop===_b_.None){stop=step > 0 ? self.length :0}
-if(start < 0){start=self.length+start}
-if(stop < 0){stop=self.length+stop}
+if(isinstance(arg,_b_.slice)){
+var s=_b_.slice.$conv_for_seq(arg,self.length)
+var start=s.start,stop=s.stop,step=s.step
 let res=[],pos=0
 if(step > 0){if(stop > start){for(let i=start;i < stop;i+=step){if(self[i]!==undefined){res[pos++]=i}}}}else{
 if(stop < start){for(let i=start;i > stop;i+=step){if(self[i]!==undefined){res[pos++]=i}}
@@ -12077,7 +12186,12 @@ list_reverseiterator_funcs.__reduce__=function(self){return $B.fast_tuple([_b_.i
 list_reverseiterator_funcs.__setstate__=function(self){}
 $B.list_reverseiterator.tp_methods=["__length_hint__","__reduce__","__setstate__"]
 function set_list_slice(obj,start,stop,value){var res=_b_.list.$factory(value)
-obj.splice.apply(obj,[start,stop-start].concat(res))}
+if(res.length > 16384){
+var tail=obj.slice(stop)
+obj.length=start
+for(var k=0;k < res.length;k+=16384){obj.push.apply(obj,res.slice(k,k+16384))}
+for(var k=0;k < tail.length;k+=16384){obj.push.apply(obj,tail.slice(k,k+16384))}}else{
+obj.splice.apply(obj,[start,stop-start].concat(res))}}
 function set_list_slice_step(obj,start,stop,step,value){if(step==1){return set_list_slice(obj,start,stop,value)}
 if(step==0){$B.RAISE(_b_.ValueError,"slice step cannot be zero")}
 var repl=_b_.list.$factory(value),j=0,test,nb=0
@@ -14293,12 +14407,12 @@ _loader=$B.$getattr(spec,"loader",_b_.None)
 break}}}
 if(test){console.log('loader',_loader)}
 if(_loader===undefined){
-var message=mod_name
+var message=`No module named '${mod_name}'`
 if($B.protocol=="file"){message+=" (warning: cannot import local files with protocol 'file')"}
 var exc=$B.EXC(_b_.ModuleNotFoundError,message)
 exc.name=mod_name
 throw exc}
-if($B.is_none(module)){if(spec===_b_.None){$B.RAISE(_b_.ModuleNotFoundError,mod_name)}
+if($B.is_none(module)){if(spec===_b_.None){$B.RAISE(_b_.ModuleNotFoundError,`No module named '${mod_name}'`)}
 var _spec_name=$B.$getattr(spec,"name")
 if(!$B.is_none(_loader)){var create_module=$B.$getattr(_loader,"create_module",_b_.None)
 if(!$B.is_none(create_module)){module=$B.$call(create_module,spec)}}
@@ -14329,7 +14443,8 @@ $B.path_importer_cache={}
 function import_error(mod_name){var exc=$B.EXC(_b_.ImportError,mod_name)
 exc.name=mod_name
 throw exc}
-$B.$__import__=function(mod_name,globals,locals,fromlist){var $test=false 
+$B.$__import__=function(mod_name,globals,locals,fromlist){if(typeof mod_name !=='string' && ! $B.is_str(mod_name)){$B.RAISE(_b_.TypeError,'module name must be a string')}
+var $test=false 
 if($test){console.log("__import__",mod_name,'fromlist',fromlist)}
 var from_stdlib=false
 if(globals !==_b_.None){var file=$B.str_dict_get(globals,'__file__',$B.NULL)
@@ -14815,7 +14930,12 @@ while(frame_obj !==null){frame=frame_obj.frame
 exc=frame.$current_exception
 if(exc !==undefined){return exc}
 frame_obj=frame_obj.prev}
-return _b_.None},executable:$B.strip_host($B.brython_path+'brython.js'),float_repr_style:'short',getdefaultencoding:function(){return 'utf-8'},getrecursionlimit:function(){return $B.recursion_limit},getrefcount:function(){return 0},gettrace:function(){return $B.tracefunc ||_b_.None},getunicodeinternedsize:function(){
+return _b_.None},executable:$B.strip_host($B.brython_path+'brython.js'),float_repr_style:'short',getdefaultencoding:function(){return 'utf-8'},getsizeof:function(obj,dflt){
+try{
+var res=$B.$call($B.$getattr(obj,'__sizeof__'))
+if(typeof res=='number' ||typeof res=='bigint'){return res}}catch(err){}
+if(dflt !==undefined){return dflt}
+$B.RAISE(_b_.TypeError,"Type "+$B.class_name(obj)+" doesn't define __sizeof__")},getrecursionlimit:function(){return $B.recursion_limit},getrefcount:function(){return 0},gettrace:function(){return $B.tracefunc ||_b_.None},getunicodeinternedsize:function(){
 return 0},last_exc:{__get__:function(){return $B.module_getattr($B.imported._sys,'exception')()},__set__:function(value){$B.frame_obj.frame.$current_exception=value}},modules:$B.obj_dict($B.imported),path:{__get__:function(){var filename=$B.get_filename_for_import()
 return $B.$list($B.import_info[filename].path)},__set__:function(value){var filename=$B.get_filename_for_import()
 $B.import_info[filename].path=value}},meta_path:{__get__:function(){var filename=$B.get_filename()
@@ -15254,7 +15374,11 @@ if(cls.tp_members){for(var descr of cls.tp_members){var[name,type,attr,flags]=de
 $B.set_to_dict(cls,name,{ob_type:$B.member_descriptor,d_member:{name,type,attr,flags},d_name:name,d_type:cls}
 )}}
 if(cls.classmethods){for(var descr of cls.classmethods){$B.set_to_dict(cls,descr,{ob_type:$B.classmethod_descriptor,d_name:descr,d_type:cls,d_method:cls.tp_funcs[descr]})}}
-if(cls.staticmethods){for(var descr of cls.staticmethods){$B.set_to_dict(cls,descr,_b_.staticmethod.$factory(cls.tp_funcs[descr]))}}
+if(cls.staticmethods){for(var descr of cls.staticmethods){let func=cls.tp_funcs[descr]
+$B.set_type(func,$B.builtin_function_or_method)
+func.ml={ml_name:descr}
+func.m_self=cls
+$B.set_to_dict(cls,descr,_b_.staticmethod.$factory(func))}}
 for(var slot in $B.wrapper_methods){if(cls[slot]){$B.wrapper_methods[slot](cls,slot)}else if(['tp_descr_get','tp_descr_set','tp_iter','tp_call','tp_new','tp_init','tp_setattro'].includes(slot)){cls[slot]=$B.NULL
 if(cls.tp_mro){for(var kls of cls.tp_mro.slice(1)){if(Object.hasOwn(cls,slot)){cls[slot]=kls[slot]
 break}}}}}
@@ -15612,7 +15736,9 @@ return value.replace(new RegExp("\\\\'",'g'),"'")}
 function compiler_error(ast_obj,message,end){prefix=''
 var exc=$B.EXC(_b_.SyntaxError,message)
 exc.filename=state.filename
-if(exc.filename !='<string>'){var src=$B.file_cache[exc.filename],lines=src.split('\n'),line=lines[ast_obj.lineno-1]
+var src=exc.filename=='<string>' ?
+undefined :$B.file_cache[exc.filename]
+if(src !==undefined){var lines=src.split('\n'),line=lines[ast_obj.lineno-1]
 exc.text=line}else{
 exc.text=_b_.None}
 exc.lineno=ast_obj.lineno
@@ -15679,6 +15805,9 @@ _scopes=scopes.concat(scope)}}
 var names=[]
 for(var _scope of _scopes){if(! _scope.parent){names.push(_scope.name)}}
 return names.join('_').replace(/\./g,'_')}
+function show_flags(name,flag){let res=[]
+for(let key in $B.SYMBOL_FLAGS){if(flag & $B.SYMBOL_FLAGS[key]){res.push(key)}}
+console.log(name,res.join(' | '))}
 function module_name(scopes){var _scopes=scopes.slice()
 var names=[]
 for(var _scope of _scopes){if(! _scope.parent){names.push(_scope.name)}}
@@ -15705,8 +15834,10 @@ return name}
 function reference(scopes,scope,name){return make_scope_name(scopes,scope)+'.'+mangle(scopes,scope,name)}
 function get_binding_scope(name,scopes){var scope=$B.last(scopes),up_scope=last_scope(scopes)
 name=mangle(scopes,up_scope,name)
-if(up_scope.globals && up_scope.globals.has(name)){scope=scopes[0]}else if(up_scope.nonlocals.has(name)){for(var i=scopes.indexOf(up_scope)-1;i >=0;i--){if(scopes[i].locals.has(name)||
-(scopes[i].maybe_locals && scopes[i].maybe_locals.has(name))){return[name,scopes[i],up_scope]}}}
+if(up_scope.globals && up_scope.globals.has(name)){scope=scopes[0]}else if(up_scope.nonlocals.has(name)){for(var i=scopes.indexOf(up_scope)-1;i >=0;i--){if(scopes[i].parent){
+continue}
+let block=scopes.symtable.table.blocks.get(fast_id(scopes[i].ast))
+if(block && Object.hasOwn(block.symbols,name)){return[name,scopes[i],up_scope]}}}
 return[name,scope,up_scope]}
 function bind(name,scopes){var[name,scope,up_scope]=get_binding_scope(name,scopes)
 if(up_scope.globals && up_scope.globals.has(name)){scope=scopes[0]}else if(up_scope.nonlocals.has(name)){for(var i=scopes.indexOf(up_scope)-1;i >=0;i--){if(scopes[i].locals.has(name)||
@@ -16192,12 +16323,14 @@ s+=js
 dedent()
 s+=prefix+`} catch (err_${id}) {\n`
 indent()
-s+=prefix+`frame.$lineno = ${lineno}\n`+
-prefix+`exc_${id} = false\n`+
+s+=prefix+`exc_${id} = false\n`+
 prefix+`err_${id} = $B.exception(err_${id}, frame)\n`+
+prefix+`var lineno_${id} = frame.$lineno\n`+
+prefix+`frame.$lineno = ${lineno}\n`+
 prefix+`var $b = await $B.promise(aexit_${id}(mgr_${id}, $B.get_class(err_${id}), \n`+
 prefix+tab.repeat(4)+`err_${id}, $B.$getattr(err_${id}, '__traceback__')))\n`+
 prefix+`if (! $B.$bool($b)) {\n`+
+prefix+tab+`frame.$lineno = lineno_${id}\n`+
 prefix+tab+`throw err_${id}\n`+
 prefix+`}\n`
 dedent()
@@ -16205,8 +16338,8 @@ s+=prefix+`}\n`
 dedent()
 s+=prefix+`}finally{\n`
 indent()
-s+=prefix+`frame.$lineno = ${lineno}\n`+
-prefix+`if (exc_${id}) {\n`+
+s+=prefix+`if (exc_${id}) {\n`+
+prefix+tab+`frame.$lineno = ${lineno}\n`+
 prefix+tab+`await $B.promise(aexit_${id}(mgr_${id}, _b_.None, _b_.None, _b_.None))\n`+
 prefix+`}\n`
 dedent()
@@ -16315,7 +16448,7 @@ named_kwargs.push(
 starred_kwargs.push($B.js_from_ast(keyword.value,scopes))}}
 var args_list=[]
 for(let arg of this.args){if(arg instanceof $B.ast.Starred){var starred_arg=$B.js_from_ast(arg.value,scopes)
-args_list.push(`...$B.make_js_iterator(${starred_arg})`)}else{
+args_list.push(`..._b_.list.$unpack(${starred_arg})`)}else{
 args_list.push($B.js_from_ast(arg,scopes))}}
 if(named_kwargs.length+starred_kwargs.length > 0){var kw=`{${named_kwargs.join(', ')}}`
 for(var starred_kwarg of starred_kwargs){kw+=`, ${starred_kwarg}`}
@@ -16331,12 +16464,11 @@ decorators.push(dec_id)
 js+=prefix+`$B.set_lineno(frame, ${dec.lineno})\n`+
 prefix+`var ${dec_id} = ${$B.js_from_ast(dec, scopes)}\n`}
 js+=prefix+`$B.set_lineno(frame, ${this.lineno}, 'ClassDef')\n`
-var qualname=this.name
-var ix=scopes.length-1
-while(ix >=0){if(scopes[ix].parent){ix--}else if(scopes[ix].ast instanceof $B.ast.ClassDef){qualname=scopes[ix].name+'.'+qualname
-ix--}else{
-break}}
-var bases=this.bases.map(x=> $B.js_from_ast(x,scopes))
+var qualname=lexical_qualname(this.name,scopes)
+var bases=this.bases.map(x=>
+x instanceof $B.ast.Starred ?
+`...$B.make_js_iterator(${$B.js_from_ast(x.value, scopes)})` :
+$B.js_from_ast(x,scopes))
 var has_type_params=this.type_params.length > 0
 if(has_type_params){check_type_params(this)
 js+=prefix+`function TYPE_PARAMS_OF_${this.name}() {\n`
@@ -16350,7 +16482,7 @@ bases.push(`generic_base`)
 if(need_typing_module){js+=prefix+`$B.$import('typing')\n`+
 prefix+'var typing = $B.imported.typing\n'+
 prefix+`var Unpack = $B.module_getattr(typing, 'Unpack')\n`+
-prefix+`var unpack = $B.$call(Unpack, '__getitem__'))\n`}
+prefix+`var unpack = x => $B.$getitem(Unpack, x)\n`}
 var name_map=new Map()
 for(let item of this.type_params){var name,param_type=item.constructor.$name
 if(['TypeVar','TypeVarTuple','ParamSpec'].includes(param_type)){name=item.name}else{
@@ -16614,6 +16746,16 @@ if(tp.bound){if(! tp.bound.elts){js+=`$B.$call(_set_lazy_eval, locals_${ref}.${n
 js+=`$B.$call(_set_lazy_eval, locals_${ref}.${name}, `+
 `'__constraints__', BOUND_OF_${name})\n`}}
 return js}
+function lexical_qualname(name,scopes){var qualname=name
+for(var i=scopes.length-1;i >=0;i--){var scope=scopes[i]
+if(scope.parent){continue}
+if(scope.globals.has(name)){break}
+var in_func=scope.ast instanceof $B.ast.FunctionDef ||
+scope.ast instanceof $B.ast.AsyncFunctionDef
+if(! in_func && !(scope.ast instanceof $B.ast.ClassDef)){break}
+qualname=scope.name+(in_func ? '.<locals>.' :'.')+qualname
+name=scope.name}
+return qualname}
 $B.ast.FunctionDef.prototype.to_js=function(scopes){compiler_check(this)
 var symtable_block=scopes.symtable.table.blocks.get(fast_id(this))
 var in_class=last_scope(scopes).ast instanceof $B.ast.ClassDef,is_async=this instanceof $B.ast.AsyncFunctionDef,arg_mangle_scope=last_scope(scopes),mangle_arg=x=> mangle(scopes,arg_mangle_scope,x)
@@ -16702,6 +16844,14 @@ prefix+tab+`var ${locals_name} = locals = `+
 prefix+`}\n`}else{
 js+=prefix+`var ${locals_name} = locals = `+
 `$B.args_parser(${name2}, arguments)\n`}
+var free_idents=[]
+for(var[ident,flag]of Object.entries(symtable_block.symbols)){if(((flag >> SF.SCOPE_OFF)& SF.SCOPE_MASK)==SF.FREE){free_idents.push(ident)}}
+for(var free_ident of free_idents){var free_scope=name_scope(free_ident,scopes)
+if(free_scope.found){var free_ns=make_scope_name(scopes,free_scope.found)
+js+=prefix+`Object.defineProperty(locals, '${free_ident}', `+
+`{get: function(){return ${free_ns}.${free_ident}}, `+
+`set: function(){}, `+
+`enumerable: true, configurable: true})\n`}}
 js+=prefix+`var frame = ["${this.$is_lambda ? '<lambda>': this.name}", `+
 `locals, "${gname}", ${globals_name}, ${name2}]\n`+
 prefix+`$B.enter_frame(frame, __file__, ${this.lineno})\n`
@@ -16749,18 +16899,15 @@ dedent()
 js+=prefix+'}\n'}else{
 js+='\n'}
 scopes.pop()
-var qualname=in_class ? `${func_name_scope.name}.${this.name}` :
-this.name
+var qualname=lexical_qualname(this.$is_lambda ? '<lambda>' :this.name,scopes)
 var flags=$B.COMPILER_FLAGS.OPTIMIZED |$B.COMPILER_FLAGS.NEWLOCALS
 if(this.args.vararg){flags |=$B.COMPILER_FLAGS.VARARGS}
 if(this.args.kwarg){flags |=$B.COMPILER_FLAGS.VARKEYWORDS}
 if(is_generator){flags |=$B.COMPILER_FLAGS.GENERATOR}
 if(is_async){flags |=$B.COMPILER_FLAGS.COROUTINE}
 var parameters=[],locals=[]
-var free_vars=[]
-for(var[ident,flag]of Object.entries(symtable_block.symbols)){var _scope=(flag >> SF.SCOPE_OFF)& SF.SCOPE_MASK
-if(_scope==SF.FREE){free_vars.push(`'${ident}'`)}
-if(flag & SF.DEF_PARAM){parameters.push(`'${ident}'`)}else if(flag & SF.DEF_LOCAL){locals.push(`'${ident}'`)}}
+var free_vars=free_idents.map(x=> `'${x}'`)
+for(var[ident,flag]of Object.entries(symtable_block.symbols)){if(flag & SF.DEF_PARAM){parameters.push(`'${ident}'`)}else if(flag & SF.DEF_LOCAL){locals.push(`'${ident}'`)}}
 var varnames=parameters.concat(locals)
 if(in_class){js+=prefix+`${name2}.$is_method = true\n`}
 var anns,anns_values,anns_strings,postponed
@@ -16790,7 +16937,7 @@ var annotations=postponed ? anns_strings :'false'
 js+=prefix+`${name2}.$function_infos = [`+
 `'${gname}', `+
 `'${this.$is_lambda ? '<lambda>': this.name}', `+
-`'${this.$is_lambda ? '<lambda>': qualname}', `+
+`'${qualname}', `+
 `__file__, `+
 `${defaults}, `+
 `${kw_defaults}, `+
@@ -17229,10 +17376,11 @@ value=value.replace(new RegExp('\\\\'+key,'g'),$B.escape2cp[key])}
 return value}
 $B.ast.Set.prototype.to_js=function(scopes){var elts=[]
 for(var elt of this.elts){var js
-if(elt instanceof $B.ast.Constant){var v=elt.value
-if(typeof v=='string'){v=remove_escapes(v)}
+if(elt instanceof $B.ast.Constant && typeof elt.value !='string'){
+let _hash=$B.$hash(elt.value)
+if(typeof _hash==='bigint'){_hash=_hash+'n'}
 js=`{constant: [${$B.js_from_ast(elt, scopes)}, `+
-`${$B.$hash(v)}]}`}else if(elt instanceof $B.ast.Starred){js=`{starred: ${$B.js_from_ast(elt.value, scopes)}}`}else{
+`${_hash}]}`}else if(elt instanceof $B.ast.Starred){js=`{starred: ${$B.js_from_ast(elt.value, scopes)}}`}else{
 js=`{item: ${$B.js_from_ast(elt, scopes)}}`}
 elts.push(js)}
 return `_b_.set.$literal([${elts.join(', ')}])`}
@@ -17494,10 +17642,11 @@ prefix+tab+`enter_${id} = $B.$getattr(klass, '__enter__')\n`
 dedent()
 s+=prefix+`} catch (err) {\n`
 indent()
+let msg=`' object does not support the context manager protocol`+
+' (missed __exit__ method)'
 s+=prefix+`var klass_name = $B.class_name(mgr_${id})\n`+
 prefix+`frame.inum = ${inum}\n`+
-prefix+`$B.RAISE(_b_.TypeError, "'" + klass_name + `+
-`"' object does not support the context manager protocol")\n`
+prefix+`$B.RAISE(_b_.TypeError, "'" + klass_name + "${msg}")\n`
 dedent()
 s+=prefix+`}\n`+
 prefix+`var value_${id} = $B.$call(enter_${id}, mgr_${id}),\n`+
@@ -17518,13 +17667,15 @@ s+=js
 dedent()
 s+=prefix+`} catch (err_${id}) {\n`
 indent()
-s+=prefix+`frame.$lineno = ${lineno}\n`+
-prefix+`exc_${id} = false\n`+
+s+=prefix+`exc_${id} = false\n`+
 prefix+`err_${id} = $B.exception(err_${id}, frame)\n`+
+prefix+`var lineno_${id} = frame.$lineno\n`+
+prefix+`frame.$lineno = ${lineno}\n`+
 prefix+`var $b = $B.$call(exit_${id}, $B.get_class(err_${id}), `+
 `err_${id}, \n`+
 prefix+tab.repeat(4)+`$B.$getattr(err_${id}, '__traceback__'))\n`+
 prefix+`if (! $B.$bool($b)) {\n`+
+prefix+tab+`frame.$lineno = lineno_${id}\n`+
 prefix+tab+`throw err_${id}\n`+
 prefix+`}\n`
 dedent()
@@ -17532,9 +17683,9 @@ s+=prefix+`}\n`
 dedent()
 s+=prefix+`}finally{\n`
 indent()
-s+=prefix+`frame.$lineno = ${lineno}\n`+
-(in_generator ? prefix+`locals.$context_managers.pop()\n` :'')+
-prefix+`if (exc_${id}) {\n`
+s+=(in_generator ? prefix+`locals.$context_managers.pop()\n` :'')+
+prefix+`if (exc_${id}) {\n`+
+prefix+tab+`frame.$lineno = ${lineno}\n`
 indent()
 s+=prefix+`try {\n`+
 prefix+tab+`$B.$call(exit_${id}, _b_.None, _b_.None, _b_.None)\n`+

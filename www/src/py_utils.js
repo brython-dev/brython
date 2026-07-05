@@ -334,7 +334,7 @@ $B.parse_kwargs = function(kw_args, fname) {
             try {
                 var keys_method = $B.$getattr(cls, 'keys')
             } catch (err) {
-                $B.RAISE(_b_.TypeError, `${fname} argument ` +
+                $B.RAISE(_b_.TypeError, `${fname}() argument ` +
                     `after ** must be a mapping, not ${$B.class_name(kw_arg)}`)
             }
             var keys_iter = $B.make_js_iterator($B.$call(keys_method, kw_arg)),
@@ -362,6 +362,37 @@ $B.parse_kwargs = function(kw_args, fname) {
         }
     }
     return kwa
+}
+
+$B.parse_tuple = function(args, start, types) {
+    // check the part of the array 'args' starting at position 'start'
+    // check that this part has the same length as 'types', then that
+    // each item has the expected type
+    if (args.length - start !== types.length) {
+        $B.RAISE(_b_.TypeError,
+            `function takes exactly ${types.length} arguments ` +
+            `(${args.length - start} given)`
+        )
+    }
+    for (let i = 0, len = types.length; i < len; i++) {
+        let type = types[i]
+        let arg = args[start + i]
+        switch(type) {
+            case 'O': // any type
+                break
+            case 'U': // str-like
+                if (! $B.is_str(arg)) {
+                    $B.RAISE(_b_.TypeError,
+                        `argument ${i + 1} must be str, ` +
+                        `not ${$B.class_name(arg)}`
+                    )
+                }
+                break
+            case 'n': // int-like
+                $B.PyNumber_Index(arg) // raise exception if not ok
+                break
+        }
+    }
 }
 
 $B.check_nb_args = function(name, expected, args) {
@@ -671,27 +702,30 @@ $B.unpacker = function(obj, nb_targets, has_starred) {
     // For "[a, b] = t", nb_targets is 2, has_starred is false
     // For "[a, *b, c]", nb_targets is 1 (a), has_starred is true (*b),
     // nb_after_starred is 1 (c)
-    var test = false // obj.tp_name == 'FlagBoundary'
-    if (test) {
-        console.log('unpacker', obj, nb_targets, has_starred)
-    }
     var inum_rank = 3
     if (has_starred) {
         var nb_after_starred = arguments[3]
         inum_rank++
     }
     var inum = arguments[inum_rank]
-    var t = _b_.list.$factory(obj),
+    let it
+    try {
+        it = $B.make_js_iterator(obj)
+    } catch(err) {
+        $B.set_inum(inum)
+        $B.RAISE(_b_.TypeError,
+            `cannot unpack non-iterable ${$B.class_name(obj)} object`
+        )
+    }
+    var t = Array.from(it),
         right_length = t.length,
         left_length = nb_targets + (has_starred ? nb_after_starred - 1 : 0)
-    if (test) {
-        console.log('list from obj', t)
-    }
+
     if((! has_starred && (right_length < nb_targets)) ||
             (has_starred && (right_length < nb_targets - 1))){
         $B.set_inum(inum)
         var exc = $B.EXC(_b_.ValueError, `not enough values to unpack ` +
-            `(expected ${has_starred ? ' at least ' : ''} ` +
+            `(expected ${has_starred ? 'at least ' : ''}` +
             `${left_length}, got ${right_length})`)
         throw exc
     }
