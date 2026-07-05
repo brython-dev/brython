@@ -583,7 +583,11 @@ BytesIO_funcs.readinto = function(_self, buffer) {
             len = 0
         }
     }
-    var buf = $B.$isinstance(buffer, _b_.bytearray) ? buffer.source : buffer.obj
+    // write into the buffer's BACKING BYTES: a memoryview arrives as its
+    // wrapper object - buffer.obj is the underlying bytearray OBJECT, and
+    // numeric writes on it land on JS properties, not in .source
+    var target = $B.$isinstance(buffer, _b_.bytearray) ? buffer : buffer.obj
+    var buf = (target && target.source) ? target.source : target
     for (var i = 0; i < len; i++) {
         buf[i] = _self._buffer.source[_self._pos + i]
     }
@@ -786,10 +790,12 @@ BufferedRWPair.$factory = function() {
 
 $B.finalize_type(BufferedRWPair)
 
-var BufferedRandom = $B.make_type("BufferedRandom", [$B._TextIOBase])
+var BufferedRandom = $B.make_type("BufferedRandom", [$B._BufferedIOBase])
 
-BufferedRandom.$factory = function() {
-    return "fileio"
+BufferedRandom.$factory = function(raw) {
+    // pass-through: the raw is already a usable read/write seekable file
+    // in the browser; buffer_size only affects chunking
+    return raw
 }
 
 $B.finalize_type(BufferedRandom)

@@ -233,24 +233,14 @@ $B.list_delitem = function(self, arg) {
             " index out of range")
     }
     if (isinstance(arg, _b_.slice)) {
-        var step = arg.step
-        if (step === _b_.None) {
-            step = 1
-        }
-        var start = arg.start
-        if (start === _b_.None) {
-            start = step > 0 ? 0 : self.length
-        }
-        var stop = arg.stop
-        if (stop === _b_.None) {
-            stop = step > 0 ? self.length : 0
-        }
-        if (start < 0) {
-            start = self.length + start
-        }
-        if (stop < 0) {
-            stop = self.length + stop
-        }
+        // normalize like $getitem_slice does: the hand-rolled version got
+        // every negative-step default wrong (start=len not len-1, stop=0
+        // excludes index 0), so del L[::-1] left the first element behind
+        // and del L[::-2] deleted the complement of the right elements
+        var s = _b_.slice.$conv_for_seq(arg, self.length)
+        var start = s.start,
+            stop = s.stop,
+            step = s.step
         let res = [],
             pos = 0
         if (step > 0) {
@@ -513,7 +503,19 @@ $B.list_reverseiterator.tp_methods = ["__length_hint__", "__reduce__", "__setsta
 // Set list key or slice
 function set_list_slice(obj, start, stop, value) {
     var res = _b_.list.$factory(value)
-    obj.splice.apply(obj,[start, stop - start].concat(res))
+    if (res.length > 16384) {
+        // same argument-limit hazard as the bytearray slice-assign
+        var tail = obj.slice(stop)
+        obj.length = start
+        for (var k = 0; k < res.length; k += 16384) {
+            obj.push.apply(obj, res.slice(k, k + 16384))
+        }
+        for (var k = 0; k < tail.length; k += 16384) {
+            obj.push.apply(obj, tail.slice(k, k + 16384))
+        }
+    } else {
+        obj.splice.apply(obj, [start, stop - start].concat(res))
+    }
 }
 
 function set_list_slice_step(obj, start, stop, step, value) {

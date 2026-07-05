@@ -789,6 +789,20 @@
         getdefaultencoding: function() {
             return 'utf-8'
         },
+        getsizeof: function(obj, dflt) {
+            // delegate to __sizeof__, like CPython
+            try {
+                var res = $B.$call($B.$getattr(obj, '__sizeof__'))
+                if (typeof res == 'number' || typeof res == 'bigint') {
+                    return res
+                }
+            } catch (err) {}
+            if (dflt !== undefined) {
+                return dflt
+            }
+            $B.RAISE(_b_.TypeError,
+                "Type " + $B.class_name(obj) + " doesn't define __sizeof__")
+        },
         getrecursionlimit: function() {
             return $B.recursion_limit
         },

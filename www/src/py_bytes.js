@@ -323,23 +323,6 @@ function count(self) {
     return nb
 }
 
-function decode(self) {
-    var $ = $B.args("decode", 3, {self: null, encoding: null, errors: null},
-                arguments, {encoding: "utf-8", errors: "strict"}, null, null)
-    switch ($.errors) {
-      case 'strict':
-      case 'ignore':
-      case 'replace':
-      case 'surrogateescape':
-      case 'surrogatepass':
-      case 'xmlcharrefreplace':
-      case 'backslashreplace':
-        return decode($.self, $.encoding, $.errors)
-      default:
-        // raise error since errors variable is not valid
-    }
-}
-
 function endswith() {
     var $ = $B.args('endswith', 4,
                 {self: null, suffix: null, start: null, end: null},
@@ -1217,6 +1200,13 @@ function check_exports(self) {
     }
 }
 
+function decode_error(obj, encoding, start, end, reason) {
+    let exc = _b_.UnicodeDecodeError.tp_new(_b_.UnicodeDecodeError)
+    _b_.UnicodeDecodeError.tp_init(exc, encoding, obj,
+                          start, end, reason)
+    return exc
+}
+
 bytearray.$factory = function() {
     var res = bytearray.tp_new(bytearray, Array.from(arguments),
         $B.empty_dict())
@@ -1296,7 +1286,22 @@ _b_.bytearray.sq_ass_item = function(self, arg, value) {
             }
         }
         // One splice only -> O(N+M) instead of O(N*M)
-        self.source.splice.apply(self.source, [start, 0].concat($temp))
+        if ($temp.length > 16384) {
+            // splice.apply passes every element as a JS argument: a big
+            // write (eg a 1 MB pickle frame through BytesIO) blows the
+            // engine's argument limit ("too many arguments provided for
+            // a function call"). Rebuild through 16K chunks instead.
+            var tail = self.source.slice(start)
+            self.source.length = start
+            for (var k = 0; k < $temp.length; k += 16384) {
+                self.source.push.apply(self.source, $temp.slice(k, k + 16384))
+            }
+            for (var k = 0; k < tail.length; k += 16384) {
+                self.source.push.apply(self.source, tail.slice(k, k + 16384))
+            }
+        } else {
+            self.source.splice.apply(self.source, [start, 0].concat($temp))
+        }
     } else {
         $B.RAISE(_b_.TypeError, 'list indices must be integer, not ' +
             $B.class_name(arg))
@@ -2148,12 +2153,10 @@ var decode = $B.decode = function(obj, encoding, errors) {
                       if (errors == "ignore") {
                           pos++
                       } else {
-                          $B.RAISE(_b_.UnicodeDecodeError,
-                              "'utf-8' codec can't decode byte 0x" +
-                              err_info[0].toString(16) +"  in position " +
-                              err_info[1] +
-                              (err_info[2] == "end" ? ": unexpected end of data" :
-                                  ": invalid continuation byte"))
+                          throw decode_error(obj, enc,
+                              err_info[1], err_info[1] + 1,
+                              err_info[2] == "end" ? ": unexpected end of data" :
+                                  ": invalid continuation byte")
                       }
                   } else {
                       let cp = byte & 0x1f
@@ -2182,12 +2185,10 @@ var decode = $B.decode = function(obj, encoding, errors) {
                           }
                           pos = err_info[3]
                       } else {
-                          $B.RAISE(_b_.UnicodeDecodeError,
-                              "'utf-8' codec can't decode byte 0x" +
-                              err_info[0].toString(16) +"  in position " +
-                              err_info[1] +
-                              (err_info[2] == "end" ? ": unexpected end of data" :
-                                  ": invalid continuation byte"))
+                          throw decode_error(obj, enc,
+                              err_info[3], err_info[3] + 1,
+                              err_info[2] == "end" ? ": unexpected end of data" :
+                                  ": invalid continuation byte")
                       }
                   } else {
                       let cp = byte & 0xf
@@ -2221,12 +2222,10 @@ var decode = $B.decode = function(obj, encoding, errors) {
                           }
                           pos = err_info[3]
                       } else {
-                          $B.RAISE(_b_.UnicodeDecodeError,
-                              "'utf-8' codec can't decode byte 0x" +
-                              err_info[0].toString(16) +"  in position " +
-                              err_info[1] +
-                              (err_info[2] == "end" ? ": unexpected end of data" :
-                                  ": invalid continuation byte"))
+                          throw decode_error(obj, enc, err_info[3],
+                              err_info[3] + 1,
+                              err_info[2] == "end" ? ": unexpected end of data" :
+                                  ": invalid continuation byte")
                       }
                   } else {
                       let cp = byte & 0xf
@@ -2245,10 +2244,8 @@ var decode = $B.decode = function(obj, encoding, errors) {
                       s += String.fromCodePoint(0xdc80 + b[pos] - 0x80)
                       pos++
                   } else {
-                      $B.RAISE(_b_.UnicodeDecodeError,
-                          "'utf-8' codec can't decode byte 0x" +
-                          byte.toString(16) + " in position " + pos +
-                          ": invalid start byte")
+                      throw decode_error(obj, enc, pos, pos + 1,
+                          'invalid start byte')
                   }
               }
           }
@@ -2316,13 +2313,38 @@ var decode = $B.decode = function(obj, encoding, errors) {
                    replace(/\\'/g, "'").
                    replace(/\\"/g, '"')
       case "raw_unicode_escape":
-          if ([bytes, bytearray].includes($B.get_class(obj))) {
-              obj = decode(obj, "latin-1", "strict")
+          let str = decode(obj, "latin-1", "strict")
+          let uni_re = /(\\U)([a-fA-F0-9]{0,8})|(\\u)([a-fA-F0-9]{0,4})/g
+          let start = 0
+          for (let mo of str.matchAll(uni_re)) {
+              s += str.substring(start, mo.index)
+              if (mo[1] == '\\U') {
+                  if (mo[2].length < 8) {
+                      throw decode_error(obj, enc,
+                          mo.index, mo.index + mo[0].length - 1,
+                          'truncated \\UXXXXXXXX escape')
+                  }
+                  let cp = parseInt(mo[2], 16)
+                  if (cp > 0x10ffff) {
+                      throw decode_error(obj, enc,
+                          mo.index, mo.index + mo[0].length - 1,
+                          '\\Uxxxxxxxx out of range')
+                  }
+                  s += String.fromCodePoint(cp)
+                  start = mo.index + mo[0].length
+              } else {
+                  if (mo[4].length < 4) {
+                      throw decode_error(obj, enc,
+                          mo.index, mo.index + mo[0].length - 1,
+                          'truncated \\uXXXX escape')
+                  }
+                  let cp = parseInt(mo[4], 16)
+                  s += String.fromCodePoint(cp)
+                  start = mo.index + mo[0].length
+              }
           }
-          return obj.replace(/\\u([a-fA-F0-9]{4})/g, function(mo) {
-              let cp = parseInt(mo.substr(2), 16)
-              return String.fromCharCode(cp)
-          })
+          s += str.substr(start)
+          return s
       case "ascii":
           for (let i = 0, len = b.length; i < len; i++) {
               let cp = b[i]
@@ -2334,10 +2356,8 @@ var decode = $B.decode = function(obj, encoding, errors) {
                   } else if (errors == "backslashreplace") {
                       s += '\\x' + cp.toString(16)
                   } else {
-                      let msg = "'ascii' codec can't decode byte 0x" +
-                        cp.toString(16) + " in position " + i +
-                        ": ordinal not in range(128)"
-                      $B.RAISE(_b_.UnicodeDecodeError, msg)
+                      throw decode_error(obj, enc, i, i + 1,
+                          'ordinal not in range(128)')
                   }
               }
           }
@@ -2745,6 +2765,13 @@ _b_.bytes.bf_getbuffer = function(self, flags) {
 
 var bytes_funcs = _b_.bytes.tp_funcs = {}
 
+bytes_funcs.__sizeof__ = function(self) {
+    // CPython: 33 (the PyBytesObject header) + one byte per item.
+    // 33 is the 64-bit build value (Brython emulates a 64-bit CPython;
+    // a 32-bit build, e.g. Pyodide, says 17 + len)
+    return 33 + (self.source ? self.source.length : 0)
+}
+
 bytes_funcs.__bytes__ = function(self) {
     if ($B.exact_type(self, _b_.bytes)) {
         return self
@@ -2961,6 +2988,7 @@ bytes_funcs.zfill = function() {
 }
 
 _b_.bytes.tp_methods = [
+    "__sizeof__",
     "__getnewargs__", "__bytes__", "capitalize", "center", "count", "decode",
     "endswith", "expandtabs", "find", "hex", "index", "isalnum", "isalpha",
     "isascii", "isdigit", "islower", "isspace", "istitle", "isupper", "join",

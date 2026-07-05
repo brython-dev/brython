@@ -744,6 +744,7 @@ $B.time_builtin_getattr = 0
 
 $B.$getattr = function(obj, attr, _default) {
     // Used internally to avoid having to parse the arguments
+    var test = false // attr == 'maketrans'
     var test = false // attr == '__qualname__'
     if (test) {
         console.log('$getattr', obj, attr)
@@ -829,7 +830,8 @@ $B.$getattr = function(obj, attr, _default) {
                 console.log('in klass dict', in_klass_dict)
                 console.log('in own dict', in_own_dict)
             }
-            if (in_klass_dict) {
+            if (in_klass_dict &&
+                    klass.$getattribute === _b_.object.tp_getattro) {
                 switch (in_klass_dict.ob_type) {
                     case $B.function:
                         if (in_own_dict === $B.NULL) {
@@ -1038,11 +1040,21 @@ _b_.id = function(obj) {
    check_nb_args_no_kw('id', 1, arguments)
    if (obj[$B.ID] !== undefined) {
        return obj[$B.ID]
-   } else if ($B.$isinstance(obj, [_b_.str, _b_.int, _b_.float])) {
-       return $B.$call($B.$getattr(_b_.str.$factory(obj), '__hash__'))
-   } else {
-       return obj[$B.ID] = $B.UUID()
    }
+   var t = typeof obj
+   if (t === 'string' || t === 'number' || t === 'bigint' ||
+           t === 'boolean' || $B.get_class(obj) === _b_.float) {
+       // JS primitives can't carry $B.ID, and a base float is value-identified;
+       // a str/int/float subclass instance is a distinct object, so it falls
+       // through to a per-instance UUID (else two MyStr("x") shared one id).
+       // Mix the type into the hashed text: id(42) must differ from id('42')
+       // (two live, distinct objects; a shared id corrupts anything keyed
+       // by id, e.g. the pure-Python pickle memo)
+       return $B.$call($B.$getattr(
+           _b_.str.$factory($B.class_name(obj) + ':' + _b_.str.$factory(obj)),
+           '__hash__'))
+   }
+   return obj[$B.ID] = $B.UUID()
 }
 
 // The default __import__ function is a builtin
@@ -1053,6 +1065,9 @@ _b_.__import__ = function() {
         arguments,
         {globals:None, locals:None, fromlist:_b_.tuple.$factory(), level:0},
         null, null)
+    if ($.name === '' && $.level === 0) {
+        $B.RAISE(_b_.ValueError, "Empty module name")
+    }
     return $B.$__import__($.name, $.globals, $.locals, $.fromlist)
 }
 
@@ -1295,7 +1310,7 @@ var len = _b_.len = function(obj) {
     var method = $B.search_in_mro(klass, '__len__', null)
     if (method === null) {
         $B.RAISE(_b_.TypeError, "object of type '" +
-            $B.class_name(obj) + "' has no len() VVV")
+            $B.class_name(obj) + "' has no len()")
     }
 
     let res = $B.$call(method, obj)
@@ -1354,7 +1369,8 @@ map.$factory = function() {
     return {
         ob_type: map,
         args: iter_args,
-        func: func
+        func: func,
+        iterables: [$.it1, ...$.args]
     }
 }
 

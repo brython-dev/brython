@@ -44,4 +44,8 @@ it1 = pickle.loads(pickle.dumps(it))
 
 next(it1)
 next(it1)
+
+# PR 2889
+pickle.dumps(bytearray.maketrans)
+
 assert next(it1) == 20

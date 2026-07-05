@@ -968,7 +968,7 @@ int_funcs.to_bytes = function(self) {
             $B.RAISE(_b_.OverflowError,
                 "can't convert negative int to unsigned")
         }
-        x = BigInt(Math.pow(256, len)) + x
+        x = (256n ** BigInt(len)) + x
     }
 
     var res = [],

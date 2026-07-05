@@ -6,6 +6,10 @@ import javascript
 from tester import assert_raises
 
 
+assert javascript.jsobj2pyobj(javascript.NULL) is javascript.NULL
+undef = javascript.jsobj2pyobj(javascript.UNDEFINED)
+assert not undef
+
 a = scope.Uint8ClampedArray.new(10)
 
 for i in range(10):

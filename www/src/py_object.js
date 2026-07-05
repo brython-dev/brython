@@ -144,9 +144,11 @@ object.$no_new_init = function(cls) {
 }
 
 function getNewArguments(self, klass) {
-    var newargs_ex = $B.$getattr(self, '__getnewargs_ex__', null)
+    // type-only lookup, like every implicit dunder: an instance getattr
+    // falls into a class __getattr__ hook on a miss
+    var newargs_ex = $B.$getattr(klass, '__getnewargs_ex__', null)
     if (newargs_ex !== null) {
-        let newargs = $B.$call(newargs_ex)
+        let newargs = $B.$call(newargs_ex, self)
         if ((! newargs) || $B.get_class(newargs) !== _b_.tuple) {
             $B.RAISE(_b_.TypeError, "__getnewargs_ex__ should " +
                 `return a tuple, not '${$B.class_name(newargs)}'`)
@@ -460,6 +462,10 @@ _b_.object.tp_init = function() {
 }
 
 _b_.object.tp_new = function(cls, args, kw) {
+    if (! $B.is_type(cls)) {
+        $B.RAISE(_b_.TypeError,
+            `object.__new__(X): X is not a type object (${$B.class_name(cls)})`)
+    }
     if (args.length > 0 || ! $B.str_dict_empty(kw)) {
         if (cls.tp_new !== _b_.object.tp_new) {
             $B.RAISE(_b_.TypeError,
@@ -479,7 +485,7 @@ _b_.object.tp_new = function(cls, args, kw) {
         $B.RAISE(_b_.TypeError,
             `Can't instantiate abstract class ${$B.get_name(cls)} ` +
             `without an implementation for abstract method${plural} ` +
-            ` '${am.join(', ')}'`
+            am.map(m => `'${m}'`).join(', ')
         )
     }
     var res = {
@@ -661,6 +667,12 @@ object_funcs.__reduce_ex__ = function(self, protocol) {
     var res = [$B.module_getattr($B.imported.copyreg, '__newobj__')]
     var arg2 = [klass]
     var newargs = getNewArguments(self, klass)
+    if (! newargs && klass !== object && $B.is_builtin_type(klass)) {
+        // a non-heap builtin with no __getnewargs__ has no reconstruction
+        // path; copyreg._reduce_ex raises likewise for protocol < 2
+        $B.RAISE(_b_.TypeError,
+            `cannot pickle '${$B.class_name(self)}' object`)
+    }
     if (newargs) {
         if (newargs.kwargs && _b_.dict.mp_length(newargs.kwargs) > 0) {
             res = [$B.module_getattr($B.imported.copyreg, '__newobj_ex__')]
@@ -708,7 +720,10 @@ object_funcs.__reduce_ex__ = function(self, protocol) {
 }
 
 object_funcs.__sizeof__ = function(self) {
-
+    // CPython: _PyObject_SIZE(Py_TYPE(self)). 16 is the 64-bit build
+    // value (Brython emulates a 64-bit CPython; a 32-bit build, e.g.
+    // Pyodide, says 8)
+    return 16
 }
 
 object_funcs.__subclasshook__ = function(self) {
