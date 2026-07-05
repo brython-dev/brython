@@ -3761,8 +3761,6 @@ $B.ast.Starred.prototype.to_js = function(scopes) {
         compiler_error(this,
             "starred assignment target must be in a list or tuple")
     } else {
-        console.log('starred', this)
-        console.log(Error('trace').stack)
         compiler_error(this, "can't use starred expression here")
     }
 }
