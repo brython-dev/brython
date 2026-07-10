@@ -1875,7 +1875,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes) {
         check_type_params(this)
         js += prefix + `function TYPE_PARAMS_OF_${this.name}() {\n`
         indent()
-        js += prefix + `$B.$import('_typing')\n` +
+        js += prefix + `$B.import('_typing')\n` +
               prefix + `var _typing = $B.imported._typing\n`
         var params = [],
             need_typing_module
@@ -1891,7 +1891,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes) {
         }
         bases.push(`generic_base`)
         if (need_typing_module) {
-            js += prefix + `$B.$import('typing')\n` +
+            js += prefix + `$B.import('typing')\n` +
                   prefix + 'var typing = $B.imported.typing\n' +
                   prefix + `var Unpack = $B.module_getattr(typing, 'Unpack')\n` +
                   prefix + `var unpack = x => $B.$getitem(Unpack, x)\n`
@@ -2518,7 +2518,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
         var type_params_func = `function TYPE_PARAMS_OF_${name2}() {\n`
 
         // generate code to store type params in the scope namespace
-        type_params = prefix + `$B.$import('_typing')\n` +
+        type_params = prefix + `$B.import('_typing')\n` +
               prefix + `var _typing = $B.imported._typing\n` +
               prefix + `var locals_${type_params_ref} = $B.empty_dict(),\n` +
               prefix + tab + tab + `locals = locals_${type_params_ref},\n` +
@@ -3115,8 +3115,9 @@ $B.ast.IfExp.prototype.to_js = function(scopes) {
 $B.ast.Import.prototype.to_js = function(scopes) {
     var js = prefix + `$B.set_lineno(frame, ${this.lineno})\n`
     var inum = add_to_positions(scopes, this)
+    let importer = '_lazy_import' //this.is_lazy ? '_lazy_import' : 'import'
     for (var alias of this.names) {
-        js += prefix + `$B.$import("${alias.name}", [], `
+        js += prefix + `$B.${importer}("${alias.name}", [], `
         if (alias.asname) {
             var binding_scope = bind(alias.asname, scopes)
             var scope_name = make_scope_name(scopes, binding_scope)
@@ -4093,7 +4094,7 @@ $B.ast.TypeAlias.prototype.to_js = function(scopes) {
     var value = this.value.to_js(scopes)
     scopes.pop()
     scopes.pop()
-    var js = prefix + `$B.$import('_typing')\n`
+    var js = prefix + `$B.import('_typing')\n`
     // create locals for the type param scope
     js += prefix + `var locals_${qualified_scope_name(scopes, type_param_scope)} = {}\n`
     // emulate the function that creates the instance of TypeAliasType

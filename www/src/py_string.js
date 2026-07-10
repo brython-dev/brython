@@ -3397,7 +3397,7 @@ Template_funcs.__class_getitem__ = function() {
 }
 
 Template_funcs.__reduce__ = function(self) {
-    $B.$import('string.templatelib')
+    $B.import('string.templatelib')
     var module = $B.imported['string.templatelib']
     var _template_unpickle = $B.module_getattr(module, '_template_unpickle')
     return $B.fast_tuple([_template_unpickle,

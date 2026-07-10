@@ -1,6 +1,6 @@
 (function($B) {
 
-$B.$import('xml_parser')
+$B.import('xml_parser')
 
 var model = $B.imported.xml_parser.models
 console.log('model', model)

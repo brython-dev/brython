@@ -724,8 +724,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-07-05 11:46:02.348080"
-__BRYTHON__.timestamp=1783244762347
+__BRYTHON__.compiled_date="2026-07-05 18:13:22.801005"
+__BRYTHON__.timestamp=1783268002800
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -2558,7 +2558,7 @@ $B.RAISE(_b_.TypeError,`${qualname}.__init_subclass__() `+
 `takes no keyword arguments`)}
 return _b_.None}
 object_funcs.__reduce__=function(cls){if(! $B.get_dict(cls)){$B.RAISE(_b_.TypeError,`cannot pickle '${$B.class_name(cls)}' object`)}
-if($B.imported.copyreg===undefined){$B.$import('copyreg')}
+if($B.imported.copyreg===undefined){$B.import('copyreg')}
 var res=[$B.module_getattr($B.imported.copyreg,'_reconstructor')]
 var D=$B.get_class(cls),B=object
 for(var klass of $B.get_mro(D)){if(klass.__module__=='builtins'){B=klass
@@ -2577,7 +2577,7 @@ var reduce_is_default=(reduce===object.tp_funcs.__reduce__)||
 (reduce.ob_type===$B.method_descriptor &&
 reduce.method===object.tp_funcs.__reduce__)
 if(! reduce_is_default){return $B.$call(reduce,self)}
-if($B.imported.copyreg===undefined){$B.$import('copyreg')}
+if($B.imported.copyreg===undefined){$B.import('copyreg')}
 if(protocol < 2){var _reduce_ex=$B.module_getattr($B.imported.copyreg,'_reduce_ex')
 return $B.$call(_reduce_ex,self,protocol)}
 var res=[$B.module_getattr($B.imported.copyreg,'__newobj__')]
@@ -4684,7 +4684,7 @@ return $builtin_base_convert_helper(res,base)}}
 _b_.bin=function(obj){check_nb_args_no_kw('bin',1,arguments)
 return bin_hex_oct(2,obj)}
 _b_.breakpoint=function(){
-$B.$import('sys',[])
+$B.import('sys',[])
 var missing={},hook=$B.$getattr($B.imported.sys,'breakpointhook',missing)
 if(hook===missing){$B.RAISE(_b_.RuntimeError,'lost sys.breakpointhook')}
 return $B.$call(hook,...arguments)}
@@ -5040,7 +5040,7 @@ indexOf(obj)>-1){url=lib_url+`/constants.html#${obj}`}else if($B.is_type(_b_[obj
 _b_[obj].tp_bases.indexOf(_b_.Exception)>-1){url=lib_url+`/exceptions.html#${obj}`}
 if(url){globalThis.open(url)
 return}}
-$B.$import('pydoc')
+$B.import('pydoc')
 return $B.$call($B.$getattr($B.imported.pydoc,'help'),obj)}
 if($B.get_class(obj)===$B.module){return help($B.get_name(obj))}
 try{
@@ -5061,6 +5061,10 @@ _b_.__import__=function(){
 var $=$B.args('__import__',5,{name:null,globals:null,locals:null,fromlist:null,level:null},arguments,{globals:None,locals:None,fromlist:_b_.tuple.$factory(),level:0},null,null)
 if($.name==='' && $.level===0){$B.RAISE(_b_.ValueError,"Empty module name")}
 return $B.$__import__($.name,$.globals,$.locals,$.fromlist)}
+_b_.__lazy_import__=function(){
+var $=$B.args('__lazy_import__',5,{name:null,globals:null,locals:null,fromlist:null,level:null},arguments,{globals:None,locals:None,fromlist:_b_.tuple.$factory(),level:0},null,null)
+if($.name==='' && $.level===0){$B.RAISE(_b_.ValueError,"Empty module name")}
+return $B.$__lazy_import__($.name,$.globals,$.locals,$.fromlist)}
 _b_.input=function(msg){var res=prompt(msg ||'')||''
 if($B.imported["sys"]&&
 $B.module_getattr($B.imported["sys"],'ps1')!==$B.NULL){
@@ -10005,7 +10009,7 @@ _b_.repr($B.fast_tuple(self.interpolations))
 return `<Template(${strings}, ${interpolations})>`}
 var Template_funcs=$B.Template.tp_funcs={}
 Template_funcs.__class_getitem__=function(){return $B.$class_getitem.apply(null,arguments)}
-Template_funcs.__reduce__=function(self){$B.$import('string.templatelib')
+Template_funcs.__reduce__=function(self){$B.import('string.templatelib')
 var module=$B.imported['string.templatelib']
 var _template_unpickle=$B.module_getattr(module,'_template_unpickle')
 return $B.fast_tuple([_template_unpickle,$B.fast_tuple([$B.fast_tuple(self.strings),$B.fast_tuple(self.interpolations)])])}
@@ -14559,11 +14563,11 @@ let package_name=mod_name
 while(parsed_name.length > 1){var module=parsed_name.pop()
 package_name=parsed_name.join('.')
 if($B.imported[package_name]===undefined){
-$B.$import(package_name,[],{},locals)
+$B.import(package_name,[],{},locals)
 $B.module_setattr($B.imported[package_name],module,$B.imported[mod_name])
 mod_name=module}}
 return $B.imported[package_name]}}
-$B.$import=function(mod_name,fromlist,aliases,locals,inum){
+$B.import=function(mod_name,fromlist,aliases,locals,inum){
 var test=false 
 if(test){console.log('import',mod_name,fromlist,aliases)}
 if(mod_name=='_frozen_importlib_external'){
@@ -14686,7 +14690,7 @@ parts.pop()}
 if(module){
 var submodule=$B.module_getattr(current_module,'__name__')+
 '.'+module
-$B.$import(submodule,[],{},{},inum)
+$B.import(submodule,[],{},{},inum)
 current_module=$B.imported[submodule]}
 if(names.length > 0 && names[0]=='*'){
 for(var item of $B.module_items(current_module)){if(item.key.startsWith('$')||item.key.startsWith('_')){continue}
@@ -14699,9 +14703,9 @@ if(value !==$B.NULL){
 ns[alias]=value}else{
 var sub_module=$B.module_getattr(current_module,'__name__')+
 '.'+name
-$B.$import(sub_module,[],{},{})
+$B.import(sub_module,[],{},{})
 ns[alias]=$B.imported[sub_module]}}}}else{
-$B.$import(module,names,aliases,locals,inum)}}
+$B.import(module,names,aliases,locals,inum)}}
 $B.$meta_path=[VFSFinder,StdlibStaticFinder,PathFinder]
 $B.finders={VFS:VFSFinder,stdlib_static:StdlibStaticFinder,path:PathFinder}
 function optimize_import_for_path(path,filetype){if(path.slice(-1)!="/"){path=path+"/" }
@@ -14977,7 +14981,7 @@ if(hookname===undefined){hookname="pdb.set_trace"}
 [modname,dot,funcname]=_b_.str.rpartition(hookname,'.')
 if(dot==""){modname="builtins"}
 try{
-$B.$import(modname)
+$B.import(modname)
 hook=$B.$getattr($B.imported[modname],funcname)}catch(err){console.warn("cannot import breakpoint",hookname)
 return _b_.None}
 return $B.$call(hook,...arguments)},exc_info:function(){var frame_obj=$B.frame_obj,frame,exc
@@ -15211,7 +15215,7 @@ func.$function_infos=[]
 func.$function_infos[$B.func_attrs.name]='sleep'
 return{
 ob_type:$B.coroutine,$args:[seconds],$func:func}},Future,__getattr__:function(attr){
-$B.$import('_aio')
+$B.import('_aio')
 return $B.$getattr($B.imported._aio,attr)}}
 function load(name,module_obj){
 $B.init_dict(module_obj)
@@ -16548,13 +16552,13 @@ var has_type_params=this.type_params.length > 0
 if(has_type_params){check_type_params(this)
 js+=prefix+`function TYPE_PARAMS_OF_${this.name}() {\n`
 indent()
-js+=prefix+`$B.$import('_typing')\n`+
+js+=prefix+`$B.import('_typing')\n`+
 prefix+`var _typing = $B.imported._typing\n`
 var params=[],need_typing_module
 for(let item of this.type_params){if(item instanceof $B.ast.TypeVar){params.push(`${item.name}`)}else if(item instanceof $B.ast.TypeVarTuple){params.push(`unpack(${item.name})`)
 need_typing_module=true}else if(item instanceof $B.ast.ParamSpec){params.push(`${item.name}`)}}
 bases.push(`generic_base`)
-if(need_typing_module){js+=prefix+`$B.$import('typing')\n`+
+if(need_typing_module){js+=prefix+`$B.import('typing')\n`+
 prefix+'var typing = $B.imported.typing\n'+
 prefix+`var Unpack = $B.module_getattr(typing, 'Unpack')\n`+
 prefix+`var unpack = x => $B.$getitem(Unpack, x)\n`}
@@ -16859,7 +16863,7 @@ var type_params_scope=new Scope(tp_name,'type_params',this.type_params)
 scopes.push(type_params_scope)
 var type_params_ref=qualified_scope_name(scopes,type_params_scope)
 var type_params_func=`function TYPE_PARAMS_OF_${name2}() {\n`
-type_params=prefix+`$B.$import('_typing')\n`+
+type_params=prefix+`$B.import('_typing')\n`+
 prefix+`var _typing = $B.imported._typing\n`+
 prefix+`var locals_${type_params_ref} = $B.empty_dict(),\n`+
 prefix+tab+tab+`locals = locals_${type_params_ref},\n`+
@@ -17177,7 +17181,8 @@ $B.js_from_ast(this.body,scopes)+': '+
 $B.js_from_ast(this.orelse,scopes)+')'}
 $B.ast.Import.prototype.to_js=function(scopes){var js=prefix+`$B.set_lineno(frame, ${this.lineno})\n`
 var inum=add_to_positions(scopes,this)
-for(var alias of this.names){js+=prefix+`$B.$import("${alias.name}", [], `
+let func=this.is_lazy ? 'lazy_import' :'import'
+for(var alias of this.names){js+=prefix+`$B.import("${alias.name}", [], `
 if(alias.asname){var binding_scope=bind(alias.asname,scopes)
 var scope_name=make_scope_name(scopes,binding_scope)
 js+=`{'${alias.name}': [${scope_name}, '${alias.asname}']}, `}else{
@@ -17662,7 +17667,7 @@ var qualified_name=qualified_scope_name(scopes,type_alias_scope)
 var value=this.value.to_js(scopes)
 scopes.pop()
 scopes.pop()
-var js=prefix+`$B.$import('_typing')\n`
+var js=prefix+`$B.import('_typing')\n`
 js+=prefix+`var locals_${qualified_scope_name(scopes, type_param_scope)} = {}\n`
 js+=prefix+`$B.set_lineno(frame, ${this.lineno})\n`
 js+=prefix+`function TYPE_PARAMS_OF_${this.name.id}() {\n`

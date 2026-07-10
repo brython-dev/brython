@@ -4,6 +4,8 @@
 
     $B.imported[$B.OB_TYPE] = _b_.dict
 
+    $B.lazy_modules = _b_.set.$factory()
+    
     var update = $B.update_obj = function(mod, data) {
         for (let attr in data) {
             mod[attr] = data[attr]
@@ -744,7 +746,7 @@
                 modname = "builtins"
             }
             try {
-                $B.$import(modname)
+                $B.import(modname)
                 hook = $B.$getattr($B.imported[modname], funcname)
             } catch (err) {
                 console.warn("cannot import breakpoint", hookname)
@@ -824,6 +826,7 @@
                 $B.frame_obj.frame.$current_exception = value
             }
         },
+        lazy_modules: $B.lazy_modules,
         modules: $B.obj_dict($B.imported),
         path: {
             __get__: function() {
@@ -1453,7 +1456,7 @@
         Future,
         __getattr__: function(attr) {
             // search in _aio.py
-            $B.$import('_aio')
+            $B.import('_aio')
             return $B.$getattr($B.imported._aio, attr)
         }
     }
@@ -1714,5 +1717,6 @@ $B.module_setattr($B.imported.builtins, 'credits',
     Foundation, and a cast of thousands for supporting Python
     development.  See www.python.org for more information.`
 )
+
 
 })(__BRYTHON__);

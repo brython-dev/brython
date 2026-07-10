@@ -192,8 +192,9 @@ init_type(_b_, "filter", [
     0,
     _b_.object,
     0,
-    `Return an iterator yielding those items of iterable for which function(item)
-is true. If function is None, return the items that are true.`,
+    `Return an iterator yielding those items of iterable for which
+function(item) is true.  If function is None, return the items that
+are true.`,
     [_b_.object],
 ])
 
@@ -260,7 +261,8 @@ If x is not a number or if base is given, then x must be a string,
 bytes, or bytearray instance representing an integer literal in the
 given base.  The literal can be preceded by '+' or '-' and be surrounded
 by whitespace.  The base defaults to 10.  Valid bases are 0 and 2-36.
-Base 0 means to interpret the base from the string as an integer literal.
+Base 0 means to interpret the base from the string as an integer
+iteral.
 >>> int('0b100', base=0)
 4`,
     [_b_.object],
@@ -292,8 +294,8 @@ init_type(_b_, "map", [
     `Make an iterator that computes the function using arguments from
 each of the iterables.  Stops when the shortest iterable is exhausted.
 
-If strict is true and one of the arguments is exhausted before the others,
-raise a ValueError.`,
+If strict is true and one of the arguments is exhausted before the
+others, raise a ValueError.`,
     [_b_.object],
 ])
 
@@ -385,7 +387,7 @@ init_type(_b_, "reversed", [
 
 init_type(_b_, "sentinel", [
     "sentinel",
-    32,
+    40,
     0,
     20738,
     0,
@@ -418,7 +420,9 @@ init_type(_b_, "slice", [
     `slice(stop)
 slice(start, stop[, step])
 
-Create a slice object.  This is used for extended slicing (e.g. a[0:10:2]).`,
+Create a slice object.
+
+This is used for extended slicing (e.g. a[0:10:2]).`,
     [_b_.object],
 ])
 
@@ -481,7 +485,8 @@ init_type(_b_, "super", [
     `super() -> same as super(__class__, <first argument>)
 super(type) -> unbound super object
 super(type, obj) -> bound super object; requires isinstance(obj, type)
-super(type, type2) -> bound super object; requires issubclass(type2, type)
+super(type, type2) -> bound super object; requires
+    issubclass(type2, type)
 Typical use to call a cooperative superclass method:
 class C(B):
     def meth(self, arg):
@@ -533,13 +538,13 @@ init_type(_b_, "zip", [
     0,
     _b_.object,
     0,
-    `The zip object yields n-length tuples, where n is the number of iterables
-passed as positional arguments to zip().  The i-th element in every tuple
-comes from the i-th iterable argument to zip().  This continues until the
-shortest argument is exhausted.
+    `The zip object yields n-length tuples, where n is the number of
+iterables passed as positional arguments to zip().  The i-th element
+in every tuple comes from the i-th iterable argument to zip().  This
+continues until the shortest argument is exhausted.
 
-If strict is true and one of the arguments is exhausted before the others,
-raise a ValueError.
+If strict is true and one of the arguments is exhausted before the
+others, raise a ValueError.
 
    >>> list(zip('abcdefg', range(3), range(4)))
    [('a', 0, 0), ('b', 1, 1), ('c', 2, 2)]`,
@@ -1151,7 +1156,7 @@ init_type($B, "lazy_import", [
     0,
     _b_.object,
     0,
-    `Represents a deferred import that will be resolved on first use.
+    `Represents a lazy import that will be resolved on first use.
 
 Instances of this object accessed from the global scope will be
 automatically imported based upon their name and then replaced with

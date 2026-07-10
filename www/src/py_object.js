@@ -617,7 +617,7 @@ object_funcs.__reduce__ = function(cls) {
         $B.RAISE(_b_.TypeError, `cannot pickle '${$B.class_name(cls)}' object`)
     }
     if ($B.imported.copyreg === undefined) {
-        $B.$import('copyreg')
+        $B.import('copyreg')
     }
     var res = [$B.module_getattr($B.imported.copyreg, '_reconstructor')]
     var D = $B.get_class(cls),
@@ -657,7 +657,7 @@ object_funcs.__reduce_ex__ = function(self, protocol) {
         return $B.$call(reduce, self)
     }
     if ($B.imported.copyreg === undefined) {
-        $B.$import('copyreg')
+        $B.import('copyreg')
     }
     if (protocol < 2) {
         var _reduce_ex = $B.module_getattr($B.imported.copyreg, '_reduce_ex')

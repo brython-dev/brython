@@ -185,7 +185,7 @@ _b_.bin = function(obj) {
 
 _b_.breakpoint = function() {
     // PEP 553
-    $B.$import('sys', [])
+    $B.import('sys', [])
     var missing = {},
         hook = $B.$getattr($B.imported.sys, 'breakpointhook', missing)
     if (hook === missing) {
@@ -744,14 +744,14 @@ $B.time_builtin_getattr = 0
 
 $B.$getattr = function(obj, attr, _default) {
     // Used internally to avoid having to parse the arguments
-    var test = false // attr == 'maketrans'
-    var test = false // attr == '__qualname__'
+    var test = false // attr == 'a2b_qp'
     if (test) {
         console.log('$getattr', obj, attr)
     }
     var res
     if (obj === undefined || obj === null) {
         console.log('getting attribute', attr)
+        console.log(Error().stack)
         $B.RAISE_ATTRIBUTE_ERROR("Javascript object '" + obj +
             "' has no attribute", obj, attr)
     }
@@ -1013,7 +1013,7 @@ var help = _b_.help = function(obj) {
             }
         }
         // use pydoc
-        $B.$import('pydoc')
+        $B.import('pydoc')
         return $B.$call($B.$getattr($B.imported.pydoc, 'help'), obj)
     }
     if ($B.get_class(obj) === $B.module) {
@@ -1059,7 +1059,6 @@ _b_.id = function(obj) {
 
 // The default __import__ function is a builtin
 _b_.__import__ = function() {
-    // TODO : Install $B.$__import__ in builtins module to avoid nested call
     var $ = $B.args('__import__', 5,
         {name: null, globals: null, locals: null, fromlist: null, level: null},
         arguments,
@@ -1069,6 +1068,19 @@ _b_.__import__ = function() {
         $B.RAISE(_b_.ValueError, "Empty module name")
     }
     return $B.$__import__($.name, $.globals, $.locals, $.fromlist)
+}
+
+// The default __import__ function is a builtin
+_b_.__lazy_import__ = function() {
+    var $ = $B.args('__lazy_import__', 5,
+        {name: null, globals: null, locals: null, fromlist: null, level: null},
+        arguments,
+        {globals:None, locals:None, fromlist:_b_.tuple.$factory(), level:0},
+        null, null)
+    if ($.name === '' && $.level === 0) {
+        $B.RAISE(_b_.ValueError, "Empty module name")
+    }
+    return $B.$__lazy_import__($.name, $.globals, $.locals, $.fromlist)
 }
 
 // not a direct alias of prompt: input has no default value

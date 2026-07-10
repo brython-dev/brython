@@ -454,12 +454,13 @@ function run_py(module_contents, path, module, compiled) {
             source_ts: $B.$getattr(spec, 'loader_state').timestamp
         }
     } catch (err) {
-        console.log("" + err + " " + " for module " + module.__name__)
+        console.log('error', err)
+        console.log('module', module)
         for (let attr in err) {
             console.log(attr + " " + err[attr])
         }
         if ($B.get_option('debug') > 0) {
-            console.log("line info " + __BRYTHON__.line_info)
+            console.log("frame obj", $B.frame_obj)
         }
         throw err
     }
@@ -1349,7 +1350,7 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist) {
             if ($B.imported[package_name] === undefined) {
                 // may happen if the modules defines __name__ = "X.Y" and package
                 // X has not been imported
-                $B.$import(package_name, [], {}, locals)
+                $B.import(package_name, [], {}, locals)
                 $B.module_setattr($B.imported[package_name], module,
                     $B.imported[mod_name])
                 mod_name = module
@@ -1370,7 +1371,7 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist) {
 
  * @return None
  */
-$B.$import = function(mod_name, fromlist, aliases, locals, inum) {
+$B.import = function(mod_name, fromlist, aliases, locals, inum) {
     /*
     mod_name: module name specified in the import statement
     fromlist: names specified in "from" statement
@@ -1379,9 +1380,10 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum) {
     locals: local namespace import bindings will be applied upon
     inum: instruction number
     */
-    var test = false // mod_name == 'posix' // && fromlist.length == 1 && fromlist[0] == "timer"
+    var test = false // mod_name == 'binascii' // && fromlist.length == 1 && fromlist[0] == "timer"
     if (test) {
         console.log('import', mod_name, fromlist, aliases)
+        console.log('loals', locals)
     }
     // special case
     if (mod_name == '_frozen_importlib_external') {
@@ -1476,16 +1478,10 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum) {
         // [Import spec] Fall back to
         __import__ = $B.$__import__
     }
-    // FIXME: Should we need locals dict supply it in, now it is useless
-    var importer = typeof __import__ == "function" ?
-                        __import__ :
-                        $B.$getattr(__import__, "__call__")
-    if (test) {
-        console.log('use importer', importer, 'mod_name', mod_name, 'fromlist', fromlist)
-        console.log('in imported', $B.imported[mod_name])
-    }
+
     try {
-        var modobj = importer(mod_name, globals, undefined, fromlist, 0)
+        var modobj = $B.$call(__import__,
+            mod_name, globals, undefined, fromlist, 0)
     } catch (err) {
         if (test) {
             console.log('set error', $B.get_class(err))
@@ -1503,6 +1499,9 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum) {
     if (! fromlist || fromlist.length == 0) {
         // import mod_name [as alias]
         // FIXME : Ensure this will work for relative imports
+        if (test) {
+            console.log('nothing in fromlist')
+        }
         let alias = aliases[mod_name]
         if (alias) {
             var [ns, name] = alias
@@ -1511,6 +1510,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum) {
             locals[norm_parts[0]] = modobj
             if (test) {
                 console.log('locals of', norm_parts[0], 'set to', modobj)
+                console.log('locals[',norm_parts[0],'] is', locals[norm_parts[0]])
             }
             // TODO: After binding 'a' should we also bind 'a.b' , 'a.b.c' , ... ?
         }
@@ -1616,6 +1616,9 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum) {
                 }
             }
         }
+        if (test) {
+            console.log('$B.import returns locals', locals)
+        }
         return locals
     }
 }
@@ -1665,7 +1668,7 @@ $B.$import_from = function(module, names, aliases, level, locals, inum) {
             // form "from .foo import bar"
             var submodule = $B.module_getattr(current_module, '__name__') +
                 '.' + module
-            $B.$import(submodule, [], {}, {}, inum)
+            $B.import(submodule, [], {}, {}, inum)
             current_module = $B.imported[submodule]
         }
         // get names from a package
@@ -1693,15 +1696,96 @@ $B.$import_from = function(module, names, aliases, level, locals, inum) {
                     // try to import module in the package
                     var sub_module = $B.module_getattr(current_module, '__name__') +
                          '.' + name
-                    $B.$import(sub_module, [], {}, {})
+                    $B.import(sub_module, [], {}, {})
                     ns[alias] = $B.imported[sub_module]
                 }
             }
         }
     } else {
         // import module
-        $B.$import(module, names, aliases, locals, inum)
+        $B.import(module, names, aliases, locals, inum)
     }
+}
+
+/* lazy_import start */
+$B.lazy_import.tp_repr = function(self) {
+    return `<lazy_import '${self.name}'>`
+}
+
+var lazy_import_funcs = $B.lazy_import.tp_funcs = {}
+
+lazy_import_funcs.resolve = function(self) {
+
+}
+
+$B.lazy_import.tp_methods = ["resolve"]
+
+/* lazy_import end */
+
+$B.LAZY_IMPORTS = Symbol('LAZY_IMPORTS')
+
+var nb_lazy = 0
+var lazy_gets = {}
+var nb_imports = {}
+
+$B._lazy_import = function(mod_name, fromlist, aliases, locals, inum) {
+    let test = mod_name == '_imp'
+    if (test) {
+        console.log('lazy import', mod_name)
+        console.log('in imported ?', Object.hasOwn($B.imported, mod_name))
+    }
+    let obj = {
+        ob_type: $B.lazy_import,
+        frame: $B.frame_obj.frame,
+        builtins: _b_,
+        name: mod_name,
+        fromlist
+    }
+    locals[$B.LAZY_IMPORTS] = locals[$B.LAZY_IMPORTS] ?? {}
+    _b_.set.tp_funcs.add($B.lazy_modules, mod_name)
+
+    let alias = mod_name
+
+    if (Object.hasOwn(aliases, mod_name)) {
+        alias = aliases[mod_name][1]
+        console.log('alias', alias)
+    }
+
+    Object.defineProperty(locals, alias, {
+        enumerable: true,
+        configurable: true,
+        get() {
+            nb_lazy++
+            lazy_gets[mod_name] = lazy_gets[mod_name] ?? 0
+            lazy_gets[mod_name] += 1
+            if (nb_lazy > 300) {
+                Error.stackTraceLimit = 50
+                console.log('lazy gets', lazy_gets)
+                console.log('nb imports', nb_imports)
+                throw Error('overflow on get')
+            }
+            if (! Object.hasOwn(locals[$B.LAZY_IMPORTS], mod_name)) {
+                nb_imports[mod_name] = nb_imports[mod_name] ?? 0
+                nb_imports[mod_name]++
+                $B.import(mod_name, fromlist, aliases, locals, inum)
+            }
+            return locals[$B.LAZY_IMPORTS][mod_name]
+        },
+        set(value) {
+            nb_lazy++
+            if (nb_lazy > 300) {
+                throw Error('overflow on set')
+            }
+            locals[$B.LAZY_IMPORTS][mod_name] = value
+            if (test) {
+                console.log('remove', mod_name, 'from lazy modules', $B.lazy_modules)
+            }
+            if (_b_.set.sq_contains($B.lazy_modules, mod_name)) {
+                _b_.set.tp_funcs.remove($B.lazy_modules, mod_name)
+            }
+        }
+    })
+    return obj
 }
 
 // List of finders, also used by brython()

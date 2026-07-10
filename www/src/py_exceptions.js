@@ -1945,7 +1945,10 @@ $B.show_error = function(err) {
 
 $B.handle_error = function(err) {
     // Print the error traceback on the standard error stream
-    console.log('handle error', $B.frame_obj)
+    if ($B.get_option('debug') > 2) {
+        console.log('handle error', err)
+        console.log('frame obj', $B.frame_obj)
+    }
     if (err.$handled) {
         return
     }
