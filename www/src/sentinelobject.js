@@ -19,7 +19,6 @@ _b_.sentinel.tp_repr = function(self) {
 _b_.sentinel.tp_hash = _b_.object.tp_hash
 
 _b_.sentinel.tp_new = function(cls, args, kw) {
-    console.log('new sentinel', cls, args, kw)
     if (args.length != 1){
         $B.RAISE(_b_.TypeError,
             `sentinel expected 1 argument, got ${args.length}`

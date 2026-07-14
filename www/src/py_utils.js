@@ -1279,7 +1279,7 @@ $B.call_attr = function(obj, attr, inum, ...args) {
             }
         }
     }
-    return $B.$call_with_position($B.$getattr(obj, attr), inum, ...args)
+    return $B.$call_with_position($B.$getattr_pep657(obj, attr, inum), inum, ...args)
 }
 
 var counter = 0

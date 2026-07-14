@@ -366,9 +366,9 @@ function run_js(module_contents, path, _module) {
 function run_py(module_contents, path, module, compiled) {
     // set file cache for path ; used in built-in function open()
     var filename = $B.module_getattr(module, '__file__')
-    var test = false // filename == 'sys'
+    var test = false // filename.endsWith('_frozen_importlib.py')
     if (test) {
-        console.log('run py', filename)
+        console.log('------------------  run py', filename)
     }
     $B.file_cache[filename] = module_contents
     $B.url2name[filename] = $B.module_getattr(module, '__name__')
@@ -411,7 +411,9 @@ function run_py(module_contents, path, module, compiled) {
             "return $module"
         var module_id = prefix + module_name.replace(/\./g, '_')
         //console.log(module.__name__, js.length)
-        //console.log(js)
+        if (test) {
+            console.log('js for', filename, '\n', js)
+        }
         var mod = (new Function(module_id, js))(module)
     } catch (err) {
         err.$frame_obj = err.$frame_obj || $B.frame_obj
@@ -1472,12 +1474,8 @@ $B.import = function(mod_name, fromlist, aliases, locals, inum) {
     // [Import spec] Resolve __import__ in global namespace
     var current_frame = $B.frame_obj.frame,
         _globals = current_frame[3],
-        __import__ = _globals["__import__"],
+        __import__ = _b_.__import__,
         globals = $B.obj_dict(_globals)
-    if (__import__ === undefined) {
-        // [Import spec] Fall back to
-        __import__ = $B.$__import__
-    }
 
     try {
         var modobj = $B.$call(__import__,
@@ -1545,6 +1543,9 @@ $B.import = function(mod_name, fromlist, aliases, locals, inum) {
         } else {
             // from mod_name import N1 [as V1], ... Nn [as Vn]
             // from modname import * ... when __all__ is defined
+            if (test) {
+                console.log('modobj', modobj)
+            }
             for (let name of __all__) {
                 var [ns, alias] = [locals, name]
                 if (aliases[name]) {
@@ -1572,8 +1573,12 @@ $B.import = function(mod_name, fromlist, aliases, locals, inum) {
                             globals, undefined, [], 0)
                         // [Import spec] ... then check imported module again for name
                         if (test) {
-                            console.log('import', mod_name + '.' + name, 'ok')
-                            console.log($B.imported[mod_name + '.' + name])
+                            console.log('import', submodule_name, 'ok')
+                            console.log($B.imported[submodule_name])
+                        }
+                        if (! Object.hasOwn($B.imported, submodule_name)) {
+                            // might be the case with overriden __import__
+                            $B.RAISE(_b_.ImportError, submodule_name)
                         }
                         ns[alias] = $B.imported[submodule_name]
                     } catch ($err3) {
@@ -1724,15 +1729,11 @@ $B.lazy_import.tp_methods = ["resolve"]
 
 $B.LAZY_IMPORTS = Symbol('LAZY_IMPORTS')
 
-var nb_lazy = 0
-var lazy_gets = {}
-var nb_imports = {}
-
 $B._lazy_import = function(mod_name, fromlist, aliases, locals, inum) {
-    let test = mod_name == '_imp'
+    let test = false // mod_name == '_imp'
     if (test) {
         console.log('lazy import', mod_name)
-        console.log('in imported ?', Object.hasOwn($B.imported, mod_name))
+        // console.log('in imported ?', Object.hasOwn($B.imported, mod_name))
     }
     let obj = {
         ob_type: $B.lazy_import,
@@ -1748,44 +1749,91 @@ $B._lazy_import = function(mod_name, fromlist, aliases, locals, inum) {
 
     if (Object.hasOwn(aliases, mod_name)) {
         alias = aliases[mod_name][1]
-        console.log('alias', alias)
     }
 
     Object.defineProperty(locals, alias, {
         enumerable: true,
         configurable: true,
         get() {
-            nb_lazy++
-            lazy_gets[mod_name] = lazy_gets[mod_name] ?? 0
-            lazy_gets[mod_name] += 1
-            if (nb_lazy > 300) {
-                Error.stackTraceLimit = 50
-                console.log('lazy gets', lazy_gets)
-                console.log('nb imports', nb_imports)
-                throw Error('overflow on get')
-            }
             if (! Object.hasOwn(locals[$B.LAZY_IMPORTS], mod_name)) {
-                nb_imports[mod_name] = nb_imports[mod_name] ?? 0
-                nb_imports[mod_name]++
+                if (test) {
+                    console.log(alias, 'not in locals[lazy import], frame', $B.frame_obj)
+                }
                 $B.import(mod_name, fromlist, aliases, locals, inum)
             }
             return locals[$B.LAZY_IMPORTS][mod_name]
         },
         set(value) {
-            nb_lazy++
-            if (nb_lazy > 300) {
-                throw Error('overflow on set')
-            }
             locals[$B.LAZY_IMPORTS][mod_name] = value
-            if (test) {
-                console.log('remove', mod_name, 'from lazy modules', $B.lazy_modules)
-            }
             if (_b_.set.sq_contains($B.lazy_modules, mod_name)) {
                 _b_.set.tp_funcs.remove($B.lazy_modules, mod_name)
             }
         }
     })
     return obj
+}
+
+$B.lazy_import_from = function(mod_name, fromlist, aliases, level, locals, inum) {
+    let test = false // mod_name == '_imp'
+    if (test) {
+        console.log('lazy import', mod_name, fromlist, 'locals', locals)
+        // console.log('in imported ?', Object.hasOwn($B.imported, mod_name))
+    }
+    if (Object.hasOwn($B.imported, mod_name)) {
+        return $B.$import_from(mod_name, fromlist, aliases, level, locals, inum)
+    }
+    locals[$B.LAZY_IMPORTS] = locals[$B.LAZY_IMPORTS] ?? {}
+    _b_.set.tp_funcs.add($B.lazy_modules, mod_name)
+
+    for (let name of fromlist) {
+        let obj = {
+            ob_type: $B.lazy_import,
+            frame: $B.frame_obj.frame,
+            builtins: _b_,
+            module: mod_name,
+            name
+        }
+
+        let alias = name
+
+        if (Object.hasOwn(aliases, name)) {
+            alias = aliases[name][1]
+        }
+
+        Object.defineProperty(locals, alias, {
+            enumerable: true,
+            configurable: true,
+            get() {
+                if (! Object.hasOwn(locals[$B.LAZY_IMPORTS], alias)) {
+                    if (test) {
+                        console.log(alias, 'not in locals[lazy import], frame', $B.frame_obj)
+                    }
+                    if (_b_.set.sq_contains($B.lazy_modules, mod_name)) {
+                        $B.import(mod_name, fromlist, aliases, locals, inum)
+                        _b_.set.tp_funcs.remove($B.lazy_modules, mod_name)
+                    }
+                    let value
+                    let module = $B.imported[mod_name]
+                    try {
+                        value = $B.module_getattr(module, name)
+                    } catch (err) {
+                        $B.set_inum(inum)
+                        let module_name = $B.$getattr(module, '__name__',
+                            '<unknown module name>')
+                        $B.RAISE(_b_.ImportError,
+                            `cannot import name '${name}' from ` +
+                            `'${module_name}' (unknown location)'`
+                        )
+                    }
+                    locals[$B.LAZY_IMPORTS][alias] = value
+                }
+                return locals[$B.LAZY_IMPORTS][alias]
+            },
+            set(value) {
+                locals[$B.LAZY_IMPORTS][alias] = value
+            }
+        })
+    }
 }
 
 // List of finders, also used by brython()

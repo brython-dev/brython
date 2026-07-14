@@ -379,8 +379,9 @@ The enumerate object yields pairs containing a count (from start, which
 defaults to zero) and a value yielded by the iterable argument.
 enumerate is useful for obtaining an indexed list:
     (0, seq[0]), (1, seq[1]), (2, seq[2]), ...`,[_b_.object],])
-init_type(_b_,"filter",["filter",32,0,21762,0,_b_.object,0,`Return an iterator yielding those items of iterable for which function(item)
-is true. If function is None, return the items that are true.`,[_b_.object],])
+init_type(_b_,"filter",["filter",32,0,21762,0,_b_.object,0,`Return an iterator yielding those items of iterable for which
+function(item) is true.  If function is None, return the items that
+are true.`,[_b_.object],])
 init_type(_b_,"float",["float",24,0,4199682,0,_b_.object,0,`Convert a string or number to a floating-point number, if possible.`,[_b_.object],])
 init_type(_b_,"frozendict",["frozendict",56,0,4216130,0,_b_.object,0,`dict() -> new empty dictionary
 dict(mapping) -> new dictionary initialized from a mapping object's
@@ -401,7 +402,8 @@ If x is not a number or if base is given, then x must be a string,
 bytes, or bytearray instance representing an integer literal in the
 given base.  The literal can be preceded by '+' or '-' and be surrounded
 by whitespace.  The base defaults to 10.  Valid bases are 0 and 2-36.
-Base 0 means to interpret the base from the string as an integer literal.
+Base 0 means to interpret the base from the string as an integer
+iteral.
 >>> int('0b100', base=0)
 4`,[_b_.object],])
 init_type(_b_,"list",["list",40,0,37770530,0,_b_.object,0,`Built-in mutable sequence.
@@ -409,8 +411,8 @@ If no argument is given, the constructor creates a new empty list.
 The argument must be an iterable if specified.`,[_b_.object],])
 init_type(_b_,"map",["map",40,0,21762,0,_b_.object,0,`Make an iterator that computes the function using arguments from
 each of the iterables.  Stops when the shortest iterable is exhausted.
-If strict is true and one of the arguments is exhausted before the others,
-raise a ValueError.`,[_b_.object],])
+If strict is true and one of the arguments is exhausted before the
+others, raise a ValueError.`,[_b_.object],])
 init_type(_b_,"memoryview",["memoryview",144,8,20770,136,_b_.object,0,`Create a new memoryview object which references the given object.`,[_b_.object],])
 init_type(_b_,"property",["property",64,0,21762,0,_b_.object,0,`Property attribute.
   fget
@@ -447,11 +449,12 @@ start defaults to 0, and stop is omitted!  range(4) produces 0, 1, 2, 3.
 These are exactly the valid indices for a list of 4 elements.
 When step is given, it specifies the increment (or decrement).`,[_b_.object],])
 init_type(_b_,"reversed",["reversed",32,0,21762,0,_b_.object,0,`Return a reverse iterator over the values of the given sequence.`,[_b_.object],])
-init_type(_b_,"sentinel",["sentinel",32,0,20738,0,_b_.object,0,`Create a unique sentinel object with the given name.`,[_b_.object],])
+init_type(_b_,"sentinel",["sentinel",40,0,20738,0,_b_.object,0,`Create a unique sentinel object with the given name.`,[_b_.object],])
 init_type(_b_,"set",["set",200,0,4216066,192,_b_.object,0,`Build an unordered collection of unique elements.`,[_b_.object],])
 init_type(_b_,"slice",["slice",40,0,20738,0,_b_.object,0,`slice(stop)
 slice(start, stop[, step])
-Create a slice object.  This is used for extended slicing (e.g. a[0:10:2]).`,[_b_.object],])
+Create a slice object.
+This is used for extended slicing (e.g. a[0:10:2]).`,[_b_.object],])
 init_type(_b_,"staticmethod",["staticmethod",32,0,21762,0,_b_.object,24,`Convert a function to be a static method.
 A static method does not receive an implicit first argument.
 To declare a static method, use this idiom:
@@ -476,7 +479,8 @@ errors defaults to 'strict'.`,[_b_.object],])
 init_type(_b_,"super",["super",40,0,21762,0,_b_.object,0,`super() -> same as super(__class__, <first argument>)
 super(type) -> unbound super object
 super(type, obj) -> bound super object; requires isinstance(obj, type)
-super(type, type2) -> bound super object; requires issubclass(type2, type)
+super(type, type2) -> bound super object; requires
+    issubclass(type2, type)
 Typical use to call a cooperative superclass method:
 class C(B):
     def meth(self, arg):
@@ -493,12 +497,12 @@ If iterable is specified the tuple is initialized from iterable's items.
 If the argument is a tuple, the return value is the same object.`,[_b_.object],])
 init_type(_b_,"type",["type",944,40,2155896066,368,_b_.object,264,`type(object) -> the object's type
 type(name, bases, dict, **kwds) -> a new type`,[_b_.object],])
-init_type(_b_,"zip",["zip",48,0,21762,0,_b_.object,0,`The zip object yields n-length tuples, where n is the number of iterables
-passed as positional arguments to zip().  The i-th element in every tuple
-comes from the i-th iterable argument to zip().  This continues until the
-shortest argument is exhausted.
-If strict is true and one of the arguments is exhausted before the others,
-raise a ValueError.
+init_type(_b_,"zip",["zip",48,0,21762,0,_b_.object,0,`The zip object yields n-length tuples, where n is the number of
+iterables passed as positional arguments to zip().  The i-th element
+in every tuple comes from the i-th iterable argument to zip().  This
+continues until the shortest argument is exhausted.
+If strict is true and one of the arguments is exhausted before the
+others, raise a ValueError.
    >>> list(zip('abcdefg', range(3), range(4)))
    [('a', 0, 0), ('b', 1, 1), ('c', 2, 2)]`,[_b_.object],])
 init_type($B,"EncodingMap",["EncodingMap",64,0,4482,0,_b_.object,0,$B.NULL,[_b_.object],])
@@ -576,7 +580,7 @@ init_type($B,"instancemethod",["instancemethod",24,0,20738,0,_b_.object,0,`Bind 
 init_type($B,"items",["items",168,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"iterator",["iterator",32,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
 init_type($B,"keys",["keys",168,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
-init_type($B,"lazy_import",["lazy_import",56,0,20866,0,_b_.object,0,`Represents a deferred import that will be resolved on first use.
+init_type($B,"lazy_import",["lazy_import",56,0,20866,0,_b_.object,0,`Represents a lazy import that will be resolved on first use.
 Instances of this object accessed from the global scope will be
 automatically imported based upon their name and then replaced with
 the imported value.`,[_b_.object],])
@@ -724,8 +728,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-07-05 18:13:22.801005"
-__BRYTHON__.timestamp=1783268002800
+__BRYTHON__.compiled_date="2026-07-14 10:13:52.189905"
+__BRYTHON__.timestamp=1784016832189
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -2023,7 +2027,7 @@ if(own_dict && Object.hasOwn(own_dict,attr)){return $B.$call_with_position(own_d
 try{
 return in_klass_dict.bind(null,obj)(...args)}catch(err){$B.set_inum(inum)
 throw err}}}}}
-return $B.$call_with_position($B.$getattr(obj,attr),inum,...args)}
+return $B.$call_with_position($B.$getattr_pep657(obj,attr,inum),inum,...args)}
 var counter=0
 $B.nb_call_factory=0
 $B.$call_with_position=function(callable,inum,...args){var test=false 
@@ -4914,10 +4918,10 @@ $B.time_obj_getattr=0
 $B.time_builtin_getattr=0
 $B.$getattr=function(obj,attr,_default){
 var test=false 
-var test=false 
 if(test){console.log('$getattr',obj,attr)}
 var res
 if(obj===undefined ||obj===null){console.log('getting attribute',attr)
+console.log(Error().stack)
 $B.RAISE_ATTRIBUTE_ERROR("Javascript object '"+obj+
 "' has no attribute",obj,attr)}
 var rawname=attr
@@ -5057,12 +5061,10 @@ t==='boolean' ||$B.get_class(obj)===_b_.float){
 return $B.$call($B.$getattr(
 _b_.str.$factory($B.class_name(obj)+':'+_b_.str.$factory(obj)),'__hash__'))}
 return obj[$B.ID]=$B.UUID()}
-_b_.__import__=function(){
-var $=$B.args('__import__',5,{name:null,globals:null,locals:null,fromlist:null,level:null},arguments,{globals:None,locals:None,fromlist:_b_.tuple.$factory(),level:0},null,null)
+_b_.__import__=function(){var $=$B.args('__import__',5,{name:null,globals:null,locals:null,fromlist:null,level:null},arguments,{globals:None,locals:None,fromlist:_b_.tuple.$factory(),level:0},null,null)
 if($.name==='' && $.level===0){$B.RAISE(_b_.ValueError,"Empty module name")}
 return $B.$__import__($.name,$.globals,$.locals,$.fromlist)}
-_b_.__lazy_import__=function(){
-var $=$B.args('__lazy_import__',5,{name:null,globals:null,locals:null,fromlist:null,level:null},arguments,{globals:None,locals:None,fromlist:_b_.tuple.$factory(),level:0},null,null)
+_b_.__lazy_import__=function(){var $=$B.args('__lazy_import__',5,{name:null,globals:null,locals:null,fromlist:null,level:null},arguments,{globals:None,locals:None,fromlist:_b_.tuple.$factory(),level:0},null,null)
 if($.name==='' && $.level===0){$B.RAISE(_b_.ValueError,"Empty module name")}
 return $B.$__lazy_import__($.name,$.globals,$.locals,$.fromlist)}
 _b_.input=function(msg){var res=prompt(msg ||'')||''
@@ -6631,13 +6633,17 @@ save_scope=scope
 count_repeats=0
 trace.push(`  File "${filename}", line ${lineno}, in `+
 (frame[0]==frame[2]? '<module>' :frame[0]))
+let test=frame[0]=='_get_module_lock' && lineno==168
 var src=false
 if(! filename.startsWith('<')){src=$B.file_cache[filename]}
 if(src){var lines=src.split('\n')
 var positions=false
 if(! is_syntax_error && frame.inum && frame.positions){positions=$B.decode_position(
-frame.positions[Math.floor(frame.inum/2)])}
+frame.positions[Math.floor(frame.inum/2)])
+if(test){console.log('has inum',frame.inum,'positions',positions)}}
 if(positions){let[lineno,end_lineno,col_offset,end_col_offset]=positions
+if(test && ! $B.traceXXX){for(let x=lineno-20;x < lineno+10;x++){console.log(x,lines[x-1])}
+$B.traceXXX=1}
 if(lines[lineno-1]===undefined){console.log('no line, lines\n',lines,'lineno',lineno)
 console.log('filename',filename,'src',src)
 continue}
@@ -6778,7 +6784,8 @@ var flush=$B.$getattr(stderr,'flush',_b_.None)
 if(flush !==_b_.None){$B.$call(flush)}}catch(print_exc_err){
 console.log(print_exc_err)}}
 $B.handle_error=function(err){
-console.log('handle error',$B.frame_obj)
+if($B.get_option('debug')> 2){console.log('handle error',err)
+console.log('frame obj',$B.frame_obj)}
 if(err.$handled){return}
 err.$handled=true
 $B.show_error(err)
@@ -14187,7 +14194,7 @@ return true}
 function run_py(module_contents,path,module,compiled){
 var filename=$B.module_getattr(module,'__file__')
 var test=false 
-if(test){console.log('run py',filename)}
+if(test){console.log('------------------  run py',filename)}
 $B.file_cache[filename]=module_contents
 $B.url2name[filename]=$B.module_getattr(module,'__name__')
 var root,js,mod_name=$B.module_getattr(module,'__name__'),
@@ -14210,6 +14217,7 @@ js+='return '+prefix
 js+=module_name.replace(/\./g,"_")+"})(__BRYTHON__)\n"+
 "return $module"
 var module_id=prefix+module_name.replace(/\./g,'_')
+if(test){console.log('js for',filename,'\n',js)}
 var mod=(new Function(module_id,js))(module)}catch(err){err.$frame_obj=err.$frame_obj ||$B.frame_obj
 if($B.get_option('debug',err)> 2){console.log('error',err,"\n for module "+module_name)
 console.log("module",module)
@@ -14228,9 +14236,10 @@ for(let attr in mod){$B.module_setattr(module,attr,mod[attr])}
 $B.module_setattr(module,'__initializing__',false)
 var spec=$B.module_getattr(module,'__spec__')
 return{
-content:src,name:mod_name,imports,is_package:module.$is_package,path,timestamp:$B.timestamp,source_ts:$B.$getattr(spec,'loader_state').timestamp}}catch(err){console.log(""+err+" "+" for module "+module.__name__)
+content:src,name:mod_name,imports,is_package:module.$is_package,path,timestamp:$B.timestamp,source_ts:$B.$getattr(spec,'loader_state').timestamp}}catch(err){console.log('error',err)
+console.log('module',module)
 for(let attr in err){console.log(attr+" "+err[attr])}
-if($B.get_option('debug')> 0){console.log("line info "+__BRYTHON__.line_info)}
+if($B.get_option('debug')> 0){console.log("frame obj",$B.frame_obj)}
 throw err}}
 $B.run_py=run_py 
 $B.run_js=run_js
@@ -14569,7 +14578,8 @@ mod_name=module}}
 return $B.imported[package_name]}}
 $B.import=function(mod_name,fromlist,aliases,locals,inum){
 var test=false 
-if(test){console.log('import',mod_name,fromlist,aliases)}
+if(test){console.log('import',mod_name,fromlist,aliases)
+console.log('loals',locals)}
 if(mod_name=='_frozen_importlib_external'){
 var ns,alias
 if(aliases[mod_name]){[ns,alias]=aliases[mod_name]}else{
@@ -14609,26 +14619,21 @@ if($B.get_option('debug')==10){console.log("$import "+mod_name)
 console.log("use VFS ? "+$B.use_VFS)
 console.log("use static stdlib paths ? "+
 $B.get_option('static_stdlib_import'))}
-var current_frame=$B.frame_obj.frame,_globals=current_frame[3],__import__=_globals["__import__"],globals=$B.obj_dict(_globals)
-if(__import__===undefined){
-__import__=$B.$__import__}
-var importer=typeof __import__=="function" ?
-__import__ :
-$B.$getattr(__import__,"__call__")
-if(test){console.log('use importer',importer,'mod_name',mod_name,'fromlist',fromlist)
-console.log('in imported',$B.imported[mod_name])}
+var current_frame=$B.frame_obj.frame,_globals=current_frame[3],__import__=_b_.__import__,globals=$B.obj_dict(_globals)
 try{
-var modobj=importer(mod_name,globals,undefined,fromlist,0)}catch(err){if(test){console.log('set error',$B.get_class(err))}
+var modobj=$B.$call(__import__,mod_name,globals,undefined,fromlist,0)}catch(err){if(test){console.log('set error',$B.get_class(err))}
 $B.set_inum(inum)
 throw err}
 if(test){console.log('step 3, mod_name',mod_name,'fromlist',fromlist)
 console.log('modobj',modobj)}
 if(! fromlist ||fromlist.length==0){
+if(test){console.log('nothing in fromlist')}
 let alias=aliases[mod_name]
 if(alias){var[ns,name]=alias
 ns[name]=$B.imported[mod_name]}else{
 locals[norm_parts[0]]=modobj
-if(test){console.log('locals of',norm_parts[0],'set to',modobj)}}}else{
+if(test){console.log('locals of',norm_parts[0],'set to',modobj)
+console.log('locals[',norm_parts[0],'] is',locals[norm_parts[0]])}}}else{
 var __all__=fromlist,thunk={}
 if(fromlist && fromlist[0]=="*"){if(test){console.log('import *',modobj)}
 try{
@@ -14639,6 +14644,7 @@ aliases={}}}
 if(__all__===thunk){
 for(var item of _b_.dict.$iter_items($B.get_dict(modobj))){var attr=item.key
 if(attr[0]!=="_"){locals[attr]=item.value}}}else{
+if(test){console.log('modobj',modobj)}
 for(let name of __all__){var[ns,alias]=[locals,name]
 if(aliases[name]){[ns,alias]=aliases[name]}
 try{
@@ -14650,8 +14656,10 @@ try{
 if(test){console.log('try to import',mod_name+'.'+name)}
 var submodule_name=mod_name+'.'+name
 $B.$call(__import__,mod_name+'.'+name,globals,undefined,[],0)
-if(test){console.log('import',mod_name+'.'+name,'ok')
-console.log($B.imported[mod_name+'.'+name])}
+if(test){console.log('import',submodule_name,'ok')
+console.log($B.imported[submodule_name])}
+if(! Object.hasOwn($B.imported,submodule_name)){
+$B.RAISE(_b_.ImportError,submodule_name)}
 ns[alias]=$B.imported[submodule_name]}catch($err3){if(test){console.log('error 3',$err3)}
 $B.set_inum(inum)
 if(! $B.is_exc($err3,[_b_.ImportError])){throw $err3}
@@ -14669,6 +14677,7 @@ if($B.get_option('debug')> 2){console.log('no name',name,'in module',modobj)
 console.log($err3)
 console.log($B.frame_obj.frame)}
 $B.RAISE(_b_.ImportError,"cannot import name '"+name+"'")}}}}
+if(test){console.log('$B.import returns locals',locals)}
 return locals}}
 $B.$import_from=function(module,names,aliases,level,locals,inum){
 var test=false 
@@ -14706,6 +14715,44 @@ var sub_module=$B.module_getattr(current_module,'__name__')+
 $B.import(sub_module,[],{},{})
 ns[alias]=$B.imported[sub_module]}}}}else{
 $B.import(module,names,aliases,locals,inum)}}
+$B.lazy_import.tp_repr=function(self){return `<lazy_import '${self.name}'>`}
+var lazy_import_funcs=$B.lazy_import.tp_funcs={}
+lazy_import_funcs.resolve=function(self){}
+$B.lazy_import.tp_methods=["resolve"]
+$B.LAZY_IMPORTS=Symbol('LAZY_IMPORTS')
+$B._lazy_import=function(mod_name,fromlist,aliases,locals,inum){let test=false 
+if(test){console.log('lazy import',mod_name)}
+let obj={ob_type:$B.lazy_import,frame:$B.frame_obj.frame,builtins:_b_,name:mod_name,fromlist}
+locals[$B.LAZY_IMPORTS]=locals[$B.LAZY_IMPORTS]??{}
+_b_.set.tp_funcs.add($B.lazy_modules,mod_name)
+let alias=mod_name
+if(Object.hasOwn(aliases,mod_name)){alias=aliases[mod_name][1]}
+Object.defineProperty(locals,alias,{enumerable:true,configurable:true,get(){if(! Object.hasOwn(locals[$B.LAZY_IMPORTS],mod_name)){if(test){console.log(alias,'not in locals[lazy import], frame',$B.frame_obj)}
+$B.import(mod_name,fromlist,aliases,locals,inum)}
+return locals[$B.LAZY_IMPORTS][mod_name]},set(value){locals[$B.LAZY_IMPORTS][mod_name]=value
+if(_b_.set.sq_contains($B.lazy_modules,mod_name)){_b_.set.tp_funcs.remove($B.lazy_modules,mod_name)}}})
+return obj}
+$B.lazy_import_from=function(mod_name,fromlist,aliases,level,locals,inum){let test=false 
+if(test){console.log('lazy import',mod_name,fromlist,'locals',locals)}
+if(Object.hasOwn($B.imported,mod_name)){return $B.$import_from(mod_name,fromlist,aliases,level,locals,inum)}
+locals[$B.LAZY_IMPORTS]=locals[$B.LAZY_IMPORTS]??{}
+_b_.set.tp_funcs.add($B.lazy_modules,mod_name)
+for(let name of fromlist){let obj={ob_type:$B.lazy_import,frame:$B.frame_obj.frame,builtins:_b_,module:mod_name,name}
+let alias=name
+if(Object.hasOwn(aliases,name)){alias=aliases[name][1]}
+Object.defineProperty(locals,alias,{enumerable:true,configurable:true,get(){if(! Object.hasOwn(locals[$B.LAZY_IMPORTS],alias)){if(test){console.log(alias,'not in locals[lazy import], frame',$B.frame_obj)}
+if(_b_.set.sq_contains($B.lazy_modules,mod_name)){$B.import(mod_name,fromlist,aliases,locals,inum)
+_b_.set.tp_funcs.remove($B.lazy_modules,mod_name)}
+let value
+let module=$B.imported[mod_name]
+try{
+value=$B.module_getattr(module,name)}catch(err){$B.set_inum(inum)
+let module_name=$B.$getattr(module,'__name__','<unknown module name>')
+$B.RAISE(_b_.ImportError,`cannot import name '${name}' from `+
+`'${module_name}' (unknown location)'`
+)}
+locals[$B.LAZY_IMPORTS][alias]=value}
+return locals[$B.LAZY_IMPORTS][alias]},set(value){locals[$B.LAZY_IMPORTS][alias]=value}})}}
 $B.$meta_path=[VFSFinder,StdlibStaticFinder,PathFinder]
 $B.finders={VFS:VFSFinder,stdlib_static:StdlibStaticFinder,path:PathFinder}
 function optimize_import_for_path(path,filetype){if(path.slice(-1)!="/"){path=path+"/" }
@@ -14721,6 +14768,7 @@ $B.imported["_importlib"]=_importlib_module})(__BRYTHON__);
 "use strict";
 (function($B){var _b_=$B.builtins
 $B.imported[$B.OB_TYPE]=_b_.dict
+$B.lazy_modules=_b_.set.$factory()
 var update=$B.update_obj=function(mod,data){for(let attr in data){mod[attr]=data[attr]}}
 var modules={}
 var win=$B.jsobj2pyobj(globalThis)
@@ -15000,7 +15048,7 @@ var res=$B.$call($B.$getattr(obj,'__sizeof__'))
 if(typeof res=='number' ||typeof res=='bigint'){return res}}catch(err){}
 if(dflt !==undefined){return dflt}
 $B.RAISE(_b_.TypeError,"Type "+$B.class_name(obj)+" doesn't define __sizeof__")},getrecursionlimit:function(){return $B.recursion_limit},getrefcount:function(){return 0},gettrace:function(){return $B.tracefunc ||_b_.None},getunicodeinternedsize:function(){
-return 0},last_exc:{__get__:function(){return $B.module_getattr($B.imported._sys,'exception')()},__set__:function(value){$B.frame_obj.frame.$current_exception=value}},modules:$B.obj_dict($B.imported),path:{__get__:function(){var filename=$B.get_filename_for_import()
+return 0},last_exc:{__get__:function(){return $B.module_getattr($B.imported._sys,'exception')()},__set__:function(value){$B.frame_obj.frame.$current_exception=value}},lazy_modules:$B.lazy_modules,modules:$B.obj_dict($B.imported),path:{__get__:function(){var filename=$B.get_filename_for_import()
 return $B.$list($B.import_info[filename].path)},__set__:function(value){var filename=$B.get_filename_for_import()
 $B.import_info[filename].path=value}},meta_path:{__get__:function(){var filename=$B.get_filename()
 return $B.$list($B.import_info[filename].meta_path)},__set__:function(self,value){var filename=$B.get_filename()
@@ -17181,8 +17229,8 @@ $B.js_from_ast(this.body,scopes)+': '+
 $B.js_from_ast(this.orelse,scopes)+')'}
 $B.ast.Import.prototype.to_js=function(scopes){var js=prefix+`$B.set_lineno(frame, ${this.lineno})\n`
 var inum=add_to_positions(scopes,this)
-let func=this.is_lazy ? 'lazy_import' :'import'
-for(var alias of this.names){js+=prefix+`$B.import("${alias.name}", [], `
+let importer=this.is_lazy ? '_lazy_import' :'import'
+for(var alias of this.names){js+=prefix+`$B.${importer}("${alias.name}", [], `
 if(alias.asname){var binding_scope=bind(alias.asname,scopes)
 var scope_name=make_scope_name(scopes,binding_scope)
 js+=`{'${alias.name}': [${scope_name}, '${alias.asname}']}, `}else{
@@ -17194,8 +17242,9 @@ for(var i=0;i < parts.length;i++){scopes.imports[parts.slice(0,i+1).join(".")]=t
 js+=`${scope_name}, ${inum})\n`}
 return js.trimRight()}
 $B.ast.ImportFrom.prototype.to_js=function(scopes){if(this.module==='__future__'){if(!($B.last(scopes).ast instanceof $B.ast.Module)){compiler_error(this,'from __future__ imports must occur at the beginning of the file',$B.last(this.names))}}
+let func=this.is_lazy ? 'lazy_import_from' :'$import_from'
 var js=prefix+`$B.set_lineno(frame, ${this.lineno})\n`+
-prefix+`$B.$import_from("${this.module || ''}", `
+prefix+`$B.${func}("${this.module || ''}", `
 var names=this.names.map(x=> `"${x.name}"`).join(', '),aliases=[]
 for(var name of this.names){if(name.asname){
 var binding_scope=bind(name.asname,scopes)

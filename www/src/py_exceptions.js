@@ -1640,6 +1640,7 @@ function trace_from_stack(err) {
         count_repeats = 0
         trace.push(`  File "${filename}", line ${lineno}, in ` +
             (frame[0] == frame[2] ? '<module>' : frame[0]))
+        let test = frame[0] == '_get_module_lock' && lineno == 168
         var src = false
         if (! filename.startsWith('<')) {
             src = $B.file_cache[filename]
@@ -1651,9 +1652,18 @@ function trace_from_stack(err) {
             if (! is_syntax_error && frame.inum && frame.positions) {
                 positions = $B.decode_position(
                     frame.positions[Math.floor(frame.inum / 2)])
+                if (test) {
+                    console.log('has inum', frame.inum, 'positions', positions)
+                }
             }
             if (positions) {
                 let [lineno, end_lineno, col_offset, end_col_offset] = positions
+                if (test && ! $B.traceXXX) {
+                    for (let x = lineno - 20; x < lineno + 10; x++){
+                        console.log(x, lines[x - 1])
+                    }
+                    $B.traceXXX = 1
+                }
                 // part of first line before error
                 if (lines[lineno - 1] === undefined) {
                     console.log('no line, lines\n', lines, 'lineno', lineno)

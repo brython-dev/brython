@@ -3115,7 +3115,7 @@ $B.ast.IfExp.prototype.to_js = function(scopes) {
 $B.ast.Import.prototype.to_js = function(scopes) {
     var js = prefix + `$B.set_lineno(frame, ${this.lineno})\n`
     var inum = add_to_positions(scopes, this)
-    let importer = '_lazy_import' //this.is_lazy ? '_lazy_import' : 'import'
+    let importer = this.is_lazy ? '_lazy_import' : 'import'
     for (var alias of this.names) {
         js += prefix + `$B.${importer}("${alias.name}", [], `
         if (alias.asname) {
@@ -3146,9 +3146,9 @@ $B.ast.ImportFrom.prototype.to_js = function(scopes) {
                 $B.last(this.names))
         }
     }
-
+    let func = this.is_lazy ? 'lazy_import_from' : '$import_from'
     var js = prefix + `$B.set_lineno(frame, ${this.lineno})\n` +
-             prefix + `$B.$import_from("${this.module || ''}", `
+             prefix + `$B.${func}("${this.module || ''}", `
     var names = this.names.map(x => `"${x.name}"`).join(', '),
         aliases = []
     for (var name of this.names) {
