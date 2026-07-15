@@ -1382,7 +1382,7 @@ $B.import = function(mod_name, fromlist, aliases, locals, inum) {
     locals: local namespace import bindings will be applied upon
     inum: instruction number
     */
-    var test = false // mod_name == 'binascii' // && fromlist.length == 1 && fromlist[0] == "timer"
+    var test = mod_name == '_bootstrap' // && fromlist.length == 1 && fromlist[0] == "timer"
     if (test) {
         console.log('import', mod_name, fromlist, aliases)
         console.log('loals', locals)
@@ -1631,9 +1631,9 @@ $B.import = function(mod_name, fromlist, aliases, locals, inum) {
 $B.$import_from = function(module, names, aliases, level, locals, inum) {
     // Import names from modules; level is 0 for absolute import, > 0
     // for relative import (number of dots before module name)
-    var test = false // module == '_heapq' //&& names[0] == '_path_normpath'
+    var test = module == '_bootstrap' //&& names[0] == '_path_normpath'
     if (test) {
-        console.log('import from', module, names)
+        console.log('import from', module, names, aliases, level, locals, inum)
     }
     var current_module_name = $B.frame_obj.frame[2],
         parts = current_module_name.split('.'),
@@ -1651,6 +1651,7 @@ $B.$import_from = function(module, names, aliases, level, locals, inum) {
         }
         if (! current_module.$is_package) {
             if (parts.length == 1) {
+                console.log('current module', current_module, 'parts', parts)
                 $B.set_inum(inum)
                 $B.RAISE(_b_.ImportError,
                     'attempted relative import with no known parent package')
@@ -1761,7 +1762,15 @@ $B._lazy_import = function(mod_name, fromlist, aliases, locals, inum) {
                 }
                 $B.import(mod_name, fromlist, aliases, locals, inum)
             }
-            return locals[$B.LAZY_IMPORTS][mod_name]
+            let value = locals[$B.LAZY_IMPORTS][mod_name]
+            Object.defineProperty(locals, alias,
+                {
+                    configurable: true,
+                    writable: true,
+                    value
+                }
+            )
+            return value
         },
         set(value) {
             locals[$B.LAZY_IMPORTS][mod_name] = value
@@ -1809,7 +1818,7 @@ $B.lazy_import_from = function(mod_name, fromlist, aliases, level, locals, inum)
                         console.log(alias, 'not in locals[lazy import], frame', $B.frame_obj)
                     }
                     if (_b_.set.sq_contains($B.lazy_modules, mod_name)) {
-                        $B.import(mod_name, fromlist, aliases, locals, inum)
+                        $B.$import_from(mod_name, fromlist, aliases, level, locals, inum)
                         _b_.set.tp_funcs.remove($B.lazy_modules, mod_name)
                     }
                     let value

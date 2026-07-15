@@ -1126,6 +1126,8 @@ function init_scopes(type, scopes) {
 function compiler_check(obj) {
     var check_func = Object.getPrototypeOf(obj)._check
     if (check_func) {
+        console.log('compiler check', Object.getPrototypeOf(obj).constructor.$name)
+        alert()
         obj._check()
     }
 }
@@ -1283,7 +1285,6 @@ function annotation_code(scopes, scope, ref) {
 }
 
 $B.ast.AnnAssign.prototype.to_js = function(scopes) {
-    compiler_check(this)
     var scope = last_scope(scopes)
     var js = ''
     if (scopes.postpone_annotations) {
@@ -1375,7 +1376,6 @@ $B.ast.AnnAssign.prototype._check = function() {
 }
 
 $B.ast.Assign.prototype.to_js = function(scopes) {
-    compiler_check(this)
     var js
     if (! this.lineno || this.$loopvar) {
         // this.$loopvar is set for the assignement of a "for" target
@@ -1481,7 +1481,7 @@ $B.ast.Assign.prototype.to_js = function(scopes) {
 }
 
 
-$B.ast.Assign.prototype._check = function() {
+$B.ast.Assign.prototype._check = function(scopes) {
     for (var target of this.targets) {
         check_assign_or_delete(this, target)
     }
@@ -1620,7 +1620,6 @@ $B.ast.Attribute.prototype.to_js = function(scopes) {
 }
 
 $B.ast.AugAssign.prototype.to_js = function(scopes) {
-    compiler_check(this)
     var js,
         op_class = this.op.$name ? this.op : this.op.constructor
     for (var op in $B.op2ast_class) {
@@ -1776,7 +1775,6 @@ $B.ast.Break.prototype.to_js = function(scopes) {
 }
 
 $B.ast.Call.prototype.to_js = function(scopes) {
-    compiler_check(this)
     var inum = add_to_positions(scopes, this)
     var js
 
@@ -2152,7 +2150,6 @@ $B.ast.Continue.prototype.to_js = function(scopes) {
 }
 
 $B.ast.Delete.prototype.to_js = function(scopes) {
-    compiler_check(this)
     var js = ''
     for (var target of this.targets) {
         var inum = add_to_positions(scopes, target)
@@ -2256,7 +2253,6 @@ $B.ast.Expression.prototype.to_js = function(scopes) {
 $B.ast.For.prototype.to_js = function(scopes) {
     // Create a new scope with the same name to avoid binding in the enclosing
     // scope.
-    compiler_check(this)
     var id = make_id(),
         iter = $B.js_from_ast(this.iter, scopes),
         js = prefix + `frame.$lineno = ${this.lineno}\n`
@@ -2455,7 +2451,6 @@ function lexical_qualname(name, scopes){
 }
 
 $B.ast.FunctionDef.prototype.to_js = function(scopes) {
-    compiler_check(this)
     var symtable_block = scopes.symtable.table.blocks.get(fast_id(this))
     var in_class = last_scope(scopes).ast instanceof $B.ast.ClassDef,
         is_async = this instanceof $B.ast.AsyncFunctionDef,
@@ -3139,16 +3134,31 @@ $B.ast.Import.prototype.to_js = function(scopes) {
 }
 
 $B.ast.ImportFrom.prototype.to_js = function(scopes) {
-    if (this.module === '__future__') {
-        if (! ($B.last(scopes).ast instanceof $B.ast.Module)) {
-            compiler_error(this,
-                'from __future__ imports must occur at the beginning of the file',
-                $B.last(this.names))
+    let can_be_lazy = true
+
+    for (let i = scopes.length - 1; i > 0; i--) {
+        if (scopes[i].type == 'try') {
+            can_be_lazy = false
+            break
         }
     }
-    let func = this.is_lazy ? 'lazy_import_from' : '$import_from'
+
+    // lazy import by default, except in scope where it can't
+    let import_func = can_be_lazy ? 'lazy_import_from' : '$import_from'
+
+    // test case "from X import *"
+    let import_star = this.names.length == 1 && this.names[0].name == '*'
+
+    if (import_star) {
+        // Import cannot be lazy in this case
+        import_func = '$import_from'
+        // Mark scope as "blurred" by the presence of "from X import *"
+        // Used in name resolution
+        last_scope(scopes).blurred = true
+    }
+
     var js = prefix + `$B.set_lineno(frame, ${this.lineno})\n` +
-             prefix + `$B.${func}("${this.module || ''}", `
+             prefix + `$B.${import_func}("${this.module || ''}", `
     var names = this.names.map(x => `"${x.name}"`).join(', '),
         aliases = []
     for (var name of this.names) {
@@ -3164,16 +3174,35 @@ $B.ast.ImportFrom.prototype.to_js = function(scopes) {
     js += `[${names}], {${aliases.join(', ')}}, ${this.level}, locals, ${inum});`
 
     for (var alias of this.names) {
-        if (alias.asname) {
-            // already bound above
-        } else if (alias.name == '*') {
-            // mark scope as "blurred" by the presence of "from X import *"
-            last_scope(scopes).blurred = true
-        } else {
+        if (! alias.asname) {
             bind(alias.name, scopes)
         }
     }
     return js
+}
+
+$B.ast.ImportFrom.prototype._check = function(scopes){
+    if (this.module === '__future__') {
+        if (! ($B.last(scopes).ast instanceof $B.ast.Module)) {
+            compiler_error(this,
+                'from __future__ imports must occur at the beginning of the file',
+                $B.last(this.names))
+        }
+        if (this.is_lazy) {
+            compiler_error(this, 'lazy from __future__ import is not allowed')
+        }
+    }
+    for (let i = scopes.length - 1; i > 0; i--) {
+        if (scopes[i].type == 'try') {
+            if (this.is_lazy) {
+                compiler_error(this,
+                    'lazy from ... import not allowed inside try/except blocks'
+                )
+            }
+            break
+        }
+    }
+
 }
 
 $B.ast.Interactive.prototype.to_js = function(scopes) {
@@ -3654,7 +3683,6 @@ $B.ast.Name.prototype.to_js = function(scopes) {
 }
 
 $B.ast.NamedExpr.prototype.to_js = function(scopes) {
-    compiler_check(this)
     // Named expressions in a comprehension are bound in the enclosing scope
     var i = scopes.length - 1
     while (scopes[i].type == 'comprehension') {
@@ -3819,6 +3847,7 @@ $B.ast.Try.prototype.to_js = function(scopes) {
     }
 
     var try_scope = copy_scope($B.last(scopes))
+    try_scope.type = 'try'
     scopes.push(try_scope)
     js += add_body(this.body, scopes) + '\n'
     dedent()
@@ -4542,6 +4571,9 @@ $B.js_from_ast = function(ast, scopes) {
                 console.log(ast)
                 throw Error('no col offset')
             }
+        }
+        if (ast._check) {
+            ast._check(scopes)
         }
         return ast.to_js(scopes)
     }
