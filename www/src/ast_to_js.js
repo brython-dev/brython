@@ -3143,6 +3143,8 @@ $B.ast.ImportFrom.prototype.to_js = function(scopes) {
         }
     }
 
+    can_be_lazy = false // XXX reset when bugs are fixed
+    
     // lazy import by default, except in scope where it can't
     let import_func = can_be_lazy ? 'lazy_import_from' : '$import_from'
 

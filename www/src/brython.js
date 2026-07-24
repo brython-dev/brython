@@ -728,8 +728,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-07-14 10:13:52.189905"
-__BRYTHON__.timestamp=1784016832189
+__BRYTHON__.compiled_date="2026-07-24 09:05:16.805086"
+__BRYTHON__.timestamp=1784876716804
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -4951,7 +4951,7 @@ return func
 default:
 break}}}
 try{
-var in_klass_dict=$B.get_dict(klass)[attr]
+var in_klass_dict=$B.search_in_mro(klass,attr,$B.NULL)
 var own_dict=$B.get_dict(obj)
 var in_own_dict=own_dict
 ? own_dict.hasOwnProperty(attr)
@@ -11487,8 +11487,10 @@ if(d[TABLE][hash].length==0){delete d[TABLE][hash]
 return{
 found:false,hash}}
 continue}
+let k=d[KEYS][index]
+let v=d[VALUES][index]
 if($B.is_or_equals(d[KEYS][index],key)){return{
-found:true,key:d[KEYS][index],value:d[VALUES][index],hash,rank:i,index}}}}
+found:true,key:k,value:v,hash,rank:i,index}}}}
 return{
 found:false,hash}}
 dict.$contains=function(self,key,hash){if(! self[KEYS]){if(typeof key=='string'){return self.hasOwnProperty(key)}
@@ -11631,7 +11633,11 @@ if(self[TABLE][hash]===undefined){index=self[KEYS].length
 self[TABLE][hash]=[index]}else{
 if(! from_setdefault){
 index=index_by_key(self,key,hash)
-if(index !==null){self[VALUES][index]=value
+if(index !==null){if(! self[TABLE]){
+convert_all_str(self)
+self[TABLE][hash]=[index]
+self[KEYS][index]=key}
+self[VALUES][index]=value
 return _b_.None}}
 index=self[KEYS].length
 if(self[TABLE][hash]===undefined){
@@ -11767,7 +11773,8 @@ if(! self[TABLE]){if(typeof key==='string'){if(! self.hasOwnProperty(key)){self[
 return self[key]}else{
 convert_all_str(self)}}
 var lookup=dict.$lookup_by_key(self,key)
-if(lookup.found){return lookup.value}
+if(lookup.found){if(self[TABLE]){
+return lookup.value}}
 var hash=lookup.hash
 dict.$setitem(self,key,_default,hash,true)
 return _default}
@@ -11955,7 +11962,6 @@ hash ^=(ma_used+1)*1927868237
 hash ^=(hash >> 11)^(hash >> 25)
 hash=hash*69069+907133923
 if(hash==-1){hash=590923713}
-console.log('hash',hash)
 self[HASHVALUE]=hash
 return hash}
 _b_.frozendict.tp_iter=_b_.dict.tp_iter
@@ -13801,7 +13807,7 @@ DOMNode_funcs.width_get=function(self){return dimension_get(self,'width')}
 DOMNode_funcs.width_set=function(self,value){return dimension_set(self,'width',value)}
 DOMNode.tp_getset=["abs_left","abs_top","class_name","closest","html","scrolled_left","scrolled_top","style","text","height","left","top","width","parent"
 ]
-DOMNode.tp_methods=["__dir__","bind","bindings","children","child_nodes","clear","clone","events","get","index","inside","reset","select","select_one","setSelectionRange","trigger","unbind"
+DOMNode.tp_methods=["__dir__","attach","bind","bindings","children","child_nodes","clear","clone","events","get","index","inside","reset","select","select_one","setSelectionRange","trigger","unbind"
 ]
 $B.set_func_names(DOMNode,"builtins")
 var Query=$B.make_builtin_class("query")
@@ -14577,7 +14583,7 @@ $B.module_setattr($B.imported[package_name],module,$B.imported[mod_name])
 mod_name=module}}
 return $B.imported[package_name]}}
 $B.import=function(mod_name,fromlist,aliases,locals,inum){
-var test=false 
+var test=mod_name=='_bootstrap' 
 if(test){console.log('import',mod_name,fromlist,aliases)
 console.log('loals',locals)}
 if(mod_name=='_frozen_importlib_external'){
@@ -14620,6 +14626,11 @@ console.log("use VFS ? "+$B.use_VFS)
 console.log("use static stdlib paths ? "+
 $B.get_option('static_stdlib_import'))}
 var current_frame=$B.frame_obj.frame,_globals=current_frame[3],__import__=_b_.__import__,globals=$B.obj_dict(_globals)
+var importer=typeof __import__=="function" ?
+__import__ :
+$B.$getattr(__import__,"__call__")
+if(test){console.log('use importer',importer,'mod_name',mod_name,'fromlist',fromlist)
+console.log('in imported',$B.imported[mod_name])}
 try{
 var modobj=$B.$call(__import__,mod_name,globals,undefined,fromlist,0)}catch(err){if(test){console.log('set error',$B.get_class(err))}
 $B.set_inum(inum)
@@ -14681,13 +14692,14 @@ if(test){console.log('$B.import returns locals',locals)}
 return locals}}
 $B.$import_from=function(module,names,aliases,level,locals,inum){
 var test=false 
-if(test){console.log('import from',module,names)}
+if(test){console.log('import from',module,names,aliases,level,locals,inum)}
 var current_module_name=$B.frame_obj.frame[2],parts=current_module_name.split('.'),relative=level > 0,current_module
 if(relative){
 current_module=$B.imported[parts.join('.')]
 if(current_module===undefined){$B.set_inum(inum)
 $B.RAISE(_b_.ImportError,'attempted relative import with no known parent package')}
-if(! current_module.$is_package){if(parts.length==1){$B.set_inum(inum)
+if(! current_module.$is_package){if(parts.length==1){console.log('current module',current_module,'parts',parts)
+$B.set_inum(inum)
 $B.RAISE(_b_.ImportError,'attempted relative import with no known parent package')}else{
 parts.pop()
 current_module=$B.imported[parts.join('.')]}}
@@ -14729,10 +14741,13 @@ let alias=mod_name
 if(Object.hasOwn(aliases,mod_name)){alias=aliases[mod_name][1]}
 Object.defineProperty(locals,alias,{enumerable:true,configurable:true,get(){if(! Object.hasOwn(locals[$B.LAZY_IMPORTS],mod_name)){if(test){console.log(alias,'not in locals[lazy import], frame',$B.frame_obj)}
 $B.import(mod_name,fromlist,aliases,locals,inum)}
-return locals[$B.LAZY_IMPORTS][mod_name]},set(value){locals[$B.LAZY_IMPORTS][mod_name]=value
+let value=locals[$B.LAZY_IMPORTS][mod_name]
+Object.defineProperty(locals,alias,{configurable:true,writable:true,value}
+)
+return value},set(value){locals[$B.LAZY_IMPORTS][mod_name]=value
 if(_b_.set.sq_contains($B.lazy_modules,mod_name)){_b_.set.tp_funcs.remove($B.lazy_modules,mod_name)}}})
 return obj}
-$B.lazy_import_from=function(mod_name,fromlist,aliases,level,locals,inum){let test=false 
+$B.lazy_import_from=function(mod_name,fromlist,aliases,level,locals,inum){let test=true 
 if(test){console.log('lazy import',mod_name,fromlist,'locals',locals)}
 if(Object.hasOwn($B.imported,mod_name)){return $B.$import_from(mod_name,fromlist,aliases,level,locals,inum)}
 locals[$B.LAZY_IMPORTS]=locals[$B.LAZY_IMPORTS]??{}
@@ -14741,7 +14756,7 @@ for(let name of fromlist){let obj={ob_type:$B.lazy_import,frame:$B.frame_obj.fra
 let alias=name
 if(Object.hasOwn(aliases,name)){alias=aliases[name][1]}
 Object.defineProperty(locals,alias,{enumerable:true,configurable:true,get(){if(! Object.hasOwn(locals[$B.LAZY_IMPORTS],alias)){if(test){console.log(alias,'not in locals[lazy import], frame',$B.frame_obj)}
-if(_b_.set.sq_contains($B.lazy_modules,mod_name)){$B.import(mod_name,fromlist,aliases,locals,inum)
+if(_b_.set.sq_contains($B.lazy_modules,mod_name)){$B.$import_from(mod_name,fromlist,aliases,level,locals,inum)
 _b_.set.tp_funcs.remove($B.lazy_modules,mod_name)}
 let value
 let module=$B.imported[mod_name]
@@ -16245,7 +16260,9 @@ for(let item of $B.make_js_iterator(namespaces.exec_locals.$target)){top_scope.l
 for(let key in namespaces.exec_locals){if(! key.startsWith('$')){top_scope.locals.add(key)}}}}}
 return name}
 function compiler_check(obj){var check_func=Object.getPrototypeOf(obj)._check
-if(check_func){obj._check()}}
+if(check_func){console.log('compiler check',Object.getPrototypeOf(obj).constructor.$name)
+alert()
+obj._check()}}
 function check_assign_or_delete(obj,target,action){action=action ?? 'assign to'
 if(target instanceof $B.ast.Attribute){if(target.attr=='__debug__'){compiler_error(obj,`cannot ${action} __debug__`,target)}}else if(target instanceof $B.ast.Name){if(target.id=='__debug__'){compiler_error(obj,`cannot ${action} __debug__`,target)}}else if(target instanceof $B.ast.Tuple){for(var elt of target.elts){check_assign_or_delete(elt,elt,action)}}else if(target instanceof $B.ast.Starred){check_assign_or_delete(obj,target.value,action)}}
 function check_is_arg(e){if(!(e instanceof $B.ast.Constant)){return true}
@@ -16324,8 +16341,7 @@ annotate+=prefix+'}\n'
 annotate+=prefix+`annotate.$closure = [$B.cell.$factory(${globals_name})]\n`
 return annotate}else{
 return prefix+`var annotate\n`}}
-$B.ast.AnnAssign.prototype.to_js=function(scopes){compiler_check(this)
-var scope=last_scope(scopes)
+$B.ast.AnnAssign.prototype.to_js=function(scopes){var scope=last_scope(scopes)
 var js=''
 if(scopes.postpone_annotations){var inum=add_to_positions(scopes,this)}
 if(! scope.has_annotation){scope.has_annotation=true
@@ -16366,8 +16382,7 @@ js+=prefix+`$B.$setitem(locals.__annotations__, `+
 `'${mangled}', ${ann_value}, ${inum})\n`}}}}
 return prefix+`$B.set_lineno(frame, ${this.lineno})\n`+js}
 $B.ast.AnnAssign.prototype._check=function(){check_assign_or_delete(this,this.target)}
-$B.ast.Assign.prototype.to_js=function(scopes){compiler_check(this)
-var js
+$B.ast.Assign.prototype.to_js=function(scopes){var js
 if(! this.lineno ||this.$loopvar){
 js=''}else{
 js=prefix+`$B.set_lineno(frame, ${this.lineno})\n`}
@@ -16416,7 +16431,7 @@ for(let target of this.targets){if(!(target instanceof $B.ast.Tuple)&&
 assigns.push(assign_many(target,value_id))}}
 js+=assigns.join('\n')
 return js}
-$B.ast.Assign.prototype._check=function(){for(var target of this.targets){check_assign_or_delete(this,target)}}
+$B.ast.Assign.prototype._check=function(scopes){for(var target of this.targets){check_assign_or_delete(this,target)}}
 $B.ast.AsyncFor.prototype.to_js=function(scopes){if(!(last_scope(scopes).ast instanceof $B.ast.AsyncFunctionDef)){compiler_error(this,"'async for' outside async function")}
 return $B.ast.For.prototype.to_js.bind(this)(scopes)}
 $B.ast.AsyncFunctionDef.prototype.to_js=function(scopes){return $B.ast.FunctionDef.prototype.to_js.bind(this)(scopes)}
@@ -16485,8 +16500,7 @@ $B.ast.Attribute.prototype.to_js=function(scopes){var attr=mangle(scopes,last_sc
 var inum=add_to_positions(scopes,this)
 return `$B.$getattr_pep657(${$B.js_from_ast(this.value, scopes)}, `+
 `'${attr}', ${inum})`}
-$B.ast.AugAssign.prototype.to_js=function(scopes){compiler_check(this)
-var js,op_class=this.op.$name ? this.op :this.op.constructor
+$B.ast.AugAssign.prototype.to_js=function(scopes){var js,op_class=this.op.$name ? this.op :this.op.constructor
 for(var op in $B.op2ast_class){if($B.op2ast_class[op][1]===op_class){var iop=op+'='
 break}}
 var value=$B.js_from_ast(this.value,scopes)
@@ -16555,8 +16569,7 @@ scope.ast instanceof $B.ast.While){js+=prefix+`no_break_${scope.id} = false\n`
 break}}
 js+=prefix+`break`
 return js}
-$B.ast.Call.prototype.to_js=function(scopes){compiler_check(this)
-var inum=add_to_positions(scopes,this)
+$B.ast.Call.prototype.to_js=function(scopes){var inum=add_to_positions(scopes,this)
 var js
 if(this.func instanceof $B.ast.Attribute){var attr=mangle(scopes,last_scope(scopes),this.func.attr)
 js=`$B.call_attr(${$B.js_from_ast(this.func.value, scopes)}, `+
@@ -16730,8 +16743,7 @@ console.log(Error('trace').stack)
 throw SyntaxError('bad value',this.value)}}
 $B.ast.Continue.prototype.to_js=function(scopes){if(! in_loop(scopes)){compiler_error(this,"'continue' not properly in loop")}
 return prefix+'continue'}
-$B.ast.Delete.prototype.to_js=function(scopes){compiler_check(this)
-var js=''
+$B.ast.Delete.prototype.to_js=function(scopes){var js=''
 for(var target of this.targets){var inum=add_to_positions(scopes,target)
 if(target instanceof $B.ast.Name){var scope=name_scope(target.id,scopes)
 var locals_id='null'
@@ -16774,7 +16786,6 @@ if(positions){res=prefix+`(frame.positions = [${positions}], `+
 res+')'}
 return res}
 $B.ast.For.prototype.to_js=function(scopes){
-compiler_check(this)
 var id=make_id(),iter=$B.js_from_ast(this.iter,scopes),js=prefix+`frame.$lineno = ${this.lineno}\n`
 var scope=$B.last(scopes),new_scope=copy_scope(scope,this,id)
 scopes.push(new_scope)
@@ -16883,8 +16894,7 @@ if(! in_func && !(scope.ast instanceof $B.ast.ClassDef)){break}
 qualname=scope.name+(in_func ? '.<locals>.' :'.')+qualname
 name=scope.name}
 return qualname}
-$B.ast.FunctionDef.prototype.to_js=function(scopes){compiler_check(this)
-var symtable_block=scopes.symtable.table.blocks.get(fast_id(this))
+$B.ast.FunctionDef.prototype.to_js=function(scopes){var symtable_block=scopes.symtable.table.blocks.get(fast_id(this))
 var in_class=last_scope(scopes).ast instanceof $B.ast.ClassDef,is_async=this instanceof $B.ast.AsyncFunctionDef,arg_mangle_scope=last_scope(scopes),mangle_arg=x=> mangle(scopes,arg_mangle_scope,x)
 if(in_class){var class_scope=last_scope(scopes)}
 var func_name_scope=bind(this.name,scopes)
@@ -17241,10 +17251,17 @@ var parts=alias.name.split('.')
 for(var i=0;i < parts.length;i++){scopes.imports[parts.slice(0,i+1).join(".")]=true}
 js+=`${scope_name}, ${inum})\n`}
 return js.trimRight()}
-$B.ast.ImportFrom.prototype.to_js=function(scopes){if(this.module==='__future__'){if(!($B.last(scopes).ast instanceof $B.ast.Module)){compiler_error(this,'from __future__ imports must occur at the beginning of the file',$B.last(this.names))}}
-let func=this.is_lazy ? 'lazy_import_from' :'$import_from'
+$B.ast.ImportFrom.prototype.to_js=function(scopes){let can_be_lazy=true
+for(let i=scopes.length-1;i > 0;i--){if(scopes[i].type=='try'){can_be_lazy=false
+break}}
+can_be_lazy=false 
+let import_func=can_be_lazy ? 'lazy_import_from' :'$import_from'
+let import_star=this.names.length==1 && this.names[0].name=='*'
+if(import_star){
+import_func='$import_from'
+last_scope(scopes).blurred=true}
 var js=prefix+`$B.set_lineno(frame, ${this.lineno})\n`+
-prefix+`$B.${func}("${this.module || ''}", `
+prefix+`$B.${import_func}("${this.module || ''}", `
 var names=this.names.map(x=> `"${x.name}"`).join(', '),aliases=[]
 for(var name of this.names){if(name.asname){
 var binding_scope=bind(name.asname,scopes)
@@ -17252,10 +17269,13 @@ var scope_name=make_scope_name(scopes,binding_scope)
 aliases.push(`${name.name}: [${scope_name}, '${name.asname}']`)}}
 var inum=add_to_positions(scopes,this)
 js+=`[${names}], {${aliases.join(', ')}}, ${this.level}, locals, ${inum});`
-for(var alias of this.names){if(alias.asname){}else if(alias.name=='*'){
-last_scope(scopes).blurred=true}else{
-bind(alias.name,scopes)}}
+for(var alias of this.names){if(! alias.asname){bind(alias.name,scopes)}}
 return js}
+$B.ast.ImportFrom.prototype._check=function(scopes){if(this.module==='__future__'){if(!($B.last(scopes).ast instanceof $B.ast.Module)){compiler_error(this,'from __future__ imports must occur at the beginning of the file',$B.last(this.names))}
+if(this.is_lazy){compiler_error(this,'lazy from __future__ import is not allowed')}}
+for(let i=scopes.length-1;i > 0;i--){if(scopes[i].type=='try'){if(this.is_lazy){compiler_error(this,'lazy from ... import not allowed inside try/except blocks'
+)}
+break}}}
 $B.ast.Interactive.prototype.to_js=function(scopes){mark_parents(this)
 var name=init_scopes.bind(this)('module',scopes)
 var module_id=name,global_name=make_scope_name(scopes),mod_name=module_name(scopes)
@@ -17481,7 +17501,7 @@ var res=name_reference(this.id,scopes,this)
 if(this.id=='__debugger__' && res.startsWith('$B.resolve_in_scopes')){
 return 'debugger'}
 return res}}
-$B.ast.NamedExpr.prototype.to_js=function(scopes){compiler_check(this)
+$B.ast.NamedExpr.prototype.to_js=function(scopes){
 var i=scopes.length-1
 while(scopes[i].type=='comprehension'){i--}
 var enclosing_scopes=scopes.slice(0,i+1)
@@ -17546,6 +17566,7 @@ js+=prefix+`var stack_length_${id} = $B.count_frames()\n`
 js+=prefix+`var save_frame_obj_${id} = $B.frame_obj\n`
 if(has_else){js+=prefix+`var failed${id} = false\n`}
 var try_scope=copy_scope($B.last(scopes))
+try_scope.type='try'
 scopes.push(try_scope)
 js+=add_body(this.body,scopes)+'\n'
 dedent()
@@ -17983,6 +18004,7 @@ if(ast.to_js !==undefined){if(ast.col_offset===undefined){var klass=ast.construc
 if(['match_case'].indexOf(klass)==-1){console.log('no col_offset for',klass)
 console.log(ast)
 throw Error('no col offset')}}
+if(ast._check){ast._check(scopes)}
 return ast.to_js(scopes)}
 console.log("unhandled",ast.constructor.$name,ast,typeof ast)
 return '// unhandled class ast.'+ast.constructor.$name}})(__BRYTHON__);

@@ -1476,7 +1476,14 @@ $B.import = function(mod_name, fromlist, aliases, locals, inum) {
         _globals = current_frame[3],
         __import__ = _b_.__import__,
         globals = $B.obj_dict(_globals)
-
+    // FIXME: Should we need locals dict supply it in, now it is useless
+    var importer = typeof __import__ == "function" ?
+                        __import__ :
+                        $B.$getattr(__import__, "__call__")
+    if (test) {
+        console.log('use importer', importer, 'mod_name', mod_name, 'fromlist', fromlist)
+        console.log('in imported', $B.imported[mod_name])
+    }
     try {
         var modobj = $B.$call(__import__,
             mod_name, globals, undefined, fromlist, 0)
@@ -1631,7 +1638,7 @@ $B.import = function(mod_name, fromlist, aliases, locals, inum) {
 $B.$import_from = function(module, names, aliases, level, locals, inum) {
     // Import names from modules; level is 0 for absolute import, > 0
     // for relative import (number of dots before module name)
-    var test = module == '_bootstrap' //&& names[0] == '_path_normpath'
+    var test = false // module == '_bootstrap' //&& names[0] == '_path_normpath'
     if (test) {
         console.log('import from', module, names, aliases, level, locals, inum)
     }
@@ -1783,7 +1790,7 @@ $B._lazy_import = function(mod_name, fromlist, aliases, locals, inum) {
 }
 
 $B.lazy_import_from = function(mod_name, fromlist, aliases, level, locals, inum) {
-    let test = false // mod_name == '_imp'
+    let test = true // mod_name == '_imp'
     if (test) {
         console.log('lazy import', mod_name, fromlist, 'locals', locals)
         // console.log('in imported ?', Object.hasOwn($B.imported, mod_name))

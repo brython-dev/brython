@@ -1480,9 +1480,9 @@ DOMNode.tp_getset = [
 ]
 
 DOMNode.tp_methods = [
-    "__dir__", "bind", "bindings", "children", "child_nodes", "clear",
-    "clone", "events", "get", "index", "inside", "reset", "select",
-    "select_one", "setSelectionRange", "trigger", "unbind"
+    "__dir__", "attach", "bind", "bindings", "children", "child_nodes",
+    "clear", "clone", "events", "get", "index", "inside", "reset", 
+    "select", "select_one", "setSelectionRange", "trigger", "unbind"
 ]
 
 $B.set_func_names(DOMNode, "builtins")

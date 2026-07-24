@@ -819,7 +819,7 @@ $B.$getattr = function(obj, attr, _default) {
             }
         }
         try {
-            var in_klass_dict = $B.get_dict(klass)[attr]
+            var in_klass_dict = $B.search_in_mro(klass, attr, $B.NULL)
             var own_dict = $B.get_dict(obj)
             var in_own_dict = own_dict
                 ? own_dict.hasOwnProperty(attr)

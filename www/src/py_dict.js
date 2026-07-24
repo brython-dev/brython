@@ -459,11 +459,13 @@ dict.$lookup_by_key = function(d, key, hash) {
                 }
                 continue
             }
+            let k = d[KEYS][index]
+            let v = d[VALUES][index]
             if ($B.is_or_equals(d[KEYS][index], key)) {
                 return {
                     found: true,
-                    key: d[KEYS][index],
-                    value: d[VALUES][index],
+                    key: k,
+                    value: v,
                     hash,
                     rank: i,
                     index
@@ -863,6 +865,12 @@ dict.$setitem = function(self, key, value, $hash, from_setdefault) {
             // another lookup
             index = index_by_key(self, key, hash)
             if (index !== null) {
+                if (! self[TABLE]) {
+                    // search by key might have cleared the dictionary...
+                    convert_all_str(self)
+                    self[TABLE][hash] = [index]
+                    self[KEYS][index] = key
+                }
                 self[VALUES][index] = value
                 return _b_.None
             }
@@ -1291,7 +1299,10 @@ dict_funcs.setdefault = function(self) {
 
     var lookup = dict.$lookup_by_key(self, key)
     if (lookup.found) {
-        return lookup.value
+        if (self[TABLE]) {
+            // lookup might have cleared the dictionary
+            return lookup.value
+        }
     }
     var hash = lookup.hash
     dict.$setitem(self, key, _default, hash, true)
@@ -1850,7 +1861,6 @@ _b_.frozendict.tp_hash = function(self) {
     if (hash == -1) {
         hash = 590923713
     }
-    console.log('hash', hash)
     self[HASHVALUE] = hash
     return hash
 }
