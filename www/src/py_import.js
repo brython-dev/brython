@@ -1470,12 +1470,8 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum) {
     // [Import spec] Resolve __import__ in global namespace
     var current_frame = $B.frame_obj.frame,
         _globals = current_frame[3],
-        __import__ = _globals["__import__"],
+        __import__ = _b_.__import__,
         globals = $B.obj_dict(_globals)
-    if (__import__ === undefined) {
-        // [Import spec] Fall back to
-        __import__ = $B.$__import__
-    }
     // FIXME: Should we need locals dict supply it in, now it is useless
     var importer = typeof __import__ == "function" ?
                         __import__ :

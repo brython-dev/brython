@@ -724,8 +724,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,3,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-07-05 08:06:40.617405"
-__BRYTHON__.timestamp=1783231600617
+__BRYTHON__.compiled_date="2026-07-24 07:51:08.726804"
+__BRYTHON__.timestamp=1784872268726
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -4984,7 +4984,7 @@ return func
 default:
 break}}}
 try{
-var in_klass_dict=$B.get_dict(klass)[attr]
+var in_klass_dict=$B.search_in_mro(klass,attr,$B.NULL)
 var own_dict=$B.get_dict(obj)
 var in_own_dict=own_dict
 ? own_dict.hasOwnProperty(attr)
@@ -13730,7 +13730,7 @@ DOMNode_funcs.width_get=function(self){return dimension_get(self,'width')}
 DOMNode_funcs.width_set=function(self,value){return dimension_set(self,'width',value)}
 DOMNode.tp_getset=["abs_left","abs_top","class_name","closest","html","scrolled_left","scrolled_top","style","text","height","left","top","width","parent"
 ]
-DOMNode.tp_methods=["__dir__","bind","bindings","children","child_nodes","clear","clone","events","get","index","inside","reset","select","select_one","setSelectionRange","trigger","unbind"
+DOMNode.tp_methods=["__dir__","attach","bind","bindings","children","child_nodes","clear","clone","events","get","index","inside","reset","select","select_one","setSelectionRange","trigger","unbind"
 ]
 $B.set_func_names(DOMNode,"builtins")
 var Query=$B.make_builtin_class("query")
@@ -14545,9 +14545,7 @@ if($B.get_option('debug')==10){console.log("$import "+mod_name)
 console.log("use VFS ? "+$B.use_VFS)
 console.log("use static stdlib paths ? "+
 $B.get_option('static_stdlib_import'))}
-var current_frame=$B.frame_obj.frame,_globals=current_frame[3],__import__=_globals["__import__"],globals=$B.obj_dict(_globals)
-if(__import__===undefined){
-__import__=$B.$__import__}
+var current_frame=$B.frame_obj.frame,_globals=current_frame[3],__import__=_b_.__import__,globals=$B.obj_dict(_globals)
 var importer=typeof __import__=="function" ?
 __import__ :
 $B.$getattr(__import__,"__call__")
