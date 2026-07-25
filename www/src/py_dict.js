@@ -100,7 +100,7 @@ function _PyDictView_Intersect(self, other) {
     /* at this point, two things should be true
        1. self is a dictview
        2. if other is a dictview then it is smaller than self */
-    var result = _b_.set.tp_new(set, [], $B.empty_dict())
+    var result = _b_.set.tp_new(_b_.set, [], $B.empty_dict())
     var it = $B.make_js_iterator(other)
 
     if ($B.$isinstance(self, $B.dict_keys)) {
@@ -138,6 +138,52 @@ function all_contained_in(self, other) {
         }
     }
     return ok
+}
+
+function dictitems_contains(self, obj) {
+    if (! $B.is_tuple(obj) || _b_.tuple.mp_length(obj) != 2) {
+        return false
+    }
+    let [key, value] = obj
+    let result = false
+    try {
+        let found = _b_.dict.mp_subscript(self.dict_obj, key)
+        result = $B.is_or_equals(found, value)
+    } catch(err) {
+        $B.RAISE_IF_NOT(err, _b_.KeyError)
+    }
+    return result
+}
+
+function dictitems_xor(self, other) {
+    let d1 = self.dict_obj
+    let d2 = other.dict_obj
+
+    let temp_dict = _b_.dict.tp_funcs.copy(d1)
+    let result_set = _b_.set.$factory()
+    let it = _b_.dict.$iter_items(d2)
+
+    for (let entry of it) {
+        let key = entry.key
+        let val2 = entry.value
+        let val1 = dict.$lookup_by_key(temp_dict, key)
+
+        let to_delete = val1.found
+            ? $B.is_or_equals(val1.value, val2)
+            : false
+
+        if (to_delete) {
+            dict.$delitem(temp_dict, key, val1.hash)
+        } else {
+            let pair = $B.fast_tuple([key, val2])
+            _b_.set.tp_funcs.add(result_set, pair)
+        }
+    }
+
+    let remaining_pairs = _b_.dict.tp_funcs.items(temp_dict)
+    _b_.set.tp_funcs.update(result_set, remaining_pairs)
+
+    return result_set
 }
 
 function dictview_len(self) {
@@ -498,7 +544,7 @@ dict.$contains = function(self, key, hash) {
     return index_by_key(self, key, hash) !== null
 }
 
-dict.$delitem  = function(self, key) {
+dict.$delitem  = function(self, key, hash) {
     if (self[$B.JSOBJ]) {
         delete self[$B.JSOBJ][key]
     }
@@ -511,12 +557,12 @@ dict.$delitem  = function(self, key) {
                 $B.RAISE(_b_.KeyError, key)
             }
         }
-        if (! dict.$contains(self, key)) {
+        if (! dict.$contains(self, key, hash)) {
             $B.RAISE(_b_.KeyError, _b_.str.$factory(key))
         }
     }
 
-    var lookup = dict.$lookup_by_key(self, key)
+    var lookup = dict.$lookup_by_key(self, key, hash)
     if (lookup.found) {
         self[TABLE][lookup.hash].splice(lookup.rank, 1)
         if (self[TABLE][lookup.hash].length == 0) {
@@ -1320,15 +1366,15 @@ $B.dict_items.nb_subtract = function(self, other) {
     return dictviews_sub(self, other)
 }
 
-$B.dict_items.nb_and = function(self) {
+$B.dict_items.nb_and = function(self, other) {
     return _PyDictView_Intersect(self, other)
 }
 
-$B.dict_items.nb_xor = function(self) {
+$B.dict_items.nb_xor = function(self, other) {
     return dictviews_xor(self, other)
 }
 
-$B.dict_items.nb_or = function(self) {
+$B.dict_items.nb_or = function(self, other) {
     return dictviews_or(self, other)
 }
 

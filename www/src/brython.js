@@ -724,8 +724,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,3,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-07-24 07:49:14.003802"
-__BRYTHON__.timestamp=1784872154003
+__BRYTHON__.compiled_date="2026-07-25 21:27:49.207483"
+__BRYTHON__.timestamp=1785007669206
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -11337,7 +11337,7 @@ var len_self=dictview_len(self)
 if($B.exact_type(other,_b_.set)&& len_self <=_b_.len(other)){return $B.$call($B.$getattr(other,'intersection'),self)}
 if(PyDictViewSet_Check(other)){var len_other=dictview_len(other)
 if(len_other > len_self){[self,other]=[other,self]}}
-var result=_b_.set.tp_new(set,[],$B.empty_dict())
+var result=_b_.set.tp_new(_b_.set,[],$B.empty_dict())
 var it=$B.make_js_iterator(other)
 if($B.$isinstance(self,$B.dict_keys)){dict_contains=$B.dict_keys.sq_contains}else{
 dict_contains=dictitems_contains}
@@ -11355,6 +11355,30 @@ if(next.done){break}
 ok=$B.$call(contains,next.value)
 if(! ok){break}}
 return ok}
+function dictitems_contains(self,obj){if(! $B.is_tuple(obj)||_b_.tuple.mp_length(obj)!=2){return false}
+let[key,value]=obj
+let result=false
+try{
+let found=_b_.dict.mp_subscript(self.dict_obj,key)
+result=$B.is_or_equals(found,value)}catch(err){$B.RAISE_IF_NOT(err,_b_.KeyError)}
+return result}
+function dictitems_xor(self,other){let d1=self.dict_obj
+let d2=other.dict_obj
+let temp_dict=_b_.dict.tp_funcs.copy(d1)
+let result_set=_b_.set.$factory()
+let it=_b_.dict.$iter_items(d2)
+for(let entry of it){let key=entry.key
+let val2=entry.value
+let val1=dict.$lookup_by_key(temp_dict,key)
+let to_delete=val1.found
+? $B.is_or_equals(val1.value,val2)
+:false
+if(to_delete){dict.$delitem(temp_dict,key,val1.hash)}else{
+let pair=$B.fast_tuple([key,val2])
+_b_.set.tp_funcs.add(result_set,pair)}}
+let remaining_pairs=_b_.dict.tp_funcs.items(temp_dict)
+_b_.set.tp_funcs.update(result_set,remaining_pairs)
+return result_set}
 function dictview_len(self){return _b_.dict.mp_length(self.dict_obj)}
 function dictview_richcompare(self,other,op){if(! $B.$isinstance(other,[_b_.set,_b_.frozenset,$B.dict_keys])){return _b_.NotImplemented}
 var len_self=$B.get_class(self).mp_length(self)
@@ -11478,12 +11502,12 @@ if(hash_method===$B.str_dict_get($B.get_dict(_b_.object),'__hash__')){return fal
 var hash=$B.$call(hash_method,key)
 convert_all_str(self)}
 return index_by_key(self,key,hash)!==null}
-dict.$delitem=function(self,key){if(self[$B.JSOBJ]){delete self[$B.JSOBJ][key]}
+dict.$delitem=function(self,key,hash){if(self[$B.JSOBJ]){delete self[$B.JSOBJ][key]}
 if(! self[KEYS]){if(typeof key=='string'){if(self.hasOwnProperty(key)){delete self[key]
 return _b_.None}else{
 $B.RAISE(_b_.KeyError,key)}}
-if(! dict.$contains(self,key)){$B.RAISE(_b_.KeyError,_b_.str.$factory(key))}}
-var lookup=dict.$lookup_by_key(self,key)
+if(! dict.$contains(self,key,hash)){$B.RAISE(_b_.KeyError,_b_.str.$factory(key))}}
+var lookup=dict.$lookup_by_key(self,key,hash)
 if(lookup.found){self[TABLE][lookup.hash].splice(lookup.rank,1)
 if(self[TABLE][lookup.hash].length==0){delete self[TABLE][lookup.hash]}
 delete self[VALUES][lookup.index]
@@ -11795,9 +11819,9 @@ $B.set_func_names(dict,"builtins")
 $B.dict_get=dict.tp_funcs.get
 $B.dict_items.tp_richcompare=function(self,other,op){return dictview_richcompare(self,other,op)}
 $B.dict_items.nb_subtract=function(self,other){return dictviews_sub(self,other)}
-$B.dict_items.nb_and=function(self){return _PyDictView_Intersect(self,other)}
-$B.dict_items.nb_xor=function(self){return dictviews_xor(self,other)}
-$B.dict_items.nb_or=function(self){return dictviews_or(self,other)}
+$B.dict_items.nb_and=function(self,other){return _PyDictView_Intersect(self,other)}
+$B.dict_items.nb_xor=function(self,other){return dictviews_xor(self,other)}
+$B.dict_items.nb_or=function(self,other){return dictviews_or(self,other)}
 $B.dict_items.tp_repr=function(self){var items=Array.from(dict.$iter_items(self.dict_obj)).map(
 x=> $B.fast_tuple([x.key,x.value]))
 items=$B.$list(items)
