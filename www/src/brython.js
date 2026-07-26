@@ -724,8 +724,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,3,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-07-26 11:50:09.091665"
-__BRYTHON__.timestamp=1785059409091
+__BRYTHON__.compiled_date="2026-07-26 21:29:31.737692"
+__BRYTHON__.timestamp=1785094171737
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -11717,7 +11717,8 @@ if(cls !==dict){$B.init_dict(instance)}
 return instance}
 var dict_funcs=_b_.dict.tp_funcs={}
 dict_funcs.__class_getitem__=$B.$class_getitem
-dict_funcs.__reversed__=function(self){return dict_reversekeyiterator.$factory(self)}
+dict_funcs.__reversed__=function(self){return{
+ob_type:$B.dict_reversekeyiterator,it:_b_.dict.$iter_items_reversed(self),dict_obj:self}}
 dict_funcs.__sizeof__=function(self){return 48}
 dict_funcs.clear=function(self){
 var $=$B.args("clear",1,{self:null},arguments)
@@ -11872,7 +11873,7 @@ dict_keys_funcs.mapping_set=_b_.None
 $B.dict_keys.tp_methods=["isdisjoint","__reversed__"]
 $B.dict_keys.tp_getset=["mapping"]
 $B.dict_values.tp_repr=function(self){var values=Array.from(dict.$iter_items(self.dict_obj)).map(x=> x.value)
-return `dict_values({${keys}])`}
+return `dict_values({${values}])`}
 $B.dict_values.tp_iter=function(self){return{
 ob_type:$B.dict_valueiterator,it:_b_.dict.$iter_items(self.dict_obj),dict_obj:self.dict_obj}}
 $B.dict_values.mp_length=function(self){return _b_.dict.mp_length(self.dict_obj)}
@@ -11901,7 +11902,10 @@ $B.dict_valueiterator.tp_iter=function(self){return self}
 $B.dict_valueiterator.tp_iternext=function*(self){for(var item of self.it){yield item.value}}
 var dict_valueiterator_funcs=$B.dict_valueiterator.tp_funcs={}
 dict_valueiterator_funcs.__length_hint__=function(self){return _b_.dict.mp_length(self.dict_obj)}
-dict_valueiterator_funcs.__reduce__=function(self){return $B.fast_tuple([_b_.iter,$B.fast_tuple([$B.$list(Array.from(dict_valueiterator.tp_iternext(self)))])])}
+dict_valueiterator_funcs.__reduce__=function(self){let values_list=$B.$list(
+Array.from($B.dict_valueiterator.tp_iternext(self))
+)
+return $B.fast_tuple([_b_.iter,$B.fast_tuple([values_list])])}
 $B.dict_valueiterator.tp_methods=["__length_hint__","__reduce__"]
 $B.dict_reversevalueiterator.tp_iter=function(self){return self}
 $B.dict_reversevalueiterator.tp_iternext=function*(self){for(var item of self.it){yield item[1]}}
@@ -11913,7 +11917,8 @@ $B.dict_itemiterator.tp_iter=function(self){return self}
 $B.dict_itemiterator.tp_iternext=function*(self){for(var item of self.it){yield $B.fast_tuple([item.key,item.value])}}
 var dict_itemiterator_funcs=$B.dict_itemiterator.tp_funcs={}
 dict_itemiterator_funcs.__length_hint__=function(self){return_b_.dict.mp_length(self.obj)}
-dict_itemiterator_funcs.__reduce__=function(self){return $B.fast_tuple([_b_.iter,$B.fast_tuple([$B.$list(Array.from(dict_itemiterator.tp_iternext(self)))])])}
+dict_itemiterator_funcs.__reduce__=function(self){let items_list=$B.$list(Array.from($B.dict_itemiterator.tp_iternext(self)))
+return $B.fast_tuple([_b_.iter,$B.fast_tuple([items_list])])}
 $B.dict_itemiterator.tp_methods=["__length_hint__","__reduce__"]
 $B.dict_reverseitemiterator.tp_iter=function(self){return self}
 $B.dict_reverseitemiterator.tp_iternext=function*(self){for(var item of self.it){yield item}}
@@ -14590,7 +14595,7 @@ $err3.args[0]=`cannot import name '${name}' `+
 if(modobj.__file__){$err3.args[0]+=` (${modobj.__file__})`}
 $err3.$suggestion=suggestion
 throw $err3}
-if($B.get_option('debug')> 2){console.log('no name',name,'in module',modobj)
+if($B.get_option('debug')> 3){console.log('no name',name,'in module',modobj)
 console.log($err3)
 console.log($B.frame_obj.frame)}
 $B.RAISE(_b_.ImportError,"cannot import name '"+name+"'")}}}}

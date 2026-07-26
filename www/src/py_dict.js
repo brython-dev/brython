@@ -1104,10 +1104,12 @@ var dict_funcs = _b_.dict.tp_funcs = {}
 
 dict_funcs.__class_getitem__ = $B.$class_getitem
 
-
-
 dict_funcs.__reversed__ = function(self) {
-    return dict_reversekeyiterator.$factory(self)
+    return {
+        ob_type: $B.dict_reversekeyiterator,
+        it: _b_.dict.$iter_items_reversed(self),
+        dict_obj: self
+    }
 }
 
 dict_funcs.__sizeof__ = function(self) {
@@ -1524,7 +1526,7 @@ $B.dict_keys.tp_getset = ["mapping"]
 /* dict_values start */
 $B.dict_values.tp_repr = function(self) {
     var values = Array.from(dict.$iter_items(self.dict_obj)).map(x => x.value)
-    return `dict_values({${keys}])`
+    return `dict_values({${values}])`
 }
 
 $B.dict_values.tp_iter = function(self) {
@@ -1633,8 +1635,10 @@ dict_valueiterator_funcs.__length_hint__ = function(self) {
 }
 
 dict_valueiterator_funcs.__reduce__ = function(self) {
-    return $B.fast_tuple([_b_.iter,
-        $B.fast_tuple([$B.$list(Array.from(dict_valueiterator.tp_iternext(self)))])])
+    let values_list = $B.$list(
+        Array.from($B.dict_valueiterator.tp_iternext(self))
+    )
+    return $B.fast_tuple([_b_.iter, $B.fast_tuple([values_list])])
 }
 
 $B.dict_valueiterator.tp_methods = ["__length_hint__", "__reduce__"]
@@ -1684,8 +1688,8 @@ dict_itemiterator_funcs.__length_hint__ = function(self) {
 }
 
 dict_itemiterator_funcs.__reduce__ = function(self) {
-    return $B.fast_tuple([_b_.iter,
-        $B.fast_tuple([$B.$list(Array.from(dict_itemiterator.tp_iternext(self)))])])
+    let items_list = $B.$list(Array.from($B.dict_itemiterator.tp_iternext(self)))
+    return $B.fast_tuple([_b_.iter, $B.fast_tuple([items_list])])
 }
 
 $B.dict_itemiterator.tp_methods = ["__length_hint__", "__reduce__"]
