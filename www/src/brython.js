@@ -724,8 +724,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,3,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-07-26 11:21:11.013368"
-__BRYTHON__.timestamp=1785057671012
+__BRYTHON__.compiled_date="2026-07-26 11:50:09.091665"
+__BRYTHON__.timestamp=1785059409091
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -3695,8 +3695,8 @@ if(! _b_.issubclass(type,self.d_type)){$B.RAISE(_b_.TypeError,"descriptor '%V' r
 "but received '%.100s'",descr_name(descr),PyDescr_TYPE(descr).tp_name,type.tp_name)}
 var cls=$B.NULL
 if(self.d_method.ml_flags & $B.METH_METHOD){cls=descr.d_common.d_type}
-var f=function(...args){return self.d_method.call(null,self.d_type,...args)}
-Object.assign(f,{ob_type:$B.builtin_function_or_method,ml:{ml_name:self.d_name},m_self:self.d_type,$function_infos:self.d_method.$function_infos}
+var f=function(...args){return self.d_method.call(null,type,...args)}
+Object.assign(f,{ob_type:$B.builtin_function_or_method,ml:{ml_name:self.d_name},m_self:type,$function_infos:self.d_method.$function_infos}
 )
 return f}
 var classmethod_descriptor_funcs=$B.classmethod_descriptor.tp_funcs={}
@@ -3842,7 +3842,7 @@ self.$function_infos[$B.func_attrs.__name__]
 if(self.m_self !==undefined && self.m_self !==null &&
 ! $B.$isinstance(self.m_self,$B.module)){return $B.fast_tuple([_b_.getattr,$B.fast_tuple([self.m_self,name])])}
 return name}
-builtin_function_or_method_funcs.__self___get=function(self){return $B.imported.builtins}
+builtin_function_or_method_funcs.__self___get=function(self){return self.m_self}
 builtin_function_or_method_funcs.__self___set=_b_.None
 builtin_function_or_method_funcs.__text_signature___get=function(self){}
 builtin_function_or_method_funcs.__text_signature___set=function(self){}
@@ -11742,7 +11742,7 @@ var res=$B.$call(cls),klass=$B.get_class(res),
 keys_iter=$B.$iter(keys),setitem=klass===dict ? dict.$setitem :$B.$getattr(klass,'__setitem__')
 while(1){try{
 var key=_b_.next(keys_iter)
-setitem(res,key,value)}catch(err){if($B.is_exc(err,[_b_.StopIteration])){return res}
+$B.$call(setitem,res,key,value)}catch(err){if($B.is_exc(err,[_b_.StopIteration])){return res}
 throw err}}}
 dict_funcs.get=function(self){var $=$B.args("get",3,{self:null,key:null,_default:null},arguments,{_default:_b_.None})
 try{

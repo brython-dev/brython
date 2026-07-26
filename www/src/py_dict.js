@@ -1161,7 +1161,7 @@ dict_funcs.fromkeys = function() {
     while (1) {
         try {
             var key = _b_.next(keys_iter)
-            setitem(res, key, value)
+            $B.$call(setitem, res, key, value)
         } catch (err) {
             if ($B.is_exc(err, [_b_.StopIteration])) {
                 return res
