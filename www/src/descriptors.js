@@ -344,13 +344,13 @@ $B.classmethod_descriptor.tp_descr_get = function(self, obj, type) {
         cls = descr.d_common.d_type
     }
     var f = function(...args) {
-        return self.d_method.call(null, self.d_type, ...args)
+        return self.d_method.call(null, type, ...args)
     }
     Object.assign(f,
         {
             ob_type: $B.builtin_function_or_method,
             ml: {ml_name: self.d_name},
-            m_self: self.d_type,
+            m_self: type,
             $function_infos: self.d_method.$function_infos
         }
     )
