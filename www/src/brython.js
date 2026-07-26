@@ -724,8 +724,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,3,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-07-25 21:27:49.207483"
-__BRYTHON__.timestamp=1785007669206
+__BRYTHON__.compiled_date="2026-07-26 09:47:34.320235"
+__BRYTHON__.timestamp=1785052054319
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -15116,14 +15116,14 @@ func.$function_infos=[]
 func.$function_infos[$B.func_attrs.name]=`ajax_${method}`
 return{
 ob_type:$B.coroutine,$args:[url,args],$func:func}},event:function(){
-var $=$B.args("event",1,{element:null},arguments)
+var $=$B.args("event",1,{element:null},arguments,null,'names')
 var element=$.element,names=$.names
 return new Promise(function(resolve){var callbacks=[]
 for(let name of names){var callback=function(evt){
-for(let items of callbacks){$B.DOMNode.unbind(element,items[0],items[1])}
+for(let items of callbacks){$B.DOMNode.tp_funcs.unbind(element,items[0],items[1])}
 resolve($B.$DOMEvent(evt))}
 callbacks.push([name,callback])
-$B.DOMNode.bind(element,name,callback)}})},get:function(){var ajax=$B.module_getattr($B.imported['browser.aio'],'ajax')
+$B.DOMNode.tp_funcs.bind(element,name,callback)}})},get:function(){var ajax=$B.module_getattr($B.imported['browser.aio'],'ajax')
 return ajax.bind(null,"GET").apply(null,arguments)},iscoroutine:function(f){return $B.get_class(f)===$B.coroutine},iscoroutinefunction:function(f){return(f.$function_infos[$B.func_attrs.flags]& 128)!=0},post:function(){var ajax=$B.module_getattr($B.imported['browser.aio'],'ajax')
 return ajax.bind(null,"POST").apply(null,arguments)},run:function(){var handle_success=function(){$B.leave_frame()},handle_error=$B.show_error
 var $=$B.args("run",3,{coro:null,onsuccess:null,onerror:null},arguments,{onsuccess:handle_success,onerror:handle_error})
