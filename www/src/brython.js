@@ -724,8 +724,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,3,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-07-26 21:29:31.737692"
-__BRYTHON__.timestamp=1785094171737
+__BRYTHON__.compiled_date="2026-07-26 22:10:05.264193"
+__BRYTHON__.timestamp=1785096605263
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -11896,7 +11896,8 @@ $B.dict_reversekeyiterator.tp_iter=function(self){return self}
 $B.dict_reversekeyiterator.tp_iternext=function*(self){for(var entry of self.it){yield entry[0]}}
 var dict_reversekeyiterator_funcs=$B.dict_reversekeyiterator.tp_funcs={}
 dict_reversekeyiterator_funcs.__length_hint__=function(self){return _b_.dict.mp_length(self.dict_obj)}
-dict_reversekeyiterator_funcs.__reduce__=function(self){}
+dict_reversekeyiterator_funcs.__reduce__=function(self){let keys=Array.from(self.it).map(x=> x[0])
+return $B.fast_tuple([_b_.iter,$B.fast_tuple([$B.$list(keys)])])}
 $B.dict_reversekeyiterator.tp_methods=["__length_hint__","__reduce__"]
 $B.dict_valueiterator.tp_iter=function(self){return self}
 $B.dict_valueiterator.tp_iternext=function*(self){for(var item of self.it){yield item.value}}
@@ -11910,8 +11911,9 @@ $B.dict_valueiterator.tp_methods=["__length_hint__","__reduce__"]
 $B.dict_reversevalueiterator.tp_iter=function(self){return self}
 $B.dict_reversevalueiterator.tp_iternext=function*(self){for(var item of self.it){yield item[1]}}
 var dict_reversevalueiterator_funcs=$B.dict_reversevalueiterator.tp_funcs={}
-dict_reversevalueiterator_funcs.__length_hint__=function(self){}
-dict_reversevalueiterator_funcs.__reduce__=function(self){}
+dict_reversevalueiterator_funcs.__length_hint__=function(self){return _b_.dict.mp_length(self.dict_obj)}
+dict_reversevalueiterator_funcs.__reduce__=function(self){let values=Array.from(self.it).map(x=> x[1])
+return $B.fast_tuple([_b_.iter,$B.fast_tuple([$B.$list(values)])])}
 $B.dict_reversevalueiterator.tp_methods=["__length_hint__","__reduce__"]
 $B.dict_itemiterator.tp_iter=function(self){return self}
 $B.dict_itemiterator.tp_iternext=function*(self){for(var item of self.it){yield $B.fast_tuple([item.key,item.value])}}
@@ -11924,7 +11926,7 @@ $B.dict_reverseitemiterator.tp_iter=function(self){return self}
 $B.dict_reverseitemiterator.tp_iternext=function*(self){for(var item of self.it){yield item}}
 var dict_reverseitemiterator_funcs=$B.dict_reverseitemiterator.tp_funcs={}
 dict_reverseitemiterator_funcs.__length_hint__=function(self){return _b_.dict.mp_length(self.dict_obj)}
-dict_reverseitemiterator_funcs.__reduce__=function(self){}
+dict_reverseitemiterator_funcs.__reduce__=function(self){return $B.fast_tuple([_b_.iter,$B.fast_tuple([$B.$list(Array.from(self.it))])])}
 $B.dict_reverseitemiterator.tp_methods=["__length_hint__","__reduce__"]
 $B.empty_dict=function(){var res={}
 res[$B.OB_TYPE]=dict

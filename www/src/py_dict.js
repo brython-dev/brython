@@ -1610,7 +1610,8 @@ dict_reversekeyiterator_funcs.__length_hint__ = function(self) {
 }
 
 dict_reversekeyiterator_funcs.__reduce__ = function(self) {
-
+    let keys = Array.from(self.it).map(x => x[0])
+    return $B.fast_tuple([_b_.iter, $B.fast_tuple([$B.$list(keys)])])
 }
 
 $B.dict_reversekeyiterator.tp_methods = ["__length_hint__", "__reduce__"]
@@ -1658,11 +1659,12 @@ $B.dict_reversevalueiterator.tp_iternext = function*(self){
 var dict_reversevalueiterator_funcs = $B.dict_reversevalueiterator.tp_funcs = {}
 
 dict_reversevalueiterator_funcs.__length_hint__ = function(self) {
-
+    return _b_.dict.mp_length(self.dict_obj)
 }
 
 dict_reversevalueiterator_funcs.__reduce__ = function(self) {
-
+    let values = Array.from(self.it).map(x => x[1])
+    return $B.fast_tuple([_b_.iter, $B.fast_tuple([$B.$list(values)])])
 }
 
 $B.dict_reversevalueiterator.tp_methods = ["__length_hint__", "__reduce__"]
@@ -1713,7 +1715,8 @@ dict_reverseitemiterator_funcs.__length_hint__ = function(self) {
 }
 
 dict_reverseitemiterator_funcs.__reduce__ = function(self) {
-
+    return $B.fast_tuple([_b_.iter,
+        $B.fast_tuple([$B.$list(Array.from(self.it))])])
 }
 
 $B.dict_reverseitemiterator.tp_methods = ["__length_hint__", "__reduce__"]
