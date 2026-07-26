@@ -350,7 +350,8 @@ $B.classmethod_descriptor.tp_descr_get = function(self, obj, type) {
         {
             ob_type: $B.builtin_function_or_method,
             ml: {ml_name: self.d_name},
-            m_self: self.d_type
+            m_self: self.d_type,
+            $function_infos: self.d_method.$function_infos
         }
     )
     return f
