@@ -460,7 +460,7 @@ memoryview_funcs.tolist = function(self) {
                 }
                 res.push(item)
             }
-            return res
+            return $B.$list(res)
         }
     }
 }

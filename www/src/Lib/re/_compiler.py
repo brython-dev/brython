@@ -775,7 +775,7 @@ def compile(p, flags=0):
     for k, i in groupindex.items():
         indexgroup[i] = k
     return _sre.compile(
-        pattern, flags | p.state.flags, 
+        pattern, flags | p.state.flags,
         code,
         p.state.groups-1,
         groupindex, tuple(indexgroup)
