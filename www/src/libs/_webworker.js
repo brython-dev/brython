@@ -244,7 +244,7 @@ function create_worker() {
         error_token = Math.random().toString(36).substr(2, 8)
 
     // open indexedDB cache before running worker code
-    js = `$B.idb_open_promise().then(function() {\n` +
+    js = `$B.idb_open_promise().then($B.wasthonLoad().then(function() {\n` +
          `try {\n` +
              `${js}\n` +
              `self.postMessage('${ok_token}')\n` +
@@ -252,7 +252,7 @@ function create_worker() {
              `console.log('worker error', err)\n` +
              `self.postMessage('${error_token}Error in worker "${id}"\\n'` +
              ` + $B.error_trace(err))\n` +
-         `}\n})`
+         `}\n}))`
     js = header + js
 
     var p = new Promise(function(resolve, reject) {
