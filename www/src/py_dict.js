@@ -191,7 +191,7 @@ function dictview_len(self) {
 }
 
 function dictview_richcompare(self, other, op) {
-    if (! $B.$isinstance(other, [_b_.set, _b_.frozenset, $B.dict_keys])) {
+    if (! $B.$isinstance(other, [_b_.set, _b_.frozenset, $B.dict_keys, $B.dict_items])) {
         return _b_.NotImplemented
     }
     var len_self = $B.get_class(self).mp_length(self)
@@ -1434,7 +1434,7 @@ dict_items_funcs.isdisjoint = function(self, other) {
 }
 
 dict_items_funcs.mapping_get = function(self) {
-    return $B.mappingproxy.tp_new(self.dict_obj, [], $B.empty_dict())
+    return $B.mappingproxy.tp_new($B.mappingproxy, [self.dict_obj], $B.empty_dict())
 }
 
 dict_items_funcs.mapping_set = _b_.None
@@ -1468,7 +1468,7 @@ $B.dict_keys.nb_or = function(self, other) {
 }
 
 $B.dict_keys.tp_repr = function(self) {
-    var keys = Array.from(dict.$iter_items(self.dict_obj)).map(x => x.key)
+    var keys = Array.from(dict.$iter_items(self.dict_obj)).map(x => _b_.repr(x.key))
     return `dict_keys([${keys}])`
 }
 
@@ -1512,7 +1512,7 @@ dict_keys_funcs.isdisjoint = function(self, other) {
 }
 
 dict_keys_funcs.mapping_get = function(self) {
-    return $B.mappingproxy.tp_new(self.dict_obj, [], $B.empty_dict())
+    return $B.mappingproxy.tp_new($B.mappingproxy, [self.dict_obj], $B.empty_dict())
 }
 
 dict_keys_funcs.mapping_set = _b_.None
@@ -1526,7 +1526,7 @@ $B.dict_keys.tp_getset = ["mapping"]
 /* dict_values start */
 $B.dict_values.tp_repr = function(self) {
     var values = Array.from(dict.$iter_items(self.dict_obj)).map(x => x.value)
-    return `dict_values({${values}])`
+    return `dict_values([${values}])`
 }
 
 $B.dict_values.tp_iter = function(self) {
@@ -1552,7 +1552,7 @@ dict_values_funcs.__reversed__ = function(self) {
 }
 
 dict_values_funcs.mapping_get = function(self) {
-    return $B.mappingproxy.tp_new(self.dict_obj, [], $B.empty_dict())
+    return $B.mappingproxy.tp_new($B.mappingproxy, [self.dict_obj], $B.empty_dict())
 }
 
 dict_values_funcs.mapping_set = _b_.None

@@ -724,8 +724,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,3,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-07-26 22:10:05.264193"
-__BRYTHON__.timestamp=1785096605263
+__BRYTHON__.compiled_date="2026-07-27 08:39:12.108176"
+__BRYTHON__.timestamp=1785134352107
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -2423,7 +2423,7 @@ if(slots !==$B.NULL){if(_b_.tuple.sq_contains(slots,attr)){self.slot_values[attr
 var dict=$B.get_dict(self)
 if(! dict && klass.$slots_has_dict){self[$B.DICT]=$B.empty_dict()
 dict=self[$B.DICT]}
-if(dict){$B.str_dict_set(dict,attr,value)}else{
+if(dict){_b_.dict.$setitem(dict,attr,value)}else{
 var exc=$B.attr_error(attr,self)
 exc.args[0]=`'${$B.get_name(klass)}' object has no attribute `+
 `'${attr}' and no __dict__ for setting new attributes`
@@ -11380,7 +11380,7 @@ let remaining_pairs=_b_.dict.tp_funcs.items(temp_dict)
 _b_.set.tp_funcs.update(result_set,remaining_pairs)
 return result_set}
 function dictview_len(self){return _b_.dict.mp_length(self.dict_obj)}
-function dictview_richcompare(self,other,op){if(! $B.$isinstance(other,[_b_.set,_b_.frozenset,$B.dict_keys])){return _b_.NotImplemented}
+function dictview_richcompare(self,other,op){if(! $B.$isinstance(other,[_b_.set,_b_.frozenset,$B.dict_keys,$B.dict_items])){return _b_.NotImplemented}
 var len_self=$B.get_class(self).mp_length(self)
 var len_other=_b_.len(other)
 var ok=false
@@ -11845,7 +11845,7 @@ dict_items_funcs.isdisjoint=function(self,other){var items=Array.from(dict.$iter
 .map(x=> $B.fast_tuple([x.key,x.value]))
 var self_as_set=$B.$call(_b_.set,items)
 return _b_.set.tp_funcs.isdisjoint(self_as_set,other)}
-dict_items_funcs.mapping_get=function(self){return $B.mappingproxy.tp_new(self.dict_obj,[],$B.empty_dict())}
+dict_items_funcs.mapping_get=function(self){return $B.mappingproxy.tp_new($B.mappingproxy,[self.dict_obj],$B.empty_dict())}
 dict_items_funcs.mapping_set=_b_.None
 $B.dict_items.tp_methods=["isdisjoint","__reversed__"]
 $B.dict_items.tp_getset=["mapping"]
@@ -11854,7 +11854,7 @@ $B.dict_keys.nb_subtract=function(self,other){return dictviews_sub(self,other)}
 $B.dict_keys.nb_and=function(self,other){return _PyDictView_Intersect(self,other)}
 $B.dict_keys.nb_xor=function(self,other){return dictviews_xor(self,other)}
 $B.dict_keys.nb_or=function(self,other){return dictviews_or(self,other)}
-$B.dict_keys.tp_repr=function(self){var keys=Array.from(dict.$iter_items(self.dict_obj)).map(x=> x.key)
+$B.dict_keys.tp_repr=function(self){var keys=Array.from(dict.$iter_items(self.dict_obj)).map(x=> _b_.repr(x.key))
 return `dict_keys([${keys}])`}
 $B.dict_keys.tp_hash=_b_.None
 $B.dict_keys.tp_iter=function(self){return{
@@ -11868,19 +11868,19 @@ ob_type:$B.dict_reversekeyiterator,it:_b_.dict.$iter_items_reversed(self.dict_ob
 dict_keys_funcs.isdisjoint=function(self,other){var keys=Array.from(dict.$iter_items(self.dict_obj)).map(x=> x.key)
 var self_as_set=$B.$call(_b_.set,keys)
 return _b_.set.tp_funcs.isdisjoint(self_as_set,other)}
-dict_keys_funcs.mapping_get=function(self){return $B.mappingproxy.tp_new(self.dict_obj,[],$B.empty_dict())}
+dict_keys_funcs.mapping_get=function(self){return $B.mappingproxy.tp_new($B.mappingproxy,[self.dict_obj],$B.empty_dict())}
 dict_keys_funcs.mapping_set=_b_.None
 $B.dict_keys.tp_methods=["isdisjoint","__reversed__"]
 $B.dict_keys.tp_getset=["mapping"]
 $B.dict_values.tp_repr=function(self){var values=Array.from(dict.$iter_items(self.dict_obj)).map(x=> x.value)
-return `dict_values({${values}])`}
+return `dict_values([${values}])`}
 $B.dict_values.tp_iter=function(self){return{
 ob_type:$B.dict_valueiterator,it:_b_.dict.$iter_items(self.dict_obj),dict_obj:self.dict_obj}}
 $B.dict_values.mp_length=function(self){return _b_.dict.mp_length(self.dict_obj)}
 var dict_values_funcs=$B.dict_values.tp_funcs={}
 dict_values_funcs.__reversed__=function(self){return{
 ob_type:$B.dict_reversevalueiterator,it:dict.$iter_items_reversed(self.dict_obj),dict_obj:self.dict_obj}}
-dict_values_funcs.mapping_get=function(self){return $B.mappingproxy.tp_new(self.dict_obj,[],$B.empty_dict())}
+dict_values_funcs.mapping_get=function(self){return $B.mappingproxy.tp_new($B.mappingproxy,[self.dict_obj],$B.empty_dict())}
 dict_values_funcs.mapping_set=_b_.None
 $B.dict_values.tp_methods=["__reversed__"]
 $B.dict_values.tp_getset=["mapping"]
