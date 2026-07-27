@@ -1376,7 +1376,7 @@
             // event(element, *names) is a Promise on the events "names" happening on
             // the element. This promise always resolves (never rejects) with the
             // first triggered DOM event.
-            var $ = $B.args("event", 1, {element: null}, arguments)
+            var $ = $B.args("event", 1, {element: null}, arguments, null, 'names')
             var element = $.element,
                 names = $.names
             return new Promise(function(resolve) {
@@ -1386,12 +1386,12 @@
                         // When one of the handled events is triggered, all bindings
                         // are removed
                         for (let items of callbacks) {
-                            $B.DOMNode.unbind(element, items[0], items[1])
+                            $B.DOMNode.tp_funcs.unbind(element, items[0], items[1])
                         }
                         resolve($B.$DOMEvent(evt))
                     }
                     callbacks.push([name, callback])
-                    $B.DOMNode.bind(element, name, callback)
+                    $B.DOMNode.tp_funcs.bind(element, name, callback)
                 }
             })
         },

@@ -724,8 +724,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,3,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-07-24 07:51:08.726804"
-__BRYTHON__.timestamp=1784872268726
+__BRYTHON__.compiled_date="2026-07-27 08:47:51.942187"
+__BRYTHON__.timestamp=1785134871941
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -2466,7 +2466,7 @@ if(slots !==$B.NULL){if(_b_.tuple.sq_contains(slots,attr)){self.slot_values[attr
 var dict=$B.get_dict(self)
 if(! dict && klass.$slots_has_dict){self[$B.DICT]=$B.empty_dict()
 dict=self[$B.DICT]}
-if(dict){$B.str_dict_set(dict,attr,value)}else{
+if(dict){_b_.dict.$setitem(dict,attr,value)}else{
 var exc=$B.attr_error(attr,self)
 exc.args[0]=`'${$B.get_name(klass)}' object has no attribute `+
 `'${attr}' and no __dict__ for setting new attributes`
@@ -3738,8 +3738,8 @@ if(! _b_.issubclass(type,self.d_type)){$B.RAISE(_b_.TypeError,"descriptor '%V' r
 "but received '%.100s'",descr_name(descr),PyDescr_TYPE(descr).tp_name,type.tp_name)}
 var cls=$B.NULL
 if(self.d_method.ml_flags & $B.METH_METHOD){cls=descr.d_common.d_type}
-var f=function(...args){return self.d_method.call(null,self.d_type,...args)}
-Object.assign(f,{ob_type:$B.builtin_function_or_method,ml:{ml_name:self.d_name},m_self:self.d_type}
+var f=function(...args){return self.d_method.call(null,type,...args)}
+Object.assign(f,{ob_type:$B.builtin_function_or_method,ml:{ml_name:self.d_name},m_self:type,$function_infos:self.d_method.$function_infos}
 )
 return f}
 var classmethod_descriptor_funcs=$B.classmethod_descriptor.tp_funcs={}
@@ -3885,7 +3885,7 @@ self.$function_infos[$B.func_attrs.__name__]
 if(self.m_self !==undefined && self.m_self !==null &&
 ! $B.$isinstance(self.m_self,$B.module)){return $B.fast_tuple([_b_.getattr,$B.fast_tuple([self.m_self,name])])}
 return name}
-builtin_function_or_method_funcs.__self___get=function(self){return $B.imported.builtins}
+builtin_function_or_method_funcs.__self___get=function(self){return self.m_self}
 builtin_function_or_method_funcs.__self___set=_b_.None
 builtin_function_or_method_funcs.__text_signature___get=function(self){}
 builtin_function_or_method_funcs.__text_signature___set=function(self){}
@@ -11370,7 +11370,7 @@ var len_self=dictview_len(self)
 if($B.exact_type(other,_b_.set)&& len_self <=_b_.len(other)){return $B.$call($B.$getattr(other,'intersection'),self)}
 if(PyDictViewSet_Check(other)){var len_other=dictview_len(other)
 if(len_other > len_self){[self,other]=[other,self]}}
-var result=_b_.set.tp_new(set,[],$B.empty_dict())
+var result=_b_.set.tp_new(_b_.set,[],$B.empty_dict())
 var it=$B.make_js_iterator(other)
 if($B.$isinstance(self,$B.dict_keys)){dict_contains=$B.dict_keys.sq_contains}else{
 dict_contains=dictitems_contains}
@@ -11388,8 +11388,32 @@ if(next.done){break}
 ok=$B.$call(contains,next.value)
 if(! ok){break}}
 return ok}
+function dictitems_contains(self,obj){if(! $B.is_tuple(obj)||_b_.tuple.mp_length(obj)!=2){return false}
+let[key,value]=obj
+let result=false
+try{
+let found=_b_.dict.mp_subscript(self.dict_obj,key)
+result=$B.is_or_equals(found,value)}catch(err){$B.RAISE_IF_NOT(err,_b_.KeyError)}
+return result}
+function dictitems_xor(self,other){let d1=self.dict_obj
+let d2=other.dict_obj
+let temp_dict=_b_.dict.tp_funcs.copy(d1)
+let result_set=_b_.set.$factory()
+let it=_b_.dict.$iter_items(d2)
+for(let entry of it){let key=entry.key
+let val2=entry.value
+let val1=dict.$lookup_by_key(temp_dict,key)
+let to_delete=val1.found
+? $B.is_or_equals(val1.value,val2)
+:false
+if(to_delete){dict.$delitem(temp_dict,key,val1.hash)}else{
+let pair=$B.fast_tuple([key,val2])
+_b_.set.tp_funcs.add(result_set,pair)}}
+let remaining_pairs=_b_.dict.tp_funcs.items(temp_dict)
+_b_.set.tp_funcs.update(result_set,remaining_pairs)
+return result_set}
 function dictview_len(self){return _b_.dict.mp_length(self.dict_obj)}
-function dictview_richcompare(self,other,op){if(! $B.$isinstance(other,[_b_.set,_b_.frozenset,$B.dict_keys])){return _b_.NotImplemented}
+function dictview_richcompare(self,other,op){if(! $B.$isinstance(other,[_b_.set,_b_.frozenset,$B.dict_keys,$B.dict_items])){return _b_.NotImplemented}
 var len_self=$B.get_class(self).mp_length(self)
 var len_other=_b_.len(other)
 var ok=false
@@ -11511,12 +11535,12 @@ if(hash_method===$B.str_dict_get($B.get_dict(_b_.object),'__hash__')){return fal
 var hash=$B.$call(hash_method,key)
 convert_all_str(self)}
 return index_by_key(self,key,hash)!==null}
-dict.$delitem=function(self,key){if(self[$B.JSOBJ]){delete self[$B.JSOBJ][key]}
+dict.$delitem=function(self,key,hash){if(self[$B.JSOBJ]){delete self[$B.JSOBJ][key]}
 if(! self[KEYS]){if(typeof key=='string'){if(self.hasOwnProperty(key)){delete self[key]
 return _b_.None}else{
 $B.RAISE(_b_.KeyError,key)}}
-if(! dict.$contains(self,key)){$B.RAISE(_b_.KeyError,_b_.str.$factory(key))}}
-var lookup=dict.$lookup_by_key(self,key)
+if(! dict.$contains(self,key,hash)){$B.RAISE(_b_.KeyError,_b_.str.$factory(key))}}
+var lookup=dict.$lookup_by_key(self,key,hash)
 if(lookup.found){self[TABLE][lookup.hash].splice(lookup.rank,1)
 if(self[TABLE][lookup.hash].length==0){delete self[TABLE][lookup.hash]}
 delete self[VALUES][lookup.index]
@@ -11726,7 +11750,8 @@ if(cls !==dict){$B.init_dict(instance)}
 return instance}
 var dict_funcs=_b_.dict.tp_funcs={}
 dict_funcs.__class_getitem__=$B.$class_getitem
-dict_funcs.__reversed__=function(self){return dict_reversekeyiterator.$factory(self)}
+dict_funcs.__reversed__=function(self){return{
+ob_type:$B.dict_reversekeyiterator,it:_b_.dict.$iter_items_reversed(self),dict_obj:self}}
 dict_funcs.__sizeof__=function(self){return 48}
 dict_funcs.clear=function(self){
 var $=$B.args("clear",1,{self:null},arguments)
@@ -11751,7 +11776,7 @@ var res=$B.$call(cls),klass=$B.get_class(res),
 keys_iter=$B.$iter(keys),setitem=klass===dict ? dict.$setitem :$B.$getattr(klass,'__setitem__')
 while(1){try{
 var key=_b_.next(keys_iter)
-setitem(res,key,value)}catch(err){if($B.is_exc(err,[_b_.StopIteration])){return res}
+$B.$call(setitem,res,key,value)}catch(err){if($B.is_exc(err,[_b_.StopIteration])){return res}
 throw err}}}
 dict_funcs.get=function(self){var $=$B.args("get",3,{self:null,key:null,_default:null},arguments,{_default:_b_.None})
 try{
@@ -11828,9 +11853,9 @@ $B.set_func_names(dict,"builtins")
 $B.dict_get=dict.tp_funcs.get
 $B.dict_items.tp_richcompare=function(self,other,op){return dictview_richcompare(self,other,op)}
 $B.dict_items.nb_subtract=function(self,other){return dictviews_sub(self,other)}
-$B.dict_items.nb_and=function(self){return _PyDictView_Intersect(self,other)}
-$B.dict_items.nb_xor=function(self){return dictviews_xor(self,other)}
-$B.dict_items.nb_or=function(self){return dictviews_or(self,other)}
+$B.dict_items.nb_and=function(self,other){return _PyDictView_Intersect(self,other)}
+$B.dict_items.nb_xor=function(self,other){return dictviews_xor(self,other)}
+$B.dict_items.nb_or=function(self,other){return dictviews_or(self,other)}
 $B.dict_items.tp_repr=function(self){var items=Array.from(dict.$iter_items(self.dict_obj)).map(
 x=> $B.fast_tuple([x.key,x.value]))
 items=$B.$list(items)
@@ -11853,7 +11878,7 @@ dict_items_funcs.isdisjoint=function(self,other){var items=Array.from(dict.$iter
 .map(x=> $B.fast_tuple([x.key,x.value]))
 var self_as_set=$B.$call(_b_.set,items)
 return _b_.set.tp_funcs.isdisjoint(self_as_set,other)}
-dict_items_funcs.mapping_get=function(self){return $B.mappingproxy.tp_new(self.dict_obj,[],$B.empty_dict())}
+dict_items_funcs.mapping_get=function(self){return $B.mappingproxy.tp_new($B.mappingproxy,[self.dict_obj],$B.empty_dict())}
 dict_items_funcs.mapping_set=_b_.None
 $B.dict_items.tp_methods=["isdisjoint","__reversed__"]
 $B.dict_items.tp_getset=["mapping"]
@@ -11862,7 +11887,7 @@ $B.dict_keys.nb_subtract=function(self,other){return dictviews_sub(self,other)}
 $B.dict_keys.nb_and=function(self,other){return _PyDictView_Intersect(self,other)}
 $B.dict_keys.nb_xor=function(self,other){return dictviews_xor(self,other)}
 $B.dict_keys.nb_or=function(self,other){return dictviews_or(self,other)}
-$B.dict_keys.tp_repr=function(self){var keys=Array.from(dict.$iter_items(self.dict_obj)).map(x=> x.key)
+$B.dict_keys.tp_repr=function(self){var keys=Array.from(dict.$iter_items(self.dict_obj)).map(x=> _b_.repr(x.key))
 return `dict_keys([${keys}])`}
 $B.dict_keys.tp_hash=_b_.None
 $B.dict_keys.tp_iter=function(self){return{
@@ -11876,19 +11901,19 @@ ob_type:$B.dict_reversekeyiterator,it:_b_.dict.$iter_items_reversed(self.dict_ob
 dict_keys_funcs.isdisjoint=function(self,other){var keys=Array.from(dict.$iter_items(self.dict_obj)).map(x=> x.key)
 var self_as_set=$B.$call(_b_.set,keys)
 return _b_.set.tp_funcs.isdisjoint(self_as_set,other)}
-dict_keys_funcs.mapping_get=function(self){return $B.mappingproxy.tp_new(self.dict_obj,[],$B.empty_dict())}
+dict_keys_funcs.mapping_get=function(self){return $B.mappingproxy.tp_new($B.mappingproxy,[self.dict_obj],$B.empty_dict())}
 dict_keys_funcs.mapping_set=_b_.None
 $B.dict_keys.tp_methods=["isdisjoint","__reversed__"]
 $B.dict_keys.tp_getset=["mapping"]
 $B.dict_values.tp_repr=function(self){var values=Array.from(dict.$iter_items(self.dict_obj)).map(x=> x.value)
-return `dict_values({${keys}])`}
+return `dict_values([${values}])`}
 $B.dict_values.tp_iter=function(self){return{
 ob_type:$B.dict_valueiterator,it:_b_.dict.$iter_items(self.dict_obj),dict_obj:self.dict_obj}}
 $B.dict_values.mp_length=function(self){return _b_.dict.mp_length(self.dict_obj)}
 var dict_values_funcs=$B.dict_values.tp_funcs={}
 dict_values_funcs.__reversed__=function(self){return{
 ob_type:$B.dict_reversevalueiterator,it:dict.$iter_items_reversed(self.dict_obj),dict_obj:self.dict_obj}}
-dict_values_funcs.mapping_get=function(self){return $B.mappingproxy.tp_new(self.dict_obj,[],$B.empty_dict())}
+dict_values_funcs.mapping_get=function(self){return $B.mappingproxy.tp_new($B.mappingproxy,[self.dict_obj],$B.empty_dict())}
 dict_values_funcs.mapping_set=_b_.None
 $B.dict_values.tp_methods=["__reversed__"]
 $B.dict_values.tp_getset=["mapping"]
@@ -11904,31 +11929,37 @@ $B.dict_reversekeyiterator.tp_iter=function(self){return self}
 $B.dict_reversekeyiterator.tp_iternext=function*(self){for(var entry of self.it){yield entry[0]}}
 var dict_reversekeyiterator_funcs=$B.dict_reversekeyiterator.tp_funcs={}
 dict_reversekeyiterator_funcs.__length_hint__=function(self){return _b_.dict.mp_length(self.dict_obj)}
-dict_reversekeyiterator_funcs.__reduce__=function(self){}
+dict_reversekeyiterator_funcs.__reduce__=function(self){let keys=Array.from(self.it).map(x=> x[0])
+return $B.fast_tuple([_b_.iter,$B.fast_tuple([$B.$list(keys)])])}
 $B.dict_reversekeyiterator.tp_methods=["__length_hint__","__reduce__"]
 $B.dict_valueiterator.tp_iter=function(self){return self}
 $B.dict_valueiterator.tp_iternext=function*(self){for(var item of self.it){yield item.value}}
 var dict_valueiterator_funcs=$B.dict_valueiterator.tp_funcs={}
 dict_valueiterator_funcs.__length_hint__=function(self){return _b_.dict.mp_length(self.dict_obj)}
-dict_valueiterator_funcs.__reduce__=function(self){return $B.fast_tuple([_b_.iter,$B.fast_tuple([$B.$list(Array.from(dict_valueiterator.tp_iternext(self)))])])}
+dict_valueiterator_funcs.__reduce__=function(self){let values_list=$B.$list(
+Array.from($B.dict_valueiterator.tp_iternext(self))
+)
+return $B.fast_tuple([_b_.iter,$B.fast_tuple([values_list])])}
 $B.dict_valueiterator.tp_methods=["__length_hint__","__reduce__"]
 $B.dict_reversevalueiterator.tp_iter=function(self){return self}
 $B.dict_reversevalueiterator.tp_iternext=function*(self){for(var item of self.it){yield item[1]}}
 var dict_reversevalueiterator_funcs=$B.dict_reversevalueiterator.tp_funcs={}
-dict_reversevalueiterator_funcs.__length_hint__=function(self){}
-dict_reversevalueiterator_funcs.__reduce__=function(self){}
+dict_reversevalueiterator_funcs.__length_hint__=function(self){return _b_.dict.mp_length(self.dict_obj)}
+dict_reversevalueiterator_funcs.__reduce__=function(self){let values=Array.from(self.it).map(x=> x[1])
+return $B.fast_tuple([_b_.iter,$B.fast_tuple([$B.$list(values)])])}
 $B.dict_reversevalueiterator.tp_methods=["__length_hint__","__reduce__"]
 $B.dict_itemiterator.tp_iter=function(self){return self}
 $B.dict_itemiterator.tp_iternext=function*(self){for(var item of self.it){yield $B.fast_tuple([item.key,item.value])}}
 var dict_itemiterator_funcs=$B.dict_itemiterator.tp_funcs={}
 dict_itemiterator_funcs.__length_hint__=function(self){return_b_.dict.mp_length(self.obj)}
-dict_itemiterator_funcs.__reduce__=function(self){return $B.fast_tuple([_b_.iter,$B.fast_tuple([$B.$list(Array.from(dict_itemiterator.tp_iternext(self)))])])}
+dict_itemiterator_funcs.__reduce__=function(self){let items_list=$B.$list(Array.from($B.dict_itemiterator.tp_iternext(self)))
+return $B.fast_tuple([_b_.iter,$B.fast_tuple([items_list])])}
 $B.dict_itemiterator.tp_methods=["__length_hint__","__reduce__"]
 $B.dict_reverseitemiterator.tp_iter=function(self){return self}
 $B.dict_reverseitemiterator.tp_iternext=function*(self){for(var item of self.it){yield item}}
 var dict_reverseitemiterator_funcs=$B.dict_reverseitemiterator.tp_funcs={}
 dict_reverseitemiterator_funcs.__length_hint__=function(self){return _b_.dict.mp_length(self.dict_obj)}
-dict_reverseitemiterator_funcs.__reduce__=function(self){}
+dict_reverseitemiterator_funcs.__reduce__=function(self){return $B.fast_tuple([_b_.iter,$B.fast_tuple([$B.$list(Array.from(self.it))])])}
 $B.dict_reverseitemiterator.tp_methods=["__length_hint__","__reduce__"]
 $B.empty_dict=function(){var res={}
 res[$B.OB_TYPE]=dict
@@ -14599,7 +14630,7 @@ $err3.args[0]=`cannot import name '${name}' `+
 if(modobj.__file__){$err3.args[0]+=` (${modobj.__file__})`}
 $err3.$suggestion=suggestion
 throw $err3}
-if($B.get_option('debug')> 2){console.log('no name',name,'in module',modobj)
+if($B.get_option('debug')> 3){console.log('no name',name,'in module',modobj)
 console.log($err3)
 console.log($B.frame_obj.frame)}
 $B.RAISE(_b_.ImportError,"cannot import name '"+name+"'")}}}}
@@ -15125,14 +15156,14 @@ func.$function_infos=[]
 func.$function_infos[$B.func_attrs.name]=`ajax_${method}`
 return{
 ob_type:$B.coroutine,$args:[url,args],$func:func}},event:function(){
-var $=$B.args("event",1,{element:null},arguments)
+var $=$B.args("event",1,{element:null},arguments,null,'names')
 var element=$.element,names=$.names
 return new Promise(function(resolve){var callbacks=[]
 for(let name of names){var callback=function(evt){
-for(let items of callbacks){$B.DOMNode.unbind(element,items[0],items[1])}
+for(let items of callbacks){$B.DOMNode.tp_funcs.unbind(element,items[0],items[1])}
 resolve($B.$DOMEvent(evt))}
 callbacks.push([name,callback])
-$B.DOMNode.bind(element,name,callback)}})},get:function(){var ajax=$B.module_getattr($B.imported['browser.aio'],'ajax')
+$B.DOMNode.tp_funcs.bind(element,name,callback)}})},get:function(){var ajax=$B.module_getattr($B.imported['browser.aio'],'ajax')
 return ajax.bind(null,"GET").apply(null,arguments)},iscoroutine:function(f){return $B.get_class(f)===$B.coroutine},iscoroutinefunction:function(f){return(f.$function_infos[$B.func_attrs.flags]& 128)!=0},post:function(){var ajax=$B.module_getattr($B.imported['browser.aio'],'ajax')
 return ajax.bind(null,"POST").apply(null,arguments)},run:function(){var handle_success=function(){$B.leave_frame()},handle_error=$B.show_error
 var $=$B.args("run",3,{coro:null,onsuccess:null,onerror:null},arguments,{onsuccess:handle_success,onerror:handle_error})

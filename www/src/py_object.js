@@ -234,7 +234,7 @@ _b_.object.tp_richcompare = function(self, other, op) {
 }
 
 _b_.object.tp_setattro = function(self, attr, value) {
-    var test = false // attr == 'x' // && value === $B.NULL
+    var test = false // attr == 'a' // && value === $B.NULL
     var klass = $B.get_class(self)
     if (! $B.is_str(attr)) {
         $B.RAISE(_b_.TypeError, "attribute name must be string, not '" +
@@ -305,7 +305,7 @@ _b_.object.tp_setattro = function(self, attr, value) {
         dict = self[$B.DICT]
     }
     if (dict) {
-        $B.str_dict_set(dict, attr, value)
+        _b_.dict.$setitem(dict, attr, value)
     } else {
         var exc = $B.attr_error(attr, self)
         exc.args[0] = `'${$B.get_name(klass)}' object has no attribute ` +

@@ -1601,7 +1601,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum) {
                             $err3.$suggestion = suggestion
                             throw $err3
                         }
-                        if ($B.get_option('debug') > 2) {
+                        if ($B.get_option('debug') > 3) {
                             console.log('no name', name, 'in module', modobj)
                             console.log($err3)
                             console.log($B.frame_obj.frame)
