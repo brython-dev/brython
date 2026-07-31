@@ -724,8 +724,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,3,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-07-31 12:46:44.063856"
-__BRYTHON__.timestamp=1785494804063
+__BRYTHON__.compiled_date="2026-07-31 15:27:37.645477"
+__BRYTHON__.timestamp=1785504457645
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -3335,7 +3335,7 @@ if(fget && fget.$attrs){for(var key in fget.$attrs){self[key]=fget.$attrs[key]}}
 _b_.property.tp_new=function(cls,args,kw){return{
 ob_type:cls}}
 var property_funcs=_b_.property.tp_funcs={}
-property_funcs.__isabstractmethod___get=function(self){for(let attr of['prop_get','prop_set','prop_del']){let test=$B.$getattr(self.prop_get,'__isabstractmethod__',false)
+property_funcs.__isabstractmethod___get=function(self){for(let attr of['prop_get','prop_set','prop_del']){let test=$B.$getattr(self[attr],'__isabstractmethod__',false)
 if(test===true){return true}}
 return false}
 property_funcs.__isabstractmethod___set=_b_.None

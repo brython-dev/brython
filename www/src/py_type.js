@@ -1947,7 +1947,7 @@ var property_funcs = _b_.property.tp_funcs = {}
 
 property_funcs.__isabstractmethod___get = function(self) {
     for (let attr of ['prop_get', 'prop_set', 'prop_del']) {
-        let test = $B.$getattr(self.prop_get, '__isabstractmethod__', false)
+        let test = $B.$getattr(self[attr], '__isabstractmethod__', false)
         if (test === true) {
             return true
         }
