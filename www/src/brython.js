@@ -724,8 +724,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,3,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-07-27 09:15:13.464518"
-__BRYTHON__.timestamp=1785136513464
+__BRYTHON__.compiled_date="2026-07-31 08:25:28.711768"
+__BRYTHON__.timestamp=1785479128711
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -3298,6 +3298,17 @@ ob_type:_b_.property,prop_get:fget,prop_set:fset ?? _b_.None,prop_del:_b_.None,d
 property.$factory=function(fget,fset,fdel,doc){var res={ob_type:property}
 property.tp_init(res,fget,fset ?? _b_.None,fdel ?? _b_.None,doc ?? _b_.None)
 return res}
+function property_copy(old,get,set,del){let type=$B.get_class(old)
+if(get===_b_.None){get=old.prop_get ?? _b_.None}
+if(set===_b_.None){set=old.prop_set ?? _b_.None}
+if(del===_b_.None){del=old.prop_del ?? _b_.None}
+let doc
+if(old.getter_doc && get !==_b_.None){
+doc=_b_.None;}else{
+doc=old.prop_doc ?? _b_.None}
+let _new=$B.$call(type,get,set,del,doc)
+if($B.exact_type(_new,_b_.property)){_new.prop_name=old.prop_name}
+return _new}
 _b_.property.tp_descr_set=function(self,obj,value){if(self.prop_set===_b_.None){var fi=self.prop_get.$function_infos
 var name=fi ? fi[$B.func_attrs.__name__]:(self.prop_name ?? self.__name__)
 var msg=`property '${name}' of '${$B.class_name(obj)}' object `+
@@ -3324,17 +3335,20 @@ if(fget && fget.$attrs){for(var key in fget.$attrs){self[key]=fget.$attrs[key]}}
 _b_.property.tp_new=function(cls,args,kw){return{
 ob_type:cls}}
 var property_funcs=_b_.property.tp_funcs={}
-property_funcs.__isabstractmethod___get=function(self){}
-property_funcs.__isabstractmethod___set=function(self){}
-property_funcs.__name___get=function(self){return $B.$getattr(self.prop_get,'__name__')}
-property_funcs.__name___set=function(self){}
+property_funcs.__isabstractmethod___get=function(self){for(let attr of['prop_get','prop_set','prop_del']){let test=$B.$getattr(self.prop_get,'__isabstractmethod__',false)
+if(test===true){return true}}
+return false}
+property_funcs.__isabstractmethod___set=_b_.None
+property_funcs.__name___get=function(self){if(Object.hasOwn(self,'prop_name')){return self.prop_name}
+let name=$B.$getattr(self.prop_get,'__name__',$B.NULL)
+if(name===$B.NULL){$B.RAISE(_b_.AttributeError,"'property' object has no attribute '__name__'"
+)}
+return name}
+property_funcs.__name___set=function(self,value){self.prop_name=value}
 property_funcs.__set_name__=function(self,cls,name){self.prop_name=name}
-property_funcs.deleter=function(self,fdel){self.prop_del=fdel
-return self}
-property_funcs.getter=function(self,fget){self.prop_get=fget
-return self}
-property_funcs.setter=function(self,fset){self.prop_set=fset
-return self}
+property_funcs.deleter=function(self,deleter){return property_copy(self,_b_.None,_b_.None,deleter)}
+property_funcs.getter=function(self,getter){return property_copy(self,getter,_b_.None,_b_.None)}
+property_funcs.setter=function(self,setter){return property_copy(self,_b_.None,setter,_b_.None)}
 _b_.property.tp_methods=["getter","setter","deleter","__set_name__"]
 _b_.property.tp_members=[["fget",$B.TYPES.OBJECT,"prop_get",1],["fset",$B.TYPES.OBJECT,"prop_set",1],["fdel",$B.TYPES.OBJECT,"prop_del",1],["__doc__",$B.TYPES.OBJECT,"prop_doc",0]
 ]
@@ -4911,8 +4925,7 @@ $B.$getattr=function(obj,attr,_default){
 var test=false 
 if(test){console.log('$getattr',obj,attr)}
 var res
-if(obj===undefined ||obj===null){console.log('getting attribute',attr)
-$B.RAISE_ATTRIBUTE_ERROR("Javascript object '"+obj+
+if(obj===undefined ||obj===null){$B.RAISE_ATTRIBUTE_ERROR("Javascript object '"+obj+
 "' has no attribute",obj,attr)}
 var rawname=attr
 if(obj===undefined){console.log("get attr",attr,"of undefined")}
@@ -5441,7 +5454,7 @@ for(var i=0,len=arguments.length;i < len;i++){args.push(arguments[i])}
 return $$super[attr].apply(null,args)}})(self)}
 if($test){console.log("no attr",attr,self,"mro",mro)}
 return _b_.object.tp_getattro(self,attr)}
-if($test){console.log("super",attr,self,"mro",mro,"found in mro[0]",mro[0],'\nf',f,'type(f)',$B.get_class(f))}
+if($test){console.log("super",attr,self,'\nf',f,'type(f)',$B.get_class(f))}
 var f_cls=$B.get_class(f)
 var getter=f_cls.tp_descr_get
 var res

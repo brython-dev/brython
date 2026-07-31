@@ -749,7 +749,6 @@ $B.$getattr = function(obj, attr, _default) {
     }
     var res
     if (obj === undefined || obj === null) {
-        console.log('getting attribute', attr)
         $B.RAISE_ATTRIBUTE_ERROR("Javascript object '" + obj +
             "' has no attribute", obj, attr)
     }
@@ -2049,7 +2048,7 @@ _b_.super.tp_repr = function(self) {
 _b_.super.tp_getattro = function(self, attr) {
     /* We want __class__ to return the class of the super object
        (i.e. super, or a subclass), not the class of su->obj. */
-    var $test = false // attr == "__new__" //&& self.type.tp_name == 'Z'
+    var $test = false // attr == "foo" //&& self.type.tp_name == 'Z'
     if (attr == "__class__") {
         return _b_.object.tp_getattro(self, attr)
     }
@@ -2116,8 +2115,7 @@ _b_.super.tp_getattro = function(self, attr) {
     }
 
     if ($test) {
-        console.log("super", attr, self, "mro", mro,
-            "found in mro[0]", mro[0], '\nf',
+        console.log("super", attr, self, '\nf',
             f, 'type(f)', $B.get_class(f))
     }
     var f_cls = $B.get_class(f)

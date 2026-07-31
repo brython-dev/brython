@@ -1848,6 +1848,35 @@ property.$factory = function(fget, fset, fdel, doc) {
     return res
 }
 
+function property_copy(old, get, set, del) {
+    let type = $B.get_class(old)
+
+    if (get === _b_.None) {
+        get = old.prop_get ?? _b_.None
+    }
+    if (set === _b_.None) {
+        set = old.prop_set ?? _b_.None
+    }
+    if (del === _b_.None) {
+        del = old.prop_del ?? _b_.None
+    }
+    let doc
+    if (old.getter_doc && get !== _b_.None) {
+        /* make _init use __doc__ from getter */
+        doc = _b_.None;
+    } else {
+        doc = old.prop_doc ?? _b_.None
+    }
+
+    let _new = $B.$call(type, get, set, del, doc)
+
+    if ($B.exact_type(_new, _b_.property)) {
+        _new.prop_name = old.prop_name
+    }
+
+    return _new
+}
+
 
 /* property start */
 _b_.property.tp_descr_set = function(self, obj, value) {
@@ -1917,38 +1946,49 @@ _b_.property.tp_new = function(cls, args, kw) {
 var property_funcs = _b_.property.tp_funcs = {}
 
 property_funcs.__isabstractmethod___get = function(self) {
-
+    for (let attr of ['prop_get', 'prop_set', 'prop_del']) {
+        let test = $B.$getattr(self.prop_get, '__isabstractmethod__', false)
+        if (test === true) {
+            return true
+        }
+    }
+    return false
 }
 
-property_funcs.__isabstractmethod___set = function(self) {
-
-}
+property_funcs.__isabstractmethod___set = _b_.None
 
 property_funcs.__name___get = function(self) {
-    return $B.$getattr(self.prop_get, '__name__')
+    if (Object.hasOwn(self, 'prop_name')) {
+        return self.prop_name
+    }
+
+    let name = $B.$getattr(self.prop_get, '__name__', $B.NULL)
+    if (name === $B.NULL) {
+        $B.RAISE(_b_.AttributeError,
+                 "'property' object has no attribute '__name__'"
+        )
+    }
+    return name
 }
 
-property_funcs.__name___set = function(self) {
-
+property_funcs.__name___set = function(self, value) {
+    self.prop_name = value
 }
 
 property_funcs.__set_name__ = function(self, cls, name) {
     self.prop_name = name
 }
 
-property_funcs.deleter = function(self, fdel) {
-    self.prop_del = fdel
-    return self
+property_funcs.deleter = function(self, deleter) {
+    return property_copy(self, _b_.None, _b_.None, deleter)
 }
 
-property_funcs.getter = function(self, fget) {
-    self.prop_get = fget
-    return self
+property_funcs.getter = function(self, getter) {
+    return property_copy(self, getter, _b_.None, _b_.None)
 }
 
-property_funcs.setter = function(self, fset) {
-    self.prop_set = fset
-    return self
+property_funcs.setter = function(self, setter) {
+    return property_copy(self, _b_.None, setter, _b_.None)
 }
 
 _b_.property.tp_methods = ["getter", "setter", "deleter", "__set_name__"]
