@@ -724,8 +724,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,3,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-07-31 08:25:28.711768"
-__BRYTHON__.timestamp=1785479128711
+__BRYTHON__.compiled_date="2026-07-31 12:46:44.063856"
+__BRYTHON__.timestamp=1785494804063
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -3807,24 +3807,29 @@ _b_.classmethod.tp_members=[["__func__",$B.TYPES.OBJECT,"cm_callable",1],["__wra
 _b_.classmethod.tp_getset=["__isabstractmethod__","__annotations__","__annotate__"]
 $B.set_func_names(classmethod,"builtins")
 var staticmethod=_b_.staticmethod
-staticmethod.$factory=function(func){return{
-ob_type:staticmethod,sm_callable:func}}
+staticmethod.$factory=function(func){let self=staticmethod.tp_new(staticmethod,[func])
+staticmethod.tp_init(self,func)
+return self}
 _b_.staticmethod.tp_repr=function(self){return `<staticmethod(${_b_.repr(self.sm_callable)})>`}
 _b_.staticmethod.tp_call=function(self,...args){return self.sm_callable(...args)}
 _b_.staticmethod.tp_descr_get=function(self){return self.sm_callable}
-_b_.staticmethod.tp_init=function(self,func){self.sm_callable=func}
-_b_.staticmethod.tp_new=function(cls,args,kw){return{
-ob_type:cls,sm_callable:_b_.None}}
+_b_.staticmethod.tp_init=function(self,func){self.sm_callable=func
+for(let attr of['__module__','__name__','__qualname__','__doc__']){$B.set_to_dict(self,attr,func.$function_infos[$B.func_attrs[attr]])}}
+_b_.staticmethod.tp_new=function(cls,args,kw){let res={ob_type:cls,sm_callable:_b_.None}
+$B.init_dict(res)
+return res}
 var staticmethod_funcs=_b_.staticmethod.tp_funcs={}
 staticmethod_funcs.__annotate___get=function(self){}
 staticmethod_funcs.__annotate___set=function(self){}
 staticmethod_funcs.__annotations___get=function(self){}
 staticmethod_funcs.__annotations___set=function(self){}
-staticmethod_funcs.__class_getitem__=function(self){}
-staticmethod_funcs.__dict___get=function(self){}
+staticmethod_funcs.__class_getitem__=$B.$class_getitem
+staticmethod_funcs.__dict___get=function(self){return $B.get_dict(self)}
 staticmethod_funcs.__dict___set=function(self){}
-staticmethod_funcs.__isabstractmethod___get=function(self){}
-staticmethod_funcs.__isabstractmethod___set=function(self){}
+staticmethod_funcs.__isabstractmethod___get=function(self){var res=$B.get_from_dict(self.sm_callable,'__isabstractmethod__',$B.NULL)
+if(res===$B.NULL){return false}
+return res}
+staticmethod_funcs.__isabstractmethod___set=_b_.None
 _b_.staticmethod.classmethods=["__class_getitem__"]
 _b_.staticmethod.tp_members=[["__func__",$B.TYPES.OBJECT,"sm_callable",1],["__wrapped__",$B.TYPES.OBJECT,"sm_callable",1]
 ]
