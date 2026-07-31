@@ -303,7 +303,7 @@ import os
 
 from browser import worker
 from browser import document, alert, bind, window, html, console
-from browser.widgets.dialog import Dialog
+from browser.widgets.dialog import Dialog, InfoDialog
 
 import javascript
 
@@ -315,6 +315,10 @@ test_dir = os.path.join(os.environ['PYTHONPATH'], "Lib", "test")
 def ready(w):
     global worker
     worker = w
+
+def copy(code):
+    window.navigator.clipboard.writeText(code).then(
+      InfoDialog('copy', 'copied', remove_after=2))
 
 def show_method(ev):
     sel = document['test']
@@ -335,14 +339,18 @@ def show_method(ev):
         if len(line) - len(line.lstrip()) <= indent:
             break
     method_lines = lines[start:end - 1]
+    method_lines = [line[indent:] for line in method_lines]
     while not method_lines[-1].strip():
         method_lines.pop()
         end -= 1
+    code = ''.join(method_lines)
     d = Dialog(method_line, top=ev.y, left=ev.x)
+    copy_button = html.BUTTON('copy').bind('click', lambda ev: copy(code))
+    d <= copy_button
     d.attach(table := html.TABLE())
     table.attach(tr := html.TR())
     tr <= html.TD() <= html.PRE('\n'.join(map(str, range(start + 1, end))))
-    tr <= html.TD() <= html.PRE(''.join(method_lines))
+    tr <= html.TD() <= html.PRE(code)
 
 
 def message(ev):
