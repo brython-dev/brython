@@ -724,8 +724,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,3,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-07-31 15:27:37.645477"
-__BRYTHON__.timestamp=1785504457645
+__BRYTHON__.compiled_date="2026-08-01 07:53:33.111156"
+__BRYTHON__.timestamp=1785563613110
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -3273,9 +3273,10 @@ $B.set_to_dict(cls,'__qualname__',value)
 cls.tp_name=value}
 type_funcs.__sizeof__=function(self){}
 type_funcs.__subclasscheck__=function(self,subclass){
-var klass=self
+if(! $B.$isinstance(subclass,$B.UnionType)&& ! $B.is_type(subclass)){$B.RAISE(_b_.TypeError,"issubclass() arg 2 must be a class,"+
+" a tuple of classes, or a union")}
 if(subclass.tp_bases===undefined){return self===_b_.object}
-return subclass.tp_bases.indexOf(klass)>-1}
+return subclass.tp_bases.indexOf(self)>-1}
 type_funcs.__subclasses__=function(cls){return $B.$list(cls.tp_subclasses)}
 type_funcs.__text_signature___get=function(self){}
 type_funcs.__text_signature___set=function(self){}
@@ -5101,6 +5102,7 @@ return false}
 var issubclass=_b_.issubclass=function(klass,classinfo){check_nb_args_no_kw('issubclass',2,arguments)
 if($B.is_tuple(classinfo)){for(var i=0;i < classinfo.length;i++){if(issubclass(klass,classinfo[i])){return true}}
 return false}
+if(! $B.is_type(klass)){$B.RAISE(_b_.TypeError,"issubclass() arg 1 must be a class")}
 if($B.get_class(classinfo)===$B.GenericAlias){$B.RAISE(_b_.TypeError,'issubclass() arg 2 cannot be a parameterized generic')}
 var mro=$B.get_mro(klass)
 if(klass===classinfo ||mro.indexOf(classinfo)>-1){return true}

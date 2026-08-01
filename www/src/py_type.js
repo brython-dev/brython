@@ -1762,11 +1762,15 @@ type_funcs.__sizeof__ = function(self) {
 
 type_funcs.__subclasscheck__ = function(self, subclass) {
     // Is subclass a subclass of self ?
-    var klass = self
+    if (! $B.$isinstance(subclass, $B.UnionType) && ! $B.is_type(subclass)) {
+        $B.RAISE(_b_.TypeError,
+            "issubclass() arg 2 must be a class," +
+            " a tuple of classes, or a union")
+    }
     if (subclass.tp_bases === undefined) {
         return self === _b_.object
     }
-    return subclass.tp_bases.indexOf(klass) > -1
+    return subclass.tp_bases.indexOf(self) > -1
 }
 
 type_funcs.__subclasses__ = function(cls) {

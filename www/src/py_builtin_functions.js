@@ -1149,6 +1149,11 @@ var issubclass = _b_.issubclass = function(klass, classinfo) {
         }
         return false
     }
+
+    if (! $B.is_type(klass)) {
+        $B.RAISE(_b_.TypeError, "issubclass() arg 1 must be a class")
+    }
+    
     if ($B.get_class(classinfo) === $B.GenericAlias) {
         $B.RAISE(_b_.TypeError,
             'issubclass() arg 2 cannot be a parameterized generic')
