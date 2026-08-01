@@ -724,8 +724,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,3,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-08-01 07:53:33.111156"
-__BRYTHON__.timestamp=1785563613110
+__BRYTHON__.compiled_date="2026-08-01 12:30:24.419605"
+__BRYTHON__.timestamp=1785580224419
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -4984,7 +4984,10 @@ var in_dict=$B.get_dict(obj)[attr]
 if(in_dict && $B.get_class(obj)===_b_.type){var res=$B.NULL
 var tset=_b_.type.tp_funcs[attr+'_set']
 if(_b_.type.tp_funcs.hasOwnProperty(attr+'_get')&&
-tset !==undefined && tset !==_b_.None){return _b_.type.tp_funcs[attr+'_get'](obj)}
+tset !==undefined && tset !==_b_.None){try{
+return _b_.type.tp_funcs[attr+'_get'](obj)}catch(err){$B.RAISE_IF_NOT(err,_b_.AttributeError)
+if(_default !==undefined){return _default}
+throw err}}
 switch($B.get_class(in_dict)){case $B.function:
 case $B.wrapper_descriptor:
 case $B.method_descriptor:
@@ -5099,16 +5102,19 @@ if(mro){for(var i=0;i < mro.length;i++){if(mro[i]===cls){return true}}}
 var instancecheck=$B.type_getattribute($B.get_class(cls),'__instancecheck__',$B.NULL)
 if(instancecheck !==$B.NULL){if(instancecheck.method !==_b_.type.tp_funcs.__instancecheck__){return $B.$call(instancecheck,cls,obj)}}
 return false}
-var issubclass=_b_.issubclass=function(klass,classinfo){check_nb_args_no_kw('issubclass',2,arguments)
-if($B.is_tuple(classinfo)){for(var i=0;i < classinfo.length;i++){if(issubclass(klass,classinfo[i])){return true}}
+var issubclass=_b_.issubclass=function(cls,class_or_tuple){check_nb_args_no_kw('issubclass',2,arguments)
+let _class
+if($B.is_tuple(class_or_tuple)){for(_class of class_or_tuple){if(issubclass(cls,_class)){return true}}
 return false}
-if(! $B.is_type(klass)){$B.RAISE(_b_.TypeError,"issubclass() arg 1 must be a class")}
-if($B.get_class(classinfo)===$B.GenericAlias){$B.RAISE(_b_.TypeError,'issubclass() arg 2 cannot be a parameterized generic')}
-var mro=$B.get_mro(klass)
-if(klass===classinfo ||mro.indexOf(classinfo)>-1){return true}
-var sch=$B.type_getattribute($B.get_class(classinfo),'__subclasscheck__',$B.NULL)
+_class=class_or_tuple 
+if(! $B.is_type(cls)){$B.RAISE(_b_.TypeError,"issubclass() arg 1 must be a class")}
+let class_type=$B.get_class(_class)
+if(class_type===$B.GenericAlias){$B.RAISE(_b_.TypeError,'issubclass() arg 2 cannot be a parameterized generic')}
+if(class_type===_b_.type){if(cls===_class){return true}
+return $B.get_mro(cls).indexOf(_class)>-1}
+var sch=$B.type_getattribute($B.get_class(_class),'__subclasscheck__',$B.NULL)
 if(sch===$B.NULL){return false}
-return $B.$call(sch,classinfo,klass)}
+return $B.$call(sch,_class,cls)}
 $B.iterator.tp_iter=function(self){var ob_type=$B.get_class(self.it_seq)
 self.len=$B.search_in_mro(ob_type,'__len__')(self.it_seq)
 self.getitem=$B.search_in_mro(ob_type,'__getitem__')

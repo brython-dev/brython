@@ -743,7 +743,7 @@ $B.time_builtin_getattr = 0
 
 $B.$getattr = function(obj, attr, _default) {
     // Used internally to avoid having to parse the arguments
-    var test = false // attr == 'attach'
+    var test = false // attr == '__abstractmethods__'
     if (test) {
         console.log('$getattr', obj, attr)
     }
@@ -862,7 +862,15 @@ $B.$getattr = function(obj, attr, _default) {
             var tset = _b_.type.tp_funcs[attr + '_set']
             if (_b_.type.tp_funcs.hasOwnProperty(attr + '_get') &&
                     tset !== undefined && tset !== _b_.None) {
-                return _b_.type.tp_funcs[attr + '_get'](obj)
+                try {
+                    return _b_.type.tp_funcs[attr + '_get'](obj)
+                } catch(err) {
+                    $B.RAISE_IF_NOT(err, _b_.AttributeError)
+                    if (_default !== undefined) {
+                        return _default
+                    }
+                    throw err
+                }
             }
             switch ($B.get_class(in_dict)) {
                 case $B.function:
@@ -1141,35 +1149,48 @@ $B.$isinstance = function(obj, cls) {
     return false
 }
 
-var issubclass = _b_.issubclass = function(klass, classinfo) {
+var issubclass = _b_.issubclass = function(cls, class_or_tuple) {
     check_nb_args_no_kw('issubclass', 2, arguments)
-    if ($B.is_tuple(classinfo)) {
-        for (var i = 0; i < classinfo.length; i++) {
-           if (issubclass(klass, classinfo[i])) {return true}
+
+    let _class
+
+    if ($B.is_tuple(class_or_tuple)) {
+        for (_class of class_or_tuple) {
+           if (issubclass(cls, _class)) {
+               return true
+           }
         }
         return false
     }
 
-    if (! $B.is_type(klass)) {
+    _class = class_or_tuple // single class
+
+    if (! $B.is_type(cls)) {
         $B.RAISE(_b_.TypeError, "issubclass() arg 1 must be a class")
     }
-    
-    if ($B.get_class(classinfo) === $B.GenericAlias) {
+
+    let class_type = $B.get_class(_class)
+
+    if (class_type === $B.GenericAlias) {
         $B.RAISE(_b_.TypeError,
             'issubclass() arg 2 cannot be a parameterized generic')
     }
-    var mro = $B.get_mro(klass)
 
-    if (klass === classinfo || mro.indexOf(classinfo) > -1) {
-        return true
+    if (class_type === _b_.type) {
+        if (cls === _class) {
+            return true
+        }
+        return $B.get_mro(cls).indexOf(_class) > -1
     }
 
     // Search __subclasscheck__ on classinfo
-    var sch = $B.type_getattribute($B.get_class(classinfo), '__subclasscheck__', $B.NULL)
+    var sch = $B.type_getattribute($B.get_class(_class),
+        '__subclasscheck__', $B.NULL)
+
     if (sch === $B.NULL) {
         return false
     }
-    return $B.$call(sch, classinfo, klass)
+    return $B.$call(sch, _class, cls)
 }
 
 // Utility class for iterators built from objects that have a __getitem__ and
