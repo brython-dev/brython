@@ -331,6 +331,7 @@ def show_method(ev):
     method_line = lines[start]
     indent = len(method_line) - len(method_line.lstrip())
     end = lineno
+
     while end < len(lines):
         line = lines[end]
         end += 1
@@ -339,11 +340,11 @@ def show_method(ev):
         if len(line) - len(line.lstrip()) <= indent:
             break
     method_lines = lines[start:end - 1]
-    method_lines = [line[indent:] for line in method_lines]
     while not method_lines[-1].strip():
         method_lines.pop()
         end -= 1
-    code = ''.join(method_lines)
+    code = ''.join(line[indent:] if line.strip() else line
+        for line in method_lines)
     d = Dialog(method_line, top=ev.y, left=ev.x)
     copy_button = html.BUTTON('copy').bind('click', lambda ev: copy(code))
     d <= copy_button
