@@ -725,9 +725,33 @@ function validate_stmt(stmt) {
     }
 }
 
+function to_js(ast_obj) {
+    let type = $B.get_class(ast_obj)
+    switch (type) {
+        case _b_.list:
+            return $B.$list(ast_obj.map(x => to_js(x)))
+        default:
+            let res = {
+                ob_type: type
+            }
+            let dict = $B.get_dict(ast_obj)
+            if (dict === undefined) {
+                console.log('no dict', ast_obj)
+                return ast_obj
+            }
+            for (let entry of _b_.dict.$iter_items(dict)) {
+                res[entry.key] = to_js(entry.value)
+            }
+            return res
+    }
+}
 
 mod._validate = function(ast_obj) {
     var js_ast = ast_obj.$js_ast
+    if (js_ast === undefined) {
+        console.log('no $js_ast', ast_obj)
+        js_ast = to_js(ast_obj)
+    }
     switch (ast_obj.ob_type) {
         case mod.Module:
             validate_stmts(js_ast.body)
