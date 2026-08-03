@@ -117,6 +117,64 @@ $B.ast_py_to_js = function(obj) {
     }
 }
 
+$B.AST = $B.make_builtin_class('AST')
+
+$B.AST.$convert = function(js_node) {
+    if (js_node === undefined) {
+        return _b_.None
+    }
+    var constr = js_node.constructor
+    if (constr && constr.$name) {
+        $B.create_python_ast_classes()
+        return $B.python_ast_classes[constr.$name].$factory(js_node)
+    } else if (Array.isArray(js_node)) {
+        return js_node.map($B.AST.$convert)
+    } else if (js_node.type) {
+        // literal constant
+        switch (js_node.type) {
+            case 'int':
+                console.log('AST convert, js_node', js_node)
+                var value = js_node.value[1],
+                    base = js_node.value[0]
+                var res = parseInt(value, base)
+                if (! Number.isSafeInteger(res)) {
+                    res = BigInt(res)
+                }
+                return res
+            case 'float':
+                return $B.fast_float(parseFloat(js_node.value))
+            case 'imaginary':
+                return $B.make_complex(0,
+                    $B.AST.$convert(js_node.value))
+            case 'ellipsis':
+                return _b_.Ellipsis
+            case 'str':
+                if (js_node.is_bytes) {
+                    return _b_.bytes.$factory(js_node.value, 'latin-1')
+                }
+                return js_node.value
+            case 'id':
+                if (['False', 'None', 'True'].indexOf(js_node.value) > -1) {
+                    return _b_[js_node.value]
+                }
+                break
+        }
+    } else if (['string', 'number'].indexOf(typeof js_node) > -1) {
+        return js_node
+    } else if (js_node.$name) {
+        // eg Store(), Load()...
+        return js_node.$name + '()'
+    } else if ([_b_.None, _b_.True, _b_.False].indexOf(js_node) > -1) {
+        return js_node
+    } else if ($B.get_class(js_node) !== $B.JSObj) {
+        return js_node
+    } else {
+        console.log('cannot handle', js_node)
+        return js_node
+    }
+}
+
+
 $B.create_python_ast_classes = function() {
     if ($B.python_ast_classes) {
         return
@@ -159,7 +217,7 @@ $B.create_python_ast_classes = function() {
             $B.set_to_dict(cls, '__module__', 'ast')
 
             cls.$factory = function() {
-                var $ = $B.args(klass, nb_args, $B.clone(slots), arguments, 
+                var $ = $B.args(klass, nb_args, $B.clone(slots), arguments,
                             $B.clone($defaults), null, 'kw')
                 var res = {
                     ob_type: cls
