@@ -172,7 +172,7 @@ class _TestResult(TestResult):
         return [test.__class__.__name__,
                 test._testMethodName,
                 test.lineno,
-                round(1000*(time.time() - test.startTime))]
+                round(1000 * (time.time() - test.startTime))]
 
     def addSubTest(self, test, subtest, err):
         TestResult.addSubTest(self, test, subtest, err)
