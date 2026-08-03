@@ -1194,8 +1194,10 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist) {
     if(typeof mod_name !== 'string' && ! $B.is_str(mod_name)){
         $B.RAISE(_b_.TypeError, 'module name must be a string')
     }
-    var $test = false // mod_name == "posix._path_normpath"
-    if ($test) {console.log("__import__", mod_name, 'fromlist', fromlist)}
+    var $test = false // mod_name == "test_ast"
+    if ($test) {
+        console.log("__import__", mod_name, 'fromlist', fromlist)
+    }
     // Main entry point for __import__
     //
     // If the module name mod_name is already in $B.imported, return it.
@@ -1253,7 +1255,6 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist) {
             if ($test) {
                 console.log("iter", i, _mod_name, "\nmodobj", modobj,
                     "\n__path__", __path__, Array.isArray(__path__))
-                alert()
             }
             if (modobj == _b_.None) {
                 // [Import spec] Stop loading loop right away

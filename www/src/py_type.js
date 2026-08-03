@@ -1767,6 +1767,9 @@ type_funcs.__subclasscheck__ = function(self, subclass) {
             "issubclass() arg 2 must be a class," +
             " a tuple of classes, or a union")
     }
+    if (self === subclass) {
+        return true
+    }
     if (subclass.tp_bases === undefined) {
         return self === _b_.object
     }
