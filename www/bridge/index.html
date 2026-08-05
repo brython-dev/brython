@@ -5,45 +5,94 @@
     <title>JavaScript/Python bridge demo</title>
     <script type="text/javascript" src="/src/brython.js"></script>
     <script type="text/javascript" src="print.brython.js"></script>
+    <script type="text/javascript" src="printJSFile.js"></script>
+    <script type="text/python" src="print_py_file.py"></script>
   </head>
   <body>
 
-    <script type="text/python" id="pythonscript">
-from browser import console, window, document
-import print_py, printJS
+    <script type="text/python" id="otherpythonscript">
+print("LOAD otherpythonscript")
 
-def print_python_from_script(message):
+def print_python_from_other_script(message):
+    print(message)
+    </script>
+
+    <script type="text/javascript" id="otherjavascriptscript">
+console.log("LOAD otherjavascriptscript")
+
+printJavaScriptFromOtherScript = function(message){
+    console.log(message)
+}
+    </script>
+
+    <script type="text/python" id="pythonscript">
+print("LOAD pythonscript")
+
+from browser import console, window, document
+
+def print_python_from_same_script(message):
     print(message)
 
 # Python code
 print("pythonscript 1: print")
-print_python_from_script("pythonscript 2: print_python_from_script")
-print_py.print_python_from_module("pythonscript 3: print_python_from_module")
+print_python_from_same_script("pythonscript 2: print_python_from_same_script")
+
+import otherpythonscript
+otherpythonscript.print_python_from_other_script("pythonscript 3: print_python_from_other_script")
+
+import print_py
+print_py.print_python_from_module("pythonscript 4: print_python_from_module")
+
+import print_py_file
+print_py_file.print_python_from_file("pythonscript 5: print_python_from_file")
 
 # JavaScript code
-console.log("pythonscript 4: console.log")
-window.printJavaScriptFromScript("pythonscript 5: printJavaScriptFromScript")
-printJS.printJavaScriptFromModule("pythonscript 6: printJavaScriptFromModule")
+console.log("pythonscript 6: console.log")
 
-document <= "Look at the 16 print in the JavaScript console"
+# Direct acces
+window.printJavaScriptFromOtherScript("pythonscript 7: printJavaScriptFromOtherScript")
+
+import printJS
+printJS.printJavaScriptFromModule("pythonscript 8: printJavaScriptFromModule")
+
+# Direct acces
+window.printJavaScriptFromFile("pythonscript 9: printJavaScriptFromFile")
+
+document <= "Look at the 22 print in the JavaScript console"
     </script>
 
     <script type="text/javascript" id="javascriptscript">
-printJavaScriptFromScript = function(message){
+console.log("LOAD javascriptscript")
+
+printJavaScriptFromSameScript = function(message){
     console.log(message)
 }
 
 // JavaScript code
 console.log("javascriptscript 1: console.log")
-printJavaScriptFromScript("javascriptscript 2: printJavaScriptFromScript")
-__BRYTHON__.getPythonModule("printJS").printJavaScriptFromModule("javascriptscript 3: printJavaScriptFromModule")
+printJavaScriptFromSameScript("javascriptscript 2: printJavaScriptFromSameScript")
+
+// Direct acces
+printJavaScriptFromOtherScript("javascriptscript 3: printJavaScriptFromOtherScript")
+
+printJS = __BRYTHON__.importModule("printJS")
+printJS.printJavaScriptFromModule("javascriptscript 4: printJavaScriptFromModule")
+
+// Direct acces
+printJavaScriptFromFile("javascriptscript 5: printJavaScriptFromFile")
 
 // Python code
-__BRYTHON__.runPythonSource("print('javascriptscript 4: print')")
-document.getElementById("pythonscript").addEventListener('load', function(script){
-    __BRYTHON__.getPythonModule("pythonscript").print_python_from_script("javascriptscript 5: print_python_from_script")
+__BRYTHON__.runPythonSource("print('javascriptscript 6: print')")
+document.getElementById("otherpythonscript").addEventListener('load', function(script){
+    otherpythonscript = __BRYTHON__.importModule("otherpythonscript")
+    otherpythonscript.print_python_from_other_script("javascriptscript 7: print_python_from_other_script")
 })
-__BRYTHON__.getPythonModule("print_py").print_python_from_module("javascriptscript 6: print_python_from_module")
+
+print_py = __BRYTHON__.importModule("print_py")
+print_py.print_python_from_module("javascriptscript 8: print_python_from_module")
+
+print_py_file = __BRYTHON__.importModule("print_py_file")
+print_py_file.print_python_from_file("javascriptscript 9: print_python_from_file")
     </script>
 
   </body>
