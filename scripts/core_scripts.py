@@ -1,14 +1,11 @@
 core_scripts = [
     'brython_builtins',
     'init_builtin_types',
-    'py_ast_classes',
     'stdlib_paths',
     'unicode_data',
     'version_info',
-
     'py_tokens',
     'python_tokenizer',
-    'py_ast',
     'loaders',
     'py_utils',
     'py_object',
@@ -40,9 +37,10 @@ core_scripts = [
     'builtin_modules',
     'finalize_builtin_types',
     'py2js',
+    'py_ast_classes',
+    'py_ast',
     'ast_to_js',
     'symtable',
-
     'action_helpers',
     'string_parser',
     'number_parser',
@@ -50,5 +48,6 @@ core_scripts = [
     'pegen',
     'gen_parse',
     'brython_ready'
+
 
 ]
