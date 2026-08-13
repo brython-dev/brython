@@ -1773,7 +1773,9 @@ type_funcs.__subclasscheck__ = function(self, subclass) {
     if (subclass.tp_bases === undefined) {
         return self === _b_.object
     }
-    return subclass.tp_bases.indexOf(self) > -1
+    // walk the full MRO, not only the direct bases: a class is a subclass
+    // of its indirect ancestors too
+    return $B.get_mro(subclass).indexOf(self) > -1
 }
 
 type_funcs.__subclasses__ = function(cls) {
