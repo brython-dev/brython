@@ -973,6 +973,10 @@ $B.$hash = function(obj) {
             if (! $B.is_int(res)) {
                 $B.RAISE(_b_.TypeError, '__hash__ method should return an integer')
             }
+            if (typeof res == 'object') {
+                // int subclass: hash of its integer value
+                res = _b_.int.tp_hash(res)
+            }
         } else {
             $B.RAISE(_b_.TypeError, "unhashable type: '" +
                     _b_.str.$factory($B.jsobj2pyobj(obj)) + "'"
@@ -1215,18 +1219,31 @@ var issubclass = _b_.issubclass = function(cls, class_or_tuple) {
 /* iterator start */
 $B.iterator.tp_iter = function(self) {
     var ob_type = $B.get_class(self.it_seq)
-    self.len = $B.search_in_mro(ob_type, '__len__')(self.it_seq)
-    self.getitem = $B.search_in_mro(ob_type, '__getitem__')
+    var getitem = $B.search_in_mro(ob_type, '__getitem__', $B.NULL)
+    if (getitem === $B.NULL) {
+        $B.RAISE(_b_.TypeError,
+            `'${$B.class_name(self.it_seq)}' object is not iterable`)
+    }
+    self.getitem = getitem
     self.it_index = 0
     return self
 }
 
 $B.iterator.tp_iternext = function*(self){
-    if (self.it_index < self.len) {
-        var res = self.getitem(self.it_seq, self.it_index)
-        self.it_index++
-        yield res
+    // "sequence protocol" iteration: call __getitem__ with increasing
+    // indices; IndexError ends the iteration (__len__ is not used, same
+    // as CPython)
+    var res
+    try {
+        res = $B.$call(self.getitem, self.it_seq, self.it_index)
+    } catch (err) {
+        if ($B.is_exc(err, [_b_.IndexError, _b_.StopIteration])) {
+            return
+        }
+        throw err
     }
+    self.it_index++
+    yield res
 }
 
 var iterator_funcs = $B.iterator.tp_funcs = {}
@@ -1307,13 +1324,14 @@ $B.$iter = function(obj, sentinel) {
             }
             return res
         }
+        // fallback for the "sequence protocol": objects with __getitem__
+        // are iterated with increasing indices until IndexError; __len__ is
+        // not required (same as CPython)
         var getitem_func = $B.search_in_mro(klass, '__getitem__', $B.NULL)
-        var len_func = $B.search_in_mro(klass, '__len__', $B.NULL)
         if (test) {
             console.log('getitem_func', getitem_func)
-            console.log('len_func', len_func)
         }
-        if (getitem_func !== $B.NULL && len_func !== $B.NULL) {
+        if (getitem_func !== $B.NULL) {
             var it = {
                 ob_type: $B.iterator,
                 it_seq: obj
