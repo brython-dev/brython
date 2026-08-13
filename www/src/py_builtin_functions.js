@@ -52,18 +52,9 @@ _b_.__build_class__ = function() {
 
 _b_.abs = function(obj) {
     check_nb_args_no_kw('abs', 1, arguments)
-
-    var klass = $B.get_class(obj)
-    try {
-        var method = $B.$getattr(klass, "__abs__")
-    } catch (err) {
-        if ($B.is_exc(err, [_b_.AttributeError])) {
-            $B.RAISE(_b_.TypeError, "Bad operand type for abs(): '" +
-                $B.class_name(obj) + "'")
-        }
-        throw err
-    }
-    return $B.$call(method, obj)
+    // use CPython-like slot dispatch (descriptor protocol on the type),
+    // cf. $B.call_special_unary
+    return $B.call_special_unary(obj, '__abs__', 'abs()')
 }
 
 _b_.aiter = function(async_iterable) {
@@ -710,6 +701,31 @@ $B.search_in_mro = function(klass, attr, _default) {
         }
     }
     return _default
+}
+
+$B.call_special_unary = function(obj, name, op_repr) {
+    // Emulates CPython's slot dispatch for unary operations: resolve `name`
+    // on the type (not the instance), apply the descriptor protocol with the
+    // instance, then call the result with no argument. In particular, a
+    // dunder defined as a zero-argument staticmethod is called without the
+    // instance, like in CPython.
+    var klass = $B.get_class(obj),
+        raw = $B.search_in_mro(klass, name, $B.NULL)
+    if (raw === $B.NULL) {
+        $B.RAISE(_b_.TypeError,
+            `bad operand type for ${op_repr}: '${$B.class_name(obj)}'`)
+    }
+    if (typeof raw == 'function') {
+        // fast path: plain method; binding to obj then calling with no
+        // argument is equivalent to calling with obj
+        return $B.$call(raw, obj)
+    }
+    var descr_get = raw.ob_type && raw.ob_type.tp_descr_get
+    if (descr_get) {
+        return $B.$call(descr_get(raw, obj, klass))
+    }
+    // non-descriptor class attribute: "bound" to nothing, call with no args
+    return $B.$call(raw)
 }
 
 $B.search_in_dict = function(obj, attr, _default) {

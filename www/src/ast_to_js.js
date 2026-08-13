@@ -4103,8 +4103,12 @@ $B.ast.UnaryOp.prototype.to_js = function(scopes) {
             return -operand + ''
         }
     }
-    var method = opclass2dunder[this.op.constructor.$name]
-    return `$B.$call($B.$getattr($B.get_class(locals.$result = ${operand}), '${method}'), locals.$result)`
+    var method = opclass2dunder[this.op.constructor.$name],
+        op_repr = {UAdd: '+', USub: '-', Invert: '~'}[this.op.constructor.$name]
+    // Use CPython-like slot dispatch: resolve the method on the type with
+    // the descriptor protocol, so that dunders defined as zero-argument
+    // staticmethods (as in sympy.core.numbers) are called without arguments.
+    return `$B.call_special_unary(${operand}, '${method}', 'unary ${op_repr}')`
 }
 
 $B.ast.While.prototype.to_js = function(scopes) {
