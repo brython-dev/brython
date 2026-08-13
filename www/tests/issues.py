@@ -3469,6 +3469,25 @@ assert cmath.sqrt(-1) == 1j
 import ctypes
 assert ctypes.sizeof(ctypes.c_long) in (4, 8)
 
+# PR 2912 : property() with only keyword arguments
+prop2912 = property(fset=lambda self, value: None)
+assert prop2912.fget is None
+assert prop2912.fset is not None
+
+class WithProp2912:
+    def __init__(self):
+        self._x = 0
+
+    def _set_x(self, value):
+        self._x = value
+
+    x = property(fset=_set_x)
+
+wp2912 = WithProp2912()
+wp2912.x = 5
+assert wp2912._x == 5
+assert_raises(AttributeError, lambda: wp2912.x)
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

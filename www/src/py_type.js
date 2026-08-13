@@ -1859,12 +1859,14 @@ $B.internal_property = function(module, fget, fset) {
     }
 }
 
-property.$factory = function(fget, fset, fdel, doc) {
+property.$factory = function() {
     var res = {
         ob_type: property
     }
-    property.tp_init(res, fget, fset ?? _b_.None, fdel ?? _b_.None,
-        doc ?? _b_.None)
+    // forward the arguments unchanged: they may end with a keyword-arguments
+    // marker (eg property(fset=...)), which tp_init's argument parser
+    // handles; inserting positional defaults here would shift it into fget
+    property.tp_init(res, ...arguments)
     return res
 }
 
