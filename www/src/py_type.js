@@ -2495,30 +2495,6 @@ $B.GenericAlias.tp_getset = ["__parameters__", "__typing_unpacked_tuple_args__"]
 
 $B.set_func_names($B.GenericAlias, "types")
 
-/*
-__repr__ <slot wrapper '__repr__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__hash__ <slot wrapper '__hash__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__getattribute__ <slot wrapper '__getattribute__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__lt__ <slot wrapper '__lt__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__le__ <slot wrapper '__le__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__eq__ <slot wrapper '__eq__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__ne__ <slot wrapper '__ne__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__gt__ <slot wrapper '__gt__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__ge__ <slot wrapper '__ge__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__or__ <slot wrapper '__or__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__ror__ <slot wrapper '__ror__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__getitem__ <slot wrapper '__getitem__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__mro_entries__ <method '__mro_entries__' of 'typing.Union' objects> <class 'method_descriptor'>
-__class_getitem__ <method '__class_getitem__' of 'typing.Union' objects> <class 'classmethod_descriptor'>
-__args__ <member '__args__' of 'typing.Union' objects> <class 'member_descriptor'>
-__name__ <attribute '__name__' of 'typing.Union' objects> <class 'getset_descriptor'>
-__qualname__ <attribute '__qualname__' of 'typing.Union' objects> <class 'getset_descriptor'>
-__origin__ <attribute '__origin__' of 'typing.Union' objects> <class 'getset_descriptor'>
-__parameters__ <attribute '__parameters__' of 'typing.Union' objects> <class 'getset_descriptor'>
-__doc__ Represent a union type
-
-E.g. for int | str <class 'str'>
-*/
 
 $B.UnionType = $B.make_builtin_class("UnionType")
 
