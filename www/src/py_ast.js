@@ -288,6 +288,43 @@ function assign_attributes(py_class, kl) {
     $B.set_to_dict(py_class, '_attributes', _attributes)
 }
 
+function set_field_types(py_class, fields, field_types) {
+    if (! fields.length) {
+        return
+    }
+    let res = $B.empty_dict()
+    for (let i = 0, len = fields.length; i < len; i++) {
+        let ftype = field_types[i]
+        let modifier
+        if (ftype.endsWith('?') || ftype.endsWith('*')) {
+            modifier = ftype[ftype.length - 1]
+            ftype = ftype.substr(0, ftype.length - 1)
+        }
+        switch (ftype) {
+            case 'int':
+                ftype = _b_.int
+                break
+            case 'string':
+            case 'identifier':
+                ftype = _b_.str
+                break
+            case 'identifier':
+                ftype = _b_.object
+                break
+            default:
+                ftype = $B.python_ast_classes[ftype]
+                break
+        }
+        if (modifier == '*') {
+            ftype = $B.GenericAlias.$factory(_b_.list, ftype)
+        } else if (modifier == '?') {
+            ftype = $B.UnionType.$factory([ftype, _b_.None])
+        }
+        $B.str_dict_set(res, fields[i], ftype)
+    }
+    $B.set_to_dict(py_class, '_field_types', res)
+}
+
 $B.create_python_ast_classes = function() {
     if ($B.python_ast_classes) {
         return
@@ -296,7 +333,8 @@ $B.create_python_ast_classes = function() {
     for (var klass in $B.ast_classes) {
         $B.python_ast_classes[klass] = (function(kl) {
             var _fields,
-                raw_fields
+                raw_fields,
+                _field_types
             if (typeof $B.ast_classes[kl] == "string") {
                 if ($B.ast_classes[kl] == '') {
                     raw_fields = _fields = []
@@ -304,6 +342,7 @@ $B.create_python_ast_classes = function() {
                     raw_fields = $B.ast_classes[kl].split(',')
                         .map(x => x.split(/\s+/))
                     _fields = raw_fields.map(t => t[1])
+                    _field_types = raw_fields.map(t => t[0])
                 }
             }
             var cls = $B.make_builtin_class(kl, [$B.AST]),
@@ -359,6 +398,7 @@ $B.create_python_ast_classes = function() {
 
             if (_fields) {
                 $B.set_to_dict(cls, '_fields', _fields)
+                set_field_types(cls, _fields, _field_types)
             }
 
             cls.tp_new = function(cls, args, kw) {
