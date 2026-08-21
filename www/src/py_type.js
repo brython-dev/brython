@@ -2524,8 +2524,9 @@ $B.UnionType.tp_repr = function(self) {
     for (var item of self.args) {
         if ($B.is_type(item)) {
             var s = $B.get_name(item)
-            if ($B.get_from_dict(item, '__module__') !== "builtins") {
-                s = item.__module__ + '.' + s
+            let module = $B.get_from_dict(item, '__module__', 'builtins')
+            if (module !== "builtins") {
+                s = module + '.' + s
             }
             t.push(s)
         } else {
