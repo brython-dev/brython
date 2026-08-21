@@ -156,6 +156,10 @@ function get_source_from_position(scopes, ast_obj) {
     var lines = scopes.lines,
         start_line = lines[ast_obj.lineno - 1],
         res
+    if (start_line === undefined) {
+        console.log('lines', lines)
+        console.log('ast_obj', ast_obj)
+    }
     if (ast_obj.end_lineno == ast_obj.lineno) {
         res = start_line.substring(ast_obj.col_offset, ast_obj.end_col_offset)
     } else {
@@ -2065,7 +2069,7 @@ $B.ast.comprehension.prototype.to_js = function(scopes) {
     return js
 }
 
-$B.ast.Constant.prototype.to_js = function() {
+$B.ast.Constant.prototype.to_js = function(scopes) {
     if (this.kind === $B.JSObj) {
         console.log('constant kind', this.kind)
     }
@@ -2103,10 +2107,26 @@ $B.ast.Constant.prototype.to_js = function() {
         return `$B.make_complex(${this.value.real.value}, ${this.value.imag.value})`
     } else if (this.value === _b_.Ellipsis) {
         return `_b_.Ellipsis`
+    } else if ($B.is_tuple(this.value)) {
+        let res = []
+        for (let item of this.value) {
+            let constant = new $B.ast.Constant(item)
+            res.push(constant.to_js(scopes))
+        }
+        return `$B.fast_tuple([${res}])`
+    } else if ($B.$isinstance(this.value, _b_.frozenset)) {
+        let res = []
+        for (let item of this.value) {
+            let constant = new $B.ast.Constant(item)
+            res.push(constant.to_js(scopes))
+        }
+        return `$B.$call(_b_.frozenset, [${res}])`
     } else {
-        console.log('invalid value', this.value)
+        console.log('invalid value', this, this.value)
         console.log(Error('trace').stack)
-        throw SyntaxError('bad value', this.value)
+        $B.RAISE(_b_.TypeError,
+            `got an invalid type in Constant: ${$B.class_name(this.value)}`
+        )
     }
 }
 
@@ -2324,7 +2344,7 @@ function transform_args(scopes) {
         annotations
     for(let arg of positional.concat(this.args.kwonlyargs).concat(
             [this.args.vararg, this.args.kwarg])){
-        if (arg && arg.annotation) {
+        if (arg && arg.annotation && arg.annotation !== _b_.None) {
             annotations = annotations || {}
             annotations[arg.arg] = arg.annotation
         }
@@ -2515,12 +2535,13 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
     for (let arg of this.args.args.concat(this.args.kwonlyargs)) {
         arg_names.push(`'${mangle_arg(arg.arg)}'`)
     }
-
-    if (this.args.vararg) {
-        bind(mangle_arg(this.args.vararg.arg), scopes)
+    let vararg = this.args.vararg ?? _b_.None
+    if (vararg !== _b_.None) {
+        bind(mangle_arg(vararg.arg), scopes)
     }
-    if (this.args.kwarg) {
-        bind(mangle_arg(this.args.kwarg.arg), scopes)
+    let kwarg = this.args.kwarg ?? _b_.None
+    if (kwarg !== _b_.None) {
+        bind(mangle_arg(kwarg.arg), scopes)
     }
 
     var is_generator = symtable_block.generator
@@ -2547,7 +2568,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
         js += 'async '
     }
 
-    if (this.args.vararg === undefined && this.args.kwarg === undefined) {
+    if (vararg === _b_.None && kwarg === _b_.None) {
         js += `function ${name2}(${positional.map(x => '_' + x.arg).join(', ')}) {\n`
     } else {
         js += `function ${name2}() {\n`
@@ -2564,21 +2585,21 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
 
     parse_args.push('arguments')
 
-    var args_vararg = this.args.vararg === undefined ? 'null' :
-                      "'" + mangle_arg(this.args.vararg.arg) + "'",
-        args_kwarg = this.args.kwarg === undefined ? 'null':
-                     "'" + mangle_arg(this.args.kwarg.arg) + "'"
+    var args_vararg = vararg === _b_.None ? 'null' :
+                      "'" + mangle_arg(vararg.arg) + "'",
+        args_kwarg = kwarg === _b_.None ? 'null':
+                     "'" + mangle_arg(kwarg.arg) + "'"
 
     if(positional.length == 0 && slots.length == 0 &&
-            this.args.vararg === undefined &&
-            this.args.kwarg === undefined){
+            vararg === _b_.None &&
+            kwarg === _b_.None){
         js += prefix + `var ${locals_name} = locals = $B.empty_dict();\n`
         // generate error message
         js += prefix + `if (arguments.length !== 0) {\n` +
               prefix + tab + `$B.args_parser(${name2}, arguments)\n` +
               prefix + `}\n`
-    }else if(this.args.vararg === undefined &&
-             this.args.kwarg === undefined &&
+    }else if(vararg === _b_.None &&
+             kwarg === _b_.None &&
              this.args.posonlyargs.length == 0 &&
              defaults === '_b_.None' &&
              kw_defaults === '_b_.None'){
@@ -2769,7 +2790,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
                 ann_items_values.push(`['${arg_ann}', ${value}]`)
             }
         }
-        if (this.returns) {
+        if (this.returns && this.returns !== _b_.None) {
             var ann_str = annotation_to_str(this.returns, scopes)
             ann_items_strings.push(`['return', '${ann_str}']`)
             var ann_value
@@ -4466,7 +4487,11 @@ $B.js_from_root = function(arg) {
     state.filename = filename
     scopes.symtable = symtable
     scopes.filename = filename
-    scopes.src = src
+    if ($B.get_class(src) === $B.code) {
+        scopes.src = src.source
+    } else {
+        scopes.src = src
+    }
     scopes.namespaces = namespaces
     scopes.imported = imported
     scopes.imports = {}
