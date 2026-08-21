@@ -142,7 +142,7 @@ return false}
 $B._PyType_HasFeature=function(type,feature){return type.tp_flags & feature !=0}
 $B.make_builtin_class=function(tp_name,tp_bases){if(tp_name===undefined){console.log('no tp name')
 console.log(Error().stack)}
-var cls={ob_type:_b_.type,tp_name,tp_bases:tp_bases ??[_b_.object],tp_base:tp_bases ? tp_bases[0]:_b_.object,tp_flags:$B.TPFLAGS.BASETYPE,tp_subclasses:[]}
+var cls={ob_type:_b_.type,tp_name,tp_bases:tp_bases ??[_b_.object],tp_base:tp_bases ? tp_bases[0]:_b_.object,tp_flags:tp_bases ? tp_bases[0].tp_flags :$B.TPFLAGS.BASETYPE,tp_subclasses:[]}
 if(tp_bases){cls.tp_mro=[cls,...tp_bases,_b_.object]}else{
 cls.tp_mro=[cls,_b_.object]}
 $B.created_types[tp_name]=cls
@@ -720,8 +720,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,3,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-08-16 12:30:39.622940"
-__BRYTHON__.timestamp=1786876239622
+__BRYTHON__.compiled_date="2026-08-21 17:41:48.521729"
+__BRYTHON__.timestamp=1787326908520
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -1898,7 +1898,9 @@ case "number":
 case "boolean":
 return a===b}
 if($B.get_class(a)===_b_.float && $B.get_class(b)===_b_.float){if(isNaN(a.value)&& isNaN(b.value)){return true}
-return a.value==b.value}
+return a.value==b.value}else if($B.is_bytes(a)&& _b_.bytes.mp_length(a)==0 &&
+$B.is_bytes(b)&& _b_.bytes.mp_length(b)==0){
+return true}
 return a===b}
 $B.is_or_equals=function(x,y){
 return $B.$is(x,y)||$B.rich_comp('__eq__',x,y)}
@@ -3487,7 +3489,8 @@ default:
 return _b_.NotImplemented}}
 $B.UnionType.tp_repr=function(self){var t=[]
 for(var item of self.args){if($B.is_type(item)){var s=$B.get_name(item)
-if($B.get_from_dict(item,'__module__')!=="builtins"){s=item.__module__+'.'+s}
+let module=$B.get_from_dict(item,'__module__','builtins')
+if(module !=="builtins"){s=module+'.'+s}
 t.push(s)}else{
 t.push(_b_.repr(item))}}
 return t.join(' | ')}
@@ -4694,12 +4697,9 @@ parser=new $B.Parser($.source,filename,'eval')
 _ast=$B._PyPegen.run_parser(parser)
 $.single_expression=true}
 if($.flags==$B.PyCF_ONLY_AST){delete $B.url2name[filename]
-let res=$B.ast_js_to_py(_ast)
-res.$js_ast=_ast
-return res}
+return $B.ast_js_to_py(_ast)}
 delete $B.url2name[filename]
 $._ast=$B.ast_js_to_py(_ast)
-$._ast.$js_ast=_ast
 var future=$B.future_features(_ast,filename)
 var symtable=$B._PySymtable_Build(_ast,filename,future)
 $B.js_from_root({ast:_ast,symtable,filename,src:$.source})
@@ -7227,9 +7227,10 @@ if(src[i]> 96 && src[i]< 123){return false}}
 return res}
 function join(){var $ns=$B.args('join',2,{self:null,iterable:null},arguments),self=$ns['self'],iterable=$ns['iterable']
 var res=this.$factory(),empty=true
-for(var item of $B.make_js_iterator(iterable)){if(empty){empty=false}else{
-res=bytes.sq_concat(res,self)}
-res=bytes.sq_concat(res,item)}
+for(var item of $B.make_js_iterator(iterable)){if(empty){empty=false
+res=this.$factory(item)}else{
+res=bytes.sq_concat(res,self)
+res=bytes.sq_concat(res,item)}}
 return res}
 function ljust(){
 var $=$B.args('ljust',3,{self:null,width:null,fillbyte:null},arguments,{fillbyte:bytes.$factory([32])})
@@ -7695,7 +7696,6 @@ self.source=int_list
 self.encoding=encoding
 self.errors=errors
 return self}
-bytes.__release_buffer__=function(_self,buffer){_b_.memoryview.tp_funcs.release(buffer)}
 var _lower=function(char_code){if(char_code >=65 && char_code <=90){return char_code+32}else{
 return char_code}}
 var _upper=function(char_code){if(char_code >=97 && char_code <=122){return char_code-32}else{
@@ -15491,18 +15491,24 @@ var unary_ops={unary_inv:'Invert',unary_pos:'UAdd',unary_neg:'USub',unary_not:'N
 var op_types=$B.op_types=[binary_ops,boolean_ops,comparison_ops,unary_ops]
 var _b_=$B.builtins
 var ast=$B.ast={}
-for(var kl in $B.ast_classes){var args=$B.ast_classes[kl],body='',arg_list=[]
+for(var kl in $B.ast_classes){var args=$B.ast_classes[kl],body='',arg_list=[],fields=[]
 if(typeof args=="string"){if(args.length > 0){for(var arg of args.split(',')){let[arg_type,arg_name]=arg.split(/\s+/)
 arg_list.push(arg_name)
 if(arg_type.endsWith('*')){
 body+=` this.${arg_name} = $B.$list(${arg_name} === undefined ? [] : ${arg_name})\n`}else if(arg_type.endsWith('?')){
 body+=` this.${arg_name} = ${arg_name}\n`}else{
-body+=` this.${arg_name} = ${arg_name}\n`}}}
+body+=` this.${arg_name} = ${arg_name}\n`}}
+fields=args.split(',').map(x=> x.trim().split(/\s+/)[1])}
 ast[kl]=Function(...arg_list,body)
-ast[kl]._fields=args.split(',')}else{
-ast[kl]=args.map(x=> ast[x])}
-ast[kl].$name=kl
-ast[kl]._attributes=[]}
+ast[kl]._fields=fields}else{
+ast[kl]=args.map(x=> ast[x])
+if(Object.hasOwn($B.ast_attributes,kl)){let attrs=$B.ast_attributes[kl]
+attrs=attrs.split(',').map(x=> x.trim().split(' '))
+let _attributes=[]
+for(let[attr_type,attr_name]of attrs){_attributes.push(attr_name)}
+ast[kl]._attributes=_attributes
+for(let klass of args){ast[klass]._attributes=_attributes}}}
+ast[kl].$name=kl}
 $B.ast_js_to_py=function(obj){$B.create_python_ast_classes()
 if(obj===undefined){return _b_.None}else if(Array.isArray(obj)){return $B.$list(obj.map($B.ast_js_to_py))}else{
 var class_name=obj.constructor.$name,py_class=$B.python_ast_classes[class_name],py_ast_obj={ob_type:py_class}
@@ -15515,16 +15521,25 @@ _attributes.push(loc)}}
 $B.set_to_dict(py_ast_obj,'_attributes',_attributes)
 $B.set_to_dict(py_ast_obj,'__module__','ast')
 return py_ast_obj}}
-$B.ast_py_to_js=function(obj){if(obj===undefined ||obj===_b_.None){return undefined}else if(Array.isArray(obj)){return obj.map($B.ast_py_to_js)}else if(typeof obj=="string"){return obj}else{
-var class_name=$B.class_name(obj),js_class=$B.ast[class_name]
+$B.ast_py_to_js=function(obj){if(obj===undefined){return undefined}else if(Array.isArray(obj)){let res=obj.map($B.ast_py_to_js)
+let type=$B.get_class(obj)
+if(type !==$B.js_array){$B.set_type(res,type)}
+return res}else if(typeof obj=="string"){return obj}else{
+var class_name=$B.class_name(obj)
+if(! Object.hasOwn($B.ast,class_name)){return obj}
+let js_class=$B.ast[class_name]
 if(js_class===undefined){return obj}
 var js_ast_obj=new js_class()
 for(var field of js_class._fields){if(field.endsWith('?')||field.endsWith('*')){field=field.substr(0,field.length-1)}
-js_ast_obj[field]=$B.ast_py_to_js(obj[field])}
-for(var loc of['lineno','col_offset','end_lineno','end_col_offset']){if(obj[loc]!==undefined){js_ast_obj[loc]=obj[loc]}}
+js_ast_obj[field]=$B.ast_py_to_js($B.get_from_dict(obj,field))}
+for(var loc of['lineno','col_offset','end_lineno','end_col_offset']){let v=$B.get_from_dict(obj,loc,$B.NULL)
+if(v !==$B.NULL){js_ast_obj[loc]=v}}
 return js_ast_obj}}
 $B.AST=$B.make_builtin_class('AST')
+$B.AST.tp_flags=$B.TPFLAGS.HEAPTYPE |$B.TPFLAGS.BASETYPE |
+$B.TPFLAGS.READY |$B.TPFLAGS.HAVE_GC
 $B.init_dict($B.AST)
+$B.set_to_dict($B.AST,'__module__','ast')
 $B.set_to_dict($B.AST,'_attributes',$B.fast_tuple())
 $B.set_to_dict($B.AST,'_fields',$B.fast_tuple())
 $B.set_to_dict($B.AST,'_field_types',_b_.None)
@@ -15533,7 +15548,7 @@ args=Array.from(args)
 let self=args.shift()
 let cls=$B.get_class(self)
 let attributes=null
-let fields=$B.$getattr(cls,'_fields',[])
+let fields=$B.$getattr(cls,'_fields',$B.fast_tuple())
 let numfields=fields.length
 let remaining_fields=_b_.set.$factory(fields)
 let res=0 
@@ -15570,12 +15585,12 @@ _b_.set.tp_funcs.add(missing_names,name)}}
 let num_missing=_b_.set.mp_length(missing_names)
 if(num_missing > 0){let name_str=format_missing(missing_names,fields)
 PyErr_Format(PyExc_TypeError,"%T.__init__ missing %d required positional argument%s: %U",self,num_missing,num_missing==1 ? "" :"s",name_str);}}}
+$B.set_func_names($B.AST,'ast')
 $B.AST.$convert=function(js_node){if(js_node===undefined){return _b_.None}
 var constr=js_node.constructor
 if(constr && constr.$name){$B.create_python_ast_classes()
 return $B.python_ast_classes[constr.$name].$factory(js_node)}else if(Array.isArray(js_node)){return js_node.map($B.AST.$convert)}else if(js_node.type){
 switch(js_node.type){case 'int':
-console.log('AST convert, js_node',js_node)
 var value=js_node.value[1],base=js_node.value[0]
 var res=parseInt(value,base)
 if(! Number.isSafeInteger(res)){res=BigInt(res)}
@@ -15596,9 +15611,8 @@ return js_node.$name+'()'}else if([_b_.None,_b_.True,_b_.False].indexOf(js_node)
 console.log('cannot handle',js_node)
 return js_node}}
 function assign_attributes(py_class,kl){let _attributes=$B.fast_tuple()
-if(Object.hasOwn($B.ast_attributes,kl)){let attrs=$B.ast_attributes[kl]
-attrs=attrs.split(',').map(x=> x.trim().split(' '))
-for(let[attr_type,attr_name]of attrs){_attributes.push(attr_name)}}
+if(Object.hasOwn($B.ast[kl],'_attributes')){let attrs=$B.ast[kl]._attributes
+for(let attr_name of attrs){_attributes.push(attr_name)}}
 $B.set_to_dict(py_class,'_attributes',_attributes)}
 function set_field_types(py_class,fields,field_types){if(! fields.length){return}
 let res=$B.empty_dict()
@@ -15624,13 +15638,15 @@ $B.str_dict_set(res,fields[i],ftype)}
 $B.set_to_dict(py_class,'_field_types',res)}
 $B.create_python_ast_classes=function(){if($B.python_ast_classes){return}
 $B.python_ast_classes={}
-for(var klass in $B.ast_classes){$B.python_ast_classes[klass]=(function(kl){var _fields,raw_fields,_field_types
-if(typeof $B.ast_classes[kl]=="string"){if($B.ast_classes[kl]==''){raw_fields=_fields=[]}else{
-raw_fields=$B.ast_classes[kl].split(',')
+for(let name in $B.ast_classes){$B.python_ast_classes[name]=$B.make_builtin_class(name,[$B.AST])}
+for(let name in $B.ast_classes){let cls=$B.python_ast_classes[name]
+let _fields,raw_fields,_field_types
+if(typeof $B.ast_classes[name]=="string"){if($B.ast_classes[name]==''){raw_fields=_fields=[]}else{
+raw_fields=$B.ast_classes[name].split(',')
 .map(x=> x.split(/\s+/))
 _fields=raw_fields.map(t=> t[1])
 _field_types=raw_fields.map(t=> t[0])}}
-var cls=$B.make_builtin_class(kl,[$B.AST]),$defaults={},slots={},nb_args=0
+let $defaults={},slots={},nb_args=0
 $B.init_dict(cls)
 if(raw_fields){for(let i=0,len=_fields.length;i < len;i++){let f=_fields[i],rf=raw_fields[i]
 nb_args++
@@ -15639,16 +15655,14 @@ if(rf[0].endsWith('*')){$defaults[f]=[]}else if(rf[0].endsWith('?')){$defaults[f
 $B.set_to_dict(cls,'__match_args__',$B.fast_tuple(Object.keys(slots)))
 $B.set_to_dict(cls,'__module__','ast')
 cls.$factory=function(){try{
-var $=$B.args(klass,nb_args,$B.clone(slots),arguments,$B.clone($defaults),null,'kw')}catch(err){console.log('error',slots,$defaults)
+var $=$B.args(name,nb_args,$B.clone(slots),arguments,$B.clone($defaults),null,'kw')}catch(err){console.log('error',slots,$defaults)
 throw err}
 var res={ob_type:cls}
 $B.init_dict(res)
-var _attributes=$B.fast_tuple()
 for(let key in $){if(key=='kw'){for(let item of _b_.dict.$iter_items($.kw)){$B.set_to_dict(res,item.key,item.value)}}else{
 $B.set_to_dict(res,key,$[key])}}
-if(klass=="Constant"){$B.set_to_dict(res,'value',$B.AST.$convert($.value))}
 return res}
-if(_fields){$B.set_to_dict(cls,'_fields',_fields)
+if(_fields){$B.set_to_dict(cls,'_fields',$B.fast_tuple(_fields))
 set_field_types(cls,_fields,_field_types)}
 cls.tp_new=function(cls,args,kw){var _args=args.concat($B.dict2kwarg(kw))
 var obj=cls.$factory(..._args)
@@ -15657,9 +15671,8 @@ if(cls.tp_name==='ast.Module'){console.log(obj)}
 return obj}
 if(raw_fields){for(let i=0,len=raw_fields.length;i < len;i++){var raw_field=raw_fields[i]
 if(raw_field[0].endsWith('?')){$B.set_to_dict(cls,_fields[i],_b_.None)}}}
-assign_attributes(cls,kl)
-$B.finalize_type(cls)
-return cls})(klass)}}
+assign_attributes(cls,name)
+$B.finalize_type(cls)}}
 var op2ast_class=$B.op2ast_class={},ast_types=[ast.BinOp,ast.BoolOp,ast.Compare,ast.UnaryOp]
 for(var i=0;i < 4;i++){for(var op in op_types[i]){op2ast_class[op]=[ast_types[i],ast[op_types[i][op]]]}}})(__BRYTHON__);
 ;
@@ -15864,6 +15877,8 @@ $B.decode_position=function(pos){if(pos.length==3){return[pos[0],pos[0],pos[1],p
 return pos}}
 function get_source_from_position(scopes,ast_obj){scopes.lines=scopes.lines ?? scopes.src.split('\n')
 var lines=scopes.lines,start_line=lines[ast_obj.lineno-1],res
+if(start_line===undefined){console.log('lines',lines)
+console.log('ast_obj',ast_obj)}
 if(ast_obj.end_lineno==ast_obj.lineno){res=start_line.substring(ast_obj.col_offset,ast_obj.end_col_offset)}else{
 var res=start_line.substr(ast_obj.col_offset),line_num=ast_obj.lineno+1
 while(line_num < ast_obj.end_lineno){res+=lines[line_num-1].trimLeft()
@@ -16687,16 +16702,23 @@ js+=assign.to_js(scopes)+'\n'
 for(var _if of this.ifs){js+=prefix+`if ($B.$bool(${$B.js_from_ast(_if, scopes)})) {\n`
 indent()}
 return js}
-$B.ast.Constant.prototype.to_js=function(){if(this.kind===$B.JSObj){console.log('constant kind',this.kind)}
+$B.ast.Constant.prototype.to_js=function(scopes){if(this.kind===$B.JSObj){console.log('constant kind',this.kind)}
 if(this.value===true ||this.value===false){return this.value+''}else if(this.value===_b_.None){return '_b_.None'}else if(typeof this.value=="string"){var s=this.value,srg=$B.surrogates(s)
 if(srg.length==0){return `'${s}'`}
 return `$B.String('${s}')`}
 var klass=$B.get_class(this.value)
 if(klass===_b_.bytes){return `_b_.bytes.$factory([${this.value.source}])`}else if(typeof this.value=="number"){if(Number.isInteger(this.value)){return this.value}else{
-return `(new $B.Float(this.value))`}}else if(typeof this.value=="bigint"){return `${this.value}n`}else if(klass===_b_.float){return `(new $B.Float(${this.value.value}))`}else if(klass===_b_.complex){return `$B.make_complex(${this.value.real.value}, ${this.value.imag.value})`}else if(this.value===_b_.Ellipsis){return `_b_.Ellipsis`}else{
-console.log('invalid value',this.value)
+return `(new $B.Float(this.value))`}}else if(typeof this.value=="bigint"){return `${this.value}n`}else if(klass===_b_.float){return `(new $B.Float(${this.value.value}))`}else if(klass===_b_.complex){return `$B.make_complex(${this.value.real.value}, ${this.value.imag.value})`}else if(this.value===_b_.Ellipsis){return `_b_.Ellipsis`}else if($B.is_tuple(this.value)){let res=[]
+for(let item of this.value){let constant=new $B.ast.Constant(item)
+res.push(constant.to_js(scopes))}
+return `$B.fast_tuple([${res}])`}else if($B.$isinstance(this.value,_b_.frozenset)){let res=[]
+for(let item of this.value){let constant=new $B.ast.Constant(item)
+res.push(constant.to_js(scopes))}
+return `$B.$call(_b_.frozenset, [${res}])`}else{
+console.log('invalid value',this,this.value)
 console.log(Error('trace').stack)
-throw SyntaxError('bad value',this.value)}}
+$B.RAISE(_b_.TypeError,`got an invalid type in Constant: ${$B.class_name(this.value)}`
+)}}
 $B.ast.Continue.prototype.to_js=function(scopes){if(! in_loop(scopes)){compiler_error(this,"'continue' not properly in loop")}
 return prefix+'continue'}
 $B.ast.Delete.prototype.to_js=function(scopes){compiler_check(this)
@@ -16797,7 +16819,7 @@ function transform_args(scopes){
 var mangle_arg=x=> mangle(scopes,last_scope(scopes),x)
 var has_posonlyargs=this.args.posonlyargs.length > 0,_defaults=[],nb_defaults=this.args.defaults.length,positional=this.args.posonlyargs.concat(this.args.args),ix=positional.length-nb_defaults,default_names=[],kw_defaults=[],annotations
 for(let arg of positional.concat(this.args.kwonlyargs).concat(
-[this.args.vararg,this.args.kwarg])){if(arg && arg.annotation){annotations=annotations ||{}
+[this.args.vararg,this.args.kwarg])){if(arg && arg.annotation && arg.annotation !==_b_.None){annotations=annotations ||{}
 annotations[arg.arg]=arg.annotation}}
 for(var i=ix;i < positional.length;i++){default_names.push(`${positional[i].arg}`)
 _defaults.push(`${positional[i].arg}: `+
@@ -16896,8 +16918,10 @@ for(let arg of args){slots.push(arg.arg+': null')
 bind(arg.arg,scopes)}
 for(let arg of this.args.posonlyargs){arg_names.push(`'${mangle_arg(arg.arg)}'`)}
 for(let arg of this.args.args.concat(this.args.kwonlyargs)){arg_names.push(`'${mangle_arg(arg.arg)}'`)}
-if(this.args.vararg){bind(mangle_arg(this.args.vararg.arg),scopes)}
-if(this.args.kwarg){bind(mangle_arg(this.args.kwarg.arg),scopes)}
+let vararg=this.args.vararg ?? _b_.None
+if(vararg !==_b_.None){bind(mangle_arg(vararg.arg),scopes)}
+let kwarg=this.args.kwarg ?? _b_.None
+if(kwarg !==_b_.None){bind(mangle_arg(kwarg.arg),scopes)}
 var is_generator=symtable_block.generator
 var function_body
 indent(is_generator ? 3 :2)
@@ -16910,7 +16934,7 @@ dedent(is_generator ? 3 :2)
 var parse_args=[name2]
 var js=prefix+`$B.set_lineno(frame, ${this.lineno})\n`+prefix
 if(is_async && ! is_generator){js+='async '}
-if(this.args.vararg===undefined && this.args.kwarg===undefined){js+=`function ${name2}(${positional.map(x => '_' + x.arg).join(', ')}) {\n`}else{
+if(vararg===_b_.None && kwarg===_b_.None){js+=`function ${name2}(${positional.map(x => '_' + x.arg).join(', ')}) {\n`}else{
 js+=`function ${name2}() {\n`}
 indent()
 if(is_generator){
@@ -16918,16 +16942,16 @@ js+=prefix+'$B.frame_obj.frame.$has_generators = true\n'}
 var locals_name=make_scope_name(scopes,func_scope)
 js+=prefix+`var locals\n`
 parse_args.push('arguments')
-var args_vararg=this.args.vararg===undefined ? 'null' :
-"'"+mangle_arg(this.args.vararg.arg)+"'",args_kwarg=this.args.kwarg===undefined ? 'null':
-"'"+mangle_arg(this.args.kwarg.arg)+"'"
+var args_vararg=vararg===_b_.None ? 'null' :
+"'"+mangle_arg(vararg.arg)+"'",args_kwarg=kwarg===_b_.None ? 'null':
+"'"+mangle_arg(kwarg.arg)+"'"
 if(positional.length==0 && slots.length==0 &&
-this.args.vararg===undefined &&
-this.args.kwarg===undefined){js+=prefix+`var ${locals_name} = locals = $B.empty_dict();\n`
+vararg===_b_.None &&
+kwarg===_b_.None){js+=prefix+`var ${locals_name} = locals = $B.empty_dict();\n`
 js+=prefix+`if (arguments.length !== 0) {\n`+
 prefix+tab+`$B.args_parser(${name2}, arguments)\n`+
-prefix+`}\n`}else if(this.args.vararg===undefined &&
-this.args.kwarg===undefined &&
+prefix+`}\n`}else if(vararg===_b_.None &&
+kwarg===_b_.None &&
 this.args.posonlyargs.length==0 &&
 defaults==='_b_.None' &&
 kw_defaults==='_b_.None'){js+=prefix+`if(arguments.length == ${positional.length} && `+
@@ -17019,7 +17043,7 @@ var ann_str=annotation_to_str(ann_ast,scopes)
 ann_items_strings.push(`['${arg_ann}', '${ann_str}']`)
 var value=ann_ast.to_js(scopes)
 ann_items_values.push(`['${arg_ann}', ${value}]`)}}
-if(this.returns){var ann_str=annotation_to_str(this.returns,scopes)
+if(this.returns && this.returns !==_b_.None){var ann_str=annotation_to_str(this.returns,scopes)
 ann_items_strings.push(`['return', '${ann_str}']`)
 var ann_value
 if(scopes.postpone_annotations){ann_value=`'${annotation_to_str(this.returns, scopes)}'`}else{
@@ -17925,7 +17949,8 @@ var scopes=[]
 state.filename=filename
 scopes.symtable=symtable
 scopes.filename=filename
-scopes.src=src
+if($B.get_class(src)===$B.code){scopes.src=src.source}else{
+scopes.src=src}
 scopes.namespaces=namespaces
 scopes.imported=imported
 scopes.imports={}
