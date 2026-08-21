@@ -354,16 +354,13 @@ _b_.compile = function() {
 
     if ($.flags == $B.PyCF_ONLY_AST) {
         delete $B.url2name[filename]
-        let res = $B.ast_js_to_py(_ast)
-        res.$js_ast = _ast
-        return res
+        return $B.ast_js_to_py(_ast)
     }
 
     delete $B.url2name[filename]
     // Set attribute ._ast to avoid compiling again if result is passed to
     // exec()
     $._ast = $B.ast_js_to_py(_ast)
-    $._ast.$js_ast = _ast
 
     // Compile the ast to JS, as in py2js, so we emit syntax errors created
     // by the JS conversion process.
