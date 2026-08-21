@@ -138,7 +138,6 @@ function _new(cls, args, kw) {
         ['source', 'encoding', 'errors'],
         {source: $B.NULL, encoding: $B.NULL, errors: $B.NULL}
     )
-
     if (source === $B.NULL) {
         let instance = {
             ob_type: cls,
@@ -625,10 +624,11 @@ function join() {
     for (var item of $B.make_js_iterator(iterable)) {
         if (empty) {
             empty = false
+            res = this.$factory(item)
         } else {
             res = bytes.sq_concat(res, self)
+            res = bytes.sq_concat(res, item)
         }
-        res = bytes.sq_concat(res, item)
     }
     return res
 }
@@ -1935,10 +1935,6 @@ bytes.$new = function(cls, source, encoding, errors) {
     self.encoding = encoding
     self.errors = errors
     return self
-}
-
-bytes.__release_buffer__ = function(_self, buffer) {
-    _b_.memoryview.tp_funcs.release(buffer)
 }
 
 var _lower = function(char_code) {
