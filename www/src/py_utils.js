@@ -1157,6 +1157,10 @@ $B.$is = function(a, b) {
             return true
         }
         return a.value == b.value
+    } else if($B.is_bytes(a) && _b_.bytes.mp_length(a) == 0 &&
+        $B.is_bytes(b) && _b_.bytes.mp_length(b) == 0) {
+            // pretend that empty bytes is a singleton
+            return true
     }
     return a === b
 }
