@@ -705,7 +705,7 @@ var pylist=['VFS_import','__future__','_aio','_ast_unparse','_codecs','_codecs_j
 for(var i=0;i < pylist.length;i++){$B.stdlib[pylist[i]]=['py']}
 var js=['_ajax','_ast','_base64','_binascii','_io_classes','_json','_jsre','_locale','_multiprocessing','_posixsubprocess','_profile','_random','_sre','_sre_utils','_string','_svg','_symtable','_tokenize','_webcomponent','_webworker','_zlib_utils','aes','array','builtins','dis','encoding_cp932','hashlib','hmac-md5','hmac-ripemd160','hmac-sha1','hmac-sha224','hmac-sha256','hmac-sha3','hmac-sha384','hmac-sha512','html_parser','marshal','math','md5','modulefinder','pbkdf2','posix','pyexpat','python_re','rabbit','rabbit-legacy','rc4','ripemd160','sha1','sha224','sha256','sha3','sha384','sha512','tripledes','unicodedata','xml_helpers','xml_parser']
 for(var i=0;i < js.length;i++){$B.stdlib[js[i]]=['js']}
-var pkglist=['_pyrepl','browser','browser.widgets','collections','compression','compression._common','compression.zstd','concurrent','concurrent.futures','email','email.mime','encodings','html','http','importlib','importlib.metadata','importlib.resources','json','logging','multiprocessing','multiprocessing.dummy','pyexpat_utils','site-packages.foobar','site-packages.simpleaio','site-packages.ui','string','test','test.encoded_modules','test.leakers','test.libregrtest','test.namespace_pkgs.not_a_namespace_pkg.foo','test.regrtestdata.import_from_tests.test_regrtest_b','test.support','test.support._hypothesis_stubs','test.test_ast','test.test_asyncio','test.test_capi','test.test_cext','test.test_concurrent_futures','test.test_cppext','test.test_ctypes','test.test_dataclasses','test.test_doctest','test.test_email','test.test_free_threading','test.test_future_stmt','test.test_gdb','test.test_import','test.test_import.data.circular_imports.subpkg2','test.test_import.data.circular_imports.subpkg2.parent','test.test_import.data.package','test.test_import.data.package3','test.test_import.data.package4','test.test_import.data.unwritable','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.metadata','test.test_importlib.metadata.data','test.test_importlib.metadata.data.sources.example.example','test.test_importlib.metadata.data.sources.example2.example2','test.test_importlib.namespace_pkgs.not_a_namespace_pkg.foo','test.test_importlib.resources','test.test_importlib.source','test.test_inspect','test.test_interpreters','test.test_json','test.test_module','test.test_multiprocessing_fork','test.test_multiprocessing_forkserver','test.test_multiprocessing_spawn','test.test_pathlib','test.test_pathlib.support','test.test_peg_generator','test.test_pydoc','test.test_pyrepl','test.test_sqlite3','test.test_string','test.test_tkinter','test.test_tomllib','test.test_tools','test.test_ttk','test.test_unittest','test.test_unittest.namespace_test_pkg.bar','test.test_unittest.namespace_test_pkg.noop.no2','test.test_unittest.testmock','test.test_warnings','test.test_zipfile','test.test_zipfile._path','test.test_zoneinfo','test.tokenizedata','test.tracedmodules','test.typinganndata','test.typinganndata.partialexecution','unittest','unittest.test','unittest.test.testmock','urllib']
+var pkglist=['_pyrepl','browser','browser.widgets','collections','compression','compression._common','compression.zstd','concurrent','concurrent.futures','ctypes','email','email.mime','encodings','html','http','importlib','importlib.metadata','importlib.resources','json','logging','multiprocessing','multiprocessing.dummy','pyexpat_utils','site-packages.foobar','site-packages.simpleaio','site-packages.ui','string','test','test.encoded_modules','test.leakers','test.libregrtest','test.namespace_pkgs.not_a_namespace_pkg.foo','test.regrtestdata.import_from_tests.test_regrtest_b','test.support','test.support._hypothesis_stubs','test.test_ast','test.test_asyncio','test.test_capi','test.test_cext','test.test_concurrent_futures','test.test_cppext','test.test_ctypes','test.test_dataclasses','test.test_doctest','test.test_email','test.test_free_threading','test.test_future_stmt','test.test_gdb','test.test_import','test.test_import.data.circular_imports.subpkg2','test.test_import.data.circular_imports.subpkg2.parent','test.test_import.data.package','test.test_import.data.package3','test.test_import.data.package4','test.test_import.data.unwritable','test.test_importlib','test.test_importlib.builtin','test.test_importlib.extension','test.test_importlib.frozen','test.test_importlib.import_','test.test_importlib.metadata','test.test_importlib.metadata.data','test.test_importlib.metadata.data.sources.example.example','test.test_importlib.metadata.data.sources.example2.example2','test.test_importlib.namespace_pkgs.not_a_namespace_pkg.foo','test.test_importlib.resources','test.test_importlib.source','test.test_inspect','test.test_interpreters','test.test_json','test.test_module','test.test_multiprocessing_fork','test.test_multiprocessing_forkserver','test.test_multiprocessing_spawn','test.test_pathlib','test.test_pathlib.support','test.test_peg_generator','test.test_pydoc','test.test_pyrepl','test.test_sqlite3','test.test_string','test.test_tkinter','test.test_tomllib','test.test_tools','test.test_ttk','test.test_unittest','test.test_unittest.namespace_test_pkg.bar','test.test_unittest.namespace_test_pkg.noop.no2','test.test_unittest.testmock','test.test_warnings','test.test_zipfile','test.test_zipfile._path','test.test_zoneinfo','test.tokenizedata','test.tracedmodules','test.typinganndata','test.typinganndata.partialexecution','unittest','unittest.test','unittest.test.testmock','urllib']
 for(var i=0;i < pkglist.length;i++){$B.stdlib[pkglist[i]]=['py',true]}
 $B.stdlib_module_names=Object.keys($B.stdlib)})(__BRYTHON__);
 ;
@@ -720,8 +720,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,3,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-08-21 17:41:48.521729"
-__BRYTHON__.timestamp=1787326908520
+__BRYTHON__.compiled_date="2026-08-23 10:30:44.783914"
+__BRYTHON__.timestamp=1787473844783
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -2869,10 +2869,14 @@ $B.$call(cls.tp_init,...arguments)}
 return res}}else{}}
 function reset_factory(cls){make_factory(cls)
 for(var kls of cls.tp_subclasses){reset_factory(kls)}}
-$B.make_iter=function(cls){cls.tp_iter=$B.NULL
-var iter=$B.get_from_dict(cls,'__iter__',$B.NULL)
-if(iter !==$B.NULL){cls.tp_iter=iter}else if(cls.tp_base){cls.tp_iter=cls.tp_base.tp_iter ??
-(cls.tp_base.tp_iter=$B.make_iter(cls.tp_base))}
+$B.make_iter=function(cls){
+cls.tp_iter=$B.NULL
+for(var klass of $B.get_mro(cls)){var iter=$B.get_from_dict(klass,'__iter__',$B.NULL)
+if(iter !==$B.NULL){cls.tp_iter=iter
+break}
+if(klass !==cls && Object.hasOwn(klass,'tp_iter')&&
+klass.tp_iter !==$B.NULL && klass.tp_iter !=null){cls.tp_iter=klass.tp_iter
+break}}
 return cls.tp_iter}
 function reset_iter(cls){$B.make_iter(cls)
 if(cls.tp_subclasses===undefined){console.log('no subclasses',cls)}
@@ -3199,7 +3203,7 @@ if(! $B.$isinstance(subclass,$B.UnionType)&& ! $B.is_type(subclass)){$B.RAISE(_b
 " a tuple of classes, or a union")}
 if(self===subclass){return true}
 if(subclass.tp_bases===undefined){return self===_b_.object}
-return subclass.tp_bases.indexOf(self)>-1}
+return $B.get_mro(subclass).indexOf(self)>-1}
 type_funcs.__subclasses__=function(cls){return $B.$list(cls.tp_subclasses)}
 type_funcs.__text_signature___get=function(self){}
 type_funcs.__text_signature___set=function(self){}
@@ -3219,8 +3223,8 @@ $B.internal_property=function(module,fget,fset){
 for(var func of[fget,fset]){if($B.get_class(func)===$B.JSFunction){$B.set_type(func,$B.function)}}
 return{
 ob_type:_b_.property,prop_get:fget,prop_set:fset ?? _b_.None,prop_del:_b_.None,doc:_b_.None}}
-property.$factory=function(fget,fset,fdel,doc){var res={ob_type:property}
-property.tp_init(res,fget,fset ?? _b_.None,fdel ?? _b_.None,doc ?? _b_.None)
+property.$factory=function(){var res={ob_type:property}
+property.tp_init(res,...arguments)
 return res}
 function property_copy(old,get,set,del){let type=$B.get_class(old)
 if(get===_b_.None){get=old.prop_get ?? _b_.None}
@@ -4565,12 +4569,7 @@ var None=_b_.None={ob_type:NoneType}
 None.__doc__=None
 _b_.__build_class__=function(){$B.RAISE(_b_.NotImplementedError,'__build_class__')}
 _b_.abs=function(obj){check_nb_args_no_kw('abs',1,arguments)
-var klass=$B.get_class(obj)
-try{
-var method=$B.$getattr(klass,"__abs__")}catch(err){if($B.is_exc(err,[_b_.AttributeError])){$B.RAISE(_b_.TypeError,"Bad operand type for abs(): '"+
-$B.class_name(obj)+"'")}
-throw err}
-return $B.$call(method,obj)}
+return $B.call_special_unary(obj,'__abs__','abs()')}
 _b_.aiter=function(async_iterable){return $B.$call($B.$getattr(async_iterable,'__aiter__'))}
 _b_.all=function(obj){check_nb_args_no_kw('all',1,arguments)
 var iterable=iter(obj)
@@ -4837,6 +4836,14 @@ $B.search_in_mro=function(klass,attr,_default){var mro=$B.get_mro(klass)
 for(var i=0,len=mro.length;i < len;i++){if($B.get_dict(mro[i])){var v=$B.get_from_dict(mro[i],attr,$B.NULL)
 if(v !==$B.NULL){return v}}}
 return _default}
+$B.call_special_unary=function(obj,name,op_repr){
+var klass=$B.get_class(obj),raw=$B.search_in_mro(klass,name,$B.NULL)
+if(raw===$B.NULL){$B.RAISE(_b_.TypeError,`bad operand type for ${op_repr}: '${$B.class_name(obj)}'`)}
+if(typeof raw=='function'){
+return $B.$call(raw,obj)}
+var descr_get=raw.ob_type && raw.ob_type.tp_descr_get
+if(descr_get){return $B.$call(descr_get(raw,obj,klass))}
+return $B.$call(raw)}
 $B.search_in_dict=function(obj,attr,_default){if($B.get_dict(obj)){try{
 var v=$B.get_from_dict(obj,attr,$B.NULL)}catch(err){console.log('error',obj,attr)
 throw err}
@@ -4953,7 +4960,9 @@ if(typeof obj==="boolean"){return obj ? 1 :0}else if(typeof obj==="number"){res=
 var klass=$B.get_class(obj)
 var hash_func=$B.search_slot(klass,'tp_hash',$B.NULL)
 if(hash_func !==$B.NULL && hash_func !==_b_.None){res=hash_func(obj)
-if(! $B.is_int(res)){$B.RAISE(_b_.TypeError,'__hash__ method should return an integer')}}else{
+if(! $B.is_int(res)){$B.RAISE(_b_.TypeError,'__hash__ method should return an integer')}
+if(typeof res=='object'){
+res=_b_.int.tp_hash(res)}}else{
 $B.RAISE(_b_.TypeError,"unhashable type: '"+
 _b_.str.$factory($B.jsobj2pyobj(obj))+"'"
 )}}
@@ -5037,13 +5046,18 @@ var sch=$B.type_getattribute($B.get_class(_class),'__subclasscheck__',$B.NULL)
 if(sch===$B.NULL){return false}
 return $B.$call(sch,_class,cls)}
 $B.iterator.tp_iter=function(self){var ob_type=$B.get_class(self.it_seq)
-self.len=$B.search_in_mro(ob_type,'__len__')(self.it_seq)
-self.getitem=$B.search_in_mro(ob_type,'__getitem__')
+var getitem=$B.search_in_mro(ob_type,'__getitem__',$B.NULL)
+if(getitem===$B.NULL){$B.RAISE(_b_.TypeError,`'${$B.class_name(self.it_seq)}' object is not iterable`)}
+self.getitem=getitem
 self.it_index=0
 return self}
-$B.iterator.tp_iternext=function*(self){if(self.it_index < self.len){var res=self.getitem(self.it_seq,self.it_index)
+$B.iterator.tp_iternext=function*(self){
+var res
+try{
+res=$B.$call(self.getitem,self.it_seq,self.it_index)}catch(err){if($B.is_exc(err,[_b_.IndexError,_b_.StopIteration])){return}
+throw err}
 self.it_index++
-yield res}}
+yield res}
 var iterator_funcs=$B.iterator.tp_funcs={}
 iterator_funcs.__length_hint__=function(self){}
 iterator_funcs.__reduce__=function(self){return $B.fast_tuple([_b_.iter,$B.fast_tuple([self.it_seq]),self.it_index])}
@@ -5072,10 +5086,8 @@ console.log('no tp_iternext in',$B.get_class(res))
 $B.RAISE(_b_.TypeError,`iter() returned non-iterable of type '${$B.class_name(res)}'`)}
 return res}
 var getitem_func=$B.search_in_mro(klass,'__getitem__',$B.NULL)
-var len_func=$B.search_in_mro(klass,'__len__',$B.NULL)
-if(test){console.log('getitem_func',getitem_func)
-console.log('len_func',len_func)}
-if(getitem_func !==$B.NULL && len_func !==$B.NULL){var it={ob_type:$B.iterator,it_seq:obj}
+if(test){console.log('getitem_func',getitem_func)}
+if(getitem_func !==$B.NULL){var it={ob_type:$B.iterator,it_seq:obj}
 return $B.iterator.tp_iter(it)}
 $B.RAISE(_b_.TypeError,`'${$B.class_name(obj)}' object is not iterable`
 )}else{
@@ -8581,6 +8593,8 @@ if(self.__hashvalue__ !==undefined){return self.__hashvalue__}
 var _hash=1927868237
 _hash*=self.$used
 for(var entry of set_iter_with_hash(self)){var _h=entry.hash
+if(typeof _h=='bigint'){
+_h=Number(BigInt.asIntN(32,_h))}
 _hash ^=((_h ^ 89869747)^(_h << 16))*3644798167}
 _hash=_hash*69069+907133923
 if(_hash==-1){_hash=590923713}
@@ -11507,9 +11521,12 @@ if(missing_method !==_b_.None){return missing_method(self,key)}}}
 $B.RAISE(_b_.KeyError,key)}
 dict.tp_hash=_b_.None
 function init_from_list(self,args){var i=0
-for(var item of args){if(item.length !=2){$B.RAISE(_b_.ValueError,"dictionary "+
-`update sequence element #${i} has length ${item.length}; 2 is required`)}
-dict.$setitem(self,item[0],item[1])
+for(var item of args){
+var pair=Array.isArray(item)? item :
+Array.from($B.make_js_iterator_no_trace(item))
+if(pair.length !=2){$B.RAISE(_b_.ValueError,"dictionary "+
+`update sequence element #${i} has length ${pair.length}; 2 is required`)}
+dict.$setitem(self,pair[0],pair[1])
 i++}}
 dict.$set_string_no_duplicate=function(d,keys,string,value){if(typeof string !=='string'){$B.RAISE(_b_.TypeError,'keywords must be strings')}
 if(keys.has(string)){$B.RAISE(_b_.TypeError,'dict() got multiple values for keyword '+
@@ -12344,6 +12361,8 @@ return _repr(self)}
 _b_.tuple.tp_hash=function(self){
 var x=0x3456789
 for(var i=0,len=self.length;i < len;i++){var y=_b_.hash(self[i])
+if(typeof y=='bigint'){
+y=Number(BigInt.asIntN(32,y))}
 x=c_mul(1000003,x)^ y & 0xFFFFFFFF}
 return x}
 _b_.tuple.tp_iter=function(self){return{
@@ -15929,9 +15948,17 @@ var scope_name='locals_'+qualified_scope_name(scopes,scope)
 scope=scope ?? last_scope(scopes)
 while(scope.parent){scope=scope.parent}
 return scope_name}
+function make_globals_name(scopes){
+var ns=scopes.namespaces
+if(ns && ns.exec_locals !==ns.exec_globals){return ns.global_name}
+return make_scope_name(scopes,scopes[0])}
 function make_search_namespaces(scopes){var namespaces=[]
 for(var scope of scopes.slice().reverse()){if(scope.parent ||scope.type=='class'){continue}else if(scope.is_exec_scope){namespaces.push('$B.exec_scope')}
-namespaces.push(make_scope_name(scopes,scope))}
+namespaces.push(make_scope_name(scopes,scope))
+var ns=scopes.namespaces
+if(scope.is_exec_scope && ns &&
+ns.exec_locals !==ns.exec_globals){
+namespaces.push(ns.global_name)}}
 namespaces.push('_b_')
 return namespaces}
 function mangle(scopes,scope,name){if(name.startsWith('__')&& ! name.endsWith('__')){var ix=scopes.indexOf(scope)
@@ -16167,7 +16194,7 @@ for(var[key,value]of Object.entries(symtable_block.symbols)){if(value & SF.DEF_C
 var comp_iter_scope=name_scope(comp_iter,scopes)
 var first_for=this.generators[0],
 outmost_expr=$B.js_from_ast(first_for.iter,scopes),nb_paren=1
-var comp={ast:this,id,type,varnames,module_name:scopes[0].name,locals_name:make_scope_name(scopes),globals_name:make_scope_name(scopes,scopes[0])}
+var comp={ast:this,id,type,varnames,module_name:scopes[0].name,locals_name:make_scope_name(scopes),globals_name:make_globals_name(scopes)}
 indent()
 if(prefix.length > plen+tab.length){console.warn('JS indentation issue')}
 var js=init_comprehension(comp,scopes)
@@ -16477,7 +16504,7 @@ var value=$B.js_from_ast(this.value,scopes)
 if(this.target instanceof $B.ast.Name){var scope=name_scope(this.target.id,scopes)
 if(! scope.found){
 let left_scope=scope.resolve=='global' ?
-make_scope_name(scopes,scopes[0]):'locals'
+make_globals_name(scopes):'locals'
 js=prefix+`${left_scope}.${this.target.id} = $B.augm_assign(`+
 make_ref(this.target.id,scopes,scope,this.target)+`, '${iop}', ${value})`}else{
 let ref=`${make_scope_name(scopes, scope.found)}.${this.target.id}`
@@ -16568,7 +16595,7 @@ args_list.push(kw)}
 return js+`${args_list.join(', ')}`}
 $B.ast.ClassDef.prototype.to_js=function(scopes){var enclosing_scope=bind(this.name,scopes)
 var class_scope=new Scope(this.name,'class',this)
-var js='',locals_name='locals_'+qualified_scope_name(scopes,class_scope),ref=this.name+make_id(),glob=scopes[0].name,globals_name=make_scope_name(scopes,scopes[0]),decorators=[],decorated=false
+var js='',locals_name='locals_'+qualified_scope_name(scopes,class_scope),ref=this.name+make_id(),glob=scopes[0].name,globals_name=make_globals_name(scopes),decorators=[],decorated=false
 for(let dec of this.decorator_list){decorated=true
 var dec_id='decorator'+make_id()
 decorators.push(dec_id)
@@ -16834,7 +16861,7 @@ kw_defaults.push(`${mangle_arg(arg.arg)}: ${v}`)}}
 var kw_default_names=[]
 for(var kw of this.args.kwonlyargs){kw_default_names.push(`'${mangle_arg(kw.arg)}'`)}
 return{default_names,_defaults,positional,has_posonlyargs,kw_defaults,kw_default_names,annotations}}
-function type_param_in_def(tp,ref,scopes){var gname=scopes[0].name,globals_name=make_scope_name(scopes,scopes[0])
+function type_param_in_def(tp,ref,scopes){var gname=scopes[0].name,globals_name=make_globals_name(scopes)
 var js=''
 var name,param_type=tp.constructor.$name
 if(['TypeVar','TypeVarTuple','ParamSpec'].includes(param_type)){name=tp.name}else{
@@ -16879,7 +16906,7 @@ var symtable_block=scopes.symtable.table.blocks.get(fast_id(this))
 var in_class=last_scope(scopes).ast instanceof $B.ast.ClassDef,is_async=this instanceof $B.ast.AsyncFunctionDef,arg_mangle_scope=last_scope(scopes),mangle_arg=x=> mangle(scopes,arg_mangle_scope,x)
 if(in_class){var class_scope=last_scope(scopes)}
 var func_name_scope=bind(this.name,scopes)
-var gname=scopes[0].name,globals_name=make_scope_name(scopes,scopes[0])
+var gname=scopes[0].name,globals_name=make_globals_name(scopes)
 var decorators=[],decorated=false,decs_declare=this.decorator_list.length > 0 ?
 prefix+'// declare decorators\n' :''
 for(let dec of this.decorator_list){decorated=true
@@ -17134,7 +17161,7 @@ var first_for=this.generators[0],
 outmost_expr=$B.js_from_ast(first_for.iter,scopes),nb_paren=1
 var comp_scope=new Scope(`genexpr_${id}`,'comprehension',this)
 scopes.push(comp_scope)
-var comp={ast:this,id,type:'genexpr',varnames,module_name:scopes[0].name,locals_name:make_scope_name(scopes),globals_name:make_scope_name(scopes,scopes[0])}
+var comp={ast:this,id,type:'genexpr',varnames,module_name:scopes[0].name,locals_name:make_scope_name(scopes),globals_name:make_globals_name(scopes)}
 indent()
 var head=init_comprehension(comp,scopes)
 var js=prefix+`var gen${id} = $B.generator.$factory(${has_await ? 'async ' : ''}function*(expr){\n`
@@ -17729,8 +17756,8 @@ $B.ast.ParamSpec.prototype.to_js=function(){return `$B.$call($B.module_getattr($
 $B.ast.UnaryOp.prototype.to_js=function(scopes){var operand=$B.js_from_ast(this.operand,scopes)
 if(this.op instanceof $B.ast.Not){return `! $B.$bool(${operand})`}
 if(typeof operand=="number" ||operand instanceof Number){if(this.op instanceof $B.ast.UAdd){return operand+''}else if(this.op instanceof $B.ast.USub){return-operand+''}}
-var method=opclass2dunder[this.op.constructor.$name]
-return `$B.$call($B.$getattr($B.get_class(locals.$result = ${operand}), '${method}'), locals.$result)`}
+var method=opclass2dunder[this.op.constructor.$name],op_repr={UAdd:'+',USub:'-',Invert:'~'}[this.op.constructor.$name]
+return `$B.call_special_unary(${operand}, '${method}', 'unary ${op_repr}')`}
 $B.ast.While.prototype.to_js=function(scopes){var id=make_id()
 var scope=$B.last(scopes),new_scope=copy_scope(scope,this,id)
 scopes.push(new_scope)
