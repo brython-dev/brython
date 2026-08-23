@@ -283,6 +283,21 @@ function make_scope_name(scopes, scope) {
     return scope_name
 }
 
+function make_globals_name(scopes) {
+    // Name of the JS object that holds the global namespace.
+    // This is normally the root scope's namespace object (at module level,
+    // locals and globals are the same object), but code run by exec() or
+    // eval() may have distinct globals and locals: the globals object is
+    // then referenced by namespaces.global_name (cf. py_eval_exec.js).
+    // Using the root locals object in that case gave functions defined in
+    // exec() a global namespace that ignored the "globals" argument.
+    var ns = scopes.namespaces
+    if (ns && ns.exec_locals !== ns.exec_globals) {
+        return ns.global_name
+    }
+    return make_scope_name(scopes, scopes[0])
+}
+
 function make_search_namespaces(scopes) {
     var namespaces = []
     for (var scope of scopes.slice().reverse()) {
@@ -292,6 +307,13 @@ function make_search_namespaces(scopes) {
             namespaces.push('$B.exec_scope')
         }
         namespaces.push(make_scope_name(scopes, scope))
+        var ns = scopes.namespaces
+        if (scope.is_exec_scope && ns &&
+                ns.exec_locals !== ns.exec_globals) {
+            // exec()/eval() with distinct globals and locals: unbound names
+            // must also be searched in the globals object, after locals
+            namespaces.push(ns.global_name)
+        }
     }
     namespaces.push('_b_')
     return namespaces
@@ -934,7 +956,7 @@ function make_comp(scopes) {
     var comp = {ast:this, id, type, varnames,
                 module_name: scopes[0].name,
                 locals_name: make_scope_name(scopes),
-                globals_name: make_scope_name(scopes, scopes[0])}
+                globals_name: make_globals_name(scopes)}
 
     indent()
     if (prefix.length > plen + tab.length) {
@@ -1608,7 +1630,7 @@ $B.ast.AugAssign.prototype.to_js = function(scopes) {
             // The left part of the assignment must be an attribute of a
             // namespace (global or local), not a call to $B.resolve
             let left_scope = scope.resolve == 'global' ?
-                make_scope_name(scopes, scopes[0]) : 'locals'
+                make_globals_name(scopes) : 'locals'
             js = prefix + `${left_scope}.${this.target.id} = $B.augm_assign(` +
                 make_ref(this.target.id, scopes, scope, this.target) + `, '${iop}', ${value})`
         } else {
@@ -1822,7 +1844,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes) {
         locals_name = 'locals_' + qualified_scope_name(scopes, class_scope),
         ref = this.name + make_id(),
         glob = scopes[0].name,
-        globals_name = make_scope_name(scopes, scopes[0]),
+        globals_name = make_globals_name(scopes),
         decorators = [],
         decorated = false
     for (let dec of this.decorator_list) {
@@ -2378,7 +2400,7 @@ function transform_args(scopes) {
 
 function type_param_in_def(tp, ref, scopes) {
     var gname = scopes[0].name,
-        globals_name = make_scope_name(scopes, scopes[0])
+        globals_name = make_globals_name(scopes)
     var js = ''
     var name,
         param_type = tp.constructor.$name
@@ -2455,7 +2477,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
     var func_name_scope = bind(this.name, scopes)
 
     var gname = scopes[0].name,
-        globals_name = make_scope_name(scopes, scopes[0])
+        globals_name = make_globals_name(scopes)
 
     var decorators = [],
         decorated = false,
@@ -2955,7 +2977,7 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes) {
     var comp = {ast:this, id, type: 'genexpr', varnames,
                 module_name: scopes[0].name,
                 locals_name: make_scope_name(scopes),
-                globals_name: make_scope_name(scopes, scopes[0])}
+                globals_name: make_globals_name(scopes)}
 
     indent()
     var head = init_comprehension(comp, scopes)
@@ -4124,8 +4146,12 @@ $B.ast.UnaryOp.prototype.to_js = function(scopes) {
             return -operand + ''
         }
     }
-    var method = opclass2dunder[this.op.constructor.$name]
-    return `$B.$call($B.$getattr($B.get_class(locals.$result = ${operand}), '${method}'), locals.$result)`
+    var method = opclass2dunder[this.op.constructor.$name],
+        op_repr = {UAdd: '+', USub: '-', Invert: '~'}[this.op.constructor.$name]
+    // Use CPython-like slot dispatch: resolve the method on the type with
+    // the descriptor protocol, so that dunders defined as zero-argument
+    // staticmethods (as in sympy.core.numbers) are called without arguments.
+    return `$B.call_special_unary(${operand}, '${method}', 'unary ${op_repr}')`
 }
 
 $B.ast.While.prototype.to_js = function(scopes) {

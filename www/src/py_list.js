@@ -1066,6 +1066,12 @@ _b_.tuple.tp_hash = function(self) {
   var x = 0x3456789
   for (var i = 0, len = self.length; i < len; i++) {
      var y = _b_.hash(self[i])
+     if (typeof y == 'bigint') {
+         // hash values above Number.MAX_SAFE_INTEGER are bigints (eg
+         // hash(2 ** 60)); reduce to 32 bits before mixing with Number
+         // arithmetic
+         y = Number(BigInt.asIntN(32, y))
+     }
      x = c_mul(1000003, x) ^ y & 0xFFFFFFFF
   }
   return x

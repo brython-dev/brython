@@ -956,13 +956,24 @@ function reset_factory(cls) {
 }
 
 $B.make_iter = function(cls) {
+    // resolve the tp_iter slot by walking the full MRO, not only tp_base:
+    // __iter__ can be inherited from any ancestor, eg a dict subclass whose
+    // first base is a plain class. Only raw class attributes are used: a
+    // descriptor must not have its __get__ invoked at slot-resolution time
+    // (it would have side effects, cf unittest.mock.MagicProxy); descriptors
+    // are handled at call time by $B.$iter
     cls.tp_iter = $B.NULL
-    var iter = $B.get_from_dict(cls, '__iter__', $B.NULL)
-    if (iter !== $B.NULL) {
-        cls.tp_iter = iter
-    } else if (cls.tp_base) {
-        cls.tp_iter = cls.tp_base.tp_iter ??
-            (cls.tp_base.tp_iter = $B.make_iter(cls.tp_base))
+    for (var klass of $B.get_mro(cls)) {
+        var iter = $B.get_from_dict(klass, '__iter__', $B.NULL)
+        if (iter !== $B.NULL) {
+            cls.tp_iter = iter
+            break
+        }
+        if (klass !== cls && Object.hasOwn(klass, 'tp_iter') &&
+                klass.tp_iter !== $B.NULL && klass.tp_iter != null) {
+            cls.tp_iter = klass.tp_iter
+            break
+        }
     }
     return cls.tp_iter
 }
@@ -1773,7 +1784,9 @@ type_funcs.__subclasscheck__ = function(self, subclass) {
     if (subclass.tp_bases === undefined) {
         return self === _b_.object
     }
-    return subclass.tp_bases.indexOf(self) > -1
+    // walk the full MRO, not only the direct bases: a class is a subclass
+    // of its indirect ancestors too
+    return $B.get_mro(subclass).indexOf(self) > -1
 }
 
 type_funcs.__subclasses__ = function(cls) {
@@ -1846,12 +1859,14 @@ $B.internal_property = function(module, fget, fset) {
     }
 }
 
-property.$factory = function(fget, fset, fdel, doc) {
+property.$factory = function() {
     var res = {
         ob_type: property
     }
-    property.tp_init(res, fget, fset ?? _b_.None, fdel ?? _b_.None,
-        doc ?? _b_.None)
+    // forward the arguments unchanged: they may end with a keyword-arguments
+    // marker (eg property(fset=...)), which tp_init's argument parser
+    // handles; inserting positional defaults here would shift it into fget
+    property.tp_init(res, ...arguments)
     return res
 }
 

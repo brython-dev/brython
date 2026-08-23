@@ -52,18 +52,9 @@ _b_.__build_class__ = function() {
 
 _b_.abs = function(obj) {
     check_nb_args_no_kw('abs', 1, arguments)
-
-    var klass = $B.get_class(obj)
-    try {
-        var method = $B.$getattr(klass, "__abs__")
-    } catch (err) {
-        if ($B.is_exc(err, [_b_.AttributeError])) {
-            $B.RAISE(_b_.TypeError, "Bad operand type for abs(): '" +
-                $B.class_name(obj) + "'")
-        }
-        throw err
-    }
-    return $B.$call(method, obj)
+    // use CPython-like slot dispatch (descriptor protocol on the type),
+    // cf. $B.call_special_unary
+    return $B.call_special_unary(obj, '__abs__', 'abs()')
 }
 
 _b_.aiter = function(async_iterable) {
@@ -709,6 +700,31 @@ $B.search_in_mro = function(klass, attr, _default) {
     return _default
 }
 
+$B.call_special_unary = function(obj, name, op_repr) {
+    // Emulates CPython's slot dispatch for unary operations: resolve `name`
+    // on the type (not the instance), apply the descriptor protocol with the
+    // instance, then call the result with no argument. In particular, a
+    // dunder defined as a zero-argument staticmethod is called without the
+    // instance, like in CPython.
+    var klass = $B.get_class(obj),
+        raw = $B.search_in_mro(klass, name, $B.NULL)
+    if (raw === $B.NULL) {
+        $B.RAISE(_b_.TypeError,
+            `bad operand type for ${op_repr}: '${$B.class_name(obj)}'`)
+    }
+    if (typeof raw == 'function') {
+        // fast path: plain method; binding to obj then calling with no
+        // argument is equivalent to calling with obj
+        return $B.$call(raw, obj)
+    }
+    var descr_get = raw.ob_type && raw.ob_type.tp_descr_get
+    if (descr_get) {
+        return $B.$call(descr_get(raw, obj, klass))
+    }
+    // non-descriptor class attribute: "bound" to nothing, call with no args
+    return $B.$call(raw)
+}
+
 $B.search_in_dict = function(obj, attr, _default) {
     if ($B.get_dict(obj)) {
         try {
@@ -954,6 +970,10 @@ $B.$hash = function(obj) {
             if (! $B.is_int(res)) {
                 $B.RAISE(_b_.TypeError, '__hash__ method should return an integer')
             }
+            if (typeof res == 'object') {
+                // int subclass: hash of its integer value
+                res = _b_.int.tp_hash(res)
+            }
         } else {
             $B.RAISE(_b_.TypeError, "unhashable type: '" +
                     _b_.str.$factory($B.jsobj2pyobj(obj)) + "'"
@@ -1196,18 +1216,31 @@ var issubclass = _b_.issubclass = function(cls, class_or_tuple) {
 /* iterator start */
 $B.iterator.tp_iter = function(self) {
     var ob_type = $B.get_class(self.it_seq)
-    self.len = $B.search_in_mro(ob_type, '__len__')(self.it_seq)
-    self.getitem = $B.search_in_mro(ob_type, '__getitem__')
+    var getitem = $B.search_in_mro(ob_type, '__getitem__', $B.NULL)
+    if (getitem === $B.NULL) {
+        $B.RAISE(_b_.TypeError,
+            `'${$B.class_name(self.it_seq)}' object is not iterable`)
+    }
+    self.getitem = getitem
     self.it_index = 0
     return self
 }
 
 $B.iterator.tp_iternext = function*(self){
-    if (self.it_index < self.len) {
-        var res = self.getitem(self.it_seq, self.it_index)
-        self.it_index++
-        yield res
+    // "sequence protocol" iteration: call __getitem__ with increasing
+    // indices; IndexError ends the iteration (__len__ is not used, same
+    // as CPython)
+    var res
+    try {
+        res = $B.$call(self.getitem, self.it_seq, self.it_index)
+    } catch (err) {
+        if ($B.is_exc(err, [_b_.IndexError, _b_.StopIteration])) {
+            return
+        }
+        throw err
     }
+    self.it_index++
+    yield res
 }
 
 var iterator_funcs = $B.iterator.tp_funcs = {}
@@ -1288,13 +1321,14 @@ $B.$iter = function(obj, sentinel) {
             }
             return res
         }
+        // fallback for the "sequence protocol": objects with __getitem__
+        // are iterated with increasing indices until IndexError; __len__ is
+        // not required (same as CPython)
         var getitem_func = $B.search_in_mro(klass, '__getitem__', $B.NULL)
-        var len_func = $B.search_in_mro(klass, '__len__', $B.NULL)
         if (test) {
             console.log('getitem_func', getitem_func)
-            console.log('len_func', len_func)
         }
-        if (getitem_func !== $B.NULL && len_func !== $B.NULL) {
+        if (getitem_func !== $B.NULL) {
             var it = {
                 ob_type: $B.iterator,
                 it_seq: obj

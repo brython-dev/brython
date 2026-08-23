@@ -712,11 +712,15 @@ dict.tp_hash = _b_.None
 function init_from_list(self, args) {
     var i = 0
     for (var item of args) {
-        if (item.length != 2) {
+        // item may be any Python sequence (eg an instance of a class with
+        // __iter__), not only a JS array: use the iteration protocol
+        var pair = Array.isArray(item) ? item :
+            Array.from($B.make_js_iterator_no_trace(item))
+        if (pair.length != 2) {
             $B.RAISE(_b_.ValueError, "dictionary " +
-                `update sequence element #${i} has length ${item.length}; 2 is required`)
+                `update sequence element #${i} has length ${pair.length}; 2 is required`)
         }
-        dict.$setitem(self, item[0], item[1])
+        dict.$setitem(self, pair[0], pair[1])
         i++
     }
 }

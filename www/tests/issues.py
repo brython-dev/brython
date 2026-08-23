@@ -3345,6 +3345,149 @@ def f2735(x):
 
 f2735(0)
 
+# PR 2912 : issubclass / super() with a custom metaclass and indirect subclass
+class Meta2912(type):
+    pass
+
+class A2912(metaclass=Meta2912):
+    pass
+
+class B2912(A2912):
+    pass
+
+class C2912(B2912):
+    pass
+
+assert issubclass(C2912, A2912)
+assert issubclass(C2912, B2912)
+
+class D2912(A2912):
+    def __new__(cls, *args):
+        obj = super().__new__(cls)
+        obj.tag = "ok"
+        return obj
+
+class E2912(D2912):
+    pass
+
+assert E2912().tag == "ok"
+
+# PR 2912 : unary dunders defined as zero-argument staticmethods
+class Unary2912:
+    @staticmethod
+    def __neg__():
+        return "neg"
+
+    @staticmethod
+    def __pos__():
+        return "pos"
+
+    @staticmethod
+    def __invert__():
+        return "invert"
+
+    @staticmethod
+    def __abs__():
+        return "abs"
+
+u2912 = Unary2912()
+assert -u2912 == "neg"
+assert +u2912 == "pos"
+assert ~u2912 == "invert"
+assert abs(u2912) == "abs"
+assert_raises(TypeError, lambda: -object())
+assert_raises(TypeError, abs, object())
+
+# PR 2912 : functions defined by exec() with distinct globals and locals
+# see the globals dict
+g2912 = {"VALUE": 42, "__name__": "mod2912"}
+l2912 = {}
+exec("def f2912():\n    return VALUE", g2912, l2912)
+assert "f2912" in l2912
+assert l2912["f2912"]() == 42
+
+# PR 2912 : iteration of a dict subclass whose first base is a plain class
+class PlainBase2912:
+    pass
+
+class DictSub2912(PlainBase2912, dict):
+    pass
+
+d2912 = DictSub2912(a=1, b=2)
+assert sorted(iter(d2912)) == ["a", "b"]
+assert sorted(list(d2912)) == ["a", "b"]
+assert max(d2912) == "b"
+
+# PR 2912 : sequence-protocol iteration only needs __getitem__ + IndexError
+class Seq2912:
+    def __getitem__(self, i):
+        if i > 2:
+            raise IndexError(i)
+        return i * 10
+
+assert list(Seq2912()) == [0, 10, 20]
+
+# PR 2912 : dict() from a sequence of Python pair objects
+class Pair2912:
+    def __init__(self, a, b):
+        self.pair = (a, b)
+
+    def __len__(self):
+        return 2
+
+    def __getitem__(self, i):
+        return self.pair[i]
+
+assert dict([Pair2912("x", 1), Pair2912("y", 2)]) == {"x": 1, "y": 2}
+
+# PR 2912 : hash of tuples / frozensets containing large ints
+# (hash(2 ** 60) is above Number.MAX_SAFE_INTEGER)
+assert isinstance(hash((2 ** 60, "x")), int)
+assert isinstance(hash(frozenset([2 ** 60, "x"])), int)
+assert hash((2 ** 60,)) == hash((2 ** 60,))
+dbig2912 = {(2 ** 60, "x"): 1}
+assert dbig2912[(2 ** 60, "x")] == 1
+
+# PR 2912 : math.lcm
+import math
+assert math.lcm(6, 4) == 12
+assert math.lcm() == 1
+assert math.lcm(5) == 5
+assert math.lcm(0, 3) == 0
+
+# PR 2912 : array.array negative indices
+from array import array
+arr2912 = array("l", [1, 2, 3])
+assert arr2912[-1] == 3
+arr2912[-1] = 5
+assert arr2912[-1] == 5
+assert_raises(IndexError, lambda: arr2912[-4])
+
+# PR 2912 : cmath and ctypes are importable
+import cmath
+assert cmath.sqrt(-1) == 1j
+import ctypes
+assert ctypes.sizeof(ctypes.c_long) in (4, 8)
+
+# PR 2912 : property() with only keyword arguments
+prop2912 = property(fset=lambda self, value: None)
+assert prop2912.fget is None
+assert prop2912.fset is not None
+
+class WithProp2912:
+    def __init__(self):
+        self._x = 0
+
+    def _set_x(self, value):
+        self._x = value
+
+    x = property(fset=_set_x)
+
+wp2912 = WithProp2912()
+wp2912.x = 5
+assert wp2912._x == 5
+assert_raises(AttributeError, lambda: wp2912.x)
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
