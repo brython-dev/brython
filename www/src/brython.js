@@ -720,8 +720,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,3,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-08-23 10:30:44.783914"
-__BRYTHON__.timestamp=1787473844783
+__BRYTHON__.compiled_date="2026-08-26 15:01:48.105723"
+__BRYTHON__.timestamp=1787749308105
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -18959,7 +18959,8 @@ if(! is_bytes){var value=make_string_for_ast_value(prepared.value)}else{
 var value=prepared.value.substr(2,prepared.value.length-3)
 try{
 value=_b_.bytes.$factory(encode_bytestring(value))}catch(err){$B._PyPegen.raise_error_known_location(p,_b_.SyntaxError,token.lineno,token.col_offset,token.end_lineno,token.end_col_offset,'bytes can only contain ASCII literal characters')}}
-var ast_obj=new $B.ast.Constant(value)
+let kind=prepared.unicode ? 'u' :_b_.None
+var ast_obj=new $B.ast.Constant(value,kind)
 set_position_from_token(ast_obj,token)
 return ast_obj}
 $B._PyPegen.constant_from_token=function(p,t){var ast_obj=new $B.ast.Constant(t.string)
@@ -19518,7 +19519,7 @@ inner=s.substring(pos+quote.length,len-quote.length)}
 break}
 pos++}
 var result={quote}
-var mods={r:'raw',f:'fstring',b:'bytes'}
+var mods={r:'raw',f:'fstring',b:'bytes',u:'unicode'}
 for(var mod of string_modifier){result[mods[mod]]=true}
 var raw=context.type=='str' && context.raw,string_start=pos+1,bytes=false,fstring=false,sm_length,
 end=null
