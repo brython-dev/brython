@@ -350,8 +350,8 @@ $B.list_iterator.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]
 /* list_iterator end */
 
 var eq = $B.list_eq = function(self, other) {
-    if (other[$B.PYOBJ]) {
-        other = other[$B.PYOBJ]
+    if ($B.PYOBJ_MAP.has(other)) {
+        other = $B.PYOBJ_MAP.get(other)
     }
     var cls = $B.$isinstance(self, list) ? list : tuple
     if (isinstance(other, cls)) {
