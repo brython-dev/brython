@@ -266,7 +266,8 @@ $B._PyPegen.constant_from_string = function(p, token) {
                 'bytes can only contain ASCII literal characters')
         }
     }
-    var ast_obj = new $B.ast.Constant(value)
+    let kind = prepared.unicode ? 'u' : _b_.None
+    var ast_obj = new $B.ast.Constant(value, kind)
     set_position_from_token(ast_obj, token)
     return ast_obj
 }
@@ -1304,7 +1305,7 @@ $B._PyPegen.checked_future_import = function(p, module,
             }
         }
     }
-    return $B._PyAST.ImportFrom(module, names, level, lineno, col_offset, 
+    return $B._PyAST.ImportFrom(module, names, level, lineno, col_offset,
         end_lineno, end_col_offset, arena)
 }
 

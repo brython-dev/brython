@@ -8,7 +8,7 @@ const TPFLAGS = $B.TPFLAGS // defined ib brython_builtins.js
 // generic code for class constructor
 $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
         bases, extra_kwargs){
-    var test = false // class_name == 'FlagBoundary'
+    var test = false // class_name == '_AllFieldTypes'
     if (test) {
         console.log('class constructor', class_name, 'dict', dict)
         console.log('metaclass', metaclass)
@@ -96,23 +96,19 @@ $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
     if ($B.get_class(kls) === metaclass) {
         // Initialize the class object by a call to metaclass __init__
         var meta_init = _b_.type.tp_getattro(metaclass, "__init__")
-        try {
-            $B.$call(meta_init, kls, class_name, resolved_bases, dict,
-                      {$kw: [extra_kwargs]})
-        } catch (err) {
-            if (class_name == 'SupportsInt') {
-                console.log('err for', class_name)
-                console.log(err)
-                console.log(err.stack)
-            }
-            throw err
-        }
+        $B.$call(meta_init, kls, class_name, resolved_bases, dict,
+                 {$kw: [extra_kwargs]})
+
     }
 
     // Set new class as subclass of its parents
     for (let i = 0; i < bases.length; i++) {
         bases[i].tp_subclasses  = bases[i].tp_subclasses || []
         bases[i].tp_subclasses.push(kls)
+    }
+
+    if (test) {
+        console.log('kls', kls)
     }
 
     return kls
@@ -693,7 +689,13 @@ $B.search_slot = function(cls, slot, _default) {
             return klass[slot]
         }
         if (dunder) {
-            var v = $B.get_from_dict(klass, dunder, $B.NULL)
+            try {
+                var v = $B.get_from_dict(klass, dunder, $B.NULL)
+            } catch(err) {
+                console.log('error for klass', klass, 'slot', slot,
+                    'dunder', dunder)
+                throw err
+            }
             if (v !== $B.NULL) {
                 if (test) {
                     console.log('klass has __call__', v)
@@ -956,13 +958,24 @@ function reset_factory(cls) {
 }
 
 $B.make_iter = function(cls) {
+    // resolve the tp_iter slot by walking the full MRO, not only tp_base:
+    // __iter__ can be inherited from any ancestor, eg a dict subclass whose
+    // first base is a plain class. Only raw class attributes are used: a
+    // descriptor must not have its __get__ invoked at slot-resolution time
+    // (it would have side effects, cf unittest.mock.MagicProxy); descriptors
+    // are handled at call time by $B.$iter
     cls.tp_iter = $B.NULL
-    var iter = $B.get_from_dict(cls, '__iter__', $B.NULL)
-    if (iter !== $B.NULL) {
-        cls.tp_iter = iter
-    } else if (cls.tp_base) {
-        cls.tp_iter = cls.tp_base.tp_iter ??
-            (cls.tp_base.tp_iter = $B.make_iter(cls.tp_base))
+    for (var klass of $B.get_mro(cls)) {
+        var iter = $B.get_from_dict(klass, '__iter__', $B.NULL)
+        if (iter !== $B.NULL) {
+            cls.tp_iter = iter
+            break
+        }
+        if (klass !== cls && Object.hasOwn(klass, 'tp_iter') &&
+                klass.tp_iter !== $B.NULL && klass.tp_iter != null) {
+            cls.tp_iter = klass.tp_iter
+            break
+        }
     }
     return cls.tp_iter
 }
@@ -1283,7 +1296,7 @@ _b_.type.tp_call = function(cls) {
 }
 
 _b_.type.tp_getattro = function(obj, name) {
-    var test = false // name == 'fromkeys' // && obj.tp_name == 'Mapping'
+    var test = false // name == '__abstractmethods__' // && obj.tp_name == 'Mapping'
     if (test) {
         console.log('class_getattr', obj, name)
         console.log('frame obj', $B.frame_obj)
@@ -1762,11 +1775,20 @@ type_funcs.__sizeof__ = function(self) {
 
 type_funcs.__subclasscheck__ = function(self, subclass) {
     // Is subclass a subclass of self ?
-    var klass = self
+    if (! $B.$isinstance(subclass, $B.UnionType) && ! $B.is_type(subclass)) {
+        $B.RAISE(_b_.TypeError,
+            "issubclass() arg 2 must be a class," +
+            " a tuple of classes, or a union")
+    }
+    if (self === subclass) {
+        return true
+    }
     if (subclass.tp_bases === undefined) {
         return self === _b_.object
     }
-    return subclass.tp_bases.indexOf(klass) > -1
+    // walk the full MRO, not only the direct bases: a class is a subclass
+    // of its indirect ancestors too
+    return $B.get_mro(subclass).indexOf(self) > -1
 }
 
 type_funcs.__subclasses__ = function(cls) {
@@ -1839,13 +1861,44 @@ $B.internal_property = function(module, fget, fset) {
     }
 }
 
-property.$factory = function(fget, fset, fdel, doc) {
+property.$factory = function() {
     var res = {
         ob_type: property
     }
-    property.tp_init(res, fget, fset ?? _b_.None, fdel ?? _b_.None,
-        doc ?? _b_.None)
+    // forward the arguments unchanged: they may end with a keyword-arguments
+    // marker (eg property(fset=...)), which tp_init's argument parser
+    // handles; inserting positional defaults here would shift it into fget
+    property.tp_init(res, ...arguments)
     return res
+}
+
+function property_copy(old, get, set, del) {
+    let type = $B.get_class(old)
+
+    if (get === _b_.None) {
+        get = old.prop_get ?? _b_.None
+    }
+    if (set === _b_.None) {
+        set = old.prop_set ?? _b_.None
+    }
+    if (del === _b_.None) {
+        del = old.prop_del ?? _b_.None
+    }
+    let doc
+    if (old.getter_doc && get !== _b_.None) {
+        /* make _init use __doc__ from getter */
+        doc = _b_.None;
+    } else {
+        doc = old.prop_doc ?? _b_.None
+    }
+
+    let _new = $B.$call(type, get, set, del, doc)
+
+    if ($B.exact_type(_new, _b_.property)) {
+        _new.prop_name = old.prop_name
+    }
+
+    return _new
 }
 
 
@@ -1917,38 +1970,49 @@ _b_.property.tp_new = function(cls, args, kw) {
 var property_funcs = _b_.property.tp_funcs = {}
 
 property_funcs.__isabstractmethod___get = function(self) {
-
+    for (let attr of ['prop_get', 'prop_set', 'prop_del']) {
+        let test = $B.$getattr(self[attr], '__isabstractmethod__', false)
+        if (test === true) {
+            return true
+        }
+    }
+    return false
 }
 
-property_funcs.__isabstractmethod___set = function(self) {
-
-}
+property_funcs.__isabstractmethod___set = _b_.None
 
 property_funcs.__name___get = function(self) {
-    return $B.$getattr(self.prop_get, '__name__')
+    if (Object.hasOwn(self, 'prop_name')) {
+        return self.prop_name
+    }
+
+    let name = $B.$getattr(self.prop_get, '__name__', $B.NULL)
+    if (name === $B.NULL) {
+        $B.RAISE(_b_.AttributeError,
+                 "'property' object has no attribute '__name__'"
+        )
+    }
+    return name
 }
 
-property_funcs.__name___set = function(self) {
-
+property_funcs.__name___set = function(self, value) {
+    self.prop_name = value
 }
 
 property_funcs.__set_name__ = function(self, cls, name) {
     self.prop_name = name
 }
 
-property_funcs.deleter = function(self, fdel) {
-    self.prop_del = fdel
-    return self
+property_funcs.deleter = function(self, deleter) {
+    return property_copy(self, _b_.None, _b_.None, deleter)
 }
 
-property_funcs.getter = function(self, fget) {
-    self.prop_get = fget
-    return self
+property_funcs.getter = function(self, getter) {
+    return property_copy(self, getter, _b_.None, _b_.None)
 }
 
-property_funcs.setter = function(self, fset) {
-    self.prop_set = fset
-    return self
+property_funcs.setter = function(self, setter) {
+    return property_copy(self, _b_.None, setter, _b_.None)
 }
 
 _b_.property.tp_methods = ["getter", "setter", "deleter", "__set_name__"]
@@ -2448,30 +2512,6 @@ $B.GenericAlias.tp_getset = ["__parameters__", "__typing_unpacked_tuple_args__"]
 
 $B.set_func_names($B.GenericAlias, "types")
 
-/*
-__repr__ <slot wrapper '__repr__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__hash__ <slot wrapper '__hash__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__getattribute__ <slot wrapper '__getattribute__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__lt__ <slot wrapper '__lt__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__le__ <slot wrapper '__le__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__eq__ <slot wrapper '__eq__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__ne__ <slot wrapper '__ne__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__gt__ <slot wrapper '__gt__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__ge__ <slot wrapper '__ge__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__or__ <slot wrapper '__or__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__ror__ <slot wrapper '__ror__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__getitem__ <slot wrapper '__getitem__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__mro_entries__ <method '__mro_entries__' of 'typing.Union' objects> <class 'method_descriptor'>
-__class_getitem__ <method '__class_getitem__' of 'typing.Union' objects> <class 'classmethod_descriptor'>
-__args__ <member '__args__' of 'typing.Union' objects> <class 'member_descriptor'>
-__name__ <attribute '__name__' of 'typing.Union' objects> <class 'getset_descriptor'>
-__qualname__ <attribute '__qualname__' of 'typing.Union' objects> <class 'getset_descriptor'>
-__origin__ <attribute '__origin__' of 'typing.Union' objects> <class 'getset_descriptor'>
-__parameters__ <attribute '__parameters__' of 'typing.Union' objects> <class 'getset_descriptor'>
-__doc__ Represent a union type
-
-E.g. for int | str <class 'str'>
-*/
 
 $B.UnionType = $B.make_builtin_class("UnionType")
 
@@ -2501,8 +2541,9 @@ $B.UnionType.tp_repr = function(self) {
     for (var item of self.args) {
         if ($B.is_type(item)) {
             var s = $B.get_name(item)
-            if ($B.get_from_dict(item, '__module__') !== "builtins") {
-                s = item.__module__ + '.' + s
+            let module = $B.get_from_dict(item, '__module__', 'builtins')
+            if (module !== "builtins") {
+                s = module + '.' + s
             }
             t.push(s)
         } else {

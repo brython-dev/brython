@@ -90,10 +90,9 @@ $B.set_func_names(classmethod, "builtins")
 var staticmethod = _b_.staticmethod
 
 staticmethod.$factory = function(func) {
-    return {
-        ob_type: staticmethod,
-        sm_callable: func
-    }
+    let self = staticmethod.tp_new(staticmethod, [func])
+    staticmethod.tp_init(self, func)
+    return self
 }
 
 /* staticmethod start */
@@ -111,13 +110,18 @@ _b_.staticmethod.tp_descr_get = function(self) {
 
 _b_.staticmethod.tp_init = function(self, func) {
     self.sm_callable = func
+    for (let attr of ['__module__', '__name__', '__qualname__', '__doc__']) {
+        $B.set_to_dict(self, attr, func.$function_infos[$B.func_attrs[attr]])
+    }
 }
 
 _b_.staticmethod.tp_new = function(cls, args, kw) {
-    return {
+    let res = {
         ob_type: cls,
         sm_callable: _b_.None
     }
+    $B.init_dict(res)
+    return res
 }
 
 var staticmethod_funcs = _b_.staticmethod.tp_funcs = {}
@@ -138,12 +142,10 @@ staticmethod_funcs.__annotations___set = function(self) {
 
 }
 
-staticmethod_funcs.__class_getitem__ = function(self) {
-
-}
+staticmethod_funcs.__class_getitem__ = $B.$class_getitem
 
 staticmethod_funcs.__dict___get = function(self) {
-
+    return $B.get_dict(self)
 }
 
 staticmethod_funcs.__dict___set = function(self) {
@@ -151,12 +153,14 @@ staticmethod_funcs.__dict___set = function(self) {
 }
 
 staticmethod_funcs.__isabstractmethod___get = function(self) {
-
+    var res = $B.get_from_dict(self.sm_callable, '__isabstractmethod__', $B.NULL)
+    if (res === $B.NULL) {
+        return false
+    }
+    return res
 }
 
-staticmethod_funcs.__isabstractmethod___set = function(self) {
-
-}
+staticmethod_funcs.__isabstractmethod___set = _b_.None
 
 _b_.staticmethod.classmethods = ["__class_getitem__"]
 

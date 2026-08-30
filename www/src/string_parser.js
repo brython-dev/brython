@@ -133,7 +133,7 @@ $B.prepare_string = function(p, token) {
         pos++
     }
     var result = {quote}
-    var mods = {r: 'raw', f: 'fstring', b: 'bytes'}
+    var mods = {r: 'raw', f: 'fstring', b: 'bytes', u: 'unicode'}
     for (var mod of string_modifier) {
         result[mods[mod]] = true
     }

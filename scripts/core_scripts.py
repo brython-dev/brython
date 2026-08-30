@@ -6,7 +6,6 @@ core_scripts = [
     'version_info',
     'py_tokens',
     'python_tokenizer',
-    'py_ast',
     'wasthon-loader',
     'loaders',
     'py_utils',
@@ -37,12 +36,12 @@ core_scripts = [
     'async',
     'py_import',
     'builtin_modules',
-    'finalize_builtin_types',
     'py2js',
     'py_ast_classes',
+    'py_ast',
+    'finalize_builtin_types',
     'ast_to_js',
     'symtable',
-
     'action_helpers',
     'string_parser',
     'number_parser',
@@ -50,5 +49,6 @@ core_scripts = [
     'pegen',
     'gen_parse',
     'brython_ready'
+
 
 ]

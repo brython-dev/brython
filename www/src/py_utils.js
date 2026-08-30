@@ -1133,6 +1133,10 @@ $B.$is = function(a, b) {
             return true
         }
         return a.value == b.value
+    } else if($B.is_bytes(a) && _b_.bytes.mp_length(a) == 0 &&
+        $B.is_bytes(b) && _b_.bytes.mp_length(b) == 0) {
+            // pretend that empty bytes is a singleton
+            return true
     }
     return a === b
 }
@@ -1276,7 +1280,10 @@ $B.$call_with_position = function(callable, inum, ...args) {
 }
 
 $B.$call = function(callable, ...args) {
-    var test = false // callable.tp_name === 'A' // && callable.$function_infos[1] == 'test_gen1'
+    var test = false // callable.tp_name === 'Name' // && callable.$function_infos[1] == 'test_gen1'
+    if (test) {
+        console.log('call', callable, 'args', args)
+    }
     if (typeof callable == 'function') {
         var res = callable(...args)
         if (callable.$in_js_module && res === undefined) {
@@ -1285,7 +1292,6 @@ $B.$call = function(callable, ...args) {
         return res
     }
     if (callable.$factory) {
-        //console.log('use $factory', callable)
         return callable.$factory(...args)
     }
     var klass = $B.get_class(callable)

@@ -1843,7 +1843,9 @@ function lcm() {
         }
         gcd = gcd2(a, b)
         product = $B.rich_op('__mul__', a, b)
-        a = $B.$getattr(product, "__floordiv__")(gcd)
+        // product may be a JS number (Brython small int) or a long_int:
+        // use rich_op, which handles both, instead of getattr on the value
+        a = $B.rich_op('__floordiv__', product, gcd)
     }
     return a
 }

@@ -52,18 +52,9 @@ _b_.__build_class__ = function() {
 
 _b_.abs = function(obj) {
     check_nb_args_no_kw('abs', 1, arguments)
-
-    var klass = $B.get_class(obj)
-    try {
-        var method = $B.$getattr(klass, "__abs__")
-    } catch (err) {
-        if ($B.is_exc(err, [_b_.AttributeError])) {
-            $B.RAISE(_b_.TypeError, "Bad operand type for abs(): '" +
-                $B.class_name(obj) + "'")
-        }
-        throw err
-    }
-    return $B.$call(method, obj)
+    // use CPython-like slot dispatch (descriptor protocol on the type),
+    // cf. $B.call_special_unary
+    return $B.call_special_unary(obj, '__abs__', 'abs()')
 }
 
 _b_.aiter = function(async_iterable) {
@@ -354,16 +345,13 @@ _b_.compile = function() {
 
     if ($.flags == $B.PyCF_ONLY_AST) {
         delete $B.url2name[filename]
-        let res = $B.ast_js_to_py(_ast)
-        res.$js_ast = _ast
-        return res
+        return $B.ast_js_to_py(_ast)
     }
 
     delete $B.url2name[filename]
     // Set attribute ._ast to avoid compiling again if result is passed to
     // exec()
     $._ast = $B.ast_js_to_py(_ast)
-    $._ast.$js_ast = _ast
 
     // Compile the ast to JS, as in py2js, so we emit syntax errors created
     // by the JS conversion process.
@@ -712,6 +700,31 @@ $B.search_in_mro = function(klass, attr, _default) {
     return _default
 }
 
+$B.call_special_unary = function(obj, name, op_repr) {
+    // Emulates CPython's slot dispatch for unary operations: resolve `name`
+    // on the type (not the instance), apply the descriptor protocol with the
+    // instance, then call the result with no argument. In particular, a
+    // dunder defined as a zero-argument staticmethod is called without the
+    // instance, like in CPython.
+    var klass = $B.get_class(obj),
+        raw = $B.search_in_mro(klass, name, $B.NULL)
+    if (raw === $B.NULL) {
+        $B.RAISE(_b_.TypeError,
+            `bad operand type for ${op_repr}: '${$B.class_name(obj)}'`)
+    }
+    if (typeof raw == 'function') {
+        // fast path: plain method; binding to obj then calling with no
+        // argument is equivalent to calling with obj
+        return $B.$call(raw, obj)
+    }
+    var descr_get = raw.ob_type && raw.ob_type.tp_descr_get
+    if (descr_get) {
+        return $B.$call(descr_get(raw, obj, klass))
+    }
+    // non-descriptor class attribute: "bound" to nothing, call with no args
+    return $B.$call(raw)
+}
+
 $B.search_in_dict = function(obj, attr, _default) {
     if ($B.get_dict(obj)) {
         try {
@@ -743,13 +756,12 @@ $B.time_builtin_getattr = 0
 
 $B.$getattr = function(obj, attr, _default) {
     // Used internally to avoid having to parse the arguments
-    var test = false // attr == 'attach'
+    var test = false // attr == '__abstractmethods__'
     if (test) {
         console.log('$getattr', obj, attr)
     }
     var res
     if (obj === undefined || obj === null) {
-        console.log('getting attribute', attr)
         $B.RAISE_ATTRIBUTE_ERROR("Javascript object '" + obj +
             "' has no attribute", obj, attr)
     }
@@ -863,7 +875,15 @@ $B.$getattr = function(obj, attr, _default) {
             var tset = _b_.type.tp_funcs[attr + '_set']
             if (_b_.type.tp_funcs.hasOwnProperty(attr + '_get') &&
                     tset !== undefined && tset !== _b_.None) {
-                return _b_.type.tp_funcs[attr + '_get'](obj)
+                try {
+                    return _b_.type.tp_funcs[attr + '_get'](obj)
+                } catch(err) {
+                    $B.RAISE_IF_NOT(err, _b_.AttributeError)
+                    if (_default !== undefined) {
+                        return _default
+                    }
+                    throw err
+                }
             }
             switch ($B.get_class(in_dict)) {
                 case $B.function:
@@ -949,6 +969,10 @@ $B.$hash = function(obj) {
             res = hash_func(obj)
             if (! $B.is_int(res)) {
                 $B.RAISE(_b_.TypeError, '__hash__ method should return an integer')
+            }
+            if (typeof res == 'object') {
+                // int subclass: hash of its integer value
+                res = _b_.int.tp_hash(res)
             }
         } else {
             $B.RAISE(_b_.TypeError, "unhashable type: '" +
@@ -1142,30 +1166,48 @@ $B.$isinstance = function(obj, cls) {
     return false
 }
 
-var issubclass = _b_.issubclass = function(klass, classinfo) {
+var issubclass = _b_.issubclass = function(cls, class_or_tuple) {
     check_nb_args_no_kw('issubclass', 2, arguments)
-    if ($B.is_tuple(classinfo)) {
-        for (var i = 0; i < classinfo.length; i++) {
-           if (issubclass(klass, classinfo[i])) {return true}
+
+    let _class
+
+    if ($B.is_tuple(class_or_tuple)) {
+        for (_class of class_or_tuple) {
+           if (issubclass(cls, _class)) {
+               return true
+           }
         }
         return false
     }
-    if ($B.get_class(classinfo) === $B.GenericAlias) {
+
+    _class = class_or_tuple // single class
+
+    if (! $B.is_type(cls)) {
+        $B.RAISE(_b_.TypeError, "issubclass() arg 1 must be a class")
+    }
+
+    let class_type = $B.get_class(_class)
+
+    if (class_type === $B.GenericAlias) {
         $B.RAISE(_b_.TypeError,
             'issubclass() arg 2 cannot be a parameterized generic')
     }
-    var mro = $B.get_mro(klass)
 
-    if (klass === classinfo || mro.indexOf(classinfo) > -1) {
-        return true
+    if (class_type === _b_.type) {
+        if (cls === _class) {
+            return true
+        }
+        return $B.get_mro(cls).indexOf(_class) > -1
     }
 
     // Search __subclasscheck__ on classinfo
-    var sch = $B.type_getattribute($B.get_class(classinfo), '__subclasscheck__', $B.NULL)
+    var sch = $B.type_getattribute($B.get_class(_class),
+        '__subclasscheck__', $B.NULL)
+
     if (sch === $B.NULL) {
         return false
     }
-    return $B.$call(sch, classinfo, klass)
+    return $B.$call(sch, _class, cls)
 }
 
 // Utility class for iterators built from objects that have a __getitem__ and
@@ -1174,18 +1216,31 @@ var issubclass = _b_.issubclass = function(klass, classinfo) {
 /* iterator start */
 $B.iterator.tp_iter = function(self) {
     var ob_type = $B.get_class(self.it_seq)
-    self.len = $B.search_in_mro(ob_type, '__len__')(self.it_seq)
-    self.getitem = $B.search_in_mro(ob_type, '__getitem__')
+    var getitem = $B.search_in_mro(ob_type, '__getitem__', $B.NULL)
+    if (getitem === $B.NULL) {
+        $B.RAISE(_b_.TypeError,
+            `'${$B.class_name(self.it_seq)}' object is not iterable`)
+    }
+    self.getitem = getitem
     self.it_index = 0
     return self
 }
 
 $B.iterator.tp_iternext = function*(self){
-    if (self.it_index < self.len) {
-        var res = self.getitem(self.it_seq, self.it_index)
-        self.it_index++
-        yield res
+    // "sequence protocol" iteration: call __getitem__ with increasing
+    // indices; IndexError ends the iteration (__len__ is not used, same
+    // as CPython)
+    var res
+    try {
+        res = $B.$call(self.getitem, self.it_seq, self.it_index)
+    } catch (err) {
+        if ($B.is_exc(err, [_b_.IndexError, _b_.StopIteration])) {
+            return
+        }
+        throw err
     }
+    self.it_index++
+    yield res
 }
 
 var iterator_funcs = $B.iterator.tp_funcs = {}
@@ -1266,13 +1321,14 @@ $B.$iter = function(obj, sentinel) {
             }
             return res
         }
+        // fallback for the "sequence protocol": objects with __getitem__
+        // are iterated with increasing indices until IndexError; __len__ is
+        // not required (same as CPython)
         var getitem_func = $B.search_in_mro(klass, '__getitem__', $B.NULL)
-        var len_func = $B.search_in_mro(klass, '__len__', $B.NULL)
         if (test) {
             console.log('getitem_func', getitem_func)
-            console.log('len_func', len_func)
         }
-        if (getitem_func !== $B.NULL && len_func !== $B.NULL) {
+        if (getitem_func !== $B.NULL) {
             var it = {
                 ob_type: $B.iterator,
                 it_seq: obj
@@ -2012,7 +2068,7 @@ _b_.super.tp_repr = function(self) {
 _b_.super.tp_getattro = function(self, attr) {
     /* We want __class__ to return the class of the super object
        (i.e. super, or a subclass), not the class of su->obj. */
-    var $test = false // attr == "__new__" //&& self.type.tp_name == 'Z'
+    var $test = false // attr == "foo" //&& self.type.tp_name == 'Z'
     if (attr == "__class__") {
         return _b_.object.tp_getattro(self, attr)
     }
@@ -2079,8 +2135,7 @@ _b_.super.tp_getattro = function(self, attr) {
     }
 
     if ($test) {
-        console.log("super", attr, self, "mro", mro,
-            "found in mro[0]", mro[0], '\nf',
+        console.log("super", attr, self, '\nf',
             f, 'type(f)', $B.get_class(f))
     }
     var f_cls = $B.get_class(f)

@@ -25,28 +25,61 @@ var _b_ = $B.builtins
 
 var ast = $B.ast = {}
 
+let base_class = {}
+
+for (let [name, value] of Object.entries($B.ast_classes)) {
+    if (Array.isArray(value)) {
+        for (let subclass of value) {
+            base_class[subclass] = name
+        }
+    }
+}
+
+for (let name in $B.ast_classes) {
+    if (! Object.hasOwn(base_class, name)) {
+        base_class[name] = 'AST'
+    }
+}
+
 for (var kl in $B.ast_classes) {
     var args = $B.ast_classes[kl],
-        body = ''
+        body = '',
+        arg_list = [],
+        fields = []
     if (typeof args == "string") {
         if (args.length > 0) {
             for (var arg of args.split(',')) {
-                if (arg.endsWith('*')) {
-                    arg = arg.substr(0, arg.length - 1)
-                    body += ` this.${arg} = $B.$list(${arg} === undefined ? [] : ${arg})\n`
-                } else if (arg.endsWith('?')) {
-                    arg = arg.substr(0, arg.length - 1)
-                    body += ` this.${arg} = ${arg}\n`
+                let [arg_type, arg_name] = arg.split(/\s+/)
+                arg_list.push(arg_name)
+                if (arg_type.endsWith('*')) {
+                    //arg = arg.substr(0, arg.length - 1)
+                    body += ` this.${arg_name} = $B.$list(${arg_name} === undefined ? [] : ${arg_name})\n`
+                } else if (arg_type.endsWith('?')) {
+                    //arg = arg.substr(0, arg.length - 1)
+                    body += ` this.${arg_name} = ${arg_name}\n`
                 } else {
-                    body += ` this.${arg} = ${arg}\n`
+                    body += ` this.${arg_name} = ${arg_name}\n`
                 }
             }
+            fields = args.split(',').map(x => x.trim().split(/\s+/)[1])
         }
-        var arg_list = args.replace(/[*?]/g, '').split(',')
+        //var arg_list = args.replace(/[*?]/g, '').split(',')
         ast[kl] = Function(...arg_list, body)
-        ast[kl]._fields = args.split(',')
+        ast[kl]._fields = fields
     } else {
         ast[kl] = args.map(x => ast[x])
+        if (Object.hasOwn($B.ast_attributes, kl)) {
+            let attrs = $B.ast_attributes[kl]
+            attrs = attrs.split(',').map(x => x.trim().split(' '))
+            let _attributes = []
+            for (let [attr_type, attr_name] of attrs) {
+                _attributes.push(attr_name)
+            }
+            ast[kl]._attributes = _attributes
+            for (let klass of args) {
+                ast[klass]._attributes = _attributes
+            }
+        }
     }
     ast[kl].$name = kl
 }
@@ -88,15 +121,23 @@ $B.ast_js_to_py = function(obj) {
 }
 
 $B.ast_py_to_js = function(obj) {
-    if (obj === undefined || obj === _b_.None) {
+    if (obj === undefined) {
         return undefined
     } else if (Array.isArray(obj)) {
-        return obj.map($B.ast_py_to_js)
+        let res = obj.map($B.ast_py_to_js)
+        let type = $B.get_class(obj)
+        if (type !== $B.js_array) {
+            $B.set_type(res, type)
+        }
+        return res
     } else if (typeof obj == "string") {
         return obj
     } else {
-        var class_name = $B.class_name(obj),
-            js_class = $B.ast[class_name]
+        var class_name = $B.class_name(obj)
+        if (! Object.hasOwn($B.ast, class_name)) {
+            return obj
+        }
+        let js_class = $B.ast[class_name]
         if (js_class === undefined) {
             return obj
         }
@@ -105,112 +146,389 @@ $B.ast_py_to_js = function(obj) {
             if (field.endsWith('?') || field.endsWith('*')) {
                 field = field.substr(0, field.length - 1)
             }
-            js_ast_obj[field] = $B.ast_py_to_js(obj[field])
+            js_ast_obj[field] = $B.ast_py_to_js($B.get_from_dict(obj, field))
         }
         for(var loc of ['lineno', 'col_offset',
                         'end_lineno', 'end_col_offset']){
-            if (obj[loc] !== undefined) {
-                js_ast_obj[loc] = obj[loc]
+            let v = $B.get_from_dict(obj, loc, $B.NULL)
+            if (v !== $B.NULL) {
+                js_ast_obj[loc] = v
             }
         }
         return js_ast_obj
     }
 }
 
+$B.AST = $B.make_builtin_class('AST')
+
+$B.AST.tp_flags = $B.TPFLAGS.HEAPTYPE | $B.TPFLAGS.BASETYPE |
+                      $B.TPFLAGS.READY | $B.TPFLAGS.HAVE_GC
+
+$B.init_dict($B.AST)
+$B.set_to_dict($B.AST, '__module__', 'ast')
+$B.set_to_dict($B.AST, '_attributes', $B.fast_tuple())
+$B.set_to_dict($B.AST, '_fields', $B.fast_tuple())
+$B.set_to_dict($B.AST, '_field_types', _b_.None)
+
+function AST_init() {
+    let [args, kw] = $B.parse_args_kw('__init__', arguments)
+    args = Array.from(args)
+    let self = args.shift()
+    let cls = $B.get_class(self)
+
+    let attributes = null
+
+    let fields = $B.$getattr(cls, '_fields', $B.fast_tuple())
+    let numfields = fields.length
+    let remaining_fields = _b_.set.$factory(fields)
+
+    let res = 0 /* if no error occurs, this stays 0 to the end */
+    if (numfields < args.length) {
+        $B.RAISE(_b_.TypeError,
+            `${$B.class_name(self)} constructor takes at most ${numfields} ` +
+            `arguments${numfields == 1 ? '' : 's'}`
+        )
+    }
+    for (let i = 0, len = args.length; i < len; i++) {
+        let name = fields[i]
+        $B.$setattr(self, name, args[i])
+        _b_.set.tp_funcs.discard(remaining_fields, name)
+    }
+    if (kw) {
+        for (let entry of _b_.dict.$iter_items(kw)) {
+            let key = entry.key
+            if (fields.includes(key)) {
+                let p = _b_.set.tp_funcs.discard(remaining_fields, key)
+                if (p == 0) {
+                    $B.RAISE(_b_.TypeError,
+                        `${_b_.repr(self)} got multiple values ` +
+                        `for argument ${key}`
+                    )
+                }
+            } else {
+                // Lazily initialize "attributes"
+                if (attributes === null) {
+                    attributes = $B.$getattr(cls, '_attributes')
+                }
+                if (! attributes.includes(key)) {
+                    let minor = $B.implementation[1]
+                    if (minor < 15) {
+                        $B.warn(_b_.DeprecationWarning,
+                            `${cls.tp_name}.__init__ got an unexpected ` +
+                            `keyword argument '${key}'. Support for ` +
+                            `arbitrary keyword arguments is deprecated ` +
+                            `and will be removed in Python 3.15.`
+                        )
+                    } else {
+                        $B.RAISE(_b_.TypeError,
+                            `${$B.class_name(self)}.__init__ ` +
+                            `got an unexpected keyword argument ${key}`
+                        )
+                    }
+                }
+            }
+            $B.$setattr(self, key, entry.value)
+        }
+    }
+    let size = _b_.set.mp_length(remaining_fields)
+    if (size > 0) {
+        let field_types = $B.$getattr(cls, '_field_types', $B.NULL)
+        if (field_types === $B.NULL) {
+            // Probably a user-defined subclass of AST that lacks _field_types.
+            // This will continue to work as it did before 3.13; i.e., attributes
+            // that are not passed in simply do not exist on the instance.
+            return
+        }
+        let remaining_list = $B.$list(remaining_fields)
+        let missing_names = new Set()
+        for (let name of remaining_list) {
+            let type
+            try {
+                type = _b_.dict.$getitem(field_types, name)
+            } catch(err) {
+                $B.RAISE_IF_NOT(err, _b_.KeyError)
+                let [major, minor] = $B.implementation
+                if (major < 3 || minor < 15) {
+                    $B.warn(_b_.DeprecationWarning,
+                        `Field '${name}' is missing from ` +
+                        `${cls.tp_name}._field_types. This will become an ` +
+                        `error in Python 3.15.`
+                    )
+                    continue
+                } else {
+                    $B.RAISE(_b_.TypeError,
+                        `mssing field ${name}`
+                    )
+                }
+            }
+            if (type === $B.NULL) {
+                // ignore
+            } else if ($B.exact_type(type, $B.UnionType)) {
+                // optional field
+                // do nothing, we'll have set a None default on the class
+            } else if ($B.exact_type(type, $B.GenericAlias)) {
+                // list field
+                $B.$setattr(self, name, $B.$list())
+            } else if (type == $B.ast.expr_context) {
+                // special case for expr_context: default to Load()
+                res = $B.$setattr(self, name, $B.ast.Load)
+            } else {
+                // simple field (e.g., identifier)
+                missing_names.add(name)
+            }
+        }
+        let num_missing = missing_names.size
+        if (num_missing > 0) {
+            for (let item of missing_names) {
+                if (field_types[item] === $B.python_ast_classes.expr_context) {
+                    $B.$setattr(self, item, Load)
+                } else {
+                    let [major, minor] = $B.implementation
+                    if (minor < 15) {
+                        $B.warn(_b_.DeprecationWarning,
+                            `${cls.tp_name}.__init__ missing 1 required ` +
+                            `positional argument: '${item}'. This will ` +
+                            `become an error in Python 3.15.`
+                        )
+                    } else {
+                        $B.RAISE(_b_.TypeError, 'missing required name ' + item)
+                    }
+                }
+            }
+        }
+    }
+}
+
+$B.set_to_dict($B.AST, '__init__', AST_init)
+
+$B.set_func_names($B.AST, 'ast')
+
+$B.AST.$convert = function(js_node) {
+    if (js_node === undefined) {
+        return _b_.None
+    }
+    var constr = js_node.constructor
+    if (constr && constr.$name) {
+        $B.create_python_ast_classes()
+        return $B.python_ast_classes[constr.$name].$factory(js_node)
+    } else if (Array.isArray(js_node)) {
+        return js_node.map($B.AST.$convert)
+    } else if (js_node.type) {
+        // literal constant
+        switch (js_node.type) {
+            case 'int':
+                var value = js_node.value[1],
+                    base = js_node.value[0]
+                var res = parseInt(value, base)
+                if (! Number.isSafeInteger(res)) {
+                    res = BigInt(res)
+                }
+                return res
+            case 'float':
+                return $B.fast_float(parseFloat(js_node.value))
+            case 'imaginary':
+                return $B.make_complex(0,
+                    $B.AST.$convert(js_node.value))
+            case 'ellipsis':
+                return _b_.Ellipsis
+            case 'str':
+                if (js_node.is_bytes) {
+                    return _b_.bytes.$factory(js_node.value, 'latin-1')
+                }
+                return js_node.value
+            case 'id':
+                if (['False', 'None', 'True'].indexOf(js_node.value) > -1) {
+                    return _b_[js_node.value]
+                }
+                break
+        }
+    } else if (['string', 'number'].indexOf(typeof js_node) > -1) {
+        return js_node
+    } else if (js_node.$name) {
+        // eg Store(), Load()...
+        return js_node.$name + '()'
+    } else if ([_b_.None, _b_.True, _b_.False].indexOf(js_node) > -1) {
+        return js_node
+    } else if ($B.get_class(js_node) !== $B.JSObj) {
+        return js_node
+    } else {
+        console.log('cannot handle', js_node)
+        return js_node
+    }
+}
+
+function assign_attributes(py_class, kl) {
+    let _attributes = $B.fast_tuple()
+    if (Object.hasOwn($B.ast[kl], '_attributes')) {
+        let attrs = $B.ast[kl]._attributes
+        for (let attr_name of attrs) {
+            _attributes.push(attr_name)
+        }
+    }
+    $B.set_to_dict(py_class, '_attributes', _attributes)
+}
+
+function set_field_types(py_class, fields, field_types) {
+    if (! fields.length) {
+        return
+    }
+    let res = $B.empty_dict()
+    for (let i = 0, len = fields.length; i < len; i++) {
+        let ftype = field_types[i]
+        let modifier
+        if (ftype.endsWith('?') || ftype.endsWith('*')) {
+            modifier = ftype[ftype.length - 1]
+            ftype = ftype.substr(0, ftype.length - 1)
+        }
+        switch (ftype) {
+            case 'int':
+                ftype = _b_.int
+                break
+            case 'string':
+            case 'identifier':
+                ftype = _b_.str
+                break
+            case 'identifier':
+                ftype = _b_.object
+                break
+            default:
+                ftype = $B.python_ast_classes[ftype]
+                break
+        }
+        if (modifier == '*') {
+            ftype = $B.GenericAlias.$factory(_b_.list, ftype)
+        } else if (modifier == '?') {
+            ftype = $B.UnionType.$factory([ftype, _b_.None])
+        }
+        $B.str_dict_set(res, fields[i], ftype)
+    }
+    $B.set_to_dict(py_class, '_field_types', res)
+}
+
+var Load
+
 $B.create_python_ast_classes = function() {
     if ($B.python_ast_classes) {
         return
     }
     $B.python_ast_classes = {}
-    for (var klass in $B.ast_classes) {
-        $B.python_ast_classes[klass] = (function(kl) {
-            var _fields,
-                raw_fields
-            if (typeof $B.ast_classes[kl] == "string") {
-                if ($B.ast_classes[kl] == '') {
-                    raw_fields = _fields = []
+    // first initialization, required to set _field_types later
+    // start with classes that inherit ast.AST
+    for (let name in $B.ast_classes) {
+        if (base_class[name] == 'AST') {
+            $B.python_ast_classes[name] = $B.make_builtin_class(name, [$B.AST])
+        }
+    }
+    // then classes that inherit expr, stmt etc.
+    for (let name in $B.ast_classes) {
+        let base = base_class[name]
+        if (base !== 'AST') {
+            $B.python_ast_classes[name] = $B.make_builtin_class(name,
+                [$B.python_ast_classes[base]])
+        }
+    }
+
+    // init dict
+    for (let [name, cls] of Object.entries($B.python_ast_classes)) {
+        $B.init_dict(cls)
+    }
+
+    // define singleton Load
+    Load = {
+        ob_type: $B.python_ast_classes.Load
+    }
+
+    for (let name in $B.ast_classes) {
+        let cls = $B.python_ast_classes[name]
+        let _fields,
+            raw_fields,
+            _field_types
+        if (typeof $B.ast_classes[name] == "string") {
+            if ($B.ast_classes[name] == '') {
+                raw_fields = _fields = []
+            } else {
+                raw_fields = $B.ast_classes[name].split(',')
+                    .map(x => x.split(/\s+/))
+                _fields = raw_fields.map(t => t[1])
+                _field_types = raw_fields.map(t => t[0])
+            }
+        }
+        let $defaults = {},
+            slots = {},
+            nb_args = 0
+        if (raw_fields) {
+            for (let i = 0, len = _fields.length; i < len; i++) {
+                let f = _fields[i],
+                    rf = raw_fields[i]
+                nb_args++
+                slots[f] = null
+                if (rf[0].endsWith('*')) {
+                    $defaults[f] = []
+                } else if (rf[0].endsWith('?')) {
+                    $defaults[f] = _b_.None
+                } else if (rf[0] == 'expr_context') {
+                    // expr_context always defaults to Load
+                    $defaults[rf[1]] = Load
+                }
+            }
+        }
+        $B.set_to_dict(cls, '__match_args__',
+            $B.fast_tuple(Object.keys(slots)))
+        $B.set_to_dict(cls, '__module__', 'ast')
+
+        cls.$factory = function() {
+            var res = {
+                ob_type: cls
+            }
+            $B.init_dict(res)
+            AST_init(res, ...arguments)
+            return res
+            for (let key in $) {
+                if (key == 'kw') {
+                    for (let item of _b_.dict.$iter_items($.kw)) {
+                        $B.set_to_dict(res, item.key, item.value)
+                    }
                 } else {
-                    raw_fields = $B.ast_classes[kl].split(',')
-                    _fields = raw_fields.map(x =>
-                        (x.endsWith('*') || x.endsWith('?')) ?
-                        x.substr(0, x.length - 1) : x)
+                    $B.set_to_dict(res, key, $[key])
                 }
             }
-            var cls = $B.make_builtin_class(kl),
-                $defaults = {},
-                slots = {},
-                nb_args = 0
-            $B.init_dict(cls)
-            if (raw_fields) {
-                for (let i = 0, len = _fields.length; i < len; i++) {
-                    let f = _fields[i],
-                        rf = raw_fields[i]
-                    nb_args++
-                    slots[f] = null
-                    if (rf.endsWith('*')) {
-                        $defaults[f] = []
-                    } else if (rf.endsWith('?')) {
-                        $defaults[f] = _b_.None
-                    }
-                }
-            }
-            $B.set_to_dict(cls, '__match_args__',
-                $B.fast_tuple(Object.keys(slots)))
-            $B.set_to_dict(cls, '__module__', 'ast')
+            return res
+        }
 
-            cls.$factory = function() {
-                var $ = $B.args(klass, nb_args, $B.clone(slots), arguments, 
-                            $B.clone($defaults), null, 'kw')
-                var res = {
-                    ob_type: cls
-                }
-                $B.init_dict(res)
-                var _attributes = $B.fast_tuple()
-                for (let key in $) {
-                    if (key == 'kw') {
-                        for (let item of _b_.dict.$iter_items($.kw)) {
-                            $B.set_to_dict(res, item.key, item.value)
-                        }
-                    } else {
-                        $B.set_to_dict(res, key, $[key])
-                    }
-                }
-                if (klass == "Constant") {
-                    $B.set_to_dict(res, 'value',
-                        $B.AST.$convert($.value))
-                }
-                return res
-            }
+        if (_fields) {
+            $B.set_to_dict(cls, '_fields', $B.fast_tuple(_fields))
+            set_field_types(cls, _fields, _field_types)
+        }
 
-            if (_fields) {
-                $B.set_to_dict(cls, '_fields', _fields)
+        cls.tp_new = function(cls, args, kw) {
+            var _args = args.concat($B.dict2kwarg(kw))
+            var obj = cls.$factory(..._args)
+            obj.ob_type = cls
+            if (cls.tp_name === 'ast.Module') {
+                console.log(obj)
             }
+            return obj
+        }
 
-            cls.tp_new = function(cls, args, kw) {
-                var _args = args.concat($B.dict2kwarg(kw))
-                var obj = cls.$factory(..._args)
-                obj.ob_type = cls
-                if (cls.tp_name === 'ast.Module') {
-                    console.log(obj)
-                }
-                return obj
-            }
-
-            // For fields that end with "?", set class attribute to None
-            // Used in ast.dump to skip printing the field
-            if (raw_fields) {
-                for (let i=0, len=raw_fields.length; i < len; i++) {
-                    var raw_field = raw_fields[i]
-                    if (raw_field.endsWith('?')) {
-                        $B.set_to_dict(cls, _fields[i], _b_.None)
-                    }
+        // For fields that end with "?", set class attribute to None
+        // Used in ast.dump to skip printing the field
+        if (raw_fields) {
+            for (let i = 0, len = raw_fields.length; i < len; i++) {
+                var raw_field = raw_fields[i]
+                if (raw_field[0].endsWith('?')) {
+                    $B.set_to_dict(cls, _fields[i], _b_.None)
                 }
             }
+        }
 
+        assign_attributes(cls, name)
+
+        try {
             $B.finalize_type(cls)
-
-            return cls
-        })(klass)
+        } catch(err) {
+            console.log('error for cls', cls)
+            throw err
+        }
     }
 }
 
