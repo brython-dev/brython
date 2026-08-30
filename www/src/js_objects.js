@@ -457,7 +457,7 @@ function convert_to_python(obj) {
         return obj
     }
     if (Array.isArray(obj)) {
-        return obj.map(convert_to_python)
+        return _b_.list.$factory(obj.map(convert_to_python))
     }
     if ($B.$isinstance(obj, $B.JSObj)) {
         if (typeof obj == 'number') {
