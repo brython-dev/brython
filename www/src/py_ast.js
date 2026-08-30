@@ -25,6 +25,22 @@ var _b_ = $B.builtins
 
 var ast = $B.ast = {}
 
+let base_class = {}
+
+for (let [name, value] of Object.entries($B.ast_classes)) {
+    if (Array.isArray(value)) {
+        for (let subclass of value) {
+            base_class[subclass] = name
+        }
+    }
+}
+
+for (let name in $B.ast_classes) {
+    if (! Object.hasOwn(base_class, name)) {
+        base_class[name] = 'AST'
+    }
+}
+
 for (var kl in $B.ast_classes) {
     var args = $B.ast_classes[kl],
         body = '',
@@ -154,7 +170,7 @@ $B.set_to_dict($B.AST, '_attributes', $B.fast_tuple())
 $B.set_to_dict($B.AST, '_fields', $B.fast_tuple())
 $B.set_to_dict($B.AST, '_field_types', _b_.None)
 
-$B.AST.tp_init = function() {
+function AST_init() {
     let [args, kw] = $B.parse_args_kw('__init__', arguments)
     args = Array.from(args)
     let self = args.shift()
@@ -179,7 +195,6 @@ $B.AST.tp_init = function() {
         _b_.set.tp_funcs.discard(remaining_fields, name)
     }
     if (kw) {
-        let i = 0;  /* needed by PyDict_Next */
         for (let entry of _b_.dict.$iter_items(kw)) {
             let key = entry.key
             if (fields.includes(key)) {
@@ -196,10 +211,20 @@ $B.AST.tp_init = function() {
                     attributes = $B.$getattr(cls, '_attributes')
                 }
                 if (! attributes.includes(key)) {
-                    $B.RAISE(_b_.TypeError,
-                        `${$B.class_name(self)}.__init__ ` +
-                        `got an unexpected keyword argument ${key}`
-                    )
+                    let minor = $B.implementation[1]
+                    if (minor < 15) {
+                        $B.warn(_b_.DeprecationWarning,
+                            `${cls.tp_name}.__init__ got an unexpected ` +
+                            `keyword argument '${key}'. Support for ` +
+                            `arbitrary keyword arguments is deprecated ` +
+                            `and will be removed in Python 3.15.`
+                        )
+                    } else {
+                        $B.RAISE(_b_.TypeError,
+                            `${$B.class_name(self)}.__init__ ` +
+                            `got an unexpected keyword argument ${key}`
+                        )
+                    }
                 }
             }
             $B.$setattr(self, key, entry.value)
@@ -215,14 +240,29 @@ $B.AST.tp_init = function() {
             return
         }
         let remaining_list = $B.$list(remaining_fields)
-        let missing_names = _b_.set.$factory([])
+        let missing_names = new Set()
         for (let name of remaining_list) {
-            let type = _b_.dict.$getitem(field_types, name)
-            if (!type) {
-                $B.RAISE(_b_.TypeError,
-                    `Field ${name} is missing from ` +
-                    `${$B.class_name(self)}._field_types`
-                )
+            let type
+            try {
+                type = _b_.dict.$getitem(field_types, name)
+            } catch(err) {
+                $B.RAISE_IF_NOT(err, _b_.KeyError)
+                let [major, minor] = $B.implementation
+                if (major < 3 || minor < 15) {
+                    $B.warn(_b_.DeprecationWarning,
+                        `Field '${name}' is missing from ` +
+                        `${cls.tp_name}._field_types. This will become an ` +
+                        `error in Python 3.15.`
+                    )
+                    continue
+                } else {
+                    $B.RAISE(_b_.TypeError,
+                        `mssing field ${name}`
+                    )
+                }
+            }
+            if (type === $B.NULL) {
+                // ignore
             } else if ($B.exact_type(type, $B.UnionType)) {
                 // optional field
                 // do nothing, we'll have set a None default on the class
@@ -234,18 +274,32 @@ $B.AST.tp_init = function() {
                 res = $B.$setattr(self, name, $B.ast.Load)
             } else {
                 // simple field (e.g., identifier)
-                _b_.set.tp_funcs.add(missing_names, name)
+                missing_names.add(name)
             }
         }
-        let num_missing = _b_.set.mp_length(missing_names)
+        let num_missing = missing_names.size
         if (num_missing > 0) {
-            let name_str = format_missing(missing_names, fields)
-            PyErr_Format(PyExc_TypeError,
-                "%T.__init__ missing %d required positional argument%s: %U",
-                self, num_missing, num_missing == 1 ? "" : "s", name_str);
+            for (let item of missing_names) {
+                if (field_types[item] === $B.python_ast_classes.expr_context) {
+                    $B.$setattr(self, item, Load)
+                } else {
+                    let [major, minor] = $B.implementation
+                    if (minor < 15) {
+                        $B.warn(_b_.DeprecationWarning,
+                            `${cls.tp_name}.__init__ missing 1 required ` +
+                            `positional argument: '${item}'. This will ` +
+                            `become an error in Python 3.15.`
+                        )
+                    } else {
+                        $B.RAISE(_b_.TypeError, 'missing required name ' + item)
+                    }
+                }
+            }
         }
     }
 }
+
+$B.set_to_dict($B.AST, '__init__', AST_init)
 
 $B.set_func_names($B.AST, 'ast')
 
@@ -351,15 +405,39 @@ function set_field_types(py_class, fields, field_types) {
     $B.set_to_dict(py_class, '_field_types', res)
 }
 
+var Load
+
 $B.create_python_ast_classes = function() {
     if ($B.python_ast_classes) {
         return
     }
     $B.python_ast_classes = {}
     // first initialization, required to set _field_types later
+    // start with classes that inherit ast.AST
     for (let name in $B.ast_classes) {
-        $B.python_ast_classes[name] = $B.make_builtin_class(name, [$B.AST])
+        if (base_class[name] == 'AST') {
+            $B.python_ast_classes[name] = $B.make_builtin_class(name, [$B.AST])
+        }
     }
+    // then classes that inherit expr, stmt etc.
+    for (let name in $B.ast_classes) {
+        let base = base_class[name]
+        if (base !== 'AST') {
+            $B.python_ast_classes[name] = $B.make_builtin_class(name,
+                [$B.python_ast_classes[base]])
+        }
+    }
+
+    // init dict
+    for (let [name, cls] of Object.entries($B.python_ast_classes)) {
+        $B.init_dict(cls)
+    }
+
+    // define singleton Load
+    Load = {
+        ob_type: $B.python_ast_classes.Load
+    }
+
     for (let name in $B.ast_classes) {
         let cls = $B.python_ast_classes[name]
         let _fields,
@@ -378,7 +456,6 @@ $B.create_python_ast_classes = function() {
         let $defaults = {},
             slots = {},
             nb_args = 0
-        $B.init_dict(cls)
         if (raw_fields) {
             for (let i = 0, len = _fields.length; i < len; i++) {
                 let f = _fields[i],
@@ -389,6 +466,9 @@ $B.create_python_ast_classes = function() {
                     $defaults[f] = []
                 } else if (rf[0].endsWith('?')) {
                     $defaults[f] = _b_.None
+                } else if (rf[0] == 'expr_context') {
+                    // expr_context always defaults to Load
+                    $defaults[rf[1]] = Load
                 }
             }
         }
@@ -397,17 +477,12 @@ $B.create_python_ast_classes = function() {
         $B.set_to_dict(cls, '__module__', 'ast')
 
         cls.$factory = function() {
-            try {
-                var $ = $B.args(name, nb_args, $B.clone(slots), arguments,
-                        $B.clone($defaults), null, 'kw')
-            } catch(err) {
-                console.log('error', slots, $defaults)
-                throw err
-            }
             var res = {
                 ob_type: cls
             }
             $B.init_dict(res)
+            AST_init(res, ...arguments)
+            return res
             for (let key in $) {
                 if (key == 'kw') {
                     for (let item of _b_.dict.$iter_items($.kw)) {
@@ -448,8 +523,12 @@ $B.create_python_ast_classes = function() {
 
         assign_attributes(cls, name)
 
-        $B.finalize_type(cls)
-
+        try {
+            $B.finalize_type(cls)
+        } catch(err) {
+            console.log('error for cls', cls)
+            throw err
+        }
     }
 }
 

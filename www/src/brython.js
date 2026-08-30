@@ -720,8 +720,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,3,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-08-26 15:03:19.859890"
-__BRYTHON__.timestamp=1787749399859
+__BRYTHON__.compiled_date="2026-08-30 08:51:46.298434"
+__BRYTHON__.timestamp=1788072706298
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -1954,11 +1954,11 @@ try{
 return $B.$call(callable,...args)}catch(err){$B.set_inum(inum)
 throw err}}
 $B.$call=function(callable,...args){var test=false 
+if(test){console.log('call',callable,'args',args)}
 if(typeof callable=='function'){var res=callable(...args)
 if(callable.$in_js_module && res===undefined){return _b_.None}
 return res}
-if(callable.$factory){
-return callable.$factory(...args)}
+if(callable.$factory){return callable.$factory(...args)}
 var klass=$B.get_class(callable)
 if(test){console.log('call',callable,'klass',klass,'args',args)}
 var call_method=klass.tp_call
@@ -2572,13 +2572,10 @@ throw err}
 if(kls.$getattribute===undefined){$B.make_getattr(kls)}
 if($B.get_class(kls)===metaclass){
 var meta_init=_b_.type.tp_getattro(metaclass,"__init__")
-try{
-$B.$call(meta_init,kls,class_name,resolved_bases,dict,{$kw:[extra_kwargs]})}catch(err){if(class_name=='SupportsInt'){console.log('err for',class_name)
-console.log(err)
-console.log(err.stack)}
-throw err}}
+$B.$call(meta_init,kls,class_name,resolved_bases,dict,{$kw:[extra_kwargs]})}
 for(let i=0;i < bases.length;i++){bases[i].tp_subclasses=bases[i].tp_subclasses ||[]
 bases[i].tp_subclasses.push(kls)}
+if(test){console.log('kls',kls)}
 return kls}
 function set_type_new(dict){
 var new_func=$B.str_dict_get(dict,'__new__',$B.NULL)
@@ -2777,7 +2774,9 @@ if(test){console.log('search slot',cls,slot)}
 var dunder=$B.slot2dunder[slot]
 if(cls.tp_mro===undefined){console.log('no mro',cls)}
 for(var klass of cls.tp_mro){if(klass.hasOwnProperty(slot)&& klass[slot]!==$B.NULL){return klass[slot]}
-if(dunder){var v=$B.get_from_dict(klass,dunder,$B.NULL)
+if(dunder){try{
+var v=$B.get_from_dict(klass,dunder,$B.NULL)}catch(err){console.log('error for klass',klass,'slot',slot,'dunder',dunder)
+throw err}
 if(v !==$B.NULL){if(test){console.log('klass has __call__',v)}
 if(typeof v !=='function'){var v_type=$B.get_class(v)
 var getter=v_type.tp_descr_get
@@ -15510,6 +15509,9 @@ var unary_ops={unary_inv:'Invert',unary_pos:'UAdd',unary_neg:'USub',unary_not:'N
 var op_types=$B.op_types=[binary_ops,boolean_ops,comparison_ops,unary_ops]
 var _b_=$B.builtins
 var ast=$B.ast={}
+let base_class={}
+for(let[name,value]of Object.entries($B.ast_classes)){if(Array.isArray(value)){for(let subclass of value){base_class[subclass]=name}}}
+for(let name in $B.ast_classes){if(! Object.hasOwn(base_class,name)){base_class[name]='AST'}}
 for(var kl in $B.ast_classes){var args=$B.ast_classes[kl],body='',arg_list=[],fields=[]
 if(typeof args=="string"){if(args.length > 0){for(var arg of args.split(',')){let[arg_type,arg_name]=arg.split(/\s+/)
 arg_list.push(arg_name)
@@ -15562,7 +15564,7 @@ $B.set_to_dict($B.AST,'__module__','ast')
 $B.set_to_dict($B.AST,'_attributes',$B.fast_tuple())
 $B.set_to_dict($B.AST,'_fields',$B.fast_tuple())
 $B.set_to_dict($B.AST,'_field_types',_b_.None)
-$B.AST.tp_init=function(){let[args,kw]=$B.parse_args_kw('__init__',arguments)
+function AST_init(){let[args,kw]=$B.parse_args_kw('__init__',arguments)
 args=Array.from(args)
 let self=args.shift()
 let cls=$B.get_class(self)
@@ -15577,33 +15579,52 @@ if(numfields < args.length){$B.RAISE(_b_.TypeError,`${$B.class_name(self)} const
 for(let i=0,len=args.length;i < len;i++){let name=fields[i]
 $B.$setattr(self,name,args[i])
 _b_.set.tp_funcs.discard(remaining_fields,name)}
-if(kw){let i=0;
-for(let entry of _b_.dict.$iter_items(kw)){let key=entry.key
+if(kw){for(let entry of _b_.dict.$iter_items(kw)){let key=entry.key
 if(fields.includes(key)){let p=_b_.set.tp_funcs.discard(remaining_fields,key)
 if(p==0){$B.RAISE(_b_.TypeError,`${_b_.repr(self)} got multiple values `+
 `for argument ${key}`
 )}}else{
 if(attributes===null){attributes=$B.$getattr(cls,'_attributes')}
-if(! attributes.includes(key)){$B.RAISE(_b_.TypeError,`${$B.class_name(self)}.__init__ `+
+if(! attributes.includes(key)){let minor=$B.implementation[1]
+if(minor < 15){$B.warn(_b_.DeprecationWarning,`${cls.tp_name}.__init__ got an unexpected `+
+`keyword argument '${key}'. Support for `+
+`arbitrary keyword arguments is deprecated `+
+`and will be removed in Python 3.15.`
+)}else{
+$B.RAISE(_b_.TypeError,`${$B.class_name(self)}.__init__ `+
 `got an unexpected keyword argument ${key}`
-)}}
+)}}}
 $B.$setattr(self,key,entry.value)}}
 let size=_b_.set.mp_length(remaining_fields)
 if(size > 0){let field_types=$B.$getattr(cls,'_field_types',$B.NULL)
 if(field_types===$B.NULL){
 return}
 let remaining_list=$B.$list(remaining_fields)
-let missing_names=_b_.set.$factory([])
-for(let name of remaining_list){let type=_b_.dict.$getitem(field_types,name)
-if(!type){$B.RAISE(_b_.TypeError,`Field ${name} is missing from `+
-`${$B.class_name(self)}._field_types`
-)}else if($B.exact_type(type,$B.UnionType)){}else if($B.exact_type(type,$B.GenericAlias)){
+let missing_names=new Set()
+for(let name of remaining_list){let type
+try{
+type=_b_.dict.$getitem(field_types,name)}catch(err){$B.RAISE_IF_NOT(err,_b_.KeyError)
+let[major,minor]=$B.implementation
+if(major < 3 ||minor < 15){$B.warn(_b_.DeprecationWarning,`Field '${name}' is missing from `+
+`${cls.tp_name}._field_types. This will become an `+
+`error in Python 3.15.`
+)
+continue}else{
+$B.RAISE(_b_.TypeError,`mssing field ${name}`
+)}}
+if(type===$B.NULL){}else if($B.exact_type(type,$B.UnionType)){}else if($B.exact_type(type,$B.GenericAlias)){
 $B.$setattr(self,name,$B.$list())}else if(type==$B.ast.expr_context){
 res=$B.$setattr(self,name,$B.ast.Load)}else{
-_b_.set.tp_funcs.add(missing_names,name)}}
-let num_missing=_b_.set.mp_length(missing_names)
-if(num_missing > 0){let name_str=format_missing(missing_names,fields)
-PyErr_Format(PyExc_TypeError,"%T.__init__ missing %d required positional argument%s: %U",self,num_missing,num_missing==1 ? "" :"s",name_str);}}}
+missing_names.add(name)}}
+let num_missing=missing_names.size
+if(num_missing > 0){for(let item of missing_names){if(field_types[item]===$B.python_ast_classes.expr_context){$B.$setattr(self,item,Load)}else{
+let[major,minor]=$B.implementation
+if(minor < 15){$B.warn(_b_.DeprecationWarning,`${cls.tp_name}.__init__ missing 1 required `+
+`positional argument: '${item}'. This will `+
+`become an error in Python 3.15.`
+)}else{
+$B.RAISE(_b_.TypeError,'missing required name '+item)}}}}}}
+$B.set_to_dict($B.AST,'__init__',AST_init)
 $B.set_func_names($B.AST,'ast')
 $B.AST.$convert=function(js_node){if(js_node===undefined){return _b_.None}
 var constr=js_node.constructor
@@ -15655,9 +15676,14 @@ break}
 if(modifier=='*'){ftype=$B.GenericAlias.$factory(_b_.list,ftype)}else if(modifier=='?'){ftype=$B.UnionType.$factory([ftype,_b_.None])}
 $B.str_dict_set(res,fields[i],ftype)}
 $B.set_to_dict(py_class,'_field_types',res)}
+var Load
 $B.create_python_ast_classes=function(){if($B.python_ast_classes){return}
 $B.python_ast_classes={}
-for(let name in $B.ast_classes){$B.python_ast_classes[name]=$B.make_builtin_class(name,[$B.AST])}
+for(let name in $B.ast_classes){if(base_class[name]=='AST'){$B.python_ast_classes[name]=$B.make_builtin_class(name,[$B.AST])}}
+for(let name in $B.ast_classes){let base=base_class[name]
+if(base !=='AST'){$B.python_ast_classes[name]=$B.make_builtin_class(name,[$B.python_ast_classes[base]])}}
+for(let[name,cls]of Object.entries($B.python_ast_classes)){$B.init_dict(cls)}
+Load={ob_type:$B.python_ast_classes.Load}
 for(let name in $B.ast_classes){let cls=$B.python_ast_classes[name]
 let _fields,raw_fields,_field_types
 if(typeof $B.ast_classes[name]=="string"){if($B.ast_classes[name]==''){raw_fields=_fields=[]}else{
@@ -15666,18 +15692,17 @@ raw_fields=$B.ast_classes[name].split(',')
 _fields=raw_fields.map(t=> t[1])
 _field_types=raw_fields.map(t=> t[0])}}
 let $defaults={},slots={},nb_args=0
-$B.init_dict(cls)
 if(raw_fields){for(let i=0,len=_fields.length;i < len;i++){let f=_fields[i],rf=raw_fields[i]
 nb_args++
 slots[f]=null
-if(rf[0].endsWith('*')){$defaults[f]=[]}else if(rf[0].endsWith('?')){$defaults[f]=_b_.None}}}
+if(rf[0].endsWith('*')){$defaults[f]=[]}else if(rf[0].endsWith('?')){$defaults[f]=_b_.None}else if(rf[0]=='expr_context'){
+$defaults[rf[1]]=Load}}}
 $B.set_to_dict(cls,'__match_args__',$B.fast_tuple(Object.keys(slots)))
 $B.set_to_dict(cls,'__module__','ast')
-cls.$factory=function(){try{
-var $=$B.args(name,nb_args,$B.clone(slots),arguments,$B.clone($defaults),null,'kw')}catch(err){console.log('error',slots,$defaults)
-throw err}
-var res={ob_type:cls}
+cls.$factory=function(){var res={ob_type:cls}
 $B.init_dict(res)
+AST_init(res,...arguments)
+return res
 for(let key in $){if(key=='kw'){for(let item of _b_.dict.$iter_items($.kw)){$B.set_to_dict(res,item.key,item.value)}}else{
 $B.set_to_dict(res,key,$[key])}}
 return res}
@@ -15691,7 +15716,9 @@ return obj}
 if(raw_fields){for(let i=0,len=raw_fields.length;i < len;i++){var raw_field=raw_fields[i]
 if(raw_field[0].endsWith('?')){$B.set_to_dict(cls,_fields[i],_b_.None)}}}
 assign_attributes(cls,name)
-$B.finalize_type(cls)}}
+try{
+$B.finalize_type(cls)}catch(err){console.log('error for cls',cls)
+throw err}}}
 var op2ast_class=$B.op2ast_class={},ast_types=[ast.BinOp,ast.BoolOp,ast.Compare,ast.UnaryOp]
 for(var i=0;i < 4;i++){for(var op in op_types[i]){op2ast_class[op]=[ast_types[i],ast[op_types[i][op]]]}}})(__BRYTHON__);
 ;
@@ -15961,7 +15988,8 @@ ns.exec_locals !==ns.exec_globals){
 namespaces.push(ns.global_name)}}
 namespaces.push('_b_')
 return namespaces}
-function mangle(scopes,scope,name){if(name.startsWith('__')&& ! name.endsWith('__')){var ix=scopes.indexOf(scope)
+function mangle(scopes,scope,name){if(name.startsWith===undefined){console.log('name',name)}
+if(name.startsWith('__')&& ! name.endsWith('__')){var ix=scopes.indexOf(scope)
 while(ix >=0){if(scopes[ix].ast instanceof $B.ast.ClassDef){var scope_name=scopes[ix].name
 while(scope_name.length > 0 && scope_name.startsWith('_')){scope_name=scope_name.substr(1)}
 if(scope_name.length==0){
@@ -17242,7 +17270,7 @@ $B.js_from_ast(this.orelse,scopes)+')'}
 $B.ast.Import.prototype.to_js=function(scopes){var js=prefix+`$B.set_lineno(frame, ${this.lineno})\n`
 var inum=add_to_positions(scopes,this)
 for(var alias of this.names){js+=prefix+`$B.$import("${alias.name}", [], `
-if(alias.asname){var binding_scope=bind(alias.asname,scopes)
+if(alias.asname && alias.asname !==_b_.None){var binding_scope=bind(alias.asname,scopes)
 var scope_name=make_scope_name(scopes,binding_scope)
 js+=`{'${alias.name}': [${scope_name}, '${alias.asname}']}, `}else{
 js+='{}, '
@@ -18797,7 +18825,7 @@ if(m.guard){VISIT(st,expr,m.guard)}
 VISIT_SEQ(st,stmt,m.body)
 return 1}
 visitor.alias=function(st,a){
-var store_name,name=(a.asname==NULL)? a.name :a.asname
+var store_name,name=(a.asname==NULL ||a.asname===_b_.None)? a.name :a.asname
 var dot=name.search('\\.')
 if(dot !=-1){store_name=name.substring(0,dot)
 if(!store_name){return 0}}else{

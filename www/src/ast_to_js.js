@@ -320,6 +320,9 @@ function make_search_namespaces(scopes) {
 }
 
 function mangle(scopes, scope, name) {
+    if (name.startsWith === undefined) {
+        console.log('name', name)
+    }
     if (name.startsWith('__') && ! name.endsWith('__')) {
         var ix = scopes.indexOf(scope)
         while (ix >= 0) {
@@ -3111,7 +3114,7 @@ $B.ast.Import.prototype.to_js = function(scopes) {
     var inum = add_to_positions(scopes, this)
     for (var alias of this.names) {
         js += prefix + `$B.$import("${alias.name}", [], `
-        if (alias.asname) {
+        if (alias.asname && alias.asname !== _b_.None) {
             var binding_scope = bind(alias.asname, scopes)
             var scope_name = make_scope_name(scopes, binding_scope)
             js += `{'${alias.name}': [${scope_name}, '${alias.asname}']}, `

@@ -8,7 +8,7 @@ const TPFLAGS = $B.TPFLAGS // defined ib brython_builtins.js
 // generic code for class constructor
 $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
         bases, extra_kwargs){
-    var test = false // class_name == 'FlagBoundary'
+    var test = false // class_name == '_AllFieldTypes'
     if (test) {
         console.log('class constructor', class_name, 'dict', dict)
         console.log('metaclass', metaclass)
@@ -96,23 +96,19 @@ $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
     if ($B.get_class(kls) === metaclass) {
         // Initialize the class object by a call to metaclass __init__
         var meta_init = _b_.type.tp_getattro(metaclass, "__init__")
-        try {
-            $B.$call(meta_init, kls, class_name, resolved_bases, dict,
-                      {$kw: [extra_kwargs]})
-        } catch (err) {
-            if (class_name == 'SupportsInt') {
-                console.log('err for', class_name)
-                console.log(err)
-                console.log(err.stack)
-            }
-            throw err
-        }
+        $B.$call(meta_init, kls, class_name, resolved_bases, dict,
+                 {$kw: [extra_kwargs]})
+
     }
 
     // Set new class as subclass of its parents
     for (let i = 0; i < bases.length; i++) {
         bases[i].tp_subclasses  = bases[i].tp_subclasses || []
         bases[i].tp_subclasses.push(kls)
+    }
+
+    if (test) {
+        console.log('kls', kls)
     }
 
     return kls
@@ -693,7 +689,13 @@ $B.search_slot = function(cls, slot, _default) {
             return klass[slot]
         }
         if (dunder) {
-            var v = $B.get_from_dict(klass, dunder, $B.NULL)
+            try {
+                var v = $B.get_from_dict(klass, dunder, $B.NULL)
+            } catch(err) {
+                console.log('error for klass', klass, 'slot', slot,
+                    'dunder', dunder)
+                throw err
+            }
             if (v !== $B.NULL) {
                 if (test) {
                     console.log('klass has __call__', v)
