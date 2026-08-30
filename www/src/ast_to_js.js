@@ -244,7 +244,7 @@ function qualified_scope_name(scopes, scope) {
             names.push(_scope.name)
         }
     }
-    return names.join('_').replace(/\./g, '_')
+    return names.join('_').replace(/[^\w$]/g, '_')
 }
 
 function show_flags(name, flag) {
