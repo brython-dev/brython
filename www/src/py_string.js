@@ -2196,7 +2196,7 @@ str_funcs.find = function(self, sub, start, end) {
             'slice indices must be integers or None or have an __index__ ' +
             'method')
     }
-    res = self.indexOf(sub, start)
+    res = self.indexOf(sub, pypos2jspos(self, start))
     if (end !== _b_.None) {
         try {
             end = $B.PyNumber_Index(end)
