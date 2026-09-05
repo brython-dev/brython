@@ -304,6 +304,8 @@ function unindent(src) {
     return unindented_lines.join('\n')
 }
 
+$B.unindent = unindent // what an embedder needs to dedent a script
+
 var $token = {}
 
 $B.parse_time = 0
