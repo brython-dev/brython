@@ -662,8 +662,8 @@ DOMNode.tp_getattro = function(self, attr) {
             return res
         }
         if (typeof res === "function") {
-            if (Object.hasOwn(res, $B.PYOBJ)) {
-                return res[$B.PYOBJ]
+            if ($B.PYOBJ_MAP.has(res)) {
+                return $B.PYOBJ_MAP.get(res)
             }
             if (self.ob_type && self.ob_type.$webcomponent) {
                 var method = $B.$getattr($B.get_class(self), attr, null)

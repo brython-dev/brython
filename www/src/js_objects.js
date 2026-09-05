@@ -120,6 +120,10 @@ $B.structuredclone2pyobj = function(obj) {
 
 const JSOBJ = $B.JSOBJ = Symbol('JSOBJ')
 const PYOBJ = $B.PYOBJ = Symbol('PYOBJ')
+// The back-reference is held here rather than as a property on the JavaScript
+// object: an own symbol key makes the object unusable as a WebIDL record, which
+// is what `new Response(body, {headers})` and `new Headers(obj)` take.
+const PYOBJ_MAP = $B.PYOBJ_MAP = new WeakMap()
 const PYOBJFCT = Symbol('PYOBJFCT')
 const PYOBJFCTS = Symbol('PYOBJFCTS')
 
@@ -194,7 +198,7 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
 
     let pyobj
     try {
-        pyobj = jsobj[PYOBJ]
+        pyobj = PYOBJ_MAP.get(jsobj)
     } catch (err) {
         // ignore and return jsobj. Cf. issue #2692
         return jsobj
@@ -304,7 +308,7 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
 
     if ($B.$isNode(jsobj)) {
         const res = $B.DOMNode.$factory(jsobj)
-        jsobj[PYOBJ] = res
+        PYOBJ_MAP.set(jsobj, res)
         res[JSOBJ] = jsobj
         return res
     }
@@ -345,7 +349,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj) {
     if (has_type(klass, _b_.list) || has_type(klass, _b_.tuple)) {
         // Python list : transform its elements
         var jsobj = pyobj.map(pyobj2jsobj)
-        jsobj[PYOBJ] = pyobj
+        PYOBJ_MAP.set(jsobj, pyobj)
         delete jsobj.ob_type // becomes a js_array
         return jsobj
     }
@@ -369,7 +373,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj) {
             jsobj[key] = pyobj2jsobj(entry.value)
         }
         pyobj[JSOBJ] = jsobj
-        jsobj[PYOBJ] = pyobj
+        PYOBJ_MAP.set(jsobj, pyobj)
         return jsobj
     }
 
@@ -405,7 +409,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj) {
             }
 
             pyobj[JSOBJ] = jsobj
-            jsobj[PYOBJ] = pyobj
+            PYOBJ_MAP.set(jsobj, pyobj)
 
             return jsobj
         }
@@ -438,7 +442,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj) {
         }
 
         pyobj[JSOBJ] = jsobj
-        jsobj[PYOBJ] = pyobj
+        PYOBJ_MAP.set(jsobj, pyobj)
 
         return jsobj
     }
@@ -1253,8 +1257,9 @@ var js_array_funcs = js_array.tp_funcs = {}
 
 js_array_funcs.append = function(self, x) {
     self.push(pyobj2jsobj(x))
-    if (self[PYOBJ]) {
-        self[PYOBJ].push(x)
+    const pyobj = PYOBJ_MAP.get(self)
+    if (pyobj) {
+        pyobj.push(x)
     }
     return _b_.None
 }
