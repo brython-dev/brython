@@ -504,7 +504,6 @@ function pyargs2jsargs(pyargs) {
 $B.JSClass = $B.make_builtin_class('JSClass', [_b_.type])
 
 $B.JSClass.tp_getattro = function(self, attr) {
-    console.log('JSClass getatro', self, attr)
     if (attr == 'new') {
         return function() {
             var args = Array.from(arguments).map(pyobj2jsobj)
