@@ -2196,6 +2196,9 @@ str_funcs.find = function(self, sub, start, end) {
             'slice indices must be integers or None or have an __index__ ' +
             'method')
     }
+    if (start < 0) {
+        start = Math.max(0, start + str.mp_length(self))
+    }
     res = self.indexOf(sub, pypos2jspos(self, start))
     if (end !== _b_.None) {
         try {
