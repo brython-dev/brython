@@ -1068,6 +1068,19 @@ function make_comp(scopes) {
     for (var name of save_locals) {
         js += prefix + `${name_reference(name, scopes)} = save_${name}\n`
     }
+    // A comprehension has its own scope, so the names its generators bind must
+    // not survive it. Drop them in both senses: the binding at run time, and
+    // the scope entry that decides how a later read of the name compiles.
+    for (var comp_name of bindings) {
+        if (! save_locals.has(comp_name)) {
+            js += prefix + `delete ${comp.locals_name}.${comp_name}\n`
+            var comp_s = comp_scope
+            while (comp_s) {
+                comp_s.locals.delete(comp_name)
+                comp_s = comp_s.parent
+            }
+        }
+    }
     if (comp_iter_scope.found) {
         js += prefix + `${name_reference(comp_iter, scopes)} = save_comp_iter\n`
     }
