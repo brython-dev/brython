@@ -184,6 +184,17 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
             return $B.String(jsobj)
     }
 
+    let pyobj
+    try {
+        pyobj = PYOBJ_MAP.get(jsobj)
+    } catch (err) {
+        // ignore and return jsobj. Cf. issue #2692
+        return jsobj
+    }
+    if (pyobj !== undefined) {
+        return pyobj
+    }
+
     if (Array.isArray(jsobj)) {
         // set it as non-enumerable, prevents issues when looping on it in JS.
         /*
@@ -194,17 +205,6 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
         }
         */
         return jsobj
-    }
-
-    let pyobj
-    try {
-        pyobj = PYOBJ_MAP.get(jsobj)
-    } catch (err) {
-        // ignore and return jsobj. Cf. issue #2692
-        return jsobj
-    }
-    if (pyobj !== undefined) {
-        return pyobj
     }
 
     // check if obj is an instance of Promise
