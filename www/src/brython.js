@@ -720,8 +720,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,3,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-08-30 08:51:46.298434"
-__BRYTHON__.timestamp=1788072706298
+__BRYTHON__.compiled_date="2026-09-06 12:19:33.155935"
+__BRYTHON__.timestamp=1788689973155
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -877,7 +877,7 @@ pos=b.pos}else{
 carets+=' '.repeat(b.pos-pos-1)+'^'
 pos=b.pos}}
 if(carets){console.log(carets)}}
-var state="line_start",char,cp,mo,pos=0,quote,triple_quote,escaped=false,string_start,string,prefix,name,number,num_type,comment,indent,indent_before_continuation=0,indents=[],braces=[],line,line_num=0,line_start=1,token_modes=['regular'],token_mode='regular',save_mode=token_mode,format_specifier,ft_type,ft_buffer,ft_start,ft_expr_start,ft_escape,ft_format_spec,braces_length_on_entry,fstring_stack=[],debug=0
+var state="line_start",char,cp,mo,pos=0,quote,triple_quote,escaped=false,string_start,string,prefix,name,number,num_type,comment,indent,indent_before_continuation=0,indents=[],braces=[],line,line_num=0,line_start=1,token_modes=['regular'],token_mode='regular',save_mode=token_mode,format_specifier,ft_type,ft_buffer,ft_start,ft_expr_start,ft_escape,ft_format_spec,ft_chunk_start,braces_length_on_entry,fstring_stack=[],debug=0
 if(parser){parser.braces=braces}
 t.push(Token('ENCODING','utf-8',0,0,0,0,''))
 while(pos < src.length){char=src[pos]
@@ -889,7 +889,9 @@ char=src.substr(pos,2)
 pos++}
 pos++
 if(token_mode !=save_mode){if(token_mode=='ft'){ft_buffer=''
-ft_escape=false}else if(token_mode=='format_specifier'){format_specifier=''}}
+ft_chunk_start=pos-line_start-char.length+1
+ft_escape=false}else if(token_mode=='format_specifier'){format_specifier=''
+ft_chunk_start=pos-line_start-char.length+1}}
 save_mode=token_mode
 if(token_mode=='ft'){
 if(char==token_mode.quote){if(ft_escape){ft_buffer+='\\'+char
@@ -900,7 +902,7 @@ continue}
 char=token_mode.quote.repeat(3)
 pos+=2}
 if(ft_buffer.length > 0){
-t.push(Token(FT_MIDDLE[ft_type],ft_buffer,line_num,ft_start,line_num,ft_start+ft_buffer.length,line))}
+t.push(Token(FT_MIDDLE[ft_type],ft_buffer,line_num,ft_chunk_start,line_num,pos-line_start-char.length+1,line))}
 t.push(Token(FT_END[ft_type],char,line_num,pos-line_start,line_num,pos-line_start+1,line))
 show_braces()
 try{
@@ -914,7 +916,7 @@ continue}else if(char=='{'){if(src.charAt(pos)=='{'){
 ft_buffer+=char
 pos++
 continue}else{
-if(ft_buffer.length > 0){t.push(Token(FT_MIDDLE[ft_type],ft_buffer,line_num,ft_start,line_num,ft_start+ft_buffer.length,line))}
+if(ft_buffer.length > 0){t.push(Token(FT_MIDDLE[ft_type],ft_buffer,line_num,ft_chunk_start,line_num,pos-line_start-char.length+1,line))}
 token_mode='regular_within_ft'
 $B.last(fstring_stack).nb_braces_on_entry=braces.length
 ft_expr_start=pos-line_start
@@ -940,10 +942,10 @@ ft_buffer+=char
 ft_escape=false
 if(char=='\n'){line_num++}
 continue}}else if(token_mode=='format_specifier'){if(char==quote){if(format_specifier.length > 0){
-t.push(Token(FT_MIDDLE[ft_type],format_specifier,line_num,ft_start,line_num,ft_start+format_specifier.length,line))
+t.push(Token(FT_MIDDLE[ft_type],format_specifier,line_num,ft_chunk_start,line_num,pos-line_start-char.length+1,line))
 token_modes.pop()
 token_mode=$B.last(token_modes)
-continue}}else if(char=='{'){if(format_specifier.length > 0){t.push(Token(FT_MIDDLE[ft_type],format_specifier,line_num,ft_start,line_num,ft_start+format_specifier.length,line))}
+continue}}else if(char=='{'){if(format_specifier.length > 0){t.push(Token(FT_MIDDLE[ft_type],format_specifier,line_num,ft_chunk_start,line_num,pos-line_start-char.length+1,line))}
 token_mode='regular_within_ft'
 fstring_stack.push(
 {start:pos,nb_braces_on_entry:braces.length,inside_format_specifier:true}
@@ -951,7 +953,7 @@ fstring_stack.push(
 ft_expr_start=pos-line_start
 state=null
 token_modes.push(token_mode)}else if(char=='}'){
-t.push(Token(FT_MIDDLE[ft_type],format_specifier,line_num,ft_start,line_num,ft_start+format_specifier.length,line))
+t.push(Token(FT_MIDDLE[ft_type],format_specifier,line_num,ft_chunk_start,line_num,pos-line_start-char.length+1,line))
 t.push(Token('OP',char,line_num,pos-line_start,line_num,pos-line_start+1,line))
 show_braces()
 if(braces.length==0 ||$B.last(braces).char !=='{'){console.log('braces',braces.slice(),$B.last(braces).char)
@@ -9485,7 +9487,8 @@ var res
 try{
 start=$B.PyNumber_Index(start)}catch(err){$B.RAISE(_b_.TypeError,'slice indices must be integers or None or have an __index__ '+
 'method')}
-res=self.indexOf(sub,start)
+if(start < 0){start=Math.max(0,start+str.mp_length(self))}
+res=self.indexOf(sub,pypos2jspos(self,start))
 if(end !==_b_.None){try{
 end=$B.PyNumber_Index(end)}catch(err){$B.RAISE(_b_.TypeError,'slice indices must be integers or None or have an __index__ '+
 'method')}
@@ -9855,9 +9858,11 @@ prefix=$.prefix
 start=$.start
 end=$.end}
 if(start !==0){start=$B.PyNumber_Index(start)
-if(start < 0){start+=self.length}}
+if(start < 0){start+=str.mp_length(self)}}
 if(end !==null){end=$B.PyNumber_Index(end)
-if(end < 0){end+=self.length}}
+if(end < 0){end+=str.mp_length(self)}}
+start=pypos2jspos(self,start)
+if(end !==null){end=pypos2jspos(self,end)}
 if($B.is_str(prefix)){return startswith(self,prefix,start,end)}else if($B.is_tuple(prefix)){for(var p of prefix){if(! $B.is_str(p)){$B.RAISE(_b_.TypeError,`TypeError: tuple for startswith must only contain `+
 `str, not ${$B.class_name(p)}`
 )}
@@ -12090,7 +12095,7 @@ list_iterator_funcs.__length_hint__=function(self){return self.len}
 list_iterator_funcs.__reduce__=function(self){return $B.fast_tuple([_b_.iter,$B.fast_tuple([list.$factory(self)]),0])}
 list_iterator_funcs.__setstate__=function(self){}
 $B.list_iterator.tp_methods=["__length_hint__","__reduce__","__setstate__"]
-var eq=$B.list_eq=function(self,other){if(other[$B.PYOBJ]){other=other[$B.PYOBJ]}
+var eq=$B.list_eq=function(self,other){if($B.PYOBJ_MAP.has(other)){other=$B.PYOBJ_MAP.get(other)}
 var cls=$B.$isinstance(self,list)? list :tuple
 if(isinstance(other,cls)){if(other.length==self.length){var i=self.length
 while(i--){if(! $B.is_or_equals(self[i],other[i])){return false}}
@@ -12432,6 +12437,7 @@ $B.RAISE(_b_.TypeError,_b_.str.$factory(obj)+
 " does not support the structured clone algorithm")}}
 const JSOBJ=$B.JSOBJ=Symbol('JSOBJ')
 const PYOBJ=$B.PYOBJ=Symbol('PYOBJ')
+const PYOBJ_MAP=$B.PYOBJ_MAP=new WeakMap()
 const PYOBJFCT=Symbol('PYOBJFCT')
 const PYOBJFCTS=Symbol('PYOBJFCTS')
 function*f(){}
@@ -12458,7 +12464,7 @@ if(Array.isArray(jsobj)){
 return jsobj}
 let pyobj
 try{
-pyobj=jsobj[PYOBJ]}catch(err){
+pyobj=PYOBJ_MAP.get(jsobj)}catch(err){
 return jsobj}
 if(pyobj !==undefined){return pyobj}
 if(jsobj instanceof Promise ||typeof jsobj.then=="function"){return jsobj}
@@ -12493,7 +12499,7 @@ Object.defineProperty(res,'$function_infos',{value,writable:true}
 return res}
 if(jsobj.constructor===Generator.constructor){return JSGenerator.$factory(jsobj)}
 if($B.$isNode(jsobj)){const res=$B.DOMNode.$factory(jsobj)
-jsobj[PYOBJ]=res
+PYOBJ_MAP.set(jsobj,res)
 res[JSOBJ]=jsobj
 return res}
 return jsobj}
@@ -12512,7 +12518,7 @@ function has_type(cls,base){return cls===base ||$B.get_mro(cls).includes(base)}
 if(has_type(klass,$B.DOMNode)){return pyobj}
 if(has_type(klass,_b_.list)||has_type(klass,_b_.tuple)){
 var jsobj=pyobj.map(pyobj2jsobj)
-jsobj[PYOBJ]=pyobj
+PYOBJ_MAP.set(jsobj,pyobj)
 delete jsobj.ob_type 
 return jsobj}
 if(has_type(klass,_b_.dict)){
@@ -12523,7 +12529,7 @@ if(typeof entry.value==='function'){
 entry.value.bind(jsobj)}
 jsobj[key]=pyobj2jsobj(entry.value)}
 pyobj[JSOBJ]=jsobj
-jsobj[PYOBJ]=pyobj
+PYOBJ_MAP.set(jsobj,pyobj)
 return jsobj}
 if(has_type(klass,_b_.str)){
 return pyobj.valueOf()}
@@ -12538,7 +12544,7 @@ if(pyobj.$is_async){
 let jsobj=function(){var res=pyobj.apply(null,arguments)
 return $B.coroutine.tp_funcs.send(res)}
 pyobj[JSOBJ]=jsobj
-jsobj[PYOBJ]=pyobj
+PYOBJ_MAP.set(jsobj,pyobj)
 return jsobj}
 let jsobj=function(){try{
 var args=new Array(arguments.length)
@@ -12550,14 +12556,14 @@ if(klass===$B.function){res=pyobj.apply(this,args)}else{
 res=pyobj.im_func.call(this,pyobj.im_self,...args)}}
 return pyobj2jsobj(res)}catch(err){$B.handle_error(err)}}
 pyobj[JSOBJ]=jsobj
-jsobj[PYOBJ]=pyobj
+PYOBJ_MAP.set(jsobj,pyobj)
 return jsobj}
 return pyobj}
 function convert_to_python(obj){
 if(obj===null ||obj===undefined){return $B.jsobj2pyobj(obj)}
 if(obj.ob_type){
 return obj}
-if(Array.isArray(obj)){return obj.map(convert_to_python)}
+if(Array.isArray(obj)){return _b_.list.$factory(obj.map(convert_to_python))}
 if($B.$isinstance(obj,$B.JSObj)){if(typeof obj=='number'){
 return $B.fast_float(obj)}
 var res=$B.empty_dict()
@@ -12574,8 +12580,7 @@ $B.RAISE(_b_.TypeError,"A Javascript function can't take "+
 args[i]=$B.pyobj2jsobj(arg)}
 return args}
 $B.JSClass=$B.make_builtin_class('JSClass',[_b_.type])
-$B.JSClass.tp_getattro=function(self,attr){console.log('JSClass getatro',self,attr)
-if(attr=='new'){return function(){var args=Array.from(arguments).map(pyobj2jsobj)
+$B.JSClass.tp_getattro=function(self,attr){if(attr=='new'){return function(){var args=Array.from(arguments).map(pyobj2jsobj)
 return jsobj2pyobj(new self.js_class(...args))}}
 var res=_b_.type.tp_getattro(self,attr)
 if(res !==$B.NULL){return res}
@@ -12855,7 +12860,8 @@ $B.repr.leave(self)
 return res}
 var js_array_funcs=js_array.tp_funcs={}
 js_array_funcs.append=function(self,x){self.push(pyobj2jsobj(x))
-if(self[PYOBJ]){self[PYOBJ].push(x)}
+const pyobj=PYOBJ_MAP.get(self)
+if(pyobj){pyobj.push(x)}
 return _b_.None}
 js_array_funcs.extend=function(self){var $=$B.args("extend",2,{self:null,t:null},arguments)
 var self=$.self,t=$.t
@@ -13380,7 +13386,7 @@ if(res !==$B.NULL){return res}}}
 return _b_.object.tp_getattro(self,attr)}
 var res=property
 if(res !==undefined){if(res===null){return res}
-if(typeof res==="function"){if(Object.hasOwn(res,$B.PYOBJ)){return res[$B.PYOBJ]}
+if(typeof res==="function"){if($B.PYOBJ_MAP.has(res)){return $B.PYOBJ_MAP.get(res)}
 if(self.ob_type && self.ob_type.$webcomponent){var method=$B.$getattr($B.get_class(self),attr,null)
 if(method !==null){
 return res.bind(self)}}
@@ -15306,6 +15312,7 @@ if(indent < min_indent){min_indent=indent}}
 for(var line of lines){if(/^\s*$/.exec(line)){unindented_lines.push(line)}else{
 unindented_lines.push(line.substr(min_indent))}}
 return unindented_lines.join('\n')}
+$B.unindent=unindent 
 var $token={}
 $B.parse_time=0
 $B.py2js=function(src,module,locals_id,parent_scope){
@@ -15961,7 +15968,7 @@ if(ix >-1){_scopes=scopes.slice(0,ix+1)}else{
 _scopes=scopes.concat(scope)}}
 var names=[]
 for(var _scope of _scopes){if(! _scope.parent){names.push(_scope.name)}}
-return names.join('_').replace(/\./g,'_')}
+return names.join('_').replace(/[^\w$]/g,'_')}
 function show_flags(name,flag){let res=[]
 for(let key in $B.SYMBOL_FLAGS){if(flag & $B.SYMBOL_FLAGS[key]){res.push(key)}}
 console.log(name,res.join(' | '))}
@@ -16271,6 +16278,10 @@ dedent()
 js+=prefix+`}\n`+
 (has_await ? prefix+`\n$B.restore_frame_obj(save_frame_obj, ${comp.locals_name});` :'')
 for(var name of save_locals){js+=prefix+`${name_reference(name, scopes)} = save_${name}\n`}
+for(var comp_name of bindings){if(! save_locals.has(comp_name)){js+=prefix+`delete ${comp.locals_name}.${comp_name}\n`
+var comp_s=comp_scope
+while(comp_s){comp_s.locals.delete(comp_name)
+comp_s=comp_s.parent}}}
 if(comp_iter_scope.found){js+=prefix+`${name_reference(comp_iter, scopes)} = save_comp_iter\n`}
 js+=prefix+`return result_${id}\n`
 dedent()
