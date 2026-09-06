@@ -3134,14 +3134,18 @@ str_funcs.startswith = function(self, prefix, start, end) {
     if (start !== 0) {
         start = $B.PyNumber_Index(start)
         if (start < 0) {
-            start += self.length
+            start += str.mp_length(self)
         }
     }
     if (end !== null) {
         end = $B.PyNumber_Index(end)
         if (end < 0) {
-            end += self.length
+            end += str.mp_length(self)
         }
+    }
+    start = pypos2jspos(self, start)
+    if (end !== null) {
+        end = pypos2jspos(self, end)
     }
     if ($B.is_str(prefix)) {
         return startswith(self, prefix, start, end)
