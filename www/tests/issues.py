@@ -3488,6 +3488,20 @@ wp2912.x = 5
 assert wp2912._x == 5
 assert_raises(AttributeError, lambda: wp2912.x)
 
+# issue 2934 - collections.deque() with keyword arguments
+from collections import deque as deque_2934
+
+d_2934 = deque_2934(maxlen=3)
+assert d_2934.maxlen == 3
+assert list(d_2934) == []
+d_2934.extend([1, 2, 3, 4])
+assert list(d_2934) == [2, 3, 4]
+
+assert list(deque_2934([1, 2], maxlen=1)) == [2]
+assert list(deque_2934(iterable=[1, 2])) == [1, 2]
+assert deque_2934().maxlen is None
+assert_raises(ValueError, deque_2934, [], -1)
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
