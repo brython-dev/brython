@@ -3488,6 +3488,15 @@ wp2912.x = 5
 assert wp2912._x == 5
 assert_raises(AttributeError, lambda: wp2912.x)
 
+# issue 2932 - str.rsplit() with the default separator
+assert " a b ".rsplit() == ["a", "b"]
+assert "a b c".rsplit() == ["a", "b", "c"]
+assert "a b c".rsplit(None, 1) == ["a b", "c"]
+assert "a\tb\nc".rsplit() == ["a", "b", "c"]
+# unchanged behaviour with an explicit separator
+assert "a,b,c".rsplit(",") == ["a", "b", "c"]
+assert "a,b,c".rsplit(",", 1) == ["a,b", "c"]
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

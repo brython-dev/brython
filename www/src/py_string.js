@@ -2918,9 +2918,10 @@ str_funcs.rsplit = function() {
 
     let [_self, sep] = to_string($.self, $.sep)
 
-    // Use split on the reverse of the string and of separator
+    // Use split on the reverse of the string and of separator.
+    // to_string() maps None to $B.NULL, so test the original argument.
     var rev_str = reverse(_self),
-        rev_sep = sep === _b_.None ? sep : reverse(sep),
+        rev_sep = $.sep === _b_.None ? _b_.None : reverse(sep),
         rev_res = str.tp_funcs.split(rev_str, rev_sep, $.maxsplit)
 
     // Reverse the list, then each string inside the list
