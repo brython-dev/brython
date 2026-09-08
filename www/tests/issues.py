@@ -3488,6 +3488,107 @@ wp2912.x = 5
 assert wp2912._x == 5
 assert_raises(AttributeError, lambda: wp2912.x)
 
+# issue 2936 - metaclass __prepare__ may return any mapping, not only a dict
+from collections.abc import MutableMapping
+
+class UpperNamespace_2936(MutableMapping):
+    def __init__(self):
+        self._data = {}
+
+    def __getitem__(self, key):
+        return self._data[key]
+
+    def __setitem__(self, key, value):
+        if isinstance(key, str) and not key.startswith('_'):
+            key = key.upper()
+        self._data[key] = value
+
+    def __delitem__(self, key):
+        del self._data[key]
+
+    def __iter__(self):
+        return iter(self._data)
+
+    def __len__(self):
+        return len(self._data)
+
+class UpperMeta_2936(type):
+    @classmethod
+    def __prepare__(mcls, name, bases, **kwargs):
+        return UpperNamespace_2936()
+
+    def __new__(mcls, name, bases, namespace, **kwargs):
+        return super().__new__(mcls, name, bases, dict(namespace), **kwargs)
+
+class Table_2936(metaclass=UpperMeta_2936):
+    col = 1
+
+    def method(self):
+        return 2
+
+assert Table_2936.COL == 1
+assert Table_2936.METHOD(None) == 2
+assert Table_2936.__qualname__ == 'Table_2936'
+
+# a plain dict namespace is unaffected
+class DictMeta_2936(type):
+    @classmethod
+    def __prepare__(mcls, name, bases, **kwargs):
+        return {}
+
+class Plain_2936(metaclass=DictMeta_2936):
+    x = 1
+
+assert Plain_2936.x == 1
+
+# a namespace with no __getitem__ is not a mapping, as in CPython, where the
+# check is PyMapping_Check()
+class NotAMappingMeta_2936(type):
+    @classmethod
+    def __prepare__(mcls, name, bases, **kwargs):
+        return 42
+
+try:
+    class Bad_2936(metaclass=NotAMappingMeta_2936):
+        pass
+    raise AssertionError('should have raised TypeError')
+except TypeError as exc_2936:
+    assert 'must return a mapping, not int' in str(exc_2936), str(exc_2936)
+
+# __setitem__ alone does not make a mapping
+class SetOnly_2936:
+    def __setitem__(self, key, value):
+        pass
+
+class SetOnlyMeta_2936(type):
+    @classmethod
+    def __prepare__(mcls, name, bases, **kwargs):
+        return SetOnly_2936()
+
+try:
+    class BadSet_2936(metaclass=SetOnlyMeta_2936):
+        pass
+    raise AssertionError('should have raised TypeError')
+except TypeError as exc_2936:
+    assert 'must return a mapping, not SetOnly_2936' in str(exc_2936), str(exc_2936)
+
+# __getitem__ alone is a mapping; the failure comes from the assignment
+class ReadOnly_2936:
+    def __getitem__(self, key):
+        raise KeyError(key)
+
+class ReadOnlyMeta_2936(type):
+    @classmethod
+    def __prepare__(mcls, name, bases, **kwargs):
+        return ReadOnly_2936()
+
+try:
+    class BadGet_2936(metaclass=ReadOnlyMeta_2936):
+        pass
+    raise AssertionError('should have raised TypeError')
+except TypeError as exc_2936:
+    assert 'does not support item assignment' in str(exc_2936), str(exc_2936)
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
