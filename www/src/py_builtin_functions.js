@@ -1268,7 +1268,8 @@ callable_iterator.$factory = function(func, sentinel) {
     return {
         ob_type: callable_iterator,
         func: func,
-        sentinel: sentinel
+        sentinel: sentinel,
+        exhausted: false
     }
 }
 
@@ -1276,12 +1277,29 @@ callable_iterator.tp_iter = function(self) {
     return self
 }
 
-callable_iterator.tp_iternext = function(self) {
-    var res = $B.$call(self.func)
-    if ($B.rich_comp("__eq__", res, self.sentinel)) {
-        $B.RAISE(_b_.StopIteration)
+callable_iterator.tp_iternext = function*(self) {
+    // Like CPython's calliter_iternext(): exhaustion is final, the sentinel
+    // is the left operand of the comparison, and an exception other than
+    // StopIteration propagates without exhausting the iterator.
+    while (! self.exhausted) {
+        var res
+        try {
+            res = $B.$call(self.func)
+        } catch (err) {
+            if ($B.is_exc(err, [_b_.StopIteration])) {
+                self.exhausted = true
+                return
+            }
+            throw err
+        }
+        // is_or_equals() gives PyObject_RichCompareBool()'s identity
+        // shortcut; $bool() converts a comparison that returned an object.
+        if ($B.$bool($B.is_or_equals(self.sentinel, res))) {
+            self.exhausted = true
+            return
+        }
+        yield res
     }
-    return res
 }
 
 $B.set_func_names(callable_iterator, "builtins")
