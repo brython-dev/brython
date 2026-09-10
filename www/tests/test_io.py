@@ -1,5 +1,7 @@
 import io
 
+from tester import assert_raises
+
 
 # issue 1047
 s = io.StringIO()
@@ -153,5 +155,66 @@ class R(io.RawIOBase):
         return True
 
 assert io.BufferedReader(R()).name == 'myname'
+
+# issue 2926 - 'closed' and the other stream properties
+sio = io.StringIO('foo')
+assert sio.closed is False
+assert sio.line_buffering is False
+assert sio.newlines is None
+sio.close()
+assert sio.closed is True
+assert_raises(ValueError, sio.write, 'bar')
+# the other stream properties report the closed stream rather than a value
+assert_raises(ValueError, lambda: sio.newlines)
+assert_raises(ValueError, lambda: sio.line_buffering)
+
+bio = io.BytesIO(b'foo')
+assert bio.closed is False
+bio.close()
+assert bio.closed is True
+assert_raises(ValueError, bio.read)
+assert_raises(ValueError, bio.write, b'bar')
+
+with io.BytesIO() as bytes_ctx:
+    assert bytes_ctx.closed is False
+assert bytes_ctx.closed is True
+
+with io.StringIO() as string_ctx:
+    assert string_ctx.closed is False
+assert string_ctx.closed is True
+
+# IOBase.__exit__ returns what close() returns, so a subclass whose close()
+# returns a true value suppresses the exception raised in the with block
+class ClosingIO(io.IOBase):
+
+    def close(self):
+        return True
+
+assert ClosingIO().__exit__(None, None, None) is True
+
+suppressed = True
+try:
+    with ClosingIO():
+        raise ValueError('boom')
+except ValueError:
+    suppressed = False
+assert suppressed
+
+class QuietIO(io.IOBase):
+
+    def close(self):
+        return None
+
+assert QuietIO().__exit__(None, None, None) is None
+raised = False
+try:
+    with QuietIO():
+        raise ValueError('boom')
+except ValueError:
+    raised = True
+assert raised
+
+# close() itself returns None, as in CPython
+assert io.StringIO().close() is None
 
 print('all tests passed...')
