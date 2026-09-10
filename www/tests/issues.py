@@ -3488,6 +3488,14 @@ wp2912.x = 5
 assert wp2912._x == 5
 assert_raises(AttributeError, lambda: wp2912.x)
 
+# issue 2943 - an async generator's aclose() must be awaitable
+async def agen_2943():
+    yield 1
+
+# aclose() returned None, so "await gen.aclose()" raised TypeError; asend() and
+# athrow() beside it already return an awaitable
+assert agen_2943().aclose() is not None
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
