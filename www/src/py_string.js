@@ -2978,6 +2978,15 @@ str_funcs.split = function(self, sep, maxsplit) {
     if ($B.is_big_int(maxsplit)) {
         maxsplit = Number($B.int_value(maxsplit))
     }
+    if (maxsplit < 0) {
+        // any negative maxsplit means no limit
+        maxsplit = -1
+    } else if (maxsplit > self.length) {
+        // more splits than the string can hold, so also no limit. Javascript's
+        // split() coerces its limit to an unsigned 32-bit integer, and a
+        // maxsplit above 2**32 would otherwise wrap round to a small one.
+        maxsplit = -1
+    }
     if (sep == "") {
         $B.RAISE(_b_.ValueError, "empty separator")
     }
@@ -2996,26 +3005,39 @@ str_funcs.split = function(self, sep, maxsplit) {
             return $B.$list(self.trim().split(sep))
         }
         self = self.trimLeft()
+        var whitespace = true
     }
 
+    if (maxsplit == 0) {
+        // Javascript's split(sep, 0) returns [], Python returns the whole
+        // string as the single unsplit item
+        return $B.$list([self])
+    }
     var res = self.split(sep, maxsplit)
     if (maxsplit != -1) {
-        // get the part after the last split
-        var nb_split = 0
-        var re = sep instanceof RegExp ? sep :
+        // Javascript's split(sep, limit) drops what follows the limit-th
+        // separator, Python keeps it as the last item. Find that separator.
+        var nb_split = 0,
+            mo,
+            reached_maxsplit = false,
+            re = sep instanceof RegExp ? sep :
                      new RegExp(RegExp.escape(sep), 'g')
-        var mo
         for (mo of self.matchAll(re)) {
             nb_split++
             if (nb_split == maxsplit) {
+                reached_maxsplit = true
                 break
             }
         }
-        if (mo) {
-            var pos = mo.index + mo[0].length
-            if (pos < self.length) {
-                res.push(self.substr(pos))
-            }
+        if (reached_maxsplit) {
+            // the remainder is an item even when empty, as in
+            // "a,".split(",", 1)
+            res.push(self.substr(mo.index + mo[0].length))
+        }
+        if (whitespace && res[res.length - 1] === '') {
+            // splitting on whitespace never yields an empty item: a trailing
+            // run is consumed, it does not end a field
+            res.pop()
         }
     }
     if (self instanceof String) {

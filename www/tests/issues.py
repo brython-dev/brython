@@ -3488,6 +3488,40 @@ wp2912.x = 5
 assert wp2912._x == 5
 assert_raises(AttributeError, lambda: wp2912.x)
 
+# issue 2938 - str.split() and str.rsplit() with maxsplit
+# the item after the last allowed separator is kept, even when it is empty
+assert "a b c".split(" ", 1) == ["a", "b c"]
+assert "a b c".split(" ", 2) == ["a", "b", "c"]
+assert "12:00 ERROR db down".split(" ", 2) == ["12:00", "ERROR", "db down"]
+assert "a b".split(" ", 2) == ["a", "b"]
+assert "abc".split(" ", 1) == ["abc"]
+assert "a.b.c".rsplit(".", 1) == ["a.b", "c"]
+assert "a,".split(",", 1) == ["a", ""]
+assert ",".split(",", 1) == ["", ""]
+assert "a,b,c,".split(",", 3) == ["a", "b", "c", ""]
+assert "  ".split(" ", 2) == ["", "", ""]
+assert ",a".rsplit(",", 1) == ["", "a"]
+assert ",a,b,".rsplit(",", 3) == ["", "a", "b", ""]
+# maxsplit == 0 does not split
+assert "a,b,c".split(",", 0) == ["a,b,c"]
+assert "a,b,c".rsplit(",", 0) == ["a,b,c"]
+assert "a b c".split(None, 0) == ["a b c"]
+# any negative maxsplit means no limit
+assert "a,b,c".split(",", -2) == ["a", "b", "c"]
+# so does one the string cannot reach: Javascript's split() would coerce it to
+# an unsigned 32-bit integer and wrap round
+assert "a,b,c".split(",", 100) == ["a", "b", "c"]
+assert "x,y".split(",", 2 ** 32 + 1) == ["x", "y"]
+assert "a,b,c".split(",", 2 ** 32) == ["a", "b", "c"]
+assert "x,y".rsplit(",", 2 ** 32 + 1) == ["x", "y"]
+assert " a b ".split(None, -2) == ["a", "b"]
+# splitting on whitespace never produces an empty item
+assert " a b ".split(None, 2) == ["a", "b"]
+assert " a b ".split(None, 3) == ["a", "b"]
+assert "a ".split(None, 1) == ["a"]
+# a run of whitespace is one separator; the unsplit tail keeps its spacing
+assert " a  b  c ".split(None, 1) == ["a", "b  c "]
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
