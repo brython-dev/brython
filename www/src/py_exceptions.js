@@ -719,9 +719,9 @@ _b_.StopIteration.tp_init = function(self) {
         kw = $.kw
     check_no_keywords(self, kw)
     _b_.BaseException.tp_init(self, ...args)
-    if (args.length > 0) {
-        self.value = args[0]
-    }
+    // None rather than nothing when there is no argument, for the reason given
+    // at set_exception_members
+    self.value = args.length > 0 ? args[0] : _b_.None
 }
 
 var StopIteration_funcs = _b_.StopIteration.tp_funcs = {}
@@ -829,13 +829,25 @@ $B.set_expected_kwargs = function(obj, expected, kwargs) {
     }
 }
 
+// Same, for the exceptions that declare those members in tp_members, which
+// CPython initialises to None. Reading one that was never set must give None,
+// not Javascript undefined: the traceback module tests
+// `name in sys.stdlib_module_names` after a `name is not None` guard, and
+// undefined passes that guard.
+function set_exception_members(obj, expected, kwargs) {
+    for (var name of expected) {
+        obj[name] = _b_.None
+    }
+    $B.set_expected_kwargs(obj, expected, kwargs)
+}
+
 // AttributeError supports keyword-only "name" and "obj" parameters
 
 _b_.AttributeError.tp_init = function() {
     var $ = $B.args("AttributeError", 1, {self: null},
                 arguments, null, 'args', 'kw')
     _b_.BaseException.tp_init($.self, ...$.args)
-    $B.set_expected_kwargs($.self, ['name', 'obj'], $.kw)
+    set_exception_members($.self, ['name', 'obj'], $.kw)
 }
 
 _b_.AttributeError.tp_repr = function(self) {
@@ -869,7 +881,7 @@ $B.attr_error = function(name, obj) {
 _b_.NameError.tp_init = function() {
     var $ = $B.args('__init__', 1, {self: null}, arguments, null, 'args', 'kw')
     _b_.BaseException.tp_init($.self, ...$.args)
-    $B.set_expected_kwargs($.self, ['name'], $.kw)
+    set_exception_members($.self, ['name'], $.kw)
 }
 
 var NameError_funcs = _b_.NameError.tp_funcs = {}
