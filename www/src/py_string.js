@@ -2982,6 +2982,12 @@ str_funcs.split = function(self, sep, maxsplit) {
         $B.RAISE(_b_.ValueError, "empty separator")
     }
     if (sep === _b_.None) {
+        if (self.length == 0 || str_funcs.isspace(self)) {
+            // no non-whitespace substring to return, whatever maxsplit is.
+            // isspace() is the Python classification; JS trim() would also
+            // strip U+FEFF and would miss U+0085 and U+001C-U+001F
+            return $B.$list([])
+        }
         if (maxsplit == 0) {
             return $B.$list([self.trimLeft()])
         }

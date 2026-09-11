@@ -3488,6 +3488,23 @@ wp2912.x = 5
 assert wp2912._x == 5
 assert_raises(AttributeError, lambda: wp2912.x)
 
+# issue 2930 - str.split() on a string with no non-whitespace character
+assert "".split() == []
+assert "   ".split() == []
+assert "\t\n ".split() == []
+assert "".split(None, 0) == []
+assert "   ".split(None, 1) == []
+# characters that Python counts as whitespace but Javascript trim() does not
+assert "\x85".split() == []
+assert "\x1c".split() == []
+assert "\x85 \x1f".split(None, 1) == []
+assert "\xa0".split() == []
+# unchanged behaviour
+assert " a b ".split() == ["a", "b"]
+assert " a b ".split(None, 0) == ["a b "]
+assert " a b ".split(None, 1) == ["a", "b "]
+assert "".split(",") == [""]
+assert "  ".split(" ") == ["", "", ""]
 # issue 2928 - two-argument iter(callable, sentinel)
 readings_2928 = iter(["12.5", "13.0", "STOP", "14.2"])
 assert list(iter(lambda: next(readings_2928), "STOP")) == ["12.5", "13.0"]
