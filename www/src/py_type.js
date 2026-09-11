@@ -366,20 +366,28 @@ $B.make_class_namespace = function(metaclass, class_name, qualname,
         $B.RAISE(_b_.TypeError, 'metaclass has no __prepare__')
     }
     var class_dict = $B.$call(prepare, class_name, bases) // dict or dict-like
-    if (! $B.is_dict(class_dict)) {
-        console.log('class dict', class_dict)
+    // __prepare__ may return any mapping (PEP 3115). Like CPython's
+    // PyMapping_Check(), a mapping is recognised by __getitem__; an object
+    // that cannot be assigned to reports that when the assignment happens.
+    var is_dict = $B.is_dict(class_dict)
+    if (! is_dict &&
+            $B.$getattr($B.get_class(class_dict), '__getitem__', $B.NULL) ===
+                $B.NULL) {
         $B.RAISE(_b_.TypeError,
             `${$B.get_name(metaclass)}.__prepare__() must return a mapping, ` +
             `not ${$B.class_name(class_dict)}`)
     }
+    var set_key = is_dict ?
+        (key, value) => $B.str_dict_set(class_dict, key, value) :
+        (key, value) => $B.$setitem(class_dict, key, value)
     if (orig_bases !== bases) {
-        $B.str_dict_set(class_dict, '__orig_bases__', orig_bases)
+        set_key('__orig_bases__', orig_bases)
     }
-    if (! $B.hasOnlyStringKeys(class_dict)) {
+    if (is_dict && ! $B.hasOnlyStringKeys(class_dict)) {
         $B.warn(_b_.RuntimeWarning,
             `non-string key in the __dict__ of class ${class_name}`)
     }
-    $B.str_dict_set(class_dict, '__qualname__', qualname)
+    set_key('__qualname__', qualname)
     return class_dict
 }
 
