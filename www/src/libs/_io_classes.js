@@ -134,13 +134,10 @@ StringIO_funcs.__setstate__ = function(_self, state) {
 
 StringIO_funcs.close = function(self) {
     self.closed = true
+    return _b_.None
 }
 
-StringIO_funcs.closed = $B.getset_descriptor.$factory(
-    StringIO,
-    'closed',
-    [self => self.closed]
-)
+StringIO_funcs.closed_get = self => self.closed
 
 StringIO_funcs.getvalue = function() {
     var $ = $B.args("getvalue", 1, {self: null}, arguments)
@@ -153,17 +150,15 @@ StringIO_funcs.getvalue = function() {
     return transform_newline(res, _self.$newline)
 }
 
-StringIO_funcs.line_buffering = $B.getset_descriptor.$factory(
-    StringIO,
-    'line_buffering',
-    [() => false]
-)
+StringIO_funcs.line_buffering_get = function(self) {
+    check_closed(self)
+    return false
+}
 
-StringIO_funcs.newlines = $B.getset_descriptor.$factory(
-    StringIO,
-    'newlines',
-    [self => self.$newlines]
-)
+StringIO_funcs.newlines_get = function(self) {
+    check_closed(self)
+    return self.$newlines
+}
 
 StringIO_funcs.read = function() {
     var $ = $B.args('read', 2, {self: null, size: null}, arguments,
@@ -520,8 +515,11 @@ BytesIO_funcs.close = function(_self) {
         $B.$call($B.$getattr(_self._buffer, 'clear'))
     }
     _self.exports = 0
+    _self.closed = true
     $B._BufferedIOBase.tp_funcs.close(_self)
 }
+
+BytesIO_funcs.closed_get = _self => _self.closed
 
 BytesIO_funcs.read = function() {
     var $ = $B.args('read', 2, {self: null, size: null}, arguments,
@@ -762,6 +760,8 @@ BytesIO.tp_methods = [
     "read", "read1", "readinto", "readline", "readlines", "write", "seek",
     "tell", "truncate", "readable", "seekable", "writable"
 ]
+
+BytesIO.tp_getset = ["closed"]
 
 $B.set_func_names(BytesIO, '_io')
 $B.finalize_type(BytesIO)
