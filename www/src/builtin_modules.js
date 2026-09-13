@@ -428,6 +428,12 @@
     $B.UndefinedType.tp_repr = function() {
         return "<Javascript undefined>"
     }
+    // str() cannot fall back to object.__str__ here: that slot is a descriptor
+    // and receives `undefined` as self, which JavaScript cannot tell apart from
+    // no argument at all, so it raises "descriptor '__str__' of 'object'
+    // object needs an argument". NullType has the same shape and gets away
+    // with it because null is a value.
+    $B.UndefinedType.tp_str = $B.UndefinedType.tp_repr
 
     $B.set_func_names($B.UndefinedType, "javascript")
 
