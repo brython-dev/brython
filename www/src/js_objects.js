@@ -81,6 +81,11 @@ $B.structuredclone2pyobj = function(obj) {
         return undefined
     } else if (typeof obj == "boolean") {
         return obj
+    } else if (typeof obj == "bigint") {
+        // A Python int above 2**53, which is what this is, was reaching the
+        // TypeError at the end of the function: every other integer is a
+        // number and took the branch below.
+        return obj
     } else if (typeof obj == "string" || obj instanceof String) {
         return $B.String(obj)
     } else if (typeof obj == "number" || obj instanceof Number) {

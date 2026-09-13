@@ -646,15 +646,56 @@
         UndefinedType: $B.UndefinedType
     }
 
+    // An integer too large for a double is a BigInt, and JavaScript's own JSON
+    // handles neither end of it: stringify refuses one outright, parse gives
+    // back a number whose last digits are wrong. The JSON *format* has no such
+    // limit, and the json module of the standard library reads and writes these
+    // integers exactly, so the two JSON routes of Brython disagreed.
+    //
+    // Both ends are read off the source text rather than the number: rawJSON
+    // writes digits unquoted, and the third argument of a reviver carries the
+    // literal as it was written, before any conversion. Both are checked rather
+    // than assumed, so an engine without them behaves as it does today.
+    var write_big = function(value) {
+        return typeof value == 'bigint' && typeof JSON.rawJSON == 'function' ?
+                   JSON.rawJSON(value.toString()) : value
+    }
+
+    var read_big = function(value, context) {
+        if (typeof value == 'number' && ! Number.isSafeInteger(value) &&
+                context && typeof context.source == 'string' &&
+                /^-?\d+$/.test(context.source)) {
+            return BigInt(context.source)
+        }
+        return value
+    }
+
     $B.assign_dict(modules.javascript.JSON,
         {
-            parse: function() {
+            parse: function(text, reviver) {
                 return $B.structuredclone2pyobj(
-                    JSON.parse.apply(this, arguments))
+                    JSON.parse(text, function(key, value, context) {
+                        value = read_big(value, context)
+                        return typeof reviver == 'function' ?
+                                   reviver.call(this, key, value) : value
+                    }))
             },
             stringify: function(obj, replacer, space) {
+                replacer = $B.jsobj2pyobj(replacer)
+                // A replacer may also be an array of keys to keep, which no
+                // function can stand in for; it is passed on untouched and a
+                // BigInt still raises, as it does today.
+                if (Array.isArray(replacer)) {
+                    return JSON.stringify($B.pyobj2structuredclone(obj, false),
+                        replacer, space)
+                }
                 return JSON.stringify($B.pyobj2structuredclone(obj, false),
-                    $B.jsobj2pyobj(replacer), space)
+                    function(key, value) {
+                        if (typeof replacer == 'function') {
+                            value = replacer.call(this, key, value)
+                        }
+                        return write_big(value)
+                    }, space)
             }
         }
     )
