@@ -76,9 +76,13 @@ $B.pyobj2structuredclone = function(obj, strict) {
 
 $B.structuredclone2pyobj = function(obj) {
     if (obj === null) {
+        // Not javascript.NULL here, unlike jsobj2pyobj: the structured clone
+        // pair maps None to null on the way out, so this keeps that round trip
+        // exact. Changing it is a separate question, with a visible cost for
+        // whoever reads a postMessage or an IndexedDB record from JavaScript.
         return _b_.None
     } else if (obj === undefined) {
-        return undefined
+        return _b_.None
     } else if (typeof obj == "boolean") {
         return obj
     } else if (typeof obj == "string" || obj instanceof String) {
@@ -155,10 +159,16 @@ JSGenerator.tp_iternext = function*(self){
 var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
     // If _this is passed and jsobj is a function, the function is called
     // with built-in value `this` set to _this
+    //
+    // null keeps its identity so that a round trip through Python gives it
+    // back; it is javascript.NULL on the Python side. undefined is Python's
+    // None: JavaScript has two "nothing" values and Python has one, so pairing
+    // None with undefined and keeping a name for null is what makes both
+    // round trips exact. See pyobj2jsobj for the other direction.
     if (jsobj === null) {
         return null
     } else if (jsobj === undefined) {
-        return undefined
+        return _b_.None
     }
 
     // Immutable types
@@ -326,6 +336,12 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj) {
         case null:
             // javascript.NULL
             return null
+        case _b_.None:
+            // None is JavaScript's undefined, the way undefined is None on
+            // the way in. A JavaScript function handed a None used to receive
+            // a Python object it could not use: JSON.stringify threw on the
+            // cycle back to its class, a DOM property took the object itself.
+            return undefined
     }
 
     let _jsobj = pyobj[JSOBJ]
@@ -715,8 +731,9 @@ $B.JSObj.tp_getattro = function(_self, attr) {
     if (js_attr === undefined) {
         if (typeof _self == 'object' && attr in _self) {
             // attr is in _self properties (possibly inherited) and the value
-            // is `undefined`
-            return undefined
+            // is `undefined`, which is None on the Python side like every
+            // other undefined the bridge hands over
+            return _b_.None
         }
         if (typeof _self.getNamedItem == 'function') {
             var res = _self.getNamedItem(attr)
@@ -860,8 +877,9 @@ JSObj_funcs.__getattr__ = function(self, attr) {
     if (js_attr === undefined) {
         if (typeof self == 'object' && attr in self) {
             // attr is in self properties (possibly inherited) and the value
-            // is `undefined`
-            return undefined
+            // is `undefined`, which is None on the Python side like every
+            // other undefined the bridge hands over
+            return _b_.None
         }
         if (typeof self.getNamedItem == 'function') {
             var res = self.getNamedItem(attr)
@@ -1241,7 +1259,9 @@ js_array.tp_repr = function(self) {
         res
 
     for (var i = 0; i < self.length; ++i) {
-        _r[i] = $B.make_str(self[i])
+        // Converted first, the way the iterator does it: an element is a
+        // JavaScript value and make_str expects a Python one.
+        _r[i] = $B.make_str(jsobj2pyobj(self[i]))
     }
 
     res = "[" + _r.join(", ") + "]"
