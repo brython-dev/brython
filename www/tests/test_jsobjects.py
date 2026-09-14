@@ -93,7 +93,7 @@ assert obj == {"foo": None}
 # issue 1352
 x = window.eval()
 assert x == javascript.UNDEFINED
-assert type(x) == javascript.UndefinedType
+assert x is None
 
 # issue #1376
 setattr(window, 'foo', [])
@@ -262,7 +262,11 @@ except Exception as exc:
 
 # issue 2248
 assert type(javascript.NULL) is javascript.NullType
-assert type(javascript.UNDEFINED) is javascript.UndefinedType
+# JavaScript's undefined is Python's None, in both directions, so the name is
+# kept for compatibility and is None. UndefinedType stays for anything a
+# program reaches that the bridge did not convert.
+assert javascript.UNDEFINED is None
+assert type(javascript.UNDEFINED) is type(None)
 
 value = getattr(window, 'opener', None)
 assert value is javascript.NULL
