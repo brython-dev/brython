@@ -720,8 +720,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,3,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-09-06 12:19:33.155935"
-__BRYTHON__.timestamp=1788689973155
+__BRYTHON__.compiled_date="2026-09-14 08:29:42.981081"
+__BRYTHON__.timestamp=1789367382980
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -2668,12 +2668,17 @@ $B.make_class_namespace=function(metaclass,class_name,qualname,orig_bases,bases)
 var prepare=$B.$getattr(metaclass,"__prepare__",$B.NULL)
 if(prepare===$B.NULL){$B.RAISE(_b_.TypeError,'metaclass has no __prepare__')}
 var class_dict=$B.$call(prepare,class_name,bases)
-if(! $B.is_dict(class_dict)){console.log('class dict',class_dict)
-$B.RAISE(_b_.TypeError,`${$B.get_name(metaclass)}.__prepare__() must return a mapping, `+
+var is_dict=$B.is_dict(class_dict)
+if(! is_dict &&
+$B.$getattr($B.get_class(class_dict),'__getitem__',$B.NULL)===
+$B.NULL){$B.RAISE(_b_.TypeError,`${$B.get_name(metaclass)}.__prepare__() must return a mapping, `+
 `not ${$B.class_name(class_dict)}`)}
-if(orig_bases !==bases){$B.str_dict_set(class_dict,'__orig_bases__',orig_bases)}
-if(! $B.hasOnlyStringKeys(class_dict)){$B.warn(_b_.RuntimeWarning,`non-string key in the __dict__ of class ${class_name}`)}
-$B.str_dict_set(class_dict,'__qualname__',qualname)
+var set_key=is_dict ?
+(key,value)=> $B.str_dict_set(class_dict,key,value):
+(key,value)=> $B.$setitem(class_dict,key,value)
+if(orig_bases !==bases){set_key('__orig_bases__',orig_bases)}
+if(is_dict && ! $B.hasOnlyStringKeys(class_dict)){$B.warn(_b_.RuntimeWarning,`non-string key in the __dict__ of class ${class_name}`)}
+set_key('__qualname__',qualname)
 return class_dict}
 $B.resolve_mro_entries=function(bases){
 var new_bases=[],has_mro_entries=false
@@ -4103,8 +4108,10 @@ try{
 closed=$B.$bool($B.$getattr(self,'closed'))}catch(err){closed=!! self._closed}
 if(closed){$B.RAISE(_b_.ValueError,'I/O operation on closed file.')}
 return self}
-_IOBase_funcs.__exit__=function(self){_IOBase_funcs.close(self)}
-_IOBase_funcs.close=function(self){self._closed=true}
+_IOBase_funcs.__exit__=function(self,type,value,traceback){
+return $B.$call($B.$getattr(self,'close'))}
+_IOBase_funcs.close=function(self){self._closed=true
+return _b_.None}
 _IOBase_funcs.closed_get=function(self){return self._closed}
 _IOBase_funcs.closed_set=_b_.None
 _IOBase_funcs.fileno=function(_self){_io_unsupported('fileno')}
@@ -5066,11 +5073,17 @@ iterator_funcs.__setstate__=function(self,state){self.it_index=state < 0 ? 0 :st
 $B.iterator.tp_methods=["__length_hint__","__reduce__","__setstate__"]
 const callable_iterator=$B.callable_iterator
 callable_iterator.$factory=function(func,sentinel){return{
-ob_type:callable_iterator,func:func,sentinel:sentinel}}
+ob_type:callable_iterator,func:func,sentinel:sentinel,exhausted:false}}
 callable_iterator.tp_iter=function(self){return self}
-callable_iterator.tp_iternext=function(self){var res=$B.$call(self.func)
-if($B.rich_comp("__eq__",res,self.sentinel)){$B.RAISE(_b_.StopIteration)}
-return res}
+callable_iterator.tp_iternext=function*(self){
+while(! self.exhausted){var res
+try{
+res=$B.$call(self.func)}catch(err){if($B.is_exc(err,[_b_.StopIteration])){self.exhausted=true
+return}
+throw err}
+if($B.$bool($B.is_or_equals(self.sentinel,res))){self.exhausted=true
+return}
+yield res}}
 $B.set_func_names(callable_iterator,"builtins")
 $B.$iter=function(obj,sentinel){
 var test=false 
@@ -6215,7 +6228,7 @@ _b_.StopIteration.tp_init=function(self){var $=$B.args("StopIteration",1,{self:n
 var self=$.self,args=$.args,kw=$.kw
 check_no_keywords(self,kw)
 _b_.BaseException.tp_init(self,...args)
-if(args.length > 0){self.value=args[0]}}
+self.value=args.length > 0 ? args[0]:_b_.None}
 var StopIteration_funcs=_b_.StopIteration.tp_funcs={}
 _b_.StopIteration.tp_members=[["value",$B.TYPES.OBJECT,"value",0]
 ]
@@ -6256,9 +6269,11 @@ var msg=`${$B.class_name(obj)}()  got an unexpected `+
 var suggestions=calculate_suggestions(expected,item.key)
 if(suggestions){msg+=`. Did you mean '${suggestions}'?`}
 $B.RAISE(_b_.TypeError,msg)}}}
+function set_exception_members(obj,expected,kwargs){for(var name of expected){obj[name]=_b_.None}
+$B.set_expected_kwargs(obj,expected,kwargs)}
 _b_.AttributeError.tp_init=function(){var $=$B.args("AttributeError",1,{self:null},arguments,null,'args','kw')
 _b_.BaseException.tp_init($.self,...$.args)
-$B.set_expected_kwargs($.self,['name','obj'],$.kw)}
+set_exception_members($.self,['name','obj'],$.kw)}
 _b_.AttributeError.tp_repr=function(self){return self.args[0]}
 _b_.AttributeError.tp_members=[["name",$B.TYPES.OBJECT,"name",0],["obj",$B.TYPES.OBJECT,"obj",0]
 ]
@@ -6270,7 +6285,7 @@ msg+=` has no attribute '${name}'`
 return $B.$call(_b_.AttributeError,msg,[],{$kw:[{name,obj}]})}
 _b_.NameError.tp_init=function(){var $=$B.args('__init__',1,{self:null},arguments,null,'args','kw')
 _b_.BaseException.tp_init($.self,...$.args)
-$B.set_expected_kwargs($.self,['name'],$.kw)}
+set_exception_members($.self,['name'],$.kw)}
 var NameError_funcs=_b_.NameError.tp_funcs={}
 _b_.NameError.tp_members=[["name",$B.TYPES.OBJECT,"name",0]
 ]
@@ -9755,7 +9770,7 @@ for(var i=0;i < items.length;i++){items[i]=items[i].split("").reverse().join("")
 return items}
 str_funcs.rsplit=function(){var $=$B.args("rsplit",3,{self:null,sep:null,maxsplit:null},arguments,{sep:_b_.None,maxsplit:-1},null,null)
 let[_self,sep]=to_string($.self,$.sep)
-var rev_str=reverse(_self),rev_sep=sep===_b_.None ? sep :reverse(sep),rev_res=str.tp_funcs.split(rev_str,rev_sep,$.maxsplit)
+var rev_str=reverse(_self),rev_sep=$.sep===_b_.None ? _b_.None :reverse(sep),rev_res=str.tp_funcs.split(rev_str,rev_sep,$.maxsplit)
 rev_res.reverse()
 for(var i=0;i < rev_res.length;i++){rev_res[i]=reverse(rev_res[i])}
 return $B.$list(rev_res)}
@@ -9777,21 +9792,30 @@ maxsplit=-1}else{
 var $=$B.args("split",3,{self:null,sep:null,maxsplit:null},arguments,{sep:_b_.None,maxsplit:-1},null,null),maxsplit=$.maxsplit,sep=$.sep,self=to_string($.self)}
 var pos=0
 if($B.is_big_int(maxsplit)){maxsplit=Number($B.int_value(maxsplit))}
+if(maxsplit < 0){
+maxsplit=-1}else if(maxsplit > self.length){
+maxsplit=-1}
 if(sep==""){$B.RAISE(_b_.ValueError,"empty separator")}
-if(sep===_b_.None){if(maxsplit==0){return $B.$list([self.trimLeft()])}
+if(sep===_b_.None){if(self.length==0 ||str_funcs.isspace(self)){
+return $B.$list([])}
+if(maxsplit==0){return $B.$list([self.trimLeft()])}
 sep=/\s+/g
 if(maxsplit==-1){return $B.$list(self.trim().split(sep))}
-self=self.trimLeft()}
+self=self.trimLeft()
+var whitespace=true}
+if(maxsplit==0){
+return $B.$list([self])}
 var res=self.split(sep,maxsplit)
 if(maxsplit !=-1){
-var nb_split=0
-var re=sep instanceof RegExp ? sep :
+var nb_split=0,mo,reached_maxsplit=false,re=sep instanceof RegExp ? sep :
 new RegExp(RegExp.escape(sep),'g')
-var mo
 for(mo of self.matchAll(re)){nb_split++
-if(nb_split==maxsplit){break}}
-if(mo){var pos=mo.index+mo[0].length
-if(pos < self.length){res.push(self.substr(pos))}}}
+if(nb_split==maxsplit){reached_maxsplit=true
+break}}
+if(reached_maxsplit){
+res.push(self.substr(mo.index+mo[0].length))}
+if(whitespace && res[res.length-1]===''){
+res.pop()}}
 if(self instanceof String){res=res.map($B.String)}
 return $B.$list(res)}
 str_funcs.splitlines=function(self,keepends){var args_length=arguments.length
@@ -12485,7 +12509,6 @@ $B.RAISE(_b_.TypeError,'keyword arguments are not supported for '+
 'Javascript functions')}
 args[i]=pyobj2jsobj(arg)}
 try{
-if(args[0]==="===================="){console.log(Error().stack)}
 return jsobj2pyobj(jsobj.apply(_this,args))}catch(err){throw $B.exception(err)}}
 if(_this===null){jsobj[PYOBJFCT]=res}else if(_this[PYOBJFCTS]!==undefined){_this[PYOBJFCTS].set(jsobj,res)}
 res[JSOBJ]=jsobj
@@ -13071,7 +13094,21 @@ async_generator_funcs.__name___set=function(self,value){self.js_gen.$name=value}
 async_generator_funcs.__qualname___get=function(self){return self.js_gen.$name}
 async_generator_funcs.__qualname___set=function(self,value){self.js_gen.$name=value}
 async_generator_funcs.__sizeof__=function(self){$B.RAISE(_b_.NotImplementedError)}
-async_generator_funcs.aclose=function(self){self.js_gen.$finished=true
+async_generator_funcs.aclose=async function(self){var gen=self.js_gen
+if(gen.$closing){$B.RAISE(_b_.RuntimeError,"aclose(): asynchronous generator is already running")}
+if(gen.$finished){return _b_.None}
+gen.$finished=true
+gen.$closing=true
+var save_frame_obj=$B.frame_obj
+if(self.$frame){$B.frame_obj=$B.push_frame(self.$frame)}
+var res
+try{
+res=await gen.throw($B.$call(_b_.GeneratorExit))}catch(err){if($B.is_exc(err,[_b_.GeneratorExit,_b_.StopAsyncIteration])){
+return _b_.None}
+throw err}finally{
+gen.$closing=false
+$B.frame_obj=save_frame_obj}
+if(! res.done){$B.RAISE(_b_.RuntimeError,"async generator ignored GeneratorExit")}
 return _b_.None}
 async_generator_funcs.ag_await_get=function(self){$B.RAISE(_b_.NotImplementedError)}
 async_generator_funcs.ag_await_set=_b_.None
