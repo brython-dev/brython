@@ -407,9 +407,9 @@ function run_py(module_contents, path, module, compiled) {
         js = "var $module = (function() {\n" + js
         var prefix = 'locals_'
         js += 'return ' + prefix
-        js += module_name.replace(/\./g, "_") + "})(__BRYTHON__)\n" +
+        js += $B.scope_name(module_name) + "})(__BRYTHON__)\n" +
             "return $module"
-        var module_id = prefix + module_name.replace(/\./g, '_')
+        var module_id = prefix + $B.scope_name(module_name)
         //console.log(module.__name__, js.length)
         //console.log(js)
         var mod = (new Function(module_id, js))(module)
@@ -637,7 +637,7 @@ VFSLoader_funcs.exec_module = function(self, modobj) {
             }
             $B.module_setattr(mod, '__file__', path)
             try {
-                var parent_id = parent.replace(/\./g, "_"),
+                var parent_id = $B.scope_name(parent),
                     prefix = 'locals_'
                 mod_js += "return " + prefix + parent_id
                 var $module = new Function(prefix + parent_id, mod_js)(
