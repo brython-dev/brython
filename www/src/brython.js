@@ -720,8 +720,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,3,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-09-15 16:07:59.573539"
-__BRYTHON__.timestamp=1789481279556
+__BRYTHON__.compiled_date="2026-09-15 16:11:49.948107"
+__BRYTHON__.timestamp=1789481509947
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -14080,7 +14080,9 @@ path.splice(ix,1,...fullpaths)}}
 if($B.protocol !=="file"){meta_path.push($B.finders.path)
 path_hooks.push($B.url_hook)}
 $B.import_info[filename]={meta_path,path_hooks,path}}
-function $download_module(mod,url){var xhr=new XMLHttpRequest(),fake_qs="?v="+(new Date().getTime()),res=null,mod_name=mod.__name__
+function $download_module(mod,url){var xhr=new XMLHttpRequest(),fake_qs="?v="+(new Date().getTime()),res=null,
+mod_name=mod.__name__===undefined ?
+$B.module_getattr(mod,'__name__'):mod.__name__
 if($B.get_option('cache')){xhr.open("GET",url,false)}else{
 xhr.open("GET",url+fake_qs,false)}
 var timer=_window.setTimeout(function(){xhr.abort()},5000)
@@ -14806,6 +14808,7 @@ $B.UndefinedType=$B.make_builtin_class("UndefinedType")
 $B.UndefinedType.$factory=function(){return undefined}
 $B.UndefinedType.nb_bool=function(){return false}
 $B.UndefinedType.tp_repr=function(){return "<Javascript undefined>"}
+$B.UndefinedType.tp_str=$B.UndefinedType.tp_repr
 $B.set_func_names($B.UndefinedType,"javascript")
 var NullType=$B.NullType=$B.make_builtin_class('NullType')
 NullType.tp_richcompare=function(self,other,op){switch(op){case '__eq__':
@@ -18075,6 +18078,7 @@ return ast.to_js(scopes)}
 console.log("unhandled",ast.constructor.$name,ast,typeof ast)
 return '// unhandled class ast.'+ast.constructor.$name}})(__BRYTHON__);
 ;
+// >>> brython compiler chain
 "use strict";
 (function($B){var _b_=$B.builtins
 var GLOBAL_PARAM="name '%s' is parameter and global",NONLOCAL_PARAM="name '%s' is parameter and nonlocal",GLOBAL_AFTER_ASSIGN="name '%s' is assigned to before global declaration",NONLOCAL_AFTER_ASSIGN="name '%s' is assigned to before nonlocal declaration",GLOBAL_AFTER_USE="name '%s' is used prior to global declaration",NONLOCAL_AFTER_USE="name '%s' is used prior to nonlocal declaration",GLOBAL_ANNOT="annotated name '%s' can't be global",NONLOCAL_ANNOT="annotated name '%s' can't be nonlocal",IMPORT_STAR_WARNING="import * only allowed at module level",NAMED_EXPR_COMP_IN_CLASS=
@@ -39126,6 +39130,7 @@ default:
 console.log('unknown mode',p.mode)
 throw Error(`unknown parse mode: ${p.mode}`)}};})(__BRYTHON__)
 ;
+// <<< brython compiler chain
 "use strict";
 (function($B){$B.whenReady=new Promise(function(resolve,reject){resolve()})})(__BRYTHON__);
 ;
