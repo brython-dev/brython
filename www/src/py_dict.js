@@ -668,7 +668,7 @@ dict.$getitem = function(self, key, ignore_missing) {
         }
         $B.RAISE(_b_.KeyError, key)
     }
-    if (typeof key == 'string') {
+    if (fast_string_key(key)) {
         if (self.hasOwnProperty(key)) {
             return self[key]
         }
@@ -782,6 +782,22 @@ dict.$iter_items_reversed = function*(d){
     }
 }
 
+// Whether a key can live as an ordinary property of the dictionary object,
+// which is the fast path for string keys.
+//
+// "__proto__" is a string like any other in Python and cannot: `d[key] = value`
+// reaches the accessor on Object.prototype, so the key never becomes an own
+// property and the value becomes the dictionary's own prototype instead. The
+// entry is lost, and `d["__proto__"]` raises KeyError on a key that was written.
+// It goes to the hash table, exactly as a string parsed as a negative integer
+// already does (issue 2256).
+//
+// Asked in one place because four sites ask it: setting, reading, `setdefault`,
+// and the conversion itself.
+function fast_string_key(key) {
+    return typeof key == 'string' && key !== '__proto__'
+}
+
 function convert_all_str(d) {
     // convert dict with only str keys to regular dict
     // add addtional fields
@@ -805,13 +821,13 @@ dict.$setitem = function(self, key, value, $hash, from_setdefault) {
         self[$B.JSOBJ][key] = value
     }
     var new_str_key
-    if (typeof key == 'string') {
+    if (fast_string_key(key)) {
         // Even if dict is not all-string keys, set self[key]
         new_str_key = ! Object.hasOwn(self, key)
         self[key] = value
     }
     if (! self[TABLE]) {
-        if (typeof key == 'string') {
+        if (fast_string_key(key)) {
             var int = parseInt(key)
             if (isNaN(int) || int >= 0) {
                 if (new_str_key) {
@@ -1267,7 +1283,7 @@ dict_funcs.setdefault = function(self) {
     _default = _default === undefined ? _b_.None : _default
 
     if (! self[TABLE]) {
-        if (typeof key === 'string') {
+        if (fast_string_key(key)) {
             if (! self.hasOwnProperty(key)) {
                 self[key] = _default
             }
