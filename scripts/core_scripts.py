@@ -51,3 +51,20 @@ core_scripts = [
 
 
 ]
+
+# The Python-to-JavaScript parsing chain, and a contiguous run of core_scripts.
+# make_dist.py brackets it with two comments in brython.js, so that a build tool
+# which compiles Python ahead of time can cut it out of the published file.
+#
+# A page that cuts it keeps everything but exec(), eval(), compile(), the ast
+# module, importing a .py from source, and the caret line of a traceback, which
+# re-parses the source.
+compiler_scripts = [
+    'symtable',
+    'action_helpers',
+    'string_parser',
+    'number_parser',
+    'python_parser',
+    'pegen',
+    'gen_parse'
+]
