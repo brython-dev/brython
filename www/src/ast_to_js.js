@@ -3569,9 +3569,10 @@ $B.ast.Module.prototype.to_js = function(scopes) {
 
     var js = `var $B = __BRYTHON__,\n    _b_ = $B.builtins,\n`
     if (! namespaces) {
-        js += `    ${global_name} = $B.namespace('${module_id}'),\n` +
+        js += `    ${global_name} = $B.namespace(${JSON.stringify(module_id)}),\n` +
               `    locals = ${global_name},\n` +
-              `    frame = ["${module_id}", locals, "${module_id}", locals]`
+              `    frame = [${JSON.stringify(module_id)}, locals, ` +
+              `${JSON.stringify(module_id)}, locals]`
     } else {
         // If module is run in an exec(), name "frame" is defined
         js += `    locals = ${namespaces.local_name},\n` +
@@ -3582,8 +3583,9 @@ $B.ast.Module.prototype.to_js = function(scopes) {
         }
     }
 
-    js += `\nvar __file__ = locals.__file__ = '${scopes.filename ?? "<string>"}'\n` +
-          `locals.__name__ = '${name}'\n` +
+    js += `\nvar __file__ = locals.__file__ = ` +
+          `${JSON.stringify(scopes.filename ?? "<string>")}\n` +
+          `locals.__name__ = ${JSON.stringify(name)}\n` +
           `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
 
     var insert_positions = js.length
