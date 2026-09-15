@@ -720,8 +720,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,3,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-09-14 08:29:42.981081"
-__BRYTHON__.timestamp=1789367382980
+__BRYTHON__.compiled_date="2026-09-15 16:07:59.573539"
+__BRYTHON__.timestamp=1789481279556
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -12604,11 +12604,12 @@ args[i]=$B.pyobj2jsobj(arg)}
 return args}
 $B.JSClass=$B.make_builtin_class('JSClass',[_b_.type])
 $B.JSClass.tp_getattro=function(self,attr){if(attr=='new'){return function(){var args=Array.from(arguments).map(pyobj2jsobj)
-return jsobj2pyobj(new self.js_class(...args))}}
+let jsobj=new self.js_class(...args)
+return jsobj2pyobj(jsobj)}}
 var res=_b_.type.tp_getattro(self,attr)
 if(res !==$B.NULL){return res}
 if(! self.js_class.hasOwnProperty(attr)){return $B.NULL}
-return jsobj2pyobj(self.jsobj[attr],self.jsobj)}
+return jsobj2pyobj(self.js_class[attr],self.jsobj)}
 $B.JSClass.tp_new=function(cls,args,kw){var kls=_b_.type.tp_new(cls,args,kw)
 kls.js_class=kls.tp_bases[0].js_class
 return kls}

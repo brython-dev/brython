@@ -505,7 +505,8 @@ $B.JSClass.tp_getattro = function(self, attr) {
     if (attr == 'new') {
         return function() {
             var args = Array.from(arguments).map(pyobj2jsobj)
-            return jsobj2pyobj(new self.js_class(...args))
+            let jsobj = new self.js_class(...args)
+            return jsobj2pyobj(jsobj)
         }
     }
     var res = _b_.type.tp_getattro(self, attr)
@@ -515,7 +516,7 @@ $B.JSClass.tp_getattro = function(self, attr) {
     if (! self.js_class.hasOwnProperty(attr)) {
         return $B.NULL
     }
-    return jsobj2pyobj(self.jsobj[attr], self.jsobj)
+    return jsobj2pyobj(self.js_class[attr], self.jsobj)
 }
 
 $B.JSClass.tp_new = function(cls, args, kw) {
