@@ -241,7 +241,11 @@ function $download_module(mod, url) {
     var xhr = new XMLHttpRequest(),
         fake_qs = "?v=" + (new Date().getTime()),
         res = null,
-        mod_name = mod.__name__
+        // A module object keeps __name__ in its dict, so reading it as a
+        // Javascript property gives undefined and the ModuleNotFoundError it
+        // raises below names 'undefined' instead of the module.
+        mod_name = mod.__name__ === undefined ?
+                       $B.module_getattr(mod, '__name__') : mod.__name__
     if ($B.get_option('cache')) {
         xhr.open("GET", url, false)
     } else {

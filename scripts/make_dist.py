@@ -10,7 +10,17 @@ import shutil
 import javascript_minifier
 from version import version, implementation
 from directories import src_dir, root_dir
-from core_scripts import core_scripts
+from core_scripts import core_scripts, compiler_scripts
+
+# The parsing chain is a contiguous run of core_scripts, so two comments are
+# enough for a build tool that compiles Python ahead of time to cut it out of
+# the published brython.js:
+#
+#     const start = full.indexOf('// >>> brython compiler chain')
+#     const end = full.indexOf('// <<< brython compiler chain')
+#     const runtime = full.slice(0, start) + full.slice(end)
+COMPILER_CHAIN_OPEN = "// >>> brython compiler chain\n"
+COMPILER_CHAIN_CLOSE = "// <<< brython compiler chain\n"
 
 cpython_version = sys.version_info
 if cpython_version[0] != version[0] or \
@@ -50,6 +60,10 @@ def run():
         except:
             print('error in', fname)
             raise
+        if fname == compiler_scripts[0]:
+            mini = COMPILER_CHAIN_OPEN + mini
+        if fname == compiler_scripts[-1]:
+            mini = mini + COMPILER_CHAIN_CLOSE
         res += mini
         if fname == 'stdlib_paths':
             res_no_static += "__BRYTHON__.stdlib = {}\n"
