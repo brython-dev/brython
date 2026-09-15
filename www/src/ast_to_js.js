@@ -244,7 +244,14 @@ function qualified_scope_name(scopes, scope) {
             names.push(_scope.name)
         }
     }
-    return names.join('_').replace(/[^\w$]/g, '_')
+    return $B.scope_name(names.join('_'))
+}
+
+// A name turned into a Javascript identifier for generated code. The importer
+// builds the same identifier to read a module back out of its wrapper, so the
+// rule has to be one and not two.
+$B.scope_name = function(name) {
+    return name.replace(/[^\w$]/g, '_')
 }
 
 function show_flags(name, flag) {
@@ -3577,7 +3584,7 @@ $B.ast.Module.prototype.to_js = function(scopes) {
         js += `    locals = ${namespaces.local_name},\n` +
               `    globals = ${namespaces.global_name}`
         if (name) {
-            let local_name = ('locals_' + name).replace(/\./g, '_')
+            let local_name = 'locals_' + $B.scope_name(name)
             js += `,\n    ${local_name} = locals`
         }
     }
