@@ -792,10 +792,17 @@ dict.$iter_items_reversed = function*(d){
 // It goes to the hash table, exactly as a string parsed as a negative integer
 // already does (issue 2256).
 //
+// "ob_type" cannot either, for the mirror reason: it does become an own
+// property, and shadows the one the engine reads to know what the object is.
+// `d["ob_type"] = "business"` leaves the dictionary answering a string for its
+// own class, and the next assignment raises "'undefined' object does not
+// support item assignment" on a dictionary that was valid a line earlier.
+// CPython keeps both keys and prints them.
+//
 // Asked in one place because four sites ask it: setting, reading, `setdefault`,
 // and the conversion itself.
 function fast_string_key(key) {
-    return typeof key == 'string' && key !== '__proto__'
+    return typeof key == 'string' && key !== '__proto__' && key !== 'ob_type'
 }
 
 function convert_all_str(d) {
