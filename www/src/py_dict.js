@@ -1845,8 +1845,8 @@ mappingproxy_funcs.__reversed__ = function(self) {
 }
 
 mappingproxy_funcs.copy = function(self) {
-    var copy_func = $B.type_getattribute(_b_.dict, 'copy')
-    return $B.mappingproxy.tp_new($B.mappingproxy, [copy_func(self.mapping)])
+    // a copy of the underlying mapping, not a new proxy
+    return $B.$call($B.$getattr(self.mapping, 'copy'))
 }
 
 mappingproxy_funcs.get = function(self, key, _default) {
