@@ -149,8 +149,13 @@ def scandir(*args, **kw):
     raise NotImplementedError('browsers cannot read a directory content')
 
 def uname():
+    # POSIX os.uname() has exactly five fields; platform.uname() adds a
+    # sixth, processor, so any five-target unpack raised ValueError
     import platform
-    return platform.uname()
+    from collections import namedtuple
+    u = platform.uname()
+    return namedtuple('uname_result',
+                      'sysname nodename release version machine')(*u[:5])
 
 def waitstatus_to_exitcode(status):
     return status >> 8
