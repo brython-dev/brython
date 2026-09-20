@@ -64,7 +64,11 @@ function bytes2WordArray(obj) {
     // Transform a bytes object into an instance of class WordArray
     // defined in CryptoJS
     if (! $B.$isinstance(obj, [_b_.bytes, _b_.bytearray])) {
-        $B.RAISE(_b_.TypeError, "expected bytes, got " + $B.class_name(obj))
+        if (! $B.is_bytes_like(obj)) {
+            $B.RAISE(_b_.TypeError, "expected bytes, got " + $B.class_name(obj))
+        }
+        // memoryview, array.array... : any object supporting the buffer API
+        obj = _b_.bytes.$factory(obj)
     }
 
     let words = []
