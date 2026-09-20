@@ -16,7 +16,7 @@ class _dataclass(tuple):
         if isinstance(key, int) and 0 <= key <= len(self.keys):
             return self.__dict__[self.keys[key]]
         elif isinstance(key, slice):
-            return [self.__dict__[k] for k in self.keys[key]]
+            return tuple(self.__dict__[k] for k in self.keys[key])
         raise KeyError(key)
 
     def __iter__(self):
