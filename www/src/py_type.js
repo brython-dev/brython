@@ -2420,7 +2420,7 @@ $B.GenericAlias.tp_repr = function(self) {
 }
 
 $B.GenericAlias.tp_hash = function(self) {
-
+    return _b_.hash(self.origin) ^ _b_.hash(self.args)
 }
 
 $B.GenericAlias.tp_call = function(self, ...args) {
