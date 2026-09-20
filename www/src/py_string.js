@@ -962,7 +962,7 @@ $B.printf_format = function(s, type, args) {
             $B.RAISE(_b_.TypeError,
                 "not all arguments converted during string formatting")
         }
-    } else if (nbph == 0) {
+    } else if (nbph == 0 && ! is_mapping(args)) {
         $B.RAISE(_b_.TypeError,
             "not all arguments converted during string formatting")
     }
