@@ -481,12 +481,11 @@ _b_.complex.tp_new = function(cls, args, kw) {
 
 _b_.complex.tp_repr = function(self) {
     $B.builtins_repr_check(complex, arguments) // in brython_builtins.js
-    var real = Number.isInteger(self.real.value) ?
-                   self.real.value + '' :
-                   _b_.str.$factory(self.real),
-        imag = Number.isInteger(self.imag.value) ?
-                   self.imag.value + '' :
-                   _b_.str.$factory(self.imag)
+    var real = _b_.str.$factory(self.real),
+        imag = _b_.str.$factory(self.imag)
+    if (real.endsWith('.0')) {
+        real = real.substr(0, real.length - 2)
+    }
     if (imag.endsWith('.0')) {
         imag = imag.substr(0, imag.length - 2)
     }
