@@ -1124,20 +1124,29 @@ $B.augm_assign = function(left, op, right) {
         method = $B.op2method.augmented_assigns[op],
         augm_func = $B.$getattr($B.get_class(left), '__' + method + '__',
             $B.NULL)
+    // an in-place method that returns NotImplemented does not end the
+    // dispatch: CPython falls back to the binary operation, which is how
+    // `s |= other` works on a frozenset (a NEW frozenset from __or__)
     if (augm_func !== $B.NULL) {
         var res = $B.$call(augm_func, left, right)
-        if (res === _b_.NotImplemented) {
+        if (res !== _b_.NotImplemented) {
+            return res
+        }
+    }
+    var method1 = $B.op2method.operations[op1]
+    if (method1 === undefined) {
+        method1 = $B.op2method.binary[op1]
+    }
+    // the fallback still blames the augmented operator, as CPython does
+    try {
+        return $B.rich_op(`__${method1}__`, left, right)
+    } catch (err) {
+        if ($B.$isinstance(err, _b_.TypeError)) {
             $B.RAISE(_b_.TypeError, `unsupported operand type(s)` +
                 ` for ${op}: '${$B.class_name(left)}' ` +
                 `and '${$B.class_name(right)}'`)
         }
-        return res
-    } else {
-        var method1 = $B.op2method.operations[op1]
-        if (method1 === undefined) {
-            method1 = $B.op2method.binary[op1]
-        }
-        return $B.rich_op(`__${method1}__`, left, right)
+        throw err
     }
 }
 
