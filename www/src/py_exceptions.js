@@ -736,8 +736,16 @@ _b_.ImportError.tp_init = function() {
     var $ = $B.args("ImportError", 1, {self: null},
                 arguments, null, 'args', 'kw')
     _b_.BaseException.tp_init($.self, ...$.args)
-    $B.set_expected_kwargs($.self, ['name', 'path'], $.kw)
+    $.self.msg = $.args.length == 1 ? $.args[0] : _b_.None
+    set_exception_members($.self, ['name', 'path', 'name_from'], $.kw)
 }
+
+_b_.ImportError.tp_members = [
+    ["msg", $B.TYPES.OBJECT, "msg", 0],
+    ["name", $B.TYPES.OBJECT, "name", 0],
+    ["path", $B.TYPES.OBJECT, "path", 0],
+    ["name_from", $B.TYPES.OBJECT, "name_from", 0]
+]
 
 $B.set_func_names(_b_.ImportError, 'builtins')
 
