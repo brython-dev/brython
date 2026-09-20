@@ -70,8 +70,6 @@ try:
         _release_lock,
         _warnings_context,
         filters,
-        warn,
-        warn_explicit,
     )
 
     _warnings_defaults = True

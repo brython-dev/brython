@@ -974,7 +974,7 @@
             } else {
                 filters = $B.module_getattr(modules._warnings, 'filters')
             }
-            if (filters[0][0] == 'error') {
+            if (filters.length && filters[0][0] == 'error') {
                 var syntax_error = $B.EXC(_b_.SyntaxError, message.args[0])
                 syntax_error.args[1] = [message.filename, message.lineno,
                     message.offset, message.line]
