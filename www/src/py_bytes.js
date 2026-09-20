@@ -890,9 +890,9 @@ function rsplit() {
             `maxsplit should be int, not ${$B.class_name(maxsplit)}`
         )
     }
-    var parts = [] // array of arrays of bytes
+    var parts // list of bytes, in reversed order
     if (sep === _b_.None) {
-        parts = bytes_split_with_whitespace(cls, self, maxsplit)
+        parts = bytes_split_with_whitespace(cls, reversed_self, maxsplit)
     } else {
         if ($B.$getattr(sep, '__buffer__', $B.NULL) === $B.NULL) {
             $B.RAISE(_b_.TypeError,
@@ -904,11 +904,7 @@ function rsplit() {
     }
     // restore order
     parts.reverse()
-    for (part of parts) {
-        part.reverse()
-    }
-    parts = parts.map(t => this.$factory(t))
-    return $B.$list(parts)
+    return $B.$list(parts.map(part => cls.$factory(part.source.toReversed())))
 }
 
 function sq_contains(self, other) {
