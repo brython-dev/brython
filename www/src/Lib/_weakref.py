@@ -124,6 +124,8 @@ class ref:
         return hash(self.obj.obj)
 
     def __eq__(self, other):
+        if not isinstance(other, ref):
+            return NotImplemented
         return self.obj.obj == other.obj.obj
 
 def getweakrefcount(obj):
