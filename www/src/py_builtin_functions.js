@@ -1633,6 +1633,11 @@ NotImplementedType.tp_repr = function() {
     return "NotImplemented"
 }
 
+NotImplementedType.nb_bool = function() {
+    $B.RAISE(_b_.TypeError,
+        "NotImplemented should not be used in a boolean context")
+}
+
 // pickled as a global reference, like CPython (notimplemented_reduce)
 NotImplementedType.tp_funcs = {
     __reduce__: function() {
