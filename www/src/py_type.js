@@ -1970,9 +1970,14 @@ _b_.property.tp_init = function() {
 }
 
 _b_.property.tp_new = function(cls, args, kw) {
-    return {
+    var res = {
         ob_type: cls
     }
+    if (cls !== _b_.property) {
+        // instances of a subclass have a __dict__
+        $B.init_dict(res)
+    }
+    return res
 }
 
 var property_funcs = _b_.property.tp_funcs = {}
