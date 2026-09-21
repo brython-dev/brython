@@ -101,12 +101,6 @@ $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
 
     }
 
-    // Set new class as subclass of its parents
-    for (let i = 0; i < bases.length; i++) {
-        bases[i].tp_subclasses  = bases[i].tp_subclasses || []
-        bases[i].tp_subclasses.push(kls)
-    }
-
     if (test) {
         console.log('kls', kls)
     }
@@ -1583,6 +1577,11 @@ _b_.type.tp_new = function(cls, args, kw) {
     //$B.make_iter(class_obj)
     $B.make_call(class_obj)
     make_factory(class_obj)
+    // Set new class as subclass of its parents
+    for (var base of class_obj.tp_bases) {
+        base.tp_subclasses = base.tp_subclasses || []
+        base.tp_subclasses.push(class_obj)
+    }
     return class_obj
 }
 
