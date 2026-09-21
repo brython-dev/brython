@@ -1715,12 +1715,12 @@ $B.rich_comp = function(op, x, y) {
         }
     }
 
-    // If both operands return NotImplemented, return False if the operand is
-    // __eq__, True if it is __ne__, raise TypeError otherwise
+    // If both operands return NotImplemented, compare by identity if the
+    // operand is __eq__ or __ne__, raise TypeError otherwise
     if (op == "__eq__") {
-        return _b_.False
+        return x === y
     } else if (op == "__ne__") {
-        return _b_.True
+        return x !== y
     }
 
     $B.RAISE(_b_.TypeError, "'" + method2comp[op] +
