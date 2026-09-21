@@ -1793,20 +1793,18 @@ function bytes_split_with_whitespace(cls, self, maxsplit) {
 
     maxsplit = $B.int_value(maxsplit)
     var ws = [9, 10, 11, 12, 13, 32]
-    // strip leading and trailing whitespaces
+    // strip leading whitespaces
     while (pos < len && ws.includes(source[pos])) {
         pos++
     }
     if (pos == len) {
         return $B.$list([])
     }
-    var start = pos
-    pos = source.length - 1
-    while (pos > 0 && ws.includes(source[pos])) {
-        pos--
-    }
-    source = source.slice(start, pos - start + 1)
+    source = source.slice(pos)
     len = source.length
+    if (maxsplit == 0) {
+        return $B.$list([cls.$factory(source)])
+    }
     // split by consecutive whitespace bytes
     var acc = []
     pos = 0
@@ -1820,6 +1818,11 @@ function bytes_split_with_whitespace(cls, self, maxsplit) {
             parts.push(acc)
             acc = []
             pos += i
+            if (parts.length == maxsplit) {
+                // the rest of the source is the last item
+                acc = source.slice(pos)
+                pos = len
+            }
         } else {
             acc.push(source[pos])
             pos++
