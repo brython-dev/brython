@@ -42,7 +42,7 @@ method_wrapper_funcs.__objclass___set = function(self) {
 }
 
 method_wrapper_funcs.__qualname___get = function(self) {
-
+    return $B.$getattr(self.d_type, '__qualname__') + '.' + self.d_name
 }
 
 method_wrapper_funcs.__qualname___set = function(self) {
@@ -518,6 +518,7 @@ $B.wrapper_descriptor.tp_descr_get = function(self, obj, type) {
     var res = {
         ob_type: $B.method_wrapper,
         d_name: self.d_name,
+        d_type: self.d_type,
         self: obj,
         wrapped: self.wrapped
     }
