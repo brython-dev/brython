@@ -108,6 +108,8 @@ class ReferenceType:
         self.obj = obj
         self.callback = callback
 
+_refs = {} # the references to an object, by id
+
 class ref:
 
     def __new__(cls, *args, **kw):
@@ -116,6 +118,7 @@ class ref:
     def __init__(self, obj, callback=None):
         self.obj = ReferenceType(obj, callback)
         self.callback = callback
+        _refs.setdefault(id(obj), []).append(self)
 
     def __call__(self):
         return self.obj.obj
@@ -127,10 +130,10 @@ class ref:
         return self.obj.obj == other.obj.obj
 
 def getweakrefcount(obj):
-    return 1
+    return len(_refs.get(id(obj), []))
 
 def getweakrefs(obj):
-    return obj
+    return list(_refs.get(id(obj), []))
 
 def _remove_dead_weakref(*args):
     pass
