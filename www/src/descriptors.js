@@ -190,7 +190,10 @@ $B.method.tp_call = function(self, ...args) {
 
 $B.method.tp_getattro = function(self, attr) {
     var tp = $B.get_class(self)
-    var descr = $B.search_in_mro(tp, attr, $B.NULL)
+    // __module__ and __doc__ are in the dict of the method type; CPython
+    // reports the function's
+    var descr = attr == '__module__' || attr == '__doc__' ? $B.NULL :
+        $B.search_in_mro(tp, attr, $B.NULL)
     if (descr !== $B.NULL) {
         var getter = $B.search_slot($B.get_class(descr), 'tp_descr_get', $B.NULL)
         if (getter !== $B.NULL) {
