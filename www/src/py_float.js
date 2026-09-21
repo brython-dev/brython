@@ -164,7 +164,9 @@ function preformat(self, fmt) {
         // The argument of toFixed is the number of digits after "."
         let prec = fmt.precision
         if (prec == 0) {
-            return Math.round(value) + ""
+            // the alternate form always shows the decimal point
+            res = Math.round(value) + (fmt.alternate ? "." : "")
+            return fmt.type == "%" ? res + "%" : res
         }
         res = $B.roundDownToFixed(value, prec) // in py_string.js
         let pt_pos = res.indexOf(".")
