@@ -855,6 +855,11 @@ $B.$getitem1 = function(obj, item) {
 
     // PEP 560
     if ($B.is_type(obj)) {
+        // the metaclass __getitem__ comes first, as in PyObject_GetItem
+        var meta_gi = $B.search_in_mro($B.get_class(obj), "__getitem__", $B.NULL)
+        if (meta_gi !== $B.NULL) {
+            return $B.$call(meta_gi, obj, item)
+        }
         if (! Array.isArray(item)) {
             item = $B.fast_tuple([item])
         }
