@@ -318,7 +318,7 @@ $B.addToImported = function(name, modobj) {
             modobj[attr].$in_js_module = true
             modobj[attr].ob_type = $B.function
             $B.init_dict(modobj[attr])
-            $B.add_function_infos(modobj, attr, name)
+            $B.add_function_infos(modobj, attr, name, attr)
         } else if ($B.$isinstance(modobj[attr], _b_.type)) {
             if ($B.get_dict(modobj[attr])) {
                 if($B.get_from_dict(modobj[attr], '__module__', $B.NULL) ===
