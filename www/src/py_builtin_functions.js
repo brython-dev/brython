@@ -1328,12 +1328,6 @@ $B.$iter = function(obj, sentinel) {
                 var res = $B.$call(iter_func, obj)
             }
             if ($B.search_slot($B.get_class(res), 'tp_iternext', $B.NULL) === $B.NULL) {
-                console.log('iter, obj', obj,
-                    '\nklass', klass,
-                    '\n  getter', getter,
-                    '\n iter func', iter_func,
-                    '\nresult of iter func', res)
-                console.log('no tp_iternext in', $B.get_class(res))
                 $B.RAISE(_b_.TypeError,
                     `iter() returned non-iterable of type '${$B.class_name(res)}'`)
             }
