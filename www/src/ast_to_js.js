@@ -307,8 +307,15 @@ function make_globals_name(scopes) {
 
 function make_search_namespaces(scopes) {
     var namespaces = []
+    var current = last_scope(scopes)
     for (var scope of scopes.slice().reverse()) {
         if (scope.parent || scope.type == 'class') {
+            if (scope === current) {
+                // a name read in the class body is searched in the class
+                // namespace first (LOAD_NAME): __module__, __qualname__ and
+                // __firstlineno__ are set there before the body runs
+                namespaces.push(make_scope_name(scopes, scope))
+            }
             continue
         } else if (scope.is_exec_scope) {
             namespaces.push('$B.exec_scope')
