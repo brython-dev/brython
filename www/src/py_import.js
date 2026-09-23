@@ -1679,13 +1679,18 @@ $B.$import_from = function(module, names, aliases, level, locals, inum) {
                 locals[item.key] = item.value
             }
         } else {
+            // `from . import X, X as Y` lists X twice in names with one
+            // aliases entry: the first occurrence binds the alias, a repeat
+            // binds the plain name, so both targets land
+            var seen = {}
             for (var name of names) {
                 var ns, alias
-                if (aliases[name]) {
+                if (aliases[name] && ! seen[name]) {
                     [ns, alias] = aliases[name]
                 } else {
                     [ns, alias] = [locals, name]
                 }
+                seen[name] = true
                 var value = $B.module_getattr(current_module, name)
                 if (value !== $B.NULL) {
                     // name is defined in the package module (__init__.py)
