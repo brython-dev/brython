@@ -280,7 +280,8 @@ $B.list_delitem = function(self, arg) {
 
 
 list.$getitem_slice = function(self, key) {
-    var klass = $B.get_class(self)
+    // slicing a subclass returns a plain list or tuple
+    var klass = $B.$isinstance(self, tuple) ? tuple : list
     // Find integer values for start, stop and step
     if(key.start === _b_.None && key.stop === _b_.None &&
             key.step === _b_.None){
