@@ -8,25 +8,14 @@ _getframe = _sys._getframe
 
 class _dataclass(tuple):
 
+    def __new__(cls, **kwargs):
+        return tuple.__new__(cls, kwargs.values())
+
     def __init__(self, **kwargs):
-        self.keys = list(kwargs)
         self.__dict__.update(kwargs)
 
-    def __getitem__(self, key):
-        if isinstance(key, int) and 0 <= key <= len(self.keys):
-            return self.__dict__[self.keys[key]]
-        elif isinstance(key, slice):
-            return [self.__dict__[k] for k in self.keys[key]]
-        raise KeyError(key)
-
-    def __iter__(self):
-        return (self.__dict__[key] for key in self.keys)
-
-    def __len__(self):
-        return len(self.keys)
-
     def __repr__(self):
-        s = ', '.join(f'{k}={self.__dict__[k]!r}' for k in self.keys)
+        s = ', '.join(f'{k}={v!r}' for k, v in self.__dict__.items())
         return f'sys.{self.__class__.__name__}({s})'
 
 
@@ -160,46 +149,8 @@ version = '.'.join(str(x) for x in __BRYTHON__.version_info[:3])
 version += " (default, %s) \n[Javascript 1.5] on Brython" \
     % __BRYTHON__.compiled_date
 
-class _comparable:
-
-    def __eq__(self, other):
-        if isinstance(other, tuple):
-           return (self.major, self.minor, self.micro) == other
-
-        return NotImplemented
-
-    def __ge__(self, other):
-        if isinstance(other, tuple):
-           return (self.major, self.minor, self.micro) >= other
-
-        return NotImplemented
-
-    def __gt__(self, other):
-        if isinstance(other, tuple):
-           return (self.major, self.minor, self.micro) > other
-
-        return NotImplemented
-
-    def __le__(self, other):
-        if isinstance(other, tuple):
-           return (self.major, self.minor, self.micro) <= other
-
-        return NotImplemented
-
-    def __lt__(self, other):
-        if isinstance(other, tuple):
-           return (self.major, self.minor, self.micro) < other
-
-        return NotImplemented
-
-    def __ne__(self, other):
-        if isinstance(other, tuple):
-           return (self.major, self.minor, self.micro) != other
-
-        return NotImplemented
-
 #eventually this needs to be the real python version such as 3.0, 3.1, etc
-version_info = make_dataclass('version_info', [_comparable])(
+version_info = make_dataclass('version_info')(
     major = __BRYTHON__.version_info[0],
     minor = __BRYTHON__.version_info[1],
     micro = __BRYTHON__.version_info[2],
@@ -238,7 +189,7 @@ hexversion = ((__BRYTHON__.version_info[0] << 24) +
                   ( __BRYTHON__.version_info[1] << 16) +
                   ( __BRYTHON__.version_info[2] << 8))
 
-_implementation_info = make_dataclass('version_info', [_comparable])(
+_implementation_info = make_dataclass('version_info')(
     major = __BRYTHON__.implementation[0],
     minor = __BRYTHON__.implementation[1],
     micro = __BRYTHON__.implementation[2],
