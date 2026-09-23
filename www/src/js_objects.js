@@ -170,7 +170,12 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
              // convert JS numbers with no decimal to a Python int
              if (jsobj % 1 === 0) {
                  if (! Number.isSafeInteger(jsobj)) {
-                     return BigInt(jsobj.toString())
+                     // Not jsobj.toString(), which writes the shortest decimal
+                     // that reads back as this double: for 2 ** 60 that is
+                     // 1152921504606847000, another integer, and from 1e21 up
+                     // it is exponential notation, which BigInt() rejects
+                     // outright. BigInt() reads the number itself, exactly.
+                     return BigInt(jsobj)
                  }
                  return jsobj
              }
