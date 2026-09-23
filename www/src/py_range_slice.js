@@ -354,22 +354,13 @@ range_funcs.count = function(self, ob) {
     if ($B.$isinstance(ob, [_b_.int, _b_.float, _b_.bool])) {
         return _b_.int.$factory(range.sq_contains(self, ob))
     } else {
-        var comp = function(other) {return $B.rich_comp("__eq__", ob, other)},
-            it = range.tp_iter(self),
-            _next = RangeIterator.tp_iternext,
-            nb = 0
-        while (true) {
-            try {
-                if (comp(_next(it))) {
-                    nb++
-                }
-            } catch (err) {
-                if ($B.$isinstance(err, _b_.StopIteration)) {
-                    return nb
-                }
-                throw err
+        var nb = 0
+        for (var item of $B.range_iterator.tp_iternext(range.tp_iter(self))) {
+            if ($B.rich_comp("__eq__", ob, item)) {
+                nb++
             }
         }
+        return nb
     }
 }
 
@@ -380,26 +371,14 @@ range_funcs.index = function(self) {
     try {
         other = $B.int_or_bool(other)
     } catch (err) {
-        var comp = function(x) {
-                return $B.rich_comp("__eq__", other, x)
-            },
-            it = range.tp_iter(self),
-            _next = RangeIterator.tp_iternext,
-            nb = 0
-        while (true) {
-            try {
-                if (comp(_next(it))) {
-                    return nb
-                }
-                nb++
-            } catch (err) {
-                if ($B.$isinstance(err, _b_.StopIteration)) {
-                    $B.RAISE(_b_.ValueError, _b_.str.$factory(other) +
-                        " not in range")
-                }
-                throw err
+        var nb = 0
+        for (var item of $B.range_iterator.tp_iternext(range.tp_iter(self))) {
+            if ($B.rich_comp("__eq__", other, item)) {
+                return nb
             }
+            nb++
         }
+        $B.RAISE(_b_.ValueError, _b_.str.$factory(other) + " not in range")
     }
     var sub = $B.rich_op('__sub__', other, self.start),
         fl = $B.rich_op('__floordiv__', sub, self.step),
