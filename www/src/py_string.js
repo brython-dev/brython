@@ -962,7 +962,10 @@ $B.printf_format = function(s, type, args) {
             $B.RAISE(_b_.TypeError,
                 "not all arguments converted during string formatting")
         }
-    } else if (nbph == 0 && ! is_mapping(args)) {
+    } else if (nbph == 0 && ($B.is_str(args) ||
+            $B.$getattr(args, '__getitem__', $B.NULL) === $B.NULL)) {
+        // PyMapping_Check: any subscriptable object except str is a
+        // "mapping" here, eg a list
         $B.RAISE(_b_.TypeError,
             "not all arguments converted during string formatting")
     }
