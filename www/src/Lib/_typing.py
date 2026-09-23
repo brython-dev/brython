@@ -426,10 +426,10 @@ class ParamSpec:
 
     def __init__(self, name, *, bound=None,
                  covariant=False, contravariant=False,
-                 infer_variance=True,
+                 infer_variance=False,
                  default=None):
         self.__name__ = name
-        super().__init__(bound, covariant, contravariant)
+        self.__bound__ = _type_convert(bound)
         def_mod = _caller()
         if def_mod != 'typing':
             self.__module__ = def_mod
