@@ -265,15 +265,15 @@ hash_info = make_dataclass('hash_info')(
     )
 
 float_info = make_dataclass('float_info')(
-        dig = 15,
-        epsilon = 2 ** -52,
-        mant_dig = 53,
         max = __BRYTHON__.MAX_VALUE,
         max_exp = 2 ** 10,
         max_10_exp = 308,
         min = __BRYTHON__.MIN_VALUE,
         min_exp = -1021,
         min_10_exp = -307,
+        dig = 15,
+        mant_dig = 53,
+        epsilon = 2 ** -52,
         radix = 2,
         rounds = 1
     )
