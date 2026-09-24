@@ -2534,14 +2534,22 @@ $B.UnionType.tp_richcompare = function(self, other, op) {
     if (! $B.$isinstance(other, $B.UnionType)) {
         return _b_.NotImplemented
     }
+    // unions compare as sets of types: int | str == str | int
+    var same = self.args.length == other.args.length &&
+        self.args.every(item => other.args.includes(item))
     switch (op) {
         case '__eq__':
-            return $B.list_eq(self.args, other.args)
+            return same
         case '__ne__':
-            return ! $B.list_eq(self.args, other.args)
+            return ! same
         default:
             return _b_.NotImplemented
     }
+}
+
+$B.UnionType.tp_hash = function(self) {
+    // equal unions must have the same hash, whatever the order of the types
+    return _b_.hash($B.$call(_b_.frozenset, $B.$list(self.args.slice())))
 }
 
 $B.UnionType.tp_repr = function(self) {
