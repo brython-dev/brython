@@ -2301,13 +2301,22 @@ var decode = $B.decode = function(obj, encoding, errors) {
           if ([bytes, bytearray].includes($B.get_class(obj))) {
               obj = decode(obj, "latin-1", "strict")
           }
-          return obj.replace(/\\n/g, "\n").
-                   replace(/\\a/g, "\u0007").
-                   replace(/\\b/g, "\b").
-                   replace(/\\f/g, "\f").
-                   replace(/\\t/g, "\t").
-                   replace(/\\'/g, "'").
-                   replace(/\\"/g, '"')
+          var simple_escapes = {'\\': '\\', "'": "'", '"': '"',
+              'a': '\u0007', 'b': '\b', 'f': '\f', 'n': '\n', 'r': '\r',
+              't': '\t', 'v': '\v'}
+          return obj.replace(
+              /\\(x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8}|[0-7]{1,3}|[\s\S])/g,
+              function(seq, esc) {
+                  var car = esc[0]
+                  if ('xuU'.includes(car) && esc.length > 1) {
+                      return String.fromCodePoint(parseInt(esc.substr(1), 16))
+                  } else if (car >= '0' && car <= '7') {
+                      return String.fromCharCode(parseInt(esc, 8))
+                  }
+                  // an unknown escape sequence is left as is
+                  return simple_escapes.hasOwnProperty(car) ?
+                      simple_escapes[car] : seq
+              })
       case "raw_unicode_escape":
           let str = decode(obj, "latin-1", "strict")
           let uni_re = /(\\U)([a-fA-F0-9]{0,8})|(\\u)([a-fA-F0-9]{0,4})/g
