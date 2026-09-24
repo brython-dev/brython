@@ -1065,7 +1065,12 @@ $B.make_setattr = function(cls) {
     cls.tp_setattro = $B.NULL
     var setattr = $B.get_from_dict(cls, '__setattr__', $B.NULL)
     if (setattr !== $B.NULL) {
-        cls.tp_setattro = setattr
+        // __setattr__ is not always a Javascript function: it can be any
+        // callable, eg a method descriptor such as dict.__setitem__
+        cls.tp_setattro = typeof setattr == 'function' ? setattr :
+            function(obj, attr, value) {
+                return $B.$call(setattr, obj, attr, value)
+            }
     } else if (cls.tp_mro) {
         for (var kls of cls.tp_mro) {
             if(Object.hasOwn(kls, 'tp_setattro') &&
