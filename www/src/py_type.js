@@ -2562,9 +2562,18 @@ $B.UnionType.tp_repr = function(self) {
 }
 
 $B.UnionType.nb_or = function(self, other) {
-    var items = self.args.slice()
-    if (! items.includes(other)) {
-        items.push(other)
+    // self is not always the union: for "x | union", nb_or of the left
+    // operand returns NotImplemented and this is called with the operands
+    // in their original order
+    var items = []
+    for (var operand of [self, other]) {
+        var operand_items = $B.$isinstance(operand, $B.UnionType) ?
+            operand.args : [operand]
+        for (var item of operand_items) {
+            if (! items.includes(item)) {
+                items.push(item)
+            }
+        }
     }
     return $B.UnionType.$factory(items)
 }
