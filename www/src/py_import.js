@@ -110,19 +110,26 @@ $B.module.tp_setattro = function(self, attr, value) {
 var module_funcs = $B.module.tp_funcs = {}
 
 module_funcs.__annotate___get = function(self) {
-
+    var value = $B.get_from_dict(self, '__annotate__', $B.NULL)
+    return value === $B.NULL ? _b_.None : value
 }
 
-module_funcs.__annotate___set = function(self) {
-
+module_funcs.__annotate___set = function(self, value) {
+    $B.set_to_dict(self, '__annotate__', value)
 }
 
 module_funcs.__annotations___get = function(self) {
-
+    var value = $B.get_from_dict(self, '__annotations__', $B.NULL)
+    if (value === $B.NULL) {
+        // as CPython does, create and cache an empty dict on first access
+        value = $B.empty_dict()
+        $B.set_to_dict(self, '__annotations__', value)
+    }
+    return value
 }
 
-module_funcs.__annotations___set = function(self) {
-
+module_funcs.__annotations___set = function(self, value) {
+    $B.set_to_dict(self, '__annotations__', value)
 }
 
 module_funcs.__dict___get = function(self) {
