@@ -424,7 +424,7 @@ def unpack(fmt, data):
         except KeyError:
             raise StructError("%s is not a valid format" % cur)
 
-        if not num :
+        if num is None:
             num = 1
 
         if cur == 'x':
