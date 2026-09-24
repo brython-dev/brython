@@ -61,7 +61,10 @@ except ImportError:
         FrameType = type(exc.__traceback__.tb_frame)
 
     GetSetDescriptorType = type(FunctionType.__code__)
-    MemberDescriptorType = type(FunctionType.__globals__)
+
+    class _S:
+        __slots__ = ('_s',)
+    MemberDescriptorType = type(_S._s)
 
     GenericAlias = type(list[int])
     UnionType = type(int | str)
@@ -73,7 +76,7 @@ except ImportError:
     # CapsuleType cannot be accessed from pure Python,
     # so there is no fallback definition.
 
-    del sys, _f, _g, _C, _c, _ag, _cell_factory  # Not for export
+    del sys, _f, _g, _C, _c, _ag, _cell_factory, _S  # Not for export
 
 
 # Provide a PEP 3115 compliant mechanism for class creation
