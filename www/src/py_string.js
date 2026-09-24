@@ -1853,7 +1853,9 @@ _b_.str.tp_new = function(cls, args, kw) {
         ob_type: cls,
         $brython_value: str.$factory(arg, encoding, errors)
     }
-    $B.init_dict(res)
+    if ($B.instance_has_dict(cls)) {
+        $B.init_dict(res)
+    }
     return res
 }
 

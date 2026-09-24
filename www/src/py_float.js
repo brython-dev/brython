@@ -1007,7 +1007,7 @@ _b_.float.tp_new = function(cls, args, kw) {
         ob_type: cls,
         value: float.$factory(value).value
     }
-    if (cls !== _b_.float) {
+    if ($B.instance_has_dict(cls)) {
         $B.init_dict(res)
     }
     return res
