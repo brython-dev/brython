@@ -3597,7 +3597,10 @@ $B.ast.Module.prototype.to_js = function(scopes) {
     if (scopes.postpone_annotations) {
         js += `locals.__annotations__ = $B.empty_dict()\n`
     } else {
-        js += `locals.$annotations = {}\n`
+        // not enumerable: $annotations is internal, it must not show up in
+        // the module __dict__
+        js += `Object.defineProperty(locals, '$annotations', ` +
+              `{value: {}, writable: true, configurable: true})\n`
         bind('__annotate__', scopes)
     }
     js += 'var stack_length = $B.count_frames()\n'
