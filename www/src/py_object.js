@@ -491,11 +491,15 @@ _b_.object.tp_new = function(cls, args, kw) {
     var res = {
         ob_type: cls
     }
-    if(cls !== object &&
-            ($B.get_from_dict(cls, '__slots__', $B.NULL) === $B.NULL ||
-             cls.$slots_has_dict)){
-        // no __slots__, or '__dict__' is in __slots__ -> instance gets a __dict__
-        $B.init_dict(res)
+    // the instance has no __dict__ only if every Python class in the MRO
+    // defines __slots__ without '__dict__'
+    for (var klass of cls.tp_mro) {
+        if (klass.tp_flags & $B.TPFLAGS.HEAPTYPE &&
+                ($B.get_from_dict(klass, '__slots__', $B.NULL) === $B.NULL ||
+                 klass.$slots_has_dict)) {
+            $B.init_dict(res)
+            break
+        }
     }
     return res
 }
