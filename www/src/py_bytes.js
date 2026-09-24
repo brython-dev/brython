@@ -2535,6 +2535,27 @@ var encode = $B.encode = function() {
               }
           }
           break
+        case "unicode_escape":
+          var escapes = {'\\': '\\\\', '\n': '\\n', '\r': '\\r', '\t': '\\t'}
+          for (let char of s) {
+              let cp = char.codePointAt(0),
+                  esc = escapes[char]
+              if (esc === undefined) {
+                  if (cp >= 0x20 && cp < 0x7f) {
+                      esc = char
+                  } else if (cp < 0x100) {
+                      esc = '\\x' + cp.toString(16).padStart(2, '0')
+                  } else if (cp < 0x10000) {
+                      esc = '\\u' + cp.toString(16).padStart(4, '0')
+                  } else {
+                      esc = '\\U' + cp.toString(16).padStart(8, '0')
+                  }
+              }
+              for (let j = 0; j < esc.length; j++) {
+                  t[pos++] = esc.charCodeAt(j)
+              }
+          }
+          break
         case "raw_unicode_escape":
           for (let i = 0, len = s.length; i < len; i++) {
               let cp = s.charCodeAt(i) // code point
