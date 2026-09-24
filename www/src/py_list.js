@@ -649,6 +649,11 @@ list.$unpack = function(obj) {
     try {
         return _b_.list.$factory(obj)
     } catch (err) {
+        if (! $B.is_exc(err, [_b_.TypeError])) {
+            // the iterable itself raised: report its exception, not the
+            // StopIteration of the re-probe below
+            throw err
+        }
         try {
             var it = $B.$iter(obj)
             $B.$call($B.$getattr(it, "__next__"))
