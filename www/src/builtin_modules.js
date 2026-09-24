@@ -648,7 +648,10 @@
         RegExp: self.RegExp && $B.jsobj2pyobj(self.RegExp),
         String: self.String && $B.jsobj2pyobj(self.String),
         "super": super_class,
-        UNDEFINED: undefined,
+        // Kept as a name so that `x is UNDEFINED` and `return UNDEFINED` in
+        // existing programs keep working: both now mean None, which is what
+        // the bridge hands back for undefined and hands out as undefined.
+        UNDEFINED: _b_.None,
         UndefinedType: $B.UndefinedType
     }
 
