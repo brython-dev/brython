@@ -40,10 +40,24 @@ __all__ = ["PickleError", "PicklingError", "UnpicklingError", "Pickler",
 
 try:
     from _pickle import PickleBuffer
-    __all__.append("PickleBuffer")
-    _HAVE_PICKLE_BUFFER = True
 except ImportError:
-    _HAVE_PICKLE_BUFFER = False
+    class PickleBuffer:
+        """Wrapper for potentially out-of-band serialisation of a buffer."""
+
+        def __init__(self, buffer):
+            self._view = memoryview(buffer)
+
+        def raw(self):
+            if self._view is None:
+                raise ValueError("operation forbidden on released "
+                                 "PickleBuffer object")
+            return self._view
+
+        def release(self):
+            self._view = None
+
+__all__.append("PickleBuffer")
+_HAVE_PICKLE_BUFFER = True
 
 
 # Shortcut for use in isinstance testing
