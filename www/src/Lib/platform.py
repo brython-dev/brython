@@ -39,7 +39,7 @@ def python_version():
     return '.'.join(map(str, __BRYTHON__.version_info[:3]))
 
 def python_version_tuple():
-    return __BRYTHON__.version_info[:3]
+    return tuple(str(item) for item in __BRYTHON__.version_info[:3])
 
 def release():
     return ''
