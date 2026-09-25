@@ -144,6 +144,9 @@ function encode_position(lineno, end_lineno, col_offset, end_col_offset) {
 }
 
 $B.decode_position = function(pos) {
+    if (pos === undefined) {
+        return pos
+    }
     if (pos.length == 3) {
         return [pos[0], pos[0], pos[1], pos[1] + pos[2]]
     } else {
