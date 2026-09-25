@@ -1621,12 +1621,12 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum) {
     }
 }
 
-$B.$import_from = function(module, names, aliases, level, locals, inum) {
+$B.$import_from = function(module, name, aliases, level, locals, inum) {
     // Import names from modules; level is 0 for absolute import, > 0
     // for relative import (number of dots before module name)
     var test = false // module == '_heapq' //&& names[0] == '_path_normpath'
     if (test) {
-        console.log('import from', module, names)
+        console.log('import from', module, name)
     }
     var current_module_name = $B.frame_obj.frame[2],
         parts = current_module_name.split('.'),
@@ -1670,7 +1670,7 @@ $B.$import_from = function(module, names, aliases, level, locals, inum) {
             current_module = $B.imported[submodule]
         }
         // get names from a package
-        if (names.length > 0 && names[0] == '*') {
+        if (name == '*') {
             // eg "from .common import *"
             for (var item of $B.module_items(current_module)) {
                 if (item.key.startsWith('$') || item.key.startsWith('_')) {
@@ -1679,34 +1679,27 @@ $B.$import_from = function(module, names, aliases, level, locals, inum) {
                 locals[item.key] = item.value
             }
         } else {
-            // `from . import X, X as Y` lists X twice in names with one
-            // aliases entry: the first occurrence binds the alias, a repeat
-            // binds the plain name, so both targets land
-            var seen = {}
-            for (var name of names) {
-                var ns, alias
-                if (aliases[name] && ! seen[name]) {
-                    [ns, alias] = aliases[name]
-                } else {
-                    [ns, alias] = [locals, name]
-                }
-                seen[name] = true
-                var value = $B.module_getattr(current_module, name)
-                if (value !== $B.NULL) {
-                    // name is defined in the package module (__init__.py)
-                    ns[alias] = value
-                } else {
-                    // try to import module in the package
-                    var sub_module = $B.module_getattr(current_module, '__name__') +
-                         '.' + name
-                    $B.$import(sub_module, [], {}, {})
-                    ns[alias] = $B.imported[sub_module]
-                }
+            var ns, alias
+            if (aliases[name]) {
+                [ns, alias] = aliases[name]
+            } else {
+                [ns, alias] = [locals, name]
+            }
+            var value = $B.module_getattr(current_module, name)
+            if (value !== $B.NULL) {
+                // name is defined in the package module (__init__.py)
+                ns[alias] = value
+            } else {
+                // try to import module in the package
+                var sub_module = $B.module_getattr(current_module, '__name__') +
+                     '.' + name
+                $B.$import(sub_module, [], {}, {})
+                ns[alias] = $B.imported[sub_module]
             }
         }
     } else {
         // import module
-        $B.$import(module, names, aliases, locals, inum)
+        $B.$import(module, [name], aliases, locals, inum)
     }
 }
 

@@ -3162,22 +3162,22 @@ $B.ast.ImportFrom.prototype.to_js = function(scopes) {
                 $B.last(this.names))
         }
     }
-
-    var js = prefix + `$B.set_lineno(frame, ${this.lineno})\n` +
-             prefix + `$B.$import_from("${this.module || ''}", `
-    var names = this.names.map(x => `"${x.name}"`).join(', '),
-        aliases = []
-    for (var name of this.names) {
+    let inum = add_to_positions(scopes, this)
+    let js = prefix + `$B.set_lineno(frame, ${this.lineno})\n`
+    for (let name of this.names) {
+        js += prefix + `$B.$import_from("${this.module || ''}", ` +
+            `'${name.name}', `
         if (name.asname) {
             // the alias might have been declared global...
             var binding_scope = bind(name.asname, scopes)
             var scope_name = make_scope_name(scopes, binding_scope)
-            aliases.push(`${name.name}: [${scope_name}, '${name.asname}']`)
+            js += `{${name.name}: [${scope_name}, '${name.asname}']}`
+        } else {
+            js += `{}`
         }
+        js += `, ${this.level}, locals, ${inum})\n`
     }
-    var inum = add_to_positions(scopes, this)
-
-    js += `[${names}], {${aliases.join(', ')}}, ${this.level}, locals, ${inum});`
+    js = js.trimRight()
 
     for (var alias of this.names) {
         if (alias.asname) {
