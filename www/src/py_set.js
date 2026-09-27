@@ -497,7 +497,7 @@ _b_.set.tp_richcompare = function(self, other, op) {
 
 _b_.set.nb_subtract = function(self, other) {
     // Return a new set with elements in the set that are not in the others
-    if(! $B.$isinstance(self, _b_.set) ||
+    if(! $B.$isinstance(self, [set, frozenset]) ||
             ! $B.$isinstance(other, [set, frozenset])){
         return _b_.NotImplemented
     }
