@@ -151,14 +151,15 @@ function mp_subscript(self, key) {
 }
 
 function sq_concat(self, other) {
-    if ($B.get_class(self) !== $B.get_class(other)) {
+    var cls = $B.$isinstance(self, tuple) ? tuple : list
+    if (! $B.$isinstance(other, cls)) {
         return _b_.NotImplemented
     }
     var res = self.slice()
     for (const item of other) {
         res.push(item)
     }
-    if ($B.$isinstance(self, tuple)) {
+    if (cls === tuple) {
         return tuple.$factory(res)
     } else {
         return $B.$list(res)
