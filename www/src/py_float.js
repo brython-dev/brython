@@ -1028,7 +1028,7 @@ _b_.float.nb_absolute = function(self) {
 
 _b_.float.nb_bool = function(self) {
     check_self_is_float(self, '__bool__')
-    return _b_.bool.$factory(self.value)
+    return self.value != 0
 }
 
 _b_.float.nb_int = function(self) {
