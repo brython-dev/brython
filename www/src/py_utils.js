@@ -1099,6 +1099,9 @@ $B.augm_assign = function(left, op, right) {
                 z = res_type.x * res_type.y
                 break
             case '/=':
+                if (res_type.y == 0) {
+                    $B.RAISE(_b_.ZeroDivisionError, "division by zero")
+                }
                 return $B.fast_float(res_type.x / res_type.y)
         }
         if (z) {
