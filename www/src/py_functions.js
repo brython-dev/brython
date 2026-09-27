@@ -340,7 +340,8 @@ $B.function.$factory = function() {
     var code = $.code
     var __name__ = $.name === _b_.None ? code.co_name : $.name
     var frame = $B.frame_obj.frame
-    var globals_name = 'locals_' + frame[2]
+    var gname = $B.str_dict_get($.globals, '__name__', frame[2])
+    var globals_name = 'locals_' + gname.replace(/[^\w$]/g, '_')
     var __file__ = frame.__file__
     var func = new Function('_b_', '__file__', globals_name, 'return ' + code.co_code)
     var f = func(_b_, __file__, $.globals)
