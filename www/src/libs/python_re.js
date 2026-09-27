@@ -3288,14 +3288,13 @@ GroupMO.prototype.backtrack = function(string, groups) {
                 var rank = mo.node.parent.items.indexOf(mo.node)
                 for (var _case of mo.node.parent.items.slice(rank + 1)) {
                     var _mo = match({node: _case, text: _case.text},
-                        string, mo.start)
+                        string, mo.start, this.endpos, false, groups)
                     if (_mo) {
                         // update GroupMO object
                         mos.push(_mo)
                         this.end = _mo.end
-                        if (this.$groups.$last.length > 0) {
-                            var ix = this.$groups.$last[this.$groups.$last.length - 1]
-                            this.$groups[ix].end = _mo.end
+                        if (this.node.num !== undefined) {
+                            groups[this.node.num].end = _mo.end
                         }
                         return true
                     }
