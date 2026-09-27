@@ -3276,6 +3276,14 @@ GroupMO.prototype.backtrack = function(string, groups) {
             nb0 = mos.length
         while (mos.length > 0) {
             var mo = mos.pop()
+            if (mo.backtrack(string, groups)) {
+                mos.push(mo)
+                if (this.node.num !== undefined) {
+                    groups[this.node.num].end = mo.end
+                }
+                this.end = mo.end
+                return true
+            }
             if (mo.node instanceof Case) {
                 var rank = mo.node.parent.items.indexOf(mo.node)
                 for (var _case of mo.node.parent.items.slice(rank + 1)) {
@@ -3292,14 +3300,6 @@ GroupMO.prototype.backtrack = function(string, groups) {
                         return true
                     }
                 }
-            }
-            if (mo.backtrack(string, groups)) {
-                mos.push(mo)
-                if (this.node.num !== undefined) {
-                    groups[this.node.num].end = mo.end
-                }
-                this.end = mo.end
-                return true
             }
         }
     }
