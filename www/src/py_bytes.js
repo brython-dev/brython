@@ -187,6 +187,9 @@ function _new(cls, args, kw) {
     }
     if (typeof source == "number" || $B.is_int(source)) {
         var size = $B.PyNumber_Index(source)
+        if (size < 0) {
+            $B.RAISE(_b_.ValueError, "negative count")
+        }
         source = []
         for (var i = 0; i < size; i++) {
             source[i] = 0
