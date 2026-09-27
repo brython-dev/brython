@@ -301,7 +301,7 @@ _b_.complex.nb_power = function(self, other, mod) {
         var x = other.real.value,
             y = other.imag.value
         var pw = Math.pow(exp.norm, x) * Math.pow(Math.E, -y * angle),
-            theta = y * Math.log(exp.norm) - x * angle
+            theta = y * Math.log(exp.norm) + x * angle
         if (pw == Number.POSITIVE_INFINITY || pw === Number.NEGATIVE_INFINITY) {
             $B.RAISE(_b_.OverflowError, 'complex exponentiation')
         }
