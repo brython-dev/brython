@@ -94,15 +94,12 @@ $B.module.tp_new = function(cls, args, kw) {
 }
 
 $B.module.tp_setattro = function(self, attr, value) {
-    var test = false // attr == 'path'
-    var res = _b_.object.tp_getattro(self, attr)
-    if (res !== $B.NULL) {
-        if (test) {
-            console.log('res', res, $B.get_class(res).tp_name)
-        }
-        if (res.__set__) {
-            return res.__set__(value)
-        }
+    // Javascript objects with a __set__ in the module dict, eg sys.path.
+    // Search the dict only: a full getattr would run the __get__ of a
+    // descriptor defined in a module subclass
+    var res = $B.get_from_dict(self, attr, $B.NULL)
+    if (res !== $B.NULL && res.__set__) {
+        return res.__set__(value)
     }
     _b_.object.tp_setattro(self, attr, value)
 }
