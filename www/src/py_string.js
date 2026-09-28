@@ -957,10 +957,10 @@ $B.printf_format = function(s, type, args) {
     if (argpos !== null) {
         if (args.length > argpos) {
             $B.RAISE(_b_.TypeError,
-                "not enough arguments for format string")
+                "not all arguments converted during string formatting")
         } else if (args.length < argpos) {
             $B.RAISE(_b_.TypeError,
-                "not all arguments converted during string formatting")
+                "not enough arguments for format string")
         }
     } else if (nbph == 0) {
         $B.RAISE(_b_.TypeError,

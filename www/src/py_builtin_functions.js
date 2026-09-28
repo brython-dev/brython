@@ -1160,6 +1160,10 @@ $B.$isinstance = function(obj, cls) {
         '__instancecheck__', $B.NULL)
     if (instancecheck !== $B.NULL) {
         if (instancecheck.method !== _b_.type.tp_funcs.__instancecheck__) {
+            if (instancecheck.im_self !== undefined) {
+                // a classmethod of the metaclass is already bound
+                return $B.$call(instancecheck, obj)
+            }
             return $B.$call(instancecheck, cls, obj)
         }
     }
@@ -1206,6 +1210,10 @@ var issubclass = _b_.issubclass = function(cls, class_or_tuple) {
 
     if (sch === $B.NULL) {
         return false
+    }
+    if (sch.im_self !== undefined) {
+        // a classmethod of the metaclass is already bound
+        return $B.$call(sch, cls)
     }
     return $B.$call(sch, _class, cls)
 }

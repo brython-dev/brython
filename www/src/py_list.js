@@ -119,13 +119,6 @@ function mp_subscript(self, key) {
         return list_res
     }
 
-    if (! $B.$isinstance(key, [_b_.int, _b_.slice])) {
-        $B.RAISE(_b_.TypeError,
-            `list indices must be integers or slices, ` +
-            `not ${$B.class_name(key)}`
-        )
-    }
-
     if ($B.$isinstance(key, _b_.slice)) {
         return _b_.list.$getitem_slice(self, key)
     }
@@ -134,7 +127,7 @@ function mp_subscript(self, key) {
         var int_key = $B.PyNumber_Index(key)
     } catch (err) {
         $B.RAISE(_b_.TypeError, $B.class_name(self) +
-            " indices must be integer, not " + $B.class_name(key))
+            " indices must be integers or slices, not " + $B.class_name(key))
     }
 
     let items = self.valueOf(),
