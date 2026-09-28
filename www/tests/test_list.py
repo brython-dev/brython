@@ -520,4 +520,8 @@ assert tuple.__getitem__(example_tuple, slice(-16, None)) == \
 # PR 2764
 assert [1, 2, 3][0:-31:-1] == [1]
 
+# PR 2973
+class L(list): pass
+assert [1] + L([2]) == [1, 2]
+
 print("passed all tests..")
