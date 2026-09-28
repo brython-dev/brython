@@ -1311,4 +1311,13 @@ class B:
 
 assert type('S', (B,), {}) in B.__subclasses__()
 
+# PR 2985
+class C:
+
+    def m(self):
+        pass
+
+assert hash(C().m) != hash(C().m)
+
+
 print('passed all tests..')
