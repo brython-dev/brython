@@ -181,7 +181,7 @@ $B.method.tp_repr = function(self) {
 }
 
 $B.method.tp_hash = function(self) {
-
+    return _b_.object.tp_hash(self.im_self) ^ _b_.hash(self.im_func)
 }
 
 $B.method.tp_call = function(self, ...args) {
