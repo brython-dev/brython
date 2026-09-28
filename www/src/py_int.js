@@ -859,7 +859,7 @@ int_funcs.bit_length = function(self) {
 }
 
 int_funcs.conjugate = function(self) {
-
+    return int_value(self)
 }
 
 int_funcs.denominator_get = function(self) {
