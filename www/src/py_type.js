@@ -29,13 +29,16 @@ $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
 
     delete extra_kwargs.metaclass
 
-    // set __module__ before calling metaclass.__new__
-    var classdef_frame = $B.frame_obj.prev.frame
-    var module = classdef_frame[2]
-    if (Object.hasOwn(classdef_frame[1], '__name__')) {
-        module = classdef_frame[1].__name__
+    // set __module__ before calling metaclass.__new__, unless the class
+    // body assigned it
+    if ($B.str_dict_get(dict, '__module__', $B.NULL) === $B.NULL) {
+        var classdef_frame = $B.frame_obj.prev.frame
+        var module = classdef_frame[2]
+        if (Object.hasOwn(classdef_frame[1], '__name__')) {
+            module = classdef_frame[1].__name__
+        }
+        $B.str_dict_set(dict, '__module__', module)
     }
-    $B.str_dict_set(dict, '__module__', module)
 
     // A class that overrides __eq__() and does not define __hash__()
     // will have its __hash__() implicitly set to None
