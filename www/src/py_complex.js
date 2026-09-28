@@ -50,19 +50,10 @@ complex.$getnewargs = function(self) {
 }
 
 function complex2expo(cx) {
-    var norm = Math.sqrt((cx.real.value * cx.real.value) +
-                         (cx.imag.value * cx.imag.value)),
-        sin = cx.imag.value / norm,
-        cos = cx.real.value / norm,
-        angle
-    if (cos == 0) {
-        angle = sin == 1 ? Math.PI / 2 : 3 * Math.PI / 2
-    } else if (sin == 0) {
-        angle = cos == 1 ? 0 : Math.PI
-    } else {
-        angle = Math.atan(sin / cos)
+    return {
+        norm: Math.hypot(cx.real.value, cx.imag.value),
+        angle: Math.atan2(cx.imag.value, cx.real.value)
     }
-    return {norm: norm, angle: angle}
 }
 
 // functions copied from CPython Objects/complexobject.c
