@@ -512,6 +512,26 @@ $B.tokenizer = function(src, filename, mode, parser) {
                         ft_escape = false
                         continue
                     }
+                    if (char == 'N' && src.charAt(pos) == '{') {
+                        // named Unicode character: the braces are part of the
+                        // escape sequence, not a replacement field
+                        var end_name = src.indexOf('}', pos)
+                        var cp = $B.unicode_name_to_cp(src.substring(pos + 1,
+                            end_name))
+                        if (cp === null) {
+                            raise_error(_b_.SyntaxError, filename,
+                                line_num, pos - line_start,
+                                line_num, end_name - line_start + 1, line,
+                                "(unicode error) 'unicodeescape' codec can't " +
+                                "decode bytes in position 0-" +
+                                (end_name - pos + 1) +
+                                ": unknown Unicode character name")
+                        }
+                        ft_buffer += String.fromCodePoint(cp)
+                        pos = end_name + 1
+                        ft_escape = false
+                        continue
+                    }
                     ft_buffer += '\\'
                 }
                 ft_buffer += char

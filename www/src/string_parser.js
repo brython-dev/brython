@@ -40,6 +40,31 @@ function SurrogatePair(value) {
     this.value = value
 }
 
+$B.unicode_name_to_cp = function(name) {
+    // Code point of the Unicode character called "name", null if there is
+    // no such character, undefined if unicode.txt could not be loaded
+    if ($B.unicodedb === undefined) {
+        var xhr = new XMLHttpRequest
+        xhr.open("GET", $B.brython_path + "unicode.txt", false)
+        xhr.onreadystatechange = function() {
+            if (this.readyState == 4) {
+                if (this.status == 200) {
+                    $B.unicodedb = this.responseText
+                } else {
+                    console.log("Warning - could not load unicode.txt")
+                }
+            }
+        }
+        xhr.send()
+        if ($B.unicodedb === undefined) {
+            return undefined
+        }
+    }
+    var re = new RegExp("^([0-9A-F]+);" + name.toUpperCase() + ";.*$", "m"),
+        search = re.exec($B.unicodedb)
+    return search === null ? null : parseInt(search[1], 16)
+}
+
 function test_escape(p, token, context, text, string_start, antislash_pos) {
     // Test if the escape sequence starting at position "antislash_pos" in text
     // is is valid
@@ -224,37 +249,16 @@ $B.prepare_string = function(p, token) {
                         string_error(p, token, "(unicode error) " +
                             "malformed \\N character escape")
                     }
-                    var description = search[0].toUpperCase()
-                    // Load unicode table if not already loaded
-                    if ($B.unicodedb === undefined) {
-                        var xhr = new XMLHttpRequest
-                        xhr.open("GET",
-                            $B.brython_path + "unicode.txt", false)
-                        xhr.onreadystatechange = function() {
-                            if (this.readyState == 4) {
-                                if (this.status == 200) {
-                                    $B.unicodedb = this.responseText
-                                } else {
-                                    console.log("Warning - could not " +
-                                        "load unicode.txt")
-                                }
-                            }
-                        }
-                        xhr.send()
-                    }
-                    if ($B.unicodedb !== undefined) {
-                        var re = new RegExp("^([0-9A-F]+);" +
-                            description + ";.*$", "m")
-                        search = re.exec($B.unicodedb)
-                        if (search === null) {
-                            string_error(p, token, "(unicode error) " +
-                                "unknown Unicode character name")
-                        }
-                        var cp = parseInt(search[1], 16) // code point
+                    var cp = $B.unicode_name_to_cp(search[0])
+                    if (cp === null) {
+                        string_error(p, token, "(unicode error) " +
+                            "unknown Unicode character name")
+                    } else if (cp === undefined) {
+                        // unicode.txt could not be loaded
+                        end++
+                    } else {
                         zone += String.fromCodePoint(cp)
                         end = end_lit + 1
-                    } else {
-                        end++
                     }
                 } else {
                     var esc = test_escape(p, token, context, src,
