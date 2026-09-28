@@ -2523,6 +2523,8 @@ $B.set_func_names($B.GenericAlias, "types")
 $B.UnionType = $B.make_builtin_class("UnionType")
 
 $B.UnionType.$factory = function(items) {
+    // X | None stores NoneType, as CPython does
+    items = items.map(item => item === _b_.None ? $B.NoneType : item)
     return {
         ob_type: $B.UnionType,
         args: $B.fast_tuple(items)
@@ -2546,7 +2548,9 @@ $B.UnionType.tp_richcompare = function(self, other, op) {
 $B.UnionType.tp_repr = function(self) {
     var t = []
     for (var item of self.args) {
-        if ($B.is_type(item)) {
+        if (item === $B.NoneType) {
+            t.push('None')
+        } else if ($B.is_type(item)) {
             var s = $B.get_name(item)
             let module = $B.get_from_dict(item, '__module__', 'builtins')
             if (module !== "builtins") {
@@ -2562,6 +2566,9 @@ $B.UnionType.tp_repr = function(self) {
 
 $B.UnionType.nb_or = function(self, other) {
     var items = self.args.slice()
+    if (other === _b_.None) {
+        other = $B.NoneType
+    }
     if (! items.includes(other)) {
         items.push(other)
     }
