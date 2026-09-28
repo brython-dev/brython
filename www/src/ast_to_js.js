@@ -2149,7 +2149,10 @@ $B.ast.Constant.prototype.to_js = function(scopes) {
     } else if (klass === _b_.float) {
         return `(new $B.Float(${this.value.value}))`
     } else if (klass === _b_.complex) {
-        return `$B.make_complex(${this.value.real.value}, ${this.value.imag.value})`
+        // a template literal prints -0 as 0
+        let [real, imag] = [this.value.real.value, this.value.imag.value].map(
+            x => Object.is(x, -0) ? '-0' : x)
+        return `$B.make_complex(${real}, ${imag})`
     } else if (this.value === _b_.Ellipsis) {
         return `_b_.Ellipsis`
     } else if ($B.is_tuple(this.value)) {
