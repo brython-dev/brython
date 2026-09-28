@@ -384,17 +384,19 @@ _b_.complex.tp_new = function(cls, args, kw) {
             }
             // Regular expression for literal complex string. Includes underscores
             // for PEP 515
-            var complex_re = /^\s*([+-]*[0-9_]*\.?[0-9_]*(e[+-]*[0-9_]*)?)([+-]?)([0-9_]*\.?[0-9_]*(e[+-]*[0-9_]*)?)(j?)\s*$/i
+            var complex_re = /^\s*([+-]*(?:nan|inf(?:inity)?|[0-9_]*\.?[0-9_]*(e[+-]*[0-9_]*)?))([+-]?)((?:nan|inf(?:inity)?|[0-9_]*\.?[0-9_]*(e[+-]*[0-9_]*)?))(j?)\s*$/i
 
             var parts = complex_re.exec(first)
 
             function to_num(s) {
-                var res = parseFloat(s.charAt(0) + s.substr(1).replace(/_/g, ""))
-                if (isNaN(res)) {
+                // float() parses the same syntax, including nan and inf
+                try {
+                    return _b_.float.$factory(s.charAt(0) +
+                        s.substr(1).replace(/_/g, "")).value
+                } catch (err) {
                     $B.RAISE(_b_.ValueError, "could not convert string " +
                         "to complex: '" + arg +"'")
                 }
-                return res
             }
             if (parts === null) {
                 $B.RAISE(_b_.ValueError, "complex() arg is a malformed string")
@@ -420,7 +422,7 @@ _b_.complex.tp_new = function(cls, args, kw) {
                     second = parts[_sign] == "-" ? -second : second
                 }
             } else {
-                if (parts[_sign] && parts[_imag] == '') {
+                if (parts[_sign] || parts[_imag]) {
                     $B.RAISE(_b_.ValueError, 'complex() arg is a malformed string')
                 }
                 first = to_num(parts[_real])
