@@ -1305,4 +1305,10 @@ A = Meta('X', (), {'tag': 1})
 B = Meta('X', (), {'tag': 1})
 assert A == B
 
+# PR 2982
+class B:
+    pass
+
+assert type('S', (B,), {}) in B.__subclasses__()
+
 print('passed all tests..')
