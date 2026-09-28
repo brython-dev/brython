@@ -574,7 +574,7 @@ _b_.set.tp_new = function(cls, args, kw) {
         {iterable: _b_.None})
     var res = make_new_set(cls)
     // a subclass instance gets a __dict__, like list/dict/float/tuple
-    if (cls !== _b_.set) {
+    if ($B.instance_has_dict(cls)) {
         $B.init_dict(res)
     }
     return res

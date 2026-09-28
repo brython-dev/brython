@@ -1097,7 +1097,7 @@ _b_.dict.tp_new = function(cls, args, kw) {
     }
     var instance = $B.empty_dict()
     instance[$B.OB_TYPE] = cls
-    if (cls !== dict) {
+    if ($B.instance_has_dict(cls)) {
         $B.init_dict(instance)
     }
     return instance
