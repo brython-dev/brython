@@ -720,8 +720,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,3,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-09-28 08:01:32.176786"
-__BRYTHON__.timestamp=1790575292176
+__BRYTHON__.compiled_date="2026-09-28 08:40:32.985736"
+__BRYTHON__.timestamp=1790577632985
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -3489,7 +3489,9 @@ $B.GenericAlias.tp_members=[["__origin__",$B.TYPES.OBJECT,"origin",1],["__args__
 $B.GenericAlias.tp_getset=["__parameters__","__typing_unpacked_tuple_args__"]
 $B.set_func_names($B.GenericAlias,"types")
 $B.UnionType=$B.make_builtin_class("UnionType")
-$B.UnionType.$factory=function(items){return{
+$B.UnionType.$factory=function(items){
+items=items.map(item=> item===_b_.None ? $B.NoneType :item)
+return{
 ob_type:$B.UnionType,args:$B.fast_tuple(items)}}
 $B.UnionType.tp_richcompare=function(self,other,op){if(! $B.$isinstance(other,$B.UnionType)){return _b_.NotImplemented}
 switch(op){case '__eq__':
@@ -3499,13 +3501,14 @@ return ! $B.list_eq(self.args,other.args)
 default:
 return _b_.NotImplemented}}
 $B.UnionType.tp_repr=function(self){var t=[]
-for(var item of self.args){if($B.is_type(item)){var s=$B.get_name(item)
+for(var item of self.args){if(item===$B.NoneType){t.push('None')}else if($B.is_type(item)){var s=$B.get_name(item)
 let module=$B.get_from_dict(item,'__module__','builtins')
 if(module !=="builtins"){s=module+'.'+s}
 t.push(s)}else{
 t.push(_b_.repr(item))}}
 return t.join(' | ')}
 $B.UnionType.nb_or=function(self,other){var items=self.args.slice()
+if(other===_b_.None){other=$B.NoneType}
 if(! items.includes(other)){items.push(other)}
 return $B.UnionType.$factory(items)}
 var UnionType_funcs=$B.UnionType.tp_funcs={}
@@ -3587,7 +3590,7 @@ return res}
 $B.method.tp_repr=function(self){var name=$B.$getattr(self.im_func,'__qualname__')
 return "<bound method "+name+
 " of "+_b_.str.$factory(self.im_self)+">"}
-$B.method.tp_hash=function(self){}
+$B.method.tp_hash=function(self){return _b_.object.tp_hash(self.im_self)^ _b_.hash(self.im_func)}
 $B.method.tp_call=function(self,...args){return $B.$call(self.im_func,self.im_self,...args)}
 $B.method.tp_getattro=function(self,attr){var tp=$B.get_class(self)
 var descr=$B.search_in_mro(tp,attr,$B.NULL)
@@ -11195,12 +11198,13 @@ var arg=first
 first=first.trim()
 if(first.startsWith("(")&& first.endsWith(")")){first=first.substr(1)
 first=first.substr(0,first.length-1)}
-var complex_re=/^\s*([+-]*[0-9_]*\.?[0-9_]*(e[+-]*[0-9_]*)?)([+-]?)([0-9_]*\.?[0-9_]*(e[+-]*[0-9_]*)?)(j?)\s*$/i
+var complex_re=/^\s*([+-]*(?:nan|inf(?:inity)?|[0-9_]*\.?[0-9_]*(e[+-]*[0-9_]*)?))([+-]?)((?:nan|inf(?:inity)?|[0-9_]*\.?[0-9_]*(e[+-]*[0-9_]*)?))(j?)\s*$/i
 var parts=complex_re.exec(first)
-function to_num(s){var res=parseFloat(s.charAt(0)+s.substr(1).replace(/_/g,""))
-if(isNaN(res)){$B.RAISE(_b_.ValueError,"could not convert string "+
-"to complex: '"+arg+"'")}
-return res}
+function to_num(s){
+try{
+return _b_.float.$factory(s.charAt(0)+
+s.substr(1).replace(/_/g,"")).value}catch(err){$B.RAISE(_b_.ValueError,"could not convert string "+
+"to complex: '"+arg+"'")}}
 if(parts===null){$B.RAISE(_b_.ValueError,"complex() arg is a malformed string")}
 if(parts[_real]&& parts[_imag].startsWith('.')&&
 parts[_sign]==''){$B.RAISE(_b_.ValueError,'complex() arg is a malformed string')}else if(parts[_real]=="." ||parts[_imag]=="." ||
@@ -11210,7 +11214,7 @@ if(parts[_real]=="+" ||parts[_real]==""){second=1}else if(parts[_real]=='-'){sec
 first=to_num(parts[_real])
 second=parts[_imag]=="" ? 1 :to_num(parts[_imag])
 second=parts[_sign]=="-" ?-second :second}}else{
-if(parts[_sign]&& parts[_imag]==''){$B.RAISE(_b_.ValueError,'complex() arg is a malformed string')}
+if(parts[_sign]||parts[_imag]){$B.RAISE(_b_.ValueError,'complex() arg is a malformed string')}
 first=to_num(parts[_real])
 second=0}
 var res=make_complex(first,second)
