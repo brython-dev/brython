@@ -259,12 +259,18 @@ builtin_function_or_method_funcs.__text_signature___set = function(self) {
 
 $B.builtin_function_or_method.tp_methods = ["__reduce__"]
 
-$B.builtin_function_or_method.tp_members = [
-    ["__module__", $B.TYPES.OBJECT, "m_module", 0]
-]
+builtin_function_or_method_funcs.__module___get = function(self) {
+    var module = self.m_module ??
+        self.$function_infos?.[$B.func_attrs.__module__]
+    return module === undefined ? _b_.None : module
+}
+
+builtin_function_or_method_funcs.__module___set = function(self, value) {
+    self.m_module = value
+}
 
 $B.builtin_function_or_method.tp_getset = [
-    "__name__", "__qualname__", "__self__", "__text_signature__"
+    "__module__", "__name__", "__qualname__", "__self__", "__text_signature__"
 ]
 
 /* builtin_function_or_method end */
