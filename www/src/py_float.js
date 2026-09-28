@@ -802,30 +802,14 @@ _b_.float.nb_multiply = function(self, other) {
 }
 
 _b_.float.nb_remainder = function(self, other) {
-    // can't use Javascript % because it works differently for negative numbers
-    self = conv_float(self)[0]
-    if (self === $B.NULL) {
+    var [x, y] = conv_float(self, other)
+    if (x === $B.NULL || y === $B.NULL) {
         return _b_.NotImplemented
     }
-    if (other == 0) {
+    if (y.value == 0) {
         $B.RAISE(_b_.ZeroDivisionError, "float modulo")
     }
-    if ($B.is_int(other)) {
-        other = _b_.int.tp_funcs.numerator_get(other)
-        return fast_float((self.value % other + other) % other)
-    }
-
-    if ($B.$isinstance(other, float)) {
-        // use truncated division
-        // cf https://en.wikipedia.org/wiki/Modulo_operation
-        var q = Math.floor(self.value / other.value),
-            r = self.value - other.value * q
-        if (r == 0 && other.value < 0) {
-            return fast_float(-0)
-        }
-        return fast_float(r)
-    }
-    return _b_.NotImplemented
+    return fast_float(_float_div_mod(x.value, y.value).mod)
 }
 
 _b_.float.nb_divmod = function(self, other) {
