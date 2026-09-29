@@ -1332,5 +1332,8 @@ o.x = 1
 # PR 2989
 assert hash((1).__add__) == hash((1).__add__)
 
+# PR 2990
+assert (1).__add__.__qualname__ == 'int.__add__'
+
 
 print('passed all tests..')
