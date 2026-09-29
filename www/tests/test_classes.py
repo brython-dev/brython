@@ -1329,5 +1329,8 @@ class Leaf(B):
 o = Leaf()
 o.x = 1
 
+# PR 2989
+assert hash((1).__add__) == hash((1).__add__)
+
 
 print('passed all tests..')
