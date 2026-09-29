@@ -5,8 +5,13 @@ var _b_ = $B.builtins
 var method_wrapper = $B.method_wrapper
 
 /* method_wrapper start */
-$B.method_wrapper.tp_richcompare = function(self) {
-
+$B.method_wrapper.tp_richcompare = function(self, other, op) {
+    if (op !== '__eq__' && op !== '__ne__' ||
+            ! $B.$isinstance(other, method_wrapper)) {
+        return _b_.NotImplemented
+    }
+    var eq = self.wrapped === other.wrapped && self.self === other.self
+    return op === '__eq__' ? eq : ! eq
 }
 
 $B.method_wrapper.tp_repr = function(self) {
@@ -16,7 +21,7 @@ $B.method_wrapper.tp_repr = function(self) {
 }
 
 $B.method_wrapper.tp_hash = function(self) {
-
+    return _b_.hash(self.self) ^ _b_.object.tp_hash(self.wrapped)
 }
 
 $B.method_wrapper.tp_call = function(self, ...args) {
