@@ -148,14 +148,14 @@ function preformat(self, fmt) {
     if (fmt.type == "%") {
         value *= 100
     }
-    if (fmt.type == "e") {
+    if (fmt.type == "e" || fmt.type == "E") {
         let res = value.toExponential(fmt.precision),
             exp = parseInt(res.substr(res.search("e") + 1))
             if (Math.abs(exp) < 10) {
                 res = res.substr(0, res.length - 1) + "0" +
                     res.charAt(res.length - 1)
             }
-        return res
+        return fmt.type == "E" ? res.toUpperCase() : res
     }
 
     var res
