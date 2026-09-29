@@ -356,4 +356,7 @@ b = bytes.__new__(bytes, [100, 101])
 
 assert_raises(AttributeError, getattr, b, '__dict__')
 
+# PR 2987
+assert b'a b c'.split(None, 1) == [b'a', b'b c']
+
 print('passed all tests...')
