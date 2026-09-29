@@ -274,6 +274,10 @@ float.$format = function(self, fmt) {
     // fmt is the object parsed from a format_spec
     fmt.align = fmt.align || ">"
     var pf = preformat(self, fmt)
+    if (Object.is(self.value, -0) && ! pf.startsWith('-')) {
+        // Javascript toFixed and toExponential drop the sign of -0
+        pf = '-' + pf
+    }
     if (fmt.z && Object.is(parseFloat(pf), -0)) {
         // if 'z' option is set, remove minus sign for negative zero
         pf = pf.substr(1)
