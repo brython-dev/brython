@@ -2399,24 +2399,29 @@ $B.GenericAlias.nb_or = function() {
     return $B.UnionType.$factory([$.self, $.other])
 }
 
+function ga_repr_item(p) {
+    // same as CPython ga_repr_item: module.qualname, except for builtins
+    if (p === _b_.Ellipsis) {
+        return '...'
+    }
+    if (_b_.hasattr(p, '__origin__') && _b_.hasattr(p, '__args__')) {
+        // looks like a GenericAlias
+        return _b_.repr(p)
+    }
+    var qualname = $B.$getattr(p, '__qualname__', $B.NULL),
+        module = $B.$getattr(p, '__module__', $B.NULL)
+    if (qualname === $B.NULL || module === $B.NULL || module === _b_.None) {
+        return _b_.repr(p)
+    }
+    return module == 'builtins' ? qualname : module + '.' + qualname
+}
+
 $B.GenericAlias.tp_repr = function(self) {
     var args = Array.isArray(self.args) ? self.args : [self.args]
-    var reprs = []
-    for (var arg of args) {
-        if (arg === _b_.Ellipsis) {
-            reprs.push('...')
-        } else {
-            if ($B.is_type(arg)) {
-                reprs.push($B.get_name(arg))
-            } else {
-                reprs.push(_b_.repr(arg))
-            }
-        }
-    }
+    var reprs = args.map(ga_repr_item)
     var iv = $B.$getattr(self.origin, '__infer_variance__', true)
     var prefix = iv ? '' : '~'
-    return prefix + $B.$getattr(self.origin, '__qualname__') + '[' +
-        reprs.join(", ") + ']'
+    return prefix + ga_repr_item(self.origin) + '[' + reprs.join(", ") + ']'
 }
 
 $B.GenericAlias.tp_hash = function(self) {
