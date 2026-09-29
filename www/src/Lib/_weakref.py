@@ -112,6 +112,8 @@ _refs = {} # the references to an object, by id
 
 class ref:
 
+    __slots__ = ('obj', 'callback', '__weakref__')
+
     def __new__(cls, *args, **kw):
         return object.__new__(cls)
         
