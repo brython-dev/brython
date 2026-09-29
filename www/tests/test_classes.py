@@ -1346,5 +1346,15 @@ class C:
 
 assert C().m.__doc__ == 'doc'
 
+# PR 2996
+class Meta(type):
+
+    def __getitem__(cls, k):
+        return k
+
+class G(metaclass=Meta): 
+    pass
+
+assert G['x'] == 'x'
 
 print('passed all tests..')
