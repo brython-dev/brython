@@ -2644,6 +2644,8 @@ str_funcs.lstrip = function(self) {
         chars = $.chars
     if (chars === _b_.None) {
         return _self.trimStart()
+    } else if (! $B.is_str(chars)) {
+        $B.RAISE(_b_.TypeError, "lstrip arg must be None or str")
     }
     [_self, chars] = to_string(_self, chars)
     while (_self.length > 0) {
@@ -2939,6 +2941,8 @@ str_funcs.rstrip = function() {
         _self = to_string($.self)
     if (chars === _b_.None) {
         return _self.trimEnd()
+    } else if (! $B.is_str(chars)) {
+        $B.RAISE(_b_.TypeError, "rstrip arg must be None or str")
     }
     chars = to_string(chars)
     while (_self.length > 0) {
@@ -3208,6 +3212,8 @@ str_funcs.strip = function() {
     var _self = to_string($.self)
     if ($.chars === _b_.None) {
         return _self.trim()
+    } else if (! $B.is_str($.chars)) {
+        $B.RAISE(_b_.TypeError, "strip arg must be None or str")
     }
     return str.tp_funcs.rstrip(str.tp_funcs.lstrip(_self, $.chars), $.chars)
 }
