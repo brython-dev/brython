@@ -686,15 +686,9 @@ function maketrans() {
 }
 
 function strip(self, cars, lr) {
-    if (cars === undefined) {
-        cars = []
-        var ws = '\r\n \t'
-        for (let i = 0, len = ws.length; i < len; i++) {
-            cars.push(ws.charCodeAt(i))
-        }
-    } else if ($B.$isinstance(cars, bytes)) {
+    if ($B.$isinstance(cars, bytes)) {
         cars = cars.source
-    } else {
+    } else if (cars !== ws_cars) {
         $B.RAISE(_b_.TypeError, "Type str doesn't support the buffer API")
     }
     switch (lr) {
@@ -1685,7 +1679,7 @@ bytearray_funcs.strip = function(self) {
     var self = $.self,
         cars = $.cars
     var stripped_right = strip.call(_b_.bytearray, self, cars, 'r')
-    return strip.call(_b_.bytearray, res, cars, 'l')
+    return strip.call(_b_.bytearray, stripped_right, cars, 'l')
 }
 
 bytearray_funcs.swapcase = function(self) {
@@ -2962,7 +2956,7 @@ bytes_funcs.strip = function() {
     var self = $.self,
         cars = $.cars
     var stripped_right = strip.call(_b_.bytes, self, cars, 'r')
-    return strip.call(_b_.bytes, res, cars, 'l')
+    return strip.call(_b_.bytes, stripped_right, cars, 'l')
 }
 
 bytes_funcs.swapcase = function() {
