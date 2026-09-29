@@ -2472,7 +2472,8 @@ $B.GenericAlias.mp_subscript = function(self, item) {
 var GenericAlias_funcs = $B.GenericAlias.tp_funcs = {}
 
 GenericAlias_funcs.__dir__ = function(self) {
-
+    let dir = _b_.dir(self.origin)
+    return dir
 }
 
 GenericAlias_funcs.__instancecheck__ = function(self) {
