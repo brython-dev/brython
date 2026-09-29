@@ -1335,5 +1335,16 @@ assert hash((1).__add__) == hash((1).__add__)
 # PR 2990
 assert (1).__add__.__qualname__ == 'int.__add__'
 
+# PR 2991
+assert not list[int].__unpacked__
+
+# PR 2992
+class C:
+
+    def m(self):
+        "doc"
+
+assert C().m.__doc__ == 'doc'
+
 
 print('passed all tests..')

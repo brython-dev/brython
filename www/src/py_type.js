@@ -2453,7 +2453,7 @@ $B.GenericAlias.tp_new = function(cls, args, kw) {
         ob_type: cls,
         origin,
         args,
-        starred: false // ???
+        starred: false
     }
 }
 
