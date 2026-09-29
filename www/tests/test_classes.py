@@ -1319,5 +1319,15 @@ class C:
 
 assert hash(C().m) != hash(C().m)
 
+# PR 2988
+class B:
+    pass
+
+class Leaf(B):
+    __slots__ = ()
+
+o = Leaf()
+o.x = 1
+
 
 print('passed all tests..')
