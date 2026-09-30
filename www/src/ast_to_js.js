@@ -3658,6 +3658,13 @@ $B.ast.Name.prototype.to_js = function(scopes) {
         if (this.id == 'xzs') {
             console.log('Name.to_js, scope', scope)
         }
+        if (scope.found && scope.found.type == 'module' &&
+                scopes.symtable.table.deleted.has(this.id)) {
+            // a global deleted somewhere in the module may be unbound when
+            // it is read, whatever the order the code is written in
+            $B.last(scopes).needs_frames = true
+            return make_ref(this.id, scopes, {found: false, resolve: 'global'}, this)
+        }
         if (scope.found === $B.last(scopes)) {
             return 'locals.' + mangle(scopes, scope.found, this.id)
         }
