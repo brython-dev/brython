@@ -1522,13 +1522,13 @@
                 module_obj[attr].$infos = {
                     __module__: name,
                     __name__: attr,
-                    __qualname__: name + '.' + attr
+                    __qualname__: attr
                 }
                 $B.set_function_infos(module_obj[attr],
                     {
                         __module__: name,
                         __name__: attr,
-                        __qualname__: name + '.' + attr
+                        __qualname__: attr
                     }
                 )
             }
