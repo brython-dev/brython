@@ -1352,9 +1352,19 @@ class Meta(type):
     def __getitem__(cls, k):
         return k
 
-class G(metaclass=Meta): 
+class G(metaclass=Meta):
     pass
 
 assert G['x'] == 'x'
+
+# PR 3004
+class A:
+
+    def __eq__(self, other):
+        return NotImplemented
+
+a = A()
+assert a == a
+
 
 print('passed all tests..')
