@@ -387,7 +387,7 @@ $B.hasOnlyStringKeys = function(d) {
 $B.dict2kwarg = function(d) {
     // create an internal kw argument from dictionary d
     var kw = dict.$to_obj(d)
-    return {$kw: [kw]}
+    return {[$B.KW]: [kw]}
 }
 
 $B.dict_from_jsobj = function(obj) {
@@ -955,14 +955,14 @@ _b_.dict.tp_init = function(self, first, second) {
     }
     if (second === undefined) {
         // single argument
-        if ((! first.$kw) && $B.$isinstance(first, $B.JSObj)) {
+        if ((! first[$B.KW]) && $B.$isinstance(first, $B.JSObj)) {
             for (let key in first) {
                 dict.$setitem(self, key, first[key])
             }
             return _b_.None
-        } else if (first.$kw) {
+        } else if (first[$B.KW]) {
             var keys = new Set()
-            for (let item of first.$kw) {
+            for (let item of first[$B.KW]) {
                 if ($B.$isinstance(item, dict)) {
                     for (let subitem of dict.$iter_items(item)) {
                         dict.$set_string_no_duplicate(self, keys, subitem.key,

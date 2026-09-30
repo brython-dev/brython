@@ -260,7 +260,7 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
             var args = new Array(arguments.length)
             for (var i = 0, len = arguments.length; i < len; ++i) {
                 var arg = arguments[i]
-                if (arg !== null && arg.constructor === Object && arg.$kw) {
+                if (arg !== null && arg.constructor === Object && arg[$B.KW]) {
                     console.log(Error().stack)
                     $B.RAISE(_b_.TypeError,
                         'keyword arguments are not supported for ' +
@@ -490,8 +490,8 @@ function pyargs2jsargs(pyargs) {
     for (var i = 0, len = pyargs.length; i < len; i++) {
         var arg = pyargs[i]
         if(arg !== undefined && arg !== null &&
-                arg.$kw !== undefined &&
-                ! $B.keyword_is_empty(arg.$kw)){
+                arg[$B.KW] !== undefined &&
+                ! $B.keyword_is_empty(arg[$B.KW])){
             // Passing keyword arguments to a Javascript function
             // raises a TypeError : since we don't know the
             // signature of the function, the result of Brython
