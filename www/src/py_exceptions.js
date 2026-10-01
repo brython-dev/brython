@@ -880,7 +880,7 @@ $B.attr_error = function(name, obj) {
         msg = `'${$B.class_name(obj)}' object`
     }
     msg +=  ` has no attribute '${name}'`
-    return $B.$call(_b_.AttributeError, msg, [], {$kw:[{name, obj}]})
+    return $B.$call(_b_.AttributeError, msg, {$kw:[{name, obj}]})
 }
 
 // NameError supports keyword-only "name" parameter
