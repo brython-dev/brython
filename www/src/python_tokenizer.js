@@ -512,6 +512,21 @@ $B.tokenizer = function(src, filename, mode, parser) {
                         ft_escape = false
                         continue
                     }
+                    // the buffer becomes a Javascript string literal, whose
+                    // escape sequences differ from Python's
+                    if (char == 'U' && /^[0-9a-f]{8}$/i.test(src.substr(pos, 8))) {
+                        ft_buffer += String.fromCodePoint(parseInt(src.substr(pos, 8), 16))
+                        pos += 8
+                        ft_escape = false
+                        continue
+                    } else if (char == 'a') {
+                        ft_buffer += '\\x07'
+                        ft_escape = false
+                        continue
+                    } else if (! '\\\'"nrtbfv01234567xuN'.includes(char)) {
+                        // not an escape sequence in Python: keep the backslash
+                        ft_buffer += '\\'
+                    }
                     ft_buffer += '\\'
                 }
                 ft_buffer += char
