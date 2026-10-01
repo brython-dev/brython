@@ -316,6 +316,10 @@ $B.parse_kwargs = function(kw_args, fname) {
         if ($B.get_class(kw_arg) === _b_.dict) {
             for (var entry of _b_.dict.$iter_items(kw_arg)) {
                 key = entry.key
+                if (typeof key != 'string' && $B.is_str(key)) {
+                    // a subclass of str names the keyword by its value
+                    key = key.$brython_value
+                }
                 if (typeof key !== 'string') {
                     $B.RAISE(_b_.TypeError, fname +
                         "() keywords must be strings")
