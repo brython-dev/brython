@@ -524,4 +524,10 @@ assert [1, 2, 3][0:-31:-1] == [1]
 class L(list): pass
 assert [1] + L([2]) == [1, 2]
 
+# PR 3010
+class T(tuple):
+    pass
+
+assert type(T([1, 2])[:2]) is tuple
+
 print("passed all tests..")
