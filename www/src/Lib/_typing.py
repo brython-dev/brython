@@ -526,6 +526,9 @@ class TypeAliasType:
             raise TypeError("Only generic type aliases are subscriptable")
         return GenericAlias(self, params)
 
+    def __repr__(self):
+        return self.__qualname__
+        
     @property
     def __value__(self):
         return self._value()
