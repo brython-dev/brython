@@ -213,7 +213,7 @@ function make_set_del(cls) {
     ))
     $B.set_to_dict(cls, '__delete__', $B.wrapper_descriptor.$factory(
         cls,
-        '__set__',
+        '__delete__',
         (self, attr) => set_func(self, attr, $B.NULL)
     ))
 }
