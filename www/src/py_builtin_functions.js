@@ -756,7 +756,7 @@ $B.time_builtin_getattr = 0
 
 $B.$getattr = function(obj, attr, _default) {
     // Used internally to avoid having to parse the arguments
-    var test = false // attr == '__abstractmethods__'
+    var test = false // attr == '__qualname__' && $B.class_name(obj) == 'TypeVar'
     if (test) {
         console.log('$getattr', obj, attr)
     }

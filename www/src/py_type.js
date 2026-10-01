@@ -35,7 +35,10 @@ $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
     if (Object.hasOwn(classdef_frame[1], '__name__')) {
         module = classdef_frame[1].__name__
     }
+
     $B.str_dict_set(dict, '__module__', module)
+
+    $B.str_dict_set(dict, '__qualname__', class_name)
 
     // A class that overrides __eq__() and does not define __hash__()
     // will have its __hash__() implicitly set to None
@@ -381,7 +384,7 @@ $B.make_class_namespace = function(metaclass, class_name, qualname,
         $B.warn(_b_.RuntimeWarning,
             `non-string key in the __dict__ of class ${class_name}`)
     }
-    set_key('__qualname__', qualname)
+    // set_key('__qualname__', qualname)
     return class_dict
 }
 
@@ -802,11 +805,6 @@ function set_tp_slots(cls) {
         }
     }
 }
-
-var special_attrs = [
-    "__name__", "__qualname__", "__module__", "__bases__", "__doc__",
-    "__type_params__", "__annotate__", "__annotations__"
-]
 
 $B.make_getattr = function(cls) {
     if (cls.tp_mro) {
@@ -1424,8 +1422,10 @@ _b_.type.tp_new = function(cls, args, kw) {
     // Create the class dictionary
     var module = $B.str_dict_get(cl_dict, '__module__', $B.frame_obj.frame[2])
     $B.str_dict_set(cl_dict, '__module__', module)
+
     var qualname = $B.str_dict_get(cl_dict, '__qualname__', name)
-    $B.str_dict_set(cl_dict, '__qualname__', qualname)
+    // __qualname__ is removed from class dict
+    $B.str_dict_del(cl_dict, '__qualname__')
 
     var ctx = {
         metatype,
@@ -2404,12 +2404,17 @@ function ga_repr_item(p) {
     if (p === _b_.Ellipsis) {
         return '...'
     }
+    /*console.log('p', p, 'has origin and args ?',
+        _b_.hasattr(p, '__origin__') && _b_.hasattr(p, '__args__'))
+    */
     if (_b_.hasattr(p, '__origin__') && _b_.hasattr(p, '__args__')) {
         // looks like a GenericAlias
+        console.log('p', p, 'looks like GA')
         return _b_.repr(p)
     }
     var qualname = $B.$getattr(p, '__qualname__', $B.NULL),
         module = $B.$getattr(p, '__module__', $B.NULL)
+    //console.log('qualname', qualname, 'module', module)
     if (qualname === $B.NULL || module === $B.NULL || module === _b_.None) {
         return _b_.repr(p)
     }
@@ -2417,6 +2422,7 @@ function ga_repr_item(p) {
 }
 
 $B.GenericAlias.tp_repr = function(self) {
+    //console.log('type(self)', $B.get_class(self))
     var args = Array.isArray(self.args) ? self.args : [self.args]
     var reprs = args.map(ga_repr_item)
     var iv = $B.$getattr(self.origin, '__infer_variance__', true)

@@ -720,8 +720,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,3,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-09-30 08:13:12.186475"
-__BRYTHON__.timestamp=1790748792186
+__BRYTHON__.compiled_date="2026-10-01 18:18:48.663134"
+__BRYTHON__.timestamp=1790871528662
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -2559,6 +2559,7 @@ var classdef_frame=$B.frame_obj.prev.frame
 var module=classdef_frame[2]
 if(Object.hasOwn(classdef_frame[1],'__name__')){module=classdef_frame[1].__name__}
 $B.str_dict_set(dict,'__module__',module)
+$B.str_dict_set(dict,'__qualname__',class_name)
 if($B.str_dict_get(dict,'__eq__',$B.NULL)!==$B.NULL &&
 $B.str_dict_get(dict,'__hash__',$B.NULL)===$B.NULL){$B.str_dict_set(dict,'__hash__',_b_.None)}
 var slots=$B.str_dict_get(dict,'__slots__',$B.NULL)
@@ -2680,7 +2681,6 @@ var set_key=is_dict ?
 (key,value)=> $B.$setitem(class_dict,key,value)
 if(orig_bases !==bases){set_key('__orig_bases__',orig_bases)}
 if(is_dict && ! $B.hasOnlyStringKeys(class_dict)){$B.warn(_b_.RuntimeWarning,`non-string key in the __dict__ of class ${class_name}`)}
-set_key('__qualname__',qualname)
 return class_dict}
 $B.resolve_mro_entries=function(bases){
 var new_bases=[],has_mro_entries=false
@@ -2820,8 +2820,6 @@ function set_tp_slots(cls){for(var[slot,dunder]of Object.entries($B.slot2dunder)
 if(method !==$B.NULL){cls[slot]=method}else{
 for(var kls of $B.get_mro(cls).slice(1)){if(kls[slot]){cls[slot]=kls[slot]
 break}}}}}
-var special_attrs=["__name__","__qualname__","__module__","__bases__","__doc__","__type_params__","__annotate__","__annotations__"
-]
 $B.make_getattr=function(cls){if(cls.tp_mro){var getattribute=$B.search_slot(cls,'tp_getattro',$B.NULL)
 var getattr=$B.search_in_mro(cls,'__getattr__',$B.NULL)
 if(getattr===$B.NULL){cls.$getattribute=getattribute}else{
@@ -3067,7 +3065,7 @@ console.log($B.frame_obj.frame.__file__,'line',$B.frame_obj.frame.$lineno)}
 var module=$B.str_dict_get(cl_dict,'__module__',$B.frame_obj.frame[2])
 $B.str_dict_set(cl_dict,'__module__',module)
 var qualname=$B.str_dict_get(cl_dict,'__qualname__',name)
-$B.str_dict_set(cl_dict,'__qualname__',qualname)
+$B.str_dict_del(cl_dict,'__qualname__')
 var ctx={metatype,args,kwds,cl_dict,name,bases}
 var class_obj={ob_type:metatype,tp_bases:bases,tp_name:name,tp_flags:$B.TPFLAGS.DEFAULT |$B.TPFLAGS.HEAPTYPE |
 $B.TPFLAGS.BASETYPE |$B.TPFLAGS.HAVE_GC}
@@ -3454,11 +3452,13 @@ return $B.UnionType.$factory([$.self,$.other])}
 function ga_repr_item(p){
 if(p===_b_.Ellipsis){return '...'}
 if(_b_.hasattr(p,'__origin__')&& _b_.hasattr(p,'__args__')){
+console.log('p',p,'looks like GA')
 return _b_.repr(p)}
 var qualname=$B.$getattr(p,'__qualname__',$B.NULL),module=$B.$getattr(p,'__module__',$B.NULL)
 if(qualname===$B.NULL ||module===$B.NULL ||module===_b_.None){return _b_.repr(p)}
 return module=='builtins' ? qualname :module+'.'+qualname}
-$B.GenericAlias.tp_repr=function(self){var args=Array.isArray(self.args)? self.args :[self.args]
+$B.GenericAlias.tp_repr=function(self){
+var args=Array.isArray(self.args)? self.args :[self.args]
 var reprs=args.map(ga_repr_item)
 var iv=$B.$getattr(self.origin,'__infer_variance__',true)
 var prefix=iv ? '' :'~'
