@@ -944,7 +944,7 @@ _b_.UnicodeDecodeError.tp_str = function(self) {
             ` in position ${start}: ${self.reason}`
     } else {
         result = `'${self.encoding}' codec can't decode bytes ` +
-        `in position ${start}-${end}: ${self.reason}`
+        `in position ${start}-${end - 1}: ${self.reason}`
     }
     return result
 }
