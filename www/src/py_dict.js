@@ -726,6 +726,10 @@ function init_from_list(self, args) {
 }
 
 dict.$set_string_no_duplicate = function(d, keys, string, value) {
+    if (typeof string != 'string' && $B.is_str(string)) {
+        // a subclass of str names the keyword by its value
+        string = string.$brython_value
+    }
     if (typeof string !== 'string') {
         $B.RAISE(_b_.TypeError,
             'keywords must be strings')
