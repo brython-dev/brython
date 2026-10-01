@@ -816,7 +816,7 @@ _b_.KeyError.tp_str = function(self) {
     if (self.args.length == 1) {
         return _b_.repr(self.args[0])
     }
-    return _b_.BaseException.tp_repr(self)
+    return _b_.BaseException.tp_str(self)
 }
 
 $B.set_func_names(_b_.KeyError, 'builtins')
