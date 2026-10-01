@@ -225,6 +225,13 @@ builtin_function_or_method_funcs.__name___get = function(self) {
 
 builtin_function_or_method_funcs.__name___set = _b_.None
 
+builtin_function_or_method_funcs.__doc___get = function(self) {
+    // set by builtins_docstrings.js
+    return self.__doc__ ?? _b_.None
+}
+
+builtin_function_or_method_funcs.__doc___set = _b_.None
+
 builtin_function_or_method_funcs.__qualname___get = function(self) {
     return self.$function_infos[$B.func_attrs.__qualname__]
 
@@ -264,7 +271,7 @@ $B.builtin_function_or_method.tp_members = [
 ]
 
 $B.builtin_function_or_method.tp_getset = [
-    "__name__", "__qualname__", "__self__", "__text_signature__"
+    "__doc__", "__name__", "__qualname__", "__self__", "__text_signature__"
 ]
 
 /* builtin_function_or_method end */
