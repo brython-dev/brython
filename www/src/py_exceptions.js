@@ -544,6 +544,9 @@ function check_no_keywords(obj, kw) {
 
 /* BaseException start */
 _b_.BaseException.tp_repr = function(self) {
+    if (self.args.length > 1) {
+        return $B.class_name(self) + _b_.repr(self.args)
+    }
     var args = ''
     if (self.args.length > 0 && self.args[0] !== _b_.None) {
         args = _b_.repr(self.args[0])
@@ -552,6 +555,9 @@ _b_.BaseException.tp_repr = function(self) {
 }
 
 _b_.BaseException.tp_str = function(self) {
+    if (self.args.length > 1) {
+        return _b_.str.$factory(self.args)
+    }
     if (self.args.length > 0 && self.args[0] !== _b_.None) {
         return _b_.str.$factory(self.args[0])
     }
@@ -880,7 +886,7 @@ $B.attr_error = function(name, obj) {
         msg = `'${$B.class_name(obj)}' object`
     }
     msg +=  ` has no attribute '${name}'`
-    return $B.$call(_b_.AttributeError, msg, [], {$kw:[{name, obj}]})
+    return $B.$call(_b_.AttributeError, msg, {$kw:[{name, obj}]})
 }
 
 // NameError supports keyword-only "name" parameter
