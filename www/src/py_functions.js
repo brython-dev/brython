@@ -459,6 +459,9 @@ function_funcs.__closure___set = _b_.None
 
 function_funcs.__code___get = function(self) {
     $B.check_infos(self)
+    if (self.$code_object !== undefined) {
+        return self.$code_object
+    }
     var res = {
         ob_type: $B.code
     }
@@ -469,7 +472,7 @@ function_funcs.__code___get = function(self) {
     res.co_name = self.$infos.__name__
     res.co_filename = self.$infos.__code__.co_filename
     res.co_code = self + "" // Javascript source code
-    return res
+    return self.$code_object = res
 }
 
 function_funcs.__code___set = function(self, value) {
@@ -479,6 +482,7 @@ function_funcs.__code___set = function(self, value) {
             '__code__ must be set to a code object')
     }
     self.$infos.__code__ = value
+    self.$code_object = value
 }
 
 function_funcs.__defaults___get = function(self) {
