@@ -495,7 +495,7 @@ $B.is_recursion_error = function(js_exc) {
 }
 
 $B.RAISE = function(error_type, message) {
-    throw $B.$call(error_type, message ?? '')
+    throw message == null ? $B.$call(error_type) : $B.$call(error_type, message)
 }
 
 $B.RAISE_IF_NOT = function(exc, exc_type) {
