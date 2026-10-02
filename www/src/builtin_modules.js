@@ -112,7 +112,7 @@
             var $ = $B.args('send', 1, {message: null}, arguments, null,
                         'args', null)
             var message = $B.pyobj2structuredclone($.message),
-                args = $.args.map($B.pyobj2jsobj)
+                args = $.args.map(arg => $B.pyobj2jsobj(arg))
             self.postMessage(message, ...args)
         }
         browser.document = {
