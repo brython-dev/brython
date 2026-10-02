@@ -129,8 +129,11 @@ const PYOBJ = $B.PYOBJ = Symbol('PYOBJ')
 // object: an own symbol key makes the object unusable as a WebIDL record, which
 // is what `new Response(body, {headers})` and `new Headers(obj)` take.
 const PYOBJ_MAP = $B.PYOBJ_MAP = new WeakMap()
-const PYOBJFCT = Symbol('PYOBJFCT')
-const PYOBJFCTS = Symbol('PYOBJFCTS')
+// The Python function made for a JavaScript function, one per function and
+// receiver, held here as well: a frozen, sealed or non-extensible receiver
+// refuses a new property, and a new function was made on every read.
+const JS_FUNCTIONS = new WeakMap()
+const JS_METHODS = new WeakMap()
 
 function* f(){}
 
@@ -235,25 +238,19 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
         // transform Python arguments to equivalent JS arguments
         _this = _this === undefined ? null : _this
 
+        let made
         if (_this === null) {
-            const pyobj = jsobj[PYOBJFCT]
-            if (pyobj !== undefined) {
-                return pyobj
+            made = JS_FUNCTIONS
+        } else if (typeof _this === 'object' || typeof _this === 'function') {
+            made = JS_METHODS.get(_this)
+            if (made === undefined) {
+                made = new WeakMap()
+                JS_METHODS.set(_this, made)
             }
-        } else {
-            const pyobjfcts = _this[PYOBJFCTS]
-            if (pyobjfcts !== undefined) {
-                const pyobj = pyobjfcts.get(jsobj)
-                if (pyobj !== undefined) {
-                    return pyobj
-                }
-            } else {
-                try {
-                    _this[PYOBJFCTS] = new Map()
-                } catch (err) {
-                    // probably read-only, ignore
-                }
-            }
+        }
+        const known = made?.get(jsobj)
+        if (known !== undefined) {
+            return known
         }
 
         var res = function() {
@@ -275,11 +272,7 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
             }
         }
 
-        if (_this === null) {
-            jsobj[PYOBJFCT] = res
-        } else if (_this[PYOBJFCTS] !== undefined) {
-            _this[PYOBJFCTS].set(jsobj, res)
-        }
+        made?.set(jsobj, res)
 
         res[JSOBJ] = jsobj
         Object.defineProperty(res, '$js_func',
