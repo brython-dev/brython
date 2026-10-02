@@ -354,7 +354,10 @@ _b_.complex.tp_new = function(cls, args, kw) {
             `complex() takes at most 2 arguments (${nb_args} given)`
         )
     } else if (nb_args == 0) {
-        return $B.make_complex(0, 0)
+        var res = make_complex(0, 0)
+        res.ob_type = cls
+        $B.init_dict(res)
+        return res
     }
     var [first, second] = $B.unpack_args('complex', args, ['first', 'second'],
                               {first: $B.NULL, second: $B.NULL})
