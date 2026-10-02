@@ -188,7 +188,13 @@ _b_.breakpoint = function() {
 _b_.callable = function(obj) {
     check_nb_args_no_kw('callable', 1, arguments)
 
-    return _b_.hasattr(obj, '__call__')
+    if (typeof obj == 'function') {
+        return true
+    }
+    // the slot $B.$call uses: __call__ is looked up on the type, not on
+    // the object, so neither __getattr__ nor an instance attribute counts
+    var call = $B.get_class(obj).tp_call
+    return call !== undefined && call !== $B.NULL
 }
 
 _b_.chr = function(i) {
