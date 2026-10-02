@@ -47,6 +47,7 @@ core_scripts = [
     'python_parser',
     'pegen',
     'gen_parse',
+    'builtins_docstrings',
     'brython_ready'
 
 
