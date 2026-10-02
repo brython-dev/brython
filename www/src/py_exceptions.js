@@ -969,14 +969,6 @@ _b_.UnicodeDecodeError.tp_init = function(self) {
     self.reason = reason
 }
 
-_b_.UnicodeDecodeError.tp_new = function(cls, args, kw) {
-    let obj = {
-        ob_type: cls
-    }
-    $B.init_dict(obj)
-    return obj
-}
-
 _b_.UnicodeDecodeError.tp_members = unicode_error_members
 
 /* UnicodeDecodeError end */
@@ -1021,14 +1013,6 @@ _b_.UnicodeEncodeError.tp_init = function(self) {
     self.start = start
     self.end = end
     self.reason = reason
-}
-
-_b_.UnicodeEncodeError.tp_new = function(cls, args, kw) {
-    let obj = {
-        ob_type: cls
-    }
-    $B.init_dict(obj)
-    return obj
 }
 
 _b_.UnicodeEncodeError.tp_members = unicode_error_members
@@ -1076,14 +1060,6 @@ _b_.UnicodeTranslateError.tp_init = function(self) {
     self.start = start
     self.end = end
     self.reason = reason
-}
-
-_b_.UnicodeTranslateError.tp_new = function(cls, args, kw) {
-    let obj = {
-        ob_type: cls
-    }
-    $B.init_dict(obj)
-    return obj
 }
 
 _b_.UnicodeTranslateError.tp_members = unicode_error_members
