@@ -793,6 +793,22 @@ _b_.SyntaxError.tp_init = function() {
     }
 }
 
+_b_.SyntaxError.tp_str = function(self) {
+    // the message, then the file's basename and the line if they are known
+    var msg = _b_.str.$factory(self.msg),
+        filename = $B.$isinstance(self.filename, _b_.str) ?
+            _b_.str.$factory(self.filename).split('/').pop() : null,
+        lineno = $B.exact_type(self.lineno, _b_.int) ? self.lineno : null
+    if (filename !== null && lineno !== null) {
+        return `${msg} (${filename}, line ${lineno})`
+    } else if (filename !== null) {
+        return `${msg} (${filename})`
+    } else if (lineno !== null) {
+        return `${msg} (line ${lineno})`
+    }
+    return msg
+}
+
 _b_.SyntaxError.tp_members = [
     ["msg", $B.TYPES.OBJECT, 'msg', 0],
     ["filename", $B.TYPES.OBJECT, "filename", 0],
