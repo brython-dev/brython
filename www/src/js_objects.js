@@ -257,7 +257,8 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
         }
 
         var res = function() {
-            var args = new Array(arguments.length)
+            var args = new Array(arguments.length),
+                memo = new Map()
             for (var i = 0, len = arguments.length; i < len; ++i) {
                 var arg = arguments[i]
                 if (arg !== null && arg.constructor === Object && arg.$kw) {
@@ -266,7 +267,7 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
                         'keyword arguments are not supported for ' +
                         'Javascript functions')
                 }
-                args[i] = pyobj2jsobj(arg)
+                args[i] = pyobj2jsobj(arg, memo)
             }
             try {
                 return jsobj2pyobj(jsobj.apply(_this, args))
@@ -324,7 +325,7 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
     return jsobj
 }
 
-var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj) {
+var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj, memo) {
     // conversion of a Python object into a Javascript object
     // Immutable types
 
@@ -337,6 +338,19 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj) {
         case null:
             // javascript.NULL
             return null
+    }
+
+    if (memo?.has(pyobj)) {
+        return memo.get(pyobj)
+    }
+    // An application embedding Brython can convert some values itself; a
+    // result other than undefined is used as the conversion. memo is passed
+    // on, so that the application keeps the graph of the call too
+    if ($B.pyobj2jsobj_hook !== undefined) {
+        let converted = $B.pyobj2jsobj_hook(pyobj, memo)
+        if (converted !== undefined) {
+            return converted
+        }
     }
 
     let _jsobj = pyobj[JSOBJ]
@@ -356,9 +370,13 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj) {
 
     if (has_type(klass, _b_.list) || has_type(klass, _b_.tuple)) {
         // Python list : transform its elements
-        var jsobj = pyobj.map(pyobj2jsobj)
+        var jsobj = []
+        memo = memo ?? new Map()
+        memo.set(pyobj, jsobj)
+        for (var item of pyobj) {
+            jsobj.push(pyobj2jsobj(item, memo))
+        }
         PYOBJ_MAP.set(jsobj, pyobj)
-        delete jsobj.ob_type // becomes a js_array
         return jsobj
     }
 
@@ -369,6 +387,8 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj) {
         // affect Python dicts such as {"1": 'a', 1: "b"}, the result will
         // be the Javascript object {1: "b"}
         let jsobj = {}
+        memo = memo ?? new Map()
+        memo.set(pyobj, jsobj)
         for (var entry of _b_.dict.$iter_items(pyobj)) {
             var key = entry.key
             if (typeof key !== "string") {
@@ -378,7 +398,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj) {
                 // set "this" to jsobj
                 entry.value.bind(jsobj)
             }
-            jsobj[key] = pyobj2jsobj(entry.value)
+            jsobj[key] = pyobj2jsobj(entry.value, memo)
         }
         pyobj[JSOBJ] = jsobj
         PYOBJ_MAP.set(jsobj, pyobj)
@@ -514,7 +534,7 @@ $B.JSClass = $B.make_builtin_class('JSClass', [_b_.type])
 $B.JSClass.tp_getattro = function(self, attr) {
     if (attr == 'new') {
         return function() {
-            var args = Array.from(arguments).map(pyobj2jsobj)
+            var args = Array.from(arguments, arg => pyobj2jsobj(arg))
             let jsobj = new self.js_class(...args)
             return jsobj2pyobj(jsobj)
         }
