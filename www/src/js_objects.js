@@ -343,6 +343,16 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj, memo) {
     if (memo?.has(pyobj)) {
         return memo.get(pyobj)
     }
+    // An application embedding Brython can convert some values itself; a
+    // result other than undefined is used as the conversion. memo is passed
+    // on, so that the application keeps the graph of the call too
+    if ($B.pyobj2jsobj_hook !== undefined) {
+        let converted = $B.pyobj2jsobj_hook(pyobj, memo)
+        if (converted !== undefined) {
+            return converted
+        }
+    }
+
     let _jsobj = pyobj[JSOBJ]
     if (_jsobj !== undefined) {
         return _jsobj
