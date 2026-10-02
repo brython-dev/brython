@@ -2884,6 +2884,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
         `[${varnames}], ` +
         `${annotations}, ` +
         `${has_type_params ? 'type_params' : '[]'}, frame]\n`
+    js += prefix + `$B.set_func_attrs(${name2}, frame, '${gname}')\n`
     js += prefix + `${name2}.ob_type = $B.function\n`
 
     if (anns && ! postponed) {

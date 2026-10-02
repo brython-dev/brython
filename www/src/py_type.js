@@ -432,6 +432,7 @@ $B.make_annotate_func = function(dict, annotations, class_frame) {
             __file__: class_frame.__file__
         }
     )
+    $B.set_func_attrs(__annotate_func__, $B.frame_obj.frame, class_frame[2])
 }
 
 $B.check_annotate_format = function(format) {

@@ -348,17 +348,20 @@ function run_js(module_contents, path, _module) {
         modobj[new_key] = globalThis[new_key]
         delete globalThis[new_key]
     }
-    for (var attr in modobj) {
-        if (typeof modobj[attr] == "function" && ! modobj[attr].$infos) {
-            modobj[attr].$infos = {
-                __module__: _module.__name__,
-                __name__: attr,
-                __qualname__: attr
+    for (var entry of _b_.dict.$iter_items($B.get_dict(modobj))) {
+        if (typeof entry.value == "function") {
+            if (! entry.value.$infos) {
+                entry.value.$infos = {
+                    __module__: _module.__name__,
+                    __name__: attr,
+                    __qualname__: attr
+                }
             }
-            modobj[attr].$in_js_module = true
-        }else if($B.$isinstance(modobj[attr], _b_.type) &&
-                modobj[attr].__module__ === undefined){
-            modobj[attr].__module__ = _module.__name__
+            entry.value.$in_js_module = true
+            entry.value.func_module = mod_name
+        }else if($B.$isinstance(entry.value, _b_.type) &&
+                entry.value.func_module === undefined){
+            entry.value.func_module = mod_name
         }
     }
     return true

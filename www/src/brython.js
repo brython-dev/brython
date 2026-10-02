@@ -720,8 +720,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,3,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-10-01 18:18:48.663134"
-__BRYTHON__.timestamp=1790871528662
+__BRYTHON__.compiled_date="2026-10-02 08:16:31.209582"
+__BRYTHON__.timestamp=1790921791209
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -937,6 +937,13 @@ if(ft_escape){if(char=='\n'){
 line_num++
 ft_escape=false
 continue}
+if(char=='U' &&/^[0-9a-f]{8}$/i.test(src.substr(pos,8))){ft_buffer+=String.fromCodePoint(parseInt(src.substr(pos,8),16))
+pos+=8
+ft_escape=false
+continue}else if(char=='a'){ft_buffer+='\\x07'
+ft_escape=false
+continue}else if(! '\\\'"nrtbfv01234567xuN'.includes(char)){
+ft_buffer+='\\'}
 ft_buffer+='\\'}
 ft_buffer+=char
 ft_escape=false
@@ -2698,7 +2705,8 @@ __annotate_func__.ob_type=$B.function
 $B.init_dict(__annotate_func__)
 $B.str_dict_set(dict,'__annotate_func__',__annotate_func__)
 $B.set_function_infos(__annotate_func__,{__defaults__:_b_.None,__doc__:_b_.None,__globals__:$B.frame_obj.frame,__kwdefaults__:_b_.None,__name__:'__annotate__',__module__:class_frame[2],__qualname__:class_frame[0]+'.__annotate__',__file__:class_frame.__file__}
-)}
+)
+$B.set_func_attrs(__annotate_func__,$B.frame_obj.frame,class_frame[2])}
 $B.check_annotate_format=function(format){if(! $B.is_int(format)){$B.RAISE(_b_.TypeError,'__annotate__ argument should be '+
 `int, not ${$B.class_name(format)}`)}
 format=$B.int_value(format)
@@ -3268,8 +3276,10 @@ self.prop_set=fset
 self.prop_del=fdel
 self.$is_property=true
 if(fget && fget.$attrs){for(var key in fget.$attrs){self[key]=fget.$attrs[key]}}}
-_b_.property.tp_new=function(cls,args,kw){return{
-ob_type:cls}}
+_b_.property.tp_new=function(cls,args,kw){var res={ob_type:cls}
+if(cls !==_b_.property){
+$B.init_dict(res)}
+return res}
 var property_funcs=_b_.property.tp_funcs={}
 property_funcs.__isabstractmethod___get=function(self){for(let attr of['prop_get','prop_set','prop_del']){let test=$B.$getattr(self[attr],'__isabstractmethod__',false)
 if(test===true){return true}}
@@ -3915,9 +3925,6 @@ if(! $B.is_dict(value)){$B.RAISE(_b_.TypeError,`__dict__ must be set to a dictio
 $B.set_dict(self,value)}
 function_funcs.__doc___get=function(self){return self.$function_infos[$B.func_attrs.__doc__]}
 function_funcs.__doc___set=function(self,value){self.$function_infos[$B.func_attrs.__doc__]=value}
-function_funcs.__globals___get=function(self){var frame=self.$function_infos[$B.func_attrs.__globals__]
-return $B.obj_dict(frame[3])}
-function_funcs.__globals___set=_b_.None
 function_funcs.__kwdefaults___get=function(self){$B.check_infos(self)
 return self.$infos.__kwdefaults__}
 function_funcs.__kwdefaults___set=function(self,value){$B.check_infos(self)
@@ -3927,9 +3934,6 @@ var kwd={}
 for(var item of _b_.dict.$iter_items(value)){kwd[item.key]=item.value}
 self.$function_infos[$B.func_attrs.__kwdefaults__]=kwd
 reset_args_parser(self)}
-function_funcs.__module___get=function(self){var res=self.$function_infos[$B.func_attrs.__module__]
-return res===$B.NULL ||res===undefined ? _b_.None :res}
-function_funcs.__module___set=function(self,value){self.$function_infos[$B.func_attrs.__module__]=value}
 function_funcs.__name___get=function(self){return self.$function_infos[$B.func_attrs.__name__]}
 function_funcs.__name___set=function(self,value){self.$function_infos[$B.func_attrs.__name__]=value}
 function_funcs.__qualname___get=function(self){return self.$function_infos[$B.func_attrs.__qualname__]}
@@ -3938,9 +3942,13 @@ function_funcs.__type_params___get=function(self){var res=self.$function_infos[$
 return $B.fast_tuple(res)}
 function_funcs.__type_params___set=function(self,value){self.$function_infos[$B.func_attrs.__type_params__]=value}
 $B.function.tp_getset=["__code__","__defaults__","__kwdefaults__","__annotations__","__annotate__","__dict__","__name__","__qualname__","__type_params__",
-"__builtins__","__closure__","__doc__","__globals__","__module__"
+"__builtins__","__closure__","__doc__"
+]
+$B.function.tp_members=[['__globals__',$B.TYPES.OBJECT,"func_globals",1],['__module__',$B.TYPES.OBJECT,"func_module",0]
 ]
 $B.set_func_names($B.function,"builtins")
+$B.set_func_attrs=function(f,frame,module){f.func_globals=$B.obj_dict(frame[3])
+f.func_module=module}
 $B.check_infos=function(f){if(! f.$infos){if(f.$function_infos){$B.make_function_infos(f,...f.$function_infos)}else{
 console.log('no $infos, no $function_infos')}}}
 $B.make_function_infos=function(f,__module__,co_name,co_qualname,co_filename,__defaults__,__kwdefaults__,__doc__,arg_names,vararg,kwarg,co_argcount,co_firstlineno,co_flags,co_freevars,co_kwonlyargcount,co_posonlyargcount,co_varnames,annotations,type_params
@@ -5230,6 +5238,7 @@ $B.RAISE(_b_.TypeError,"'"+$B.class_name(obj)+
 var NotImplementedType=$B.NotImplementedType
 NotImplementedType.$factory=function(){return NotImplemented}
 NotImplementedType.tp_repr=function(){return "NotImplemented"}
+NotImplementedType.nb_bool=function(){$B.RAISE(_b_.TypeError,"NotImplemented should not be used in a boolean context")}
 NotImplementedType.tp_funcs={__reduce__:function(){return 'NotImplemented'}}
 NotImplementedType.tp_methods=['__reduce__']
 $B.set_func_names(NotImplementedType,"builtins")
@@ -12116,7 +12125,8 @@ if(_b_.hasattr(arg,"__int__")||_b_.hasattr(arg,"__index__")){$B.list_delitem(sel
 return _b_.None}
 $B.RAISE(_b_.TypeError,$B.class_name(self)+
 " indices must be integer, not "+$B.class_name(arg))}
-list.$getitem_slice=function(self,key){var klass=$B.get_class(self)
+list.$getitem_slice=function(self,key){
+var klass=$B.$isinstance(self,tuple)? tuple :list
 if(key.start===_b_.None && key.stop===_b_.None &&
 key.step===_b_.None){let res=self.slice()
 res.ob_type=klass
@@ -14144,9 +14154,10 @@ modobj.ob_type=Module
 $B.module_setattr(modobj,'__name__',mod_name)
 for(var new_key of new_keys){modobj[new_key]=globalThis[new_key]
 delete globalThis[new_key]}
-for(var attr in modobj){if(typeof modobj[attr]=="function" && ! modobj[attr].$infos){modobj[attr].$infos={__module__:_module.__name__,__name__:attr,__qualname__:attr}
-modobj[attr].$in_js_module=true}else if($B.$isinstance(modobj[attr],_b_.type)&&
-modobj[attr].__module__===undefined){modobj[attr].__module__=_module.__name__}}
+for(var entry of _b_.dict.$iter_items($B.get_dict(modobj))){if(typeof entry.value=="function"){if(! entry.value.$infos){entry.value.$infos={__module__:_module.__name__,__name__:attr,__qualname__:attr}}
+entry.value.$in_js_module=true
+entry.value.func_module=mod_name}else if($B.$isinstance(entry.value,_b_.type)&&
+entry.value.func_module===undefined){entry.value.func_module=mod_name}}
 return true}
 function run_py(module_contents,path,module,compiled){
 var filename=$B.module_getattr(module,'__file__')
@@ -16059,7 +16070,10 @@ var ns=scopes.namespaces
 if(ns && ns.exec_locals !==ns.exec_globals){return ns.global_name}
 return make_scope_name(scopes,scopes[0])}
 function make_search_namespaces(scopes){var namespaces=[]
-for(var scope of scopes.slice().reverse()){if(scope.parent ||scope.type=='class'){continue}else if(scope.is_exec_scope){namespaces.push('$B.exec_scope')}
+var current=last_scope(scopes)
+for(var scope of scopes.slice().reverse()){if(scope.parent ||scope.type=='class'){if(scope===current){
+namespaces.push(make_scope_name(scopes,scope))}
+continue}else if(scope.is_exec_scope){namespaces.push('$B.exec_scope')}
 namespaces.push(make_scope_name(scopes,scope))
 var ns=scopes.namespaces
 if(scope.is_exec_scope && ns &&
@@ -17212,6 +17226,7 @@ prefix+tab+`${positional.length}, `+
 `[${varnames}], `+
 `${annotations}, `+
 `${has_type_params ? 'type_params' : '[]'}, frame]\n`
+js+=prefix+`$B.set_func_attrs(${name2}, frame, '${gname}')\n`
 js+=prefix+`${name2}.ob_type = $B.function\n`
 if(anns && ! postponed){
 var inum=add_to_positions(scopes,this)
