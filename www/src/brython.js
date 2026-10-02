@@ -720,8 +720,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,3,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-10-02 09:15:18.777658"
-__BRYTHON__.timestamp=1790925318777
+__BRYTHON__.compiled_date="2026-10-02 09:19:49.037962"
+__BRYTHON__.timestamp=1790925589037
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -8141,7 +8141,8 @@ memoryview.$is_sequence=true
 function memoryview_eq(self,other){var other_obj=$B.get_class(other)===memoryview ? other.obj :other
 var eq=$B.$getattr($B.get_class(self.obj),'__eq__')
 return $B.$call(eq,self.obj,other_obj)===true}
-var struct_format={'x':{'size':1},'b':{'size':1},'B':{'size':1},'c':{'size':1},'s':{'size':1},'p':{'size':1},'h':{'size':2},'H':{'size':2},'i':{'size':4},'I':{'size':4},'l':{'size':4},'L':{'size':4},'q':{'size':8},'Q':{'size':8},'f':{'size':4},'d':{'size':8},'P':{'size':8}}
+var struct_format={'x':{'size':1},'b':{'size':1},'B':{'size':1},'c':{'size':1},'s':{'size':1},'p':{'size':1},'h':{'size':2},'H':{'size':2},'i':{'size':4},'I':{'size':4},'l':{'size':4},'L':{'size':4},'q':{'size':8},'Q':{'size':8},'f':{'float':true,'size':4},'d':{'float':true,'size':8},'P':{'size':8}}
+var dataview_getter={'b':'getInt8','B':'getUint8','c':'getUint8','s':'getUint8','p':'getUint8','x':'getUint8','h':'getInt16','H':'getUint16','i':'getInt32','I':'getUint32','l':'getInt32','L':'getUint32','q':'getBigInt64','Q':'getBigUint64','P':'getBigUint64','f':'getFloat32','d':'getFloat64'}
 const MEMORYVIEW={RELEASED:0x001,
 C:0x002,
 FORTRAN:0x004,
@@ -8171,14 +8172,15 @@ ob_type:$B.memory_iterator,it:$B.make_js_iterator(self.obj)}}
 _b_.memoryview.tp_new=function(cls,args,kw){return memoryview.$factory.apply(null,args)}
 _b_.memoryview.mp_length=function(self){return _b_.len(self.obj)/self.itemsize}
 _b_.memoryview.mp_subscript=function(self,key){var res
-if($B.is_int(key)){var start=key*self.itemsize
-if(self.format=="I"){res=self.obj.source[start]
-var coef=256
-for(var i=1;i < 4;i++){res+=self.obj.source[start+i]*coef
-coef*=256}
-return res}else if("B".indexOf(self.format)>-1){if(key > self.obj.source.length-1){$B.RAISE(_b_.KeyError,key)}
-return self.obj.source[key]}else{
-return self.obj.source[key]}}
+if($B.is_int(key)){var nb_items=_b_.memoryview.mp_length(self)
+if(key < 0){key+=nb_items}
+if(key < 0 ||key >=nb_items){$B.RAISE(_b_.IndexError,"index out of bounds on dimension 1")}
+var start=key*self.itemsize
+var view=new DataView(
+Uint8Array.from(self.obj.source.slice(start,start+self.itemsize)).buffer)
+res=view[dataview_getter[self.format]](0,true)
+return typeof res=='bigint' ? _b_.int.$int_or_long(res):
+struct_format[self.format].float ? $B.fast_float(res):res}
 var getitem=$B.$getattr($B.get_class(self.obj),'__getitem__',$B.NULL)
 if(getitem !==$B.NULL){res=$B.$call(getitem,self.obj,key)}
 if($B.get_class(key)===_b_.slice){var mv=memoryview.$factory(res)
@@ -8205,15 +8207,12 @@ var nb=1
 for(var item of shape){if(! $B.is_int(item)){$B.RAISE(_b_.TypeError,'memoryview.cast(): elements of shape must be integers')}
 nb*=item}
 if(nb*new_itemsize !=_b_.len(self)){$B.RAISE(_b_.TypeError,'memoryview: product(shape) * itemsize != buffer size')}}
-switch(format){case "B":
-return memoryview.$factory(self.obj)
-case "I":
-var res=memoryview.$factory(self.obj),objlen=_b_.len(self.obj)
-res.itemsize=4
-res.format="I"
-if(objlen % 4 !=0){$B.RAISE(_b_.TypeError,"memoryview: length is not "+
+if(_b_.len(self.obj)% new_itemsize !=0){$B.RAISE(_b_.TypeError,"memoryview: length is not "+
 "a multiple of itemsize")}
-return res}}
+var res=memoryview.$factory(self.obj)
+res.format=format
+res.itemsize=new_itemsize
+return res}
 memoryview_funcs.contiguous_get=function(self){return self.contiguous}
 memoryview_funcs.contiguous_set=_b_.None
 memoryview_funcs.count=function(self){var $=$B.args('count',2,{self:null,value:null},arguments)
@@ -8271,12 +8270,9 @@ ob_type:_b_.bytes,source:self.obj.source}}else if($B.imported.array){var array=$
 if($B.$isinstance(self.obj,array)){
 return array.tp_funcs.tobytes(self.obj)}}
 $B.RAISE(_b_.TypeError,'cannot run tobytes with '+$B.class_name(self.obj))}
-memoryview_funcs.tolist=function(self){if(self.itemsize==1){return _b_.list.$factory(_b_.bytes.$factory(self.obj))}else if(self.itemsize==4){if(self.format=="I"){var res=[]
-for(var i=0;i < self.obj.source.length;i+=4){var item=self.obj.source[i],coef=256
-for(var j=1;j < 4;j++){item+=coef*self.obj.source[i+j]
-coef*=256}
-res.push(item)}
-return $B.$list(res)}}}
+memoryview_funcs.tolist=function(self){var res=[]
+for(var i=0,len=_b_.memoryview.mp_length(self);i < len;i++){res.push(_b_.memoryview.mp_subscript(self,i))}
+return $B.$list(res)}
 memoryview_funcs.toreadonly=function(self){
 var res=memoryview.$factory(self.obj)
 res.readonly=1
@@ -8987,7 +8983,9 @@ value=args[argpos]
 if(value===undefined){$B.RAISE(_b_.TypeError,"not enough arguments for format string")}
 argpos++}}
 ret+=func(value,fmt,type)}}
-if(argpos !==null){if(args.length > argpos){$B.RAISE(_b_.TypeError,"not all arguments converted during string formatting")}else if(args.length < argpos){$B.RAISE(_b_.TypeError,"not enough arguments for format string")}}else if(nbph==0){$B.RAISE(_b_.TypeError,"not all arguments converted during string formatting")}
+if(argpos !==null){if(args.length > argpos){$B.RAISE(_b_.TypeError,"not all arguments converted during string formatting")}else if(args.length < argpos){$B.RAISE(_b_.TypeError,"not enough arguments for format string")}}else if(nbph==0 &&($B.is_str(args)||
+$B.$getattr(args,'__getitem__',$B.NULL)===$B.NULL)){
+$B.RAISE(_b_.TypeError,"not all arguments converted during string formatting")}
 return ret}
 var combining=[]
 for(var cp=0x300;cp <=0x36F;cp++){combining.push(String.fromCharCode(cp))}
