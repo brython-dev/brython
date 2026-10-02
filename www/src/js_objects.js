@@ -454,6 +454,24 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj) {
 
         return jsobj
     }
+    if (klass !== $B.JSObj && ! $B.$isinstance(pyobj, _b_.type) &&
+            _b_.callable(pyobj)) {
+        // an instance of a class that defines __call__
+        let jsobj = function() {
+            try {
+                var args = new Array(arguments.length)
+                for (var i = 0; i < arguments.length; ++i) {
+                    args[i] = jsobj2pyobj(arguments[i])
+                }
+                return pyobj2jsobj($B.$call(pyobj, ...args))
+            } catch (err) {
+                $B.handle_error(err)
+            }
+        }
+        pyobj[JSOBJ] = jsobj
+        PYOBJ_MAP.set(jsobj, pyobj)
+        return jsobj
+    }
     return pyobj
 }
 
