@@ -1455,7 +1455,7 @@ _b_.map.tp_iternext = function*(self){
     for (var iter of self.args) {
         var arg = iter.next()
         if (arg.done) {
-            $B.RAISE(_b_.StopIteration, '')
+            $B.RAISE(_b_.StopIteration)
         }
         args.push(arg.value)
     }

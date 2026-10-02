@@ -3397,7 +3397,7 @@ Template.tp_iter = function(self) {
 Template.tp_iternext = function(self) {
     self.$counter++
     if (self.$counter >= self.$len) {
-        $B.RAISE(_b_.StopIteration, '')
+        $B.RAISE(_b_.StopIteration)
     }
     var type = 'si'[self.$counter % 2]
     var rank = Math.floor(self.$counter / 2)
