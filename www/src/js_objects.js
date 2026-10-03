@@ -220,7 +220,12 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
 
     // check if obj is an instance of Promise
     // cf. issue #2321
-    if (jsobj instanceof Promise || typeof jsobj.then == "function") {
+    // `then` is looked up without running a getter of that name
+    var then
+    for (var o = jsobj; o !== null && then === undefined; o = Object.getPrototypeOf(o)) {
+        then = Object.getOwnPropertyDescriptor(o, 'then')
+    }
+    if (jsobj instanceof Promise || typeof then?.value == "function") {
         return jsobj
     }
 
