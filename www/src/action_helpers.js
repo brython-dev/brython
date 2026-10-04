@@ -302,7 +302,7 @@ function _get_interpolation_conversion(p, debug, conversion, format) {
 function _strip_interpolation_expr(exprstr) {
     var len = exprstr.length
 
-    for (var c of exprstr) {
+    for (var c of [...exprstr].reverse()) {
         if (is_whitespace(c) || c == '=') {
             len--
         } else {
