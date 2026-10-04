@@ -163,6 +163,8 @@ function raise_error(err_type, filename,
     throw exc
 }
 
+var MAXLEVEL = 200 // maximum depth of nested brackets
+
 var ops = '.,:;+-*/%~^|&=<>[](){}@', // ! is valid in f-strings
     op2 = ['**', '//', '>>', '<<'],
     augm_op = '+-*/%^|&=<>@',
@@ -922,6 +924,12 @@ $B.tokenizer = function(src, filename, mode, parser) {
                                 pos++
                             }
                             if ('[({'.includes(char)) {
+                                if (braces.length >= MAXLEVEL) {
+                                    var col = pos - line_start - op.length + 1
+                                    raise_error(_b_.SyntaxError, filename,
+                                        line_num, col + 1, line_num, col + 2,
+                                        line, 'too many nested parentheses')
+                                }
                                 braces.push({char, pos, line_num, line_start, line})
                             } else if ('])}'.includes(char)) {
                                 if (debug) {
