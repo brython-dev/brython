@@ -88,19 +88,23 @@ function preformat(self, fmt) {
             res = value.toString()
             break
         case "b":
-            res = (fmt.alternate ? "0b" : "") + value.toString(2)
+            res = (value < 0 ? "-" : "") + (fmt.alternate ? "0b" : "") +
+                (value < 0 ? -value : value).toString(2)
             break
         case "c":
             res = _b_.chr(value)
             break
         case "o":
-            res = (fmt.alternate ? "0o" : "") + value.toString(8)
+            res = (value < 0 ? "-" : "") + (fmt.alternate ? "0o" : "") +
+                (value < 0 ? -value : value).toString(8)
             break
         case "x":
-            res = (fmt.alternate ? "0x" : "") + value.toString(16)
+            res = (value < 0 ? "-" : "") + (fmt.alternate ? "0x" : "") +
+                (value < 0 ? -value : value).toString(16)
             break
         case "X":
-            res = (fmt.alternate ? "0X" : "") + value.toString(16).toUpperCase()
+            res = (value < 0 ? "-" : "") + (fmt.alternate ? "0X" : "") +
+                (value < 0 ? -value : value).toString(16).toUpperCase()
             break
         case "n":
             return self // fix me
