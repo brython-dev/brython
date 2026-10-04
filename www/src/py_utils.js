@@ -1914,21 +1914,20 @@ $B.is_none = function(o) {
 var repr_stack = new Set()
 
 $B.repr = {
+    depth: 0, // nested calls of repr()
     enter: function(obj) {
         var obj_id = _b_.id(obj)
         if (repr_stack.has(obj_id)) {
             return true
         } else {
             repr_stack.add(obj_id)
-            if (repr_stack.size > $B.recursion_limit) {
-                repr_stack.clear()
-                $B.RAISE(_b_.RecursionError, "maximum recursion depth " +
-                    "exceeded while getting the repr of an object")
-            }
         }
     },
     leave: function(obj) {
         repr_stack.delete(_b_.id(obj))
+    },
+    clear: function() {
+        repr_stack.clear()
     }
 }
 

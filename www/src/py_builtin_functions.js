@@ -1787,7 +1787,23 @@ var repr = _b_.repr = function(obj) {
     check_nb_args_no_kw('repr', 1, arguments)
     var klass = $B.get_class(obj)
     var tp_repr = $B.search_slot(klass, 'tp_repr')
-    return tp_repr(obj)
+    $B.repr.depth++
+    try {
+        return tp_repr(obj)
+    } catch (err) {
+        // an error out of the outermost repr() leaves no object marked as
+        // being represented, and a stack overflow is a RecursionError
+        if ($B.repr.depth == 1) {
+            $B.repr.clear()
+            if ($B.is_recursion_error(err)) {
+                $B.RAISE(_b_.RecursionError, "maximum recursion depth " +
+                    "exceeded while getting the repr of an object")
+            }
+        }
+        throw err
+    } finally {
+        $B.repr.depth--
+    }
 }
 
 var reversed = _b_.reversed
