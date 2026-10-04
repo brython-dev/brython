@@ -3428,11 +3428,10 @@ Template.tp_new = function(cls, args, kw) {
 }
 
 Template.tp_repr = function(self) {
-    var strings = 'strings=(' + _b_.repr(self.strings) +
-        ')'
+    var strings = 'strings=' + _b_.repr(self.strings)
     var interpolations = 'interpolations=' +
         _b_.repr($B.fast_tuple(self.interpolations))
-    return `<Template(${strings}, ${interpolations})>`
+    return `Template(${strings}, ${interpolations})`
 }
 
 var Template_funcs = $B.Template.tp_funcs = {}
