@@ -38,8 +38,6 @@ $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
 
     $B.str_dict_set(dict, '__module__', module)
 
-    $B.str_dict_set(dict, '__qualname__', class_name)
-
     // A class that overrides __eq__() and does not define __hash__()
     // will have its __hash__() implicitly set to None
     if($B.str_dict_get(dict, '__eq__', $B.NULL) !== $B.NULL &&
@@ -1441,6 +1439,7 @@ _b_.type.tp_new = function(cls, args, kw) {
         ob_type: metatype,
         tp_bases: bases,
         tp_name: name,
+        ht_qualname: qualname,
         tp_flags: $B.TPFLAGS.DEFAULT | $B.TPFLAGS.HEAPTYPE |
                    $B.TPFLAGS.BASETYPE | $B.TPFLAGS.HAVE_GC
     }
@@ -1767,7 +1766,7 @@ type_funcs.__qualname___get = function(cls) {
     // builtin descriptor types store their instance __qualname__ getset under
     // the same dict key; use the dict value only when it is the qualname string
     var q = $B.get_from_dict(cls, '__qualname__', $B.NULL)
-    return typeof q === 'string' ? q : $B.get_name(cls)
+    return typeof q === 'string' ? q : (cls.ht_qualname ?? $B.get_name(cls))
 }
 
 type_funcs.__qualname___set = function(cls, value) {

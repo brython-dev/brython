@@ -1972,6 +1972,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes) {
 
     js += prefix + `locals.__doc__ = ${docstring}\n` +
           prefix + `locals.__module__ = '${glob}'\n` +
+          prefix + `locals.__qualname__ = "${qualname}"\n` +
           prefix + `locals.__firstlineno__ = ${this.lineno}\n`
 
     js += prefix + `var frame = [name, locals, '${glob}', ${globals_name}]\n` +
