@@ -52,6 +52,7 @@ coroutine_funcs.__sizeof__ = function(self) {
 
 coroutine_funcs.close = function(self) {
     self.$sent = true // avoids RuntimeWarning
+    unawaited.unregister(self)
 }
 
 coroutine_funcs.cr_await_get = function(self) {
@@ -96,6 +97,7 @@ coroutine_funcs.cr_suspended_set = function(self) {
 
 coroutine_funcs.send = function(self) {
     self.$sent = true
+    unawaited.unregister(self)
     if (! $B.$isinstance(self, coroutine)) {
         var msg = "object is not a coroutine"
         if(typeof self == "function" && self.$function_infos &&
@@ -138,6 +140,39 @@ $B.coroutine.tp_getset = [
 
 $B.set_func_names(coroutine, "builtins")
 
+// A coroutine reclaimed before it started was never awaited. The warning keeps
+// its name and its frame without the locals, which may hold the coroutine.
+var unawaited = new FinalizationRegistry(function(created) {
+    var current = $B.frame_obj
+    $B.frame_obj = {frame: created.frame, prev: null, count: 1}
+    try {
+        var message = $B.EXC(_b_.RuntimeWarning,
+            `coroutine '${created.name}' was never awaited`)
+        message.lineno = created.frame.$lineno
+        $B.module_getattr($B.imported._warnings, 'warn')(message)
+    } finally {
+        $B.frame_obj = current
+    }
+})
+
+// Only the coroutines not started when the current turn ends are watched.
+var made = []
+
+function watch_unstarted() {
+    for (var i = 0; i < made.length; i += 2) {
+        var coro = made[i]
+        if (! coro.$sent) {
+            var frame = Object.assign([], made[i + 1])
+            frame[1] = {}
+            unawaited.register(coro, {
+                name: coro.$func.$function_infos[$B.func_attrs.__name__],
+                frame
+            }, coro)
+        }
+    }
+    made = []
+}
+
 $B.make_async = func => {
     if (func.$is_genfunc) {
         return func
@@ -151,8 +186,11 @@ $B.make_async = func => {
         }
         if ($B.frame_obj !== null) {
             var frame = $B.frame_obj.frame
-            frame.$coroutine = res
             res.$lineno = frame.$lineno
+            if (made.length == 0) {
+                queueMicrotask(watch_unstarted)
+            }
+            made.push(res, frame)
         }
         return res
     }
