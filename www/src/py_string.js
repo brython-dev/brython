@@ -3427,6 +3427,21 @@ Template.tp_new = function(cls, args, kw) {
     return res
 }
 
+Template.sq_concat = function(self, other) {
+    if ($B.get_class(other) !== Template) {
+        return _b_.NotImplemented
+    }
+    var last = self.strings.length - 1
+    return {
+        ob_type: Template,
+        strings: $B.fast_tuple([...self.strings.slice(0, last),
+            _b_.str.sq_concat(self.strings[last], other.strings[0]),
+            ...other.strings.slice(1)]),
+        interpolations: $B.fast_tuple([...self.interpolations,
+            ...other.interpolations])
+    }
+}
+
 Template.tp_repr = function(self) {
     var strings = 'strings=(' + _b_.repr(self.strings) +
         ')'
