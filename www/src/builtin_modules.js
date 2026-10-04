@@ -1700,7 +1700,6 @@ All Rights Reserved.
 `
 $B.module_setattr($B.imported.builtins, 'copyright', '')
 $B.module_setattr($B.imported.builtins, 'license', 'BSD 3')
-$B.module_setattr($B.imported.builtins, 'help', 'type help()')
 $B.module_setattr($B.imported.builtins, 'credits',
 `    Thanks to CWI, CNRI, BeOpen, Zope Corporation, the Python Software
     Foundation, and a cast of thousands for supporting Python
