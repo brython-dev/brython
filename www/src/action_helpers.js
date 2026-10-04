@@ -373,8 +373,8 @@ $B._PyPegen.formatted_value = function(p,
     if (typeof conversion_val == 'string') {
         // Got a conversion character, validate and convert to charCode
         if (conversion_val.length > 1 || ! 'sra'.includes(conversion_val)) {
-            $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(conversion.result,
-                `f-string: invalid conversion character ${conversion_val}: ` +
+            $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, conversion.result,
+                `f-string: invalid conversion character '${conversion_val}': ` +
                 "expected 's', 'r', or 'a'")
         }
         conversion_val = conversion_val.charCodeAt(0)
