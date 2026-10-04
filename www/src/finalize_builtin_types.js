@@ -133,6 +133,7 @@ Object.assign($B.wrapper_methods,
         tp_init: wrap('__init__'),
         tp_iter: wrap('__iter__'),
         tp_iternext: make_next,
+        tp_match_args: make_match_args,
         tp_new: make_new,
         tp_repr: wrap('__repr__', 1),
         tp_str : wrap('__str__', 1),
@@ -146,6 +147,10 @@ function make_doc(cls) {
     if (in_dict === $B.NULL) {
         $B.set_to_dict(cls, '__doc__', cls.tp_doc)
     }
+}
+
+function make_match_args(cls) {
+    $B.set_to_dict(cls, '__match_args__', $B.fast_tuple(cls.tp_match_args))
 }
 
 function make_getattribute(cls) {
