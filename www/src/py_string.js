@@ -3376,6 +3376,7 @@ Template.$factory = function() {
                 strings.push('')
             }
             interpolations.push(Interpolation.$factory(...item))
+            expect_str = true
         } else {
             strings.push(item)
             expect_str = false
