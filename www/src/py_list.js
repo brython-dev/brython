@@ -104,7 +104,8 @@ function index(self) {
         stop = Math.min(stop, self.length)
     }
     for (var i = start; i < stop; i++) {
-        if ($B.rich_comp('__eq__', $.x, self[i])) {
+        // identity first, then equality
+        if (self[i] === $.x || $B.rich_comp('__eq__', $.x, self[i])) {
             return i
         }
     }
