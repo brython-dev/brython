@@ -3391,30 +3391,45 @@ Template.$factory = function() {
     }
 }
 
+var TemplateIter = $B.make_builtin_class('string.templatelib.TemplateIter')
+
+TemplateIter.tp_flags = 0b101000110000010 // not a BASETYPE, not instantiable
+
 Template.tp_iter = function(self) {
-    self.$counter = -1
-    self.$len = self.strings.length + self.interpolations.length
+    return {
+        ob_type: TemplateIter,
+        template: self,
+        $counter: -1,
+        $len: self.strings.length + self.interpolations.length
+    }
+}
+
+TemplateIter.tp_iter = function(self) {
     return self
 }
 
-Template.tp_iternext = function(self) {
+TemplateIter.tp_iternext = function*(self) {
     self.$counter++
     if (self.$counter >= self.$len) {
-        $B.RAISE(_b_.StopIteration, '')
+        return
     }
     var type = 'si'[self.$counter % 2]
     var rank = Math.floor(self.$counter / 2)
     switch (type) {
         case 's':
-            var s = self.strings[rank]
+            var s = self.template.strings[rank]
             if (s.length > 0) {
-                return s
+                yield s
+            } else {
+                yield* TemplateIter.tp_iternext(self)
             }
-            return Template.tp_iternext(self)
+            break
         case 'i':
-            return self.interpolations[rank]
+            yield self.template.interpolations[rank]
     }
 }
+
+$B.set_func_names(TemplateIter, 'builtins')
 
 
 Template.tp_new = function(cls, args, kw) {
