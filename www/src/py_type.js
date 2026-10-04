@@ -1420,9 +1420,13 @@ _b_.type.tp_new = function(cls, args, kw) {
         console.log($B.frame_obj.frame.__file__, 'line', $B.frame_obj.frame.$lineno)
     }
 
-    // Create the class dictionary
-    var module = $B.str_dict_get(cl_dict, '__module__', $B.frame_obj.frame[2])
-    $B.str_dict_set(cl_dict, '__module__', module)
+    // Create the class dictionary: __module__ is the __name__ of the current
+    // globals, and is not set if they have none
+    var module = $B.str_dict_get(cl_dict, '__module__',
+        $B.frame_obj.frame[3].__name__)
+    if (module !== undefined) {
+        $B.str_dict_set(cl_dict, '__module__', module)
+    }
 
     var qualname = $B.str_dict_get(cl_dict, '__qualname__', name)
     // __qualname__ is removed from class dict
