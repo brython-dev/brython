@@ -805,16 +805,19 @@ int_funcs.__format__ = function(self, format_spec) {
     fmt.align = fmt.align || ">"
     var res = preformat(self, fmt)
     if (fmt.comma) {
-        var sign = res[0] == "-" ? "-" : "",
-            rest = res.substr(sign.length),
+        // digits are grouped by 4 in bases 2, 8 and 16, after the sign and
+        // the prefix
+        var size = 'boxX'.includes(fmt.type) ? 4 : 3,
+            lead = res.match(/^[-+ ]?(0[bBoOxX])?/)[0],
+            rest = res.substr(lead.length),
             len = rest.length,
-            nb = Math.ceil(rest.length/3),
+            nb = Math.ceil(rest.length / size),
             chunks = []
         for (var i = 0; i < nb; i++) {
-            chunks.push(rest.substring(len - 3 * i - 3, len - 3 * i))
+            chunks.push(rest.substring(len - size * i - size, len - size * i))
         }
         chunks.reverse()
-        res = sign + chunks.join(",")
+        res = lead + chunks.join(fmt.grouping_option)
     }
     return $B.format_width(res, fmt)
 }
