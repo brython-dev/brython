@@ -1571,15 +1571,6 @@ $B.leave_frame = function(arg) {
         throw Error('no frame_obj')
     }
     var frame = $B.frame_obj.frame
-    if (frame.$coroutine) {
-        if (! frame.$coroutine.$sent) {
-            var cname = frame.$coroutine.$func.$function_infos[$B.func_attrs.__name__]
-            var message = $B.EXC(_b_.RuntimeWarning,
-                `coroutine '${cname}' was never awaited`)
-            message.lineno = frame.$coroutine.$lineno
-            $B.module_getattr($B.imported._warnings, 'warn')(message)
-        }
-    }
     $B.frame_obj = $B.frame_obj.prev
     // For generators in locals, if their execution frame has context
     // managers, close them. In standard Python this happens when the
