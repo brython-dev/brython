@@ -1752,7 +1752,9 @@ type_funcs.__mro___set = function(self) {
 }
 
 type_funcs.__name___get = function(cls) {
-    return $B.get_name(cls)
+    var name = $B.get_name(cls)
+    // a static type named "module.name" is called by its last part
+    return (cls.tp_flags & TPFLAGS.HEAPTYPE) ? name : name.split('.').pop()
 }
 
 type_funcs.__name___set = function(cls,value) {
@@ -1767,7 +1769,7 @@ type_funcs.__qualname___get = function(cls) {
     // builtin descriptor types store their instance __qualname__ getset under
     // the same dict key; use the dict value only when it is the qualname string
     var q = $B.get_from_dict(cls, '__qualname__', $B.NULL)
-    return typeof q === 'string' ? q : $B.get_name(cls)
+    return typeof q === 'string' ? q : type_funcs.__name___get(cls)
 }
 
 type_funcs.__qualname___set = function(cls, value) {
