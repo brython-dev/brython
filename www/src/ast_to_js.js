@@ -3598,9 +3598,10 @@ $B.ast.Module.prototype.to_js = function(scopes) {
         }
     }
 
+    // exec() adds no __name__ to the globals it is given
     js += `\nvar __file__ = locals.__file__ = ` +
           `${JSON.stringify(scopes.filename ?? "<string>")}\n` +
-          `locals.__name__ = ${JSON.stringify(name)}\n` +
+          (namespaces ? '' : `locals.__name__ = ${JSON.stringify(name)}\n`) +
           `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
 
     var insert_positions = js.length
