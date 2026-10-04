@@ -1345,6 +1345,12 @@ $B.$call = function(callable, ...args) {
             "' object is not callable")
     }
     if (typeof call_method !== 'function') {
+        // a descriptor, such as a classmethod, is bound before it is called
+        var call_getter = $B.search_slot($B.get_class(call_method),
+            'tp_descr_get', $B.NULL)
+        if (call_getter !== $B.NULL) {
+            return $B.$call(call_getter(call_method, callable, klass), ...args)
+        }
         if ($B.get_class(call_method).tp_call !== $B.NULL) {
             // for instance __call__ might be set to dict
             return $B.$call(call_method, ...args)
