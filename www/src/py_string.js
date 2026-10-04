@@ -3357,6 +3357,13 @@ Interpolation.tp_repr = function(self) {
     return res + items.join(', ') + ')'
 }
 
+Interpolation.tp_members = [
+    ["value", $B.TYPES.OBJECT, "value", 1],
+    ["expression", $B.TYPES.OBJECT, "expression", 1],
+    ["conversion", $B.TYPES.OBJECT, "conversion", 1],
+    ["format_spec", $B.TYPES.OBJECT, "format_spec", 1]
+]
+
 $B.set_func_names(Interpolation, 'builtins')
 
 var Template = $B.Template = $B.make_builtin_class('string.templatelib.Template')
