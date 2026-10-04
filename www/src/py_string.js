@@ -3365,20 +3365,28 @@ Template.tp_flags = 0b101001000011100 // not a BASETYPE
 
 Template.$factory = function() {
     // create a Template string (PEP 750)
-    // arguments are strings or arrays
+    // arguments are strings, and arrays or Interpolation instances
     var strings = $B.fast_tuple([]),
         interpolations = $B.fast_tuple([])
     var expect_str = true
     for (var item of arguments) {
-        if (Array.isArray(item)) {
+        if (Array.isArray(item) || $B.get_class(item) === Interpolation) {
             // interpolation
             if (expect_str) {
                 strings.push('')
             }
-            interpolations.push(Interpolation.$factory(...item))
-        } else {
+            interpolations.push(Array.isArray(item) ?
+                Interpolation.$factory(...item) : item)
+        } else if (! $B.is_str(item)) {
+            $B.RAISE(_b_.TypeError, "Template.__new__ *args need to be " +
+                `of type 'str' or 'Interpolation', got ${$B.class_name(item)}`)
+        } else if (expect_str) {
             strings.push(item)
             expect_str = false
+        } else {
+            // consecutive strings are concatenated
+            strings[strings.length - 1] = _b_.str.sq_concat(
+                strings[strings.length - 1], item)
         }
     }
     if (expect_str) {
