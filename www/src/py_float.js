@@ -502,8 +502,8 @@ function float_round(x, ndigits) {
            }
        }
        if (no_digits) {
-           // return an int
-           return res
+           // return an int, which has no negative zero
+           return res + 0
        }
        return $B.fast_float(res)
     }
@@ -1046,7 +1046,7 @@ _b_.float.nb_int = function(self) {
                    res_num :
                    BigInt(res)
     }
-    return Math.trunc(self.value)
+    return Math.trunc(self.value) + 0
 }
 
 _b_.float.nb_float = function(self) {
@@ -1092,7 +1092,7 @@ float_funcs.__ceil__ = function(self) {
     } else if (isinf(self)) {
         $B.RAISE(_b_.OverflowError, 'cannot convert float infinity to integer')
     }
-    return Math.ceil(self.value)
+    return Math.ceil(self.value) + 0
 }
 
 float_funcs.__floor__ = function(self) {
@@ -1102,7 +1102,7 @@ float_funcs.__floor__ = function(self) {
     } else if (isinf(self)) {
         $B.RAISE(_b_.OverflowError, 'cannot convert float infinity to integer')
     }
-    return Math.floor(self.value)
+    return Math.floor(self.value) + 0
 }
 
 float_funcs.__format__ = function(self, format_spec) {
