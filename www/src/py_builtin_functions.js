@@ -987,7 +987,7 @@ $B.$hash = function(obj) {
     return res
 }
 
-var help = _b_.help = function(obj) {
+var help = function(obj) {
     if (obj === undefined) {obj = 'help'}
 
     if (typeof obj == 'string') {
@@ -1045,10 +1045,20 @@ var help = _b_.help = function(obj) {
     }
 }
 
-help.__repr__ = help.__str__ = function() {
+// the builtin help is an instance of _sitebuiltins._Helper: calling it runs
+// help(), its repr says how to use it
+var Helper = $B.make_builtin_class('_sitebuiltins._Helper')
+
+Helper.tp_call = function(self, ...args) {
+    return help(...args)
+}
+
+Helper.tp_repr = function() {
     return "Type help() for interactive help, or help(object) " +
         "for help about object."
 }
+
+_b_.help = {ob_type: Helper}
 
 _b_.hex = function(obj) {
     check_nb_args_no_kw('hex', 1, arguments)
