@@ -3336,7 +3336,9 @@ $B.set_func_names(str, "builtins")
 $B.str_len = _b_.str.mp_length
 
 
-var Interpolation = $B.make_builtin_class('Interpolation')
+var Interpolation = $B.make_builtin_class('string.templatelib.Interpolation')
+
+Interpolation.tp_flags = 0b101000100000010 // not a BASETYPE
 
 Interpolation.$factory = function(value, expression, conversion, format_spec) {
     return {
@@ -3361,7 +3363,7 @@ $B.set_func_names(Interpolation, 'builtins')
 
 var Template = $B.Template = $B.make_builtin_class('string.templatelib.Template')
 
-Template.tp_flags = 0b101001000011100 // not a BASETYPE
+Template.tp_flags = 0b101000100000010 // not a BASETYPE
 
 Template.$factory = function() {
     // create a Template string (PEP 750)
