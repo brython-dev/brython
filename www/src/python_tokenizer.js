@@ -447,6 +447,10 @@ $B.tokenizer = function(src, filename, mode, parser) {
                     throw err
                 }
                 fstring_stack.pop()
+                if (fstring_stack.length > 0) {
+                    // back in the enclosing f-string or t-string
+                    ft_type = $B.last(fstring_stack).ft_type
+                }
                 // pop from token modes
                 token_modes.pop()
                 token_mode = $B.last(token_modes)
@@ -1030,7 +1034,8 @@ $B.tokenizer = function(src, filename, mode, parser) {
                             fstring_stack.push(
                                 {
                                     start: pos,
-                                    nb_braces_on_entry: braces.length
+                                    nb_braces_on_entry: braces.length,
+                                    ft_type
                                 }
                             )
                             continue
