@@ -1175,12 +1175,12 @@ $B._PyPegen.concatenate_strings = function(p, strings) {
         values = []
 
     function error(message) {
-        var a = {lineno: first.start[0],
-                 col_offset: first.start[1],
-                 end_lineno : last.end[0],
-                 end_col_offset: last.end[1]
+        var a = {lineno: first.lineno,
+                 col_offset: first.col_offset,
+                 end_lineno : last.end_lineno,
+                 end_col_offset: last.end_col_offset
                 }
-        $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, message)
+        $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, message)
     }
 
     function set_position_from_list(ast_obj, items) {
