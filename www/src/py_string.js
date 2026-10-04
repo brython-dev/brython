@@ -3338,7 +3338,8 @@ $B.str_len = _b_.str.mp_length
 
 var Interpolation = $B.make_builtin_class('Interpolation')
 
-Interpolation.$factory = function(value, expression, conversion, format_spec) {
+Interpolation.$factory = function(value, expression = '', conversion = _b_.None,
+        format_spec = '') {
     return {
         ob_type: Interpolation,
         value,
