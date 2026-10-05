@@ -1504,9 +1504,9 @@ function $extreme(args, op) { // used by min() and max()
     var last = args[args.length - 1]
     var nb_args = args.length
     var kw
-    if (last.$kw) {
+    if (last[$B.KW]) {
         nb_args--
-        kw = $B.parse_kwargs(last.$kw)
+        kw = $B.parse_kwargs(last[$B.KW])
     }
 
     var has_default = false,

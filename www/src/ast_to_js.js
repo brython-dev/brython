@@ -1859,7 +1859,7 @@ function make_args(scopes) {
         for (var starred_kwarg of starred_kwargs) {
             kw += `, ${starred_kwarg}`
         }
-        kw = `{$kw:[${kw}]}`
+        kw = `{[$B.KW]: [${kw}]}`
         args_list.push(kw)
     }
     return js + `${args_list.join(', ')}`
@@ -2459,7 +2459,7 @@ function type_param_in_def(tp, ref, scopes) {
     }
     js += prefix + `var ptype = $B.module_getattr(_typing, '${param_type}')\n` +
           prefix + `locals_${ref}.${name} = ` +
-              `$B.$call(ptype, '${name}', {$kw: [{infer_variance: true}]})\n` +
+              `$B.$call(ptype, '${name}', {[$B.KW]: [{infer_variance: true}]})\n` +
           prefix + `type_params.push(locals_${ref}.${name})\n` +
           prefix + `var _set_lazy_eval = $B.$getattr(ptype, '_set_lazy_eval')\n`
     if (tp.bound) {
@@ -2656,7 +2656,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
              defaults === '_b_.None' &&
              kw_defaults === '_b_.None'){
          js += prefix + `if(arguments.length == ${positional.length} && ` +
-                   `! _${positional[positional.length -1].arg}?.$kw){\n` +
+                   `! _${positional[positional.length -1].arg}?.[$B.KW]){\n` +
                prefix + tab + `var ${locals_name} = locals = ` +
                    `{${positional.map(x => x.arg + ': _' + x.arg).join(', ')}}\n` +
                prefix + `} else {\n` +
@@ -4156,7 +4156,7 @@ $B.ast.TypeAlias.prototype.to_js = function(scopes) {
 $B.ast.TypeVar.prototype.to_js = function() {
     check_type_params(this)
     return `$B.$call($B.module_getattr($B.imported._typing, 'TypeVar'), '${this.name}', ` +
-        `{$kw: [{infer_variance: true}]})`
+        `{[$B.KW]: [{infer_variance: true}]})`
 }
 
 $B.ast.TypeVarTuple.prototype.to_js = function() {

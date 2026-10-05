@@ -733,7 +733,7 @@ function make_arguments_parser(f) {
 
         const args_length = args.length
         const last_arg = args[args_length - 1]
-        const has_kw = last_arg?.$kw
+        const has_kw = last_arg?.[$B.KW]
 
         const nb_pos = has_kw ? args_length - 1 : args_length
 
@@ -799,25 +799,25 @@ function make_arguments_parser(f) {
             }
 
             var elt = last_arg
-            for (let key in elt.$kw[0]) {
-                add_key(key, elt.$kw[0][key])
+            for (let key in elt[$B.KW][0]) {
+                add_key(key, elt[$B.KW][0][key])
             }
-            for (let i = 1; i< elt.$kw.length; i++) {
-                if ($B.get_class(elt.$kw[i]) === _b_.dict) {
-                    for (let item of _b_.dict.$iter_items(elt.$kw[i])) {
+            for (let i = 1; i< elt[$B.KW].length; i++) {
+                if ($B.get_class(elt[$B.KW][i]) === _b_.dict) {
+                    for (let item of _b_.dict.$iter_items(elt[$B.KW][i])) {
                         add_key(item.key, item.value)
                     }
                 } else {
-                    let klass = $B.get_class(elt.$kw[i])
+                    let klass = $B.get_class(elt[$B.KW][i])
                     let keys_method = $B.$getattr(klass, 'keys', null)
                     let getitem = $B.$getattr(klass, '__getitem__', null)
                     if (keys_method === null || getitem === null) {
                         $B.RAISE(_b_.TypeError,
                             `${name} argument after ** must be a mapping, ` +
-                            `not ${$B.class_name(elt.$kw[i])}`)
+                            `not ${$B.class_name(elt[$B.KW][i])}`)
                     }
-                    for (let key of $B.make_js_iterator(keys_method(elt.$kw[i]))) {
-                        add_key(key, getitem(elt.$kw[i], key))
+                    for (let key of $B.make_js_iterator(keys_method(elt[$B.KW][i]))) {
+                        add_key(key, getitem(elt[$B.KW][i], key))
                     }
                 }
             }
