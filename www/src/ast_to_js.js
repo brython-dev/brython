@@ -956,9 +956,6 @@ function make_comp(scopes) {
                                  fast_id(upper_comp_scope.ast)),
         comp_scope_symbols = comp_scope_block.symbols
 
-    var initial_nb_await_in_scope = upper_comp_scope.nb_await === undefined ? 0 :
-                            upper_comp_scope.nb_await
-
     for (var [key, value] of Object.entries(symtable_block.symbols)) {
         if (value & SF.DEF_COMP_ITER) {
             comp_iter = key
@@ -994,6 +991,13 @@ function make_comp(scopes) {
     } else if (this instanceof $B.ast.DictComp) {
         js += prefix + `var result_${id} = $B.empty_dict()\n`
     }
+
+    // The comprehension has its own scope: the names bound by its generators
+    // are set in a namespace of its own, never in the enclosing scope
+    var own_scope = new Scope(`${type.toLowerCase()}_${id}`, 'comprehension', this)
+    scopes.push(own_scope)
+    js += prefix + `var ${make_scope_name(scopes)} = {},\n` +
+          prefix + tab + tab + `locals = ${make_scope_name(scopes)}\n`
 
     // special case for first generator
     var first = this.generators[0]
@@ -1046,10 +1050,7 @@ function make_comp(scopes) {
     if (save_target_flags) {
         $B.str_dict_set(comp_scope_symbols, target_name, save_target_flags)
     }
-    // count if nb_await was incremented
-    var final_nb_await_in_scope = upper_comp_scope.nb_await === undefined ? 0 :
-                                  upper_comp_scope.nb_await
-    var has_await = final_nb_await_in_scope > initial_nb_await_in_scope
+    var has_await = own_scope.has_await
 
     // If the element has an "await", attribute has_await is set to the scope
     // Use it to make the function aync or not
@@ -1082,25 +1083,13 @@ function make_comp(scopes) {
     for (var name of save_locals) {
         js += prefix + `${name_reference(name, scopes)} = save_${name}\n`
     }
-    // A comprehension has its own scope, so the names its generators bind must
-    // not survive it. Drop them in both senses: the binding at run time, and
-    // the scope entry that decides how a later read of the name compiles.
-    for (var comp_name of bindings) {
-        if (! save_locals.has(comp_name)) {
-            js += prefix + `delete ${comp.locals_name}.${comp_name}\n`
-            var comp_s = comp_scope
-            while (comp_s) {
-                comp_s.locals.delete(comp_name)
-                comp_s = comp_s.parent
-            }
-        }
-    }
     if (comp_iter_scope.found) {
         js += prefix + `${name_reference(comp_iter, scopes)} = save_comp_iter\n`
     }
     js += prefix + `return result_${id}\n`
     dedent()
     js += prefix + `}` + `)(${outmost_expr})\n`
+    scopes.pop()
     return js
 }
 
