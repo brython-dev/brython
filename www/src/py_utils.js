@@ -722,7 +722,7 @@ $B.unpacker = function(obj, nb_targets, has_starred) {
     }
     var t = Array.from(it),
         right_length = t.length,
-        left_length = nb_targets + (has_starred ? nb_after_starred - 1 : 0)
+        left_length = has_starred ? nb_targets - 1 : nb_targets
 
     if((! has_starred && (right_length < nb_targets)) ||
             (has_starred && (right_length < nb_targets - 1))){
