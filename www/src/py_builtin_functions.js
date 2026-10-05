@@ -1418,7 +1418,8 @@ _b_.locals = function() {
     // is not a container or iterable"). Skip frame infrastructure keys.
     var d = $B.empty_dict()
     for (var key in locals_obj) {
-        if (key.startsWith('$') || key == '__class__' || key == 'ob_type') {
+        if (key.startsWith('$') || key == '__class__' || key == 'ob_type' ||
+                key.startsWith('lambda_' + $B.lambda_magic + '_')) {
             continue
         }
         _b_.dict.$setitem(d, key, locals_obj[key])
