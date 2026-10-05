@@ -1621,6 +1621,10 @@ $B.ast.Await.prototype.to_js = function(scopes) {
             scopes[ix].ast instanceof $B.ast.GeneratorExp){
         scopes[ix].has_await = true
         ix--
+        // skip the blocks (if, for, try...) the comprehension is written in
+        while (scopes[ix].parent) {
+            ix--
+        }
     }
     if (scopes[ix].ast instanceof $B.ast.AsyncFunctionDef) {
         scopes[ix].has_await = true
