@@ -104,7 +104,7 @@ function index(self) {
         stop = Math.min(stop, self.length)
     }
     for (var i = start; i < stop; i++) {
-        if ($B.rich_comp('__eq__', $.x, self[i])) {
+        if ($B.is_or_equals($.x, self[i])) {
             return i
         }
     }
@@ -875,7 +875,7 @@ list_funcs.pop = function(self) {
 list_funcs.remove = function(self) {
     var $ = $B.args("remove", 2, {self: null, x: null}, arguments)
     for (var i = 0, len = $.self.length; i < len; i++) {
-        if ($B.rich_comp("__eq__", $.self[i], $.x)) {
+        if ($B.is_or_equals($.self[i], $.x)) {
             $.self.splice(i, 1)
             return _b_.None
         }
