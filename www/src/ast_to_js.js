@@ -1053,9 +1053,8 @@ function make_comp(scopes) {
 
     // If the element has an "await", attribute has_await is set to the scope
     // Use it to make the function aync or not
-    js = `(${has_await ? 'async ' : ''}function(expr) {\n` + js
-
-    js += has_await ? 'var save_frame_obj = $B.frame_obj;\n' : ''
+    js = `(${has_await ? 'async ' : ''}function(expr) {\n` +
+         (has_await ? 'var save_frame_obj = $B.frame_obj;\n' : '') + js
 
     if (this instanceof $B.ast.ListComp) {
         js += prefix + `result_${id}.push(${elt})\n`
@@ -1101,7 +1100,9 @@ function make_comp(scopes) {
     js += prefix + `return result_${id}\n`
     dedent()
     js += prefix + `}` + `)(${outmost_expr})\n`
-    return js
+    // With an "await", the comprehension is an async function: its result is
+    // awaited where the comprehension is written
+    return has_await ? `(await ${js})` : js
 }
 
 function init_scopes(type, scopes) {
