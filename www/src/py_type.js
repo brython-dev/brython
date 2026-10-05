@@ -2348,6 +2348,9 @@ function _Py_subs_parameters(self, args, parameters, item) {
 $B.GenericAlias = $B.make_builtin_class("types.GenericAlias")
 
 $B.GenericAlias.$factory = function(origin, args) {
+    if (! $B.$isinstance(args, _b_.tuple)) {
+        args = $B.fast_tuple([args])
+    }
     var res = {
         ob_type: $B.GenericAlias,
         origin,
