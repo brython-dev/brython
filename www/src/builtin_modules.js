@@ -679,6 +679,9 @@
     $B.assign_dict(modules.javascript.JSON,
         {
             parse: function(text, reviver) {
+                if ($B.is_str(text)) {
+                    text = _b_.str.$to_string(text)
+                }
                 return $B.structuredclone2pyobj(
                     JSON.parse(text, function(key, value, context) {
                         value = read_big(value, context)
