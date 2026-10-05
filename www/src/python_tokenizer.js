@@ -954,7 +954,7 @@ $B.tokenizer = function(src, filename, mode, parser) {
                                     line)
                                 // used on fstring debug mode
                                 token.metadata = src.substring(
-                                    line_start + ft_start + 2, pos - 1)
+                                    line_start + ft_expr_start, pos - 1)
                                 t.push(token)
                             }
                         } else if (char == ' ' || char == '\t') {
