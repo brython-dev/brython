@@ -2731,7 +2731,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
             class_ref = class_scope.name, // XXX qualname
             refs = class_ref.split('.').map(x => `'${x}'`)
         bind("__class__", scopes)
-        js += prefix + `locals.ob_type =  locals.__class__ = ` +
+        js += prefix + `locals.__class__ = ` +
                   `$B.get_method_class(${name2}, ${scope_ref}, "${class_ref}", [${refs}])\n`
     }
 

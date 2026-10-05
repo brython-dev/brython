@@ -1418,7 +1418,7 @@ _b_.locals = function() {
     // is not a container or iterable"). Skip frame infrastructure keys.
     var d = $B.empty_dict()
     for (var key in locals_obj) {
-        if (key.startsWith('$') || key == '__class__' || key == 'ob_type') {
+        if (key.startsWith('$') || key == '__class__') {
             continue
         }
         _b_.dict.$setitem(d, key, locals_obj[key])
@@ -2244,7 +2244,8 @@ _b_.super.tp_init = function(self, _type, object_or_type) {
                 code = $B.$getattr(pyframe, 'f_code'),
                 co_varnames = $B.$getattr(code, 'co_varnames')
             if (co_varnames.length > 0) {
-                type = $B.get_class(frame[1])
+                // The method's class, which the compiler binds as __class__
+                type = frame[1].__class__
                 if (type === undefined) {
                     $B.RAISE(_b_.RuntimeError, "super(): no arguments")
                 }
