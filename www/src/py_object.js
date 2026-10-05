@@ -329,7 +329,29 @@ _b_.object.tp_repr = function(self) {
     }
 }
 
+// A Javascript symbol cannot hold a property: its hash is kept here, in a
+// WeakMap that does not keep the symbol alive when the engine accepts it as a
+// weak key, else in a Map (a symbol of Symbol.for is never a weak key, and
+// never dies)
+var weak_symbol_hashes = new WeakMap(),
+    symbol_hashes = new Map(),
+    symbols_are_weak_keys = true
+
+try {
+    new WeakMap().set(Symbol(), 0)
+} catch (err) {
+    symbols_are_weak_keys = false
+}
+
 _b_.object.tp_hash = function(self) {
+    if (typeof self == 'symbol') {
+        var hashes = symbols_are_weak_keys && Symbol.keyFor(self) === undefined ?
+                     weak_symbol_hashes : symbol_hashes
+        if (! hashes.has(self)) {
+            hashes.set(self, $B.$py_next_hash--)
+        }
+        return hashes.get(self)
+    }
     var hash = self.__hashvalue__
     if (hash !== undefined) {
         return hash
