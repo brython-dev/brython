@@ -405,7 +405,7 @@ $B._PyPegen.formatted_value = function(p,
         debug.lineno = arena.lineno
         debug.col_offset = arena.col_offset + 1
         debug.end_lineno = debug_end_line
-        debug.end_col_offset = debug_end_offset
+        debug.end_col_offset = debug_end_offset - 1
         var joined_str = new $B.ast.JoinedStr([debug, formatted_value])
         set_position_from_obj(joined_str, arena)
         return joined_str
