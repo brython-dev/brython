@@ -329,7 +329,16 @@ _b_.object.tp_repr = function(self) {
     }
 }
 
+// A Javascript symbol cannot hold a property: its hash is kept here
+var symbol_hashes = new Map()
+
 _b_.object.tp_hash = function(self) {
+    if (typeof self == 'symbol') {
+        if (! symbol_hashes.has(self)) {
+            symbol_hashes.set(self, $B.$py_next_hash--)
+        }
+        return symbol_hashes.get(self)
+    }
     var hash = self.__hashvalue__
     if (hash !== undefined) {
         return hash
