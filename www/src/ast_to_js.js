@@ -116,6 +116,17 @@ function make_id() {
     return uuid
 }
 
+// The counter starts at random, so the same source compiles to a different
+// text in every page or process. A tool that compiles ahead of time sets it
+// before each file to get reproducible output. Returns the previous value.
+$B.id_counter = function(n) {
+    var was = uuid
+    if (n !== undefined) {
+        uuid = n
+    }
+    return was
+}
+
 function fast_id(obj) {
     // faster than calling _b_.id
     if (obj[$B.ID] !== undefined) {
