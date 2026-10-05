@@ -908,60 +908,14 @@ function init_genexpr(comp, scopes) {
            prefix + `var _frame_obj = $B.frame_obj\n`
 }
 
-function comp_bindings(comp, bindings) {
-    if (comp.target instanceof $B.ast.Name) {
-        bindings.add(comp.target.id)
-    } else if (comp.target.elts) {
-        for (var elt of comp.target.elts) {
-            comp_bindings({target: elt}, bindings)
-        }
-    }
-    return bindings
-}
-
 function make_comp(scopes) {
     // Code common to list / set / dict comprehensions
-    // List all names bound inside the comprehension generators
-    var bindings = new Set()
-    for (var gen of this.generators) {
-        comp_bindings(gen, bindings)
-    }
-    var save_locals = new Set()
     var plen = prefix.length
-    var comp_prefix = prefix
     var id = make_id(),
         type = this.constructor.$name,
         symtable_block = scopes.symtable.table.blocks.get(fast_id(this)),
-        varnames = Object.keys($B.dict_as_jsobj(symtable_block.symbols)).map(x => `"${x}"`),
-        comp_iter,
-        comp_scope = $B.last(scopes),
-        upper_comp_scope = comp_scope
+        varnames = Object.keys($B.dict_as_jsobj(symtable_block.symbols)).map(x => `"${x}"`)
 
-    // Check the names bound in the comprehension that would shadow names
-    // in the comprehension scope
-    for (var name of comp_scope.locals) {
-        if (bindings.has(name)) {
-            save_locals.add(name)
-        }
-    }
-    while (upper_comp_scope.parent) {
-        upper_comp_scope = upper_comp_scope.parent
-        for (var name of upper_comp_scope.locals) {
-            if (bindings.has(name)) {
-                save_locals.add(name)
-            }
-        }
-    }
-    var comp_scope_block = scopes.symtable.table.blocks.get(
-                                 fast_id(upper_comp_scope.ast)),
-        comp_scope_symbols = comp_scope_block.symbols
-
-    for (var [key, value] of Object.entries(symtable_block.symbols)) {
-        if (value & SF.DEF_COMP_ITER) {
-            comp_iter = key
-        }
-    }
-    var comp_iter_scope = name_scope(comp_iter, scopes)
     var first_for = this.generators[0],
         // outmost expression is evaluated in enclosing scope
         outmost_expr = $B.js_from_ast(first_for.iter, scopes),
@@ -978,12 +932,6 @@ function make_comp(scopes) {
     }
     var js = init_comprehension(comp, scopes)
 
-    if (comp_iter_scope.found) {
-        js += prefix + `var save_comp_iter = ${name_reference(comp_iter, scopes)}\n`
-    }
-    for (var name of save_locals) {
-        js += prefix + `var save_${name} = ${name_reference(name, scopes)}\n`
-    }
     if (this instanceof $B.ast.ListComp) {
         js += prefix + `var result_${id} = $B.$list([])\n`
     } else if (this instanceof $B.ast.SetComp) {
@@ -1005,16 +953,6 @@ function make_comp(scopes) {
     indent()
     js += prefix + `for (var next_${id} of next_func_${id}) {\n`
     indent()
-    var save_target_flags
-    if (first.target instanceof $B.ast.Name) {
-        var target_name = first.target.id
-        if ($B.str_dict_get(comp_scope_symbols, target_name) !== $B.NULL) {
-            save_target_flags = $B.str_dict_get(comp_scope_symbols,
-                target_name)
-            $B.str_dict_set(comp_scope_symbols, target_name,
-                SF.LOCAL << SF.SCOPE_OFF)
-        }
-    }
     // assign result of iteration to target
     var name = new $B.ast.Name(`next_${id}`, new $B.ast.Load())
     copy_position(name, first_for.iter)
@@ -1047,9 +985,6 @@ function make_comp(scopes) {
         var elt = $B.js_from_ast(this.elt, scopes)
     }
 
-    if (save_target_flags) {
-        $B.str_dict_set(comp_scope_symbols, target_name, save_target_flags)
-    }
     var has_await = own_scope.has_await
 
     // If the element has an "await", attribute has_await is set to the scope
@@ -1080,12 +1015,6 @@ function make_comp(scopes) {
     js += prefix + `}\n` +
           (has_await ? prefix + `\n$B.restore_frame_obj(save_frame_obj, ${comp.locals_name});` : '')
 
-    for (var name of save_locals) {
-        js += prefix + `${name_reference(name, scopes)} = save_${name}\n`
-    }
-    if (comp_iter_scope.found) {
-        js += prefix + `${name_reference(comp_iter, scopes)} = save_comp_iter\n`
-    }
     js += prefix + `return result_${id}\n`
     dedent()
     js += prefix + `}` + `)(${outmost_expr})\n`
