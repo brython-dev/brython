@@ -1214,7 +1214,7 @@ _b_.type.tp_repr = function(kls) {
 }
 
 _b_.type.tp_call = function(cls) {
-    var $ = $B.args(cls?.tp_name ?? '__call__', 1, {cls: null}, arguments, null, 'args', 'kw'),
+    var $ = $B.args(cls?.tp_name ?? '__call__', 1, {cls: null}, arguments, null, 'args', 'kw', 1),
         cls = $.cls,
         args = $.args,
         kw = $.kw,
