@@ -896,14 +896,13 @@ function init_genexpr(comp, scopes) {
     var varnames = Object.keys(comp.varnames || {}).map(x => `'${x}'`).join(', ')
     return prefix + `var ${comp.locals_name} = {},\n` +
            prefix + tab + tab + `locals = ${comp.locals_name}\n` +
-           prefix + `locals['.0'] = expr\n` +
+           prefix + `locals['.0'] = _b_.iter(expr)\n` +
            prefix + `var frame = ["<${comp.type.toLowerCase()}>", ${comp.locals_name}, ` +
                `"${comp.module_name}", ${comp.globals_name}]\n` +
            prefix + `frame.$has_generators = true\n` +
            prefix + `frame.__file__ = '${scopes.filename}'\n` +
            prefix + `frame.$lineno = ${comp.ast.lineno}\n` +
            prefix + `$B.make_f_code(frame, [${varnames}])\n` +
-           prefix + `var next_func_${comp.id} = $B.make_js_iterator(expr, frame, ${comp.ast.lineno})\n` +
            prefix + `frame.$f_trace = _b_.None\n` +
            prefix + `var _frame_obj = $B.frame_obj\n`
 }
@@ -3013,6 +3012,20 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes) {
     indent()
     var head = init_comprehension(comp, scopes)
 
+    // the free variables of the expression are keys of its locals, as in a
+    // function
+    for (var [ident, flag] of Object.entries(symtable_block.symbols)) {
+        if (((flag >> SF.SCOPE_OFF) & SF.SCOPE_MASK) == SF.FREE) {
+            var free_scope = name_scope(ident, scopes)
+            if (free_scope.found) {
+                head += prefix + `Object.defineProperty(locals, '${ident}', ` +
+                    `{get: function(){return ` +
+                    `${make_scope_name(scopes, free_scope.found)}.${ident}}, ` +
+                    `set: function(){}, enumerable: true, configurable: true})\n`
+            }
+        }
+    }
+
     var js = prefix + `var gen${id} = $B.generator.$factory(${has_await ? 'async ' : ''}function*(expr){\n`
 
     // special case for first generator
@@ -3077,7 +3090,7 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes) {
     dedent()
     js += prefix + '}\n'
     js += prefix + '$B.leave_frame()\n'
-    js += prefix + '}, "<genexpr>")(expr)\n'
+    js += prefix + '}, "<genexpr>")(locals[".0"])\n'
 
     scopes.pop()
     var func = `${head}\n${js}\n` + prefix + `return gen${id}`

@@ -3502,6 +3502,15 @@ assert list(deque_2934(iterable=[1, 2])) == [1, 2]
 assert deque_2934().maxlen is None
 assert_raises(ValueError, deque_2934, [], -1)
 
+# the frame of a generator expression: .0 is the iterator, and its free
+# variables are in locals()
+def genexpr_frame():
+    y = 1
+    return list({k: type(v).__name__ for k, v in locals().items()}
+                for _ in range(1) if y)
+
+assert genexpr_frame() == [{'.0': 'range_iterator', '_': 'int', 'y': 'int'}]
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
