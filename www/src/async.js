@@ -125,6 +125,8 @@ coroutine_funcs.throw = function(self) {
 
 $B.coroutine.tp_methods = ["send", "throw", "close", "__sizeof__"]
 
+$B.coroutine.noargs_methods = ["close", "__sizeof__"]
+
 $B.coroutine.classmethods = ["__class_getitem__"]
 
 $B.coroutine.tp_members = [

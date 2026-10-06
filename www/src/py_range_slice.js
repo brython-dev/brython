@@ -139,6 +139,8 @@ range_iterator_funcs.__setstate__ = function(self, value) {
 
 $B.range_iterator.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]
 
+$B.range_iterator.noargs_methods = ["__length_hint__", "__reduce__"]
+
 /* range_iterator end */
 
 $B.set_func_names($B.range_iterator, "builtins")
@@ -401,6 +403,8 @@ range_funcs.index = function(self) {
 
 _b_.range.tp_methods = ["__reversed__", "__reduce__", "count", "index"]
 
+_b_.range.noargs_methods = ["__reversed__", "__reduce__"]
+
 _b_.range.tp_members = [
     ["start", $B.TYPES.OBJECT_EX, "start", 1],
     ["stop", $B.TYPES.OBJECT_EX, "stop", 1],
@@ -639,6 +643,8 @@ slice_funcs.indices = function() {
 }
 
 _b_.slice.tp_methods = ["indices", "__reduce__"]
+
+_b_.slice.noargs_methods = ["__reduce__"]
 
 _b_.slice.tp_members = [
     ["start", $B.TYPES.OBJECT, "start", 1],

@@ -213,6 +213,8 @@ traceback_funcs.tb_next_set = function(self, value) {
 
 $B.traceback.tp_methods = ["__dir__"]
 
+$B.traceback.noargs_methods = ["__dir__"]
+
 $B.traceback.tp_members = [
     ["tb_frame", $B.TYPES.OBJECT, "tb_frame",  1],
     ["tb_lasti", $B.TYPES.INT, "tb_lasti",  1]
@@ -367,6 +369,8 @@ frame_funcs.f_trace_set = function(self, value) {
 }
 
 $B.frame.tp_methods = ["clear", "__sizeof__"]
+
+$B.frame.noargs_methods = ["clear", "__sizeof__"]
 
 $B.frame.tp_members = [
     ["f_trace_lines", $B.TYPES.BOOL, "f_trace_lines", 0]
@@ -698,6 +702,8 @@ _b_.BaseException.functions_or_methods = ["__new__"]
 _b_.BaseException.tp_methods = [
     "__reduce__", "__setstate__", "with_traceback", "add_note"
 ]
+
+_b_.BaseException.noargs_methods = ["__reduce__"]
 
 _b_.BaseException.tp_members = [
     ["__suppress_context__", $B.TYPES.BOOL, "suppress_context", 0]

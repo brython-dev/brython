@@ -742,6 +742,8 @@ _b_.object.tp_methods = [
     "__dir__"
 ]
 
+_b_.object.noargs_methods = ["__reduce__", "__getstate__", "__sizeof__", "__dir__"]
+
 _b_.object.classmethods = ["__init_subclass__"]
 
 _b_.object.tp_getset = ["__class__"]

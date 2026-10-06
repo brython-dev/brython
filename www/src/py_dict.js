@@ -1122,9 +1122,6 @@ dict_funcs.__sizeof__ = function(self) {
 
 dict_funcs.clear = function(self) {
     // Remove all items from the dictionary.
-    var $ = $B.args("clear", 1, {self: null}, arguments)
-    var self = $.self
-
     if (self[TABLE]) {
         delete self[TABLE]
         delete self[HASHES]
@@ -1140,9 +1137,7 @@ dict_funcs.clear = function(self) {
 
 dict_funcs.copy = function(self) {
     // Return a shallow copy of the dictionary
-    var $ = $B.args("copy", 1, {self: null}, arguments)
-    var self = $.self,
-        res = $B.empty_dict()
+    var res = $B.empty_dict()
 
     if ($B.exact_type(self, _b_.dict)) {
         $copy_dict(res, self)
@@ -1194,7 +1189,6 @@ dict_funcs.get = function(self) {
 }
 
 dict_funcs.items = function(self) {
-    $B.args('items', 1, {self: null}, arguments)
     return {
         ob_type: $B.dict_items,
         dict_obj: self
@@ -1202,7 +1196,6 @@ dict_funcs.items = function(self) {
 }
 
 dict_funcs.keys = function(self) {
-    $B.args('keys', 1, {self: null}, arguments)
     return {
         ob_type: $B.dict_keys,
         dict_obj: self
@@ -1232,7 +1225,6 @@ dict_funcs.pop = function(self) {
 }
 
 dict_funcs.popitem = function(self) {
-    $B.check_nb_args_no_kw('popitem', 1, arguments)
     if (dict.mp_length(self) == 0) {
         $B.RAISE(_b_.KeyError, "'popitem(): dictionary is empty'")
     }
@@ -1340,7 +1332,6 @@ dict_funcs.update = function(self) {
 }
 
 dict_funcs.values = function(self) {
-    $B.args('values', 1, {self: null}, arguments)
     return {
         ob_type: $B.dict_values,
         dict_obj: self
@@ -1350,6 +1341,11 @@ dict_funcs.values = function(self) {
 _b_.dict.tp_methods = [
     "__sizeof__", "get", "setdefault", "pop", "popitem", "keys", "items",
     "values", "update", "clear", "copy", "__reversed__"
+]
+
+_b_.dict.noargs_methods = [
+    "__sizeof__", "popitem", "keys", "items", "values", "clear", "copy",
+    "__reversed__"
 ]
 
 _b_.dict.classmethods = [
@@ -1445,6 +1441,8 @@ dict_items_funcs.mapping_set = _b_.None
 
 $B.dict_items.tp_methods = ["isdisjoint", "__reversed__"]
 
+$B.dict_items.noargs_methods = ["__reversed__"]
+
 $B.dict_items.tp_getset = ["mapping"]
 
 /* dict_items end */
@@ -1523,6 +1521,8 @@ dict_keys_funcs.mapping_set = _b_.None
 
 $B.dict_keys.tp_methods = ["isdisjoint", "__reversed__"]
 
+$B.dict_keys.noargs_methods = ["__reversed__"]
+
 $B.dict_keys.tp_getset = ["mapping"]
 
 /* dict_keys end */
@@ -1563,6 +1563,8 @@ dict_values_funcs.mapping_set = _b_.None
 
 $B.dict_values.tp_methods = ["__reversed__"]
 
+$B.dict_values.noargs_methods = ["__reversed__"]
+
 $B.dict_values.tp_getset = ["mapping"]
 
 /* dict_values end */
@@ -1593,6 +1595,8 @@ dict_keyiterator_funcs.__reduce__ = function(self) {
 }
 
 $B.dict_keyiterator.tp_methods = ["__length_hint__", "__reduce__"]
+
+$B.dict_keyiterator.noargs_methods = ["__length_hint__", "__reduce__"]
 /* dict_keyiterator end */
 
 
@@ -1619,6 +1623,8 @@ dict_reversekeyiterator_funcs.__reduce__ = function(self) {
 }
 
 $B.dict_reversekeyiterator.tp_methods = ["__length_hint__", "__reduce__"]
+
+$B.dict_reversekeyiterator.noargs_methods = ["__length_hint__", "__reduce__"]
 
 /* dict_reversekeyiterator end */
 
@@ -1647,6 +1653,8 @@ dict_valueiterator_funcs.__reduce__ = function(self) {
 }
 
 $B.dict_valueiterator.tp_methods = ["__length_hint__", "__reduce__"]
+
+$B.dict_valueiterator.noargs_methods = ["__length_hint__", "__reduce__"]
 /* dict_valueiterator end */
 
 /* dict_reversevalueiterator start */
@@ -1672,6 +1680,8 @@ dict_reversevalueiterator_funcs.__reduce__ = function(self) {
 }
 
 $B.dict_reversevalueiterator.tp_methods = ["__length_hint__", "__reduce__"]
+
+$B.dict_reversevalueiterator.noargs_methods = ["__length_hint__", "__reduce__"]
 
 /* dict_reversevalueiterator end */
 
@@ -1699,6 +1709,8 @@ dict_itemiterator_funcs.__reduce__ = function(self) {
 }
 
 $B.dict_itemiterator.tp_methods = ["__length_hint__", "__reduce__"]
+
+$B.dict_itemiterator.noargs_methods = ["__length_hint__", "__reduce__"]
 /* dict_itemiterator start */
 
 /* dict_reverseitemiterator start */
@@ -1724,6 +1736,8 @@ dict_reverseitemiterator_funcs.__reduce__ = function(self) {
 }
 
 $B.dict_reverseitemiterator.tp_methods = ["__length_hint__", "__reduce__"]
+
+$B.dict_reverseitemiterator.noargs_methods = ["__length_hint__", "__reduce__"]
 
 /* dict_reverseitemiterator end */
 
@@ -1875,6 +1889,8 @@ mappingproxy_funcs.values = function(self) {
 $B.mappingproxy.functions_or_methods = ["__new__"]
 
 $B.mappingproxy.tp_methods = ["get", "keys", "values", "items", "copy", "__reversed__"]
+
+$B.mappingproxy.noargs_methods = ["keys", "values", "items", "copy", "__reversed__"]
 
 $B.mappingproxy.classmethods = ["__class_getitem__"]
 
