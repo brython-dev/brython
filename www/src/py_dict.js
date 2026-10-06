@@ -1144,10 +1144,7 @@ dict_funcs.copy = function(self) {
     var self = $.self,
         res = $B.empty_dict()
 
-    if ($B.exact_type(self, _b_.dict)) {
-        $copy_dict(res, self)
-        return res
-    }
+    $copy_dict(res, self)
     return res
 }
 
