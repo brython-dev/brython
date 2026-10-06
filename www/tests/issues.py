@@ -3502,6 +3502,13 @@ assert list(deque_2934(iterable=[1, 2])) == [1, 2]
 assert deque_2934().maxlen is None
 assert_raises(ValueError, deque_2934, [], -1)
 
+# an unbound method called with no argument
+try:
+    list.clear()
+    raise AssertionError("should have raised TypeError")
+except TypeError as exc:
+    assert exc.args[0] == "unbound method list.clear() needs an argument"
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
