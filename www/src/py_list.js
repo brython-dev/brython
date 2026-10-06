@@ -896,7 +896,10 @@ list_funcs.reverse = function(self) {
 }
 
 list_funcs.sort = function(self) {
-    var $ = $B.args("sort", 1, {self: null}, arguments, null, null, "kw")
+    var $ = $B.args("sort", 1, {self: null}, arguments, null, "args", "kw")
+    if ($.args.length > 0) {
+        $B.RAISE(_b_.TypeError, "sort() takes no positional arguments")
+    }
 
     check_not_tuple(self, "sort")
     var func = _b_.None,
@@ -972,6 +975,8 @@ list_funcs.sort = function(self) {
     // Javascript libraries might use the return value
     return self.$is_js_array ? self : _b_.None
 }
+
+list_funcs.sort.__text_signature__ = "($self, /, *, key=None, reverse=False)"
 
 _b_.list.tp_methods = [
     "__reversed__", "__sizeof__", "clear", "copy", "append", "insert",

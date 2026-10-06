@@ -257,7 +257,7 @@ builtin_function_or_method_funcs.__self___get = function(self) {
 builtin_function_or_method_funcs.__self___set = _b_.None
 
 builtin_function_or_method_funcs.__text_signature___get = function(self) {
-
+    return self.__text_signature__ ?? _b_.None
 }
 
 builtin_function_or_method_funcs.__text_signature___set = function(self) {
