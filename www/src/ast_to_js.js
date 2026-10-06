@@ -2572,6 +2572,17 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
     var func_scope = new Scope(this.name, 'def', this)
     scopes.push(func_scope)
 
+    // __class__ is a free variable of a function that names super or
+    // __class__, itself or in a function nested in it. A method binds it
+    // before its body is compiled, so that a nested function finds it there
+    var class_cell = in_class &&
+            $B.str_dict_contains(symtable_block.symbols, '__class__') &&
+            (($B.str_dict_get(symtable_block.symbols, '__class__') >>
+                SF.SCOPE_OFF) & SF.SCOPE_MASK) == SF.FREE
+    if (class_cell) {
+        bind("__class__", scopes)
+    }
+
     var args = positional.concat(this.args.kwonlyargs),
         slots = [],
         arg_names = []
@@ -2673,7 +2684,8 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
     // bare eval()/exec() see them
     var free_idents = []
     for (var [ident, flag] of Object.entries(symtable_block.symbols)) {
-        if (((flag >> SF.SCOPE_OFF) & SF.SCOPE_MASK) == SF.FREE) {
+        if (((flag >> SF.SCOPE_OFF) & SF.SCOPE_MASK) == SF.FREE &&
+                ! (class_cell && ident == '__class__')) {
             free_idents.push(ident)
         }
     }
@@ -2722,7 +2734,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
     js += prefix + `try {\n`
     indent()
     js += prefix + `$B.js_this = this\n`
-    if (in_class) {
+    if (class_cell) {
         // Set local name "__class__"
         var ix = scopes.indexOf(class_scope),
             parent = scopes[ix - 1]
@@ -2730,7 +2742,6 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
         var scope_ref = make_scope_name(scopes, parent),
             class_ref = class_scope.name, // XXX qualname
             refs = class_ref.split('.').map(x => `'${x}'`)
-        bind("__class__", scopes)
         js += prefix + `locals.ob_type =  locals.__class__ = ` +
                   `$B.get_method_class(${name2}, ${scope_ref}, "${class_ref}", [${refs}])\n`
     }
