@@ -1828,6 +1828,8 @@ _b_.type.tp_methods = [
     "__sizeof__"
 ]
 
+_b_.type.noargs_methods = ["mro", "__subclasses__", "__dir__", "__sizeof__"]
+
 _b_.type.classmethods = ["__prepare__"]
 
 _b_.type.tp_members = [
@@ -2525,6 +2527,8 @@ GenericAlias_funcs.__typing_unpacked_tuple_args___set = function(self) {
 }
 
 $B.GenericAlias.tp_methods = ["__mro_entries__", "__instancecheck__", "__subclasscheck__", "__reduce__", "__dir__"]
+
+$B.GenericAlias.noargs_methods = ["__reduce__", "__dir__"]
 
 $B.GenericAlias.tp_members = [
     ["__origin__", $B.TYPES.OBJECT, "origin", 1],

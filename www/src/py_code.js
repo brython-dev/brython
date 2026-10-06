@@ -146,6 +146,8 @@ $B.code.tp_methods = [
     "_varname_from_oparg", "__replace__"
 ]
 
+$B.code.noargs_methods = ["__sizeof__", "co_lines", "co_branches", "co_positions"]
+
 $B.code.tp_members = [
     ["co_argcount",        $B.TYPES.INT,     'co_argcount',        1],
     ["co_posonlyargcount", $B.TYPES.INT,     'co_posonlyargcount', 1],

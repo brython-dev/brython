@@ -266,6 +266,8 @@ builtin_function_or_method_funcs.__text_signature___set = function(self) {
 
 $B.builtin_function_or_method.tp_methods = ["__reduce__"]
 
+$B.builtin_function_or_method.noargs_methods = ["__reduce__"]
+
 $B.builtin_function_or_method.tp_members = [
     ["__module__", $B.TYPES.OBJECT, "m_module", 0]
 ]
