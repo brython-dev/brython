@@ -3502,6 +3502,19 @@ assert list(deque_2934(iterable=[1, 2])) == [1, 2]
 assert deque_2934().maxlen is None
 assert_raises(ValueError, deque_2934, [], -1)
 
+# super(type, obj) where obj is an instance of a list or tuple subclass
+class List_super(list):
+    def __init__(self, items):
+        super(List_super, self).__init__(items)
+
+assert list(List_super([1, 2])) == [1, 2]
+assert super(List_super, List_super([3])).copy() == [3]
+
+class Tuple_super(tuple):
+    pass
+
+assert super(Tuple_super, Tuple_super((1,))).count(1) == 1
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
