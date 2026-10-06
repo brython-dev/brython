@@ -2263,9 +2263,6 @@ _b_.super.tp_init = function(self, _type, object_or_type) {
             return
         }
     }
-    if (Array.isArray(object_or_type)) {
-        object_or_type = object_or_type[0]
-    }
     self.type = type
     self.obj = object_or_type
     self.obj_type = supercheck(type, object_or_type)
