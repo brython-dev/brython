@@ -898,9 +898,9 @@ function init_genexpr(comp, scopes) {
            prefix + tab + tab + `locals = ${comp.locals_name}\n` +
            prefix + `locals['.0'] = expr\n` +
            prefix + `var frame = ["<${comp.type.toLowerCase()}>", ${comp.locals_name}, ` +
-               `"${comp.module_name}", ${comp.globals_name}]\n` +
+               `${JSON.stringify(comp.module_name)}, ${comp.globals_name}]\n` +
            prefix + `frame.$has_generators = true\n` +
-           prefix + `frame.__file__ = '${scopes.filename}'\n` +
+           prefix + `frame.__file__ = ${JSON.stringify(scopes.filename)}\n` +
            prefix + `frame.$lineno = ${comp.ast.lineno}\n` +
            prefix + `$B.make_f_code(frame, [${varnames}])\n` +
            prefix + `var next_func_${comp.id} = $B.make_js_iterator(expr, frame, ${comp.ast.lineno})\n` +
@@ -1275,7 +1275,7 @@ function annotation_code(scopes, scope, ref) {
         annotate += prefix + `$B.check_annotate_format(format)\n` +
             prefix + `var current_frame = $B.frame_obj.frame\n` +
             prefix + `var frame = ['__annotate__', {}, current_frame[2], current_frame[3]]\n` +
-            prefix + `$B.enter_frame(frame, "${scopes.filename}", ${scope.ast.lineno})\n` +
+            prefix + `$B.enter_frame(frame, ${JSON.stringify(scopes.filename)}, ${scope.ast.lineno})\n` +
             prefix + `frame.positions = [${scope.positions}]\n` +
             prefix + `var res = $B.empty_dict()\n` +
             prefix + `var anns = {\n`
@@ -1971,10 +1971,10 @@ $B.ast.ClassDef.prototype.to_js = function(scopes) {
     dedent(2)
 
     js += prefix + `locals.__doc__ = ${docstring}\n` +
-          prefix + `locals.__module__ = '${glob}'\n` +
+          prefix + `locals.__module__ = ${JSON.stringify(glob)}\n` +
           prefix + `locals.__firstlineno__ = ${this.lineno}\n`
 
-    js += prefix + `var frame = [name, locals, '${glob}', ${globals_name}]\n` +
+    js += prefix + `var frame = [name, locals, ${JSON.stringify(glob)}, ${globals_name}]\n` +
           prefix + `$B.enter_frame(frame, __file__, ${this.lineno})\n` +
           prefix + `var _frame_obj = $B.frame_obj\n` +
           prefix + `if (frame.$f_trace !== _b_.None) {\n` +
@@ -2447,7 +2447,7 @@ function type_param_in_def(tp, ref, scopes) {
         scopes.push(typevarscope)
         js += `function BOUND_OF_${name}() {\n` +
               `var current_frame = $B.frame_obj.frame,\n` +
-              `frame = ['BOUND_OF_${name}', {}, '${gname}', ${globals_name}]\n` +
+              `frame = ['BOUND_OF_${name}', {}, ${JSON.stringify(gname)}, ${globals_name}]\n` +
               `$B.enter_frame(frame, __file__, ${tp.bound.lineno})\n` +
               `try {\n` +
               `var res = ${tp.bound.to_js(scopes)}\n` +
@@ -2560,9 +2560,9 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
               prefix + `var _typing = $B.imported._typing\n` +
               prefix + `var locals_${type_params_ref} = $B.empty_dict(),\n` +
               prefix + tab + tab + `locals = locals_${type_params_ref},\n` +
-              prefix + tab + tab + `frame = ['${type_params_ref}', locals, '${gname}', ${globals_name}],\n` +
+              prefix + tab + tab + `frame = ['${type_params_ref}', locals, ${JSON.stringify(gname)}, ${globals_name}],\n` +
               prefix + tab + tab + `type_params = []\n` +
-              prefix + `$B.enter_frame(frame, '${scopes.filename}', ${this.lineno})\n`
+              prefix + `$B.enter_frame(frame, ${JSON.stringify(scopes.filename)}, ${this.lineno})\n`
         for (var item of this.type_params) {
             type_params += type_param_in_def(item, type_params_ref, scopes)
         }
@@ -2691,7 +2691,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
     }
 
     js += prefix + `var frame = ["${this.$is_lambda ? '<lambda>': this.name}", ` +
-          `locals, "${gname}", ${globals_name}, ${name2}]\n` +
+          `locals, ${JSON.stringify(gname)}, ${globals_name}, ${name2}]\n` +
           prefix + `$B.enter_frame(frame, __file__, ${this.lineno})\n`
 
     if (func_scope.positions) {
@@ -2864,7 +2864,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
 
     // Set admin infos
     js += prefix + `${name2}.$function_infos = [` +
-        `'${gname}', ` +
+        `${JSON.stringify(gname)}, ` +
         `'${this.$is_lambda ? '<lambda>': this.name}', ` +
         `'${qualname}', ` +
         `__file__, ` +
@@ -2884,7 +2884,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
         `[${varnames}], ` +
         `${annotations}, ` +
         `${has_type_params ? 'type_params' : '[]'}, frame]\n`
-    js += prefix + `$B.set_func_attrs(${name2}, frame, '${gname}')\n`
+    js += prefix + `$B.set_func_attrs(${name2}, frame, ${JSON.stringify(gname)})\n`
     js += prefix + `${name2}.ob_type = $B.function\n`
 
     if (anns && ! postponed) {
@@ -2894,7 +2894,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
         js += prefix + `${name2}.__annotate__ = function(format) {\n`
         indent()
         js += prefix + `var locals = {format}\n` +
-              prefix + `var frame = ['__annotate__', locals, '${gname}', ${globals_name}]\n` +
+              prefix + `var frame = ['__annotate__', locals, ${JSON.stringify(gname)}, ${globals_name}]\n` +
               prefix + `$B.enter_frame(frame, __file__, ${this.lineno})\n` +
               prefix + `frame.positions = $B.frame_obj.prev.frame.positions\n` +
               prefix + `frame.positions.push([${this.lineno}, ${this.end_lineno}, ${this.col_offset}, ${this.end_col_offset}])\n` +
