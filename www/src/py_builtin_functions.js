@@ -975,9 +975,7 @@ $B.$hash = function(obj) {
                 res = _b_.int.tp_hash(res)
             }
         } else {
-            $B.RAISE(_b_.TypeError, "unhashable type: '" +
-                    _b_.str.$factory($B.jsobj2pyobj(obj)) + "'"
-            )
+            $B.RAISE(_b_.TypeError, `unhashable type: '${$B.class_name(obj)}'`)
         }
     }
     // CPython reserves -1 as the "hash failed" sentinel, so any value that
