@@ -1337,7 +1337,7 @@ $B.$iter = function(obj, sentinel) {
             }
             if ($B.search_slot($B.get_class(res), 'tp_iternext', $B.NULL) === $B.NULL) {
                 $B.RAISE(_b_.TypeError,
-                    `iter() returned non-iterable of type '${$B.class_name(res)}'`)
+                    `iter() returned non-iterator of type '${$B.class_name(res)}'`)
             }
             return res
         }
