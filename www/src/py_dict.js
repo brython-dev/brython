@@ -463,9 +463,22 @@ var $copy_dict = function(left, right) {
     }
 }
 
+function dict_hash(key) {
+    // hash(key) for a dict key: a TypeError says what it was refused as
+    try {
+        return $B.$hash(key)
+    } catch (err) {
+        if ($B.is_exc(err, [_b_.TypeError]) && err.args && err.args[0]) {
+            err.args[0] = `cannot use '${$B.class_name(key)}' as ` +
+                `a dict key (${err.args[0]})`
+        }
+        throw err
+    }
+}
+
 function index_by_key(d, key, hash) {
     // only used for dictionaries with a TABLE
-    hash = hash ?? _b_.hash(key)
+    hash = hash ?? dict_hash(key)
     var indices = d[TABLE][hash],
         index
     if (indices !== undefined) {
@@ -488,7 +501,7 @@ function index_by_key(d, key, hash) {
 }
 
 dict.$lookup_by_key = function(d, key, hash) {
-    hash = hash === undefined ? _b_.hash(key) : hash
+    hash = hash === undefined ? dict_hash(key) : hash
     var indices = d[TABLE][hash],
         index
     if (indices !== undefined) {
@@ -532,7 +545,7 @@ dict.$contains = function(self, key, hash) {
         if (hash_method === $B.str_dict_get($B.get_dict(_b_.object), '__hash__')) {
             return false
         }
-        var hash = $B.$call(hash_method, key)
+        var hash = dict_hash(key)
         // If the object has a specific __hash__ method and a specific __eq__
         // method, `hash` could be the same as one of the string keys's hash,
         // and the __eq__ method might return true. To cover this case we have
@@ -834,7 +847,7 @@ dict.$setitem = function(self, key, value, $hash, from_setdefault) {
         key = key.valueOf()
     }
 
-    var hash = $hash !== undefined ? $hash : $B.$hash(key)
+    var hash = $hash !== undefined ? $hash : dict_hash(key)
 
     var index
 
