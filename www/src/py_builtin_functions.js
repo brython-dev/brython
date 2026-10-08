@@ -1406,7 +1406,7 @@ var len = _b_.len = function(obj) {
 _b_.locals = function() {
     // $B.frame_obj.frame is
     // [locals_name, locals_obj, globals_name, globals_obj]
-    check_nb_args('locals', 0, arguments)
+    check_nb_args_no_kw('locals', 0, arguments)
     var locals_obj = $B.frame_obj.frame[1]
     // In a class body, locals() is a proxy around a dict(-like) object
     var class_locals = locals_obj.$target
