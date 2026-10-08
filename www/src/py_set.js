@@ -846,7 +846,8 @@ set_funcs.update = function(self) {
     // Update the set, adding elements from all others.
     var $ = $B.args("update", 1, {self: null}, arguments, null, "args")
     for (var iterable of $.args) {
-        if (Array.isArray(iterable)) {
+        var klass = $B.get_class(iterable)
+        if (klass === _b_.list || klass === _b_.tuple) {
             for (let i = 0; i < iterable.length; i++) {
                 set_add(self, iterable[i])
             }
