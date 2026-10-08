@@ -561,7 +561,7 @@ _b_.set.tp_init = function(self, iterable) {
     if (iterable === _b_.None) {
         return _b_.None
     }
-    $B.check_nb_args_no_kw('set', 2, arguments)
+    $B.check_nb_args_no_kw('set', 1, arguments, true)
     if (Object.keys(self.$store).length > 0) {
         set.clear(self)
     }
@@ -643,7 +643,7 @@ set_funcs.__sizeof__ = function(self) {
 }
 
 set_funcs.add = function(self, item) {
-    $B.check_nb_args_no_kw('set.add', 2, arguments)
+    $B.check_nb_args_no_kw('set.add', 1, arguments, true)
     set_add(self, item)
     return _b_.None
 }
@@ -692,7 +692,7 @@ set_funcs.difference_update = function(self) {
 }
 
 set_funcs.discard = function(self, item) {
-    $B.check_nb_args_no_kw('set.discard', 2, arguments)
+    $B.check_nb_args_no_kw('set.discard', 1, arguments, true)
     var result = set_discard_entry(self, item)
     if (result != DISCARD_NOTFOUND) {
         self.$version++
@@ -724,14 +724,14 @@ set_funcs.intersection_update = function(self) {
 set_funcs.isdisjoint = function(self, other) {
     /* Return True if the set has no elements in common with other. Sets are
     disjoint if and only if their intersection is the empty set. */
-    $B.check_nb_args_no_kw('set.isdisjoint', 2, arguments)
+    $B.check_nb_args_no_kw('set.isdisjoint', 1, arguments, true)
     var intersection = set_intersection(self, other)
     return intersection.$used == 0
 }
 
 set_funcs.issubset = function(self, other) {
     // Test whether every element in the set is in other.
-    $B.check_nb_args_no_kw('set.issubset', 2, arguments)
+    $B.check_nb_args_no_kw('set.issubset', 1, arguments, true)
     if ($B.$isinstance(other, [set, frozenset])) {
         if (set.mp_length(self) > set.mp_length(other)) {
             return false
@@ -762,7 +762,7 @@ set_funcs.issubset = function(self, other) {
 
 set_funcs.issuperset = function(self, other) {
     // Test whether every element in other is in the set.
-    $B.check_nb_args_no_kw('set.issuperset', 2, arguments)
+    $B.check_nb_args_no_kw('set.issuperset', 1, arguments, true)
     if ($B.$isinstance(other, [set, frozenset])) {
         return set_funcs.issubset(other, self)
     } else {
@@ -793,7 +793,7 @@ set_funcs.pop = function(self) {
 
 set_funcs.remove = function(self, item) {
     // If item is a set, search if a frozenset in self compares equal to item
-    $B.check_nb_args_no_kw('set.remove', 2, arguments)
+    $B.check_nb_args_no_kw('set.remove', 1, arguments, true)
     var result = set_discard_entry(self, item)
     if (result == DISCARD_NOTFOUND) {
         $B.RAISE(_b_.KeyError, item)
@@ -804,7 +804,7 @@ set_funcs.remove = function(self, item) {
 
 set_funcs.symmetric_difference = function(self, other) {
     // Return a new set with elements in either the set or other but not both
-    $B.check_nb_args_no_kw('set.symmetric_difference', 2, arguments)
+    $B.check_nb_args_no_kw('set.symmetric_difference', 1, arguments, true)
     var res = set_copy(self)
     set_symmetric_difference_update(res, other)
     return res
@@ -812,7 +812,7 @@ set_funcs.symmetric_difference = function(self, other) {
 
 set_funcs.symmetric_difference_update = function(self, s) {
     // Update the set, keeping only elements found in either set, but not in both.
-    $B.check_nb_args_no_kw('set.symmetric_difference_update', 2, arguments)
+    $B.check_nb_args_no_kw('set.symmetric_difference_update', 1, arguments, true)
     return set_symmetric_difference_update(self, s)
 }
 
