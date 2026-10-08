@@ -158,3 +158,32 @@ help"""
 import builtins
 for name in builtins_names.split('\n'):
     assert name in builtins.__dict__, name
+
+from tester import assert_raises
+
+# a builtin that takes exactly one argument or a fixed number of them says so
+for func in [abs, len, ord, repr]:
+    name = func.__name__
+    assert_raises(TypeError, func,
+        msg=f'{name}() takes exactly one argument (0 given)')
+    assert_raises(TypeError, func, 1, 2,
+        msg=f'{name}() takes exactly one argument (2 given)')
+
+for func in [divmod, hasattr, isinstance]:
+    name = func.__name__
+    assert_raises(TypeError, func, 1,
+        msg=f'{name} expected 2 arguments, got 1')
+    assert_raises(TypeError, func, 1, 2, 3,
+        msg=f'{name} expected 2 arguments, got 3')
+
+# a method does not count its instance
+for obj, name in [(set(), 'add'), ([], 'append'), ('a', 'join')]:
+    qualname = f'{type(obj).__name__}.{name}'
+    assert_raises(TypeError, getattr(obj, name),
+        msg=f'{qualname}() takes exactly one argument (0 given)')
+    assert_raises(TypeError, getattr(obj, name), 1, 2,
+        msg=f'{qualname}() takes exactly one argument (2 given)')
+    assert_raises(TypeError, getattr(type(obj), name), obj,
+        msg=f'{qualname}() takes exactly one argument (0 given)')
+    assert_raises(TypeError, getattr(obj, name), x=1,
+        msg=f'{qualname}() takes no keyword arguments')

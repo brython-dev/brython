@@ -794,7 +794,7 @@ list_funcs.__sizeof__ = function(self) {
 }
 
 list_funcs.append = function(self, x) {
-    $B.check_nb_args_no_kw("append", 2, arguments)
+    $B.check_nb_args_no_kw("list.append", 1, arguments, true)
     if (self[$B.JSOBJ]) {
         self[$B.JSOBJ].push($B.pyobj2jsobj(x))
         self.push($B.pyobj2jsobj(x))
