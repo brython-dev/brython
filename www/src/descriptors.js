@@ -259,6 +259,11 @@ $B.method_descriptor.tp_call = function(self, ...args) {
             `unbound method ${class_name}.${name} needs an argument`
         )
     }
+    if (! $B.get_mro($B.get_class(args[0])).includes(self.d_type)) {
+        $B.RAISE(_b_.TypeError, `descriptor '${self.d_name}' for ` +
+            `'${$B.get_name(self.d_type)}' objects doesn't apply to a ` +
+            `'${$B.class_name(args[0])}' object`)
+    }
     try {
         var res = self.method(...args)
         return res
