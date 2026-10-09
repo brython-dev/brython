@@ -3217,13 +3217,14 @@ $B.ast.ImportFrom.prototype.to_js = function(scopes) {
         }
     }
     let inum = add_to_positions(scopes, this)
+    /*
     let js = prefix + `$B.set_lineno(frame, ${this.lineno})\n`
     for (let name of this.names) {
         js += prefix + `$B.$import_from("${this.module || ''}", ` +
             `'${name.name}', `
-
+    */
     can_be_lazy = false // XXX reset when bugs are fixed
-    
+
     // lazy import by default, except in scope where it can't
     let import_func = can_be_lazy ? 'lazy_import_from' : '$import_from'
 
@@ -3238,11 +3239,10 @@ $B.ast.ImportFrom.prototype.to_js = function(scopes) {
         last_scope(scopes).blurred = true
     }
 
-    var js = prefix + `$B.set_lineno(frame, ${this.lineno})\n` +
-             prefix + `$B.${import_func}("${this.module || ''}", `
-    var names = this.names.map(x => `"${x.name}"`).join(', '),
-        aliases = []
-    for (var name of this.names) {
+    let js = prefix + `$B.set_lineno(frame, ${this.lineno})\n`
+    for (let name of this.names) {
+        js += prefix + `$B.$import_from("${this.module || ''}", ` +
+            `'${name.name}', `
         if (name.asname) {
             // the alias might have been declared global...
             var binding_scope = bind(name.asname, scopes)
