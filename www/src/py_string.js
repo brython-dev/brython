@@ -957,12 +957,15 @@ $B.printf_format = function(s, type, args) {
     if (argpos !== null) {
         if (args.length > argpos) {
             $B.RAISE(_b_.TypeError,
-                "not enough arguments for format string")
+                "not all arguments converted during string formatting")
         } else if (args.length < argpos) {
             $B.RAISE(_b_.TypeError,
-                "not all arguments converted during string formatting")
+                "not enough arguments for format string")
         }
-    } else if (nbph == 0) {
+    } else if (nbph == 0 && ($B.is_str(args) ||
+            $B.$getattr(args, '__getitem__', $B.NULL) === $B.NULL)) {
+        // PyMapping_Check: any subscriptable object except str is a
+        // "mapping" here, eg a list
         $B.RAISE(_b_.TypeError,
             "not all arguments converted during string formatting")
     }
@@ -2196,7 +2199,10 @@ str_funcs.find = function(self, sub, start, end) {
             'slice indices must be integers or None or have an __index__ ' +
             'method')
     }
-    res = self.indexOf(sub, start)
+    if (start < 0) {
+        start = Math.max(0, start + str.mp_length(self))
+    }
+    res = self.indexOf(sub, pypos2jspos(self, start))
     if (end !== _b_.None) {
         try {
             end = $B.PyNumber_Index(end)
@@ -2641,6 +2647,8 @@ str_funcs.lstrip = function(self) {
         chars = $.chars
     if (chars === _b_.None) {
         return _self.trimStart()
+    } else if (! $B.is_str(chars)) {
+        $B.RAISE(_b_.TypeError, "lstrip arg must be None or str")
     }
     [_self, chars] = to_string(_self, chars)
     while (_self.length > 0) {
@@ -2915,9 +2923,10 @@ str_funcs.rsplit = function() {
 
     let [_self, sep] = to_string($.self, $.sep)
 
-    // Use split on the reverse of the string and of separator
+    // Use split on the reverse of the string and of separator.
+    // to_string() maps None to $B.NULL, so test the original argument.
     var rev_str = reverse(_self),
-        rev_sep = sep === _b_.None ? sep : reverse(sep),
+        rev_sep = $.sep === _b_.None ? _b_.None : reverse(sep),
         rev_res = str.tp_funcs.split(rev_str, rev_sep, $.maxsplit)
 
     // Reverse the list, then each string inside the list
@@ -2935,6 +2944,8 @@ str_funcs.rstrip = function() {
         _self = to_string($.self)
     if (chars === _b_.None) {
         return _self.trimEnd()
+    } else if (! $B.is_str(chars)) {
+        $B.RAISE(_b_.TypeError, "rstrip arg must be None or str")
     }
     chars = to_string(chars)
     while (_self.length > 0) {
@@ -2975,10 +2986,25 @@ str_funcs.split = function(self, sep, maxsplit) {
     if ($B.is_big_int(maxsplit)) {
         maxsplit = Number($B.int_value(maxsplit))
     }
+    if (maxsplit < 0) {
+        // any negative maxsplit means no limit
+        maxsplit = -1
+    } else if (maxsplit > self.length) {
+        // more splits than the string can hold, so also no limit. Javascript's
+        // split() coerces its limit to an unsigned 32-bit integer, and a
+        // maxsplit above 2**32 would otherwise wrap round to a small one.
+        maxsplit = -1
+    }
     if (sep == "") {
         $B.RAISE(_b_.ValueError, "empty separator")
     }
     if (sep === _b_.None) {
+        if (self.length == 0 || str_funcs.isspace(self)) {
+            // no non-whitespace substring to return, whatever maxsplit is.
+            // isspace() is the Python classification; JS trim() would also
+            // strip U+FEFF and would miss U+0085 and U+001C-U+001F
+            return $B.$list([])
+        }
         if (maxsplit == 0) {
             return $B.$list([self.trimLeft()])
         }
@@ -2987,26 +3013,39 @@ str_funcs.split = function(self, sep, maxsplit) {
             return $B.$list(self.trim().split(sep))
         }
         self = self.trimLeft()
+        var whitespace = true
     }
 
+    if (maxsplit == 0) {
+        // Javascript's split(sep, 0) returns [], Python returns the whole
+        // string as the single unsplit item
+        return $B.$list([self])
+    }
     var res = self.split(sep, maxsplit)
     if (maxsplit != -1) {
-        // get the part after the last split
-        var nb_split = 0
-        var re = sep instanceof RegExp ? sep :
+        // Javascript's split(sep, limit) drops what follows the limit-th
+        // separator, Python keeps it as the last item. Find that separator.
+        var nb_split = 0,
+            mo,
+            reached_maxsplit = false,
+            re = sep instanceof RegExp ? sep :
                      new RegExp(RegExp.escape(sep), 'g')
-        var mo
         for (mo of self.matchAll(re)) {
             nb_split++
             if (nb_split == maxsplit) {
+                reached_maxsplit = true
                 break
             }
         }
-        if (mo) {
-            var pos = mo.index + mo[0].length
-            if (pos < self.length) {
-                res.push(self.substr(pos))
-            }
+        if (reached_maxsplit) {
+            // the remainder is an item even when empty, as in
+            // "a,".split(",", 1)
+            res.push(self.substr(mo.index + mo[0].length))
+        }
+        if (whitespace && res[res.length - 1] === '') {
+            // splitting on whitespace never yields an empty item: a trailing
+            // run is consumed, it does not end a field
+            res.pop()
         }
     }
     if (self instanceof String) {
@@ -3134,14 +3173,18 @@ str_funcs.startswith = function(self, prefix, start, end) {
     if (start !== 0) {
         start = $B.PyNumber_Index(start)
         if (start < 0) {
-            start += self.length
+            start += str.mp_length(self)
         }
     }
     if (end !== null) {
         end = $B.PyNumber_Index(end)
         if (end < 0) {
-            end += self.length
+            end += str.mp_length(self)
         }
+    }
+    start = pypos2jspos(self, start)
+    if (end !== null) {
+        end = pypos2jspos(self, end)
     }
     if ($B.is_str(prefix)) {
         return startswith(self, prefix, start, end)
@@ -3172,6 +3215,8 @@ str_funcs.strip = function() {
     var _self = to_string($.self)
     if ($.chars === _b_.None) {
         return _self.trim()
+    } else if (! $B.is_str($.chars)) {
+        $B.RAISE(_b_.TypeError, "strip arg must be None or str")
     }
     return str.tp_funcs.rstrip(str.tp_funcs.lstrip(_self, $.chars), $.chars)
 }

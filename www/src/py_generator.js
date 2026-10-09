@@ -301,8 +301,44 @@ async_generator_funcs.__sizeof__ = function(self) {
     $B.RAISE(_b_.NotImplementedError)
 }
 
-async_generator_funcs.aclose = function(self) {
-    self.js_gen.$finished = true
+async_generator_funcs.aclose = async function(self) {
+    var gen = self.js_gen
+    if (gen.$closing) {
+        $B.RAISE(_b_.RuntimeError,
+            "aclose(): asynchronous generator is already running")
+    }
+    if (gen.$finished) {
+        return _b_.None
+    }
+    gen.$finished = true
+    // not ag_running: asend() leaves that set when it raises
+    // StopAsyncIteration for an exhausted generator, so it cannot be tested
+    // here
+    gen.$closing = true
+    var save_frame_obj = $B.frame_obj
+    if (self.$frame) {
+        $B.frame_obj = $B.push_frame(self.$frame)
+    }
+    var res
+    try {
+        // Throw GeneratorExit in, as CPython does, so that the generator's
+        // "except GeneratorExit" clauses and the __aexit__ of any context
+        // manager it is suspended inside run. Javascript's return() would run
+        // the finally blocks and skip both.
+        res = await gen.throw($B.$call(_b_.GeneratorExit))
+    } catch (err) {
+        if ($B.is_exc(err, [_b_.GeneratorExit, _b_.StopAsyncIteration])) {
+            // the generator let GeneratorExit propagate, or returned
+            return _b_.None
+        }
+        throw err
+    } finally {
+        gen.$closing = false
+        $B.frame_obj = save_frame_obj
+    }
+    if (! res.done) {
+        $B.RAISE(_b_.RuntimeError, "async generator ignored GeneratorExit")
+    }
     return _b_.None
 }
 

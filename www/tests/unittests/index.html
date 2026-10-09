@@ -172,7 +172,7 @@ class _TestResult(TestResult):
         return [test.__class__.__name__,
                 test._testMethodName,
                 test.lineno,
-                round(1000*(time.time() - test.startTime))]
+                round(1000 * (time.time() - test.startTime))]
 
     def addSubTest(self, test, subtest, err):
         TestResult.addSubTest(self, test, subtest, err)
@@ -303,7 +303,7 @@ import os
 
 from browser import worker
 from browser import document, alert, bind, window, html, console
-from browser.widgets.dialog import Dialog
+from browser.widgets.dialog import Dialog, InfoDialog
 
 import javascript
 
@@ -316,6 +316,10 @@ def ready(w):
     global worker
     worker = w
 
+def copy(code):
+    window.navigator.clipboard.writeText(code).then(
+      InfoDialog('copy', 'copied', remove_after=2))
+
 def show_method(ev):
     sel = document['test']
     module = sel.options[sel.selectedIndex].value
@@ -327,6 +331,7 @@ def show_method(ev):
     method_line = lines[start]
     indent = len(method_line) - len(method_line.lstrip())
     end = lineno
+
     while end < len(lines):
         line = lines[end]
         end += 1
@@ -338,11 +343,15 @@ def show_method(ev):
     while not method_lines[-1].strip():
         method_lines.pop()
         end -= 1
+    code = ''.join(line[indent:] if line.strip() else line
+        for line in method_lines)
     d = Dialog(method_line, top=ev.y, left=ev.x)
+    copy_button = html.BUTTON('copy').bind('click', lambda ev: copy(code))
+    d <= copy_button
     d.attach(table := html.TABLE())
     table.attach(tr := html.TR())
     tr <= html.TD() <= html.PRE('\n'.join(map(str, range(start + 1, end))))
-    tr <= html.TD() <= html.PRE(''.join(method_lines))
+    tr <= html.TD() <= html.PRE(code)
 
 
 def message(ev):
@@ -491,13 +500,11 @@ Brython version: <span id="version"></span>
 <!-- brython start -->
 <script src="/src/brython_builtins.js"></script>
 <script src="/src/init_builtin_types.js"></script>
-<script src="/src/py_ast_classes.js"></script>
 <script src="/src/stdlib_paths.js"></script>
 <script src="/src/unicode_data.js"></script>
 <script src="/src/version_info.js"></script>
 <script src="/src/py_tokens.js"></script>
 <script src="/src/python_tokenizer.js"></script>
-<script src="/src/py_ast.js"></script>
 <script src="/src/loaders.js"></script>
 <script src="/src/py_utils.js"></script>
 <script src="/src/py_object.js"></script>
@@ -528,8 +535,10 @@ Brython version: <span id="version"></span>
 <script src="/src/async.js"></script>
 <script src="/src/py_import.js"></script>
 <script src="/src/builtin_modules.js"></script>
-<script src="/src/finalize_builtin_types.js"></script>
 <script src="/src/py2js.js"></script>
+<script src="/src/py_ast_classes.js"></script>
+<script src="/src/py_ast.js"></script>
+<script src="/src/finalize_builtin_types.js"></script>
 <script src="/src/ast_to_js.js"></script>
 <script src="/src/symtable.js"></script>
 <script src="/src/action_helpers.js"></script>

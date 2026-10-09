@@ -100,7 +100,7 @@ function _PyDictView_Intersect(self, other) {
     /* at this point, two things should be true
        1. self is a dictview
        2. if other is a dictview then it is smaller than self */
-    var result = _b_.set.tp_new(set, [], $B.empty_dict())
+    var result = _b_.set.tp_new(_b_.set, [], $B.empty_dict())
     var it = $B.make_js_iterator(other)
 
     if ($B.$isinstance(self, $B.dict_keys)) {
@@ -140,12 +140,58 @@ function all_contained_in(self, other) {
     return ok
 }
 
+function dictitems_contains(self, obj) {
+    if (! $B.is_tuple(obj) || _b_.tuple.mp_length(obj) != 2) {
+        return false
+    }
+    let [key, value] = obj
+    let result = false
+    try {
+        let found = _b_.dict.mp_subscript(self.dict_obj, key)
+        result = $B.is_or_equals(found, value)
+    } catch(err) {
+        $B.RAISE_IF_NOT(err, _b_.KeyError)
+    }
+    return result
+}
+
+function dictitems_xor(self, other) {
+    let d1 = self.dict_obj
+    let d2 = other.dict_obj
+
+    let temp_dict = _b_.dict.tp_funcs.copy(d1)
+    let result_set = _b_.set.$factory()
+    let it = _b_.dict.$iter_items(d2)
+
+    for (let entry of it) {
+        let key = entry.key
+        let val2 = entry.value
+        let val1 = dict.$lookup_by_key(temp_dict, key)
+
+        let to_delete = val1.found
+            ? $B.is_or_equals(val1.value, val2)
+            : false
+
+        if (to_delete) {
+            dict.$delitem(temp_dict, key, val1.hash)
+        } else {
+            let pair = $B.fast_tuple([key, val2])
+            _b_.set.tp_funcs.add(result_set, pair)
+        }
+    }
+
+    let remaining_pairs = _b_.dict.tp_funcs.items(temp_dict)
+    _b_.set.tp_funcs.update(result_set, remaining_pairs)
+
+    return result_set
+}
+
 function dictview_len(self) {
     return _b_.dict.mp_length(self.dict_obj)
 }
 
 function dictview_richcompare(self, other, op) {
-    if (! $B.$isinstance(other, [_b_.set, _b_.frozenset, $B.dict_keys])) {
+    if (! $B.$isinstance(other, [_b_.set, _b_.frozenset, $B.dict_keys, $B.dict_items])) {
         return _b_.NotImplemented
     }
     var len_self = $B.get_class(self).mp_length(self)
@@ -500,7 +546,7 @@ dict.$contains = function(self, key, hash) {
     return index_by_key(self, key, hash) !== null
 }
 
-dict.$delitem  = function(self, key) {
+dict.$delitem  = function(self, key, hash) {
     if (self[$B.JSOBJ]) {
         delete self[$B.JSOBJ][key]
     }
@@ -513,12 +559,12 @@ dict.$delitem  = function(self, key) {
                 $B.RAISE(_b_.KeyError, key)
             }
         }
-        if (! dict.$contains(self, key)) {
+        if (! dict.$contains(self, key, hash)) {
             $B.RAISE(_b_.KeyError, _b_.str.$factory(key))
         }
     }
 
-    var lookup = dict.$lookup_by_key(self, key)
+    var lookup = dict.$lookup_by_key(self, key, hash)
     if (lookup.found) {
         self[TABLE][lookup.hash].splice(lookup.rank, 1)
         if (self[TABLE][lookup.hash].length == 0) {
@@ -734,11 +780,15 @@ dict.tp_hash = _b_.None
 function init_from_list(self, args) {
     var i = 0
     for (var item of args) {
-        if (item.length != 2) {
+        // item may be any Python sequence (eg an instance of a class with
+        // __iter__), not only a JS array: use the iteration protocol
+        var pair = Array.isArray(item) ? item :
+            Array.from($B.make_js_iterator_no_trace(item))
+        if (pair.length != 2) {
             $B.RAISE(_b_.ValueError, "dictionary " +
-                `update sequence element #${i} has length ${item.length}; 2 is required`)
+                `update sequence element #${i} has length ${pair.length}; 2 is required`)
         }
-        dict.$setitem(self, item[0], item[1])
+        dict.$setitem(self, pair[0], pair[1])
         i++
     }
 }
@@ -1129,10 +1179,12 @@ var dict_funcs = _b_.dict.tp_funcs = {}
 
 dict_funcs.__class_getitem__ = $B.$class_getitem
 
-
-
 dict_funcs.__reversed__ = function(self) {
-    return dict_reversekeyiterator.$factory(self)
+    return {
+        ob_type: $B.dict_reversekeyiterator,
+        it: _b_.dict.$iter_items_reversed(self),
+        dict_obj: self
+    }
 }
 
 dict_funcs.__sizeof__ = function(self) {
@@ -1186,7 +1238,7 @@ dict_funcs.fromkeys = function() {
     while (1) {
         try {
             var key = _b_.next(keys_iter)
-            setitem(res, key, value)
+            $B.$call(setitem, res, key, value)
         } catch (err) {
             if ($B.is_exc(err, [_b_.StopIteration])) {
                 return res
@@ -1394,15 +1446,15 @@ $B.dict_items.nb_subtract = function(self, other) {
     return dictviews_sub(self, other)
 }
 
-$B.dict_items.nb_and = function(self) {
+$B.dict_items.nb_and = function(self, other) {
     return _PyDictView_Intersect(self, other)
 }
 
-$B.dict_items.nb_xor = function(self) {
+$B.dict_items.nb_xor = function(self, other) {
     return dictviews_xor(self, other)
 }
 
-$B.dict_items.nb_or = function(self) {
+$B.dict_items.nb_or = function(self, other) {
     return dictviews_or(self, other)
 }
 
@@ -1460,7 +1512,7 @@ dict_items_funcs.isdisjoint = function(self, other) {
 }
 
 dict_items_funcs.mapping_get = function(self) {
-    return $B.mappingproxy.tp_new(self.dict_obj, [], $B.empty_dict())
+    return $B.mappingproxy.tp_new($B.mappingproxy, [self.dict_obj], $B.empty_dict())
 }
 
 dict_items_funcs.mapping_set = _b_.None
@@ -1494,7 +1546,7 @@ $B.dict_keys.nb_or = function(self, other) {
 }
 
 $B.dict_keys.tp_repr = function(self) {
-    var keys = Array.from(dict.$iter_items(self.dict_obj)).map(x => x.key)
+    var keys = Array.from(dict.$iter_items(self.dict_obj)).map(x => _b_.repr(x.key))
     return `dict_keys([${keys}])`
 }
 
@@ -1538,7 +1590,7 @@ dict_keys_funcs.isdisjoint = function(self, other) {
 }
 
 dict_keys_funcs.mapping_get = function(self) {
-    return $B.mappingproxy.tp_new(self.dict_obj, [], $B.empty_dict())
+    return $B.mappingproxy.tp_new($B.mappingproxy, [self.dict_obj], $B.empty_dict())
 }
 
 dict_keys_funcs.mapping_set = _b_.None
@@ -1552,7 +1604,7 @@ $B.dict_keys.tp_getset = ["mapping"]
 /* dict_values start */
 $B.dict_values.tp_repr = function(self) {
     var values = Array.from(dict.$iter_items(self.dict_obj)).map(x => x.value)
-    return `dict_values({${keys}])`
+    return `dict_values([${values}])`
 }
 
 $B.dict_values.tp_iter = function(self) {
@@ -1578,7 +1630,7 @@ dict_values_funcs.__reversed__ = function(self) {
 }
 
 dict_values_funcs.mapping_get = function(self) {
-    return $B.mappingproxy.tp_new(self.dict_obj, [], $B.empty_dict())
+    return $B.mappingproxy.tp_new($B.mappingproxy, [self.dict_obj], $B.empty_dict())
 }
 
 dict_values_funcs.mapping_set = _b_.None
@@ -1636,7 +1688,8 @@ dict_reversekeyiterator_funcs.__length_hint__ = function(self) {
 }
 
 dict_reversekeyiterator_funcs.__reduce__ = function(self) {
-
+    let keys = Array.from(self.it).map(x => x[0])
+    return $B.fast_tuple([_b_.iter, $B.fast_tuple([$B.$list(keys)])])
 }
 
 $B.dict_reversekeyiterator.tp_methods = ["__length_hint__", "__reduce__"]
@@ -1661,8 +1714,10 @@ dict_valueiterator_funcs.__length_hint__ = function(self) {
 }
 
 dict_valueiterator_funcs.__reduce__ = function(self) {
-    return $B.fast_tuple([_b_.iter,
-        $B.fast_tuple([$B.$list(Array.from(dict_valueiterator.tp_iternext(self)))])])
+    let values_list = $B.$list(
+        Array.from($B.dict_valueiterator.tp_iternext(self))
+    )
+    return $B.fast_tuple([_b_.iter, $B.fast_tuple([values_list])])
 }
 
 $B.dict_valueiterator.tp_methods = ["__length_hint__", "__reduce__"]
@@ -1682,11 +1737,12 @@ $B.dict_reversevalueiterator.tp_iternext = function*(self){
 var dict_reversevalueiterator_funcs = $B.dict_reversevalueiterator.tp_funcs = {}
 
 dict_reversevalueiterator_funcs.__length_hint__ = function(self) {
-
+    return _b_.dict.mp_length(self.dict_obj)
 }
 
 dict_reversevalueiterator_funcs.__reduce__ = function(self) {
-
+    let values = Array.from(self.it).map(x => x[1])
+    return $B.fast_tuple([_b_.iter, $B.fast_tuple([$B.$list(values)])])
 }
 
 $B.dict_reversevalueiterator.tp_methods = ["__length_hint__", "__reduce__"]
@@ -1712,8 +1768,8 @@ dict_itemiterator_funcs.__length_hint__ = function(self) {
 }
 
 dict_itemiterator_funcs.__reduce__ = function(self) {
-    return $B.fast_tuple([_b_.iter,
-        $B.fast_tuple([$B.$list(Array.from(dict_itemiterator.tp_iternext(self)))])])
+    let items_list = $B.$list(Array.from($B.dict_itemiterator.tp_iternext(self)))
+    return $B.fast_tuple([_b_.iter, $B.fast_tuple([items_list])])
 }
 
 $B.dict_itemiterator.tp_methods = ["__length_hint__", "__reduce__"]
@@ -1737,7 +1793,8 @@ dict_reverseitemiterator_funcs.__length_hint__ = function(self) {
 }
 
 dict_reverseitemiterator_funcs.__reduce__ = function(self) {
-
+    return $B.fast_tuple([_b_.iter,
+        $B.fast_tuple([$B.$list(Array.from(self.it))])])
 }
 
 $B.dict_reverseitemiterator.tp_methods = ["__length_hint__", "__reduce__"]
@@ -2032,8 +2089,8 @@ mappingproxy_funcs.__reversed__ = function(self) {
 }
 
 mappingproxy_funcs.copy = function(self) {
-    var copy_func = $B.type_getattribute(_b_.dict, 'copy')
-    return $B.mappingproxy.tp_new($B.mappingproxy, [copy_func(self.mapping)])
+    // a copy of the underlying mapping, not a new proxy
+    return $B.$call($B.$getattr(self.mapping, 'copy'))
 }
 
 mappingproxy_funcs.get = function(self, key, _default) {

@@ -119,13 +119,6 @@ function mp_subscript(self, key) {
         return list_res
     }
 
-    if (! $B.$isinstance(key, [_b_.int, _b_.slice])) {
-        $B.RAISE(_b_.TypeError,
-            `list indices must be integers or slices, ` +
-            `not ${$B.class_name(key)}`
-        )
-    }
-
     if ($B.$isinstance(key, _b_.slice)) {
         return _b_.list.$getitem_slice(self, key)
     }
@@ -134,7 +127,7 @@ function mp_subscript(self, key) {
         var int_key = $B.PyNumber_Index(key)
     } catch (err) {
         $B.RAISE(_b_.TypeError, $B.class_name(self) +
-            " indices must be integer, not " + $B.class_name(key))
+            " indices must be integers or slices, not " + $B.class_name(key))
     }
 
     let items = self.valueOf(),
@@ -151,14 +144,15 @@ function mp_subscript(self, key) {
 }
 
 function sq_concat(self, other) {
-    if ($B.get_class(self) !== $B.get_class(other)) {
+    var cls = $B.$isinstance(self, tuple) ? tuple : list
+    if (! $B.$isinstance(other, cls)) {
         return _b_.NotImplemented
     }
     var res = self.slice()
     for (const item of other) {
         res.push(item)
     }
-    if ($B.$isinstance(self, tuple)) {
+    if (cls === tuple) {
         return tuple.$factory(res)
     } else {
         return $B.$list(res)
@@ -280,7 +274,8 @@ $B.list_delitem = function(self, arg) {
 
 
 list.$getitem_slice = function(self, key) {
-    var klass = $B.get_class(self)
+    // slicing a subclass returns a plain list or tuple
+    var klass = $B.$isinstance(self, tuple) ? tuple : list
     // Find integer values for start, stop and step
     if(key.start === _b_.None && key.stop === _b_.None &&
             key.step === _b_.None){
@@ -350,8 +345,8 @@ $B.list_iterator.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]
 /* list_iterator end */
 
 var eq = $B.list_eq = function(self, other) {
-    if (other[$B.PYOBJ]) {
-        other = other[$B.PYOBJ]
+    if ($B.PYOBJ_MAP.has(other)) {
+        other = $B.PYOBJ_MAP.get(other)
     }
     var cls = $B.$isinstance(self, list) ? list : tuple
     if (isinstance(other, cls)) {
@@ -1066,6 +1061,12 @@ _b_.tuple.tp_hash = function(self) {
   var x = 0x3456789
   for (var i = 0, len = self.length; i < len; i++) {
      var y = _b_.hash(self[i])
+     if (typeof y == 'bigint') {
+         // hash values above Number.MAX_SAFE_INTEGER are bigints (eg
+         // hash(2 ** 60)); reduce to 32 bits before mixing with Number
+         // arithmetic
+         y = Number(BigInt.asIntN(32, y))
+     }
      x = c_mul(1000003, x) ^ y & 0xFFFFFFFF
   }
   return x

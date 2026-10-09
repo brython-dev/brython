@@ -855,6 +855,11 @@ $B.$getitem1 = function(obj, item) {
 
     // PEP 560
     if ($B.is_type(obj)) {
+        // the metaclass __getitem__ comes first, as in PyObject_GetItem
+        var meta_gi = $B.search_in_mro($B.get_class(obj), "__getitem__", $B.NULL)
+        if (meta_gi !== $B.NULL) {
+            return $B.$call(meta_gi, obj, item)
+        }
         if (! Array.isArray(item)) {
             item = $B.fast_tuple([item])
         }
@@ -1124,20 +1129,29 @@ $B.augm_assign = function(left, op, right) {
         method = $B.op2method.augmented_assigns[op],
         augm_func = $B.$getattr($B.get_class(left), '__' + method + '__',
             $B.NULL)
+    // an in-place method that returns NotImplemented does not end the
+    // dispatch: CPython falls back to the binary operation, which is how
+    // `s |= other` works on a frozenset (a NEW frozenset from __or__)
     if (augm_func !== $B.NULL) {
         var res = $B.$call(augm_func, left, right)
-        if (res === _b_.NotImplemented) {
+        if (res !== _b_.NotImplemented) {
+            return res
+        }
+    }
+    var method1 = $B.op2method.operations[op1]
+    if (method1 === undefined) {
+        method1 = $B.op2method.binary[op1]
+    }
+    // the fallback still blames the augmented operator, as CPython does
+    try {
+        return $B.rich_op(`__${method1}__`, left, right)
+    } catch (err) {
+        if ($B.$isinstance(err, _b_.TypeError)) {
             $B.RAISE(_b_.TypeError, `unsupported operand type(s)` +
                 ` for ${op}: '${$B.class_name(left)}' ` +
                 `and '${$B.class_name(right)}'`)
         }
-        return res
-    } else {
-        var method1 = $B.op2method.operations[op1]
-        if (method1 === undefined) {
-            method1 = $B.op2method.binary[op1]
-        }
-        return $B.rich_op(`__${method1}__`, left, right)
+        throw err
     }
 }
 
@@ -1157,6 +1171,10 @@ $B.$is = function(a, b) {
             return true
         }
         return a.value == b.value
+    } else if($B.is_bytes(a) && _b_.bytes.mp_length(a) == 0 &&
+        $B.is_bytes(b) && _b_.bytes.mp_length(b) == 0) {
+            // pretend that empty bytes is a singleton
+            return true
     }
     return a === b
 }
@@ -1300,7 +1318,10 @@ $B.$call_with_position = function(callable, inum, ...args) {
 }
 
 $B.$call = function(callable, ...args) {
-    var test = false // callable.tp_name === 'A' // && callable.$function_infos[1] == 'test_gen1'
+    var test = false // callable.tp_name === 'Name' // && callable.$function_infos[1] == 'test_gen1'
+    if (test) {
+        console.log('call', callable, 'args', args)
+    }
     if (typeof callable == 'function') {
         var res = callable(...args)
         if (callable.$in_js_module && res === undefined) {
@@ -1309,7 +1330,6 @@ $B.$call = function(callable, ...args) {
         return res
     }
     if (callable.$factory) {
-        //console.log('use $factory', callable)
         return callable.$factory(...args)
     }
     var klass = $B.get_class(callable)
@@ -1709,12 +1729,12 @@ $B.rich_comp = function(op, x, y) {
         }
     }
 
-    // If both operands return NotImplemented, return False if the operand is
-    // __eq__, True if it is __ne__, raise TypeError otherwise
+    // If both operands return NotImplemented, compare by identity if the
+    // operand is __eq__ or __ne__, raise TypeError otherwise
     if (op == "__eq__") {
-        return _b_.False
+        return x === y
     } else if (op == "__ne__") {
-        return _b_.True
+        return x !== y
     }
 
     $B.RAISE(_b_.TypeError, "'" + method2comp[op] +

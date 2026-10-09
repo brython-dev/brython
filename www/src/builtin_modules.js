@@ -430,6 +430,12 @@
     $B.UndefinedType.tp_repr = function() {
         return "<Javascript undefined>"
     }
+    // str() cannot fall back to object.__str__ here: that slot is a descriptor
+    // and receives `undefined` as self, which JavaScript cannot tell apart from
+    // no argument at all, so it raises "descriptor '__str__' of 'object'
+    // object needs an argument". NullType has the same shape and gets away
+    // with it because null is a value.
+    $B.UndefinedType.tp_str = $B.UndefinedType.tp_repr
 
     $B.set_func_names($B.UndefinedType, "javascript")
 
@@ -648,15 +654,56 @@
         UndefinedType: $B.UndefinedType
     }
 
+    // An integer too large for a double is a BigInt, and JavaScript's own JSON
+    // handles neither end of it: stringify refuses one outright, parse gives
+    // back a number whose last digits are wrong. The JSON *format* has no such
+    // limit, and the json module of the standard library reads and writes these
+    // integers exactly, so the two JSON routes of Brython disagreed.
+    //
+    // Both ends are read off the source text rather than the number: rawJSON
+    // writes digits unquoted, and the third argument of a reviver carries the
+    // literal as it was written, before any conversion. Both are checked rather
+    // than assumed, so an engine without them behaves as it does today.
+    var write_big = function(value) {
+        return typeof value == 'bigint' && typeof JSON.rawJSON == 'function' ?
+                   JSON.rawJSON(value.toString()) : value
+    }
+
+    var read_big = function(value, context) {
+        if (typeof value == 'number' && ! Number.isSafeInteger(value) &&
+                context && typeof context.source == 'string' &&
+                /^-?\d+$/.test(context.source)) {
+            return BigInt(context.source)
+        }
+        return value
+    }
+
     $B.assign_dict(modules.javascript.JSON,
         {
-            parse: function() {
+            parse: function(text, reviver) {
                 return $B.structuredclone2pyobj(
-                    JSON.parse.apply(this, arguments))
+                    JSON.parse(text, function(key, value, context) {
+                        value = read_big(value, context)
+                        return typeof reviver == 'function' ?
+                                   reviver.call(this, key, value) : value
+                    }))
             },
             stringify: function(obj, replacer, space) {
+                replacer = $B.jsobj2pyobj(replacer)
+                // A replacer may also be an array of keys to keep, which no
+                // function can stand in for; it is passed on untouched and a
+                // BigInt still raises, as it does today.
+                if (Array.isArray(replacer)) {
+                    return JSON.stringify($B.pyobj2structuredclone(obj, false),
+                        replacer, space)
+                }
                 return JSON.stringify($B.pyobj2structuredclone(obj, false),
-                    $B.jsobj2pyobj(replacer), space)
+                    function(key, value) {
+                        if (typeof replacer == 'function') {
+                            value = replacer.call(this, key, value)
+                        }
+                        return write_big(value)
+                    }, space)
             }
         }
     )
@@ -1379,7 +1426,7 @@
             // event(element, *names) is a Promise on the events "names" happening on
             // the element. This promise always resolves (never rejects) with the
             // first triggered DOM event.
-            var $ = $B.args("event", 1, {element: null}, arguments)
+            var $ = $B.args("event", 1, {element: null}, arguments, null, 'names')
             var element = $.element,
                 names = $.names
             return new Promise(function(resolve) {
@@ -1389,12 +1436,12 @@
                         // When one of the handled events is triggered, all bindings
                         // are removed
                         for (let items of callbacks) {
-                            $B.DOMNode.unbind(element, items[0], items[1])
+                            $B.DOMNode.tp_funcs.unbind(element, items[0], items[1])
                         }
                         resolve($B.$DOMEvent(evt))
                     }
                     callbacks.push([name, callback])
-                    $B.DOMNode.bind(element, name, callback)
+                    $B.DOMNode.tp_funcs.bind(element, name, callback)
                 }
             })
         },
@@ -1478,13 +1525,13 @@
                 module_obj[attr].$infos = {
                     __module__: name,
                     __name__: attr,
-                    __qualname__: name + '.' + attr
+                    __qualname__: attr
                 }
                 $B.set_function_infos(module_obj[attr],
                     {
                         __module__: name,
                         __name__: attr,
-                        __qualname__: name + '.' + attr
+                        __qualname__: attr
                     }
                 )
             }
@@ -1591,61 +1638,6 @@
 
     $B.set_func_names($B.cell, "builtins")
 
-    $B.AST = $B.make_type('AST')
-    $B.AST.$convert = function(js_node) {
-        if (js_node === undefined) {
-            return _b_.None
-        }
-        var constr = js_node.constructor
-        if (constr && constr.$name) {
-            $B.create_python_ast_classes()
-            return $B.python_ast_classes[constr.$name].$factory(js_node)
-        } else if (Array.isArray(js_node)) {
-            return js_node.map($B.AST.$convert)
-        } else if (js_node.type) {
-            // literal constant
-            switch (js_node.type) {
-                case 'int':
-                    console.log('AST convert, js_node', js_node)
-                    var value = js_node.value[1],
-                        base = js_node.value[0]
-                    var res = parseInt(value, base)
-                    if (! Number.isSafeInteger(res)) {
-                        res = BigInt(res)
-                    }
-                    return res
-                case 'float':
-                    return $B.fast_float(parseFloat(js_node.value))
-                case 'imaginary':
-                    return $B.make_complex(0,
-                        $B.AST.$convert(js_node.value))
-                case 'ellipsis':
-                    return _b_.Ellipsis
-                case 'str':
-                    if (js_node.is_bytes) {
-                        return _b_.bytes.$factory(js_node.value, 'latin-1')
-                    }
-                    return js_node.value
-                case 'id':
-                    if (['False', 'None', 'True'].indexOf(js_node.value) > -1) {
-                        return _b_[js_node.value]
-                    }
-                    break
-            }
-        } else if (['string', 'number'].indexOf(typeof js_node) > -1) {
-            return js_node
-        } else if (js_node.$name) {
-            // eg Store(), Load()...
-            return js_node.$name + '()'
-        } else if ([_b_.None, _b_.True, _b_.False].indexOf(js_node) > -1) {
-            return js_node
-        } else if ($B.get_class(js_node) !== $B.JSObj) {
-            return js_node
-        } else {
-            console.log('cannot handle', js_node)
-            return js_node
-        }
-    }
 
 $B.stdin = {
     ob_type: $io,

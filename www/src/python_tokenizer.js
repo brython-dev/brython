@@ -377,6 +377,7 @@ $B.tokenizer = function(src, filename, mode, parser) {
         ft_expr_start,
         ft_escape,
         ft_format_spec,
+        ft_chunk_start,
         braces_length_on_entry,
         fstring_stack = [],
         debug = 0
@@ -405,9 +406,11 @@ $B.tokenizer = function(src, filename, mode, parser) {
         if (token_mode != save_mode) {
             if (token_mode == 'ft') {
                 ft_buffer = ''
+                ft_chunk_start = pos - line_start - char.length + 1
                 ft_escape = false
             } else if (token_mode == 'format_specifier') {
                 format_specifier = ''
+                ft_chunk_start = pos - line_start - char.length + 1
             }
         }
         save_mode = token_mode
@@ -430,8 +433,8 @@ $B.tokenizer = function(src, filename, mode, parser) {
                 if (ft_buffer.length > 0) {
                     // emit FSTRING_MIDDLE token
                     t.push(Token(FT_MIDDLE[ft_type], ft_buffer,
-                        line_num, ft_start,
-                        line_num, ft_start + ft_buffer.length,
+                        line_num, ft_chunk_start,
+                        line_num, pos - line_start - char.length + 1,
                         line))
                 }
                 t.push(Token(FT_END[ft_type], char, line_num, pos - line_start,
@@ -459,8 +462,8 @@ $B.tokenizer = function(src, filename, mode, parser) {
                     // emit FSTRING_MIDDLE if not empty
                     if (ft_buffer.length > 0) {
                         t.push(Token(FT_MIDDLE[ft_type], ft_buffer,
-                            line_num, ft_start,
-                            line_num, ft_start + ft_buffer.length,
+                            line_num, ft_chunk_start,
+                            line_num, pos - line_start - char.length + 1,
                             line))
                     }
                     token_mode = 'regular_within_ft'
@@ -509,6 +512,21 @@ $B.tokenizer = function(src, filename, mode, parser) {
                         ft_escape = false
                         continue
                     }
+                    // the buffer becomes a Javascript string literal, whose
+                    // escape sequences differ from Python's
+                    if (char == 'U' && /^[0-9a-f]{8}$/i.test(src.substr(pos, 8))) {
+                        ft_buffer += String.fromCodePoint(parseInt(src.substr(pos, 8), 16))
+                        pos += 8
+                        ft_escape = false
+                        continue
+                    } else if (char == 'a') {
+                        ft_buffer += '\\x07'
+                        ft_escape = false
+                        continue
+                    } else if (! '\\\'"nrtbfv01234567xuN'.includes(char)) {
+                        // not an escape sequence in Python: keep the backslash
+                        ft_buffer += '\\'
+                    }
                     ft_buffer += '\\'
                 }
                 ft_buffer += char
@@ -523,8 +541,8 @@ $B.tokenizer = function(src, filename, mode, parser) {
                 if (format_specifier.length > 0) {
                     // emit FSTRING_MIDDLE token
                     t.push(Token(FT_MIDDLE[ft_type], format_specifier,
-                        line_num, ft_start,
-                        line_num, ft_start + format_specifier.length,
+                        line_num, ft_chunk_start,
+                        line_num, pos - line_start - char.length + 1,
                         line))
                     // pop from token modes
                     token_modes.pop()
@@ -534,8 +552,8 @@ $B.tokenizer = function(src, filename, mode, parser) {
             } else if (char == '{') {
                 if (format_specifier.length > 0) {
                     t.push(Token(FT_MIDDLE[ft_type], format_specifier,
-                        line_num, ft_start,
-                        line_num, ft_start + format_specifier.length,
+                        line_num, ft_chunk_start,
+                        line_num, pos - line_start - char.length + 1,
                         line))
                 }
                 token_mode = 'regular_within_ft'
@@ -552,8 +570,8 @@ $B.tokenizer = function(src, filename, mode, parser) {
             } else if (char == '}') {
                 // emit FSTRING_MIDDLE
                 t.push(Token(FT_MIDDLE[ft_type], format_specifier,
-                    line_num, ft_start,
-                    line_num, ft_start + format_specifier.length,
+                    line_num, ft_chunk_start,
+                    line_num, pos - line_start - char.length + 1,
                     line))
                 // emit closing bracket token
                 t.push(Token('OP', char,

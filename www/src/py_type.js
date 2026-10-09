@@ -8,7 +8,7 @@ const TPFLAGS = $B.TPFLAGS // defined ib brython_builtins.js
 // generic code for class constructor
 $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
         bases, extra_kwargs){
-    var test = false // class_name == 'FlagBoundary'
+    var test = false // class_name == '_AllFieldTypes'
     if (test) {
         console.log('class constructor', class_name, 'dict', dict)
         console.log('metaclass', metaclass)
@@ -35,7 +35,10 @@ $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
     if (Object.hasOwn(classdef_frame[1], '__name__')) {
         module = classdef_frame[1].__name__
     }
+
     $B.str_dict_set(dict, '__module__', module)
+
+    $B.str_dict_set(dict, '__qualname__', class_name)
 
     // A class that overrides __eq__() and does not define __hash__()
     // will have its __hash__() implicitly set to None
@@ -96,23 +99,13 @@ $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
     if ($B.get_class(kls) === metaclass) {
         // Initialize the class object by a call to metaclass __init__
         var meta_init = _b_.type.tp_getattro(metaclass, "__init__")
-        try {
-            $B.$call(meta_init, kls, class_name, resolved_bases, dict,
-                      {$kw: [extra_kwargs]})
-        } catch (err) {
-            if (class_name == 'SupportsInt') {
-                console.log('err for', class_name)
-                console.log(err)
-                console.log(err.stack)
-            }
-            throw err
-        }
+        $B.$call(meta_init, kls, class_name, resolved_bases, dict,
+                 {$kw: [extra_kwargs]})
+
     }
 
-    // Set new class as subclass of its parents
-    for (let i = 0; i < bases.length; i++) {
-        bases[i].tp_subclasses  = bases[i].tp_subclasses || []
-        bases[i].tp_subclasses.push(kls)
+    if (test) {
+        console.log('kls', kls)
     }
 
     return kls
@@ -370,20 +363,28 @@ $B.make_class_namespace = function(metaclass, class_name, qualname,
         $B.RAISE(_b_.TypeError, 'metaclass has no __prepare__')
     }
     var class_dict = $B.$call(prepare, class_name, bases) // dict or dict-like
-    if (! $B.is_dict(class_dict)) {
-        console.log('class dict', class_dict)
+    // __prepare__ may return any mapping (PEP 3115). Like CPython's
+    // PyMapping_Check(), a mapping is recognised by __getitem__; an object
+    // that cannot be assigned to reports that when the assignment happens.
+    var is_dict = $B.is_dict(class_dict)
+    if (! is_dict &&
+            $B.$getattr($B.get_class(class_dict), '__getitem__', $B.NULL) ===
+                $B.NULL) {
         $B.RAISE(_b_.TypeError,
             `${$B.get_name(metaclass)}.__prepare__() must return a mapping, ` +
             `not ${$B.class_name(class_dict)}`)
     }
+    var set_key = is_dict ?
+        (key, value) => $B.str_dict_set(class_dict, key, value) :
+        (key, value) => $B.$setitem(class_dict, key, value)
     if (orig_bases !== bases) {
-        $B.str_dict_set(class_dict, '__orig_bases__', orig_bases)
+        set_key('__orig_bases__', orig_bases)
     }
-    if (! $B.hasOnlyStringKeys(class_dict)) {
+    if (is_dict && ! $B.hasOnlyStringKeys(class_dict)) {
         $B.warn(_b_.RuntimeWarning,
             `non-string key in the __dict__ of class ${class_name}`)
     }
-    $B.str_dict_set(class_dict, '__qualname__', qualname)
+    // set_key('__qualname__', qualname)
     return class_dict
 }
 
@@ -432,6 +433,7 @@ $B.make_annotate_func = function(dict, annotations, class_frame) {
             free_vars: $B.fast_tuple(['__classdict__'])
         }
     )
+    $B.set_func_attrs(__annotate_func__, $B.frame_obj.frame, class_frame[2])
 }
 
 $B.check_annotate_format = function(format) {
@@ -694,7 +696,13 @@ $B.search_slot = function(cls, slot, _default) {
             return klass[slot]
         }
         if (dunder) {
-            var v = $B.get_from_dict(klass, dunder, $B.NULL)
+            try {
+                var v = $B.get_from_dict(klass, dunder, $B.NULL)
+            } catch(err) {
+                console.log('error for klass', klass, 'slot', slot,
+                    'dunder', dunder)
+                throw err
+            }
             if (v !== $B.NULL) {
                 if (test) {
                     console.log('klass has __call__', v)
@@ -799,11 +807,6 @@ function set_tp_slots(cls) {
         }
     }
 }
-
-var special_attrs = [
-    "__name__", "__qualname__", "__module__", "__bases__", "__doc__",
-    "__type_params__", "__annotate__", "__annotations__"
-]
 
 $B.make_getattr = function(cls) {
     if (cls.tp_mro) {
@@ -957,13 +960,24 @@ function reset_factory(cls) {
 }
 
 $B.make_iter = function(cls) {
+    // resolve the tp_iter slot by walking the full MRO, not only tp_base:
+    // __iter__ can be inherited from any ancestor, eg a dict subclass whose
+    // first base is a plain class. Only raw class attributes are used: a
+    // descriptor must not have its __get__ invoked at slot-resolution time
+    // (it would have side effects, cf unittest.mock.MagicProxy); descriptors
+    // are handled at call time by $B.$iter
     cls.tp_iter = $B.NULL
-    var iter = $B.get_from_dict(cls, '__iter__', $B.NULL)
-    if (iter !== $B.NULL) {
-        cls.tp_iter = iter
-    } else if (cls.tp_base) {
-        cls.tp_iter = cls.tp_base.tp_iter ??
-            (cls.tp_base.tp_iter = $B.make_iter(cls.tp_base))
+    for (var klass of $B.get_mro(cls)) {
+        var iter = $B.get_from_dict(klass, '__iter__', $B.NULL)
+        if (iter !== $B.NULL) {
+            cls.tp_iter = iter
+            break
+        }
+        if (klass !== cls && Object.hasOwn(klass, 'tp_iter') &&
+                klass.tp_iter !== $B.NULL && klass.tp_iter != null) {
+            cls.tp_iter = klass.tp_iter
+            break
+        }
     }
     return cls.tp_iter
 }
@@ -1284,7 +1298,7 @@ _b_.type.tp_call = function(cls) {
 }
 
 _b_.type.tp_getattro = function(obj, name) {
-    var test = false // name == '__getformat__' // && obj.tp_name == 'Mapping'
+    var test = false // name == '__abstractmethods__' // && obj.tp_name == 'Mapping'
     if (test) {
         console.log('class_getattr', obj, name)
         console.log('frame obj', $B.frame_obj)
@@ -1410,8 +1424,10 @@ _b_.type.tp_new = function(cls, args, kw) {
     // Create the class dictionary
     var module = $B.str_dict_get(cl_dict, '__module__', $B.frame_obj.frame[2])
     $B.str_dict_set(cl_dict, '__module__', module)
+
     var qualname = $B.str_dict_get(cl_dict, '__qualname__', name)
-    $B.str_dict_set(cl_dict, '__qualname__', qualname)
+    // __qualname__ is removed from class dict
+    $B.str_dict_del(cl_dict, '__qualname__')
 
     var ctx = {
         metatype,
@@ -1563,6 +1579,11 @@ _b_.type.tp_new = function(cls, args, kw) {
     //$B.make_iter(class_obj)
     $B.make_call(class_obj)
     make_factory(class_obj)
+    // Set new class as subclass of its parents
+    for (var base of class_obj.tp_bases) {
+        base.tp_subclasses = base.tp_subclasses || []
+        base.tp_subclasses.push(class_obj)
+    }
     return class_obj
 }
 
@@ -1772,11 +1793,20 @@ type_funcs.__sizeof__ = function(self) {
 
 type_funcs.__subclasscheck__ = function(self, subclass) {
     // Is subclass a subclass of self ?
-    var klass = self
+    if (! $B.$isinstance(subclass, $B.UnionType) && ! $B.is_type(subclass)) {
+        $B.RAISE(_b_.TypeError,
+            "issubclass() arg 2 must be a class," +
+            " a tuple of classes, or a union")
+    }
+    if (self === subclass) {
+        return true
+    }
     if (subclass.tp_bases === undefined) {
         return self === _b_.object
     }
-    return subclass.tp_bases.indexOf(klass) > -1
+    // walk the full MRO, not only the direct bases: a class is a subclass
+    // of its indirect ancestors too
+    return $B.get_mro(subclass).indexOf(self) > -1
 }
 
 type_funcs.__subclasses__ = function(cls) {
@@ -1849,13 +1879,44 @@ $B.internal_property = function(module, fget, fset) {
     }
 }
 
-property.$factory = function(fget, fset, fdel, doc) {
+property.$factory = function() {
     var res = {
         ob_type: property
     }
-    property.tp_init(res, fget, fset ?? _b_.None, fdel ?? _b_.None,
-        doc ?? _b_.None)
+    // forward the arguments unchanged: they may end with a keyword-arguments
+    // marker (eg property(fset=...)), which tp_init's argument parser
+    // handles; inserting positional defaults here would shift it into fget
+    property.tp_init(res, ...arguments)
     return res
+}
+
+function property_copy(old, get, set, del) {
+    let type = $B.get_class(old)
+
+    if (get === _b_.None) {
+        get = old.prop_get ?? _b_.None
+    }
+    if (set === _b_.None) {
+        set = old.prop_set ?? _b_.None
+    }
+    if (del === _b_.None) {
+        del = old.prop_del ?? _b_.None
+    }
+    let doc
+    if (old.getter_doc && get !== _b_.None) {
+        /* make _init use __doc__ from getter */
+        doc = _b_.None;
+    } else {
+        doc = old.prop_doc ?? _b_.None
+    }
+
+    let _new = $B.$call(type, get, set, del, doc)
+
+    if ($B.exact_type(_new, _b_.property)) {
+        _new.prop_name = old.prop_name
+    }
+
+    return _new
 }
 
 
@@ -1919,46 +1980,62 @@ _b_.property.tp_init = function() {
 }
 
 _b_.property.tp_new = function(cls, args, kw) {
-    return {
+    var res = {
         ob_type: cls
     }
+    if (cls !== _b_.property) {
+        // instances of a subclass have a __dict__
+        $B.init_dict(res)
+    }
+    return res
 }
 
 var property_funcs = _b_.property.tp_funcs = {}
 
 property_funcs.__isabstractmethod___get = function(self) {
-
+    for (let attr of ['prop_get', 'prop_set', 'prop_del']) {
+        let test = $B.$getattr(self[attr], '__isabstractmethod__', false)
+        if (test === true) {
+            return true
+        }
+    }
+    return false
 }
 
-property_funcs.__isabstractmethod___set = function(self) {
-
-}
+property_funcs.__isabstractmethod___set = _b_.None
 
 property_funcs.__name___get = function(self) {
-    return $B.$getattr(self.prop_get, '__name__')
+    if (Object.hasOwn(self, 'prop_name')) {
+        return self.prop_name
+    }
+
+    let name = $B.$getattr(self.prop_get, '__name__', $B.NULL)
+    if (name === $B.NULL) {
+        $B.RAISE(_b_.AttributeError,
+                 "'property' object has no attribute '__name__'"
+        )
+    }
+    return name
 }
 
-property_funcs.__name___set = function(self) {
-
+property_funcs.__name___set = function(self, value) {
+    self.prop_name = value
 }
 
 property_funcs.__set_name__ = function(self, cls, name) {
     self.prop_name = name
 }
 
-property_funcs.deleter = function(self, fdel) {
-    self.prop_del = fdel
-    return self
+property_funcs.deleter = function(self, deleter) {
+    return property_copy(self, _b_.None, _b_.None, deleter)
 }
 
-property_funcs.getter = function(self, fget) {
-    self.prop_get = fget
-    return self
+property_funcs.getter = function(self, getter) {
+    return property_copy(self, getter, _b_.None, _b_.None)
 }
 
-property_funcs.setter = function(self, fset) {
-    self.prop_set = fset
-    return self
+property_funcs.setter = function(self, setter) {
+    return property_copy(self, _b_.None, setter, _b_.None)
 }
 
 _b_.property.tp_methods = ["getter", "setter", "deleter", "__set_name__"]
@@ -2284,7 +2361,8 @@ $B.GenericAlias.$factory = function(origin, args) {
     var res = {
         ob_type: $B.GenericAlias,
         origin,
-        args
+        args,
+        starred: false
     }
     return res
 }
@@ -2337,28 +2415,39 @@ $B.GenericAlias.nb_or = function() {
     return $B.UnionType.$factory([$.self, $.other])
 }
 
-$B.GenericAlias.tp_repr = function(self) {
-    var args = Array.isArray(self.args) ? self.args : [self.args]
-    var reprs = []
-    for (var arg of args) {
-        if (arg === _b_.Ellipsis) {
-            reprs.push('...')
-        } else {
-            if ($B.is_type(arg)) {
-                reprs.push($B.get_name(arg))
-            } else {
-                reprs.push(_b_.repr(arg))
-            }
-        }
+function ga_repr_item(p) {
+    // same as CPython ga_repr_item: module.qualname, except for builtins
+    if (p === _b_.Ellipsis) {
+        return '...'
     }
+    /*console.log('p', p, 'has origin and args ?',
+        _b_.hasattr(p, '__origin__') && _b_.hasattr(p, '__args__'))
+    */
+    if (_b_.hasattr(p, '__origin__') && _b_.hasattr(p, '__args__')) {
+        // looks like a GenericAlias
+        console.log('p', p, 'looks like GA')
+        return _b_.repr(p)
+    }
+    var qualname = $B.$getattr(p, '__qualname__', $B.NULL),
+        module = $B.$getattr(p, '__module__', $B.NULL)
+    //console.log('qualname', qualname, 'module', module)
+    if (qualname === $B.NULL || module === $B.NULL || module === _b_.None) {
+        return _b_.repr(p)
+    }
+    return module == 'builtins' ? qualname : module + '.' + qualname
+}
+
+$B.GenericAlias.tp_repr = function(self) {
+    //console.log('type(self)', $B.get_class(self))
+    var args = Array.isArray(self.args) ? self.args : [self.args]
+    var reprs = args.map(ga_repr_item)
     var iv = $B.$getattr(self.origin, '__infer_variance__', true)
     var prefix = iv ? '' : '~'
-    return prefix + $B.$getattr(self.origin, '__qualname__') + '[' +
-        reprs.join(", ") + ']'
+    return prefix + ga_repr_item(self.origin) + '[' + reprs.join(", ") + ']'
 }
 
 $B.GenericAlias.tp_hash = function(self) {
-
+    return _b_.hash(self.origin) ^ _b_.hash(self.args)
 }
 
 $B.GenericAlias.tp_call = function(self, ...args) {
@@ -2391,7 +2480,7 @@ $B.GenericAlias.tp_new = function(cls, args, kw) {
         ob_type: cls,
         origin,
         args,
-        starred: false // ???
+        starred: false
     }
 }
 
@@ -2411,7 +2500,8 @@ $B.GenericAlias.mp_subscript = function(self, item) {
 var GenericAlias_funcs = $B.GenericAlias.tp_funcs = {}
 
 GenericAlias_funcs.__dir__ = function(self) {
-
+    let dir = _b_.dir(self.origin)
+    return dir
 }
 
 GenericAlias_funcs.__instancecheck__ = function(self) {
@@ -2458,34 +2548,12 @@ $B.GenericAlias.tp_getset = ["__parameters__", "__typing_unpacked_tuple_args__"]
 
 $B.set_func_names($B.GenericAlias, "types")
 
-/*
-__repr__ <slot wrapper '__repr__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__hash__ <slot wrapper '__hash__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__getattribute__ <slot wrapper '__getattribute__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__lt__ <slot wrapper '__lt__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__le__ <slot wrapper '__le__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__eq__ <slot wrapper '__eq__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__ne__ <slot wrapper '__ne__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__gt__ <slot wrapper '__gt__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__ge__ <slot wrapper '__ge__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__or__ <slot wrapper '__or__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__ror__ <slot wrapper '__ror__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__getitem__ <slot wrapper '__getitem__' of 'typing.Union' objects> <class 'wrapper_descriptor'>
-__mro_entries__ <method '__mro_entries__' of 'typing.Union' objects> <class 'method_descriptor'>
-__class_getitem__ <method '__class_getitem__' of 'typing.Union' objects> <class 'classmethod_descriptor'>
-__args__ <member '__args__' of 'typing.Union' objects> <class 'member_descriptor'>
-__name__ <attribute '__name__' of 'typing.Union' objects> <class 'getset_descriptor'>
-__qualname__ <attribute '__qualname__' of 'typing.Union' objects> <class 'getset_descriptor'>
-__origin__ <attribute '__origin__' of 'typing.Union' objects> <class 'getset_descriptor'>
-__parameters__ <attribute '__parameters__' of 'typing.Union' objects> <class 'getset_descriptor'>
-__doc__ Represent a union type
-
-E.g. for int | str <class 'str'>
-*/
 
 $B.UnionType = $B.make_builtin_class("UnionType")
 
 $B.UnionType.$factory = function(items) {
+    // X | None stores NoneType, as CPython does
+    items = items.map(item => item === _b_.None ? $B.NoneType : item)
     return {
         ob_type: $B.UnionType,
         args: $B.fast_tuple(items)
@@ -2509,10 +2577,13 @@ $B.UnionType.tp_richcompare = function(self, other, op) {
 $B.UnionType.tp_repr = function(self) {
     var t = []
     for (var item of self.args) {
-        if ($B.is_type(item)) {
+        if (item === $B.NoneType) {
+            t.push('None')
+        } else if ($B.is_type(item)) {
             var s = $B.get_name(item)
-            if ($B.get_from_dict(item, '__module__') !== "builtins") {
-                s = item.__module__ + '.' + s
+            let module = $B.get_from_dict(item, '__module__', 'builtins')
+            if (module !== "builtins") {
+                s = module + '.' + s
             }
             t.push(s)
         } else {
@@ -2524,6 +2595,9 @@ $B.UnionType.tp_repr = function(self) {
 
 $B.UnionType.nb_or = function(self, other) {
     var items = self.args.slice()
+    if (other === _b_.None) {
+        other = $B.NoneType
+    }
     if (! items.includes(other)) {
         items.push(other)
     }

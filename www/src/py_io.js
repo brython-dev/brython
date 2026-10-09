@@ -111,12 +111,16 @@ _IOBase_funcs.__enter__ = function(self) {
     return self
 }
 
-_IOBase_funcs.__exit__ = function(self) {
-    _IOBase_funcs.close(self)
+_IOBase_funcs.__exit__ = function(self, type, value, traceback) {
+    // CPython's iobase_exit() returns the result of self.close(), so the
+    // subclass's close() runs and a close() that returns a true value
+    // suppresses the with-block exception
+    return $B.$call($B.$getattr(self, 'close'))
 }
 
 _IOBase_funcs.close = function(self) {
     self._closed = true
+    return _b_.None
 }
 
 _IOBase_funcs.closed_get = function(self) {

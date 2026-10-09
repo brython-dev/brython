@@ -81,6 +81,11 @@ $B.structuredclone2pyobj = function(obj) {
         return undefined
     } else if (typeof obj == "boolean") {
         return obj
+    } else if (typeof obj == "bigint") {
+        // A Python int above 2**53, which is what this is, was reaching the
+        // TypeError at the end of the function: every other integer is a
+        // number and took the branch below.
+        return obj
     } else if (typeof obj == "string" || obj instanceof String) {
         return $B.String(obj)
     } else if (typeof obj == "number" || obj instanceof Number) {
@@ -120,6 +125,10 @@ $B.structuredclone2pyobj = function(obj) {
 
 const JSOBJ = $B.JSOBJ = Symbol('JSOBJ')
 const PYOBJ = $B.PYOBJ = Symbol('PYOBJ')
+// The back-reference is held here rather than as a property on the JavaScript
+// object: an own symbol key makes the object unusable as a WebIDL record, which
+// is what `new Response(body, {headers})` and `new Headers(obj)` take.
+const PYOBJ_MAP = $B.PYOBJ_MAP = new WeakMap()
 const PYOBJFCT = Symbol('PYOBJFCT')
 const PYOBJFCTS = Symbol('PYOBJFCTS')
 
@@ -166,7 +175,12 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
              // convert JS numbers with no decimal to a Python int
              if (jsobj % 1 === 0) {
                  if (! Number.isSafeInteger(jsobj)) {
-                     return BigInt(jsobj.toString())
+                     // Not jsobj.toString(), which writes the shortest decimal
+                     // that reads back as this double: for 2 ** 60 that is
+                     // 1152921504606847000, another integer, and from 1e21 up
+                     // it is exponential notation, which BigInt() rejects
+                     // outright. BigInt() reads the number itself, exactly.
+                     return BigInt(jsobj)
                  }
                  return jsobj
              }
@@ -184,9 +198,10 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
         return jsobj
     }
 
+
     let pyobj
     try {
-        pyobj = jsobj[PYOBJ]
+        pyobj = PYOBJ_MAP.get(jsobj)
     } catch (err) {
         // ignore and return jsobj. Cf. issue #2692
         return jsobj
@@ -293,7 +308,7 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
 
     if ($B.$isNode(jsobj)) {
         const res = $B.DOMNode.$factory(jsobj)
-        jsobj[PYOBJ] = res
+        PYOBJ_MAP.set(jsobj, res)
         res[JSOBJ] = jsobj
         return res
     }
@@ -334,7 +349,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj) {
     if (has_type(klass, _b_.list) || has_type(klass, _b_.tuple)) {
         // Python list : transform its elements
         var jsobj = pyobj.map(pyobj2jsobj)
-        jsobj[PYOBJ] = pyobj
+        PYOBJ_MAP.set(jsobj, pyobj)
         delete jsobj.ob_type // becomes a js_array
         return jsobj
     }
@@ -358,7 +373,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj) {
             jsobj[key] = pyobj2jsobj(entry.value)
         }
         pyobj[JSOBJ] = jsobj
-        jsobj[PYOBJ] = pyobj
+        PYOBJ_MAP.set(jsobj, pyobj)
         return jsobj
     }
 
@@ -394,7 +409,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj) {
             }
 
             pyobj[JSOBJ] = jsobj
-            jsobj[PYOBJ] = pyobj
+            PYOBJ_MAP.set(jsobj, pyobj)
 
             return jsobj
         }
@@ -427,7 +442,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj) {
         }
 
         pyobj[JSOBJ] = jsobj
-        jsobj[PYOBJ] = pyobj
+        PYOBJ_MAP.set(jsobj, pyobj)
 
         return jsobj
     }
@@ -446,7 +461,7 @@ function convert_to_python(obj) {
         return obj
     }
     if (Array.isArray(obj)) {
-        return obj.map(convert_to_python)
+        return _b_.list.$factory(obj.map(convert_to_python))
     }
     if ($B.$isinstance(obj, $B.JSObj)) {
         if (typeof obj == 'number') {
@@ -489,11 +504,11 @@ function pyargs2jsargs(pyargs) {
 $B.JSClass = $B.make_builtin_class('JSClass', [_b_.type])
 
 $B.JSClass.tp_getattro = function(self, attr) {
-    console.log('JSClass getatro', self, attr)
     if (attr == 'new') {
         return function() {
             var args = Array.from(arguments).map(pyobj2jsobj)
-            return jsobj2pyobj(new self.js_class(...args))
+            let jsobj = new self.js_class(...args)
+            return jsobj2pyobj(jsobj)
         }
     }
     var res = _b_.type.tp_getattro(self, attr)
@@ -503,7 +518,7 @@ $B.JSClass.tp_getattro = function(self, attr) {
     if (! self.js_class.hasOwnProperty(attr)) {
         return $B.NULL
     }
-    return jsobj2pyobj(self.jsobj[attr], self.jsobj)
+    return jsobj2pyobj(self.js_class[attr], self.jsobj)
 }
 
 $B.JSClass.tp_new = function(cls, args, kw) {
@@ -1242,8 +1257,9 @@ var js_array_funcs = js_array.tp_funcs = {}
 
 js_array_funcs.append = function(self, x) {
     self.push(pyobj2jsobj(x))
-    if (self[PYOBJ]) {
-        self[PYOBJ].push(x)
+    const pyobj = PYOBJ_MAP.get(self)
+    if (pyobj) {
+        pyobj.push(x)
     }
     return _b_.None
 }

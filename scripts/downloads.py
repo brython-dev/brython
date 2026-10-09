@@ -57,6 +57,7 @@ if not os.path.exists("ucd"):
 for path in ["UnicodeData.txt",
              "CaseFolding.txt",
              "DerivedCoreProperties.txt",
+             "EastAsianWidth.txt",
              "NameAliases.txt"]:
     abs_path = os.path.join("ucd", path)
     f = urllib.request.urlopen(unicode_url + path)

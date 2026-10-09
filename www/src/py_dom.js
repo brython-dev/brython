@@ -16,16 +16,6 @@ function convertDomValue(v) {
     return $B.jsobj2pyobj(v)
 }
 
-// Conversion of immutable types between Javascript and Python
-var py_immutable_to_js = $B.py_immutable_to_js = function(pyobj) {
-    if ($B.$isinstance(pyobj, _b_.float)) {
-        return pyobj.value
-    } else if ($B.is_int(pyobj) && typeof pyobj !== "boolean") {
-        return Number($B.int_value(pyobj))
-    }
-    return $B.pyobj2jsobj(pyobj)
-}
-
 // cross-browser utility functions
 function $getPosition(e) {
     var left = 0,
@@ -594,7 +584,7 @@ DOMNode.tp_getattro = function(self, attr) {
     }
 
     var klass = $B.get_class(self)
-    var test = false // attr == 'closest'
+    var test = false // attr == 'long_int'
 
     var property = self[attr]
     if (test) {
@@ -662,8 +652,8 @@ DOMNode.tp_getattro = function(self, attr) {
             return res
         }
         if (typeof res === "function") {
-            if (Object.hasOwn(res, $B.PYOBJ)) {
-                return res[$B.PYOBJ]
+            if ($B.PYOBJ_MAP.has(res)) {
+                return $B.PYOBJ_MAP.get(res)
             }
             if (self.ob_type && self.ob_type.$webcomponent) {
                 var method = $B.$getattr($B.get_class(self), attr, null)
@@ -912,7 +902,7 @@ DOMNode.tp_setattro = function(self, attr, value) {
     }
 
     // Set the property
-    self[attr] = py_immutable_to_js(value)
+    self[attr] = $B.pyobj2jsobj(value)
 
     return _b_.None
 
@@ -1481,7 +1471,7 @@ DOMNode.tp_getset = [
 
 DOMNode.tp_methods = [
     "__dir__", "attach", "bind", "bindings", "children", "child_nodes",
-    "clear", "clone", "events", "get", "index", "inside", "reset", 
+    "clear", "clone", "events", "get", "index", "inside", "reset",
     "select", "select_one", "setSelectionRange", "trigger", "unbind"
 ]
 

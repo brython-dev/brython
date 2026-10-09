@@ -1,5 +1,6 @@
 """Context Variables"""
 
+from types import GenericAlias
 
 class Context(object):
 
@@ -46,6 +47,8 @@ class ContextVar:
     def set(self, value):
         self.value = value
         return Token(self)
+
+    __class_getitem__ = classmethod(GenericAlias)
 
 class Token(object):
 

@@ -1,3 +1,5 @@
+from tester import assert_raises
+
 x = [1, 2]
 z = iter(x)
 assert z.__next__() == 1
@@ -144,5 +146,90 @@ class A:
 
 assert 'd' in A()
 assert 'z' not in A()
+
+# issue 2928 - two-argument iter(callable, sentinel)
+readings_2928 = iter(["12.5", "13.0", "STOP", "14.2"])
+assert list(iter(lambda: next(readings_2928), "STOP")) == ["12.5", "13.0"]
+
+# a callable that returns the sentinel first yields nothing
+assert list(iter(lambda: "STOP", "STOP")) == []
+
+# next() raises StopIteration once the sentinel is seen, and the iterator
+# stays exhausted afterwards - it does not resume on the next value
+values_2928 = iter(["a", "STOP", "b"])
+it_2928 = iter(values_2928.__next__, "STOP")
+assert next(it_2928) == "a"
+assert_raises(StopIteration, next, it_2928)
+assert next(it_2928, None) is None
+assert next(it_2928, None) is None
+
+# a second pass over an exhausted callable iterator yields nothing
+drained_2928 = iter(iter([1, 2, "STOP", 3]).__next__, "STOP")
+assert list(drained_2928) == [1, 2]
+assert list(drained_2928) == []
+
+# the sentinel is the left operand of the comparison, as in CPython
+class Sentinel_2928:
+    def __eq__(self, other):
+        return True
+
+class Value_2928:
+    def __eq__(self, other):
+        return False
+
+assert next(iter(Value_2928, Sentinel_2928()), None) is None
+
+# the comparison keeps CPython's identity shortcut: the callable returning the
+# sentinel object itself stops the iteration even when __eq__ says otherwise
+class NeverEqual_2928:
+    def __eq__(self, other):
+        return False
+
+same_2928 = NeverEqual_2928()
+assert next(iter(lambda: same_2928, same_2928), "STOPPED") == "STOPPED"
+
+# a comparison that returns an object is converted to a boolean
+class Falsy_2928:
+    def __bool__(self):
+        return False
+
+class FalsyResult_2928:
+    def __eq__(self, other):
+        return Falsy_2928()
+
+assert next(iter(lambda: "v", FalsyResult_2928()), "STOPPED") == "v"
+
+class Truthy_2928:
+    def __bool__(self):
+        return True
+
+class TruthyResult_2928:
+    def __eq__(self, other):
+        return Truthy_2928()
+
+assert next(iter(lambda: "v", TruthyResult_2928()), "STOPPED") == "STOPPED"
+
+# StopIteration raised by the callable exhausts the iterator
+def stop_2928():
+    raise StopIteration
+
+stopping_2928 = iter(stop_2928, "X")
+assert next(stopping_2928, None) is None
+assert next(stopping_2928, None) is None
+
+# any other exception propagates and leaves the iterator usable
+calls_2928 = []
+
+def flaky_2928():
+    calls_2928.append(1)
+    if len(calls_2928) == 1:
+        raise ValueError("boom")
+    return "later" if len(calls_2928) < 4 else "STOP"
+
+flaky_it_2928 = iter(flaky_2928, "STOP")
+assert_raises(ValueError, next, flaky_it_2928)
+assert next(flaky_it_2928) == "later"
+assert next(flaky_it_2928) == "later"
+assert next(flaky_it_2928, None) is None
 
 print("passed all tests...")

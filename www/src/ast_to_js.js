@@ -156,6 +156,10 @@ function get_source_from_position(scopes, ast_obj) {
     var lines = scopes.lines,
         start_line = lines[ast_obj.lineno - 1],
         res
+    if (start_line === undefined) {
+        console.log('lines', lines)
+        console.log('ast_obj', ast_obj)
+    }
     if (ast_obj.end_lineno == ast_obj.lineno) {
         res = start_line.substring(ast_obj.col_offset, ast_obj.end_col_offset)
     } else {
@@ -240,7 +244,14 @@ function qualified_scope_name(scopes, scope) {
             names.push(_scope.name)
         }
     }
-    return names.join('_').replace(/\./g, '_')
+    return $B.scope_name(names.join('_'))
+}
+
+// A name turned into a Javascript identifier for generated code. The importer
+// builds the same identifier to read a module back out of its wrapper, so the
+// rule has to be one and not two.
+$B.scope_name = function(name) {
+    return name.replace(/[^\w$]/g, '_')
 }
 
 function show_flags(name, flag) {
@@ -279,21 +290,53 @@ function make_scope_name(scopes, scope) {
     return scope_name
 }
 
+function make_globals_name(scopes) {
+    // Name of the JS object that holds the global namespace.
+    // This is normally the root scope's namespace object (at module level,
+    // locals and globals are the same object), but code run by exec() or
+    // eval() may have distinct globals and locals: the globals object is
+    // then referenced by namespaces.global_name (cf. py_eval_exec.js).
+    // Using the root locals object in that case gave functions defined in
+    // exec() a global namespace that ignored the "globals" argument.
+    var ns = scopes.namespaces
+    if (ns && ns.exec_locals !== ns.exec_globals) {
+        return ns.global_name
+    }
+    return make_scope_name(scopes, scopes[0])
+}
+
 function make_search_namespaces(scopes) {
     var namespaces = []
+    var current = last_scope(scopes)
     for (var scope of scopes.slice().reverse()) {
         if (scope.parent || scope.type == 'class') {
+            if (scope === current) {
+                // a name read in the class body is searched in the class
+                // namespace first (LOAD_NAME): __module__, __qualname__ and
+                // __firstlineno__ are set there before the body runs
+                namespaces.push(make_scope_name(scopes, scope))
+            }
             continue
         } else if (scope.is_exec_scope) {
             namespaces.push('$B.exec_scope')
         }
         namespaces.push(make_scope_name(scopes, scope))
+        var ns = scopes.namespaces
+        if (scope.is_exec_scope && ns &&
+                ns.exec_locals !== ns.exec_globals) {
+            // exec()/eval() with distinct globals and locals: unbound names
+            // must also be searched in the globals object, after locals
+            namespaces.push(ns.global_name)
+        }
     }
     namespaces.push('_b_')
     return namespaces
 }
 
 function mangle(scopes, scope, name) {
+    if (name.startsWith === undefined) {
+        console.log('name', name)
+    }
     if (name.startsWith('__') && ! name.endsWith('__')) {
         var ix = scopes.indexOf(scope)
         while (ix >= 0) {
@@ -922,7 +965,7 @@ function make_comp(scopes) {
     var comp = {ast:this, id, type, varnames,
                 module_name: scopes[0].name,
                 locals_name: make_scope_name(scopes),
-                globals_name: make_scope_name(scopes, scopes[0])}
+                globals_name: make_globals_name(scopes)}
 
     indent()
     if (prefix.length > plen + tab.length) {
@@ -1064,6 +1107,19 @@ function make_comp(scopes) {
 
     for (var name of save_locals) {
         js += prefix + `${name_reference(name, scopes)} = save_${name}\n`
+    }
+    // A comprehension has its own scope, so the names its generators bind must
+    // not survive it. Drop them in both senses: the binding at run time, and
+    // the scope entry that decides how a later read of the name compiles.
+    for (var comp_name of bindings) {
+        if (! save_locals.has(comp_name)) {
+            js += prefix + `delete ${comp.locals_name}.${comp_name}\n`
+            var comp_s = comp_scope
+            while (comp_s) {
+                comp_s.locals.delete(comp_name)
+                comp_s = comp_s.parent
+            }
+        }
     }
     if (comp_iter_scope.found) {
         js += prefix + `${name_reference(comp_iter, scopes)} = save_comp_iter\n`
@@ -1637,7 +1693,7 @@ $B.ast.AugAssign.prototype.to_js = function(scopes) {
             // The left part of the assignment must be an attribute of a
             // namespace (global or local), not a call to $B.resolve
             let left_scope = scope.resolve == 'global' ?
-                make_scope_name(scopes, scopes[0]) : 'locals'
+                make_globals_name(scopes) : 'locals'
             js = prefix + `${left_scope}.${this.target.id} = $B.augm_assign(` +
                 make_ref(this.target.id, scopes, scope, this.target) + `, '${iop}', ${value})`
         } else {
@@ -1850,7 +1906,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes) {
         locals_name = 'locals_' + qualified_scope_name(scopes, class_scope),
         ref = this.name + make_id(),
         glob = scopes[0].name,
-        globals_name = make_scope_name(scopes, scopes[0]),
+        globals_name = make_globals_name(scopes),
         decorators = [],
         decorated = false
     for (let dec of this.decorator_list) {
@@ -2097,7 +2153,7 @@ $B.ast.comprehension.prototype.to_js = function(scopes) {
     return js
 }
 
-$B.ast.Constant.prototype.to_js = function() {
+$B.ast.Constant.prototype.to_js = function(scopes) {
     if (this.kind === $B.JSObj) {
         console.log('constant kind', this.kind)
     }
@@ -2135,10 +2191,26 @@ $B.ast.Constant.prototype.to_js = function() {
         return `$B.make_complex(${this.value.real.value}, ${this.value.imag.value})`
     } else if (this.value === _b_.Ellipsis) {
         return `_b_.Ellipsis`
+    } else if ($B.is_tuple(this.value)) {
+        let res = []
+        for (let item of this.value) {
+            let constant = new $B.ast.Constant(item)
+            res.push(constant.to_js(scopes))
+        }
+        return `$B.fast_tuple([${res}])`
+    } else if ($B.$isinstance(this.value, _b_.frozenset)) {
+        let res = []
+        for (let item of this.value) {
+            let constant = new $B.ast.Constant(item)
+            res.push(constant.to_js(scopes))
+        }
+        return `$B.$call(_b_.frozenset, [${res}])`
     } else {
-        console.log('invalid value', this.value)
+        console.log('invalid value', this, this.value)
         console.log(Error('trace').stack)
-        throw SyntaxError('bad value', this.value)
+        $B.RAISE(_b_.TypeError,
+            `got an invalid type in Constant: ${$B.class_name(this.value)}`
+        )
     }
 }
 
@@ -2354,7 +2426,7 @@ function transform_args(scopes) {
         annotations
     for(let arg of positional.concat(this.args.kwonlyargs).concat(
             [this.args.vararg, this.args.kwarg])){
-        if (arg && arg.annotation) {
+        if (arg && arg.annotation && arg.annotation !== _b_.None) {
             annotations = annotations || {}
             annotations[arg.arg] = arg.annotation
         }
@@ -2388,7 +2460,7 @@ function transform_args(scopes) {
 
 function type_param_in_def(tp, ref, scopes) {
     var gname = scopes[0].name,
-        globals_name = make_scope_name(scopes, scopes[0])
+        globals_name = make_globals_name(scopes)
     var js = ''
     var name,
         param_type = tp.constructor.$name
@@ -2464,7 +2536,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
     var func_name_scope = bind(this.name, scopes)
 
     var gname = scopes[0].name,
-        globals_name = make_scope_name(scopes, scopes[0])
+        globals_name = make_globals_name(scopes)
 
     var decorators = [],
         decorated = false,
@@ -2544,12 +2616,13 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
     for (let arg of this.args.args.concat(this.args.kwonlyargs)) {
         arg_names.push(`'${mangle_arg(arg.arg)}'`)
     }
-
-    if (this.args.vararg) {
-        bind(mangle_arg(this.args.vararg.arg), scopes)
+    let vararg = this.args.vararg ?? _b_.None
+    if (vararg !== _b_.None) {
+        bind(mangle_arg(vararg.arg), scopes)
     }
-    if (this.args.kwarg) {
-        bind(mangle_arg(this.args.kwarg.arg), scopes)
+    let kwarg = this.args.kwarg ?? _b_.None
+    if (kwarg !== _b_.None) {
+        bind(mangle_arg(kwarg.arg), scopes)
     }
 
     var is_generator = symtable_block.generator
@@ -2576,7 +2649,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
         js += 'async '
     }
 
-    if (this.args.vararg === undefined && this.args.kwarg === undefined) {
+    if (vararg === _b_.None && kwarg === _b_.None) {
         js += `function ${name2}(${positional.map(x => '_' + x.arg).join(', ')}) {\n`
     } else {
         js += `function ${name2}() {\n`
@@ -2593,21 +2666,21 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
 
     parse_args.push('arguments')
 
-    var args_vararg = this.args.vararg === undefined ? 'null' :
-                      "'" + mangle_arg(this.args.vararg.arg) + "'",
-        args_kwarg = this.args.kwarg === undefined ? 'null':
-                     "'" + mangle_arg(this.args.kwarg.arg) + "'"
+    var args_vararg = vararg === _b_.None ? 'null' :
+                      "'" + mangle_arg(vararg.arg) + "'",
+        args_kwarg = kwarg === _b_.None ? 'null':
+                     "'" + mangle_arg(kwarg.arg) + "'"
 
     if(positional.length == 0 && slots.length == 0 &&
-            this.args.vararg === undefined &&
-            this.args.kwarg === undefined){
+            vararg === _b_.None &&
+            kwarg === _b_.None){
         js += prefix + `var ${locals_name} = locals = $B.empty_dict();\n`
         // generate error message
         js += prefix + `if (arguments.length !== 0) {\n` +
               prefix + tab + `$B.args_parser(${name2}, arguments)\n` +
               prefix + `}\n`
-    }else if(this.args.vararg === undefined &&
-             this.args.kwarg === undefined &&
+    }else if(vararg === _b_.None &&
+             kwarg === _b_.None &&
              this.args.posonlyargs.length == 0 &&
              defaults === '_b_.None' &&
              kw_defaults === '_b_.None'){
@@ -2798,7 +2871,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
                 ann_items_values.push(`['${arg_ann}', ${value}]`)
             }
         }
-        if (this.returns) {
+        if (this.returns && this.returns !== _b_.None) {
             var ann_str = annotation_to_str(this.returns, scopes)
             ann_items_strings.push(`['return', '${ann_str}']`)
             var ann_value
@@ -2840,6 +2913,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
         `[${varnames}], ` +
         `${annotations}, ` +
         `${has_type_params ? 'type_params' : '[]'}, frame]\n`
+    js += prefix + `$B.set_func_attrs(${name2}, frame, '${gname}')\n`
     js += prefix + `${name2}.ob_type = $B.function\n`
 
     if (anns && ! postponed) {
@@ -2963,7 +3037,7 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes) {
     var comp = {ast:this, id, type: 'genexpr', varnames,
                 module_name: scopes[0].name,
                 locals_name: make_scope_name(scopes),
-                globals_name: make_scope_name(scopes, scopes[0])}
+                globals_name: make_globals_name(scopes)}
 
     indent()
     var head = init_comprehension(comp, scopes)
@@ -3113,7 +3187,7 @@ $B.ast.Import.prototype.to_js = function(scopes) {
     let importer = this.is_lazy ? '_lazy_import' : 'import'
     for (var alias of this.names) {
         js += prefix + `$B.${importer}("${alias.name}", [], `
-        if (alias.asname) {
+        if (alias.asname && alias.asname !== _b_.None) {
             var binding_scope = bind(alias.asname, scopes)
             var scope_name = make_scope_name(scopes, binding_scope)
             js += `{'${alias.name}': [${scope_name}, '${alias.asname}']}, `
@@ -3142,6 +3216,11 @@ $B.ast.ImportFrom.prototype.to_js = function(scopes) {
             break
         }
     }
+    let inum = add_to_positions(scopes, this)
+    let js = prefix + `$B.set_lineno(frame, ${this.lineno})\n`
+    for (let name of this.names) {
+        js += prefix + `$B.$import_from("${this.module || ''}", ` +
+            `'${name.name}', `
 
     can_be_lazy = false // XXX reset when bugs are fixed
     
@@ -3168,12 +3247,13 @@ $B.ast.ImportFrom.prototype.to_js = function(scopes) {
             // the alias might have been declared global...
             var binding_scope = bind(name.asname, scopes)
             var scope_name = make_scope_name(scopes, binding_scope)
-            aliases.push(`${name.name}: [${scope_name}, '${name.asname}']`)
+            js += `{${name.name}: [${scope_name}, '${name.asname}']}`
+        } else {
+            js += `{}`
         }
+        js += `, ${this.level}, locals, ${inum})\n`
     }
-    var inum = add_to_positions(scopes, this)
-
-    js += `[${names}], {${aliases.join(', ')}}, ${this.level}, locals, ${inum});`
+    js = js.trimRight()
 
     for (var alias of this.names) {
         if (! alias.asname) {
@@ -3591,21 +3671,23 @@ $B.ast.Module.prototype.to_js = function(scopes) {
 
     var js = `var $B = __BRYTHON__,\n    _b_ = $B.builtins,\n`
     if (! namespaces) {
-        js += `    ${global_name} = $B.namespace('${module_id}'),\n` +
+        js += `    ${global_name} = $B.namespace(${JSON.stringify(module_id)}),\n` +
               `    locals = ${global_name},\n` +
-              `    frame = ["${module_id}", locals, "${module_id}", locals]`
+              `    frame = [${JSON.stringify(module_id)}, locals, ` +
+              `${JSON.stringify(module_id)}, locals]`
     } else {
         // If module is run in an exec(), name "frame" is defined
         js += `    locals = ${namespaces.local_name},\n` +
               `    globals = ${namespaces.global_name}`
         if (name) {
-            let local_name = ('locals_' + name).replace(/\./g, '_')
+            let local_name = 'locals_' + $B.scope_name(name)
             js += `,\n    ${local_name} = locals`
         }
     }
 
-    js += `\nvar __file__ = locals.__file__ = '${scopes.filename ?? "<string>"}'\n` +
-          `locals.__name__ = '${name}'\n` +
+    js += `\nvar __file__ = locals.__file__ = ` +
+          `${JSON.stringify(scopes.filename ?? "<string>")}\n` +
+          `locals.__name__ = ${JSON.stringify(name)}\n` +
           `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
 
     var insert_positions = js.length
@@ -4184,8 +4266,12 @@ $B.ast.UnaryOp.prototype.to_js = function(scopes) {
             return -operand + ''
         }
     }
-    var method = opclass2dunder[this.op.constructor.$name]
-    return `$B.$call($B.$getattr($B.get_class(locals.$result = ${operand}), '${method}'), locals.$result)`
+    var method = opclass2dunder[this.op.constructor.$name],
+        op_repr = {UAdd: '+', USub: '-', Invert: '~'}[this.op.constructor.$name]
+    // Use CPython-like slot dispatch: resolve the method on the type with
+    // the descriptor protocol, so that dunders defined as zero-argument
+    // staticmethods (as in sympy.core.numbers) are called without arguments.
+    return `$B.call_special_unary(${operand}, '${method}', 'unary ${op_repr}')`
 }
 
 $B.ast.While.prototype.to_js = function(scopes) {
@@ -4547,7 +4633,11 @@ $B.js_from_root = function(arg) {
     state.filename = filename
     scopes.symtable = symtable
     scopes.filename = filename
-    scopes.src = src
+    if ($B.get_class(src) === $B.code) {
+        scopes.src = src.source
+    } else {
+        scopes.src = src
+    }
     scopes.namespaces = namespaces
     scopes.imported = imported
     scopes.imports = {}

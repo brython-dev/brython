@@ -137,7 +137,7 @@ class Tester:
         assert re.match(regex, text), msg
 
     def assertIs(self, a, b, msg=None):
-        if not a is b:
+        if a is not b:
             raise AssertionError(msg or '%s is %s should be true' %(a, b))
 
     def assertIsInstance(self, obj, klass):

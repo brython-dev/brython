@@ -137,4 +137,10 @@ def import_alias_in_globals():
 import_alias_in_globals()
 assert heapq1 is not None
 
+# PR 2964
+from math import pi, pi as PI, pi as Pi
+
+assert PI == pi
+assert Pi == pi
+
 print('passed all tests')

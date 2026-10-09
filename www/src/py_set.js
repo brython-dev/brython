@@ -497,7 +497,7 @@ _b_.set.tp_richcompare = function(self, other, op) {
 
 _b_.set.nb_subtract = function(self, other) {
     // Return a new set with elements in the set that are not in the others
-    if(! $B.$isinstance(self, _b_.set) ||
+    if(! $B.$isinstance(self, [set, frozenset]) ||
             ! $B.$isinstance(other, [set, frozenset])){
         return _b_.NotImplemented
     }
@@ -936,6 +936,12 @@ frozenset.tp_hash = function(self) {
 
    for (var entry of set_iter_with_hash(self)) {
       var _h = entry.hash
+      if (typeof _h == 'bigint') {
+          // hash values above Number.MAX_SAFE_INTEGER are bigints (eg
+          // hash(2 ** 60)); reduce to 32 bits before mixing with Number
+          // arithmetic
+          _h = Number(BigInt.asIntN(32, _h))
+      }
       _hash ^= ((_h ^ 89869747) ^ (_h << 16)) * 3644798167
    }
 

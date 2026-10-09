@@ -479,4 +479,13 @@ d.update({'a': 1})
 assert d.get('a') == 1
 assert d['a'] == 1
 
+# A Javascript number above 2 ** 53 is the int it is, not the int its shortest
+# decimal spells, and one from 1e21 up is converted rather than refused
+assert window.eval('Math.pow(2, 53)') == 2 ** 53
+assert window.eval('Math.pow(2, 60)') == 2 ** 60
+assert window.eval('1e20') == 10 ** 20
+assert window.eval('1e21') == 10 ** 21
+assert window.eval('Math.pow(2, 70)') == 2 ** 70
+assert window.eval('-Math.pow(2, 70)') == -2 ** 70
+
 print("all tests ok...")

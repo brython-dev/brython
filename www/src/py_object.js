@@ -234,7 +234,7 @@ _b_.object.tp_richcompare = function(self, other, op) {
 }
 
 _b_.object.tp_setattro = function(self, attr, value) {
-    var test = false // attr == 'x' // && value === $B.NULL
+    var test = false // attr == 'a' // && value === $B.NULL
     var klass = $B.get_class(self)
     if (! $B.is_str(attr)) {
         $B.RAISE(_b_.TypeError, "attribute name must be string, not '" +
@@ -305,7 +305,7 @@ _b_.object.tp_setattro = function(self, attr, value) {
         dict = self[$B.DICT]
     }
     if (dict) {
-        $B.str_dict_set(dict, attr, value)
+        _b_.dict.$setitem(dict, attr, value)
     } else {
         var exc = $B.attr_error(attr, self)
         exc.args[0] = `'${$B.get_name(klass)}' object has no attribute ` +
@@ -355,7 +355,7 @@ _b_.object.tp_str = function(self) {
 $B.time_object_tp_getattro = 0
 
 _b_.object.tp_getattro = function(self, attr) {
-    var test = false // attr == 'pattern' // && self.ob_type && self.ob_type.tp_name == 'super'
+    var test = false // attr == '__qualname__' // && $B.class_name(self) == 'TypeVar'
     var klass = $B.get_class(self)
     if (test) {
         console.log('getattr', attr, 'of self', self, klass)
@@ -491,11 +491,15 @@ _b_.object.tp_new = function(cls, args, kw) {
     var res = {
         ob_type: cls
     }
-    if(cls !== object &&
-            ($B.get_from_dict(cls, '__slots__', $B.NULL) === $B.NULL ||
-             cls.$slots_has_dict)){
-        // no __slots__, or '__dict__' is in __slots__ -> instance gets a __dict__
-        $B.init_dict(res)
+    // the instance has no __dict__ only if every Python class in the MRO
+    // defines __slots__ without '__dict__'
+    for (var klass of cls.tp_mro) {
+        if (klass.tp_flags & $B.TPFLAGS.HEAPTYPE &&
+                ($B.get_from_dict(klass, '__slots__', $B.NULL) === $B.NULL ||
+                 klass.$slots_has_dict)) {
+            $B.init_dict(res)
+            break
+        }
     }
     return res
 }

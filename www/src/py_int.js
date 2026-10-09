@@ -794,8 +794,13 @@ int_funcs.__floor__ = function(self) {
 int_funcs.__format__ = function(self, format_spec) {
     var fmt = new $B.parse_format_spec(format_spec, self)
     if (fmt.type && 'eEfFgG%'.indexOf(fmt.type) != -1) {
-        // Call __format__ on float(self)
-        return _b_.float.tp_funcs.__format__($B.fast_float(self), format_spec)
+        // Call __format__ on float(self). nb_float, not fast_float: an int of
+        // 2**53 or more is held as a BigInt, and fast_float wraps it without
+        // converting, so the arithmetic inside float.__format__ raised
+        // "Cannot convert a BigInt value to a number" for format(2 ** 53, '.2f').
+        // nb_float is the int-to-float conversion, and it raises CPython's own
+        // OverflowError for an int too large to be a float.
+        return _b_.float.tp_funcs.__format__(_b_.int.nb_float(self), format_spec)
     }
     fmt.align = fmt.align || ">"
     var res = preformat(self, fmt)
@@ -1107,8 +1112,13 @@ _b_.bool.tp_new = function(cls, args, kw) {
 }
 
 _b_.bool.nb_invert = function(self) {
-    $B.warn(_b_.DeprecationWarning, `Bitwise inversion '~' on bool is deprecated.This returns the bitwise inversion of the underlying int object and is usually not what you expect from negating a bool.Use the 'not' operator for boolean negation or ~int(x) if you really want the bitwise inversion of the underlying int.`)
-    return int_funcs.__invert__(self)
+    $B.warn(_b_.DeprecationWarning, "Bitwise inversion '~' on bool is " +
+        "deprecated and will be removed in Python 3.16. This returns the " +
+        "bitwise inversion of the underlying int object and is usually not " +
+        "what you expect from negating a bool. Use the 'not' operator for " +
+        "boolean negation or ~int(x) if you really want the bitwise " +
+        "inversion of the underlying int.")
+    return _b_.int.nb_invert(self)
 }
 
 var bool_funcs = _b_.bool.tp_funcs = {}

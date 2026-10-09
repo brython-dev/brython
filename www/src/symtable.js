@@ -1968,7 +1968,7 @@ visitor.alias = function(st, a) {
        dotted package name (e.g. spam.eggs)
     */
     var store_name,
-        name = (a.asname == NULL) ? a.name : a.asname
+        name = (a.asname == NULL || a.asname === _b_.None) ? a.name : a.asname
     var dot = name.search('\\.')
     if (dot != -1) {
         store_name = name.substring(0, dot)

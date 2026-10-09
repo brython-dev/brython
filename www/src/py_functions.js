@@ -90,10 +90,9 @@ $B.set_func_names(classmethod, "builtins")
 var staticmethod = _b_.staticmethod
 
 staticmethod.$factory = function(func) {
-    return {
-        ob_type: staticmethod,
-        sm_callable: func
-    }
+    let self = staticmethod.tp_new(staticmethod, [func])
+    staticmethod.tp_init(self, func)
+    return self
 }
 
 /* staticmethod start */
@@ -111,13 +110,18 @@ _b_.staticmethod.tp_descr_get = function(self) {
 
 _b_.staticmethod.tp_init = function(self, func) {
     self.sm_callable = func
+    for (let attr of ['__module__', '__name__', '__qualname__', '__doc__']) {
+        $B.set_to_dict(self, attr, func.$function_infos[$B.func_attrs[attr]])
+    }
 }
 
 _b_.staticmethod.tp_new = function(cls, args, kw) {
-    return {
+    let res = {
         ob_type: cls,
         sm_callable: _b_.None
     }
+    $B.init_dict(res)
+    return res
 }
 
 var staticmethod_funcs = _b_.staticmethod.tp_funcs = {}
@@ -138,12 +142,10 @@ staticmethod_funcs.__annotations___set = function(self) {
 
 }
 
-staticmethod_funcs.__class_getitem__ = function(self) {
-
-}
+staticmethod_funcs.__class_getitem__ = $B.$class_getitem
 
 staticmethod_funcs.__dict___get = function(self) {
-
+    return $B.get_dict(self)
 }
 
 staticmethod_funcs.__dict___set = function(self) {
@@ -151,12 +153,14 @@ staticmethod_funcs.__dict___set = function(self) {
 }
 
 staticmethod_funcs.__isabstractmethod___get = function(self) {
-
+    var res = $B.get_from_dict(self.sm_callable, '__isabstractmethod__', $B.NULL)
+    if (res === $B.NULL) {
+        return false
+    }
+    return res
 }
 
-staticmethod_funcs.__isabstractmethod___set = function(self) {
-
-}
+staticmethod_funcs.__isabstractmethod___set = _b_.None
 
 _b_.staticmethod.classmethods = ["__class_getitem__"]
 
@@ -221,6 +225,13 @@ builtin_function_or_method_funcs.__name___get = function(self) {
 
 builtin_function_or_method_funcs.__name___set = _b_.None
 
+builtin_function_or_method_funcs.__doc___get = function(self) {
+    // set by builtins_docstrings.js
+    return self.__doc__ ?? _b_.None
+}
+
+builtin_function_or_method_funcs.__doc___set = _b_.None
+
 builtin_function_or_method_funcs.__qualname___get = function(self) {
     return self.$function_infos[$B.func_attrs.__qualname__]
 
@@ -240,7 +251,7 @@ builtin_function_or_method_funcs.__reduce__ = function(self) {
 }
 
 builtin_function_or_method_funcs.__self___get = function(self) {
-    return $B.imported.builtins
+    return self.m_self
 }
 
 builtin_function_or_method_funcs.__self___set = _b_.None
@@ -260,7 +271,7 @@ $B.builtin_function_or_method.tp_members = [
 ]
 
 $B.builtin_function_or_method.tp_getset = [
-    "__name__", "__qualname__", "__self__", "__text_signature__"
+    "__doc__", "__name__", "__qualname__", "__self__", "__text_signature__"
 ]
 
 /* builtin_function_or_method end */
@@ -336,6 +347,8 @@ $B.function.$factory = function() {
     var code = $.code
     var __name__ = $B.str_dict_get($.kw, 'name', code.co_name) // function name
     var frame = $B.frame_obj.frame
+    var gname = $B.str_dict_get($.globals, '__name__', frame[2])
+    var globals_name = 'locals_' + gname.replace(/[^\w$]/g, '_')
     var globals_name = 'locals_' + __name__
     var __file__ = frame.__file__
     var func = new Function('_b_', '__file__', globals_name, 'return ' + code.co_code)
@@ -516,13 +529,6 @@ function_funcs.__doc___set = function(self, value) {
     self.$function_infos[$B.func_attrs.__doc__] = value
 }
 
-function_funcs.__globals___get = function(self) {
-    var frame = self.$function_infos[$B.func_attrs.__globals__]
-    return $B.obj_dict(frame[3])
-}
-
-function_funcs.__globals___set = _b_.None
-
 function_funcs.__kwdefaults___get = function(self) {
     $B.check_infos(self)
     return self.$infos.__kwdefaults__
@@ -544,15 +550,6 @@ function_funcs.__kwdefaults___set = function(self, value) {
     self.$function_infos[$B.func_attrs.__kwdefaults__] = kwd
     // Make a new version of arguments parser
     reset_args_parser(self)
-}
-
-function_funcs.__module___get = function(self) {
-    var res = self.$function_infos[$B.func_attrs.__module__]
-    return res === $B.NULL || res === undefined ? _b_.None : res
-}
-
-function_funcs.__module___set = function(self, value) {
-    self.$function_infos[$B.func_attrs.__module__] = value
 }
 
 function_funcs.__name___get = function(self) {
@@ -584,13 +581,22 @@ $B.function.tp_getset = [
     "__code__", "__defaults__", "__kwdefaults__", "__annotations__",
     "__annotate__", "__dict__", "__name__", "__qualname__", "__type_params__",
     // the following are members in CPython
-    "__builtins__", "__closure__", "__doc__", "__globals__", "__module__"
+    "__builtins__", "__closure__", "__doc__"
 ]
 
+$B.function.tp_members = [
+    ['__globals__', $B.TYPES.OBJECT, "func_globals", 1],
+    ['__module__', $B.TYPES.OBJECT, "func_module", 0]
+]
 
 /* function end */
 
 $B.set_func_names($B.function, "builtins")
+
+$B.set_func_attrs = function(f, frame, module) {
+    f.func_globals = $B.obj_dict(frame[3])
+    f.func_module = module
+}
 
 $B.check_infos = function(f) {
     if (! f.$infos) {

@@ -1305,4 +1305,66 @@ A = Meta('X', (), {'tag': 1})
 B = Meta('X', (), {'tag': 1})
 assert A == B
 
+# PR 2982
+class B:
+    pass
+
+assert type('S', (B,), {}) in B.__subclasses__()
+
+# PR 2985
+class C:
+
+    def m(self):
+        pass
+
+assert hash(C().m) != hash(C().m)
+
+# PR 2988
+class B:
+    pass
+
+class Leaf(B):
+    __slots__ = ()
+
+o = Leaf()
+o.x = 1
+
+# PR 2989
+assert hash((1).__add__) == hash((1).__add__)
+
+# PR 2990
+assert (1).__add__.__qualname__ == 'int.__add__'
+
+# PR 2991
+assert not list[int].__unpacked__
+
+# PR 2992
+class C:
+
+    def m(self):
+        "doc"
+
+assert C().m.__doc__ == 'doc'
+
+# PR 2996
+class Meta(type):
+
+    def __getitem__(cls, k):
+        return k
+
+class G(metaclass=Meta):
+    pass
+
+assert G['x'] == 'x'
+
+# PR 3004
+class A:
+
+    def __eq__(self, other):
+        return NotImplemented
+
+a = A()
+assert a == a
+
+
 print('passed all tests..')

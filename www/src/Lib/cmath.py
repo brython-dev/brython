@@ -680,12 +680,17 @@ def tanh(x):
     return complex(_real, _imag)
 
 # For compliance with CPython, set all functions as built-in
+# (cosmetic: makes type(cmath.sin) look like a builtin function; skip it
+# if the implementation cannot construct builtin_function_or_method)
 FunctionType = type(_takes_complex)
 locs = locals()
 keys = list(locs.keys())
-for f in keys:
-    if type(locs[f]) is FunctionType and not f.startswith("_"):
-        locals()[f] = type(abs)(locals()[f])
+try:
+    for f in keys:
+        if type(locs[f]) is FunctionType and not f.startswith("_"):
+            locals()[f] = type(abs)(locals()[f])
+except TypeError:
+    pass
 
 pi = math.pi
 e = math.e

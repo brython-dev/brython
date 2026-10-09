@@ -225,4 +225,32 @@ try:
 except KeyError as e:
   assert str(e) == "'missing'"
   
+# issue 2940 - an exception member that was never set reads as None
+assert NameError("boom").name is None
+assert AttributeError("nope").name is None
+assert AttributeError("nope").obj is None
+assert StopIteration().value is None
+assert StopIteration(5).value == 5
+# a failed lookup still sets it
+try:
+    undefined_name_2940
+except NameError as exc:
+    assert exc.name == "undefined_name_2940"
+# so the traceback module no longer fails on "name in sys.stdlib_module_names"
+try:
+    raise NameError("boom")
+except NameError:
+    assert "NameError: boom" in traceback.format_exc()
+# and unittest can record the error, instead of reporting a successful run
+import unittest
+
+class Test2940(unittest.TestCase):
+    def test_raises_name_error(self):
+        raise NameError("boom")
+
+result_2940 = unittest.TestResult()
+unittest.TestLoader().loadTestsFromTestCase(Test2940).run(result_2940)
+assert len(result_2940.errors) == 1
+assert not result_2940.wasSuccessful()
+
 print('all tests passed...')

@@ -5,8 +5,13 @@ var _b_ = $B.builtins
 var method_wrapper = $B.method_wrapper
 
 /* method_wrapper start */
-$B.method_wrapper.tp_richcompare = function(self) {
-
+$B.method_wrapper.tp_richcompare = function(self, other, op) {
+    if (op !== '__eq__' && op !== '__ne__' ||
+            ! $B.$isinstance(other, method_wrapper)) {
+        return _b_.NotImplemented
+    }
+    var eq = self.wrapped === other.wrapped && self.self === other.self
+    return op === '__eq__' ? eq : ! eq
 }
 
 $B.method_wrapper.tp_repr = function(self) {
@@ -16,7 +21,7 @@ $B.method_wrapper.tp_repr = function(self) {
 }
 
 $B.method_wrapper.tp_hash = function(self) {
-
+    return _b_.hash(self.self) ^ _b_.object.tp_hash(self.wrapped)
 }
 
 $B.method_wrapper.tp_call = function(self, ...args) {
@@ -42,7 +47,7 @@ method_wrapper_funcs.__objclass___set = function(self) {
 }
 
 method_wrapper_funcs.__qualname___get = function(self) {
-
+    return $B.$getattr(self.d_type, '__qualname__') + '.' + self.d_name
 }
 
 method_wrapper_funcs.__qualname___set = function(self) {
@@ -181,7 +186,7 @@ $B.method.tp_repr = function(self) {
 }
 
 $B.method.tp_hash = function(self) {
-
+    return _b_.object.tp_hash(self.im_self) ^ _b_.hash(self.im_func)
 }
 
 $B.method.tp_call = function(self, ...args) {
@@ -190,7 +195,10 @@ $B.method.tp_call = function(self, ...args) {
 
 $B.method.tp_getattro = function(self, attr) {
     var tp = $B.get_class(self)
-    var descr = $B.search_in_mro(tp, attr, $B.NULL)
+    // __module__ and __doc__ are in the dict of the method type; CPython
+    // reports the function's
+    var descr = attr == '__module__' || attr == '__doc__' ? $B.NULL :
+        $B.search_in_mro(tp, attr, $B.NULL)
     if (descr !== $B.NULL) {
         var getter = $B.search_slot($B.get_class(descr), 'tp_descr_get', $B.NULL)
         if (getter !== $B.NULL) {
@@ -344,13 +352,14 @@ $B.classmethod_descriptor.tp_descr_get = function(self, obj, type) {
         cls = descr.d_common.d_type
     }
     var f = function(...args) {
-        return self.d_method.call(null, self.d_type, ...args)
+        return self.d_method.call(null, type, ...args)
     }
     Object.assign(f,
         {
             ob_type: $B.builtin_function_or_method,
             ml: {ml_name: self.d_name},
-            m_self: self.d_type
+            m_self: type,
+            $function_infos: self.d_method.$function_infos
         }
     )
     return f
@@ -517,6 +526,7 @@ $B.wrapper_descriptor.tp_descr_get = function(self, obj, type) {
     var res = {
         ob_type: $B.method_wrapper,
         d_name: self.d_name,
+        d_type: self.d_type,
         self: obj,
         wrapped: self.wrapped
     }

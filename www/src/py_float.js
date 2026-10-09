@@ -148,14 +148,14 @@ function preformat(self, fmt) {
     if (fmt.type == "%") {
         value *= 100
     }
-    if (fmt.type == "e") {
+    if (fmt.type == "e" || fmt.type == "E") {
         let res = value.toExponential(fmt.precision),
             exp = parseInt(res.substr(res.search("e") + 1))
             if (Math.abs(exp) < 10) {
                 res = res.substr(0, res.length - 1) + "0" +
                     res.charAt(res.length - 1)
             }
-        return res
+        return fmt.type == "E" ? res.toUpperCase() : res
     }
 
     var res
@@ -164,7 +164,9 @@ function preformat(self, fmt) {
         // The argument of toFixed is the number of digits after "."
         let prec = fmt.precision
         if (prec == 0) {
-            return Math.round(value) + ""
+            // the alternate form always shows the decimal point
+            res = Math.round(value) + (fmt.alternate ? "." : "")
+            return fmt.type == "%" ? res + "%" : res
         }
         res = $B.roundDownToFixed(value, prec) // in py_string.js
         let pt_pos = res.indexOf(".")
@@ -274,6 +276,10 @@ float.$format = function(self, fmt) {
     // fmt is the object parsed from a format_spec
     fmt.align = fmt.align || ">"
     var pf = preformat(self, fmt)
+    if (Object.is(self.value, -0) && ! pf.startsWith('-')) {
+        // Javascript toFixed and toExponential drop the sign of -0
+        pf = '-' + pf
+    }
     if (fmt.z && Object.is(parseFloat(pf), -0)) {
         // if 'z' option is set, remove minus sign for negative zero
         pf = pf.substr(1)

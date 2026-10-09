@@ -70,6 +70,10 @@ array.bf_getbuffer = function(_self, flag) {
 
 array.mp_subscript = function(_self, key) {
     if (_self.obj) {
+        if ($B.is_int(key) && key < 0) {
+            // Python semantics: negative indices count from the end
+            key = _self.obj.length + Number(key)
+        }
         if (_self.obj[key] !== undefined) {
             return _self.obj[key]
         } else if ($B.$isinstance(key, _b_.slice)) {
@@ -120,6 +124,10 @@ array.bf_release_buffer = function(_self, buffer) {
 
 array.mp_ass_subscript = function(_self, index, value) {
     if ($B.is_int(index)) {
+        if (index < 0) {
+            // Python semantics: negative indices count from the end
+            index = _self.obj.length + Number(index)
+        }
         if (_self.obj[index] === undefined) {
             $B.RAISE(_b_.IndexError, "array index out of range")
         }

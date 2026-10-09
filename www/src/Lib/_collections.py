@@ -31,9 +31,10 @@ BLOCKSIZ = n+2
 class deque:
 
     def __new__(cls, iterable=(), *args, **kw):
-        #fixme
-        #self = super(deque, cls).__new__(cls, *args, **kw)
-        self=object.__new__(cls, *args, **kw)
+        # object.__new__() rejects extra arguments when __new__ is
+        # overridden, so the constructor arguments stop here: __init__
+        # consumes them.
+        self = object.__new__(cls)
         self.clear()
         return self
 
