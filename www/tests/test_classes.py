@@ -1135,6 +1135,43 @@ class MyClass(object):
 
 assert MyClass.__call__(42) == 42
 
+# a builtin as __call__ has no __get__: it is called without the instance
+rows = [1, 2]
+
+class Clearer:
+    __call__ = rows.clear
+
+assert Clearer()() is None
+assert rows == []
+
+class Appender:
+    __call__ = rows.append
+
+Appender()(5)
+assert rows == [5]
+
+class Upper:
+    __call__ = "abc".upper
+
+assert Upper()() == "ABC"
+
+class Length:
+    __call__ = len
+
+assert Length()([1, 2]) == 2
+assert_raises(TypeError, Length())
+
+class FromKeys:
+    __call__ = dict.fromkeys
+
+assert FromKeys()(["a"]) == {"a": None}
+
+class Function:
+    def __call__(self, x):
+        return (type(self).__name__, x)
+
+assert Function()(1) == ("Function", 1)
+
 # __static_attributes__, new in Python 3.13
 class C:
     def f(self):

@@ -1353,6 +1353,12 @@ $B.$call = function(callable, ...args) {
                 "' object is not callable")
         }
     }
+    if ($B.search_slot($B.get_class(call_method), 'tp_descr_get',
+            $B.NULL) === $B.NULL) {
+        // a builtin, such as len or a bound list.clear, has no __get__: it
+        // is called as it is, without the instance
+        return call_method(...args)
+    }
     var res = call_method(callable, ...args)
     if (test) {
         console.log('result of call1', res)
