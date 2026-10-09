@@ -169,17 +169,6 @@ $B._PyPegen.update_memo = function(p, mark, type, node) {
     return $B._PyPegen.insert_memo(p, mark, type, node)
 }
 
-function init_normalization(p) {
-    if (p.normalize) {
-        return 1
-    }
-    p.normalize = _PyImport_GetModuleAttrString("unicodedata", "normalize")
-    if (!p.normalize) {
-        return 0
-    }
-    return 1
-}
-
 function growable_comment_array_init(arr, initial_size) {
     arr.items = new Array(initial_size * arr.items.length)
     arr.size = initial_size
@@ -465,39 +454,9 @@ $B._PyPegen.get_last_nonnwhitespace_token = function(p) {
 }
 
 $B._PyPegen.new_identifier = function(p, n) {
-    var id = n
     /* Check whether there are non-ASCII characters in the
        identifier; if so, normalize to NFKC. */
-    if (! PyUnicode_IS_ASCII(id)) {
-        var id2
-        if (!init_normalization(p)) {
-            return error()
-        }
-        var form = PyUnicode_InternFromString("NFKC")
-        if (form == NULL) {
-            return error()
-        }
-        var args = {form, id}
-        id2 = _PyObject_FastCall(p.normalize, args, 2)
-        if (!id2) {
-            return error()
-        }
-        if (!PyUnicode_Check(id2)) {
-            PyErr_Format(PyExc_TypeError,
-                         "unicodedata.normalize() must return a string, not " +
-                         "%.200s",
-                         _PyType_Name(Py_TYPE(id2)))
-            return error()
-        }
-        id = id2
-    }
-    PyUnicode_InternInPlace(id)
-    return id
-
-    function error() {
-        p.error_indicator = 1
-        return NULL
-    }
+    return /^[\x00-\x7f]*$/.test(n) ? n : n.normalize('NFKC')
 }
 
 $B._PyPegen.name_from_token = function(p, t) {
@@ -510,7 +469,7 @@ $B._PyPegen.name_from_token = function(p, t) {
         return NULL
     }
 
-    var res = new $B.ast.Name(s, Load)
+    var res = new $B.ast.Name($B._PyPegen.new_identifier(p, s), Load)
     set_position_from_token(res, t)
     return res
 }
