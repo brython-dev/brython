@@ -720,8 +720,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,14,3,'dev',0]
 __BRYTHON__.version_info=[3,14,0,'final',0]
-__BRYTHON__.compiled_date="2026-10-02 09:26:18.162146"
-__BRYTHON__.timestamp=1790925978161
+__BRYTHON__.compiled_date="2026-10-09 07:02:31.019010"
+__BRYTHON__.timestamp=1791522151018
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -7963,6 +7963,13 @@ if(cp <=127){t[pos++]=cp}else if(errors=="backslashreplace"){let hex=_b_.hex(_b_
 if(hex.length < 5){hex='\\x'+'0'.repeat(4-hex.length)+hex.substr(2)}else if(hex.length < 7){hex='\\u'+'0'.repeat(6-hex.length)+hex.substr(2)}else{
 hex='\\U'+'0'.repeat(10-hex.length)+hex.substr(2)}
 for(let char of hex){t[pos++]=char.charCodeAt(0)}}else if(errors !=='ignore'){$UnicodeEncodeError(encoding,i)}}
+break
+case "unicode_escape":
+var escapes={'\\':'\\\\','\n':'\\n','\r':'\\r','\t':'\\t'}
+for(let char of s){let cp=char.codePointAt(0),esc=escapes[char]
+if(esc===undefined){if(cp >=0x20 && cp < 0x7f){esc=char}else if(cp < 0x100){esc='\\x'+cp.toString(16).padStart(2,'0')}else if(cp < 0x10000){esc='\\u'+cp.toString(16).padStart(4,'0')}else{
+esc='\\U'+cp.toString(16).padStart(8,'0')}}
+for(let j=0;j < esc.length;j++){t[pos++]=esc.charCodeAt(j)}}
 break
 case "raw_unicode_escape":
 for(let i=0,len=s.length;i < len;i++){let cp=s.charCodeAt(i)
