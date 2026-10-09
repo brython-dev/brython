@@ -24,4 +24,15 @@ class Obj (object):
 
 o = Obj ()
 o.test ()
+
+# object.__setattr__ returns None, whatever the descriptor's __set__ returns
+class Returning:
+    def __set__(self, obj, value):
+        return 5
+
+class Held:
+    d = Returning()
+
+assert object.__setattr__(Held(), "d", 1) is None
+
 print('passed all tests...')

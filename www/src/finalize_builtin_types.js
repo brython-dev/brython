@@ -251,7 +251,10 @@ function make_setattr_delattr(cls) {
         $B.wrapper_descriptor.$factory(
             cls,
             '__setattr__',
-            setattro
+            function(obj, attr, value) {
+                setattro(obj, attr, value)
+                return _b_.None
+            }
         )
     )
     $B.set_to_dict(cls, '__delattr__',
