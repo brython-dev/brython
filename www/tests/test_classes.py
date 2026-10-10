@@ -1086,6 +1086,19 @@ class A:
 A().f(1, x=2)
 assert A.f.__code__.co_varnames == ('self', '_A__v', '_A__kw')
 
+# a method keeps the __qualname__ the compiler gave it
+def outer():
+    class Box:
+        def f(self):
+            pass
+    return Box
+
+def free(self):
+    pass
+
+assert outer().f.__qualname__ == 'outer.<locals>.Box.f'
+assert type("Made", (), {"free": free}).free.__qualname__ == 'free'
+
 # issue 2435
 class A:
     a = "-".join
