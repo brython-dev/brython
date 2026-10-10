@@ -972,12 +972,6 @@ $B.printf_format = function(s, type, args) {
     return ret
 }
 
-var combining = []
-for (var cp = 0x300; cp <= 0x36F; cp++) {
-    combining.push(String.fromCharCode(cp))
-}
-var combining_re = new RegExp("(" + combining.join("|") + ")", "g")
-
 
 // Next function used by method .format()
 
@@ -1751,8 +1745,6 @@ _b_.str.tp_repr = function(self) {
                 cp = '0' + cp
             }
             repl += '\\x' + cp
-        } else if (cp >= 0x300 && cp <= 0x36F) {
-            repl += "\u200B" + chars[i] + ' '
         } else if (cp.toString(16) == 'feff') {
             repl += '\\ufeff'
         } else {
@@ -1761,13 +1753,12 @@ _b_.str.tp_repr = function(self) {
     }
     var res = repl
     if (res.search('"') == -1 && res.search("'") == -1) {
-        return "'" + res + "'"
+        return $B.String("'" + res + "'")
     } else if (self.search('"') == -1) {
-        return '"' + res + '"'
+        return $B.String('"' + res + '"')
     }
     var qesc = new RegExp("'", "g") // to escape single quote
-    res = "'" + res.replace(qesc, "\\'") + "'"
-    return res
+    return $B.String("'" + res.replace(qesc, "\\'") + "'")
 }
 
 _b_.str.tp_hash = function(self) {
@@ -1789,21 +1780,7 @@ _b_.str.tp_hash = function(self) {
 }
 
 _b_.str.tp_str = function(self) {
-    self = to_string(self)
-    var repl = '',
-        chars = to_chars(self)
-    if (chars.length == self.length) {
-        return self.replace(combining_re, "\u200B$1")
-    }
-    for (var i = 0; i < chars.length; i++) {
-        var cp = _b_.ord(chars[i])
-        if (cp >= 0x300 && cp <= 0x36F) {
-            repl += "\u200B" + chars[i]
-        } else {
-            repl += chars[i]
-        }
-    }
-    return repl
+    return to_string(self)
 }
 
 _b_.str.tp_iter = function(self) {

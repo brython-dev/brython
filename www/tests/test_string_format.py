@@ -286,4 +286,13 @@ from tester import assert_raises
 
 assert_raises(TypeError, '%s %s %s'.__mod__, ["foo", "bar", "baz"])
 
+# str() and repr() keep combining and astral characters as they are
+class Name(str):
+    pass
+
+for s in ('é', '😀a', '😀é'):
+    assert str(s) == s and s.__str__() == s
+    assert len(Name(s)) == len(s) and Name(s) == s
+    assert repr(s) == "'" + s + "'" and len(repr(s)) == len(s) + 2
+
 print("passed all tests...")
