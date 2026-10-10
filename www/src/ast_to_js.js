@@ -2161,7 +2161,7 @@ $B.ast.Constant.prototype.to_js = function(scopes) {
         return this.value + ''
     } else if (this.value === _b_.None) {
         return '_b_.None'
-    } else if (typeof this.value == "string") {
+    } else if (typeof this.value == "string" || this.value instanceof String) {
         var s = this.value,
             srg = $B.surrogates(s) // in py_string.js
         if (srg.length == 0) {
