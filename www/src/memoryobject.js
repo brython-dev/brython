@@ -128,12 +128,15 @@ _b_.memoryview.tp_richcompare = function(self, other, op) {
         return _b_.NotImplemented
     }
     var res
+    // A released view is equal to itself alone
+    var eq = () => self.$released || other.$released ? self === other :
+        memoryview_eq(self, other)
     switch (op) {
         case '__eq__':
-            res = memoryview_eq(self, other)
+            res = eq()
             break
         case '__ne__':
-            res = ! memoryview_eq(self, other)
+            res = ! eq()
             break
         default:
             res = _b_.NotImplemented
