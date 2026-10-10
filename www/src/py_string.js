@@ -2003,19 +2003,16 @@ str_funcs.casefold = function(self) {
 str_funcs.center = function() {
     var $ = $B.args("center", 3, {self: null, width: null, fillchar: null},
             arguments, {fillchar:" "}, null, null),
-        self = to_string($.self)
+        self = to_string($.self),
+        marg = $.width - str.mp_length(self)
 
-    if ($.width <= self.length) {
+    if (marg <= 0) {
         return self
     }
 
-    var pad = parseInt(($.width - self.length) / 2),
-        res = $.fillchar.repeat(pad)
-    res += self + res
-    if (res.length < $.width) {
-        res += $.fillchar
-    }
-    return res
+    // the odd fill char goes left when the width is odd too
+    var left = Math.floor(marg / 2) + (marg & $.width & 1)
+    return $.fillchar.repeat(left) + self + $.fillchar.repeat(marg - left)
 }
 
 str_funcs.count = function() {
