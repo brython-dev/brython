@@ -379,6 +379,7 @@ function run_py(module_contents, path, module, compiled) {
     var root,
         js,
         mod_name = $B.module_getattr(module, '__name__'), // might be modified inside module, eg _pydecimal
+        spec = $B.module_getattr(module, '__spec__'),
         src
     if (! compiled) {
         src = {
@@ -449,7 +450,6 @@ function run_py(module_contents, path, module, compiled) {
             $B.module_setattr(module, attr, mod[attr])
         }
         $B.module_setattr(module, '__initializing__', false)
-        var spec = $B.module_getattr(module, '__spec__')
         return {
             content: src,
             name: mod_name,
@@ -761,6 +761,7 @@ StdlibStaticFinder_funcs.find_spec = function(self, fullname) {
                 },
                 _module = Module.$factory(fullname)
                 metadata.code = $download_module(_module, metadata.path)
+                metadata.timestamp = Date.parse(_module.$last_modified)
 
             var res = ModuleSpec.$factory({
                 name : fullname,
@@ -784,14 +785,6 @@ StdlibStaticFinder.classmethods = ["find_spec"]
 
 $B.set_func_names(StdlibStaticFinder, "<import>")
 
-/*
-for (let method in StdlibStaticFinder) {
-    if (typeof StdlibStaticFinder[method] == "function") {
-        StdlibStaticFinder[method] = _b_.classmethod.$factory(
-            StdlibStaticFinder[method])
-    }
-}
-*/
 
 // Finder for modules in a list of directories.
 // By default, this list has one element, the directory of the current script.
