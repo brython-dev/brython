@@ -1713,13 +1713,13 @@ $B.$import_from = function(module, name, aliases, level, locals, inum) {
                 // try to import module in the package
                 var sub_module = $B.module_getattr(current_module, '__name__') +
                      '.' + name
-                $B.$import(sub_module, [], {}, {})
+                $B.import(sub_module, [], {}, {}, inum)
                 ns[alias] = $B.imported[sub_module]
             }
         }
     } else {
         // import module
-        $B.$import(module, [name], aliases, locals, inum)
+        $B.import(module, [name], aliases, locals, inum)
     }
 }
 
