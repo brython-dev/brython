@@ -682,16 +682,10 @@ function dict_init(self, args, kw) {
                     }
                 }
             } else {
-                let i = 0
-                for (var item of $B.make_js_iterator(args)) {
-                    if (item.length != 2) {
-                        $B.RAISE(_b_.ValueError, "dictionary " +
-                            `update sequence element #${i} has length ` +
-                            `${item.length}; 2 is required`)
-                    }
-                    dict.$setitem(self, item[0], item[1])
-                    i++
+                if (! Array.isArray(args)) {
+                    args = _b_.list.$factory(args)
                 }
+                init_from_list(self, args)
             }
         }
     }
