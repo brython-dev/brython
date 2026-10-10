@@ -906,6 +906,14 @@ assert trace == [(Plugin, Client),
                  (Plugin1, Client),
                  (Plugin1, PluginBase)]
 
+# only a plain function given as __class_getitem__ is made a classmethod
+class Box:
+    @staticmethod
+    def __class_getitem__(key):
+        return key
+
+assert Box.__class_getitem__(3) == 3
+
 # `klass.x = y` is `klass.__class__.__setattr__(klass, x, y)`
 t = []
 class Meta(type):
