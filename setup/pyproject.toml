@@ -4,13 +4,13 @@ build-backend = "hatchling.build"
 
 [project]
 name = "brython"
-version = "3.14.3"
+version = "3.15.0"
 authors = [
   { name="Pierre Quentel", email="pierre.quentel@gmail.com" },
 ]
 description = "Brython is an implementation of Python 3 running in the browser"
 readme = "long_description.md"
-requires_python = ">=3.14"
+requires_python = ">=3.15"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: BSD License",

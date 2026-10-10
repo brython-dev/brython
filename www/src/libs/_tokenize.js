@@ -2,7 +2,7 @@
 
 var _b_ = $B.builtins
 
-$B.$import('token')
+$B.import('token')
 
 var TokenizerIter = $B.make_type('TokenizerIter')
 

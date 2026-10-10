@@ -196,7 +196,7 @@ except NameError as exc:
     check(exc, expected)
 
 # suggestion for AttributeError
-expected = "AttributeError: 'str' object has no attribute 'strio'. Did you mean: 'strip'?"
+expected = "'str' object has no attribute 'strio'. Did you mean '.strip' instead of '.strio'?"
 
 try:
     def f():

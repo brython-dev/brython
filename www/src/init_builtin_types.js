@@ -10,6 +10,9 @@ function init_type(ns, name, data) {
         cls[slots[i]] = data[i]
     }
     $B.builtin_types[name] = cls
+    if (cls.tp_flags & $B.TPFLAGS.HEAPTYPE) {
+        cls.ht_qualname = name
+    }
 }
 
 var slots = [
@@ -54,7 +57,7 @@ init_type(_b_, "BaseException", [
 
 init_type(_b_, "bytearray", [
     "bytearray",
-    56,
+    64,
     0,
     4199682,
     0,
@@ -192,8 +195,9 @@ init_type(_b_, "filter", [
     0,
     _b_.object,
     0,
-    `Return an iterator yielding those items of iterable for which function(item)
-is true. If function is None, return the items that are true.`,
+    `Return an iterator yielding those items of iterable for which
+function(item) is true.  If function is None, return the items that
+are true.`,
     [_b_.object],
 ])
 
@@ -206,6 +210,26 @@ init_type(_b_, "float", [
     _b_.object,
     0,
     `Convert a string or number to a floating-point number, if possible.`,
+    [_b_.object],
+])
+
+init_type(_b_, "frozendict", [
+    "frozendict",
+    56,
+    0,
+    4216130,
+    0,
+    _b_.object,
+    0,
+    `dict() -> new empty dictionary
+dict(mapping) -> new dictionary initialized from a mapping object's
+    (key, value) pairs
+dict(iterable) -> new dictionary initialized as if via:
+    d = {}
+    for k, v in iterable:
+        d[k] = v
+dict(**kwargs) -> new dictionary initialized with the name=value pairs
+    in the keyword argument list.  For example:  dict(one=1, two=2)`,
     [_b_.object],
 ])
 
@@ -240,7 +264,8 @@ If x is not a number or if base is given, then x must be a string,
 bytes, or bytearray instance representing an integer literal in the
 given base.  The literal can be preceded by '+' or '-' and be surrounded
 by whitespace.  The base defaults to 10.  Valid bases are 0 and 2-36.
-Base 0 means to interpret the base from the string as an integer literal.
+Base 0 means to interpret the base from the string as an integer
+iteral.
 >>> int('0b100', base=0)
 4`,
     [_b_.object],
@@ -272,8 +297,8 @@ init_type(_b_, "map", [
     `Make an iterator that computes the function using arguments from
 each of the iterables.  Stops when the shortest iterable is exhausted.
 
-If strict is true and one of the arguments is exhausted before the others,
-raise a ValueError.`,
+If strict is true and one of the arguments is exhausted before the
+others, raise a ValueError.`,
     [_b_.object],
 ])
 
@@ -363,6 +388,18 @@ init_type(_b_, "reversed", [
     [_b_.object],
 ])
 
+init_type(_b_, "sentinel", [
+    "sentinel",
+    40,
+    0,
+    20738,
+    0,
+    _b_.object,
+    0,
+    `Create a unique sentinel object with the given name.`,
+    [_b_.object],
+])
+
 init_type(_b_, "set", [
     "set",
     200,
@@ -386,7 +423,9 @@ init_type(_b_, "slice", [
     `slice(stop)
 slice(start, stop[, step])
 
-Create a slice object.  This is used for extended slicing (e.g. a[0:10:2]).`,
+Create a slice object.
+
+This is used for extended slicing (e.g. a[0:10:2]).`,
     [_b_.object],
 ])
 
@@ -449,7 +488,8 @@ init_type(_b_, "super", [
     `super() -> same as super(__class__, <first argument>)
 super(type) -> unbound super object
 super(type, obj) -> bound super object; requires isinstance(obj, type)
-super(type, type2) -> bound super object; requires issubclass(type2, type)
+super(type, type2) -> bound super object; requires
+    issubclass(type2, type)
 Typical use to call a cooperative superclass method:
 class C(B):
     def meth(self, arg):
@@ -482,7 +522,7 @@ If the argument is a tuple, the return value is the same object.`,
 
 init_type(_b_, "type", [
     "type",
-    936,
+    944,
     40,
     2155896066,
     368,
@@ -501,13 +541,13 @@ init_type(_b_, "zip", [
     0,
     _b_.object,
     0,
-    `The zip object yields n-length tuples, where n is the number of iterables
-passed as positional arguments to zip().  The i-th element in every tuple
-comes from the i-th iterable argument to zip().  This continues until the
-shortest argument is exhausted.
+    `The zip object yields n-length tuples, where n is the number of
+iterables passed as positional arguments to zip().  The i-th element
+in every tuple comes from the i-th iterable argument to zip().  This
+continues until the shortest argument is exhausted.
 
-If strict is true and one of the arguments is exhausted before the others,
-raise a ValueError.
+If strict is true and one of the arguments is exhausted before the
+others, raise a ValueError.
 
    >>> list(zip('abcdefg', range(3), range(4)))
    [('a', 0, 0), ('b', 1, 1), ('c', 2, 2)]`,
@@ -534,7 +574,10 @@ init_type($B, "FrameLocalsProxy", [
     0,
     _b_.object,
     0,
-    $B.NULL,
+    `Create a write-through view of the locals dictionary for a frame.
+
+  frame
+    the frame object to wrap.`,
     [_b_.object],
 ])
 
@@ -731,7 +774,7 @@ init_type($B, "async_generator_asend", [
 
 init_type($B, "async_generator_athrow", [
     "async_generator_athrow",
-    40,
+    56,
     0,
     20866,
     0,
@@ -1216,6 +1259,22 @@ init_type($B, "keys", [
     [_b_.object],
 ])
 
+init_type($B, "lazy_import", [
+    "lazy_import",
+    56,
+    0,
+    20866,
+    0,
+    _b_.object,
+    0,
+    `Represents a lazy import that will be resolved on first use.
+
+Instances of this object accessed from the global scope will be
+automatically imported based upon their name and then replaced with
+the imported value.`,
+    [_b_.object],
+])
+
 init_type($B, "line_iterator", [
     "line_iterator",
     64,
@@ -1362,10 +1421,10 @@ init_type($B, "method_descriptor", [
 
 init_type($B, "module", [
     "module",
-    56,
+    104,
     0,
     21762,
-    40,
+    32,
     _b_.object,
     16,
     `Create a module object.
@@ -1472,7 +1531,7 @@ init_type($B, "str_iterator", [
 
 init_type($B, "symtable_entry", [
     "symtable entry",
-    144,
+    152,
     0,
     4482,
     0,
@@ -1532,7 +1591,7 @@ init_type($B, "tuple_iterator", [
 
 init_type($B, "uop_executor", [
     "uop_executor",
-    128,
+    104,
     1,
     20866,
     0,
@@ -1568,7 +1627,7 @@ init_type($B, "wrapper_descriptor", [
 
 init_type(_b_, "BaseExceptionGroup", [
     "BaseExceptionGroup",
-    88,
+    96,
     0,
     1073763586,
     0,
@@ -1827,7 +1886,7 @@ init_type(_b_, "EOFError", [
 
 init_type(_b_, "ExceptionGroup", [
     "ExceptionGroup",
-    88,
+    96,
     0,
     1073763848,
     -32,
@@ -2140,6 +2199,18 @@ init_type(_b_, "FutureWarning", [
     `Base class for warnings about constructs that will change semantically
 in the future.`,
     [_b_.Warning],
+])
+
+init_type(_b_, "ImportCycleError", [
+    "ImportCycleError",
+    104,
+    0,
+    1073763586,
+    0,
+    _b_.ImportError,
+    16,
+    `Import produces a cycle.`,
+    [_b_.ImportError],
 ])
 
 init_type(_b_, "ImportWarning", [
@@ -2549,6 +2620,6 @@ for (var name in $B.builtin_types) {
 }
 
 
-$B.builtin_funcs = ['__build_class__', '__import__', 'abs', 'aiter', 'all', 'anext', 'any', 'ascii', 'bin', 'breakpoint', 'callable', 'chr', 'compile', 'delattr', 'dir', 'divmod', 'eval', 'exec', 'format', 'getattr', 'globals', 'hasattr', 'hash', 'hex', 'id', 'input', 'isinstance', 'issubclass', 'iter', 'len', 'locals', 'max', 'min', 'next', 'oct', 'open', 'ord', 'pow', 'print', 'repr', 'round', 'setattr', 'sorted', 'sum', 'vars']
+$B.builtin_funcs = ['__build_class__', '__import__', '__lazy_import__', 'abs', 'aiter', 'all', 'anext', 'any', 'ascii', 'bin', 'breakpoint', 'callable', 'chr', 'compile', 'delattr', 'dir', 'divmod', 'eval', 'exec', 'format', 'getattr', 'globals', 'hasattr', 'hash', 'hex', 'id', 'input', 'isinstance', 'issubclass', 'iter', 'len', 'locals', 'max', 'min', 'next', 'oct', 'open', 'ord', 'pow', 'print', 'repr', 'round', 'setattr', 'sorted', 'sum', 'vars']
 
 })(__BRYTHON__)

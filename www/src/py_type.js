@@ -6,7 +6,7 @@ var _b_ = $B.builtins
 const TPFLAGS = $B.TPFLAGS // defined ib brython_builtins.js
 
 // generic code for class constructor
-$B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
+$B.$class_constructor = function(qualname, dict, metaclass, resolved_bases,
         bases, extra_kwargs){
     var test = false // class_name == '_AllFieldTypes'
     if (test) {
@@ -16,6 +16,8 @@ $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
     if (metaclass.tp_mro === undefined) {
         console.log('no mro in metaclass', metaclass)
     }
+
+    let class_name = $B.last(qualname.split('.'))
 
     // bool is not a valid base
     for (var base of bases) {
@@ -107,6 +109,8 @@ $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
     if (test) {
         console.log('kls', kls)
     }
+
+    kls.ht_qualname = qualname
 
     return kls
 }
@@ -429,7 +433,8 @@ $B.make_annotate_func = function(dict, annotations, class_frame) {
             __name__: '__annotate__',
             __module__: class_frame[2],
             __qualname__: class_frame[0] + '.__annotate__',
-            __file__: class_frame.__file__
+            __file__: class_frame.__file__,
+            free_vars: $B.fast_tuple(['__classdict__'])
         }
     )
     $B.set_func_attrs(__annotate_func__, $B.frame_obj.frame, class_frame[2])
@@ -1767,14 +1772,25 @@ type_funcs.__qualname___get = function(cls) {
     // builtin descriptor types store their instance __qualname__ getset under
     // the same dict key; use the dict value only when it is the qualname string
     var q = $B.get_from_dict(cls, '__qualname__', $B.NULL)
-    return typeof q === 'string' ? q : $B.get_name(cls)
+    if (typeof q === 'string') {
+        return q
+    }
+    if (cls.tp_flags & $B.TPFLAGS.HEAPTYPE) {
+        return cls.ht_qualname
+    } else {
+        return $B.get_name(cls)
+    }
 }
 
 type_funcs.__qualname___set = function(cls, value) {
     // write the dict, where __qualname___get reads it (tp_name alone left the
     // getter returning the stale auto-computed qualname); keep tp_name for repr
-    $B.set_to_dict(cls, '__qualname__', value)
-    cls.tp_name = value
+    if (cls.tp_flags & $B.TPFLAGS.HEAPTYPE) {
+        cls.ht_qualname = value
+    } else {
+        $B.RAISE(_b_.TypeError, `cannot set attribute '__qualname__' of ` +
+            `immutable type '${cls.tp_name}'`)
+    }
 }
 
 type_funcs.__sizeof__ = function(self) {

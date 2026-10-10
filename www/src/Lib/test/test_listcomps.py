@@ -180,6 +180,18 @@ class ListComprehensionTest(unittest.TestCase):
                 code, outputs={"res": [2]}, scopes=["module", "function"])
         self._check_in_scopes(code, raises=NameError, scopes=["class"])
 
+    def test_references___classdict__(self):
+        code = """
+            class i: [__classdict__ for x in y]
+        """
+        self._check_in_scopes(code, raises=NameError)
+
+    def test_references___conditional_annotations__(self):
+        code = """
+            class i: [__conditional_annotations__ for x in y]
+        """
+        self._check_in_scopes(code, raises=NameError)
+
     def test_references___class___enclosing(self):
         code = """
             __class__ = 2
@@ -749,28 +761,6 @@ class ListComprehensionTest(unittest.TestCase):
                 self.assertEqual(f.end_lineno, co.co_firstlineno + 2)
                 self.assertEqual(f.line[f.colno - indent : f.end_colno - indent],
                                  expected)
-
-    def test_only_calls_dunder_iter_once(self):
-
-        class Iterator:
-
-            def __init__(self):
-                self.val = 0
-
-            def __next__(self):
-                if self.val == 2:
-                    raise StopIteration
-                self.val += 1
-                return self.val
-
-            # No __iter__ method
-
-        class C:
-
-            def __iter__(self):
-                return Iterator()
-
-        self.assertEqual([1, 2], [i for i in C()])
 
 __test__ = {'doctests' : doctests}
 

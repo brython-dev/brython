@@ -143,4 +143,8 @@ from math import pi, pi as PI, pi as Pi
 assert PI == pi
 assert Pi == pi
 
+# lazy import (Python 3.15)
+lazy import faulthandler
+faulthandler.disable
+
 print('passed all tests')

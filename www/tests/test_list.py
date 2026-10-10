@@ -530,4 +530,9 @@ class T(tuple):
 
 assert type(T([1, 2])[:2]) is tuple
 
+# unpacking in comprehension
+lists = [[1, 2], [3, 4], [5]]
+assert [*L for L in lists] == [1, 2, 3, 4, 5]
+
+
 print("passed all tests..")

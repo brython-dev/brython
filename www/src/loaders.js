@@ -431,8 +431,10 @@ var loop = $B.loop = function() {
         } catch (err) {
             // If the error was not caught by the Python runtime, build an
             // instance of a Python exception
-            console.log('error in loaders', err)
-            console.log('frame obj', $B.frame_obj)
+            if ($B.get_option('debug') > 2){
+                console.log('error in loaders', err)
+                console.log('frame obj', $B.frame_obj)
+            }
             if (err.ob_type === undefined) {
                 err.filename = script.filename
                 if (err.$py_exc) {

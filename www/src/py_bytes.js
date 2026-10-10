@@ -40,7 +40,7 @@ function invalid(other) {
 }
 
 var is_bytes_like = $B.is_bytes_like = function(obj) {
-    return $B.$getattr(obj, '__buffer__', $B.NULL) !== $B.NULL
+    return $B.$getattr($B.get_class(obj), '__buffer__', $B.NULL) !== $B.NULL
 }
 
 function get_list_from_bytes_like(obj) {

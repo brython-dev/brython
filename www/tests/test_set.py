@@ -320,4 +320,8 @@ assert_raises(TypeError, {1}.pop, 1)
 # PR 2818
 assert set([0, 2**61 - 1]) == {0, 2305843009213693951}
 
+# set comprehension
+sets = [{1, 2}, {2, 3}, {3, 4}]
+assert {*s for s in sets}  == {1, 2, 3, 4}
+
 print("passed all tests..")

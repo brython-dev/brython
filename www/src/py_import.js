@@ -370,15 +370,16 @@ function run_js(module_contents, path, _module) {
 function run_py(module_contents, path, module, compiled) {
     // set file cache for path ; used in built-in function open()
     var filename = $B.module_getattr(module, '__file__')
-    var test = false // filename == 'sys'
+    var test = false // filename.endsWith('_frozen_importlib.py')
     if (test) {
-        console.log('run py', filename)
+        console.log('------------------  run py', filename)
     }
     $B.file_cache[filename] = module_contents
     $B.url2name[filename] = $B.module_getattr(module, '__name__')
     var root,
         js,
         mod_name = $B.module_getattr(module, '__name__'), // might be modified inside module, eg _pydecimal
+        spec = $B.module_getattr(module, '__spec__'),
         src
     if (! compiled) {
         src = {
@@ -405,7 +406,7 @@ function run_py(module_contents, path, module, compiled) {
         js = compiled ? module_contents : root.to_js()
         if ($B.get_option('debug') == 10) {
            console.log("code for module " + module_name)
-           console.log($B.format_indent(js, 0))
+           console.log(js)
         }
         src = js
         js = "var $module = (function() {\n" + js
@@ -415,7 +416,9 @@ function run_py(module_contents, path, module, compiled) {
             "return $module"
         var module_id = prefix + $B.scope_name(module_name)
         //console.log(module.__name__, js.length)
-        //console.log(js)
+        if (test) {
+            console.log('js for', filename, '\n', js)
+        }
         var mod = (new Function(module_id, js))(module)
     } catch (err) {
         err.$frame_obj = err.$frame_obj || $B.frame_obj
@@ -447,7 +450,6 @@ function run_py(module_contents, path, module, compiled) {
             $B.module_setattr(module, attr, mod[attr])
         }
         $B.module_setattr(module, '__initializing__', false)
-        var spec = $B.module_getattr(module, '__spec__')
         return {
             content: src,
             name: mod_name,
@@ -458,12 +460,13 @@ function run_py(module_contents, path, module, compiled) {
             source_ts: $B.$getattr(spec, 'loader_state').timestamp
         }
     } catch (err) {
-        console.log("" + err + " " + " for module " + module.__name__)
+        console.log('error', err)
+        console.log('module', module)
         for (let attr in err) {
             console.log(attr + " " + err[attr])
         }
         if ($B.get_option('debug') > 0) {
-            console.log("line info " + __BRYTHON__.line_info)
+            console.log("frame obj", $B.frame_obj)
         }
         throw err
     }
@@ -758,6 +761,7 @@ StdlibStaticFinder_funcs.find_spec = function(self, fullname) {
                 },
                 _module = Module.$factory(fullname)
                 metadata.code = $download_module(_module, metadata.path)
+                metadata.timestamp = Date.parse(_module.$last_modified)
 
             var res = ModuleSpec.$factory({
                 name : fullname,
@@ -781,14 +785,6 @@ StdlibStaticFinder.classmethods = ["find_spec"]
 
 $B.set_func_names(StdlibStaticFinder, "<import>")
 
-/*
-for (let method in StdlibStaticFinder) {
-    if (typeof StdlibStaticFinder[method] == "function") {
-        StdlibStaticFinder[method] = _b_.classmethod.$factory(
-            StdlibStaticFinder[method])
-    }
-}
-*/
 
 // Finder for modules in a list of directories.
 // By default, this list has one element, the directory of the current script.
@@ -1354,7 +1350,7 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist) {
             if ($B.imported[package_name] === undefined) {
                 // may happen if the modules defines __name__ = "X.Y" and package
                 // X has not been imported
-                $B.$import(package_name, [], {}, locals)
+                $B.import(package_name, [], {}, locals)
                 $B.module_setattr($B.imported[package_name], module,
                     $B.imported[mod_name])
                 mod_name = module
@@ -1375,7 +1371,7 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist) {
 
  * @return None
  */
-$B.$import = function(mod_name, fromlist, aliases, locals, inum) {
+$B.import = function(mod_name, fromlist, aliases, locals, inum) {
     /*
     mod_name: module name specified in the import statement
     fromlist: names specified in "from" statement
@@ -1384,9 +1380,10 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum) {
     locals: local namespace import bindings will be applied upon
     inum: instruction number
     */
-    var test = false // mod_name == 'posix' // && fromlist.length == 1 && fromlist[0] == "timer"
+    var test = mod_name == '_bootstrap' // && fromlist.length == 1 && fromlist[0] == "timer"
     if (test) {
         console.log('import', mod_name, fromlist, aliases)
+        console.log('loals', locals)
     }
     // special case
     if (mod_name == '_frozen_importlib_external') {
@@ -1486,7 +1483,8 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum) {
         console.log('in imported', $B.imported[mod_name])
     }
     try {
-        var modobj = importer(mod_name, globals, undefined, fromlist, 0)
+        var modobj = $B.$call(__import__,
+            mod_name, globals, undefined, fromlist, 0)
     } catch (err) {
         if (test) {
             console.log('set error', $B.get_class(err))
@@ -1504,6 +1502,9 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum) {
     if (! fromlist || fromlist.length == 0) {
         // import mod_name [as alias]
         // FIXME : Ensure this will work for relative imports
+        if (test) {
+            console.log('nothing in fromlist')
+        }
         let alias = aliases[mod_name]
         if (alias) {
             var [ns, name] = alias
@@ -1512,6 +1513,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum) {
             locals[norm_parts[0]] = modobj
             if (test) {
                 console.log('locals of', norm_parts[0], 'set to', modobj)
+                console.log('locals[',norm_parts[0],'] is', locals[norm_parts[0]])
             }
             // TODO: After binding 'a' should we also bind 'a.b' , 'a.b.c' , ... ?
         }
@@ -1546,6 +1548,9 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum) {
         } else {
             // from mod_name import N1 [as V1], ... Nn [as Vn]
             // from modname import * ... when __all__ is defined
+            if (test) {
+                console.log('modobj', modobj)
+            }
             for (let name of __all__) {
                 var [ns, alias] = [locals, name]
                 if (aliases[name]) {
@@ -1573,8 +1578,12 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum) {
                             globals, undefined, [], 0)
                         // [Import spec] ... then check imported module again for name
                         if (test) {
-                            console.log('import', mod_name + '.' + name, 'ok')
-                            console.log($B.imported[mod_name + '.' + name])
+                            console.log('import', submodule_name, 'ok')
+                            console.log($B.imported[submodule_name])
+                        }
+                        if (! Object.hasOwn($B.imported, submodule_name)) {
+                            // might be the case with overriden __import__
+                            $B.RAISE(_b_.ImportError, submodule_name)
                         }
                         ns[alias] = $B.imported[submodule_name]
                     } catch ($err3) {
@@ -1617,6 +1626,9 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum) {
                 }
             }
         }
+        if (test) {
+            console.log('$B.import returns locals', locals)
+        }
         return locals
     }
 }
@@ -1624,7 +1636,7 @@ $B.$import = function(mod_name, fromlist, aliases, locals, inum) {
 $B.$import_from = function(module, name, aliases, level, locals, inum) {
     // Import names from modules; level is 0 for absolute import, > 0
     // for relative import (number of dots before module name)
-    var test = false // module == '_heapq' //&& names[0] == '_path_normpath'
+    var test = false // module == '_bootstrap' //&& names[0] == '_path_normpath'
     if (test) {
         console.log('import from', module, name)
     }
@@ -1644,6 +1656,7 @@ $B.$import_from = function(module, name, aliases, level, locals, inum) {
         }
         if (! current_module.$is_package) {
             if (parts.length == 1) {
+                console.log('current module', current_module, 'parts', parts)
                 $B.set_inum(inum)
                 $B.RAISE(_b_.ImportError,
                     'attempted relative import with no known parent package')
@@ -1666,7 +1679,7 @@ $B.$import_from = function(module, name, aliases, level, locals, inum) {
             // form "from .foo import bar"
             var submodule = $B.module_getattr(current_module, '__name__') +
                 '.' + module
-            $B.$import(submodule, [], {}, {}, inum)
+            $B.import(submodule, [], {}, {}, inum)
             current_module = $B.imported[submodule]
         }
         // get names from a package
@@ -1693,13 +1706,145 @@ $B.$import_from = function(module, name, aliases, level, locals, inum) {
                 // try to import module in the package
                 var sub_module = $B.module_getattr(current_module, '__name__') +
                      '.' + name
-                $B.$import(sub_module, [], {}, {})
+                $B.import(sub_module, [], {}, {}, inum)
                 ns[alias] = $B.imported[sub_module]
             }
         }
     } else {
         // import module
-        $B.$import(module, [name], aliases, locals, inum)
+        $B.import(module, [name], aliases, locals, inum)
+    }
+}
+
+/* lazy_import start */
+$B.lazy_import.tp_repr = function(self) {
+    return `<lazy_import '${self.name}'>`
+}
+
+var lazy_import_funcs = $B.lazy_import.tp_funcs = {}
+
+lazy_import_funcs.resolve = function(self) {
+
+}
+
+$B.lazy_import.tp_methods = ["resolve"]
+
+/* lazy_import end */
+
+$B.LAZY_IMPORTS = Symbol('LAZY_IMPORTS')
+
+$B._lazy_import = function(mod_name, fromlist, aliases, locals, inum) {
+    let test = false // mod_name == '_imp'
+    if (test) {
+        console.log('lazy import', mod_name)
+        // console.log('in imported ?', Object.hasOwn($B.imported, mod_name))
+    }
+    let obj = {
+        ob_type: $B.lazy_import,
+        frame: $B.frame_obj.frame,
+        builtins: _b_,
+        name: mod_name,
+        fromlist
+    }
+    locals[$B.LAZY_IMPORTS] = locals[$B.LAZY_IMPORTS] ?? {}
+    _b_.set.tp_funcs.add($B.lazy_modules, mod_name)
+
+    let alias = mod_name
+
+    if (Object.hasOwn(aliases, mod_name)) {
+        alias = aliases[mod_name][1]
+    }
+
+    Object.defineProperty(locals, alias, {
+        enumerable: true,
+        configurable: true,
+        get() {
+            if (! Object.hasOwn(locals[$B.LAZY_IMPORTS], mod_name)) {
+                if (test) {
+                    console.log(alias, 'not in locals[lazy import], frame', $B.frame_obj)
+                }
+                $B.import(mod_name, fromlist, aliases, locals, inum)
+            }
+            let value = locals[$B.LAZY_IMPORTS][mod_name]
+            Object.defineProperty(locals, alias,
+                {
+                    configurable: true,
+                    writable: true,
+                    value
+                }
+            )
+            return value
+        },
+        set(value) {
+            locals[$B.LAZY_IMPORTS][mod_name] = value
+            if (_b_.set.sq_contains($B.lazy_modules, mod_name)) {
+                _b_.set.tp_funcs.remove($B.lazy_modules, mod_name)
+            }
+        }
+    })
+    return obj
+}
+
+$B.lazy_import_from = function(mod_name, fromlist, aliases, level, locals, inum) {
+    let test = true // mod_name == '_imp'
+    if (test) {
+        console.log('lazy import', mod_name, fromlist, 'locals', locals)
+        // console.log('in imported ?', Object.hasOwn($B.imported, mod_name))
+    }
+    if (Object.hasOwn($B.imported, mod_name)) {
+        return $B.$import_from(mod_name, fromlist, aliases, level, locals, inum)
+    }
+    locals[$B.LAZY_IMPORTS] = locals[$B.LAZY_IMPORTS] ?? {}
+    _b_.set.tp_funcs.add($B.lazy_modules, mod_name)
+
+    for (let name of fromlist) {
+        let obj = {
+            ob_type: $B.lazy_import,
+            frame: $B.frame_obj.frame,
+            builtins: _b_,
+            module: mod_name,
+            name
+        }
+
+        let alias = name
+
+        if (Object.hasOwn(aliases, name)) {
+            alias = aliases[name][1]
+        }
+
+        Object.defineProperty(locals, alias, {
+            enumerable: true,
+            configurable: true,
+            get() {
+                if (! Object.hasOwn(locals[$B.LAZY_IMPORTS], alias)) {
+                    if (test) {
+                        console.log(alias, 'not in locals[lazy import], frame', $B.frame_obj)
+                    }
+                    if (_b_.set.sq_contains($B.lazy_modules, mod_name)) {
+                        $B.$import_from(mod_name, fromlist, aliases, level, locals, inum)
+                        _b_.set.tp_funcs.remove($B.lazy_modules, mod_name)
+                    }
+                    let value
+                    let module = $B.imported[mod_name]
+                    try {
+                        value = $B.module_getattr(module, name)
+                    } catch (err) {
+                        $B.set_inum(inum)
+                        let module_name = $B.$getattr(module, '__name__',
+                            '<unknown module name>')
+                        $B.RAISE(_b_.ImportError,
+                            `cannot import name '${name}' from ` +
+                            `'${module_name}' (unknown location)'`
+                        )
+                    }
+                    locals[$B.LAZY_IMPORTS][alias] = value
+                }
+                return locals[$B.LAZY_IMPORTS][alias]
+            },
+            set(value) {
+                locals[$B.LAZY_IMPORTS][alias] = value
+            }
+        })
     }
 }
 
