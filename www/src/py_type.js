@@ -1683,8 +1683,25 @@ type_funcs.__bases___set = function() {
             `not ${$B.class_name(bases)}`
         )
     }
+    var old_bases = cls.tp_bases,
+        old_mros = new Map(),
+        classes = [cls]
     cls.tp_bases = bases
-    cls.tp_mro = $B.make_mro(cls)
+    try {
+        for (var klass of classes) {
+            if (! old_mros.has(klass)) {
+                old_mros.set(klass, klass.tp_mro)
+            }
+            klass.tp_mro = $B.make_mro(klass)
+            classes.push(...klass.tp_subclasses)
+        }
+    } catch (err) {
+        cls.tp_bases = old_bases
+        for (var [klass, mro] of old_mros) {
+            klass.tp_mro = mro
+        }
+        throw err
+    }
 }
 
 type_funcs.__dict___get = function(cls) {
