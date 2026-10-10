@@ -1090,7 +1090,16 @@ function reset_setattr(cls) {
 function set_slots(cl_dict, class_obj) {
     let slots = $B.str_dict_get(cl_dict, '__slots__', $B.NULL)
     if (slots !== $B.NULL) {
+        // a base whose instances vary in size, as a tuple's, has no room
+        var base = class_obj.tp_base
+        while (base.tp_flags & TPFLAGS.HEAPTYPE) {
+            base = base.tp_base
+        }
         for (let key of $B.make_js_iterator(slots)) {
+            if (base.tp_itemsize) {
+                $B.RAISE(_b_.TypeError, 'nonempty __slots__ not supported ' +
+                    `for subtype of '${$B.get_name(class_obj.tp_base)}'`)
+            }
             // CPython mangles private slot names at class-creation time,
             // matching the compiler's mangling of self.__private accesses
             if (key.startsWith('__') && ! key.endsWith('__')) {
