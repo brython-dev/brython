@@ -1683,8 +1683,15 @@ type_funcs.__bases___set = function() {
             `not ${$B.class_name(bases)}`
         )
     }
+    var old_bases = cls.tp_bases
     cls.tp_bases = bases
     cls.tp_mro = $B.make_mro(cls)
+    for (var base of old_bases) {
+        base.tp_subclasses.remove(cls)
+    }
+    for (var base of bases) {
+        base.tp_subclasses.push(cls)
+    }
 }
 
 type_funcs.__dict___get = function(cls) {
