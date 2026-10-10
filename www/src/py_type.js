@@ -769,6 +769,16 @@ $B.type_getattribute = function(klass, attr) {
     }
 }
 
+// The subclasses of a class, held weakly: iterating yields the live ones
+$B.subclasses = function() {
+    var refs = []
+    return {
+        push: cls => refs = refs.filter(ref => ref.deref()).concat(new WeakRef(cls)),
+        remove: cls => refs = refs.filter(ref => ! [cls, undefined].includes(ref.deref())),
+        [Symbol.iterator]: () => refs.map(ref => ref.deref()).filter(cls => cls).values()
+    }
+}
+
 function update_subclasses(kls, name, alias, value) {
     // recursively propagate kls[alias] = value to subclasses of kls that
     // don't define kls[name]
@@ -1457,7 +1467,7 @@ _b_.type.tp_new = function(cls, args, kw) {
 
     $B.set_dict(class_obj, cl_dict)
     class_obj.tp_mro = $B.make_mro(class_obj)
-    class_obj.tp_subclasses = []
+    class_obj.tp_subclasses = $B.subclasses()
 
     $B.make_getattr(class_obj)
 
@@ -1580,7 +1590,7 @@ _b_.type.tp_new = function(cls, args, kw) {
     make_factory(class_obj)
     // Set new class as subclass of its parents
     for (var base of class_obj.tp_bases) {
-        base.tp_subclasses = base.tp_subclasses || []
+        base.tp_subclasses = base.tp_subclasses || $B.subclasses()
         base.tp_subclasses.push(class_obj)
     }
     return class_obj
@@ -1800,7 +1810,7 @@ type_funcs.__subclasscheck__ = function(self, subclass) {
 }
 
 type_funcs.__subclasses__ = function(cls) {
-    return $B.$list(cls.tp_subclasses)
+    return $B.$list([...cls.tp_subclasses])
 }
 
 type_funcs.__text_signature___get = function(self) {
