@@ -1104,6 +1104,15 @@ function set_slots(cl_dict, class_obj) {
                 }
                 continue
             }
+            // not a name the class statement sets itself, __doc__ when the
+            // class has no docstring
+            var found = $B.str_dict_get(cl_dict, key, $B.NULL)
+            if (found !== $B.NULL && key != '__qualname__' &&
+                    ! (key == '__doc__' && found === _b_.None) &&
+                    $B.get_class(found) !== $B.member_descriptor) {
+                $B.RAISE(_b_.ValueError, `'${key}' in __slots__ conflicts ` +
+                    'with class variable')
+            }
             var member = {
                 name: key,
                 type: $B.TYPES.OBJECT,
