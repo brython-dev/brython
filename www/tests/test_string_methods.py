@@ -68,6 +68,13 @@ assert "bghggbazertyhbg".strip("bhg") == "azerty"
 
 assert "zer".upper() == "ZER"
 
+# what a str method returns counts an astral character once, folded at
+# compile time or not
+e = '😀a'
+assert len(e.upper()) == len(''.join([e])) == len(e.strip()) == 2
+assert len(e * 2) == len('😀a' * 2) == 4
+assert len(e.ljust(3)) == len(e.zfill(3)) == 3
+
 # issue 286
 assert "a1".islower()
 assert "B?".isupper()
