@@ -591,6 +591,14 @@ assert "b" in A.__dict__
 assert "message" in A.__dict__
 assert "__init__" in A.__dict__
 
+# a __dict__ the class defines is kept
+class Box:
+    @property
+    def __dict__(self):
+        return {"public": 1}
+
+assert Box().__dict__ == {"public": 1}
+
 d = A.__dict__["__dict__"]
 try:
     d.b
