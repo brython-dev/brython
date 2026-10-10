@@ -362,4 +362,9 @@ assert b'a b c'.split(None, 1) == [b'a', b'b c']
 # PR 2997
 assert b' a '.strip() == b'a'
 
+# a bytes iterator asked for its iterator keeps its position
+it = iter(b'abcd')
+next(it)
+assert list(it) == [98, 99, 100] and list(it) == []
+
 print('passed all tests...')
