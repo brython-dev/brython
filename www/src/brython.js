@@ -142,7 +142,7 @@ return false}
 $B._PyType_HasFeature=function(type,feature){return type.tp_flags & feature !=0}
 $B.make_builtin_class=function(tp_name,tp_bases){if(tp_name===undefined){console.log('no tp name')
 console.log(Error().stack)}
-var cls={ob_type:_b_.type,tp_name,tp_bases:tp_bases ??[_b_.object],tp_base:tp_bases ? tp_bases[0]:_b_.object,tp_flags:tp_bases ? tp_bases[0].tp_flags :$B.TPFLAGS.BASETYPE,tp_subclasses:[]}
+var cls={ob_type:_b_.type,ht_qualname:tp_name,tp_name,tp_bases:tp_bases ??[_b_.object],tp_base:tp_bases ? tp_bases[0]:_b_.object,tp_flags:tp_bases ? tp_bases[0].tp_flags :$B.TPFLAGS.BASETYPE,tp_subclasses:[]}
 if(tp_bases){cls.tp_mro=[cls,...tp_bases,_b_.object]}else{
 cls.tp_mro=[cls,_b_.object]}
 $B.created_types[tp_name]=cls
@@ -315,7 +315,8 @@ return $B.imported[name]}})(__BRYTHON__);
 $B.builtin_types={}
 function init_type(ns,name,data){var cls=ns[name]={}
 for(var i=0,len=slots.length;i < len;i++){cls[slots[i]]=data[i]}
-$B.builtin_types[name]=cls}
+$B.builtin_types[name]=cls
+if(cls.tp_flags & $B.TPFLAGS.HEAPTYPE){cls.ht_qualname=name}}
 var slots=["tp_name","tp_basicsize","tp_itemsize","tp_flags","tp_weakrefoffset","tp_base","tp_dictoffset","tp_doc","tp_bases"
 ]
 init_type(_b_,"object",["object",16,0,5378,0,$B.NULL,0,`The base class of the class hierarchy.
@@ -536,7 +537,7 @@ init_type($B,"callable_iterator",["callable_iterator",32,0,20866,0,_b_.object,0,
 init_type($B,"cell",["cell",24,0,20738,0,_b_.object,0,`Create a new cell object.
   contents
     the contents of the cell. If not specified, the cell will be empty,
-    and 
+    and
  further attempts to access its cell_contents attribute will
     raise a ValueError.`,[_b_.object],])
 init_type($B,"classmethod_descriptor",["classmethod_descriptor",56,0,20866,0,_b_.object,0,$B.NULL,[_b_.object],])
@@ -724,8 +725,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-10-09 07:44:15.039239"
-__BRYTHON__.timestamp=1791524655038
+__BRYTHON__.compiled_date="2026-10-10 09:58:50.845189"
+__BRYTHON__.timestamp=1791619130844
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -2558,10 +2559,11 @@ $B.set_func_names(object,"builtins")})(__BRYTHON__);
 "use strict";
 (function($B){var _b_=$B.builtins
 const TPFLAGS=$B.TPFLAGS 
-$B.$class_constructor=function(class_name,dict,metaclass,resolved_bases,bases,extra_kwargs){var test=false 
+$B.$class_constructor=function(qualname,dict,metaclass,resolved_bases,bases,extra_kwargs){var test=false 
 if(test){console.log('class constructor',class_name,'dict',dict)
 console.log('metaclass',metaclass)}
 if(metaclass.tp_mro===undefined){console.log('no mro in metaclass',metaclass)}
+let class_name=$B.last(qualname.split('.'))
 for(var base of bases){if(base.tp_flags !==undefined &&
 !(base.tp_flags & TPFLAGS.BASETYPE)){$B.RAISE(_b_.TypeError,`type '${$B.$getattr(base, '__qualname__')}' `+
 `is not an acceptable base type`)}}
@@ -2592,6 +2594,7 @@ if($B.get_class(kls)===metaclass){
 var meta_init=_b_.type.tp_getattro(metaclass,"__init__")
 $B.$call(meta_init,kls,class_name,resolved_bases,dict,{$kw:[extra_kwargs]})}
 if(test){console.log('kls',kls)}
+kls.ht_qualname=qualname
 return kls}
 function set_type_new(dict){
 var new_func=$B.str_dict_get(dict,'__new__',$B.NULL)
@@ -3214,13 +3217,12 @@ type_funcs.__prepare__=function(cls){return $B.empty_dict()}
 type_funcs.__qualname___get=function(cls){
 var q=$B.get_from_dict(cls,'__qualname__',$B.NULL)
 if(typeof q==='string'){return q}
-var name=$B.get_name(cls)
-var module=$B.str_dict_get($B.get_dict(cls),'__module__',$B.NULL)
-if(module !==$B.NULL && module !=='builtins'){return `${module}.${name}`}else{
-return name}}
+if(cls.tp_flags & $B.TPFLAGS.HEAPTYPE){return cls.ht_qualname}else{
+return $B.get_name(cls)}}
 type_funcs.__qualname___set=function(cls,value){
-$B.set_to_dict(cls,'__qualname__',value)
-cls.tp_name=value}
+if(cls.tp_flags & $B.TPFLAGS.HEAPTYPE){cls.ht_qualname=value}else{
+$B.RAISE(_b_.TypeError,`cannot set attribute '__qualname__' of `+
+`immutable type '${cls.tp_name}'`)}}
 type_funcs.__sizeof__=function(self){}
 type_funcs.__subclasscheck__=function(self,subclass){
 if(! $B.$isinstance(subclass,$B.UnionType)&& ! $B.is_type(subclass)){$B.RAISE(_b_.TypeError,"issubclass() arg 2 must be a class,"+
@@ -11600,12 +11602,8 @@ for(var key of $B.make_js_iterator($B.$call(keys,args))){try{
 let value=$B.$call(gi,args,key)
 dict.$setitem(self,key,value)}catch(err){if($B.is_exc(err,_b_.StopIteration)){break}
 throw err}}}}else{
-let i=0
-for(var item of $B.make_js_iterator(args)){if(item.length !=2){$B.RAISE(_b_.ValueError,"dictionary "+
-`update sequence element #${i} has length `+
-`${item.length}; 2 is required`)}
-dict.$setitem(self,item[0],item[1])
-i++}}}}
+if(! Array.isArray(args)){args=_b_.list.$factory(args)}
+init_from_list(self,args)}}}
 for(let item of _b_.dict.$iter_items(kw)){dict.$setitem(self,item.key,item.value)}
 return _b_.None}
 function dict_repr(self){if($B.repr.enter(self)){return "{...}"}
@@ -14805,9 +14803,9 @@ if(value !==$B.NULL){
 ns[alias]=value}else{
 var sub_module=$B.module_getattr(current_module,'__name__')+
 '.'+name
-$B.$import(sub_module,[],{},{})
+$B.import(sub_module,[],{},{},inum)
 ns[alias]=$B.imported[sub_module]}}}else{
-$B.$import(module,[name],aliases,locals,inum)}}
+$B.import(module,[name],aliases,locals,inum)}}
 $B.lazy_import.tp_repr=function(self){return `<lazy_import '${self.name}'>`}
 var lazy_import_funcs=$B.lazy_import.tp_funcs={}
 lazy_import_funcs.resolve=function(self){}
@@ -15758,7 +15756,7 @@ module.exports={__BRYTHON__ }}
 ;
 
 "use strict";
-__BRYTHON__.ast_classes={Add:'',And:'',AnnAssign:'expr target,expr annotation,expr? value,int simple',Assert:'expr test,expr? msg',Assign:'expr* targets,expr value,string? type_comment',AsyncFor:'expr target,expr iter,stmt* body,stmt* orelse,string? type_comment',AsyncFunctionDef:'identifier name,arguments args,stmt* body,expr* decorator_list,expr? returns,string? type_comment,type_param* type_params',AsyncWith:'withitem* items,stmt* body,string? type_comment',Attribute:'expr value,identifier attr,expr_context ctx',AugAssign:'expr target,operator op,expr value',Await:'expr value',BinOp:'expr left,operator op,expr right',BitAnd:'',BitOr:'',BitXor:'',BoolOp:'boolop op,expr* values',Break:'',Call:'expr func,expr* args,keyword* keywords',ClassDef:'identifier name,expr* bases,keyword* keywords,stmt* body,expr* decorator_list,type_param* type_params',Compare:'expr left,cmpop* ops,expr* comparators',Constant:'constant value,string? kind',Continue:'',Del:'',Delete:'expr* targets',Dict:'expr?* keys,expr* values',DictComp:'expr key,expr value,comprehension* generators',Div:'',Eq:'',ExceptHandler:'expr? type,identifier? name,stmt* body',Expr:'expr value',Expression:'expr body',FloorDiv:'',For:'expr target,expr iter,stmt* body,stmt* orelse,string? type_comment',FormattedValue:'expr value,int conversion,expr? format_spec',FunctionDef:'identifier name,arguments args,stmt* body,expr* decorator_list,expr? returns,string? type_comment,type_param* type_params',FunctionType:'expr* argtypes,expr returns',GeneratorExp:'expr elt,comprehension* generators',Global:'identifier* names',Gt:'',GtE:'',If:'expr test,stmt* body,stmt* orelse',IfExp:'expr test,expr body,expr orelse',Import:'alias* names',ImportFrom:'identifier? module,alias* names,int? level',In:'',Interactive:'stmt* body',Interpolation:'expr value,constant str,int conversion,expr? format_spec',Invert:'',Is:'',IsNot:'',JoinedStr:'expr* values',LShift:'',Lambda:'arguments args,expr body',List:'expr* elts,expr_context ctx',ListComp:'expr elt,comprehension* generators',Load:'',Lt:'',LtE:'',MatMult:'',Match:'expr subject,match_case* cases',MatchAs:'pattern? pattern,identifier? name',MatchClass:'expr cls,pattern* patterns,identifier* kwd_attrs,pattern* kwd_patterns',MatchMapping:'expr* keys,pattern* patterns,identifier? rest',MatchOr:'pattern* patterns',MatchSequence:'pattern* patterns',MatchSingleton:'constant value',MatchStar:'identifier? name',MatchValue:'expr value',Mod:'',Module:'stmt* body,type_ignore* type_ignores',Mult:'',Name:'identifier id,expr_context ctx',NamedExpr:'expr target,expr value',Nonlocal:'identifier* names',Not:'',NotEq:'',NotIn:'',Or:'',ParamSpec:'identifier name,expr? default_value',Pass:'',Pow:'',RShift:'',Raise:'expr? exc,expr? cause',Return:'expr? value',Set:'expr* elts',SetComp:'expr elt,comprehension* generators',Slice:'expr? lower,expr? upper,expr? step',Starred:'expr value,expr_context ctx',Store:'',Sub:'',Subscript:'expr value,expr slice,expr_context ctx',TemplateStr:'expr* values',Try:'stmt* body,excepthandler* handlers,stmt* orelse,stmt* finalbody',TryStar:'stmt* body,excepthandler* handlers,stmt* orelse,stmt* finalbody',Tuple:'expr* elts,expr_context ctx',TypeAlias:'expr name,type_param* type_params,expr value',TypeIgnore:'int lineno,string tag',TypeVar:'identifier name,expr? bound,expr? default_value',TypeVarTuple:'identifier name,expr? default_value',UAdd:'',USub:'',UnaryOp:'unaryop op,expr operand',While:'expr test,stmt* body,stmt* orelse',With:'withitem* items,stmt* body,string? type_comment',Yield:'expr? value',YieldFrom:'expr value',alias:'identifier name,identifier? asname',arg:'identifier arg,expr? annotation,string? type_comment',arguments:'arg* posonlyargs,arg* args,arg? vararg,arg* kwonlyargs,expr?* kw_defaults,arg? kwarg,expr* defaults',boolop:['And','Or'],cmpop:['Eq','NotEq','Lt','LtE','Gt','GtE','Is','IsNot','In','NotIn'],comprehension:'expr target,expr iter,expr* ifs,int is_async',excepthandler:['ExceptHandler'],expr:['BoolOp','NamedExpr','BinOp','UnaryOp','Lambda','IfExp','Dict','Set','ListComp','SetComp','DictComp','GeneratorExp','Await','Yield','YieldFrom','Compare','Call','FormattedValue','Interpolation','JoinedStr','TemplateStr','Constant','Attribute','Subscript','Starred','Name','List','Tuple','Slice'],expr_context:['Load','Store','Del'],keyword:'identifier? arg,expr value',match_case:'pattern pattern,expr? guard,stmt* body',mod:['Module','Interactive','Expression','FunctionType'],operator:['Add','Sub','Mult','MatMult','Div','Mod','Pow','LShift','RShift','BitOr','BitXor','BitAnd','FloorDiv'],pattern:['MatchValue','MatchSingleton','MatchSequence','MatchMapping','MatchClass','MatchStar','MatchAs','MatchOr'],stmt:['FunctionDef','AsyncFunctionDef','ClassDef','Return','Delete','Assign','TypeAlias','AugAssign','AnnAssign','For','AsyncFor','While','If','With','AsyncWith','Match','Raise','Try','TryStar','Assert','Import','ImportFrom','Global','Nonlocal','Expr','Pass','Break','Continue'],type_ignore:['TypeIgnore'],type_param:['TypeVar','ParamSpec','TypeVarTuple'],unaryop:['Invert','Not','UAdd','USub'],withitem:'expr context_expr,expr? optional_vars'}
+__BRYTHON__.ast_classes={Add:'',And:'',AnnAssign:'expr target,expr annotation,expr? value,int simple',Assert:'expr test,expr? msg',Assign:'expr* targets,expr value,string? type_comment',AsyncFor:'expr target,expr iter,stmt* body,stmt* orelse,string? type_comment',AsyncFunctionDef:'identifier name,arguments args,stmt* body,expr* decorator_list,expr? returns,string? type_comment,type_param* type_params',AsyncWith:'withitem* items,stmt* body,string? type_comment',Attribute:'expr value,identifier attr,expr_context ctx',AugAssign:'expr target,operator op,expr value',Await:'expr value',BinOp:'expr left,operator op,expr right',BitAnd:'',BitOr:'',BitXor:'',BoolOp:'boolop op,expr* values',Break:'',Call:'expr func,expr* args,keyword* keywords',ClassDef:'identifier name,expr* bases,keyword* keywords,stmt* body,expr* decorator_list,type_param* type_params',Compare:'expr left,cmpop* ops,expr* comparators',Constant:'constant value,string? kind',Continue:'',Del:'',Delete:'expr* targets',Dict:'expr?* keys,expr* values',DictComp:'expr key,expr? value,comprehension* generators',Div:'',Eq:'',ExceptHandler:'expr? type,identifier? name,stmt* body',Expr:'expr value',Expression:'expr body',FloorDiv:'',For:'expr target,expr iter,stmt* body,stmt* orelse,string? type_comment',FormattedValue:'expr value,int conversion,expr? format_spec',FunctionDef:'identifier name,arguments args,stmt* body,expr* decorator_list,expr? returns,string? type_comment,type_param* type_params',FunctionType:'expr* argtypes,expr returns',GeneratorExp:'expr elt,comprehension* generators',Global:'identifier* names',Gt:'',GtE:'',If:'expr test,stmt* body,stmt* orelse',IfExp:'expr test,expr body,expr orelse',Import:'alias* names,int? is_lazy',ImportFrom:'identifier? module,alias* names,int? level,int? is_lazy',In:'',Interactive:'stmt* body',Interpolation:'expr value,constant str,int conversion,expr? format_spec',Invert:'',Is:'',IsNot:'',JoinedStr:'expr* values',LShift:'',Lambda:'arguments args,expr body',List:'expr* elts,expr_context ctx',ListComp:'expr elt,comprehension* generators',Load:'',Lt:'',LtE:'',MatMult:'',Match:'expr subject,match_case* cases',MatchAs:'pattern? pattern,identifier? name',MatchClass:'expr cls,pattern* patterns,identifier* kwd_attrs,pattern* kwd_patterns',MatchMapping:'expr* keys,pattern* patterns,identifier? rest',MatchOr:'pattern* patterns',MatchSequence:'pattern* patterns',MatchSingleton:'constant value',MatchStar:'identifier? name',MatchValue:'expr value',Mod:'',Module:'stmt* body,type_ignore* type_ignores',Mult:'',Name:'identifier id,expr_context ctx',NamedExpr:'expr target,expr value',Nonlocal:'identifier* names',Not:'',NotEq:'',NotIn:'',Or:'',ParamSpec:'identifier name,expr? default_value',Pass:'',Pow:'',RShift:'',Raise:'expr? exc,expr? cause',Return:'expr? value',Set:'expr* elts',SetComp:'expr elt,comprehension* generators',Slice:'expr? lower,expr? upper,expr? step',Starred:'expr value,expr_context ctx',Store:'',Sub:'',Subscript:'expr value,expr slice,expr_context ctx',TemplateStr:'expr* values',Try:'stmt* body,excepthandler* handlers,stmt* orelse,stmt* finalbody',TryStar:'stmt* body,excepthandler* handlers,stmt* orelse,stmt* finalbody',Tuple:'expr* elts,expr_context ctx',TypeAlias:'expr name,type_param* type_params,expr value',TypeIgnore:'int lineno,string tag',TypeVar:'identifier name,expr? bound,expr? default_value',TypeVarTuple:'identifier name,expr? default_value',UAdd:'',USub:'',UnaryOp:'unaryop op,expr operand',While:'expr test,stmt* body,stmt* orelse',With:'withitem* items,stmt* body,string? type_comment',Yield:'expr? value',YieldFrom:'expr value',alias:'identifier name,identifier? asname',arg:'identifier arg,expr? annotation,string? type_comment',arguments:'arg* posonlyargs,arg* args,arg? vararg,arg* kwonlyargs,expr?* kw_defaults,arg? kwarg,expr* defaults',boolop:['And','Or'],cmpop:['Eq','NotEq','Lt','LtE','Gt','GtE','Is','IsNot','In','NotIn'],comprehension:'expr target,expr iter,expr* ifs,int is_async',excepthandler:['ExceptHandler'],expr:['BoolOp','NamedExpr','BinOp','UnaryOp','Lambda','IfExp','Dict','Set','ListComp','SetComp','DictComp','GeneratorExp','Await','Yield','YieldFrom','Compare','Call','FormattedValue','Interpolation','JoinedStr','TemplateStr','Constant','Attribute','Subscript','Starred','Name','List','Tuple','Slice'],expr_context:['Load','Store','Del'],keyword:'identifier? arg,expr value',match_case:'pattern pattern,expr? guard,stmt* body',mod:['Module','Interactive','Expression','FunctionType'],operator:['Add','Sub','Mult','MatMult','Div','Mod','Pow','LShift','RShift','BitOr','BitXor','BitAnd','FloorDiv'],pattern:['MatchValue','MatchSingleton','MatchSequence','MatchMapping','MatchClass','MatchStar','MatchAs','MatchOr'],stmt:['FunctionDef','AsyncFunctionDef','ClassDef','Return','Delete','Assign','TypeAlias','AugAssign','AnnAssign','For','AsyncFor','While','If','With','AsyncWith','Match','Raise','Try','TryStar','Assert','Import','ImportFrom','Global','Nonlocal','Expr','Pass','Break','Continue'],type_ignore:['TypeIgnore'],type_param:['TypeVar','ParamSpec','TypeVarTuple'],unaryop:['Invert','Not','UAdd','USub'],withitem:'expr context_expr,expr? optional_vars'}
 __BRYTHON__.ast_attributes={"stmt":"int lineno, int col_offset, int? end_lineno, int? end_col_offset","expr":"int lineno, int col_offset, int? end_lineno, int? end_col_offset","excepthandler":"int lineno, int col_offset, int? end_lineno, int? end_col_offset","arg":"int lineno, int col_offset, int? end_lineno, int? end_col_offset","keyword":"int lineno, int col_offset, int? end_lineno, int? end_col_offset","alias":"int lineno, int col_offset, int? end_lineno, int? end_col_offset","pattern":"int lineno, int col_offset, int end_lineno, int end_col_offset"}
 ;
 "use strict";
@@ -16990,7 +16988,7 @@ js.substr(index_for_positions)}
 scopes.pop()
 js+=annotation_code(scopes,class_scope,class_ref)
 js+=prefix+`$B.make_annotate_func(class_dict, annotate, frame)\n`
-js+=prefix+`var kls = $B.$class_constructor('${this.name}', `+
+js+=prefix+`var kls = $B.$class_constructor('${qualname}', `+
 `class_dict, metaclass, resolved_bases, bases, `+
 `keywords)\n`+
 prefix+'$B.trace_return_and_leave(frame, _b_.None)\n'+
@@ -17579,19 +17577,16 @@ $B.ast.ImportFrom.prototype.to_js=function(scopes){let can_be_lazy=true
 for(let i=scopes.length-1;i > 0;i--){if(scopes[i].type=='try'){can_be_lazy=false
 break}}
 let inum=add_to_positions(scopes,this)
-let js=prefix+`$B.set_lineno(frame, ${this.lineno})\n`
-for(let name of this.names){js+=prefix+`$B.$import_from("${this.module || ''}", `+
-`'${name.name}', `
 can_be_lazy=false 
 let import_func=can_be_lazy ? 'lazy_import_from' :'$import_from'
 let import_star=this.names.length==1 && this.names[0].name=='*'
 if(import_star){
 import_func='$import_from'
 last_scope(scopes).blurred=true}
-var js=prefix+`$B.set_lineno(frame, ${this.lineno})\n`+
-prefix+`$B.${import_func}("${this.module || ''}", `
-var names=this.names.map(x=> `"${x.name}"`).join(', '),aliases=[]
-for(var name of this.names){if(name.asname){
+let js=prefix+`$B.set_lineno(frame, ${this.lineno})\n`
+for(let name of this.names){js+=prefix+`$B.$import_from("${this.module || ''}", `+
+`'${name.name}', `
+if(name.asname){
 var binding_scope=bind(name.asname,scopes)
 var scope_name=make_scope_name(scopes,binding_scope)
 js+=`{${name.name}: [${scope_name}, '${name.asname}']}`}else{

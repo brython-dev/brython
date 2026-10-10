@@ -1771,7 +1771,6 @@ type_funcs.__prepare__ = function(cls) {
 type_funcs.__qualname___get = function(cls) {
     // builtin descriptor types store their instance __qualname__ getset under
     // the same dict key; use the dict value only when it is the qualname string
-    console.log('type qualname', cls)
     var q = $B.get_from_dict(cls, '__qualname__', $B.NULL)
     if (typeof q === 'string') {
         return q
