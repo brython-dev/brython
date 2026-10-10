@@ -579,6 +579,15 @@ class A:
 
 assert A.x == 5
 
+# __set_name__ is called whatever the name
+seen = []
+class Descriptor:
+    def __set_name__(self, owner, name):
+        seen.append(name)
+
+type("Box", (), {"__doc__": Descriptor(), "x": Descriptor()})
+assert seen == ["__doc__", "x"]
+
 # issue 1392
 class A():
     b = "This is b"
