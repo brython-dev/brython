@@ -638,7 +638,7 @@ $B.make_js_iterator_no_trace = function(iterator) {
     return $B.make_js_iterator(iterator, $B.NULL)
 }
 
-$B.make_js_iterator = function(iterator, frame, lineno) {
+$B.make_js_iterator = function(iterator, frame, lineno, inum) {
     // return a Javascript iterator usable in a loop
     // "for (item of $B.make_js_iterator(...)) {"
     var set_lineno = $B.set_lineno
@@ -690,8 +690,8 @@ $B.make_js_iterator = function(iterator, frame, lineno) {
                     if ($B.is_exc(err, [_b_.StopIteration])) {
                         return {done: true, value: null}
                     }
-                    if (iterator[$B.INUM]) {
-                        $B.set_inum(iterator[$B.INUM])
+                    if (inum) {
+                        $B.set_inum(inum)
                     }
                     throw err
                 }

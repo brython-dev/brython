@@ -488,4 +488,10 @@ assert window.eval('1e21') == 10 ** 21
 assert window.eval('Math.pow(2, 70)') == 2 ** 70
 assert window.eval('-Math.pow(2, 70)') == -2 ** 70
 
+# a for loop leaves the iterated JS object untouched
+a = window.Array.of(1, 2)
+for x in a:
+    pass
+assert len(window.Object.getOwnPropertySymbols(a)) == 0
+
 print("all tests ok...")
