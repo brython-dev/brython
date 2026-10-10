@@ -318,4 +318,8 @@ class B:
 
 assert dict(B()) == {0: 'e', 1: 'f', 2: 'g', 3: 'h'}
 
+# unpacking in dict comprehensions (Python 3.15)
+dicts = [{'a': 1}, {'b': 2}, {'a': 3}]
+assert {**d for d in dicts} == {'a': 3, 'b': 2}
+
 print("passed all tests..")
