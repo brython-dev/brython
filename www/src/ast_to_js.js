@@ -2045,7 +2045,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes) {
 
     js += prefix + `$B.make_annotate_func(class_dict, annotate, frame)\n`
 
-    js += prefix + `var kls = $B.$class_constructor('${this.name}', ` +
+    js += prefix + `var kls = $B.$class_constructor('${qualname}', ` +
               `class_dict, metaclass, resolved_bases, bases, ` +
               `keywords)\n` +
           prefix + '$B.trace_return_and_leave(frame, _b_.None)\n' +

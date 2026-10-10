@@ -361,6 +361,7 @@ $B.make_builtin_class = function(tp_name, tp_bases) {
     }
     var cls = {
         ob_type: _b_.type,
+        ht_qualname: tp_name,
         tp_name,
         tp_bases: tp_bases ?? [_b_.object],
         tp_base: tp_bases ? tp_bases[0] : _b_.object,

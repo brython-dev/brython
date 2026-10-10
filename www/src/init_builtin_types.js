@@ -10,6 +10,9 @@ function init_type(ns, name, data) {
         cls[slots[i]] = data[i]
     }
     $B.builtin_types[name] = cls
+    if (cls.tp_flags & $B.TPFLAGS.HEAPTYPE) {
+        cls.ht_qualname = name
+    }
 }
 
 var slots = [
@@ -781,7 +784,7 @@ init_type($B, "cell", [
 
   contents
     the contents of the cell. If not specified, the cell will be empty,
-    and 
+    and
  further attempts to access its cell_contents attribute will
     raise a ValueError.`,
     [_b_.object],
