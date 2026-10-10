@@ -6,6 +6,11 @@ assert m[1:2] == memoryview(b's')
 assert m[1:2] != memoryview(b'x')
 assert bytes(m[2:4]) == b'sa'
 
+# a released view is equal to itself alone
+released = memoryview(b'essai')
+released.release()
+assert released == released and released != m and m != released
+
 data = bytearray(b'abcefg')
 v = memoryview(data)
 assert v.tobytes() == b'abcefg'
