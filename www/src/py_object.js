@@ -577,15 +577,24 @@ object_funcs.__format__ = function() {
 object_funcs.__getstate__ = function(self) {
     var dict = $B.get_dict(self)
     // CPython 3.11+: instances with filled __slots__ return a 2-tuple
-    // (dict-or-None, {slot: value}); slot values live as the member
-    // descriptors' slot_value_* properties
-    var sd = null
-    for (var k in self) {
-        if (k.startsWith('slot_value_') && self[k] !== undefined) {
-            if (sd === null) {
-                sd = $B.empty_dict()
+    // (dict-or-None, {slot: value}); a slot is read as getattr reads it,
+    // through the first member descriptor of its name along the MRO
+    var sd = null,
+        seen = new Set()
+    for (var klass of $B.get_mro($B.get_class(self))) {
+        if (! (klass.tp_flags & $B.TPFLAGS.HEAPTYPE)) {
+            continue
+        }
+        for (var entry of _b_.dict.$iter_items($B.get_dict(klass))) {
+            var md = entry.value
+            if (seen.has(entry.key) || $B.get_class(md) !== $B.member_descriptor) {
+                continue
             }
-            _b_.dict.$setitem(sd, k.slice(11), self[k])
+            seen.add(entry.key)
+            if (self[md.d_member.attr] !== undefined) {
+                sd = sd ?? $B.empty_dict()
+                _b_.dict.$setitem(sd, entry.key, self[md.d_member.attr])
+            }
         }
     }
     if (sd !== null) {

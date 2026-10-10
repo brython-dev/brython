@@ -1104,10 +1104,14 @@ function set_slots(cl_dict, class_obj) {
                 }
                 continue
             }
+            // a slot that redeclares a base's has a storage of its own
+            var shadowed = $B.search_in_mro(class_obj.tp_base, key, $B.NULL)
             var member = {
                 name: key,
                 type: $B.TYPES.OBJECT,
-                attr: 'slot_value_' + key,
+                attr: shadowed !== $B.NULL &&
+                    $B.get_class(shadowed) === $B.member_descriptor ?
+                    Symbol(key) : 'slot_value_' + key,
                 flags: 0
             }
             var md = {
