@@ -213,6 +213,10 @@ $B.make_mro = function(cls) {
         seqs = [],
         pos1 = 0
     for (var base of bases) {
+        if (bases.indexOf(base) != bases.lastIndexOf(base)) {
+            $B.RAISE(_b_.TypeError,
+                `duplicate base class ${$B.get_name(base)}`)
+        }
         // We can't simply push bases[i].__mro__
         // because it would be modified in the algorithm
         let bmro = [],
