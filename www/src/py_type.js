@@ -49,22 +49,6 @@ $B.$class_constructor = function(qualname, dict, metaclass, resolved_bases,
         $B.str_dict_set(dict, '__hash__', _b_.None)
     }
 
-    // Check if class has __slots__
-    var slots = $B.str_dict_get(dict, '__slots__', $B.NULL)
-    if (slots !== $B.NULL) {
-        if (typeof slots == "string") {
-            slots = [slots]
-        } else {
-            for (let item of $B.make_js_iterator(slots)) {
-                if (typeof item != 'string') {
-                    $B.RAISE(_b_.TypeError, '__slots__ items must be ' +
-                        `strings, not '${$B.class_name(item)}'`)
-                }
-            }
-        }
-        $B.str_dict_set(dict, '__slots__', slots)
-    }
-
     set_type_new(dict)
 
     // Apply method __new__ of metaclass to create the class object
@@ -1090,7 +1074,21 @@ function reset_setattr(cls) {
 function set_slots(cl_dict, class_obj) {
     let slots = $B.str_dict_get(cl_dict, '__slots__', $B.NULL)
     if (slots !== $B.NULL) {
+        if (typeof slots == 'string') {
+            slots = [slots]
+        }
         for (let key of $B.make_js_iterator(slots)) {
+            if (typeof key != 'string') {
+                $B.RAISE(_b_.TypeError, '__slots__ items must be ' +
+                    `strings, not '${$B.class_name(key)}'`)
+            }
+            if (! _b_.str.tp_funcs.isidentifier(key)) {
+                $B.RAISE(_b_.TypeError, '__slots__ must be identifiers')
+            }
+            if (MARKERS.includes(key) && class_obj.$slots.includes(key)) {
+                $B.RAISE(_b_.TypeError,
+                    `${key} slot disallowed: we already got one`)
+            }
             // CPython mangles private slot names at class-creation time,
             // matching the compiler's mangling of self.__private accesses
             if (key.startsWith('__') && ! key.endsWith('__')) {
