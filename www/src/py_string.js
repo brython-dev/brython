@@ -223,7 +223,7 @@ str_iterator_funcs.__reduce__ = function(self) {
 }
 
 str_iterator_funcs.__setstate__ = function(self, value) {
-    self.it = self.obj[Symbol.iterator]()
+    self.it = to_string(self.obj)[Symbol.iterator]()
     for (var i = 0; i < value; i++) {
         self.it.next()
     }
@@ -1811,7 +1811,7 @@ _b_.str.tp_iter = function(self) {
         ob_type: $B.str_iterator,
         obj: self,
         len: _b_.str.mp_length(self),
-        it: self[Symbol.iterator]()
+        it: to_string(self)[Symbol.iterator]()
     }
 }
 
