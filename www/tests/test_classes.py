@@ -1295,6 +1295,10 @@ assert t.__getstate__() is None  # after
 t.a = 1
 assert t.__getstate__() == (None, {'a': 1})  # after
 
+# a slot whose descriptor was deleted can no longer be written
+del T.a
+assert_raises(AttributeError, setattr, t, 'a', 2)
+
 # PR 2746
 class Meta(type):
 

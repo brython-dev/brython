@@ -291,12 +291,6 @@ _b_.object.tp_setattro = function(self, attr, value) {
             return setter(in_mro, self, value)
         }
     }
-    var slots = $B.get_from_dict(klass, '__slots__', $B.NULL)
-    if (slots !== $B.NULL) {
-        if (_b_.tuple.sq_contains(slots, attr)) {
-            self.slot_values[attr] = value
-        }
-    }
     var dict = $B.get_dict(self)
     // a class whose __slots__ contains '__dict__' keeps a per-instance
     // dict: create it lazily on the first out-of-slots setattr
