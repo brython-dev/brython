@@ -919,7 +919,14 @@ $B.$getattr = function(obj, attr, _default) {
                 return res
             }
         }
-        var res = $B.type_getattribute(obj, attr)
+        try {
+            var res = $B.type_getattribute(obj, attr)
+        } catch (err) {
+            if (_default !== undefined && $B.is_exc(err, _b_.AttributeError)) {
+                return _default
+            }
+            throw err
+        }
     }
     if (res === $B.NULL) {
         if (_default !== undefined) {
