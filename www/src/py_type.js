@@ -229,7 +229,6 @@ function calculate_metaclass(metatype, bases) {
 }
 
 function shape_differs(t1, t2) {
-    console.log('shape differs', t1, t2)
     return (
         t1.tp_basicsize != t2.tp_basicsize ||
         t1.tp_itemsize != t2.tp_itemsize
@@ -256,6 +255,9 @@ function solid_base(type) {
         base = solid_base(type.tp_base)
     } else {
         base = _b_.object
+    }
+    if (! (type.tp_flags & TPFLAGS.HEAPTYPE)) {
+        return shape_differs(type, base) ? type : base
     }
     try {
         var slots = $B.search_in_dict(type, '__slots__', $B.NULL)
