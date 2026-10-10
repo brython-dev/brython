@@ -742,12 +742,19 @@ $B.type_getattribute = function(klass, attr) {
         var res = meta.tp_getattro(klass, attr)
         return res
     }
-    var getattro = $B.search_slot(meta, 'tp_getattro', $B.NULL)
+    var getattro = $B.search_slot(meta, 'tp_getattro', $B.NULL),
+        missing = null
     if (getattro !== $B.NULL) {
         if (test) {
             console.log('getattro', getattro)
         }
-        var res = getattro(klass, attr, $B.NULL)
+        try {
+            var res = getattro(klass, attr)
+        } catch (err) {
+            $B.RAISE_IF_NOT(err, _b_.AttributeError)
+            missing = err
+            res = $B.NULL
+        }
         if (test) {
             console.log('result of getattro', res)
         }
@@ -757,6 +764,10 @@ $B.type_getattribute = function(klass, attr) {
     }
     var getattr = $B.search_in_mro(meta, '__getattr__', $B.NULL)
     if (getattr === $B.NULL) {
+        if (missing !== null) {
+            // without __getattr__, the AttributeError raised stands
+            throw missing
+        }
         return $B.NULL
     }
     try {
