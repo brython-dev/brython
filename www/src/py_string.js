@@ -172,24 +172,10 @@ function startswith(self, prefix, start, end) {
 str.$getitem_slice = function(_self, slice) {
     var len = str.mp_length(_self),
         s = _b_.slice.$conv_for_seq(slice, len),
-        start = pypos2jspos(_self, s.start),
-        stop = pypos2jspos(_self, s.stop),
-        step = s.step
+        chars = _self.surrogates === undefined ? _self : to_chars(_self)
     var res = ""
-    if (step > 0) {
-        if (stop <= start) {
-            return ""
-        }
-        for (let i = start; i < stop; i += step) {
-            res += _self[i]
-        }
-    } else {
-        if (stop >= start) {
-            return ''
-        }
-        for (let i = start; i > stop; i += step) {
-            res += _self[i]
-        }
+    for (let i = s.start; s.step > 0 ? i < s.stop : i > s.stop; i += s.step) {
+        res += chars[i]
     }
     return $B.String(res)
 }
