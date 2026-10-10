@@ -1545,8 +1545,6 @@ _b_.type.tp_new = function(cls, args, kw) {
                     }
                 } else {
                     v.$function_infos[$B.func_attrs.method_class] = class_obj
-                    v.$function_infos[$B.func_attrs.__qualname__] = qualname + '.' +
-                        v.$function_infos[$B.func_attrs.__name__]
                 }
             }
         }
