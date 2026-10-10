@@ -2367,7 +2367,7 @@ $B.GenericAlias.$factory = function(origin, args) {
     var res = {
         ob_type: $B.GenericAlias,
         origin,
-        args,
+        args: $B.is_tuple(args) ? args : $B.fast_tuple([args]),
         starred: false
     }
     return res
