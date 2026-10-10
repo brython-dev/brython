@@ -648,6 +648,16 @@ assert str(list[int, ...]) == 'list[int, ...]'
 assert str(tuple[str]) == 'tuple[str]'
 assert isinstance(list[str], types.GenericAlias)
 
+# __class_getitem__ receives the subscript as written, a lone one unpacked
+class G:
+    def __class_getitem__(cls, item):
+        return item
+
+assert G[int] is int
+assert G[int, str] == (int, str)
+assert list[int].__args__ == (int,)
+assert type[int].__args__ == (int,)
+
 try:
     isinstance([1, 2, 3], list[str])
     raise Exception("should have raised TypeError")

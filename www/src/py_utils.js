@@ -860,9 +860,6 @@ $B.$getitem1 = function(obj, item) {
         if (meta_gi !== $B.NULL) {
             return $B.$call(meta_gi, obj, item)
         }
-        if (! Array.isArray(item)) {
-            item = $B.fast_tuple([item])
-        }
         if (obj === _b_.type) {
             return $B.$class_getitem(obj, item)
         }
