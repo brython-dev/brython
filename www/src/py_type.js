@@ -1090,7 +1090,15 @@ function reset_setattr(cls) {
 function set_slots(cl_dict, class_obj) {
     let slots = $B.str_dict_get(cl_dict, '__slots__', $B.NULL)
     if (slots !== $B.NULL) {
+        if ($B.is_str(slots)) {
+            slots = [slots]
+        }
         for (let key of $B.make_js_iterator(slots)) {
+            if (! $B.is_str(key)) {
+                $B.RAISE(_b_.TypeError, '__slots__ items must be ' +
+                    `strings, not '${$B.class_name(key)}'`)
+            }
+            key = _b_.str.$to_string(key)
             // CPython mangles private slot names at class-creation time,
             // matching the compiler's mangling of self.__private accesses
             if (key.startsWith('__') && ! key.endsWith('__')) {
