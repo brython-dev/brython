@@ -1357,6 +1357,15 @@ class G(metaclass=Meta):
 
 assert G['x'] == 'x'
 
+# __class_getitem__ receives the key as written, and a builtin generic keeps
+# its arguments in a tuple
+class Box:
+    def __class_getitem__(cls, key):
+        return key
+
+assert Box[3] == 3 and Box[3, 4] == (3, 4) and Box[(3,)] == (3,)
+assert list[int].__args__ == (int,) and dict[str, int].__args__ == (str, int)
+
 # PR 3004
 class A:
 
