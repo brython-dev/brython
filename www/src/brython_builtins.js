@@ -279,8 +279,10 @@ $B.make_mro = function(cls) {
             }
         }
         if (candidate === null) {
-            $B.RAISE(_b_.TypeError,
-                "inconsistent hierarchy, no C3 MRO is possible")
+            var heads = new Set(non_empty.map(seq => seq[0]))
+            $B.RAISE(_b_.TypeError, 'Cannot create a consistent method ' +
+                'resolution order (MRO) for bases ' +
+                Array.from(heads, $B.get_name).join(', '))
         }
         mro[mpos++] = candidate
         for (let i = 0; i < seqs.length;  i++) {
