@@ -1516,11 +1516,6 @@ _b_.type.tp_new = function(cls, args, kw) {
             if (test) {
                 // console.log('check __set_name__ for', key, v)
             }
-            if(['__module__', '__doc__', '__dict__', '__qualname__',
-                    '__firstlineno__', '__static_attributes__',
-                    '__annotate_func__'].includes(key)){
-                continue
-            }
             if (key == '__class_getitem__') {
                 // always a classmethod
                 if ($B.get_class(v) !== _b_.classmethod) {
