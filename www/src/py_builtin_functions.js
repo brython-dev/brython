@@ -2296,12 +2296,12 @@ _b_.vars = function() {
     var obj = $.obj
     if (obj === $B.NULL) {
         return _b_.locals()
-    } else {
-        if ($B.get_dict(obj)) {
-            return $B.get_dict(obj)
-        } else {
-            $B.RAISE(_b_.TypeError, "vars() argument must have __dict__ attribute")
-        }
+    }
+    try {
+        return $B.$getattr(obj, '__dict__')
+    } catch (err) {
+        $B.RAISE_IF_NOT(err, _b_.AttributeError)
+        $B.RAISE(_b_.TypeError, "vars() argument must have __dict__ attribute")
     }
 }
 
