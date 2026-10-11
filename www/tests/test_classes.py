@@ -1366,5 +1366,35 @@ class A:
 a = A()
 assert a == a
 
+# a metaclass __getattribute__ is called with the class and the name
+class Meta(type):
+    def __getattribute__(cls, name):
+        if name == "hidden":
+            raise AttributeError("custom message")
+        return super().__getattribute__(name)
+
+class WithFallback(Meta):
+    def __getattr__(cls, name):
+        return "fallback"
+
+class A(metaclass=Meta):
+    x = 1
+
+class B(metaclass=WithFallback):
+    x = 1
+
+assert A.x == 1
+assert A.__name__ == "A"
+assert getattr(A, "nothing", 0) == 0
+assert not hasattr(A, "hidden")
+assert getattr(A, "hidden", 0) == 0
+try:
+    A.hidden
+    raise AssertionError("A.hidden did not raise")
+except AttributeError as exc:
+    assert str(exc) == "custom message", str(exc)
+assert B.x == 1
+assert B.hidden == "fallback"
+
 
 print('passed all tests..')
