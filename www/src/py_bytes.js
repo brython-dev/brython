@@ -1246,15 +1246,7 @@ _b_.bytearray.sq_ass_item = function(self, arg, value) {
             $B.RAISE(_b_.IndexError, 'list index out of range')
         }
     } else if ($B.$isinstance(arg, _b_.slice)) {
-        var start = arg.start === _b_.None ? 0 : arg.start
-        var stop = arg.stop === _b_.None ? self.source.length : arg.stop
-
-        if (start < 0) {
-            start = self.source.length + start
-        }
-        if (stop < 0) {
-            stop = self.source.length + stop
-        }
+        var {start, stop} = _b_.slice.$conv_for_seq(arg, self.source.length)
         if (stop > self.source.length) {
             check_exports(self)
         }
