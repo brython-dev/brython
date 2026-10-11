@@ -1,5 +1,8 @@
 import sys
 
+# the console's write() returns the number of characters written
+assert sys.__stdout__.write("ab\n") == 3
+
 # issue 1218
 x = "Outer stack frame"
 
