@@ -2325,13 +2325,6 @@ _b_.vars = function() {
 var zip = _b_.zip
 
 zip.$factory = function() {
-    var res = {
-        ob_type: zip,
-        items: []
-    }
-    if (arguments.length == 0) {
-        return res
-    }
     var [args, kw] = $B.parse_args_kw('zip', arguments)
     var strict = $B.$bool($B.str_dict_get(kw, 'strict', false))
     var iters = []
@@ -2353,6 +2346,9 @@ _b_.zip.tp_iter = function(self) {
 _b_.zip.tp_iternext = function*(self){
     var res = [],
         len = self.iters.length
+    if (len == 0) {
+        return
+    }
     for (var i = 0; i < len; i++) {
         var v = self.iters[i].next()
         if (v.done) {
@@ -2378,10 +2374,6 @@ _b_.zip.tp_iternext = function*(self){
 }
 
 _b_.zip.tp_new = function(cls, args, kw) {
-    var res = {
-        ob_type: cls,
-        items: []
-    }
     var strict = $B.$bool($B.str_dict_get(kw, 'strict', false))
     var iters = []
     for (var arg of args) {
