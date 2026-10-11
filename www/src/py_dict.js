@@ -671,7 +671,7 @@ function dict_init(self, args, kw) {
                     // keys and values
                     for (var key of $B.make_js_iterator($B.$call(keys, args))) {
                         try {
-                            let value = $B.$call(gi, args, key)
+                            let value = $B.$getitem1(args, key)
                             dict.$setitem(self, key, value)
                         } catch (err) {
                             if ($B.is_exc(err, _b_.StopIteration)) {
@@ -1089,7 +1089,7 @@ _b_.dict.tp_init = function(self) {
                     // keys and values
                     for (var key of $B.make_js_iterator($B.$call(keys, args))) {
                         try {
-                            let value = $B.$call(gi, args, key)
+                            let value = $B.$getitem1(args, key)
                             dict.$setitem(self, key, value)
                         } catch (err) {
                             if ($B.is_exc(err, _b_.StopIteration)) {

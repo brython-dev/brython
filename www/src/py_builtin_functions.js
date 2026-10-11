@@ -713,17 +713,24 @@ $B.call_special_unary = function(obj, name, op_repr) {
         $B.RAISE(_b_.TypeError,
             `bad operand type for ${op_repr}: '${$B.class_name(obj)}'`)
     }
-    if (typeof raw == 'function') {
-        // fast path: plain method; binding to obj then calling with no
-        // argument is equivalent to calling with obj
-        return $B.$call(raw, obj)
+    return $B.call_special(raw, obj)
+}
+
+$B.call_special = function(raw, obj, ...args) {
+    // Calls `raw`, a special method found on the type of `obj`, bound to
+    // `obj` by the descriptor protocol, with `args`
+    var klass = $B.get_class(raw)
+    if (klass === $B.function) {
+        // fast path: plain method; binding to obj then calling with args
+        // is equivalent to calling with obj and args
+        return $B.$call(raw, obj, ...args)
     }
-    var descr_get = raw.ob_type && raw.ob_type.tp_descr_get
-    if (descr_get) {
-        return $B.$call(descr_get(raw, obj, klass))
+    var descr_get = $B.search_slot(klass, 'tp_descr_get', $B.NULL)
+    if (descr_get !== $B.NULL) {
+        return $B.$call(descr_get(raw, obj, $B.get_class(obj)), ...args)
     }
-    // non-descriptor class attribute: "bound" to nothing, call with no args
-    return $B.$call(raw)
+    // non-descriptor class attribute: "bound" to nothing
+    return $B.$call(raw, ...args)
 }
 
 $B.search_in_dict = function(obj, attr, _default) {
@@ -1257,7 +1264,7 @@ $B.iterator.tp_iternext = function*(self){
     // as CPython)
     var res
     try {
-        res = $B.$call(self.getitem, self.it_seq, self.it_index)
+        res = $B.call_special(self.getitem, self.it_seq, self.it_index)
     } catch (err) {
         if ($B.is_exc(err, [_b_.IndexError, _b_.StopIteration])) {
             return
@@ -1822,9 +1829,8 @@ reversed.$factory = function(seq) {
     if (rev_method !== null) {
         return $B.$call(rev_method, seq)
     }
-    try {
-        var method = $B.$getattr(klass, '__getitem__')
-    } catch (err) {
+    var method = $B.search_in_mro(klass, '__getitem__', $B.NULL)
+    if (method === $B.NULL) {
         $B.RAISE(_b_.TypeError, "argument to reversed() must be a sequence")
     }
 
@@ -1869,7 +1875,7 @@ _b_.reversed.tp_iternext = function*(self){
     if (self.counter < 0) {
         return
     }
-    yield $B.$call(self.getitem, self.seq, self.counter)
+    yield $B.call_special(self.getitem, self.seq, self.counter)
 }
 
 _b_.reversed.tp_new = function(cls, args, kw) {
@@ -1880,9 +1886,8 @@ _b_.reversed.tp_new = function(cls, args, kw) {
     if (rev_method !== $B.NULL) {
         return $B.$call(rev_method, seq)
     }
-    try {
-        var method = $B.$getattr($B.get_class(seq), '__getitem__')
-    } catch (err) {
+    var method = $B.search_in_mro($B.get_class(seq), '__getitem__', $B.NULL)
+    if (method === $B.NULL) {
         $B.RAISE(_b_.TypeError, "argument to reversed() must be a sequence")
     }
 

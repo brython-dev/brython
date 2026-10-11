@@ -3502,6 +3502,47 @@ assert list(deque_2934(iterable=[1, 2])) == [1, 2]
 assert deque_2934().maxlen is None
 assert_raises(ValueError, deque_2934, [], -1)
 
+# __getitem__ is bound like any special method
+class StaticItem:
+    @staticmethod
+    def __getitem__(index):
+        return [1, 2][index]
+    def __len__(self):
+        return 2
+    def keys(self):
+        return [0]
+
+class ClassItem:
+    @classmethod
+    def __getitem__(cls, index):
+        return [cls, 1][index]
+
+class StaticMap:
+    @staticmethod
+    def __getitem__(key):
+        return key * 2
+    def keys(self):
+        return ["a"]
+
+class Calls:
+    def __call__(self, *args):
+        return len(args)
+
+class NotDescriptors:
+    __getitem__ = Calls()
+    __neg__ = abs
+
+def kwargs(**kw):
+    return kw
+
+assert StaticItem()[1] == 2 and list(StaticItem()) == [1, 2]
+assert list(reversed(StaticItem())) == [2, 1]
+assert dict(StaticItem()) == {0: 1}
+assert ClassItem()[0] is ClassItem
+assert kwargs(**StaticMap()) == {"a": "aa"}
+assert NotDescriptors()[0] == 1
+assert_raises(TypeError, lambda: -NotDescriptors())
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

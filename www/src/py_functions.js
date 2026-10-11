@@ -821,7 +821,7 @@ function make_arguments_parser(f) {
                             `not ${$B.class_name(elt.$kw[i])}`)
                     }
                     for (let key of $B.make_js_iterator(keys_method(elt.$kw[i]))) {
-                        add_key(key, getitem(elt.$kw[i], key))
+                        add_key(key, $B.$getitem1(elt.$kw[i], key))
                     }
                 }
             }
