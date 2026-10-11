@@ -3275,18 +3275,28 @@ str_funcs.translate = function(self, table) {
         cp,
         _self = to_string(self)
     for (var char of _self) {
-        cp = _b_.ord(char)
+        // only a LookupError of the table leaves the character as it is
         try {
-            var repl = $B.$call(getitem, cp)
-            if (repl !== _b_.None) {
-                if (typeof repl == "string") {
-                    res.push(repl)
-                } else if (typeof repl == "number") {
-                    res.push(String.fromCharCode(repl))
-                }
-            }
+            var repl = $B.$call(getitem, _b_.ord(char))
         } catch (err) {
+            if (! $B.is_exc(err, [_b_.LookupError])) {
+                throw err
+            }
             res.push(char)
+            continue
+        }
+        if ($B.is_str(repl)) {
+            res.push(to_string(repl))
+        } else if ($B.$isinstance(repl, _b_.int)) {
+            cp = $B.PyNumber_Index(repl)
+            if (cp < 0 || cp > 0x10FFFF) {
+                $B.RAISE(_b_.ValueError,
+                    "character mapping must be in range(0x110000)")
+            }
+            res.push(String.fromCodePoint(Number(cp)))
+        } else if (repl !== _b_.None) {
+            $B.RAISE(_b_.TypeError,
+                "character mapping must return integer, None or str")
         }
     }
     return res.join("")
