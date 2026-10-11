@@ -256,7 +256,7 @@ $B.method_descriptor.tp_call = function(self, ...args) {
         var name = self.d_name
         var class_name = self.d_type.tp_name
         $B.RAISE(_b_.TypeError,
-            `unbound method ${class_name}.${name} needs an argument`
+            `unbound method ${class_name}.${name}() needs an argument`
         )
     }
     try {
