@@ -462,7 +462,7 @@
                 "sha256:fbd18dc82d7bf274b37aa48d664534330af744e03bccf696d6f4c6042e7d19e7"
             ],
             "markers": "python_version >= '3.9'",
-            "version": "==6.7.0"
+            "version": ">=6.9.1"
         },
         "propcache": {
             "hashes": [
