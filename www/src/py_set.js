@@ -742,21 +742,8 @@ set_funcs.issubset = function(self, other) {
             }
         }
         return true
-    } else if ($B.is_dict(other)) {
-        for (let entry of _b_.dict.$iter_items(self)) {
-            if (! set_lookkey(other, entry.key, entry.hash)) {
-                return false
-            }
-        }
-        return true
     } else {
-        var member_func = $B.member_func(other)
-        for (let entry of set_iter_with_hash(self)) {
-            if (! member_func(entry.item)) {
-                return false
-            }
-        }
-        return true
+        return set_funcs.issubset(self, set.$factory(other))
     }
 }
 
