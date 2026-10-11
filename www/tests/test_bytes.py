@@ -36,6 +36,20 @@ assert b == bytearray([3, 2, 5])
 b.insert(1, 4)
 assert b == bytearray([3, 4, 2, 5])
 
+# a bytearray iterator reads the current size of the bytearray
+b = bytearray(b'abcd')
+it = iter(b)
+next(it)
+b.append(101)
+assert list(it) == [98, 99, 100, 101]
+b = bytearray(b'abcd')
+it = iter(b)
+next(it)
+b.clear()
+assert list(it) == []
+b.append(1)
+assert list(it) == []
+
 assert b'-'.join([b'a', b'b']) == b'a-b'
 
 # encoding and decoding
