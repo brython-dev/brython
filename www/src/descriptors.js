@@ -279,6 +279,7 @@ $B.method_descriptor.tp_descr_get = function(self, obj, klass) {
     // getters (which read self.$function_infos[...] unguarded) work on
     // the bound method, as they do on the unbound descriptor's method.
     f.$function_infos = self.method.$function_infos
+    f.__text_signature__ = self.method.__text_signature__
     f.ml = {ml_name: self.d_name}
     f.m_self = obj
     return f
@@ -300,7 +301,7 @@ method_descriptor_funcs.__reduce__ = function(self) {
 }
 
 method_descriptor_funcs.__text_signature___get = function(self) {
-
+    return self.method.__text_signature__ ?? _b_.None
 }
 
 method_descriptor_funcs.__text_signature___set = function(self) {

@@ -3502,6 +3502,15 @@ assert list(deque_2934(iterable=[1, 2])) == [1, 2]
 assert deque_2934().maxlen is None
 assert_raises(ValueError, deque_2934, [], -1)
 
+# list.sort takes keyword arguments only, and its signature says so
+assert_raises(TypeError, [].sort, 1,
+    msg='sort() takes no positional arguments')
+sorted_keyword = ['bb', 'a']
+sorted_keyword.sort(key=len, reverse=True)
+assert sorted_keyword == ['bb', 'a']
+assert list.sort.__text_signature__ == '($self, /, *, key=None, reverse=False)'
+assert [].sort.__text_signature__ == list.sort.__text_signature__
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
