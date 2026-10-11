@@ -1937,6 +1937,18 @@ c = C()
 delattr(c, "x")
 assert c.count == 1
 
+# delattr() and the __delattr__ of object and type return None
+class D:
+    pass
+
+d = D()
+d.x = 1
+assert delattr(d, "x") is None
+d.x = 1
+assert object.__delattr__(d, "x") is None
+D.y = 1
+assert type.__delattr__(D, "y") is None
+
 # setting __defaults__ to functions (issue #1053)
 
 def ftrk(x, y=5):

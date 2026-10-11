@@ -260,6 +260,7 @@ function make_setattr_delattr(cls) {
             '__delattr__',
             function(obj, attr) {
                 setattro(obj, attr, $B.NULL)
+                return _b_.None
             }
         )
     )
