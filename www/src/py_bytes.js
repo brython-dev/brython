@@ -1832,7 +1832,6 @@ var bytes_iterator = $B.bytes_iterator
 
 /* bytes_iterator start */
 $B.bytes_iterator.tp_iter = function(self) {
-    self.index = -1
     return self
 }
 
