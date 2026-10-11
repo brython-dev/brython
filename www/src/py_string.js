@@ -1710,7 +1710,7 @@ _b_.str.tp_richcompare = function(self, other, op) {
 }
 
 _b_.str.sq_repeat = function(self, other) {
-    $B.check_nb_args_no_kw('str.__mul__', 2, arguments)
+    $B.check_nb_args_no_kw('str.__mul__', 1, arguments, true)
     var _self = to_string(self)
     if (! $B.is_int(other)) {
         $B.RAISE(_b_.TypeError,
@@ -2340,7 +2340,7 @@ str_funcs.format = function() {
 }
 
 str_funcs.format_map = function(self, mapping) {
-    $B.check_nb_args_no_kw('str.format_map', 2, arguments)
+    $B.check_nb_args_no_kw('str.format_map', 1, arguments, true)
     var _self = to_string(self)
     return str.tp_funcs.format(_self, {$nat: 'mapping', mapping})
 }
@@ -2594,7 +2594,7 @@ str_funcs.isupper = function(self) {
 }
 
 str_funcs.join = function(self, iterable) {
-    $B.check_nb_args_no_kw('str.join', 2, arguments)
+    $B.check_nb_args_no_kw('str.join', 1, arguments, true)
     var _self = to_string(self)
     iterable = _b_.iter(iterable)
     var res = [],
@@ -2735,7 +2735,7 @@ str_funcs.maketrans = function() {
 }
 
 str_funcs.partition = function(self, sep) {
-    $B.check_nb_args_no_kw('str.partition', 2, arguments)
+    $B.check_nb_args_no_kw('str.partition', 1, arguments, true)
     var _self
     if (sep == "") {
         $B.RAISE(_b_.ValueError, "empty separator")
@@ -2752,7 +2752,7 @@ str_funcs.partition = function(self, sep) {
 }
 
 str_funcs.removeprefix = function(self, prefix) {
-    $B.check_nb_args_no_kw('str.removeprefix', 2, arguments)
+    $B.check_nb_args_no_kw('str.removeprefix', 1, arguments, true)
     var _self
     if (! $B.is_str(prefix)) {
         $B.RAISE(_b_.ValueError, "prefix should be str, not " +
@@ -2766,7 +2766,7 @@ str_funcs.removeprefix = function(self, prefix) {
 }
 
 str_funcs.removesuffix = function(self, suffix) {
-    $B.check_nb_args_no_kw('str.removesuffix', 2, arguments)
+    $B.check_nb_args_no_kw('str.removesuffix', 1, arguments, true)
     var _self
     if (! $B.is_str(suffix)) {
         $B.RAISE(_b_.ValueError, "suffix should be str, not " +
@@ -2906,7 +2906,7 @@ str_funcs.rjust = function() {
 }
 
 str_funcs.rpartition = function(self, sep) {
-    $B.check_nb_args_no_kw('str.rpartition', 2, arguments)
+    $B.check_nb_args_no_kw('str.rpartition', 1, arguments, true)
     check_str(sep)
     var _self = reverse(self),
     sep = reverse(sep)
@@ -3269,7 +3269,7 @@ str_funcs.title = function(self) {
 }
 
 str_funcs.translate = function(self, table) {
-    $B.check_nb_args_no_kw('str.translate', 2, arguments)
+    $B.check_nb_args_no_kw('str.translate', 1, arguments, true)
     var res = [],
         getitem = $B.$getattr(table, "__getitem__"),
         cp,
@@ -3299,7 +3299,7 @@ str_funcs.upper = function(self) {
 }
 
 str_funcs.zfill = function(self, width) {
-    $B.check_nb_args_no_kw('str.zfill', 2, arguments)
+    $B.check_nb_args_no_kw('str.zfill', 1, arguments, true)
     var _self = to_string(self)
     var len = str.mp_length(_self)
     if (width <= len) {

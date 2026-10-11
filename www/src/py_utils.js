@@ -408,15 +408,22 @@ $B.check_nb_args = function(name, expected, args) {
         }
     }
     if (len != expected) {
-        if (expected == 0) {
-            $B.RAISE(_b_.TypeError, name + "() takes no argument" +
-                " (" + len + " given)")
-        } else {
-            $B.RAISE(_b_.TypeError, name + "() takes exactly " +
-                expected + " argument" + (expected < 2 ? '' : 's') +
-                " (" + len + " given)")
-        }
+        nb_args_error(name, expected, len)
     }
+}
+
+function nb_args_error(name, expected, given) {
+    // A builtin that takes no argument or exactly one is named with its
+    // parentheses, one that takes several by its bare name
+    if (expected == 0) {
+        $B.RAISE(_b_.TypeError, name + "() takes no arguments" +
+            " (" + given + " given)")
+    } else if (expected == 1) {
+        $B.RAISE(_b_.TypeError, name + "() takes exactly one argument" +
+            " (" + given + " given)")
+    }
+    $B.RAISE(_b_.TypeError, name.split('.').pop() + " expected " +
+        expected + " arguments, got " + given)
 }
 
 $B.check_no_kw = function(name, x, y) {
@@ -439,8 +446,9 @@ $B.keyword_is_empty = function(kw) {
     return true
 }
 
-$B.check_nb_args_no_kw = function(name, expected, args) {
-    // Check the number of arguments and absence of keyword args
+$B.check_nb_args_no_kw = function(name, expected, args, method) {
+    // Check the number of arguments and absence of keyword args. The
+    // arguments of a method start with the instance, which is not counted
     var len = args.length,
         last = args[len - 1]
     if (last && last.$kw) {
@@ -449,15 +457,11 @@ $B.check_nb_args_no_kw = function(name, expected, args) {
             $B.RAISE(_b_.TypeError, name + "() takes no keyword arguments")
         }
     }
+    if (method) {
+        len--
+    }
     if (len != expected) {
-        if (expected == 0) {
-            $B.RAISE(_b_.TypeError, name + "() takes no argument" +
-                " (" + len + " given)")
-        } else {
-            $B.RAISE(_b_.TypeError, name + "() takes exactly " +
-                expected + " argument" + (expected < 2 ? '' : 's') +
-                " (" + len + " given)")
-        }
+        nb_args_error(name, expected, len)
     }
 }
 
