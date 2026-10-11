@@ -3502,6 +3502,50 @@ assert list(deque_2934(iterable=[1, 2])) == [1, 2]
 assert deque_2934().maxlen is None
 assert_raises(ValueError, deque_2934, [], -1)
 
+# super() in a function nested in a method, and __class__ in locals()
+class Base_class_cell:
+    def greet(self):
+        return "base"
+
+class Class_cell(Base_class_cell):
+    def plain(self):
+        return sorted(locals())
+
+    def uses_super(self):
+        super()
+        return sorted(locals())
+
+    def nested(self):
+        def inner(obj):
+            return super().greet(), sorted(locals())
+        return inner(self), sorted(locals())
+
+    def in_lambda(self):
+        return (lambda obj: super().greet())(self)
+
+assert Class_cell().plain() == ['self']
+assert Class_cell().uses_super() == ['__class__', 'self']
+assert Class_cell().nested() == (('base', ['__class__', 'obj']),
+                                 ['__class__', 'inner', 'self'])
+assert Class_cell().in_lambda() == 'base'
+
+class Class_cell_order(Base_class_cell):
+    def m(self):
+        def inner(obj):
+            x = 1
+            super()
+            return list(locals())
+        return inner(self), list(locals())
+
+assert Class_cell_order().m() == (['obj', 'x', '__class__'],
+                                  ['self', 'inner', '__class__'])
+
+def super_outside_class(x):
+    return super()
+
+assert_raises(RuntimeError, super_outside_class, 1,
+    msg="super(): __class__ cell not found")
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
