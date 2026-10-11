@@ -570,6 +570,8 @@ enumerate_funcs.__reduce__ = function(self) {
 
 _b_.enumerate.tp_methods = ["__reduce__"]
 
+_b_.enumerate.noargs_methods = ["__reduce__"]
+
 _b_.enumerate.classmethods = ["__class_getitem__"]
 
 /* enumerate end */
@@ -636,6 +638,8 @@ filter_funcs.__reduce__ = function(self) {
 }
 
 filter.tp_methods = ["__reduce__"]
+
+filter.noargs_methods = ["__reduce__"]
 
 /* filter end */
 $B.set_func_names(filter, "builtins")
@@ -1285,6 +1289,8 @@ iterator_funcs.__setstate__ = function(self, state) {
 
 $B.iterator.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]
 
+$B.iterator.noargs_methods = ["__length_hint__", "__reduce__"]
+
 /* iterator end */
 
 const callable_iterator = $B.callable_iterator
@@ -1510,6 +1516,8 @@ map_funcs.__setstate__ = function(self) {
 
 _b_.map.tp_methods = ["__reduce__", "__setstate__"]
 
+_b_.map.noargs_methods = ["__reduce__"]
+
 /* map end */
 
 $B.set_func_names(map, "builtins")
@@ -1664,6 +1672,8 @@ NotImplementedType.tp_funcs = {
     }
 }
 NotImplementedType.tp_methods = ['__reduce__']
+
+NotImplementedType.noargs_methods = ['__reduce__']
 
 $B.set_func_names(NotImplementedType, "builtins")
 
@@ -1919,7 +1929,6 @@ reversed_funcs.__length_hint__ = function(self) {
 }
 
 reversed_funcs.__reduce__ = function(self) {
-    check_nb_args_no_kw('__reduce__', 1, arguments)
     var cls = self.ob_type
     if (self.seq === undefined) {
         return $B.fast_tuple([cls, $B.fast_tuple([$B.fast_tuple([])])])
@@ -1939,6 +1948,8 @@ reversed_funcs.__setstate__ = function(self, state) {
 }
 
 _b_.reversed.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]
+
+_b_.reversed.noargs_methods = ["__length_hint__", "__reduce__"]
 
 /* reversed end */
 
@@ -2406,6 +2417,8 @@ zip_funcs.__setstate__ = function(self) {
 
 _b_.zip.tp_methods = ["__reduce__", "__setstate__"]
 
+_b_.zip.noargs_methods = ["__reduce__"]
+
 /* zip end */
 
 $B.set_func_names(zip, "builtins")
@@ -2451,6 +2464,8 @@ ellipsis.tp_funcs = {
     }
 }
 ellipsis.tp_methods = ['__reduce__']
+
+ellipsis.noargs_methods = ['__reduce__']
 
 $B.set_func_names(ellipsis)
 

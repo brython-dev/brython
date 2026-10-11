@@ -98,6 +98,8 @@ bytearray_iterator_funcs.__setstate__ = function(self, value) {
 
 $B.bytearray_iterator.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]
 
+$B.bytearray_iterator.noargs_methods = ["__length_hint__", "__reduce__"]
+
 /* bytearray_iterator end */
 
 //bytearray() (built in class)
@@ -106,11 +108,6 @@ var bytearray = _b_.bytearray
 function no_resizing() {
     $B.RAISE(_b_.BufferError,
         "Existing exports of data: object cannot be re-sized")
-}
-
-function self_arg(func_name, args) {
-    var $ = $B.args(func_name, 1, {self: null}, args, null, null, null)
-    return $.self
 }
 
 function self_other_args(func_name, args) {
@@ -255,8 +252,7 @@ function bytearray_delitem(self, arg) {
     return $B.list_delitem(self.source, arg)
 }
 
-function capitalize() {
-    var self = self_arg('capitalize', arguments)
+function capitalize(self) {
     var src = self.source,
         len = src.length,
         buffer = src.slice()
@@ -486,8 +482,7 @@ function hex() {
     return res
 }
 
-function isalnum() {
-    var self = self_arg('isalnum', arguments)
+function isalnum(self) {
     var src = self.source,
         len = src.length,
         res = len > 0
@@ -500,8 +495,7 @@ function isalnum() {
     return res
 }
 
-function isalpha() {
-    var self = self_arg('isalpha', arguments)
+function isalpha(self) {
     var src = self.source,
         len = src.length,
         res = len > 0
@@ -512,8 +506,7 @@ function isalpha() {
     return res
 }
 
-function isascii() {
-    var self = self_arg('isascii', arguments)
+function isascii(self) {
     for (var byte of self.source) {
         if (byte > 0x7F) {
             return false
@@ -522,8 +515,7 @@ function isascii() {
     return true
 }
 
-function isdigit() {
-    var self = self_arg('isdigit', arguments)
+function isdigit(self) {
     var src = self.source,
         len = src.length,
         res = len > 0
@@ -534,8 +526,7 @@ function isdigit() {
     return res
 }
 
-function islower() {
-    var self = self_arg('islower', arguments)
+function islower(self) {
     var src = self.source,
         len = src.length,
         res = false
@@ -551,9 +542,7 @@ function islower() {
     return res
 }
 
-function isspace() {
-    var self = self_arg('isspace', arguments)
-
+function isspace(self) {
     var src = self.source,
         len = src.length
 
@@ -575,8 +564,7 @@ function isspace() {
     return true
 }
 
-function istitle() {
-    var self = self_arg('istitle', arguments)
+function istitle(self) {
     var src = self.source,
         len = src.length,
         current_char_is_letter = false,
@@ -600,8 +588,7 @@ function istitle() {
     return true
 }
 
-function isupper() {
-    var self = self_arg('isupper', arguments)
+function isupper(self) {
     var src = self.source,
         len = src.length,
         res = false
@@ -1037,8 +1024,7 @@ function startswith() {
     }
 }
 
-function upper() {
-    var self = self_arg('upper', arguments)
+function upper(self) {
     var _res = [],
         pos = 0
     for (var i = 0, len = self.source.length; i < len; i++) {
@@ -1047,8 +1033,7 @@ function upper() {
     return main_type(self).$factory(_res)
 }
 
-function swapcase() {
-    var self = $B.single_arg('swapcase', 'self', arguments)
+function swapcase(self) {
     var src = self.source,
         len = src.length,
         buffer = src.slice()
@@ -1064,8 +1049,7 @@ function swapcase() {
     return cls.$factory(buffer)
 }
 
-function title() {
-    var self = $B.single_arg('title', 'self', arguments)
+function title(self) {
     var cls = this // bytes or bytearray
     var src = self.source,
         len = src.length,
@@ -1714,6 +1698,12 @@ _b_.bytearray.tp_methods = [
     "upper", "zfill"
 ]
 
+_b_.bytearray.noargs_methods = [
+    "__alloc__", "__reduce__", "__sizeof__", "capitalize", "clear", "copy",
+    "isalnum", "isalpha", "isascii", "isdigit", "islower", "isspace",
+    "istitle", "isupper", "lower", "reverse", "swapcase", "title", "upper"
+]
+
 _b_.bytearray.classmethods = ["fromhex"]
 
 _b_.bytearray.staticmethods = ["maketrans"]
@@ -1859,6 +1849,8 @@ bytes_iterator_funcs.__setstate__ = function(self, value) {
 }
 
 $B.bytes_iterator.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]
+
+$B.bytes_iterator.noargs_methods = ["__length_hint__", "__reduce__"]
 
 /* bytes_iterator end */
 
@@ -2796,7 +2788,7 @@ bytes_funcs.__bytes__ = function(self) {
 }
 
 bytes_funcs.__getnewargs__ = function(self) {
-    return bytes.$getnewargs($B.single_arg('__getnewargs__', 'self', arguments))
+    return bytes.$getnewargs(self)
 }
 
 bytes_funcs.capitalize = function(self) {
@@ -3009,6 +3001,12 @@ _b_.bytes.tp_methods = [
     "removesuffix", "rfind", "rindex", "rjust", "rpartition", "rsplit",
     "rstrip", "split", "splitlines", "startswith", "strip", "swapcase",
     "title", "translate", "upper", "zfill"
+]
+
+_b_.bytes.noargs_methods = [
+    "__getnewargs__", "__bytes__", "capitalize", "isalnum", "isalpha",
+    "isascii", "isdigit", "islower", "isspace", "istitle", "isupper", "lower",
+    "swapcase", "title", "upper"
 ]
 
 _b_.bytes.classmethods = ["fromhex"]

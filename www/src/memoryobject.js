@@ -463,6 +463,8 @@ memoryview_funcs.toreadonly = function(self) {
 
 _b_.memoryview.tp_methods = ["release", "tobytes", "hex", "tolist", "cast", "toreadonly", "count", "index", "__enter__", "__exit__"]
 
+_b_.memoryview.noargs_methods = ["release", "tolist", "toreadonly", "__enter__"]
+
 _b_.memoryview.classmethods = ["_from_flags", "__class_getitem__"]
 
 _b_.memoryview.tp_getset = ["obj", "nbytes", "readonly", "itemsize", "format", "ndim", "shape", "strides", "suboffsets", "c_contiguous", "f_contiguous", "contiguous"]

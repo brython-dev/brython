@@ -69,6 +69,8 @@ method_wrapper_funcs.__text_signature___set = function(self) {
 
 $B.method_wrapper.tp_methods = ["__reduce__"]
 
+$B.method_wrapper.noargs_methods = ["__reduce__"]
+
 $B.method_wrapper.tp_members = [
     ["__self__", $B.TYPES.OBJECT, "self", 1]
 ]
@@ -123,6 +125,8 @@ member_descriptor_funcs.__reduce__ = function(self) {
 }
 
 $B.member_descriptor.tp_methods = ["__reduce__"]
+
+$B.member_descriptor.noargs_methods = ["__reduce__"]
 
 $B.member_descriptor.tp_members = [
     ["__objclass__", $B.TYPES.OBJECT, "d_type", 1],
@@ -236,6 +240,8 @@ $B.method.functions_or_methods = ["__new__"]
 
 $B.method.tp_methods = ["__reduce__"]
 
+$B.method.noargs_methods = ["__reduce__"]
+
 $B.method.tp_members = [
     ["__func__", $B.TYPES.OBJECT, "im_func", 1],
     ["__self__", $B.TYPES.OBJECT, "im_self", 1]
@@ -308,6 +314,8 @@ method_descriptor_funcs.__text_signature___set = function(self) {
 }
 
 $B.method_descriptor.tp_methods = ["__reduce__"]
+
+$B.method_descriptor.noargs_methods = ["__reduce__"]
 
 $B.method_descriptor.tp_members = [
     ["__objclass__", $B.TYPES.OBJECT, "d_type", 1],
@@ -557,6 +565,8 @@ wrapper_descriptor_funcs.__text_signature___set = function(self) {
 }
 
 $B.wrapper_descriptor.tp_methods = ["__reduce__"]
+
+$B.wrapper_descriptor.noargs_methods = ["__reduce__"]
 
 $B.wrapper_descriptor.tp_members = [
     ["__objclass__", $B.TYPES.OBJECT, "d_type", 1],

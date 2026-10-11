@@ -649,7 +649,6 @@ set_funcs.add = function(self, item) {
 }
 
 set_funcs.clear = function(self) {
-    $B.check_nb_args_no_kw('set.clear', 1, arguments)
     self.$used = 0
     self.$store = Object.create(null)
     self.$version++
@@ -657,7 +656,6 @@ set_funcs.clear = function(self) {
 }
 
 set_funcs.copy = function(self) {
-    $B.check_nb_args_no_kw('copy', 1, arguments)
     return set_copy(self)
 }
 
@@ -771,10 +769,6 @@ set_funcs.issuperset = function(self, other) {
 }
 
 set_funcs.pop = function(self) {
-    if (arguments.length > 1) {
-        $B.RAISE(_b_.TypeError, `set.pop() takes no arguments` +
-            ` (${arguments.length - 1} given)`)
-    }
     for (var hash in self.$store) {
         break
     }
@@ -875,6 +869,8 @@ _b_.set.tp_methods = [
     "issuperset", "pop", "__reduce__", "remove", "__sizeof__",
     "symmetric_difference", "symmetric_difference_update", "union", "update"
 ]
+
+_b_.set.noargs_methods = ["clear", "copy", "pop", "__reduce__", "__sizeof__"]
 
 _b_.set.classmethods = ["__class_getitem__"]
 
@@ -989,6 +985,8 @@ _b_.frozenset.tp_methods = [
     "copy", "difference", "intersection", "isdisjoint", "issubset",
     "issuperset", "__reduce__", "__sizeof__", "symmetric_difference", "union"
 ]
+
+_b_.frozenset.noargs_methods = ["copy", "__reduce__", "__sizeof__"]
 
 _b_.frozenset.classmethods = ["__class_getitem__"]
 

@@ -283,6 +283,34 @@ function make_richcompare(cls) {
     }
 }
 
+// A method listed in noargs_methods takes no argument but the instance, like a
+// CPython method flagged METH_NOARGS: the function its descriptor calls refuses
+// any other, in the name of the type that defines it. It replaces the method
+// in tp_funcs, so that the descriptor's method is still tp_funcs' own.
+function noargs_method(cls, name, method) {
+    var qualname = `${cls.tp_name}.${name}`
+    var func = function(self) {
+        var nb = arguments.length - 1
+        if (nb > 0) {
+            var last = arguments[nb]
+            if (last !== null && last !== undefined && last[$B.KW]) {
+                if (! $B.keyword_is_empty(last[$B.KW])) {
+                    $B.RAISE(_b_.TypeError,
+                        `${qualname}() takes no keyword arguments`)
+                }
+                nb--
+            }
+            if (nb > 0) {
+                $B.RAISE(_b_.TypeError,
+                    `${qualname}() takes no arguments (${nb} given)`)
+            }
+        }
+        return method(self)
+    }
+    func.$function_infos = method.$function_infos
+    return func
+}
+
 $B.finalize_type = function(cls) {
     cls.tp_mro = $B.make_mro(cls)
     $B.set_dict(cls, $B.get_dict(cls) ?? $B.empty_dict())
@@ -308,11 +336,15 @@ $B.finalize_type = function(cls) {
         }
     }
     if (cls.tp_methods) {
+        var noargs = cls.noargs_methods ?? []
         for (var descr of cls.tp_methods) {
             var method = cls.tp_funcs[descr]
             if (method === undefined) {
                 console.log('no method', cls, cls.tp_funcs, descr)
                 alert()
+            }
+            if (noargs.includes(descr)) {
+                method = cls.tp_funcs[descr] = noargs_method(cls, descr, method)
             }
             method.ob_type = $B.builtin_method
             $B.set_to_dict(cls, descr, {

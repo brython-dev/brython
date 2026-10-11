@@ -342,6 +342,8 @@ list_iterator_funcs.__setstate__ = function(self) {
 
 $B.list_iterator.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]
 
+$B.list_iterator.noargs_methods = ["__length_hint__", "__reduce__"]
+
 /* list_iterator end */
 
 var eq = $B.list_eq = function(self, other) {
@@ -492,6 +494,8 @@ list_reverseiterator_funcs.__setstate__ = function(self) {
 }
 
 $B.list_reverseiterator.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]
+
+$B.list_reverseiterator.noargs_methods = ["__length_hint__", "__reduce__"]
 
 /* list_reverseiterator end */
 
@@ -806,18 +810,16 @@ list_funcs.append = function(self, x) {
     return _b_.None
 }
 
-list_funcs.clear = function() {
-    var $ = $B.args("clear", 1, {self: null}, arguments)
-    while ($.self.length) {
-        $.self.pop()
+list_funcs.clear = function(self) {
+    while (self.length) {
+        self.pop()
     }
     return _b_.None
 }
 
 list_funcs.copy = function(self) {
-    var $ = $B.args("copy", 1, {self: null}, arguments)
-    var res = $.self.slice()
-    res.ob_type = $B.get_class($.self)
+    var res = self.slice()
+    res.ob_type = $B.get_class(self)
     return res
 }
 
@@ -884,13 +886,12 @@ list_funcs.remove = function(self) {
 }
 
 list_funcs.reverse = function(self) {
-    var $ = $B.args("reverse", 1, {self: null}, arguments)
-    var _len = $.self.length - 1,
-        i = parseInt($.self.length / 2)
+    var _len = self.length - 1,
+        i = parseInt(self.length / 2)
     while (i--) {
-        var buf = $.self[i]
-        $.self[i] = $.self[_len - i]
-        $.self[_len - i] = buf
+        var buf = self[i]
+        self[i] = self[_len - i]
+        self[_len - i] = buf
     }
     return _b_.None
 }
@@ -978,6 +979,10 @@ _b_.list.tp_methods = [
     "extend", "pop", "remove", "index", "count", "reverse", "sort"
 ]
 
+_b_.list.noargs_methods = [
+    "__reversed__", "__sizeof__", "clear", "copy", "reverse"
+]
+
 _b_.list.classmethods = ["__class_getitem__"]
 
 /* list end */
@@ -1017,6 +1022,8 @@ tuple_iterator_funcs.__setstate__ = function(self) {
 }
 
 $B.tuple_iterator.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]
+
+$B.tuple_iterator.noargs_methods = ["__length_hint__", "__reduce__"]
 
 /* tuple_iterator end */
 
@@ -1126,7 +1133,7 @@ tuple_funcs.__class_getitem__ = function(self) {
 }
 
 tuple_funcs.__getnewargs__ = function(self) {
-    return tuple.$getnewargs($B.single_arg('__getnewargs__', 'self', arguments))
+    return tuple.$getnewargs(self)
 }
 
 tuple_funcs.count = function() {
@@ -1138,6 +1145,8 @@ tuple_funcs.index = function() {
 }
 
 _b_.tuple.tp_methods = ["__getnewargs__", "index", "count"]
+
+_b_.tuple.noargs_methods = ["__getnewargs__"]
 
 _b_.tuple.classmethods = ["__class_getitem__"]
 

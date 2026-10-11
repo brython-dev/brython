@@ -616,8 +616,8 @@ complex_funcs.__format__ = function(self, format_spec) {
     $B.RAISE(_b_.ValueError, `invalid type for complex: ${type}`)
 }
 
-complex_funcs.__getnewargs__ = function() {
-    return complex.$getnewargs($B.single_arg('__getnewargs__', 'self', arguments))
+complex_funcs.__getnewargs__ = function(self) {
+    return complex.$getnewargs(self)
 }
 
 complex_funcs.conjugate = function(self) {
@@ -643,6 +643,8 @@ complex_funcs.from_number = function(cls, obj) {
 _b_.complex.classmethods = ["from_number"]
 
 _b_.complex.tp_methods = ["conjugate", "__complex__", "__getnewargs__", "__format__"]
+
+_b_.complex.noargs_methods = ["conjugate", "__complex__", "__getnewargs__"]
 
 _b_.complex.tp_members = [
     ["real", $B.TYPES.DOUBLE, "real", 1],

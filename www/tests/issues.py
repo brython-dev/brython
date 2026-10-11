@@ -3502,6 +3502,26 @@ assert list(deque_2934(iterable=[1, 2])) == [1, 2]
 assert deque_2934().maxlen is None
 assert_raises(ValueError, deque_2934, [], -1)
 
+# a method that takes no arguments refuses them, in the name of its type
+for obj, name in [([], 'clear'), ({}, 'keys'), ('a', 'casefold'),
+                  (bytearray(), 'clear'), (1, 'bit_length'),
+                  (frozenset(), 'copy'), (iter([]), '__length_hint__')]:
+    qualname = f'{type(obj).__name__}.{name}'
+    method = getattr(obj, name)
+    assert_raises(TypeError, method, 1,
+        msg=f'{qualname}() takes no arguments (1 given)')
+    assert_raises(TypeError, method, x=1,
+        msg=f'{qualname}() takes no keyword arguments')
+    assert_raises(TypeError, getattr(type(obj), name), obj, 1, 2,
+        msg=f'{qualname}() takes no arguments (2 given)')
+    method(**{})
+
+class List_noargs(list):
+    pass
+
+assert_raises(TypeError, lambda: List_noargs().copy(1),
+    msg='list.copy() takes no arguments (1 given)')
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================

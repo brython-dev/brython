@@ -1125,7 +1125,7 @@ float_funcs.__getformat__ = function(cls, arg) {
 }
 
 float_funcs.__getnewargs__ = function(self) {
-    return float.$getnewargs($B.single_arg('__getnewargs__', 'self', arguments))
+    return float.$getnewargs(self)
 }
 
 float_funcs.__round__ = function(self) {
@@ -1476,6 +1476,11 @@ _b_.float.classmethods = ["from_number", "fromhex", "__getformat__"]
 _b_.float.tp_methods = [
     "conjugate", "__trunc__", "__floor__", "__ceil__", "__round__",
     "as_integer_ratio", "hex", "is_integer", "__getnewargs__", "__format__"
+]
+
+_b_.float.noargs_methods = [
+    "conjugate", "__trunc__", "__floor__", "__ceil__", "as_integer_ratio",
+    "hex", "is_integer", "__getnewargs__"
 ]
 
 _b_.float.tp_getset = ["real", "imag"]

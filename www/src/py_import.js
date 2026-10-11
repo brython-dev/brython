@@ -146,6 +146,8 @@ module_funcs.__dir__ = function(self) {
 
 $B.module.tp_methods = ["__dir__"]
 
+$B.module.noargs_methods = ["__dir__"]
+
 $B.module.tp_getset = [
     "__annotations__", "__annotate__",
     "__dict__" // is member in CPython
