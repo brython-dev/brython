@@ -151,7 +151,7 @@ _b_.memoryview.sq_ass_item = function(self, key, value) {
 }
 
 _b_.memoryview.tp_repr = function(self) {
-    if (self.flags & MEMORYVIEW.RELEASED) {
+    if (self.$released) {
         return "<released memory>"
     } else {
         return "<memory>"

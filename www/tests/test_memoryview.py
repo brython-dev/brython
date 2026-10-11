@@ -10,6 +10,11 @@ data = bytearray(b'abcefg')
 v = memoryview(data)
 assert v.tobytes() == b'abcefg'
 assert v.hex() == '616263656667'
+
+# the repr of a released view says it is released
+released = memoryview(b'essai')
+released.release()
+assert repr(released).startswith('<released memory')
 assert v.format == 'B'
 assert v.itemsize == 1
 assert v.tolist() == [97, 98, 99, 101, 102, 103]
