@@ -755,7 +755,7 @@
                 $B.class_name(msg))
         }
         self.buf.push(msg)
-        return _b_.None
+        return _b_.str.mp_length(msg)
     }
 
     $io.tp_methods = ["flush", "write"]
