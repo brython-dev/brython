@@ -232,4 +232,13 @@ assert next(flaky_it_2928) == "later"
 assert next(flaky_it_2928) == "later"
 assert next(flaky_it_2928, None) is None
 
+# the start of enumerate is an index, counted as a Python int
+class Seven:
+    def __index__(self):
+        return 7
+assert list(enumerate("ab", Seven())) == [(7, "a"), (8, "b")]
+assert list(enumerate("ab", 2 ** 53 + 1)) == [(2 ** 53 + 1, "a"), (2 ** 53 + 2, "b")]
+assert type(next(enumerate("a", True))[0]) is int
+assert_raises(TypeError, enumerate, "ab", 1.5)
+
 print("passed all tests...")
