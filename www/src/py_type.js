@@ -286,7 +286,7 @@ function best_base(bases, ctx) {
         if(base_i.tp_flags !== undefined &&
                  ! (base_i.tp_flags & TPFLAGS.BASETYPE)){
             $B.RAISE(_b_.TypeError,
-                `type '${base.__name__}' is not an acceptable base type`)
+                `type '${$B.get_name(base_i)}' is not an acceptable base type`)
         }
         candidate = solid_base(base_i)
         if (test) {
@@ -1090,12 +1090,14 @@ function reset_setattr(cls) {
 function set_slots(cl_dict, class_obj) {
     let slots = $B.str_dict_get(cl_dict, '__slots__', $B.NULL)
     if (slots !== $B.NULL) {
+        class_obj.$slots = []
         for (let key of $B.make_js_iterator(slots)) {
             // CPython mangles private slot names at class-creation time,
             // matching the compiler's mangling of self.__private accesses
             if (key.startsWith('__') && ! key.endsWith('__')) {
                 key = '_' + $B.get_name(class_obj).replace(/^_+/, '') + key
             }
+            class_obj.$slots.push(key)
             // CPython: '__dict__' / '__weakref__' inside __slots__ are
             // markers, not slots — '__dict__' keeps the per-instance dict
             if (key == '__dict__' || key == '__weakref__') {
@@ -1118,6 +1120,7 @@ function set_slots(cl_dict, class_obj) {
             }
             $B.str_dict_set(cl_dict, key, md)
         }
+        class_obj.$slots.sort()
     }
 }
 
@@ -1678,6 +1681,45 @@ type_funcs.__bases___get = function(cls) {
     return $B.fast_tuple(cls.tp_bases)
 }
 
+var MARKERS = ['__dict__', '__weakref__']
+
+// whether instances of cls have a __dict__, or a __weakref__
+function has_slot(cls, name) {
+    return cls.tp_flags & TPFLAGS.HEAPTYPE ?
+        ! cls.$slots || cls.$slots.includes(name) || has_slot(cls.tp_base, name) :
+        cls[name == '__dict__' ? 'tp_dictoffset' : 'tp_weakrefoffset'] > 0
+}
+
+// the furthest base whose instances are laid out as those of cls
+function layout_base(cls) {
+    var base = cls.tp_base
+    return base && ! ((cls.tp_flags ^ base.tp_flags) & TPFLAGS.HAVE_GC) &&
+        (cls.tp_flags & TPFLAGS.HEAPTYPE ? (cls.$slots ?? MARKERS).every(name =>
+            MARKERS.includes(name) && has_slot(base, name)) :
+        cls.tp_basicsize == base.tp_basicsize &&
+            cls.tp_itemsize == base.tp_itemsize) ? layout_base(base) : cls
+}
+
+// whether instances of cls can become instances of a class with these bases
+function check_layout(cls, bases) {
+    var oldto = cls.tp_base,
+        newto = best_base(bases),
+        oldbase = layout_base(oldto),
+        newbase = layout_base(newto),
+        layout = klass => JSON.stringify([(klass.$slots ?? []).filter(name =>
+            ! MARKERS.includes(name)), ...MARKERS.map(name =>
+            has_slot(klass, name))]),
+        differs = (oldto.tp_flags ^ newto.tp_flags) & TPFLAGS.HAVE_GC ?
+            'deallocator' :
+            newbase !== oldbase && (newbase.tp_base !== oldbase.tp_base ||
+                ! (newbase.tp_flags & oldbase.tp_flags & TPFLAGS.HEAPTYPE) ||
+                layout(newbase) != layout(oldbase)) ? 'object layout' : null
+    if (differs) {
+        $B.RAISE(_b_.TypeError, `__bases__ assignment: '${$B.get_name(newto)}' ` +
+            `${differs} differs from '${$B.get_name(oldto)}'`)
+    }
+}
+
 type_funcs.__bases___set = function() {
     var $ = $B.args('__bases__', 2, {cls: null, bases: null}, arguments)
     var cls = $.cls,
@@ -1688,6 +1730,21 @@ type_funcs.__bases___set = function() {
             `not ${$B.class_name(bases)}`
         )
     }
+    if (bases.length == 0) {
+        $B.RAISE(_b_.TypeError, 'can only assign non-empty tuple to ' +
+            `${$B.get_name(cls)}.__bases__, not ()`)
+    }
+    for (var base of bases) {
+        if (! $B.is_type(base)) {
+            $B.RAISE(_b_.TypeError, `${$B.get_name(cls)}.__bases__ must ` +
+                `be tuple of classes, not '${$B.class_name(base)}'`)
+        }
+        if ($B.get_mro(base).includes(cls)) {
+            $B.RAISE(_b_.TypeError,
+                'a __bases__ item causes an inheritance cycle')
+        }
+    }
+    check_layout(cls, bases)
     cls.tp_bases = bases
     cls.tp_mro = $B.make_mro(cls)
 }
