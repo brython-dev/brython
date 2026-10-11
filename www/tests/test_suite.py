@@ -915,6 +915,30 @@ class A:
 
 assert A.__doc__ == "Docstring of class A."
 
+# identifiers are normalized to NFKC, strings are not
+class Box:
+    def __init__(self):
+        self.field = "field"
+        self.café = "composed"
+
+box = Box()
+assert box.ﬁeld == "field"
+namespace = {"box": box}
+exec("decomposed = box.café", namespace)
+assert namespace["decomposed"] == "composed"
+assert getattr(box, "ﬁeld", "missing") == "missing"
+
+ﬂag = 1
+assert flag == 1
+
+Ⅷ = 8
+assert VIII == 8
+
+def ｆｕｌｌ():
+    return "full"
+
+assert full() == "full"
+
 # chained assignments and unpacking
 x, y = info = (1, 2)
 assert x == 1
