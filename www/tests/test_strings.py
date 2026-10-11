@@ -139,6 +139,11 @@ assert not "a" in ""
 # issue 285
 assert "ab"[1:0:-1] == 'b'
 
+# maketrans() reads characters, an astral one included
+assert str.maketrans("a😀", "😀a") == {97: 0x1F600, 0x1F600: 97}
+assert str.maketrans({"😀": "x"}) == {0x1F600: "x"}
+assert "a😀b".translate(str.maketrans("a", "x", "😀")) == "xb"
+
 # issue 361
 FULL_ENGLISH_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 FULL_ENTEAN_ALPHABET =  "AZYXEWVTISRLPNOMQKJHUGFDCB"
