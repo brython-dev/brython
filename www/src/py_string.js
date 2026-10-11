@@ -2251,7 +2251,7 @@ str_funcs.format = function() {
         }
         $ = $B.args("format", 1, {self: null}, args, null, "$args", null)
     } else {
-        $ = $B.args("format", 1, {self: null}, arguments, null, "$args", "$kw")
+        $ = $B.args("format", 1, {self: null}, arguments, null, "$args", "$kw", 1)
         mapping = $.$kw, // dictionary
         getitem = function(key) {
             return _b_.dict.$getitem(mapping, key)

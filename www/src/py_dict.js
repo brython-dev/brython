@@ -1049,7 +1049,7 @@ _b_.dict.tp_init = function(self) {
     }
 
     var $ = $B.args("dict", 1, {self:null}, arguments, null, "first",
-                "second")
+                "second", 1)
 
     var args = $.first
     if (args.length > 1) {
@@ -1357,7 +1357,7 @@ dict_funcs.setdefault = function(self) {
 
 dict_funcs.update = function(self) {
     var $ = $B.args("update", 1, {"self": null}, arguments, null, "args",
-                "kw")
+                "kw", 1)
     var self = $.self,
         args = $.args,
         kw = $.kw

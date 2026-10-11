@@ -3502,6 +3502,23 @@ assert list(deque_2934(iterable=[1, 2])) == [1, 2]
 assert deque_2934().maxlen is None
 assert_raises(ValueError, deque_2934, [], -1)
 
+# a keyword named like the receiver of a builtin is the caller's keyword
+assert "{self}".format(self=1) == "1"
+assert "{0}-{self}".format(1, self=2) == "1-2"
+assert dict({}, self=1) == {"self": 1}
+d_self = {}
+d_self.update(self=1)
+assert d_self == {"self": 1}
+
+class Meta_cls_keyword(type):
+    pass
+
+class With_cls_keyword(metaclass=Meta_cls_keyword):
+    def __init__(self, cls=None):
+        self.seen = cls
+
+assert With_cls_keyword(cls=1).seen == 1
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
