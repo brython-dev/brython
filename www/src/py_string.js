@@ -2689,7 +2689,7 @@ str_funcs.maketrans = function() {
             let k = items[i][0],
                 v = items[i][1]
             if (! $B.is_int(k)) {
-                if ($B.is_str(k) && k.length == 1) {
+                if ($B.is_str(k) && to_chars(k).length == 1) {
                     k = _b_.ord(k)
                 } else {$B.RAISE(_b_.TypeError, "dictionary key " + k +
                     " is not int or 1-char string")}
@@ -2707,7 +2707,10 @@ str_funcs.maketrans = function() {
         // to the character at the same position in y
         if (! ($B.is_str($.x) && $B.is_str($.y))) {
             $B.RAISE(_b_.TypeError, "maketrans arguments must be strings")
-        } else if ($.x.length !== $.y.length) {
+        }
+        var x = to_chars($.x),
+            y = to_chars($.y)
+        if (x.length !== y.length) {
             $B.RAISE(_b_.TypeError,
                 "maketrans arguments must be strings or same length")
         } else {
@@ -2719,14 +2722,12 @@ str_funcs.maketrans = function() {
                     $B.RAISE(_b_.TypeError,
                         "maketrans third argument must be a string")
                 }
-                for (let i = 0, len = $.z.length; i < len; i++) {
-                    toNone[_b_.ord($.z.charAt(i))] = true
+                for (var char of to_chars($.z)) {
+                    toNone[_b_.ord(char)] = true
                 }
             }
-            for (let i = 0, len = $.x.length; i < len; i++) {
-                var key = _b_.ord($.x.charAt(i)),
-                    value = $.y.charCodeAt(i)
-                _b_.dict.$setitem(_t, key, value)
+            for (let i = 0, len = x.length; i < len; i++) {
+                _b_.dict.$setitem(_t, _b_.ord(x[i]), _b_.ord(y[i]))
             }
             for (let k in toNone) {
                 _b_.dict.$setitem(_t, parseInt(k), _b_.None)
