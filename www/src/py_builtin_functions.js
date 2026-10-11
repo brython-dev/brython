@@ -2225,7 +2225,8 @@ _b_.super.tp_getattro = function(self, attr) {
             console.log('call getter', getter)
             console.log('args', self.obj, self.obj_type)
         }
-        res = getter(f, self.obj, self.obj_type)
+        res = getter(f, self.obj === self.obj_type ? $B.NULL : self.obj,
+            self.obj_type)
     } else {
         res = f
     }
