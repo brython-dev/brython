@@ -699,6 +699,10 @@ $B.op2method = {
 
 $B.method_to_op = {}
 for (var category in $B.op2method) {
+    if (category == 'boolean') {
+        // "and" and "or" are not the operators of __and__ and __or__
+        continue
+    }
     for (var op in $B.op2method[category]) {
         var method = `__${$B.op2method[category][op]}__`
         $B.method_to_op[method] = op

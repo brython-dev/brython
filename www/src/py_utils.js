@@ -1742,9 +1742,6 @@ $B.rich_comp = function(op, x, y) {
         "' and '" + $B.class_name(y) + "'")
 }
 
-var opname2opsign = {__sub__: "-", __xor__: "^", __mul__: "*",
-    __and__: '&', __or__: '|'}
-
 $B.get_position_from_inum = function(inum) {
     // Get position from pseudo instruction number
     if ($B.frame_obj !== null) {
@@ -1836,7 +1833,7 @@ $B.rich_op1 = function(op, x, y) {
         if (method === $B.NULL) {
             var kl_name = $B.class_name(x)
             $B.RAISE(_b_.TypeError, "unsupported operand type(s) " +
-                "for " + opname2opsign[op] + ": '" + kl_name + "' and '" +
+                "for " + $B.method_to_op[op] + ": '" + kl_name + "' and '" +
                 kl_name + "'")
         }
         var same_res = $B.$call(method, x, y)
