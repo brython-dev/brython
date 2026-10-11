@@ -726,7 +726,7 @@ _b_.list.tp_new = function(cls, args, kw) {
     }
     var res = []
     res.ob_type = cls
-    if (cls !== list) {
+    if ($B.instance_has_dict(cls)) {
         $B.init_dict(res)
     }
     return res
@@ -1086,7 +1086,7 @@ _b_.tuple.tp_new = function(cls, args, kw) {
     }
     var self = []
     self.ob_type = cls
-    if (cls !== tuple) {
+    if ($B.instance_has_dict(cls)) {
         $B.init_dict(self)
     }
     args = args ?? []
