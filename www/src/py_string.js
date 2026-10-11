@@ -962,7 +962,10 @@ $B.printf_format = function(s, type, args) {
             $B.RAISE(_b_.TypeError,
                 "not enough arguments for format string")
         }
-    } else if (nbph == 0) {
+    } else if (nbph == 0 && ($B.is_str(args) ||
+            $B.$getattr(args, '__getitem__', $B.NULL) === $B.NULL)) {
+        // PyMapping_Check: any subscriptable object except str is a
+        // "mapping" here, eg a list
         $B.RAISE(_b_.TypeError,
             "not all arguments converted during string formatting")
     }
@@ -1853,7 +1856,9 @@ _b_.str.tp_new = function(cls, args, kw) {
         ob_type: cls,
         $brython_value: str.$factory(arg, encoding, errors)
     }
-    $B.init_dict(res)
+    if ($B.instance_has_dict(cls)) {
+        $B.init_dict(res)
+    }
     return res
 }
 
@@ -3439,7 +3444,7 @@ Template_funcs.__class_getitem__ = function() {
 }
 
 Template_funcs.__reduce__ = function(self) {
-    $B.$import('string.templatelib')
+    $B.import('string.templatelib')
     var module = $B.imported['string.templatelib']
     var _template_unpickle = $B.module_getattr(module, '_template_unpickle')
     return $B.fast_tuple([_template_unpickle,
