@@ -321,15 +321,18 @@ $B.list_iterator.tp_iter = function(self) {
 }
 
 $B.list_iterator.tp_iternext = function*(self){
-    for (var value of self.it) {
-        yield value
+    if (self.index < self.obj.length) {
+        yield self.obj[self.index++]
+    } else {
+        // exhausted for good, whatever the list grows to
+        self.index = Infinity
     }
 }
 
 var list_iterator_funcs = $B.list_iterator.tp_funcs = {}
 
 list_iterator_funcs.__length_hint__ = function(self) {
-    return self.len
+    return Math.max(0, self.obj.length - self.index)
 }
 
 list_iterator_funcs.__reduce__ = function(self) {
@@ -479,7 +482,8 @@ $B.list_reverseiterator.tp_iternext = function*(self){
 var list_reverseiterator_funcs = $B.list_reverseiterator.tp_funcs = {}
 
 list_reverseiterator_funcs.__length_hint__ = function(self) {
-    return self.items.length
+    var len = self.counter + 1
+    return len <= self.items.length ? Math.max(0, len) : 0
 }
 
 list_reverseiterator_funcs.__reduce__ = function(self) {
@@ -686,8 +690,8 @@ _b_.list.tp_hash = _b_.None
 _b_.list.tp_iter = function(self) {
     var res = {
         ob_type: list_iterator,
-        it: self[Symbol.iterator](),
-        len: self.length
+        obj: self,
+        index: 0
     }
     return res
 }
@@ -997,15 +1001,15 @@ $B.tuple_iterator.tp_iter = function(self) {
 }
 
 $B.tuple_iterator.tp_iternext = function*(self){
-    for (var value of self.it) {
-        yield value
+    if (self.index < self.obj.length) {
+        yield self.obj[self.index++]
     }
 }
 
 var tuple_iterator_funcs = $B.tuple_iterator.tp_funcs = {}
 
 tuple_iterator_funcs.__length_hint__ = function(self) {
-    return self.obj.length
+    return Math.max(0, self.obj.length - self.index)
 }
 
 tuple_iterator_funcs.__reduce__ = function(self) {
@@ -1076,7 +1080,7 @@ _b_.tuple.tp_iter = function(self) {
     return {
         ob_type: $B.tuple_iterator,
         obj: self,
-        it: self[Symbol.iterator]()
+        index: 0
     }
 }
 
