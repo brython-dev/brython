@@ -3260,7 +3260,7 @@ $B.ast.ImportFrom.prototype.to_js = function(scopes) {
     js = js.trimRight()
 
     for (var alias of this.names) {
-        if (! alias.asname) {
+        if ($B.is_none(alias.asname)) {
             bind(alias.name, scopes)
         }
     }
