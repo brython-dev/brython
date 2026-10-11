@@ -1551,12 +1551,7 @@
         modules['browser'].aio = modules['browser.aio']
     }
 
-    // Set builtin name __builtins__
-    _b_.__builtins__ = $B.module.$factory('__builtins__',
-        'Python builtins')
-
     for (let attr in _b_) {
-        $B.module_setattr(_b_.__builtins__, attr, _b_[attr])
         $B.builtins_scope.binding[attr] = true
     }
 
@@ -1672,8 +1667,11 @@ $B.module.tp_init($B.imported.builtins, 'builtins', builtins_doc)
 
 $B.set_dict($B.imported.builtins, _b_)
 
+// Set builtin name __builtins__
+_b_.__builtins__ = $B.imported.builtins
+
 $B.module_setattr($B.imported.builtins, '__doc__', builtins_doc)
-//$B.module_setattr($B.imported.builtins, '__name__', 'builtins')
+$B.module_setattr($B.imported.builtins, '__name__', 'builtins')
 
 $B.module_setattr($B.imported.builtins, '__package__', _b_.None)
 $B.module_setattr($B.imported.builtins, '__loader__', _b_.None)
