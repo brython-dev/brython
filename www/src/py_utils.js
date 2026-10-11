@@ -357,7 +357,7 @@ $B.parse_kwargs = function(kw_args, fname) {
                             `'${$B.class_name(kw_arg)}' object is not subscriptable`)
                     }
                 }
-                kwa[k] = getitem(kw_arg, k)
+                kwa[k] = $B.$getitem1(kw_arg, k)
             }
         }
     }
@@ -622,7 +622,7 @@ $B.unpack_mapping = function(func, obj) {
         if (! $B.is_str(key)) {
             $B.RAISE(_b_.TypeError, 'keywords must be strings')
         }
-        items.push({key, value: $B.$call(getitem, obj, key)})
+        items.push({key, value: $B.$getitem1(obj, key)})
     }
     return items
 }
@@ -886,7 +886,7 @@ $B.$getitem1 = function(obj, item) {
 
     var gi = $B.search_in_mro($B.get_class(obj), "__getitem__", $B.NULL)
     if (gi !== $B.NULL) {
-        return $B.$call(gi, obj, item)
+        return $B.call_special(gi, obj, item)
     }
 
     var exc = $B.EXC(_b_.TypeError, "'" + $B.class_name(obj) +
