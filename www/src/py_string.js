@@ -1389,10 +1389,11 @@ $B.parse_format_spec = function(spec, obj) {
 }
 
 $B.format_width = function(s, fmt) {
-    if (fmt.width && s.length < fmt.width) {
+    var len = [...s].length
+    if (fmt.width && len < fmt.width) {
         var fill = fmt.fill || " ",
             align = fmt.align || "<",
-            missing = fmt.width - s.length
+            missing = fmt.width - len
         switch (align) {
             case "<":
                 return s + fill.repeat(missing)
@@ -1938,7 +1939,7 @@ str_funcs.__format__ = function(self, format_spec) {
             "Sign not allowed in string format specifier")
     }
     if (fmt.precision) {
-        self = self.substr(0, fmt.precision)
+        self = to_chars(self).slice(0, fmt.precision).join('')
     }
     // For strings, alignment default to left
     fmt.align = fmt.align || "<"
@@ -2109,8 +2110,7 @@ str_funcs.endswith = function(self, suffix) {
         suffixes = [suffixes]
     }
 
-    var chars = to_chars(_self),
-        s = chars.slice($.start, $.end)
+    var s = _self.substring($.js_start ?? $.start, $.js_end ?? $.end)
     for (var i = 0, len = suffixes.length; i < len; i++) {
         var suffix = suffixes[i]
         if (! $B.is_str(suffix)) {
@@ -2118,8 +2118,7 @@ str_funcs.endswith = function(self, suffix) {
                 "endswith first arg must be str or a tuple of str, not int")
         }
         suffix = suffix.ob_type ? suffix.$brython_value : suffix
-        if(suffix.length <= s.length &&
-                s.slice(s.length - suffix.length).join('') == suffix){
+        if (s.endsWith(suffix)) {
             return true
         }
     }
@@ -2742,13 +2741,12 @@ str_funcs.partition = function(self, sep) {
     }
     check_str(sep);
     [_self, sep] = to_string(self, sep)
-    var chars = to_chars(_self),
-        i = _self.indexOf(sep)
+    var i = _self.indexOf(sep)
     if (i == -1) {
         return _b_.tuple.$factory([_self, "", ""])
     }
-    return _b_.tuple.$factory([chars.slice(0, i).join(''), sep,
-        chars.slice(i + sep.length).join('')])
+    return _b_.tuple.$factory([_self.slice(0, i), sep,
+        _self.slice(i + sep.length)])
 }
 
 str_funcs.removeprefix = function(self, prefix) {
@@ -2815,7 +2813,7 @@ str_funcs.replace = function() {
         if (_self == "") {
             return _new
         }
-        elts = _self.split("")
+        elts = to_chars(_self)
         if (count > -1 && elts.length >= count) {
             var rest = elts.slice(count).join("")
             return _new + elts.slice(0, count).join(_new) + rest
@@ -3108,7 +3106,7 @@ str_funcs.splitlines = function(self, keepends) {
                 break
             default:
                 buf += char
-                pos++
+                pos += char.length
         }
     }
     if (buf != '') {

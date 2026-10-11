@@ -60,6 +60,14 @@ assert " aBc  dEf ".split() == ['aBc', 'dEf']
 
 assert "az\ner\nty".splitlines() == ["az", "er", "ty"]
 
+# positions count characters, an astral one included
+assert "😀a\r\nb".splitlines() == ["😀a", "b"]
+assert "😀a|b".partition("|") == ("😀a", "|", "b")
+assert "a😀b".partition("😀") == ("a", "😀", "b")
+assert "a😀".endswith("😀") and "a😀b".endswith("😀", 0, 2)
+assert format("😀a", ">4") == "  😀a" and format("😀ab", ".2") == "😀a"
+assert "😀a".replace("", "-") == "-😀-a-"
+
 assert "azerty".startswith('az')
 
 assert "  azerty ".strip() == "azerty"
