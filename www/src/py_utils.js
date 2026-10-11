@@ -903,7 +903,7 @@ $B.getitem_slice = function(obj, slice, inum) {
         } else if (typeof obj == "string") {
             res = _b_.str.mp_subscript(obj, slice)
         } else {
-            res = $B.$call($B.$getattr(klass, "__getitem__"), obj, slice)
+            res = $B.$getitem1(obj, slice)
         }
         return res
     } catch (err) {
@@ -935,7 +935,7 @@ $B.$setitem = function(obj, item, value, inum) {
             throw err
         }
     }
-    var setitem = $B.$getattr($B.get_class(obj), "__setitem__", $B.NULL)
+    var setitem = $B.search_in_mro(klass, "__setitem__", $B.NULL)
     if (setitem === $B.NULL) {
         $B.set_inum(inum)
         $B.RAISE(_b_.TypeError, "'" + $B.class_name(obj) +
@@ -1025,7 +1025,7 @@ $B.$delitem = function(obj, item, inum) {
             throw err
         }
     }
-    var delitem = $B.$getattr(klass, "__delitem__", $B.NULL)
+    var delitem = $B.search_in_mro(klass, "__delitem__", $B.NULL)
     if (delitem === $B.NULL) {
         $B.RAISE(_b_.TypeError, "'" + $B.class_name(obj) +
             "' object doesn't support item deletion")
