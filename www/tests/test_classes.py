@@ -1366,5 +1366,12 @@ class A:
 a = A()
 assert a == a
 
+# PR 3030
+class L(list):
+
+    def size(self):
+        return super(L, self).__len__()
+
+assert L([1, 2]).size() == 2
 
 print('passed all tests..')

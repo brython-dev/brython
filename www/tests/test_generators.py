@@ -1259,4 +1259,12 @@ assert_raises(ValueError, i.throw, ValueError(x), None,
               nb_args=1,
               msg=x)
 
+# PR 3040
+def gen():
+    yield 1
+    raise ValueError('real error')
+
+assert_raises(ValueError, list, gen(), msg='real error')
+
+
 print('passed all tests...')
