@@ -151,5 +151,7 @@ x = f'{func({})}'
 typecode = 'u'
 s = f"array('{typecode}', '\\x00=\"\\'a\\\\b\\x80\xff\\x00\\x01\u1234')"
 
+# PR 3015
+assert f"\U0001F600" == '😀'
 
 print("passed all tests")

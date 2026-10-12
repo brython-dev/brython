@@ -221,6 +221,12 @@ class TypeVar:
                        '-' if self.__contravariant__ else '~'
         return f"{variance}{self.__name__}"
 
+    def __or__(self, other):
+        return Union[self, other]
+
+    def __ror__(self, other):
+        return Union[other, self]
+
     def _set_lazy_eval(self, attr, func):
         self._lazy_eval[attr] = func
 
@@ -426,10 +432,10 @@ class ParamSpec:
 
     def __init__(self, name, *, bound=None,
                  covariant=False, contravariant=False,
-                 infer_variance=True,
+                 infer_variance=False,
                  default=None):
         self.__name__ = name
-        super().__init__(bound, covariant, contravariant)
+        self.__bound__ = _type_convert(bound)
         def_mod = _caller()
         if def_mod != 'typing':
             self.__module__ = def_mod
@@ -446,6 +452,12 @@ class ParamSpec:
         variance = '+' if self.__covariant__ else \
                        '-' if self.__contravariant__ else '~'
         return f"{variance}{self.__name__}"
+
+    def __or__(self, other):
+        return Union[self, other]
+
+    def __ror__(self, other):
+        return Union[other, self]
 
     def __typing_subst__(self, arg):
         if isinstance(arg, (list, tuple)):
@@ -526,6 +538,9 @@ class TypeAliasType:
             raise TypeError("Only generic type aliases are subscriptable")
         return GenericAlias(self, params)
 
+    def __repr__(self):
+        return self.__qualname__
+        
     @property
     def __value__(self):
         return self._value()

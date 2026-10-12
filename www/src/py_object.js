@@ -187,8 +187,8 @@ function getNewArguments(self, klass) {
 // constructor of the built-in class 'object'
 object.$factory = function() {
     if(arguments.length > 0 ||
-            (arguments.length == 1 && arguments[0].$kw &&
-                Object.keys(arguments[0].$kw).length > 0)
+            (arguments.length == 1 && arguments[0][$B.KW] &&
+                Object.keys(arguments[0][$B.KW]).length > 0)
             ){
         $B.RAISE(_b_.TypeError, 'object() takes no arguments')
     }
@@ -338,7 +338,7 @@ _b_.object.tp_hash = function(self) {
 }
 
 _b_.object.tp_str = function(self) {
-    if (self === undefined) {
+    if (arguments.length === 0) {
         $B.RAISE(_b_.TypeError, "descriptor '__str__' of 'object' " +
             "object needs an argument")
     }
@@ -355,7 +355,7 @@ _b_.object.tp_str = function(self) {
 $B.time_object_tp_getattro = 0
 
 _b_.object.tp_getattro = function(self, attr) {
-    var test = false // attr == 'pattern' // && self.ob_type && self.ob_type.tp_name == 'super'
+    var test = false // attr == '__qualname__' // && $B.class_name(self) == 'TypeVar'
     var klass = $B.get_class(self)
     if (test) {
         console.log('getattr', attr, 'of self', self, klass)
@@ -491,17 +491,23 @@ _b_.object.tp_new = function(cls, args, kw) {
     var res = {
         ob_type: cls
     }
-    // the instance has no __dict__ only if every Python class in the MRO
+    if ($B.instance_has_dict(cls)) {
+        $B.init_dict(res)
+    }
+    return res
+}
+
+$B.instance_has_dict = function(cls) {
+    // An instance has no __dict__ only if every Python class in the MRO
     // defines __slots__ without '__dict__'
     for (var klass of cls.tp_mro) {
         if (klass.tp_flags & $B.TPFLAGS.HEAPTYPE &&
                 ($B.get_from_dict(klass, '__slots__', $B.NULL) === $B.NULL ||
                  klass.$slots_has_dict)) {
-            $B.init_dict(res)
-            break
+            return true
         }
     }
-    return res
+    return false
 }
 
 var object_funcs = _b_.object.tp_funcs = {}
@@ -621,7 +627,7 @@ object_funcs.__reduce__ = function(cls) {
         $B.RAISE(_b_.TypeError, `cannot pickle '${$B.class_name(cls)}' object`)
     }
     if ($B.imported.copyreg === undefined) {
-        $B.$import('copyreg')
+        $B.import('copyreg')
     }
     var res = [$B.module_getattr($B.imported.copyreg, '_reconstructor')]
     var D = $B.get_class(cls),
@@ -661,7 +667,7 @@ object_funcs.__reduce_ex__ = function(self, protocol) {
         return $B.$call(reduce, self)
     }
     if ($B.imported.copyreg === undefined) {
-        $B.$import('copyreg')
+        $B.import('copyreg')
     }
     if (protocol < 2) {
         var _reduce_ex = $B.module_getattr($B.imported.copyreg, '_reduce_ex')

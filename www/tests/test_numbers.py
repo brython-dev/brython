@@ -917,4 +917,8 @@ assert type(Int(4).__int__()) is int
 assert_raises(OverflowError, float, 10**1000,
   msg="int too large to convert to float")
 
+# PR 3038
+assert float('nan') is not float('nan')
+
+
 print('passed all tests...')

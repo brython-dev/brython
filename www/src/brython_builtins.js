@@ -361,6 +361,7 @@ $B.make_builtin_class = function(tp_name, tp_bases) {
     }
     var cls = {
         ob_type: _b_.type,
+        ht_qualname: tp_name,
         tp_name,
         tp_bases: tp_bases ?? [_b_.object],
         tp_base: tp_bases ? tp_bases[0] : _b_.object,
@@ -407,6 +408,9 @@ $B.set_func_names = function(klass, module) {
         if (typeof klass[attr] == 'function') {
             $B.add_function_infos(klass, attr, module)
         }
+    }
+    if ($B.get_dict && $B.get_dict(klass)) {
+        $B.set_to_dict(klass, '__module__', module)
     }
     // Also seed $function_infos on tp_funcs entries. Brython-native classes
     // expose their methods through `tp_funcs` (the C-style slot table); when
@@ -706,6 +710,7 @@ $B.OB_TYPE = Symbol('OB_TYPE') // object type
 $B.ID = Symbol('ID') // used for built-in id()
 $B.INUM = Symbol('INUM') // for iterators
 $B.FAST_ITER = Symbol('FAST_ITER') // fast iteration
+$B.KW = Symbol('KW') // keyword arguments of a call: {[$B.KW]: [named, ...unpacked]}
 
 // special repr() for some codepoints, used in py_string.js and py_bytes.js
 $B.special_string_repr = {
@@ -760,7 +765,6 @@ $B.builtins_repr_check = function(builtin, args) {
     var self = $.self
     if (! $B.$isinstance(self, builtin)) {
         var _b_ = $B.builtins
-        console.log(Error().stack)
         $B.RAISE(_b_.TypeError, "descriptor '__repr__' requires a " +
             `'${builtin.tp_name}' object but received a ` +
             `'${$B.class_name(self)}'`)

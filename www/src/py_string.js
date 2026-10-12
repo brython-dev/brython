@@ -962,7 +962,10 @@ $B.printf_format = function(s, type, args) {
             $B.RAISE(_b_.TypeError,
                 "not enough arguments for format string")
         }
-    } else if (nbph == 0) {
+    } else if (nbph == 0 && ($B.is_str(args) ||
+            $B.$getattr(args, '__getitem__', $B.NULL) === $B.NULL)) {
+        // PyMapping_Check: any subscriptable object except str is a
+        // "mapping" here, eg a list
         $B.RAISE(_b_.TypeError,
             "not all arguments converted during string formatting")
     }
@@ -1853,7 +1856,9 @@ _b_.str.tp_new = function(cls, args, kw) {
         ob_type: cls,
         $brython_value: str.$factory(arg, encoding, errors)
     }
-    $B.init_dict(res)
+    if ($B.instance_has_dict(cls)) {
+        $B.init_dict(res)
+    }
     return res
 }
 
@@ -2170,12 +2175,12 @@ str_funcs.find = function(self, sub, start, end) {
     // arguments start and end are interpreted as in slice notation.
     // Return -1 if sub is not found.
     var args_length = arguments.length
-    if (args_length == 2 && ! sub.$kw) {
+    if (args_length == 2 && ! sub[$B.KW]) {
         start = 0
         end = _b_.None
-    } else if (args_length == 3 && ! start.$kw) {
+    } else if (args_length == 3 && ! start[$B.KW]) {
         end = _b_.None
-    } else if (args_length == 4 && ! end.$kw) {
+    } else if (args_length == 4 && ! end[$B.KW]) {
         //
     } else {
         var $ = $B.args("str.find", 4,
@@ -2963,12 +2968,12 @@ str_funcs.rstrip = function() {
 
 str_funcs.split = function(self, sep, maxsplit) {
     var locals
-    if (arguments.length == 3 && ! maxsplit.$kw) {
+    if (arguments.length == 3 && ! maxsplit[$B.KW]) {
         self = to_string(self)
-    } else if (arguments.length == 2 && ! sep.$kw) {
+    } else if (arguments.length == 2 && ! sep[$B.KW]) {
         self = to_string(self)
         maxsplit = -1
-    } else if (arguments.length == 1 && ! self.$kw) {
+    } else if (arguments.length == 1 && ! self[$B.KW]) {
         self = to_string(self)
         sep = _b_.None
         maxsplit = -1
@@ -3053,9 +3058,9 @@ str_funcs.split = function(self, sep, maxsplit) {
 
 str_funcs.splitlines = function(self, keepends) {
     var args_length = arguments.length
-    if (args_length == 1 && ! self.$kw) {
+    if (args_length == 1 && ! self[$B.KW]) {
         keepends = false
-    } else if (args_length == 2 && ! keepends.$kw) {
+    } else if (args_length == 2 && ! keepends[$B.KW]) {
         //
     } else {
         var $ = $B.args('splitlines', 2, {self: null, keepends: null},
@@ -3151,12 +3156,12 @@ str_funcs.startswith = function(self) {
 
 str_funcs.startswith = function(self, prefix, start, end) {
     var args_length = arguments.length
-    if (args_length == 2 && ! prefix.$kw) {
+    if (args_length == 2 && ! prefix[$B.KW]) {
         start = 0
         end = null
-    } else if (args_length == 3 && ! start.$kw) {
+    } else if (args_length == 3 && ! start[$B.KW]) {
         end = null
-    } else if (args_length == 4 && ! end.$kw) {
+    } else if (args_length == 4 && ! end[$B.KW]) {
         //
     } else {
         var $ = $B.args("startswith", 4,
@@ -3439,7 +3444,7 @@ Template_funcs.__class_getitem__ = function() {
 }
 
 Template_funcs.__reduce__ = function(self) {
-    $B.$import('string.templatelib')
+    $B.import('string.templatelib')
     var module = $B.imported['string.templatelib']
     var _template_unpickle = $B.module_getattr(module, '_template_unpickle')
     return $B.fast_tuple([_template_unpickle,

@@ -176,7 +176,7 @@ _b_.bin = function(obj) {
 
 _b_.breakpoint = function() {
     // PEP 553
-    $B.$import('sys', [])
+    $B.import('sys', [])
     var missing = {},
         hook = $B.$getattr($B.imported.sys, 'breakpointhook', missing)
     if (hook === missing) {
@@ -215,9 +215,10 @@ _b_.chr = function(i) {
 _b_.compile = function() {
     var $ = $B.args('compile', 7,
         {source:null, filename:null, mode:null, flags:null, dont_inherit:null,
-         optimize:null, _feature_version:null},
+         optimize:null, _feature_version:null, module: null},
          arguments,
-         {flags: 0, dont_inherit: false, optimize: -1, _feature_version: 0},
+         {flags: 0, dont_inherit: false, optimize: -1, _feature_version: 0,
+         module: _b_.None},
          null, null)
 
     var module_name = '$exec_' + $B.UUID()
@@ -756,12 +757,13 @@ $B.time_builtin_getattr = 0
 
 $B.$getattr = function(obj, attr, _default) {
     // Used internally to avoid having to parse the arguments
-    var test = false // attr == '__abstractmethods__'
+    var test = false // attr == '__qualname__' && $B.class_name(obj) == 'TypeVar'
     if (test) {
         console.log('$getattr', obj, attr)
     }
     var res
     if (obj === undefined || obj === null) {
+        console.log(Error().stack)
         $B.RAISE_ATTRIBUTE_ERROR("Javascript object '" + obj +
             "' has no attribute", obj, attr)
     }
@@ -866,6 +868,9 @@ $B.$getattr = function(obj, attr, _default) {
             return $B.get_class(obj)
         }
         var in_dict = $B.get_dict(obj)[attr]
+        if (test) {
+            console.log('in dict of class', in_dict)
+        }
         if (in_dict && $B.get_class(obj) === _b_.type) {
             var res = $B.NULL
             // A data descriptor on the metatype wins over the type's own
@@ -1032,7 +1037,7 @@ var help = _b_.help = function(obj) {
             }
         }
         // use pydoc
-        $B.$import('pydoc')
+        $B.import('pydoc')
         return $B.$call($B.$getattr($B.imported.pydoc, 'help'), obj)
     }
     if ($B.get_class(obj) === $B.module) {
@@ -1078,7 +1083,6 @@ _b_.id = function(obj) {
 
 // The default __import__ function is a builtin
 _b_.__import__ = function() {
-    // TODO : Install $B.$__import__ in builtins module to avoid nested call
     var $ = $B.args('__import__', 5,
         {name: null, globals: null, locals: null, fromlist: null, level: null},
         arguments,
@@ -1088,6 +1092,19 @@ _b_.__import__ = function() {
         $B.RAISE(_b_.ValueError, "Empty module name")
     }
     return $B.$__import__($.name, $.globals, $.locals, $.fromlist)
+}
+
+// The default __import__ function is a builtin
+_b_.__lazy_import__ = function() {
+    var $ = $B.args('__lazy_import__', 5,
+        {name: null, globals: null, locals: null, fromlist: null, level: null},
+        arguments,
+        {globals:None, locals:None, fromlist:_b_.tuple.$factory(), level:0},
+        null, null)
+    if ($.name === '' && $.level === 0) {
+        $B.RAISE(_b_.ValueError, "Empty module name")
+    }
+    return $B.$__lazy_import__($.name, $.globals, $.locals, $.fromlist)
 }
 
 // not a direct alias of prompt: input has no default value
@@ -1504,9 +1521,9 @@ function $extreme(args, op) { // used by min() and max()
     var last = args[args.length - 1]
     var nb_args = args.length
     var kw
-    if (last.$kw) {
+    if (last[$B.KW]) {
         nb_args--
-        kw = $B.parse_kwargs(last.$kw)
+        kw = $B.parse_kwargs(last[$B.KW])
     }
 
     var has_default = false,
@@ -1633,6 +1650,11 @@ NotImplementedType.$factory = function() {
 
 NotImplementedType.tp_repr = function() {
     return "NotImplemented"
+}
+
+NotImplementedType.nb_bool = function() {
+    $B.RAISE(_b_.TypeError,
+        "NotImplemented should not be used in a boolean context")
 }
 
 // pickled as a global reference, like CPython (notimplemented_reduce)
@@ -2258,7 +2280,9 @@ _b_.super.tp_init = function(self, _type, object_or_type) {
             return
         }
     }
-    if (Array.isArray(object_or_type)) {
+    if (Array.isArray(object_or_type) && object_or_type.ob_type === undefined) {
+        // a plain Javascript array holds the arguments, an instance of a
+        // list subclass is an array too and must be kept as is
         object_or_type = object_or_type[0]
     }
     self.type = type

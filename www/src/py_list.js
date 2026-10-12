@@ -274,7 +274,8 @@ $B.list_delitem = function(self, arg) {
 
 
 list.$getitem_slice = function(self, key) {
-    var klass = $B.get_class(self)
+    // slicing a subclass returns a plain list or tuple
+    var klass = $B.$isinstance(self, tuple) ? tuple : list
     // Find integer values for start, stop and step
     if(key.start === _b_.None && key.stop === _b_.None &&
             key.step === _b_.None){
@@ -643,6 +644,11 @@ list.$unpack = function(obj) {
     try {
         return _b_.list.$factory(obj)
     } catch (err) {
+        if (! $B.is_exc(err, [_b_.TypeError])) {
+            // the iterable itself raised: report its exception, not the
+            // StopIteration of the re-probe below
+            throw err
+        }
         try {
             var it = $B.$iter(obj)
             $B.$call($B.$getattr(it, "__next__"))
@@ -725,7 +731,7 @@ _b_.list.tp_new = function(cls, args, kw) {
     }
     var res = []
     res.ob_type = cls
-    if (cls !== list) {
+    if ($B.instance_has_dict(cls)) {
         $B.init_dict(res)
     }
     return res
@@ -1085,7 +1091,7 @@ _b_.tuple.tp_new = function(cls, args, kw) {
     }
     var self = []
     self.ob_type = cls
-    if (cls !== tuple) {
+    if ($B.instance_has_dict(cls)) {
         $B.init_dict(self)
     }
     args = args ?? []

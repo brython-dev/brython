@@ -1,3 +1,5 @@
+def _normalize_encoding(encoding, lower=False):
+    return encoding.replace('.', '_')
 
 def ascii_decode(*args,**kw):
     pass
