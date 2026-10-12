@@ -1948,60 +1948,16 @@ $B.set_func_names(reversed, "builtins")
 _b_.round = function() {
     var $ = $B.args('round', 2, {number: null, ndigits: null},
                 arguments, {ndigits: None}, null, null)
-    var arg = $.number,
-        n = $.ndigits === None ? 0 : $.ndigits
-
-    var klass
-
-    if (! $B.$isinstance(arg,[_b_.int, _b_.float])) {
-        klass = $B.get_class(arg)
-        try {
-            return $B.$call($B.$getattr(klass, "__round__"), ...arguments)
-        } catch (err) {
-            if ($B.is_exc(err, [_b_.AttributeError])) {
-                $B.RAISE(_b_.TypeError, "type " + $B.class_name(arg) +
-                    " doesn't define __round__ method")
-            } else {
-                throw err
-            }
-        }
-    }
-
-    if (! $B.is_int(n)) {
-        $B.RAISE(_b_.TypeError, "'" + $B.class_name(n) +
-            "' object cannot be interpreted as an integer")
-    }
-
-    klass = $B.get_class(arg)
-
-    if ($B.$isinstance(arg, _b_.float)) {
-        return _b_.float.tp_funcs.__round__(arg, $.ndigits)
-    }
-
-    var mult = Math.pow(10, n),
-        x = arg * mult,
-        floor = Math.floor(x),
-        diff = Math.abs(x - floor),
-        res
-    if (diff == 0.5) {
-        if (floor % 2) {
-            floor += 1
-        }
-        res = _b_.int.nb_true_divide(floor, mult)
-    } else {
-        res = _b_.int.nb_true_divide(Math.round(x), mult)
-    }
-    if (res.value === Infinity || res.value === -Infinity) {
-        $B.RAISE(_b_.OverflowError,
-            "rounded value too large to represent")
+    // the __round__ of the type of number, given ndigits only if passed
+    var round = $B.$getattr($B.get_class($.number), "__round__", $B.NULL)
+    if (round === $B.NULL) {
+        $B.RAISE(_b_.TypeError, "type " + $B.class_name($.number) +
+            " doesn't define __round__ method")
     }
     if ($.ndigits === None) {
-        // Always return an integer
-        return Math.floor(res.value)
-    } else {
-        // Return the same type as argument
-        return $B.$call(klass, res)
+        return $B.$call(round, $.number)
     }
+    return $B.$call(round, $.number, $.ndigits)
 }
 
 _b_.setattr = function() {

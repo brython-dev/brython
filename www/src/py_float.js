@@ -480,6 +480,9 @@ function float_round(x, ndigits) {
     }
 
     var no_digits = ndigits === _b_.None
+    if (! no_digits) {
+        ndigits = Number($B.PyNumber_Index(ndigits))
+    }
     if (isnan(x)) {
         if (ndigits === _b_.None) {
             $B.RAISE(_b_.ValueError,
@@ -491,72 +494,57 @@ function float_round(x, ndigits) {
     } else if (isinf(x)) {
         return ndigits === _b_.None ? overflow() : INF
     }
-    x = float_value(x)
-    ndigits = ndigits === _b_.None ? 0 : ndigits
-    if (ndigits == 0) {
-        var res = Math.round(x.value)
-        if (Math.abs(x.value - res) == 0.5) {
-           // rounding is done towards the even choice
-           if (res % 2) {
-               return res - 1
-           }
-       }
-       if (no_digits) {
-           // return an int
-           return res
-       }
-       return $B.fast_float(res)
-    }
-    if (typeof ndigits == "bigint") {
-        ndigits = Number(ndigits)
-    }
-    // avoids parsing arguments
-    var pow1,
-        pow2,
-        y,
-        z
-    if (ndigits >= 0) {
-        if (ndigits > 22) {
-            /* pow1 and pow2 are each safe from overflow, but
-               pow1*pow2 ~= pow(10.0, ndigits) might overflow */
-            pow1 = 10 ** (ndigits - 22)
-            pow2 = 1e22
-        } else {
-            pow1 = 10 ** ndigits
-            pow2 = 1.0
+    x = float_value(x).value
+    if (no_digits) {
+        // the nearest int, a tie going to the even one
+        var res = Math.round(x)
+        if (Math.abs(x - res) == 0.5 && res % 2) {
+            res -= 1
         }
-        y = (x.value * pow1) * pow2
-        /* if y overflows, then rounded value is exactly x */
-        if (!isFinite(y)) {
-            return x
-        }
+        return _b_.int.$int_or_long(BigInt(res))
+    }
+    if (ndigits > 323 || x == 0) {
+        // x has fewer digits than that
+        return fast_float(x)
+    }
+    if (ndigits < -308) {
+        return fast_float(0 * x)
+    }
+    // x is exactly mant * 2 ** exp: round mant * 2 ** exp * 10 ** ndigits
+    // to the nearest integer q, a tie going to the even one, and read
+    // q * 10 ** -ndigits as a float
+    var view = new DataView(new ArrayBuffer(8))
+    view.setFloat64(0, Math.abs(x))
+    var high = view.getUint32(0),
+        exp = high >>> 20,
+        mant = (BigInt(high & 0xfffff) << 32n) | BigInt(view.getUint32(4))
+    if (exp == 0) {
+        exp = 1
     } else {
-        pow1 = 10 ** -ndigits
-        pow2 = 1.0 /* unused; silences a gcc compiler warning */
-        if (isFinite(pow1)) {
-            y = x.value / pow1
-        } else {
-            return ZERO
-        }
+        mant |= 1n << 52n
     }
-
-    z = Math.round(y)
-    if (fabs(y - z).value == 0.5) {
-        /* halfway between two integers; use round-half-even */
-        z = 2.0 * Math.round(y / 2)
+    exp -= 1075
+    var num = mant * 10n ** BigInt(Math.max(ndigits, 0)) *
+            2n ** BigInt(Math.max(exp, 0)),
+        den = 10n ** BigInt(Math.max(-ndigits, 0)) *
+            2n ** BigInt(Math.max(-exp, 0)),
+        q = num / den,
+        r = num % den
+    if (2n * r > den || (2n * r == den && q % 2n == 1n)) {
+        q += 1n
     }
-    if (ndigits >= 0) {
-        z = (z / pow2) / pow1
+    var digits = q.toString()
+    if (ndigits > 0) {
+        digits = digits.padStart(ndigits + 1, '0')
+        digits = digits.slice(0, -ndigits) + '.' + digits.slice(-ndigits)
     } else {
-        z *= pow1
+        digits += '0'.repeat(-ndigits)
     }
-    /* if computation resulted in overflow, raise OverflowError */
+    var z = Number(digits)
     if (! isFinite(z)) {
-        $B.RAISE(_b_.OverflowError,
-                        "overflow occurred during round")
+        $B.RAISE(_b_.OverflowError, "rounded value too large to represent")
     }
-
-    return fast_float(z)
+    return fast_float(x < 0 ? -z : z)
 }
 
 function to_digits(s) {
