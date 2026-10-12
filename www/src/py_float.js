@@ -1187,7 +1187,7 @@ float_funcs.as_integer_ratio = function(self) {
 }
 
 float_funcs.conjugate = function(self) {
-    $B.RAISE(_b_.NotImplementedError, 'conjugate')
+    return float_value(self)
 }
 
 float_funcs.from_number = function(self) {
