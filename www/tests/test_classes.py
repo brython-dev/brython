@@ -1169,6 +1169,35 @@ class A:
     x = 9
   assert x == 9
 
+# a class statement that raises leaves its frame
+class Checked:
+    def __init_subclass__(cls, **kw):
+        raise TypeError("refused")
+
+def make_checked():
+    try:
+        class C(Checked):
+            pass
+    except TypeError as error:
+        return str(error)
+
+def make_raising():
+    try:
+        class C:
+            raise ValueError("from the body")
+    except ValueError as error:
+        return str(error)
+
+def run(f):
+    try:
+        value = f()
+    except Exception:
+        value = "escaped"
+    return value
+
+assert run(make_checked) == "refused"
+assert run(make_raising) == "from the body"
+
 # issue 2555
 class MyClass:
 
