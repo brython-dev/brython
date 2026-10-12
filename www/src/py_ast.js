@@ -45,7 +45,8 @@ for (var kl in $B.ast_classes) {
     var args = $B.ast_classes[kl],
         body = '',
         arg_list = [],
-        fields = []
+        fields = [],
+        optional = []
     if (typeof args == "string") {
         if (args.length > 0) {
             for (var arg of args.split(',')) {
@@ -56,6 +57,7 @@ for (var kl in $B.ast_classes) {
                     body += ` this.${arg_name} = $B.$list(${arg_name} === undefined ? [] : ${arg_name})\n`
                 } else if (arg_type.endsWith('?')) {
                     //arg = arg.substr(0, arg.length - 1)
+                    optional.push(arg_name)
                     body += ` this.${arg_name} = ${arg_name}\n`
                 } else {
                     body += ` this.${arg_name} = ${arg_name}\n`
@@ -66,6 +68,7 @@ for (var kl in $B.ast_classes) {
         //var arg_list = args.replace(/[*?]/g, '').split(',')
         ast[kl] = Function(...arg_list, body)
         ast[kl]._fields = fields
+        ast[kl]._optional = optional
     } else {
         ast[kl] = args.map(x => ast[x])
         if (Object.hasOwn($B.ast_attributes, kl)) {
@@ -146,7 +149,11 @@ $B.ast_py_to_js = function(obj) {
             if (field.endsWith('?') || field.endsWith('*')) {
                 field = field.substr(0, field.length - 1)
             }
-            js_ast_obj[field] = $B.ast_py_to_js($B.get_from_dict(obj, field))
+            let value = $B.get_from_dict(obj, field)
+            // an optional field left out is None in Python, undefined here
+            js_ast_obj[field] = value === _b_.None &&
+                js_class._optional.includes(field) ? undefined :
+                $B.ast_py_to_js(value)
         }
         for(var loc of ['lineno', 'col_offset',
                         'end_lineno', 'end_col_offset']){
