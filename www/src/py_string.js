@@ -210,6 +210,7 @@ $B.str_iterator.tp_iternext = function*(self){
     for (var char of self.it) {
         yield char
     }
+    self.done = true
 }
 
 var str_iterator_funcs = $B.str_iterator.tp_funcs = {}
@@ -223,10 +224,14 @@ str_iterator_funcs.__reduce__ = function(self) {
 }
 
 str_iterator_funcs.__setstate__ = function(self, value) {
-    self.it = self.obj[Symbol.iterator]()
-    for (var i = 0; i < value; i++) {
-        self.it.next()
+    var index = $B.clip_index(value, 0, self.len)
+    if (! self.done) {
+        self.it = to_string(self.obj)[Symbol.iterator]()
+        for (self.index = 0; self.index < index; self.index++) {
+            self.it.next()
+        }
     }
+    return _b_.None
 }
 
 $B.str_iterator.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]

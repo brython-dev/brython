@@ -336,8 +336,13 @@ list_iterator_funcs.__reduce__ = function(self) {
     return $B.fast_tuple([_b_.iter, $B.fast_tuple([list.$factory(self)]), 0])
 }
 
-list_iterator_funcs.__setstate__ = function(self) {
-
+list_iterator_funcs.__setstate__ = function(self, state) {
+    // -1 is a position as well: the end
+    var index = $B.clip_index(state, -1, self.obj.length)
+    if (self.index !== Infinity) {
+        self.index = index < 0 ? Infinity : index
+    }
+    return _b_.None
 }
 
 $B.list_iterator.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]
@@ -487,8 +492,9 @@ list_reverseiterator_funcs.__reduce__ = function(self) {
         $B.fast_tuple([list.$factory(self).reverse()]), 0])
 }
 
-list_reverseiterator_funcs.__setstate__ = function(self) {
-
+list_reverseiterator_funcs.__setstate__ = function(self, state) {
+    self.counter = $B.clip_index(state, -1, self.items.length - 1)
+    return _b_.None
 }
 
 $B.list_reverseiterator.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]
@@ -997,8 +1003,10 @@ $B.tuple_iterator.tp_iter = function(self) {
 }
 
 $B.tuple_iterator.tp_iternext = function*(self){
-    for (var value of self.it) {
-        yield value
+    if (self.index < self.obj.length) {
+        yield self.obj[self.index++]
+    } else {
+        self.index = Infinity
     }
 }
 
@@ -1012,8 +1020,12 @@ tuple_iterator_funcs.__reduce__ = function(self) {
 
 }
 
-tuple_iterator_funcs.__setstate__ = function(self) {
-
+tuple_iterator_funcs.__setstate__ = function(self, state) {
+    var index = $B.clip_index(state, 0, self.obj.length)
+    if (self.index !== Infinity) {
+        self.index = index
+    }
+    return _b_.None
 }
 
 $B.tuple_iterator.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]

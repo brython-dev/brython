@@ -134,7 +134,12 @@ range_iterator_funcs.__reduce__ = function(self) {
 }
 
 range_iterator_funcs.__setstate__ = function(self, value) {
-    self.it = self.start + value * self.step
+    // moves on from where the iterator stands
+    var index = $B.clip_index($B.PyNumber_Index(value), 0,
+        range_iterator_funcs.__length_hint__(self))
+    self.it += typeof self.it == 'bigint' ?
+        BigInt(index) * self.step : index * self.step
+    return _b_.None
 }
 
 $B.range_iterator.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]

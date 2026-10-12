@@ -638,6 +638,16 @@ $B.make_js_iterator_no_trace = function(iterator) {
     return $B.make_js_iterator(iterator, $B.NULL)
 }
 
+$B.clip_index = function(state, low, high) {
+    // the position an iterator's __setstate__ is given, an integer silently
+    // brought between low and high
+    if (! $B.is_int(state)) {
+        $B.RAISE(_b_.TypeError, "an integer is required")
+    }
+    var index = $B.PyNumber_Index(state)
+    return index < low ? low : index > high ? high : index
+}
+
 $B.make_js_iterator = function(iterator, frame, lineno) {
     // return a Javascript iterator usable in a loop
     // "for (item of $B.make_js_iterator(...)) {"
