@@ -1131,6 +1131,12 @@ _b_.isinstance = function(obj, cls) {
 $B.$isinstance = function(obj, cls) {
     var kls
     if (Array.isArray(cls)) {
+        // a tuple, or a Javascript array of classes passed by Brython itself;
+        // not a list
+        if (cls.ob_type !== undefined && ! $B.is_tuple(cls)) {
+            $B.RAISE(_b_.TypeError, "isinstance() arg 2 must be a type, " +
+                "a tuple of types, or a union")
+        }
         for (kls of cls) {
             if ($B.$isinstance(obj, kls)) {
                 return true

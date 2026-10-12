@@ -867,6 +867,11 @@ assert isinstance(classmethod(print), classmethod)
 assert isinstance(staticmethod(print), staticmethod)
 assert isinstance(property(print), property)
 
+# isinstance() takes a tuple of types, not a list
+for classes in ([str, int], [], (str, [int])):
+    assert_raises(TypeError, isinstance, 1, classes)
+assert isinstance(1, (str, (bytes, int)))
+
 # issue 2043
 class HasClassMethod:
     @classmethod
