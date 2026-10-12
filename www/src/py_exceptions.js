@@ -1058,8 +1058,7 @@ _b_.UnicodeTranslateError.tp_str = function(self) {
         char = `characters`
         pos = `${self.start}-${self.end - 1}`
     }
-    return `'${self.encoding}' codec can't translate ` +
-           `${char} in position ${pos}: ${self.reason}`
+    return `can't translate ${char} in position ${pos}: ${self.reason}`
 }
 
 _b_.UnicodeTranslateError.tp_init = function(self) {
@@ -1071,8 +1070,8 @@ _b_.UnicodeTranslateError.tp_init = function(self) {
     }
     $B.parse_tuple(args, 1, "UnnU")
 
-    let [_, encoding, object, start, end, reason] = args
-    self.encoding = encoding
+    let [_, object, start, end, reason] = args
+    self.encoding = _b_.None
     self.object = object
     self.start = start
     self.end = end
