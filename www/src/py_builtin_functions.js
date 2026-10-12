@@ -502,9 +502,8 @@ enumerate.$factory = function() {
     return {
         ob_type: enumerate,
         __name__: 'enumerate iterator',
-        counter: start - 1,
         it: $B.make_js_iterator(iterable),
-        counter: start
+        counter: $B.PyNumber_Index(start)
     }
 }
 
@@ -516,7 +515,7 @@ _b_.enumerate.tp_iter = function(self) {
 _b_.enumerate.tp_iternext = function*(self){
     for (var item of self.it) {
         var res = $B.fast_tuple([self.counter, item])
-        self.counter++
+        self.counter = _b_.int.nb_add(self.counter, 1)
         yield res
     }
 }
@@ -554,7 +553,7 @@ _b_.enumerate.tp_new = function(cls, args, kw) {
     var res = {
         ob_type: _b_.enumerate,
         it: $B.make_js_iterator(iterable),
-        counter: start ?? 0
+        counter: $B.PyNumber_Index(start ?? 0)
     }
     $B.init_dict(res)
     return res
