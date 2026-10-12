@@ -31,8 +31,21 @@ function make_new_set_base_type(so) {
                frozenset.$factory()
 }
 
+function set_hash(key) {
+    // hash(key) for a set element: a TypeError says what it was refused as
+    try {
+        return $B.$hash(key)
+    } catch (err) {
+        if ($B.is_exc(err, [_b_.TypeError]) && err.args && err.args[0]) {
+            err.args[0] = `cannot use '${$B.class_name(key)}' as ` +
+                `a set element (${err.args[0]})`
+        }
+        throw err
+    }
+}
+
 function set_add(so, item, hash) {
-    hash = hash ?? $B.$hash(item)
+    hash = hash ?? set_hash(item)
     var stored = so.$store[hash]
     if (stored) {
         // A bucket already holds items with this hash. If the item is already
@@ -239,15 +252,11 @@ function set_lookkey(so, key, hash) {
     // {hash, index} where index is such that so[hash][index] == key
     if (hash === undefined) {
         try {
-            hash = $B.$hash(key)
+            hash = set_hash(key)
         } catch (err) {
             if ($B.$isinstance(key, set)) {
                 hash = $B.$hash(frozenset.$factory(key))
             } else {
-                if (err.args && err.args[0]) {
-                    err.args[0] = `cannot use '${$B.class_name(key)}' as ` +
-                        `a set element (${err.args[0]})`
-                }
                 throw err
             }
         }
