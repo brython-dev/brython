@@ -1092,6 +1092,24 @@ class A:
 
 assert A().a(['a', 'b']) == 'a-b'
 
+# '__dict__' and '__weakref__' in __slots__ do not fix the instance layout
+class WithX:
+    __slots__ = ('x',)
+
+class WithY:
+    __slots__ = ('y',)
+
+class Markers:
+    __slots__ = ('__dict__', '__weakref__')
+
+class C(Markers, WithX):
+    pass
+
+class C(WithX, Markers):
+    pass
+
+assert_raises(TypeError, type, 'C', (WithX, WithY), {})
+
 # setting a classmethod
 class A:
 
