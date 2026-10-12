@@ -125,5 +125,7 @@ Number = int | float
 x: Number | str = "succes"
 y: str | Number = "fail"
 
+# PR 3037
+assert (int | str) == (str | int)
 
 print("Passed all tests...")

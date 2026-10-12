@@ -23,6 +23,10 @@ function conv_complex(...objs) {
     return res
 }
 
+function is_real(obj) {
+    return $B.$isinstance(obj, _b_.float) || $B.is_int(obj)
+}
+
 var complex = _b_.complex
 
 function complex_eq(self, other) {
@@ -50,19 +54,10 @@ complex.$getnewargs = function(self) {
 }
 
 function complex2expo(cx) {
-    var norm = Math.sqrt((cx.real.value * cx.real.value) +
-                         (cx.imag.value * cx.imag.value)),
-        sin = cx.imag.value / norm,
-        cos = cx.real.value / norm,
-        angle
-    if (cos == 0) {
-        angle = sin == 1 ? Math.PI / 2 : 3 * Math.PI / 2
-    } else if (sin == 0) {
-        angle = cos == 1 ? 0 : Math.PI
-    } else {
-        angle = Math.atan(sin / cos)
+    return {
+        norm: Math.hypot(cx.real.value, cx.imag.value),
+        angle: Math.atan2(cx.imag.value, cx.real.value)
     }
-    return {norm: norm, angle: angle}
 }
 
 // functions copied from CPython Objects/complexobject.c
@@ -209,7 +204,9 @@ _b_.complex.nb_add = function(self, other) {
         return _b_.NotImplemented
     }
     return make_complex(x.real.value + y.real.value,
-                            x.imag.value + y.imag.value)
+                        is_real(self) ? y.imag.value :
+                        is_real(other) ? x.imag.value :
+                        x.imag.value + y.imag.value)
 }
 
 _b_.complex.nb_bool = function(self) {
@@ -223,6 +220,7 @@ _b_.complex.nb_subtract = function(self, other) {
         return _b_.NotImplemented
     }
     return make_complex(x.real.value - y.real.value,
+                        is_real(self) ? -y.imag.value :
                         x.imag.value - y.imag.value)
 }
 
@@ -230,6 +228,10 @@ _b_.complex.nb_multiply = function(self, other) {
     var [x, y] = conv_complex(self, other)
     if (x === $B.NULL || y === $B.NULL) {
         return _b_.NotImplemented
+    }
+    if (is_real(self) || is_real(other)) {
+        var [c, r] = is_real(self) ? [y, x.real.value] : [x, y.real.value]
+        return make_complex(c.real.value * r, c.imag.value * r)
     }
     return make_complex(x.real.value * y.real.value -
                         x.imag.value * y.imag.value,
@@ -301,7 +303,7 @@ _b_.complex.nb_power = function(self, other, mod) {
         var x = other.real.value,
             y = other.imag.value
         var pw = Math.pow(exp.norm, x) * Math.pow(Math.E, -y * angle),
-            theta = y * Math.log(exp.norm) - x * angle
+            theta = y * Math.log(exp.norm) + x * angle
         if (pw == Number.POSITIVE_INFINITY || pw === Number.NEGATIVE_INFINITY) {
             $B.RAISE(_b_.OverflowError, 'complex exponentiation')
         }

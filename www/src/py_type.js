@@ -83,7 +83,7 @@ $B.$class_constructor = function(qualname, dict, metaclass, resolved_bases,
             }
         } else {
             kls = $B.$call(meta_new, metaclass, class_name, resolved_bases, dict,
-                           {$kw:[extra_kwargs]})
+                           {[$B.KW]: [extra_kwargs]})
         }
     } catch (err) {
         if (test) {
@@ -102,7 +102,7 @@ $B.$class_constructor = function(qualname, dict, metaclass, resolved_bases,
         // Initialize the class object by a call to metaclass __init__
         var meta_init = _b_.type.tp_getattro(metaclass, "__init__")
         $B.$call(meta_init, kls, class_name, resolved_bases, dict,
-                 {$kw: [extra_kwargs]})
+                 {[$B.KW]: [extra_kwargs]})
 
     }
 
@@ -1063,7 +1063,12 @@ $B.make_setattr = function(cls) {
     cls.tp_setattro = $B.NULL
     var setattr = $B.get_from_dict(cls, '__setattr__', $B.NULL)
     if (setattr !== $B.NULL) {
-        cls.tp_setattro = setattr
+        // __setattr__ is not always a Javascript function: it can be any
+        // callable, eg a method descriptor such as dict.__setitem__
+        cls.tp_setattro = typeof setattr == 'function' ? setattr :
+            function(obj, attr, value) {
+                return $B.$call(setattr, obj, attr, value)
+            }
     } else if (cls.tp_mro) {
         for (var kls of cls.tp_mro) {
             if(Object.hasOwn(kls, 'tp_setattro') &&
@@ -2570,14 +2575,22 @@ $B.UnionType.tp_richcompare = function(self, other, op) {
     if (! $B.$isinstance(other, $B.UnionType)) {
         return _b_.NotImplemented
     }
+    // unions compare as sets of types: int | str == str | int
+    var same = self.args.length == other.args.length &&
+        self.args.every(item => other.args.includes(item))
     switch (op) {
         case '__eq__':
-            return $B.list_eq(self.args, other.args)
+            return same
         case '__ne__':
-            return ! $B.list_eq(self.args, other.args)
+            return ! same
         default:
             return _b_.NotImplemented
     }
+}
+
+$B.UnionType.tp_hash = function(self) {
+    // equal unions must have the same hash, whatever the order of the types
+    return _b_.hash($B.$call(_b_.frozenset, $B.$list(self.args.slice())))
 }
 
 $B.UnionType.tp_repr = function(self) {

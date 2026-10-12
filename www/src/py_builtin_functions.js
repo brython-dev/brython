@@ -1435,7 +1435,8 @@ _b_.locals = function() {
     // is not a container or iterable"). Skip frame infrastructure keys.
     var d = $B.empty_dict()
     for (var key in locals_obj) {
-        if (key.startsWith('$') || key == '__class__' || key == 'ob_type') {
+        if (key.startsWith('$') || key == '__class__' || key == 'ob_type' ||
+                key.startsWith('lambda_' + $B.lambda_magic + '_')) {
             continue
         }
         _b_.dict.$setitem(d, key, locals_obj[key])
@@ -1521,9 +1522,9 @@ function $extreme(args, op) { // used by min() and max()
     var last = args[args.length - 1]
     var nb_args = args.length
     var kw
-    if (last.$kw) {
+    if (last[$B.KW]) {
         nb_args--
-        kw = $B.parse_kwargs(last.$kw)
+        kw = $B.parse_kwargs(last[$B.KW])
     }
 
     var has_default = false,
@@ -2280,7 +2281,9 @@ _b_.super.tp_init = function(self, _type, object_or_type) {
             return
         }
     }
-    if (Array.isArray(object_or_type)) {
+    if (Array.isArray(object_or_type) && object_or_type.ob_type === undefined) {
+        // a plain Javascript array holds the arguments, an instance of a
+        // list subclass is an array too and must be kept as is
         object_or_type = object_or_type[0]
     }
     self.type = type
