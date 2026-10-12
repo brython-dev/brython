@@ -920,5 +920,7 @@ assert_raises(OverflowError, float, 10**1000,
 # PR 3038
 assert float('nan') is not float('nan')
 
+# PR 3052
+assert str(2 * complex(float('inf'), 1)) == '(inf+2j)'
 
 print('passed all tests...')
