@@ -823,6 +823,9 @@ _b_.float.nb_divmod = function(self, other) {
     if (x === $B.NULL || y === $B.NULL) {
         return _b_.NotImplemented
     }
+    if (y.value == 0) {
+        $B.RAISE(_b_.ZeroDivisionError, "division by zero")
+    }
     var divmod = _float_div_mod(x.value, y.value)
     return $B.fast_tuple([$B.fast_float(divmod.floordiv),
                           $B.fast_float(divmod.mod)])
@@ -1041,6 +1044,9 @@ _b_.float.nb_floor_divide = function(self, other) {
     var [x, y] = conv_float(self, other) //self = conv_float(self)
     if (x === $B.NULL || y === $B.NULL) {
         return _b_.NotImplemented
+    }
+    if (y.value == 0) {
+        $B.RAISE(_b_.ZeroDivisionError, "division by zero")
     }
     var divmod = _float_div_mod(x.value, y.value)
     return $B.fast_float(divmod.floordiv)
