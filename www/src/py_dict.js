@@ -644,6 +644,51 @@ function dict_eq(self, other) {
     return true
 }
 
+function dict_update_arg(self, arg) {
+    // dict(arg) and dict.update(arg): a dict that keeps the iteration of
+    // dict is read from its storage; another object with keys() is read
+    // through keys() and subscription; anything else is a sequence of pairs
+    if ($B.$isinstance(arg, dict) &&
+            $B.search_in_mro($B.get_class(arg), '__iter__', $B.NULL) ===
+            $B.search_in_dict(dict, '__iter__', $B.NULL)) {
+        $copy_dict(self, arg)
+    } else if ($B.get_class(arg) === $B.JSObj) {
+        for (let key in arg) {
+            $B.str_dict_set(self, key, $B.jsobj2pyobj(arg[key]))
+        }
+    } else if ($B.$getattr(arg, "keys", $B.NULL) !== $B.NULL) {
+        for (let key of $B.make_js_iterator($B.$call($B.$getattr(arg, "keys")))) {
+            dict.$setitem(self, key, $B.$getitem1(arg, key))
+        }
+    } else {
+        let it = _b_.iter(arg),
+            i = 0,
+            key_value
+        while (true) {
+            try {
+                var item = _b_.next(it)
+            } catch (err) {
+                if ($B.is_exc(err, _b_.StopIteration)) {
+                    break
+                }
+                throw err
+            }
+            try {
+                key_value = _b_.list.$factory(item)
+            } catch (err) {
+                $B.RAISE(_b_.TypeError, "object is not iterable")
+            }
+            if (key_value.length !== 2) {
+                $B.RAISE(_b_.ValueError, "dictionary update " +
+                    "sequence element #" + i + " has length " +
+                    key_value.length + "; 2 is required")
+            }
+            dict.$setitem(self, key_value[0], key_value[1])
+            i++
+        }
+    }
+}
+
 function dict_init(self, args, kw) {
     if(args === undefined){
         console.log('args undef')
@@ -653,41 +698,7 @@ function dict_init(self, args, kw) {
         $B.RAISE(_b_.TypeError, "dict expected at most 1 argument" +
             `, got ${args.length}`)
     } else if (args.length == 1) {
-        args = args[0]
-        if ($B.exact_type(args, dict)) {
-            for (let entry of dict.$iter_items(args)) {
-                dict.$setitem(self, entry.key, entry.value, entry.hash)
-            }
-        } else if($B.get_class(args) === $B.JSObj) {
-            for (let key in args) {
-                $B.str_dict_set(self, key, $B.jsobj2pyobj(args[key]))
-            }
-        } else {
-            var keys = $B.$getattr($B.get_class(args), "keys", $B.NULL)
-            if (keys !== $B.NULL) {
-                var gi = $B.$getattr($B.get_class(args), "__getitem__", $B.NULL)
-                if (gi !== $B.NULL) {
-                    // has keys and __getitem__ : it's a mapping, iterate on
-                    // keys and values
-                    for (var key of $B.make_js_iterator($B.$call(keys, args))) {
-                        try {
-                            let value = $B.$call(gi, args, key)
-                            dict.$setitem(self, key, value)
-                        } catch (err) {
-                            if ($B.is_exc(err, _b_.StopIteration)) {
-                                break
-                            }
-                            throw err
-                        }
-                    }
-                }
-            } else {
-                if (! Array.isArray(args)) {
-                    args = _b_.list.$factory(args)
-                }
-                init_from_list(self, args)
-            }
-        }
+        dict_update_arg(self, args[0])
     }
 
     for (let item of _b_.dict.$iter_items(kw)) {
@@ -1264,47 +1275,11 @@ dict_funcs.update = function(self) {
     var self = $.self,
         args = $.args,
         kw = $.kw
-    if (args.length > 0) {
-        var o = args[0]
-        if ($B.$isinstance(o, dict)) {
-            $copy_dict(self, o)
-        } else if (_b_.hasattr(o, "keys")) {
-            var _keys = _b_.list.$factory($B.$call($B.$getattr(o, "keys")))
-            for (let i = 0, len = _keys.length; i < len; i++) {
-                var getitem = $B.$getattr(o, "__getitem__", $B.NULL)
-                if (getitem !== $B.NULL) {
-                    var _value = $B.$call(getitem, _keys[i])
-                    dict.$setitem(self, _keys[i], _value)
-                }
-            }
-        } else {
-            let it = _b_.iter(o),
-                i = 0,
-                key_value
-            while (true) {
-                try {
-                    var item = _b_.next(it)
-                } catch (err) {
-                    if ($B.is_exc(err, _b_.StopIteration)) {
-                        break
-                    }
-                    throw err
-                }
-                try {
-                    key_value = _b_.list.$factory(item)
-                } catch (err) {
-                    $B.RAISE(_b_.TypeError, "cannot convert dictionary" +
-                        " update sequence element #" + i + " to a sequence")
-                }
-                if (key_value.length !== 2) {
-                    $B.RAISE(_b_.ValueError, "dictionary update " +
-                        "sequence element #" + i + " has length " +
-                        key_value.length + "; 2 is required")
-                }
-                dict.$setitem(self, key_value[0], key_value[1])
-                i++
-            }
-        }
+    if (args.length > 1) {
+        $B.RAISE(_b_.TypeError, "update expected at most 1 argument" +
+            `, got ${args.length}`)
+    } else if (args.length == 1) {
+        dict_update_arg(self, args[0])
     }
     $copy_dict(self, kw)
     return _b_.None

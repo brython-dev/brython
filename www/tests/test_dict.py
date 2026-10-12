@@ -168,6 +168,30 @@ assert str(a) == '{1: 3, 2: 2}'
 a.update({4:4})
 assert str(a) == '{1: 3, 2: 2, 4: 4}'
 
+# dict() and update() read a dict subclass that iterates its own way through
+# keys() and subscription, refuse a mapping without __getitem__ and a second
+# argument
+class Selected(dict):
+    def __iter__(self):
+        return iter(["b"])
+    def keys(self):
+        return ["b"]
+
+class Incomplete:
+    def keys(self):
+        return ["a"]
+
+d = {}
+d.update(Selected(a=1, b=2))
+assert d == {"b": 2} and dict(Selected(a=1, b=2)) == {"b": 2}
+for args in ([Incomplete()], [{"a": 1}, {"b": 2}]):
+    try:
+        d.update(*args)
+        raise AssertionError("should have raised TypeError")
+    except TypeError:
+        pass
+assert d == {"b": 2}
+
 b = {'a': 1, 'b': 2}
 b['a'] = 3
 assert str(b) == "{'a': 3, 'b': 2}"
