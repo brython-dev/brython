@@ -117,6 +117,8 @@ function Symtable() {
     this.blocks = new Map()
     this.cur = NULL
     this.private = NULL
+    // names a "del" statement targets somewhere in the module
+    this.deleted = new Set()
 
 }
 
@@ -1701,6 +1703,9 @@ visitor.expr = function(st, e) {
         var flag = e.ctx instanceof $B.ast.Load ? SF.USE : SF.DEF_LOCAL
         if (! symtable_add_def(st, e.id, flag, LOCATION(e))) {
             VISIT_QUIT(st, 0)
+        }
+        if (e.ctx instanceof $B.ast.Del) {
+            st.deleted.add(e.id)
         }
         /* Special-case super: it counts as a use of __class__ */
         if (e.ctx instanceof $B.ast.Load &&
