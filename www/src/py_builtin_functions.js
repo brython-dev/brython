@@ -946,10 +946,13 @@ _b_.globals = function() {
 _b_.hasattr = function(obj,attr) {
     check_nb_args_no_kw('hasattr', 2, arguments)
     try {
-        $B.$getattr(obj, attr)
+        _b_.getattr(obj, attr)
         return true
     } catch (err) {
-        return false
+        if ($B.is_exc(err, [_b_.AttributeError])) {
+            return false
+        }
+        throw err
     }
 }
 
