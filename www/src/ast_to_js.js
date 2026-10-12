@@ -1393,7 +1393,7 @@ $B.ast.AnnAssign.prototype.to_js = function(scopes) {
                 // Update __annotations__ only for classes and modules
                 if (! scopes.postpone_annotations) {
                     let ann_str = annotation_to_str(this.annotation, scopes)
-                    ann_str = `$B.$call(FR, '${ann_str}', {$kw:[{is_class:true}]})`
+                    ann_str = `$B.$call(FR, '${ann_str}', $B.make_kwarg({is_class:true}))`
 
                     if (scope.type == 'class') {
                         scope.annotate.push(`${mangled}: [${this.lineno}, ` +
