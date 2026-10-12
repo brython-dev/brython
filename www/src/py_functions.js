@@ -671,7 +671,7 @@ function missing_names(missing) {
 }
 
 function add_to_kwargs(kw_dict, key, value) {
-    $B.str_dict_set(kw_dict, key, value)
+    _b_.dict.$setitem(kw_dict, key, value)
 }
 
 function reset_args_parser(self) {
@@ -774,7 +774,7 @@ function make_arguments_parser(f) {
                 var index = arg_names.indexOf(key)
                 if (index == -1) {
                     if (kwarg) {
-                        add_to_kwargs(locals[kwarg], key, value)
+                        add_to_kwargs(locals[kwarg], kw_key, value)
                         return
                     } else {
                         $B.RAISE(_b_.TypeError, name +
