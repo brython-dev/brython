@@ -316,13 +316,17 @@ $B.parse_kwargs = function(kw_args, fname) {
         if ($B.get_class(kw_arg) === _b_.dict) {
             for (var entry of _b_.dict.$iter_items(kw_arg)) {
                 key = entry.key
-                if (typeof key !== 'string') {
-                    $B.RAISE(_b_.TypeError, fname +
-                        "() keywords must be strings")
-                } else if (kwa[key] !== undefined) {
-                    $B.RAISE(_b_.TypeError, fname +
-                        "() got multiple values for argument '" +
-                        key + "'")
+                if ($B.is_str(key)) {
+                    key = _b_.str.$to_string(key)
+                } else {
+                    $B.RAISE(_b_.TypeError,
+                        `${fname}() keywords must be strings`
+                    )
+                }
+                if (kwa[key] !== undefined) {
+                    $B.RAISE(_b_.TypeError,
+                        `${fname}() got multiple values for keyword argument '${key}'`
+                    )
                 } else {
                     kwa[key] = entry.value
                 }
