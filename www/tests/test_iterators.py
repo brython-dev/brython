@@ -232,4 +232,8 @@ assert next(flaky_it_2928) == "later"
 assert next(flaky_it_2928) == "later"
 assert next(flaky_it_2928, None) is None
 
+# zip() with no iterable is empty
+assert list(zip()) == [] and list(zip(strict=True)) == []
+assert list(type("Z", (zip,), {})()) == []
+
 print("passed all tests...")
