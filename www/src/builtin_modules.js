@@ -750,11 +750,11 @@
         if (self.buf === undefined) {
             self.buf = []
         }
-        if (typeof msg != "string") {
+        if (! $B.is_str(msg)) {
             $B.RAISE(_b_.TypeError, "write() argument must be str, not " +
                 $B.class_name(msg))
         }
-        self.buf.push(msg)
+        self.buf.push(_b_.str.$to_string(msg))
         return _b_.None
     }
 
