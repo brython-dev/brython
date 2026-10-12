@@ -1184,6 +1184,15 @@ $B.$isinstance = function(obj, cls) {
             return $B.$call(instancecheck, cls, obj)
         }
     }
+    // an object may report another class than its type, as a proxy does
+    if ($B.search_in_mro(obj_class, '__class__', $B.NULL) !==
+            $B.search_in_dict(_b_.object, '__class__', $B.NULL)) {
+        var reported = $B.$getattr(obj, '__class__', $B.NULL)
+        if (reported !== $B.NULL && reported !== obj_class &&
+                $B.is_type(reported)) {
+            return $B.get_mro(reported).includes(cls)
+        }
+    }
     return false
 }
 
