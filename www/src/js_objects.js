@@ -296,12 +296,6 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
         return res
     }
 
-    /*
-    if (jsobj.$kw) {
-        return jsobj
-    }
-    */
-
     if (jsobj.constructor === Generator.constructor) {
         return JSGenerator.$factory(jsobj)
     }
