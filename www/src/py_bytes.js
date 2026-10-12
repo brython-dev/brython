@@ -85,7 +85,7 @@ $B.bytearray_iterator.tp_iternext = function*(self){
 var bytearray_iterator_funcs = $B.bytearray_iterator.tp_funcs = {}
 
 bytearray_iterator_funcs.__length_hint__ = function(self) {
-    return self.len
+    return Math.max(0, self.obj.source.length - self.index - 1)
 }
 
 bytearray_iterator_funcs.__reduce__ = function(self) {
@@ -1847,7 +1847,7 @@ $B.bytes_iterator.tp_iternext = function*(self){
 var bytes_iterator_funcs = $B.bytes_iterator.tp_funcs = {}
 
 bytes_iterator_funcs.__length_hint__ = function(self) {
-    return self.len
+    return Math.max(0, self.len - self.index - 1)
 }
 
 bytes_iterator_funcs.__reduce__ = function(self) {

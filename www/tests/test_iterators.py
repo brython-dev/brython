@@ -1,5 +1,23 @@
 from tester import assert_raises
 
+# __length_hint__ of a sequence iterator is what remains
+for seq in ([1, 2, 3], (1, 2, 3), "ab😀", b"abc", bytearray(b"abc"),
+        range(3), range(9, 0, -4)):
+    it = iter(seq)
+    next(it)
+    assert it.__length_hint__() == 2, seq
+    list(it)
+    assert it.__length_hint__() == 0, seq
+it = reversed([1, 2, 3])
+next(it)
+assert it.__length_hint__() == 2
+data = [1, 2]
+it = iter(data)
+data.append(3)
+assert it.__length_hint__() == 3 and list(it) == [1, 2, 3]
+data.append(4)
+assert list(it) == []
+
 x = [1, 2]
 z = iter(x)
 assert z.__next__() == 1
