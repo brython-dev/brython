@@ -1092,6 +1092,18 @@ function reset_setattr(cls) {
     }
 }
 
+function gives_dict(cls) {
+    // whether the instances of cls have a __dict__: a builtin type with a
+    // '__dict__' descriptor, a class without __slots__, with '__dict__' in
+    // them, or one of whose bases gives a __dict__
+    if (! (cls.tp_flags & TPFLAGS.HEAPTYPE)) {
+        return $B.search_in_mro(cls, '__dict__', $B.NULL) !== $B.NULL
+    }
+    return $B.get_from_dict(cls, '__slots__', $B.NULL) === $B.NULL ||
+        cls.$slots_has_dict === true ||
+        cls.tp_bases.some(gives_dict)
+}
+
 function set_slots(cl_dict, class_obj) {
     let slots = $B.str_dict_get(cl_dict, '__slots__', $B.NULL)
     if (slots !== $B.NULL) {
@@ -1105,6 +1117,10 @@ function set_slots(cl_dict, class_obj) {
             // markers, not slots — '__dict__' keeps the per-instance dict
             if (key == '__dict__' || key == '__weakref__') {
                 if (key == '__dict__') {
+                    if (class_obj.$slots_has_dict || gives_dict(class_obj.tp_base)) {
+                        $B.RAISE(_b_.TypeError,
+                            "__dict__ slot disallowed: we already got one")
+                    }
                     class_obj.$slots_has_dict = true
                 }
                 continue
