@@ -1240,14 +1240,6 @@ var issubclass = _b_.issubclass = function(cls, class_or_tuple) {
 
 /* iterator start */
 $B.iterator.tp_iter = function(self) {
-    var ob_type = $B.get_class(self.it_seq)
-    var getitem = $B.search_in_mro(ob_type, '__getitem__', $B.NULL)
-    if (getitem === $B.NULL) {
-        $B.RAISE(_b_.TypeError,
-            `'${$B.class_name(self.it_seq)}' object is not iterable`)
-    }
-    self.getitem = getitem
-    self.it_index = 0
     return self
 }
 
@@ -1255,11 +1247,15 @@ $B.iterator.tp_iternext = function*(self){
     // "sequence protocol" iteration: call __getitem__ with increasing
     // indices; IndexError ends the iteration (__len__ is not used, same
     // as CPython)
+    if (self.it_seq === null) {
+        return
+    }
     var res
     try {
         res = $B.$call(self.getitem, self.it_seq, self.it_index)
     } catch (err) {
         if ($B.is_exc(err, [_b_.IndexError, _b_.StopIteration])) {
+            self.it_seq = null
             return
         }
         throw err
@@ -1275,6 +1271,9 @@ iterator_funcs.__length_hint__ = function(self) {
 }
 
 iterator_funcs.__reduce__ = function(self) {
+    if (self.it_seq === null) {
+        return $B.fast_tuple([_b_.iter, $B.fast_tuple([$B.fast_tuple([])])])
+    }
     return $B.fast_tuple([_b_.iter,
         $B.fast_tuple([self.it_seq]), self.it_index])
 }
@@ -1366,11 +1365,12 @@ $B.$iter = function(obj, sentinel) {
             console.log('getitem_func', getitem_func)
         }
         if (getitem_func !== $B.NULL) {
-            var it = {
+            return {
                 ob_type: $B.iterator,
-                it_seq: obj
+                it_seq: obj,
+                getitem: getitem_func,
+                it_index: 0
             }
-            return $B.iterator.tp_iter(it)
 
         }
         $B.RAISE(_b_.TypeError,
