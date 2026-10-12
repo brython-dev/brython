@@ -600,4 +600,13 @@ assert "a ".split(None, 1) == ["a"]
 # a run of whitespace is one separator; the unsplit tail keeps its spacing
 assert " a  b  c ".split(None, 1) == ["a", "b  c "]
 
+# PR 3063
+class T(str):
+    pass
+
+def g(text):
+    return text
+
+assert g(**{T("text"): "abc"}) == 'abc'
+
 print("passed all tests...")
