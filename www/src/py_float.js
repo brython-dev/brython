@@ -65,7 +65,7 @@ function _float_div_mod(vx, wx) {
     // copied from CPython floatobject.c
     var mod = vx % wx
     var div = (vx - mod) / wx
-    if (mod) {
+    if (mod != 0) {
         /* ensure the remainder has the same sign as the denominator */
         if ((wx < 0) != (mod < 0)) {
             mod += wx
@@ -79,7 +79,7 @@ function _float_div_mod(vx, wx) {
     }
     /* snap quotient to nearest integral value */
     var floordiv
-    if (div) {
+    if (div != 0) {
         floordiv = Math.floor(div)
         if (div - floordiv > 0.5) {
             floordiv += 1.0
@@ -808,30 +808,14 @@ _b_.float.nb_multiply = function(self, other) {
 }
 
 _b_.float.nb_remainder = function(self, other) {
-    // can't use Javascript % because it works differently for negative numbers
-    self = conv_float(self)[0]
-    if (self === $B.NULL) {
+    var [x, y] = conv_float(self, other)
+    if (x === $B.NULL || y === $B.NULL) {
         return _b_.NotImplemented
     }
-    if (other == 0) {
+    if (y.value == 0) {
         $B.RAISE(_b_.ZeroDivisionError, "float modulo")
     }
-    if ($B.is_int(other)) {
-        other = _b_.int.tp_funcs.numerator_get(other)
-        return fast_float((self.value % other + other) % other)
-    }
-
-    if ($B.$isinstance(other, float)) {
-        // use truncated division
-        // cf https://en.wikipedia.org/wiki/Modulo_operation
-        var q = Math.floor(self.value / other.value),
-            r = self.value - other.value * q
-        if (r == 0 && other.value < 0) {
-            return fast_float(-0)
-        }
-        return fast_float(r)
-    }
-    return _b_.NotImplemented
+    return fast_float(_float_div_mod(x.value, y.value).mod)
 }
 
 _b_.float.nb_divmod = function(self, other) {
@@ -1034,7 +1018,7 @@ _b_.float.nb_absolute = function(self) {
 
 _b_.float.nb_bool = function(self) {
     check_self_is_float(self, '__bool__')
-    return _b_.bool.$factory(self.value)
+    return self.value != 0
 }
 
 _b_.float.nb_int = function(self) {
@@ -1187,7 +1171,7 @@ float_funcs.as_integer_ratio = function(self) {
 }
 
 float_funcs.conjugate = function(self) {
-    $B.RAISE(_b_.NotImplementedError, 'conjugate')
+    return float_value(self)
 }
 
 float_funcs.from_number = function(self) {
