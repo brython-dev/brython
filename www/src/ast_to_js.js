@@ -116,6 +116,17 @@ function make_id() {
     return uuid
 }
 
+// The counter starts at random, so the same source compiles to a different
+// text in every page or process. A tool that compiles ahead of time sets it
+// before each file to get reproducible output. Returns the previous value.
+$B.id_counter = function(n) {
+    var was = uuid
+    if (n !== undefined) {
+        uuid = n
+    }
+    return was
+}
+
 function fast_id(obj) {
     // faster than calling _b_.id
     if (obj[$B.ID] !== undefined) {
@@ -1894,7 +1905,7 @@ function make_args(scopes) {
         for (var starred_kwarg of starred_kwargs) {
             kw += `, ${starred_kwarg}`
         }
-        kw = `{$kw:[${kw}]}`
+        kw = `{[$B.KW]: [${kw}]}`
         args_list.push(kw)
     }
     return js + `${args_list.join(', ')}`
@@ -2191,7 +2202,10 @@ $B.ast.Constant.prototype.to_js = function(scopes) {
     } else if (klass === _b_.float) {
         return `(new $B.Float(${this.value.value}))`
     } else if (klass === _b_.complex) {
-        return `$B.make_complex(${this.value.real.value}, ${this.value.imag.value})`
+        // a template literal prints -0 as 0
+        let [real, imag] = [this.value.real.value, this.value.imag.value].map(
+            x => Object.is(x, -0) ? '-0' : x)
+        return `$B.make_complex(${real}, ${imag})`
     } else if (this.value === _b_.Ellipsis) {
         return `_b_.Ellipsis`
     } else if ($B.is_tuple(this.value)) {
@@ -2492,7 +2506,7 @@ function type_param_in_def(tp, ref, scopes) {
     }
     js += prefix + `var ptype = $B.module_getattr(_typing, '${param_type}')\n` +
           prefix + `locals_${ref}.${name} = ` +
-              `$B.$call(ptype, '${name}', {$kw: [{infer_variance: true}]})\n` +
+              `$B.$call(ptype, '${name}', {[$B.KW]: [{infer_variance: true}]})\n` +
           prefix + `type_params.push(locals_${ref}.${name})\n` +
           prefix + `var _set_lazy_eval = $B.$getattr(ptype, '_set_lazy_eval')\n`
     if (tp.bound) {
@@ -2688,7 +2702,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
              defaults === '_b_.None' &&
              kw_defaults === '_b_.None'){
          js += prefix + `if(arguments.length == ${positional.length} && ` +
-                   `! _${positional[positional.length -1].arg}?.$kw){\n` +
+                   `! _${positional[positional.length -1].arg}?.[$B.KW]){\n` +
                prefix + tab + `var ${locals_name} = locals = ` +
                    `{${positional.map(x => x.arg + ': _' + x.arg).join(', ')}}\n` +
                prefix + `} else {\n` +
@@ -4253,7 +4267,7 @@ $B.ast.TypeAlias.prototype.to_js = function(scopes) {
 $B.ast.TypeVar.prototype.to_js = function() {
     check_type_params(this)
     return `$B.$call($B.module_getattr($B.imported._typing, 'TypeVar'), '${this.name}', ` +
-        `{$kw: [{infer_variance: true}]})`
+        `{[$B.KW]: [{infer_variance: true}]})`
 }
 
 $B.ast.TypeVarTuple.prototype.to_js = function() {

@@ -83,7 +83,7 @@ $B.$class_constructor = function(qualname, dict, metaclass, resolved_bases,
             }
         } else {
             kls = $B.$call(meta_new, metaclass, class_name, resolved_bases, dict,
-                           {$kw:[extra_kwargs]})
+                           {[$B.KW]: [extra_kwargs]})
         }
     } catch (err) {
         if (test) {
@@ -102,7 +102,7 @@ $B.$class_constructor = function(qualname, dict, metaclass, resolved_bases,
         // Initialize the class object by a call to metaclass __init__
         var meta_init = _b_.type.tp_getattro(metaclass, "__init__")
         $B.$call(meta_init, kls, class_name, resolved_bases, dict,
-                 {$kw: [extra_kwargs]})
+                 {[$B.KW]: [extra_kwargs]})
 
     }
 

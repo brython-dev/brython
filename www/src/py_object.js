@@ -187,8 +187,8 @@ function getNewArguments(self, klass) {
 // constructor of the built-in class 'object'
 object.$factory = function() {
     if(arguments.length > 0 ||
-            (arguments.length == 1 && arguments[0].$kw &&
-                Object.keys(arguments[0].$kw).length > 0)
+            (arguments.length == 1 && arguments[0][$B.KW] &&
+                Object.keys(arguments[0][$B.KW]).length > 0)
             ){
         $B.RAISE(_b_.TypeError, 'object() takes no arguments')
     }
