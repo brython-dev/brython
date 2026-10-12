@@ -232,4 +232,27 @@ assert next(flaky_it_2928) == "later"
 assert next(flaky_it_2928) == "later"
 assert next(flaky_it_2928, None) is None
 
+# __setstate__ moves a builtin iterator, the position brought within bounds
+for seq in ([1, 2, 3, 4], (1, 2, 3, 4), "ab😀d", b"abcd"):
+    it = iter(seq)
+    assert it.__setstate__(2) is None and list(it) == list(seq)[2:]
+    it = iter(seq)
+    it.__setstate__(9)
+    assert list(it) == []
+it = iter(range(1, 9, 2))
+next(it)
+it.__setstate__(1)
+assert list(it) == [5, 7]
+it = reversed([1, 2, 3, 4])
+it.__setstate__(1)
+assert list(it) == [2, 1]
+assert_raises(TypeError, iter([1]).__setstate__, 1.5)
+class Index:
+    def __index__(self):
+        return 1
+assert_raises(TypeError, iter([1]).__setstate__, Index())
+it = iter(range(3))
+it.__setstate__(Index())
+assert list(it) == [1, 2]
+
 print("passed all tests...")

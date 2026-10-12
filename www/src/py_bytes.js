@@ -93,7 +93,12 @@ bytearray_iterator_funcs.__reduce__ = function(self) {
 }
 
 bytearray_iterator_funcs.__setstate__ = function(self, value) {
-    self.index = $B.PyNumber_Index(value) - 1
+    // -1 is a position as well: the end
+    var index = $B.clip_index(value, -1, self.obj.source.length)
+    if (self.index !== Infinity) {
+        self.index = index < 0 ? Infinity : index - 1
+    }
+    return _b_.None
 }
 
 $B.bytearray_iterator.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]
@@ -1839,6 +1844,7 @@ $B.bytes_iterator.tp_iter = function(self) {
 $B.bytes_iterator.tp_iternext = function*(self){
     self.index++
     if (self.index >= self.len) {
+        self.index = Infinity
         return
     }
     yield self.obj.source[self.index]
@@ -1855,7 +1861,11 @@ bytes_iterator_funcs.__reduce__ = function(self) {
 }
 
 bytes_iterator_funcs.__setstate__ = function(self, value) {
-    self.index = $B.PyNumber_Index(value) - 1
+    var index = $B.clip_index(value, 0, self.len)
+    if (self.index !== Infinity) {
+        self.index = index - 1
+    }
+    return _b_.None
 }
 
 $B.bytes_iterator.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]
