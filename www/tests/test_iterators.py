@@ -232,4 +232,12 @@ assert next(flaky_it_2928) == "later"
 assert next(flaky_it_2928) == "later"
 assert next(flaky_it_2928, None) is None
 
+# a subclass of a builtin iterator makes instances of the subclass
+for base, args in ((enumerate, ("ab",)), (filter, (None, "ab")), (map, (str, "ab")),
+                   (zip, ("ab",)), (reversed, ("ab",))):
+    sub = type("Sub", (base,), {"label": "sub"})(*args)
+    assert type(sub).__name__ == "Sub" and sub.label == "sub"
+    sub.x = 1
+    assert sub.x == 1 and len(list(sub)) == 2
+
 print("passed all tests...")

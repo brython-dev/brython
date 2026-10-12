@@ -552,7 +552,7 @@ _b_.enumerate.tp_new = function(cls, args, kw) {
         }
     }
     var res = {
-        ob_type: _b_.enumerate,
+        ob_type: cls,
         it: $B.make_js_iterator(iterable),
         counter: start ?? 0
     }
@@ -622,11 +622,15 @@ filter.tp_new = function(cls, args, kw) {
         ['func', 'iterable'], {})
     $B.check_kw_empty('filter', kw)
     var func = func === _b_.None ? (x) => x : func
-    return {
-        ob_type: _b_.filter,
+    var res = {
+        ob_type: cls,
         func,
         it: $B.make_js_iterator(iterable)
     }
+    if (cls !== _b_.filter) {
+        $B.init_dict(res)
+    }
+    return res
 }
 
 var filter_funcs = _b_.filter.tp_funcs = {}
@@ -1490,12 +1494,16 @@ _b_.map.tp_new = function(cls, args, kw) {
     for (var arg of extra_args) {
         iter_args.push($B.make_js_iterator(arg))
     }
-    return {
+    var res = {
         ob_type: cls,
         args: iter_args,
         func: func,
         iterables: [it1, ...extra_args]
     }
+    if (cls !== _b_.map) {
+        $B.init_dict(res)
+    }
+    return res
 }
 
 var map_funcs = _b_.map.tp_funcs = {}
@@ -1908,6 +1916,9 @@ _b_.reversed.tp_new = function(cls, args, kw) {
         // index.
         counter: seqlen,
         getitem: method
+    }
+    if (cls !== _b_.reversed) {
+        $B.init_dict(res)
     }
     return res
 }
@@ -2390,11 +2401,15 @@ _b_.zip.tp_new = function(cls, args, kw) {
     for (var arg of args) {
         iters.push($B.make_js_iterator(arg))
     }
-    return {
+    var res = {
         ob_type: cls,
         iters,
         strict
     }
+    if (cls !== _b_.zip) {
+        $B.init_dict(res)
+    }
+    return res
 }
 
 var zip_funcs = _b_.zip.tp_funcs = {}
