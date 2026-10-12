@@ -767,9 +767,14 @@ function make_arguments_parser(f) {
         if (has_kw) {
 
             function add_key(key, value) {
-                if (typeof key != 'string' && $B.is_str(key)) {
-                    // a subclass of str names the argument by its value
-                    key = key.$brython_value
+                let kw_key = key
+                if (typeof key != 'string'){
+                    if($B.is_str(key)) {
+                        // a subclass of str names the argument by its value
+                        key = key.$brython_value
+                    } else {
+                        $B.RAISE(_b_.TypeError, 'keywords must be strings')
+                    }
                 }
                 var index = arg_names.indexOf(key)
                 if (index == -1) {
