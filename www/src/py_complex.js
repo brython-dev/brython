@@ -23,6 +23,10 @@ function conv_complex(...objs) {
     return res
 }
 
+function is_real(obj) {
+    return $B.$isinstance(obj, _b_.float) || $B.is_int(obj)
+}
+
 var complex = _b_.complex
 
 function complex_eq(self, other) {
@@ -209,7 +213,9 @@ _b_.complex.nb_add = function(self, other) {
         return _b_.NotImplemented
     }
     return make_complex(x.real.value + y.real.value,
-                            x.imag.value + y.imag.value)
+                        is_real(self) ? y.imag.value :
+                        is_real(other) ? x.imag.value :
+                        x.imag.value + y.imag.value)
 }
 
 _b_.complex.nb_bool = function(self) {
@@ -223,6 +229,7 @@ _b_.complex.nb_subtract = function(self, other) {
         return _b_.NotImplemented
     }
     return make_complex(x.real.value - y.real.value,
+                        is_real(self) ? -y.imag.value :
                         x.imag.value - y.imag.value)
 }
 
@@ -230,6 +237,10 @@ _b_.complex.nb_multiply = function(self, other) {
     var [x, y] = conv_complex(self, other)
     if (x === $B.NULL || y === $B.NULL) {
         return _b_.NotImplemented
+    }
+    if (is_real(self) || is_real(other)) {
+        var [c, r] = is_real(self) ? [y, x.real.value] : [x, y.real.value]
+        return make_complex(c.real.value * r, c.imag.value * r)
     }
     return make_complex(x.real.value * y.real.value -
                         x.imag.value * y.imag.value,
