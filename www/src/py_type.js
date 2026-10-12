@@ -264,7 +264,11 @@ function solid_base(type) {
         throw err
     }
     if (slots !== $B.NULL && slots.length > 0) {
-        return type
+        // '__dict__' and '__weakref__' are markers, they add no slot
+        var names = typeof slots == 'string' ? [slots] : Array.from(slots)
+        if (names.some(name => name != '__dict__' && name != '__weakref__')) {
+            return type
+        }
     }
     return base
 }
