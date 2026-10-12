@@ -1175,6 +1175,10 @@ $B.$is = function(a, b) {
     if ($B.get_class(a) === _b_.float && $B.get_class(b) === _b_.float) {
         // two NaN objects are not identical, but two boxes of the same
         // value are: floats are not interned here
+        if (isNaN(a.value) || isNaN(b.value)) {
+            // a NaN equals nothing, so only the same object is itself
+            return a === b
+        }
         return a.value == b.value
     } else if($B.is_bytes(a) && _b_.bytes.mp_length(a) == 0 &&
         $B.is_bytes(b) && _b_.bytes.mp_length(b) == 0) {

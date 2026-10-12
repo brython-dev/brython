@@ -926,4 +926,10 @@ assert (-1+1j) ** 0.5 == (0.4550898605622274+1.0986841134678098j)
 # PR 3052
 assert str(2 * complex(float('inf'), 1)) == '(inf+2j)'
 
+# PR 3059
+assert float("nan") is not float("nan")
+nan = float("nan")
+assert nan is nan
+
+
 print('passed all tests...')
