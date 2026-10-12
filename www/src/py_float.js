@@ -65,7 +65,7 @@ function _float_div_mod(vx, wx) {
     // copied from CPython floatobject.c
     var mod = vx % wx
     var div = (vx - mod) / wx
-    if (mod) {
+    if (mod != 0) {
         /* ensure the remainder has the same sign as the denominator */
         if ((wx < 0) != (mod < 0)) {
             mod += wx
@@ -79,7 +79,7 @@ function _float_div_mod(vx, wx) {
     }
     /* snap quotient to nearest integral value */
     var floordiv
-    if (div) {
+    if (div != 0) {
         floordiv = Math.floor(div)
         if (div - floordiv > 0.5) {
             floordiv += 1.0
