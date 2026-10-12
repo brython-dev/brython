@@ -862,6 +862,20 @@ assert s.slot == 42
 
 assert_raises(AttributeError, setattr, s, 'x', 9)
 
+# __slots__ cannot ask for a __dict__ a base already gives
+class Plain:
+    pass
+
+class NoSlot:
+    __slots__ = ()
+
+assert_raises(TypeError, type, 'B', (Plain,), {'__slots__': ('__dict__',)})
+assert_raises(TypeError, type, 'B', (), {'__slots__': ('__dict__', '__dict__')})
+assert_raises(TypeError, type, 'B', (Plain, NoSlot), {'__slots__': ('__dict__',)})
+assert_raises(TypeError, type, 'B', (Exception,), {'__slots__': ('__dict__',)})
+type('B', (), {'__slots__': ('__dict__', '__weakref__')})
+type('B', (NoSlot, Plain), {'__slots__': ('__dict__',)})
+
 # issue 2039
 assert isinstance(classmethod(print), classmethod)
 assert isinstance(staticmethod(print), staticmethod)
