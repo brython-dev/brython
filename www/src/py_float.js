@@ -10,7 +10,7 @@ function conv_num(x) {
         return Number(x)
     } else if ($B.is_int(x)) {
         // int subclass
-        return conv_num(x.value)
+        return conv_num($B.int_value(x))
     } else if (x.ob_type === _b_.float) {
         return x.value
     } else if ($B.$isinstance(x, _b_.float)) {
