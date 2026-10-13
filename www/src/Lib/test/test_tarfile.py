@@ -10,6 +10,7 @@ import shutil
 import re
 import warnings
 import stat
+import time
 
 import unittest
 import unittest.mock
@@ -841,6 +842,57 @@ class MiscReadTestBase(CommonReadTest):
         with tarfile.open(fileobj=fd, mode="r") as tf:
             self.assertEqual(tf.next(), None)
 
+    def _setup_symlink_to_target(self, temp_dirpath):
+        target_filepath = os.path.join(temp_dirpath, "target")
+        ustar_dirpath = os.path.join(temp_dirpath, "ustar")
+        hardlink_filepath = os.path.join(ustar_dirpath, "lnktype")
+        with open(target_filepath, "wb") as f:
+            f.write(b"target")
+        os.makedirs(ustar_dirpath)
+        os.symlink(target_filepath, hardlink_filepath)
+        return target_filepath, hardlink_filepath
+
+    def _assert_on_file_content(self, filepath, digest):
+        with open(filepath, "rb") as f:
+            data = f.read()
+        self.assertEqual(sha256sum(data), digest)
+
+    @unittest.skipUnless(
+        hasattr(os, "link"), "Missing hardlink implementation"
+    )
+    @os_helper.skip_unless_symlink
+    def test_extract_hardlink_on_symlink(self):
+        """
+        This test verifies that extracting a hardlink will not follow an
+        existing symlink after a FileExistsError on os.link.
+        """
+        with os_helper.temp_dir() as DIR:
+            target_filepath, hardlink_filepath = self._setup_symlink_to_target(DIR)
+            with tarfile.open(tarname, encoding="iso8859-1") as tar:
+                tar.extract("ustar/regtype", DIR, filter="data")
+                tar.extract("ustar/lnktype", DIR, filter="data")
+                self._assert_on_file_content(target_filepath, sha256sum(b"target"))
+                self._assert_on_file_content(hardlink_filepath, sha256_regtype)
+
+    @unittest.skipUnless(
+        hasattr(os, "link"), "Missing hardlink implementation"
+    )
+    @os_helper.skip_unless_symlink
+    def test_extractall_hardlink_on_symlink(self):
+        """
+        This test verifies that extracting a hardlink will not follow an
+        existing symlink after a FileExistsError on os.link.
+        """
+        with os_helper.temp_dir() as DIR:
+            target_filepath, hardlink_filepath = self._setup_symlink_to_target(DIR)
+            with tarfile.open(tarname, encoding="iso8859-1") as tar:
+                tar.extractall(
+                    DIR, members=["ustar/regtype", "ustar/lnktype"], filter="data",
+                )
+                self._assert_on_file_content(target_filepath, sha256sum(b"target"))
+                self._assert_on_file_content(hardlink_filepath, sha256_regtype)
+
+
 class MiscReadTest(MiscReadTestBase, unittest.TestCase):
     test_fail_comp = None
 
@@ -1182,6 +1234,25 @@ class LongnameTest:
             with tarfile.open(tmpname) as tar:
                 self.assertIsNotNone(tar.getmember(longdir))
                 self.assertIsNotNone(tar.getmember(longdir.removesuffix('/')))
+
+    def test_longname_file_not_directory(self):
+        # Test reading a longname file and ensure it is not handled as a directory
+        # Issue #141707
+        buf = io.BytesIO()
+        with tarfile.open(mode='w', fileobj=buf, format=self.format) as tar:
+            ti = tarfile.TarInfo()
+            ti.type = tarfile.AREGTYPE
+            ti.name = ('a' * 99) + '/' + ('b' * 3)
+            tar.addfile(ti)
+
+            expected = {t.name: t.type for t in tar.getmembers()}
+
+        buf.seek(0)
+        with tarfile.open(mode='r', fileobj=buf) as tar:
+            actual = {t.name: t.type for t in tar.getmembers()}
+
+        self.assertEqual(expected, actual)
+
 
 class GNUReadTest(LongnameTest, ReadTest, unittest.TestCase):
 
@@ -1737,6 +1808,16 @@ class StreamWriteTest(WriteTestBase, unittest.TestCase):
         finally:
             os.umask(original_umask)
 
+    def test_pathlike_name(self):
+        expected_name = os.path.abspath(tmpname)
+        tarpath = os_helper.FakePath(tmpname)
+
+        for func in (tarfile.open, tarfile.TarFile.open):
+            with self.subTest():
+                with func(tarpath, self.mode) as tar:
+                    self.assertEqual(tar.name, expected_name)
+                os_helper.unlink(tmpname)
+
 
 class GzipStreamWriteTest(GzipTest, StreamWriteTest):
     def test_source_directory_not_leaked(self):
@@ -1748,6 +1829,19 @@ class GzipStreamWriteTest(GzipTest, StreamWriteTest):
         payload = pathlib.Path(tmpname).read_text(encoding='latin-1')
         assert os.path.dirname(tmpname) not in payload
 
+    def test_create_with_mtime(self):
+        tarfile.open(tmpname, self.mode, mtime=0).close()
+        with self.open(tmpname, 'r') as fobj:
+            fobj.read()
+            self.assertEqual(fobj.mtime, 0)
+
+    def test_create_without_mtime(self):
+        before = int(time.time())
+        tarfile.open(tmpname, self.mode).close()
+        after = int(time.time())
+        with self.open(tmpname, 'r') as fobj:
+            fobj.read()
+            self.assertTrue(before <= fobj.mtime <= after)
 
 class Bz2StreamWriteTest(Bz2Test, StreamWriteTest):
     decompressor = bz2.BZ2Decompressor if bz2 else None
@@ -2054,6 +2148,19 @@ class GzipCreateTest(GzipTest, CreateTest):
         with tarfile.open(tmpname, 'r:gz', compresslevel=1) as tobj:
             pass
 
+    def test_create_with_mtime(self):
+        tarfile.open(tmpname, self.mode, mtime=0).close()
+        with self.open(tmpname, 'rb') as fobj:
+            fobj.read()
+            self.assertEqual(fobj.mtime, 0)
+
+    def test_create_without_mtime(self):
+        before = int(time.time())
+        tarfile.open(tmpname, self.mode).close()
+        after = int(time.time())
+        with self.open(tmpname, 'r') as fobj:
+            fobj.read()
+            self.assertTrue(before <= fobj.mtime <= after)
 
 class Bz2CreateTest(Bz2Test, CreateTest):
 
@@ -2716,7 +2823,7 @@ class MiscTest(unittest.TestCase):
             str(excinfo.exception),
         )
 
-    @unittest.skipUnless(os_helper.can_symlink(), 'requires symlink support')
+    @os_helper.skip_unless_symlink
     @unittest.skipUnless(hasattr(os, 'chmod'), "missing os.chmod")
     @unittest.mock.patch('os.chmod')
     def test_deferred_directory_attributes_update(self, mock_chmod):
@@ -3602,6 +3709,39 @@ class TestExtractionFilters(unittest.TestCase):
     # The destination for the extraction, within `outerdir`
     destdir = outerdir / 'dest'
 
+    @classmethod
+    def setUpClass(cls):
+        # Posix and Windows have different pathname resolution:
+        # either symlink or a '..' component resolve first.
+        # Let's see which we are on.
+        if os_helper.can_symlink():
+            testpath = os.path.join(TEMPDIR, 'resolution_test')
+            os.mkdir(testpath)
+
+            # testpath/current links to `.` which is all of:
+            #   - `testpath`
+            #   - `testpath/current`
+            #   - `testpath/current/current`
+            #   - etc.
+            os.symlink('.', os.path.join(testpath, 'current'))
+
+            # we'll test where `testpath/current/../file` ends up
+            with open(os.path.join(testpath, 'current', '..', 'file'), 'w'):
+                pass
+
+            if os.path.exists(os.path.join(testpath, 'file')):
+                # Windows collapses 'current\..' to '.' first, leaving
+                # 'testpath\file'
+                cls.dotdot_resolves_early = True
+            elif os.path.exists(os.path.join(testpath, '..', 'file')):
+                # Posix resolves 'current' to '.' first, leaving
+                # 'testpath/../file'
+                cls.dotdot_resolves_early = False
+            else:
+                raise AssertionError('Could not determine link resolution')
+        else:
+            cls.dotdot_resolves_early = False
+
     @contextmanager
     def check_context(self, tar, filter, *, check_flag=True):
         """Extracts `tar` to `self.destdir` and allows checking the result
@@ -3748,23 +3888,21 @@ class TestExtractionFilters(unittest.TestCase):
             arc.add('current', symlink_to='.')
 
             # effectively points to ./../
-            arc.add('parent', symlink_to='current/..')
+            if self.dotdot_resolves_early and os_helper.can_symlink():
+                arc.add('parent', symlink_to='current/../..')
+            else:
+                arc.add('parent', symlink_to='current/..')
 
             arc.add('parent/evil')
 
         if os_helper.can_symlink():
             with self.check_context(arc.open(), 'fully_trusted'):
-                if self.raised_exception is not None:
-                    # Windows will refuse to create a file that's a symlink to itself
-                    # (and tarfile doesn't swallow that exception)
-                    self.expect_exception(FileExistsError)
-                    # The other cases will fail with this error too.
-                    # Skip the rest of this test.
-                    return
+                self.expect_file('current', symlink_to='.')
+                if self.dotdot_resolves_early:
+                    self.expect_file('parent', symlink_to='current/../..')
                 else:
-                    self.expect_file('current', symlink_to='.')
                     self.expect_file('parent', symlink_to='current/..')
-                    self.expect_file('../evil')
+                self.expect_file('../evil')
 
             with self.check_context(arc.open(), 'tar'):
                 self.expect_exception(
@@ -3866,35 +4004,6 @@ class TestExtractionFilters(unittest.TestCase):
         # Test interplaying symlinks
         # Inspired by 'dirsymlink2b' in jwilk/traversal-archives
 
-        # Posix and Windows have different pathname resolution:
-        # either symlink or a '..' component resolve first.
-        # Let's see which we are on.
-        if os_helper.can_symlink():
-            testpath = os.path.join(TEMPDIR, 'resolution_test')
-            os.mkdir(testpath)
-
-            # testpath/current links to `.` which is all of:
-            #   - `testpath`
-            #   - `testpath/current`
-            #   - `testpath/current/current`
-            #   - etc.
-            os.symlink('.', os.path.join(testpath, 'current'))
-
-            # we'll test where `testpath/current/../file` ends up
-            with open(os.path.join(testpath, 'current', '..', 'file'), 'w'):
-                pass
-
-            if os.path.exists(os.path.join(testpath, 'file')):
-                # Windows collapses 'current\..' to '.' first, leaving
-                # 'testpath\file'
-                dotdot_resolves_early = True
-            elif os.path.exists(os.path.join(testpath, '..', 'file')):
-                # Posix resolves 'current' to '.' first, leaving
-                # 'testpath/../file'
-                dotdot_resolves_early = False
-            else:
-                raise AssertionError('Could not determine link resolution')
-
         with ArchiveMaker() as arc:
 
             # `current` links to `.` which is both the destination directory
@@ -3930,7 +4039,7 @@ class TestExtractionFilters(unittest.TestCase):
 
         with self.check_context(arc.open(), 'data'):
             if os_helper.can_symlink():
-                if dotdot_resolves_early:
+                if self.dotdot_resolves_early:
                     # Fail when extracting a file outside destination
                     self.expect_exception(
                             tarfile.OutsideDestinationError,
@@ -3977,6 +4086,21 @@ class TestExtractionFilters(unittest.TestCase):
             self.expect_exception(
                 tarfile.AbsoluteLinkError,
                 "'parent' is a link to an absolute path")
+
+    @symlink_test
+    @os_helper.skip_unless_symlink
+    def test_symlink_target_seperator_rewrite_on_windows(self):
+        with ArchiveMaker() as arc:
+            arc.add('link', symlink_to="relative/test/path")
+
+        with self.check_context(arc.open(), 'fully_trusted'):
+            self.expect_file('link', type=tarfile.SYMTYPE)
+            link_path = os.path.normpath(self.destdir / "link")
+            link_target = os.readlink(link_path)
+            if os.name == "nt":
+                self.assertEqual(link_target, "relative\\test\\path")
+            else:
+                self.assertEqual(link_target, "relative/test/path")
 
     def test_absolute_hardlink(self):
         # Test hardlink to an absolute path
@@ -4756,6 +4880,16 @@ class OffsetValidationTests(unittest.TestCase):
             self.assertEqual(len(members), 1)
             self.assertEqual(members[0].name, "filename")
             self.assertEqual(members[0].offset, expected_offset)
+
+
+class TestModule(unittest.TestCase):
+    def test_deprecated_version(self):
+        with self.assertWarnsRegex(
+                DeprecationWarning,
+                "'version' is deprecated and slated for removal in Python 3.20",
+        ) as cm:
+            getattr(tarfile, "version")
+        self.assertEqual(cm.filename, __file__)
 
 
 def setUpModule():

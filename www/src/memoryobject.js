@@ -91,9 +91,19 @@ var struct_format = {
     'L': {'size': 4},
     'q': {'size': 8},
     'Q': {'size': 8},
-    'f': {'size': 4},
-    'd': {'size': 8},
+    'f': {'float': true, 'size': 4},
+    'd': {'float': true, 'size': 8},
     'P': {'size': 8}
+}
+
+// Format of a memoryview item -> DataView reader
+var dataview_getter = {
+    'b': 'getInt8', 'B': 'getUint8', 'c': 'getUint8', 's': 'getUint8',
+    'p': 'getUint8', 'x': 'getUint8',
+    'h': 'getInt16', 'H': 'getUint16',
+    'i': 'getInt32', 'I': 'getUint32', 'l': 'getInt32', 'L': 'getUint32',
+    'q': 'getBigInt64', 'Q': 'getBigUint64', 'P': 'getBigUint64',
+    'f': 'getFloat32', 'd': 'getFloat64'
 }
 
 const MEMORYVIEW = {
@@ -171,24 +181,20 @@ _b_.memoryview.mp_length = function(self) {
 _b_.memoryview.mp_subscript = function(self, key) {
     var res
     if ($B.is_int(key)) {
-        var start = key * self.itemsize
-        if (self.format == "I") {
-            res = self.obj.source[start]
-            var coef = 256
-            for (var i = 1; i < 4; i++) {
-                res += self.obj.source[start + i] * coef
-                coef *= 256
-            }
-            return res
-        } else if ("B".indexOf(self.format) > -1) {
-            if (key > self.obj.source.length - 1) {
-                $B.RAISE(_b_.KeyError, key)
-            }
-            return self.obj.source[key]
-        } else {
-            // fix me
-            return self.obj.source[key]
+        var nb_items = _b_.memoryview.mp_length(self)
+        if (key < 0) {
+            key += nb_items
         }
+        if (key < 0 || key >= nb_items) {
+            $B.RAISE(_b_.IndexError, "index out of bounds on dimension 1")
+        }
+        var start = key * self.itemsize
+        var view = new DataView(
+            Uint8Array.from(self.obj.source.slice(start,
+                start + self.itemsize)).buffer)
+        res = view[dataview_getter[self.format]](0, true) // little-endian
+        return typeof res == 'bigint' ? _b_.int.$int_or_long(res) :
+            struct_format[self.format].float ? $B.fast_float(res) : res
     }
     // fix me : add slice support for other formats than B
     var getitem = $B.$getattr($B.get_class(self.obj), '__getitem__', $B.NULL)
@@ -267,20 +273,14 @@ memoryview_funcs.cast = function(self, format, shape) {
                 'memoryview: product(shape) * itemsize != buffer size')
         }
     }
-    switch (format) {
-        case "B":
-            return memoryview.$factory(self.obj)
-        case "I":
-            var res = memoryview.$factory(self.obj),
-                objlen = _b_.len(self.obj)
-            res.itemsize = 4
-            res.format = "I"
-            if (objlen % 4 != 0) {
-                $B.RAISE(_b_.TypeError, "memoryview: length is not " +
-                    "a multiple of itemsize")
-            }
-            return res
+    if (_b_.len(self.obj) % new_itemsize != 0) {
+        $B.RAISE(_b_.TypeError, "memoryview: length is not " +
+            "a multiple of itemsize")
     }
+    var res = memoryview.$factory(self.obj)
+    res.format = format
+    res.itemsize = new_itemsize
+    return res
 }
 
 memoryview_funcs.contiguous_get = function(self) {
@@ -446,23 +446,11 @@ memoryview_funcs.tobytes = function(self) {
 }
 
 memoryview_funcs.tolist = function(self) {
-    if (self.itemsize == 1) {
-        return _b_.list.$factory(_b_.bytes.$factory(self.obj))
-    } else if (self.itemsize == 4) {
-        if (self.format == "I") {
-            var res = []
-            for (var i = 0; i < self.obj.source.length; i += 4) {
-                var item = self.obj.source[i],
-                    coef = 256
-                for (var j = 1; j < 4; j++) {
-                    item += coef * self.obj.source[i + j]
-                    coef *= 256
-                }
-                res.push(item)
-            }
-            return $B.$list(res)
-        }
+    var res = []
+    for (var i = 0, len = _b_.memoryview.mp_length(self); i < len; i++) {
+        res.push(_b_.memoryview.mp_subscript(self, i))
     }
+    return $B.$list(res)
 }
 
 memoryview_funcs.toreadonly = function(self) {

@@ -1,5 +1,5 @@
 """(Extremely) low-level import machinery bits as used by importlib and imp."""
-import sys
+
 
 def _fix_co_filename(*args,**kw):
     """Changes code.co_filename to specify the passed-in file path.
@@ -69,3 +69,5 @@ def release_lock(*args,**kw):
 
 def source_hash(*args,**kw):
     pass
+
+pyc_magic_number_token = 168627794

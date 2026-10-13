@@ -548,7 +548,8 @@ _b_.BaseException.tp_repr = function(self) {
     if (self.args.length > 0 && self.args[0] !== _b_.None) {
         args = _b_.repr(self.args[0])
     }
-    return `${$B.class_name(self)}(${args})`
+    var qualname = $B.$getattr($B.get_class(self), '__qualname__')
+    return `${qualname}(${args})`
 }
 
 _b_.BaseException.tp_str = function(self) {
@@ -816,7 +817,7 @@ _b_.KeyError.tp_str = function(self) {
     if (self.args.length == 1) {
         return _b_.repr(self.args[0])
     }
-    return _b_.BaseException.tp_repr(self)
+    return _b_.BaseException.tp_str(self)
 }
 
 $B.set_func_names(_b_.KeyError, 'builtins')
@@ -944,7 +945,7 @@ _b_.UnicodeDecodeError.tp_str = function(self) {
             ` in position ${start}: ${self.reason}`
     } else {
         result = `'${self.encoding}' codec can't decode bytes ` +
-        `in position ${start}-${end}: ${self.reason}`
+        `in position ${start}-${end - 1}: ${self.reason}`
     }
     return result
 }
@@ -990,14 +991,14 @@ _b_.UnicodeEncodeError.tp_str = function(self) {
         let c = _b_.str.mp_subscript(obj, self.start)
         let cp = _b_.ord(c)
         let s = cp.toString(16)
-        if (cp < 0xff) {
-            s = '0'.repeat(2 - s.length) + s
-        } else if (cp < 0xffff) {
-            s = '0'.repeat(4 - s.length) + s
+        if (cp <= 0xff) {
+            s = '\\x' + '0'.repeat(2 - s.length) + s
+        } else if (cp <= 0xffff) {
+            s = '\\u' + '0'.repeat(4 - s.length) + s
         } else {
-            s = '0'.repeat(8 - s.length) + s
+            s = '\\U' + '0'.repeat(8 - s.length) + s
         }
-        char = `character '\\x${s}'`
+        char = `character '${s}'`
         pos = self.start
     } else {
         char = `characters`
@@ -1044,14 +1045,14 @@ _b_.UnicodeTranslateError.tp_str = function(self) {
         let c = _b_.str.mp_subscript(obj, self.start)
         let cp = _b_.ord(c)
         let s = cp.toString(16)
-        if (cp < 0xff) {
-            s = '0'.repeat(2 - s.length) + s
-        } else if (cp < 0xffff) {
-            s = '0'.repeat(4 - s.length) + s
+        if (cp <= 0xff) {
+            s = '\\x' + '0'.repeat(2 - s.length) + s
+        } else if (cp <= 0xffff) {
+            s = '\\u' + '0'.repeat(4 - s.length) + s
         } else {
-            s = '0'.repeat(8 - s.length) + s
+            s = '\\U' + '0'.repeat(8 - s.length) + s
         }
-        char = `character '\\x${s}'`
+        char = `character '${s}'`
         pos = self.start
     } else {
         char = `characters`
@@ -1659,6 +1660,7 @@ function trace_from_stack(err) {
         count_repeats = 0
         trace.push(`  File "${filename}", line ${lineno}, in ` +
             (frame[0] == frame[2] ? '<module>' : frame[0]))
+        let test = frame[0] == '_get_module_lock' && lineno == 168
         var src = false
         if (! filename.startsWith('<')) {
             src = $B.file_cache[filename]
@@ -1670,9 +1672,18 @@ function trace_from_stack(err) {
             if (! is_syntax_error && frame.inum && frame.positions) {
                 positions = $B.decode_position(
                     frame.positions[Math.floor(frame.inum / 2)])
+                if (test) {
+                    console.log('has inum', frame.inum, 'positions', positions)
+                }
             }
             if (positions) {
                 let [lineno, end_lineno, col_offset, end_col_offset] = positions
+                if (test && ! $B.traceXXX) {
+                    for (let x = lineno - 20; x < lineno + 10; x++){
+                        console.log(x, lines[x - 1])
+                    }
+                    $B.traceXXX = 1
+                }
                 // part of first line before error
                 if (lines[lineno - 1] === undefined) {
                     console.log('no line, lines\n', lines, 'lineno', lineno)
@@ -1891,7 +1902,7 @@ $B.error_trace = function(err) {
 
         trace += `${$B.get_name($B.get_class(err))}: ${err.args[0] ?? '<no detail available>'}`
     } else if ($B.get_class(err) !== $B.JSObj) {
-        var name = $B.class_name(err)
+        var name = $B.$getattr($B.get_class(err), '__qualname__')
         trace += trace_from_stack(err)
         var args_str = _b_.str.$factory(err)
         trace += name + (args_str ? ': ' + args_str : '')
@@ -1907,7 +1918,7 @@ $B.error_trace = function(err) {
         } else if ($B.is_exc(err, _b_.AttributeError)) {
             let suggestion = $B.offer_suggestions_for_attribute_error(err)
             if (suggestion !== _b_.None) {
-                trace += `. Did you mean: '${suggestion}'?`
+                trace += `. Did you mean '.${suggestion}' instead of '.${err.name}'?`
             }
         } else if ($B.is_exc(err, _b_.ImportError)) {
             if ($B.exact_type(err, _b_.ModuleNotFoundError)) {
@@ -1964,7 +1975,10 @@ $B.show_error = function(err) {
 
 $B.handle_error = function(err) {
     // Print the error traceback on the standard error stream
-    console.log('handle error', $B.frame_obj)
+    if ($B.get_option('debug') > 2) {
+        console.log('handle error', err)
+        console.log('frame obj', $B.frame_obj)
+    }
     if (err.$handled) {
         return
     }

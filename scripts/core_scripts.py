@@ -28,6 +28,7 @@ core_scripts = [
     'py_complex',
     'py_dict',
     'py_list',
+    'sentinelobject',
     'js_objects',
     'py_generator',
     'py_dom',

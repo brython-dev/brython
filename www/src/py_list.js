@@ -104,7 +104,7 @@ function index(self) {
         stop = Math.min(stop, self.length)
     }
     for (var i = start; i < stop; i++) {
-        if ($B.rich_comp('__eq__', $.x, self[i])) {
+        if ($B.is_or_equals($.x, self[i])) {
             return i
         }
     }
@@ -644,6 +644,11 @@ list.$unpack = function(obj) {
     try {
         return _b_.list.$factory(obj)
     } catch (err) {
+        if (! $B.is_exc(err, [_b_.TypeError])) {
+            // the iterable itself raised: report its exception, not the
+            // StopIteration of the re-probe below
+            throw err
+        }
         try {
             var it = $B.$iter(obj)
             $B.$call($B.$getattr(it, "__next__"))
@@ -726,7 +731,7 @@ _b_.list.tp_new = function(cls, args, kw) {
     }
     var res = []
     res.ob_type = cls
-    if (cls !== list) {
+    if ($B.instance_has_dict(cls)) {
         $B.init_dict(res)
     }
     return res
@@ -875,7 +880,7 @@ list_funcs.pop = function(self) {
 list_funcs.remove = function(self) {
     var $ = $B.args("remove", 2, {self: null, x: null}, arguments)
     for (var i = 0, len = $.self.length; i < len; i++) {
-        if ($B.rich_comp("__eq__", $.self[i], $.x)) {
+        if ($B.is_or_equals($.self[i], $.x)) {
             $.self.splice(i, 1)
             return _b_.None
         }
@@ -1086,7 +1091,7 @@ _b_.tuple.tp_new = function(cls, args, kw) {
     }
     var self = []
     self.ob_type = cls
-    if (cls !== tuple) {
+    if ($B.instance_has_dict(cls)) {
         $B.init_dict(self)
     }
     args = args ?? []

@@ -181,6 +181,9 @@ function init_type(ns, name, data) {
         cls[slots[i]] = data[i]
     }
     $B.builtin_types[name] = cls
+    if (cls.tp_flags & $B.TPFLAGS.HEAPTYPE) {
+        cls.ht_qualname = name
+    }
 }
 
 """

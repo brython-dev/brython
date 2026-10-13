@@ -55,10 +55,10 @@ function pos_only_passed_as_keyword(fname, arg) {
 function too_many_pos_args(fname, kwarg, arg_names, nb_kwonly, defaults, args, slots) {
     var nb_pos = args.length,
         last = $B.last(args)
-    if (last !== null && last !== undefined && last.$kw) {
+    if (last !== null && last !== undefined && last[$B.KW]) {
         // Unexpected keyword args take precedence
         if (! kwarg) {
-            var kw = $B.parse_kwargs(last.$kw, fname)
+            var kw = $B.parse_kwargs(last[$B.KW], fname)
             for (var k in kw) {
                 if (! slots.hasOwnProperty(k)) {
                     var suggestion = $B.offer_suggestions_for_unexpected_keyword_error(arg_names, k)
@@ -163,10 +163,10 @@ $B.parse_args = function(args, fname, argcount, slots, arg_names, defaults,
         if (arg && $B.get_class(arg) === $B.generator) {
             slots.$has_generators = true
         }
-        if (arg && arg.$kw) {
+        if (arg && arg[$B.KW]) {
             // function was called with keyword arguments
             nb_passed_pos--
-            kw = $B.parse_kwargs(arg.$kw, fname)
+            kw = $B.parse_kwargs(arg[$B.KW], fname)
         } else {
             var arg_name = arg_names[i]
             if (arg_name !== undefined) {
@@ -316,13 +316,17 @@ $B.parse_kwargs = function(kw_args, fname) {
         if ($B.get_class(kw_arg) === _b_.dict) {
             for (var entry of _b_.dict.$iter_items(kw_arg)) {
                 key = entry.key
-                if (typeof key !== 'string') {
-                    $B.RAISE(_b_.TypeError, fname +
-                        "() keywords must be strings")
-                } else if (kwa[key] !== undefined) {
-                    $B.RAISE(_b_.TypeError, fname +
-                        "() got multiple values for argument '" +
-                        key + "'")
+                if ($B.is_str(key)) {
+                    key = _b_.str.$to_string(key)
+                } else {
+                    $B.RAISE(_b_.TypeError,
+                        `${fname}() keywords must be strings`
+                    )
+                }
+                if (kwa[key] !== undefined) {
+                    $B.RAISE(_b_.TypeError,
+                        `${fname}() got multiple values for keyword argument '${key}'`
+                    )
                 } else {
                     kwa[key] = entry.value
                 }
@@ -399,8 +403,8 @@ $B.check_nb_args = function(name, expected, args) {
     // Check the number of arguments
     var len = args.length,
         last = args[len - 1]
-    if (last && last.$kw) {
-        var kw = last.$kw
+    if (last && last[$B.KW]) {
+        var kw = last[$B.KW]
         if (kw[1]) {
             if (_b_.len(kw[1]) == 0) {
                 len--
@@ -421,8 +425,8 @@ $B.check_nb_args = function(name, expected, args) {
 
 $B.check_no_kw = function(name, x, y) {
     // Throw error if one of x, y is a keyword argument
-    if((x.$kw && x.$kw[0] && Object.keys(x.$kw[0]).length > 0) ||
-            (y !== undefined && y.$kw)){
+    if((x[$B.KW] && x[$B.KW][0] && Object.keys(x[$B.KW][0]).length > 0) ||
+            (y !== undefined && y[$B.KW])){
         $B.RAISE(_b_.TypeError, name + "() takes no keyword arguments")}
 }
 
@@ -443,9 +447,9 @@ $B.check_nb_args_no_kw = function(name, expected, args) {
     // Check the number of arguments and absence of keyword args
     var len = args.length,
         last = args[len - 1]
-    if (last && last.$kw) {
+    if (last && last[$B.KW]) {
         len--
-        if (! $B.keyword_is_empty(last.$kw)) {
+        if (! $B.keyword_is_empty(last[$B.KW])) {
             $B.RAISE(_b_.TypeError, name + "() takes no keyword arguments")
         }
     }
@@ -482,8 +486,8 @@ $B.check_kw_empty = function(name, kw) {
 
 $B.parse_args_kw = function(fname, args) {
     var last = args[args.length - 1]
-    if (last?.$kw) {
-        var kw = $B.parse_kwargs(last.$kw, fname)
+    if (last?.[$B.KW]) {
+        var kw = $B.parse_kwargs(last[$B.KW], fname)
         kw[$B.OB_TYPE] = _b_.dict
         args = Array.from(args)
         args.pop()
@@ -1104,6 +1108,9 @@ $B.augm_assign = function(left, op, right) {
                 z = res_type.x * res_type.y
                 break
             case '/=':
+                if (res_type.y == 0) {
+                    $B.RAISE(_b_.ZeroDivisionError, "division by zero")
+                }
                 return $B.fast_float(res_type.x / res_type.y)
         }
         if (z) {
@@ -1166,9 +1173,15 @@ $B.$is = function(a, b) {
         case "boolean":
             return a === b
     }
+    if (a === b) {
+        return true
+    }
     if ($B.get_class(a) === _b_.float && $B.get_class(b) === _b_.float) {
-        if (isNaN(a.value) && isNaN(b.value)) {
-            return true
+        // two NaN objects are not identical, but two boxes of the same
+        // value are: floats are not interned here
+        if (isNaN(a.value) || isNaN(b.value)) {
+            // a NaN equals nothing, so only the same object is itself
+            return a === b
         }
         return a.value == b.value
     } else if($B.is_bytes(a) && _b_.bytes.mp_length(a) == 0 &&
@@ -1297,7 +1310,7 @@ $B.call_attr = function(obj, attr, inum, ...args) {
             }
         }
     }
-    return $B.$call_with_position($B.$getattr(obj, attr), inum, ...args)
+    return $B.$call_with_position($B.$getattr_pep657(obj, attr, inum), inum, ...args)
 }
 
 var counter = 0
