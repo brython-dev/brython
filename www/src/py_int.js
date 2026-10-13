@@ -610,7 +610,9 @@ _b_.int.tp_hash = function(self) {
 }
 
 _b_.int.nb_negative = function(self) {
-    return - int_value(self)
+    var value = int_value(self)
+    // an int has no negative zero
+    return value === 0 ? 0 : - value
 }
 
 _b_.int.nb_positive = function(self) {
