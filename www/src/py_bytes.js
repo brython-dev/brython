@@ -206,6 +206,9 @@ function _new(cls, args, kw) {
         var int_list
         if (Array.isArray(source)) {
             int_list = source
+        } else if ($B.$getattr(source, '__bytes__', $B.NULL) === $B.NULL &&
+                is_bytes_like(source)) {
+            int_list = get_list_from_bytes_like(source)
         } else {
             try {
                 int_list = _b_.list.$factory(source)
