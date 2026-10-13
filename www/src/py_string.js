@@ -3371,6 +3371,8 @@ Interpolation.tp_members = [
 
 $B.set_func_names(Interpolation, 'builtins')
 
+Interpolation.tp_match_args = ['value', 'expression', 'conversion', 'format_spec']
+
 var Template = $B.Template = $B.make_builtin_class('string.templatelib.Template')
 
 Template.tp_flags = 0b101000100000010 // not a BASETYPE
