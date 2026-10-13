@@ -87,7 +87,7 @@ def get_ident():
     available, it is safe to assume that the current process is the
     only thread.  Thus a constant can be safely returned.
     """
-    return -1
+    return 1
 
 def allocate_lock():
     """Dummy implementation of _thread.allocate_lock()."""
@@ -100,7 +100,7 @@ def stack_size(size=None):
     return 0
 
 def _get_main_thread_ident():
-    return 999
+    return get_ident()
 
 def _is_main_interpreter():
     return True

@@ -3,8 +3,12 @@
 def f():
     print(__annotations__)
 print(type(__builtins__))
-__builtins__.open # cf. issue 2196
 
+try:
+    __builtins__.open # cf. issue 2196
+except AttributeError:
+    __builtins__['open']
+    
 try:
     f()
     raise Exception('should have raised NameError')

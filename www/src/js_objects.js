@@ -129,8 +129,11 @@ const PYOBJ = $B.PYOBJ = Symbol('PYOBJ')
 // object: an own symbol key makes the object unusable as a WebIDL record, which
 // is what `new Response(body, {headers})` and `new Headers(obj)` take.
 const PYOBJ_MAP = $B.PYOBJ_MAP = new WeakMap()
-const PYOBJFCT = Symbol('PYOBJFCT')
-const PYOBJFCTS = Symbol('PYOBJFCTS')
+// The Python function made for a JavaScript function, one per function and
+// receiver, held here as well: a frozen, sealed or non-extensible receiver
+// refuses a new property, and a new function was made on every read.
+const JS_FUNCTIONS = new WeakMap()
+const JS_METHODS = new WeakMap()
 
 function* f(){}
 
@@ -195,14 +198,6 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
     }
 
     if (Array.isArray(jsobj)) {
-        // set it as non-enumerable, prevents issues when looping on it in JS.
-        /*
-        try {
-            Object.defineProperty(jsobj, "$is_js_array", {value: true})
-        } catch (err) {
-            // ignore; cf. issue #2379
-        }
-        */
         return jsobj
     }
 
@@ -220,7 +215,12 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
 
     // check if obj is an instance of Promise
     // cf. issue #2321
-    if (jsobj instanceof Promise || typeof jsobj.then == "function") {
+    // `then` is looked up without running a getter of that name
+    var then
+    for (var o = jsobj; o !== null && then === undefined; o = Object.getPrototypeOf(o)) {
+        then = Object.getOwnPropertyDescriptor(o, 'then')
+    }
+    if (jsobj instanceof Promise || typeof then?.value == "function") {
         return jsobj
     }
 
@@ -235,38 +235,33 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
         // transform Python arguments to equivalent JS arguments
         _this = _this === undefined ? null : _this
 
+        let made
         if (_this === null) {
-            const pyobj = jsobj[PYOBJFCT]
-            if (pyobj !== undefined) {
-                return pyobj
+            made = JS_FUNCTIONS
+        } else if (typeof _this === 'object' || typeof _this === 'function') {
+            made = JS_METHODS.get(_this)
+            if (made === undefined) {
+                made = new WeakMap()
+                JS_METHODS.set(_this, made)
             }
-        } else {
-            const pyobjfcts = _this[PYOBJFCTS]
-            if (pyobjfcts !== undefined) {
-                const pyobj = pyobjfcts.get(jsobj)
-                if (pyobj !== undefined) {
-                    return pyobj
-                }
-            } else {
-                try {
-                    _this[PYOBJFCTS] = new Map()
-                } catch (err) {
-                    // probably read-only, ignore
-                }
-            }
+        }
+        const known = made?.get(jsobj)
+        if (known !== undefined) {
+            return known
         }
 
         var res = function() {
-            var args = new Array(arguments.length)
+            var args = new Array(arguments.length),
+                memo = new Map()
             for (var i = 0, len = arguments.length; i < len; ++i) {
                 var arg = arguments[i]
-                if (arg !== null && arg.constructor === Object && arg.$kw) {
+                if (arg !== null && arg.constructor === Object && arg[$B.KW]) {
                     console.log(Error().stack)
                     $B.RAISE(_b_.TypeError,
                         'keyword arguments are not supported for ' +
                         'Javascript functions')
                 }
-                args[i] = pyobj2jsobj(arg)
+                args[i] = pyobj2jsobj(arg, memo)
             }
             try {
                 return jsobj2pyobj(jsobj.apply(_this, args))
@@ -275,11 +270,7 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
             }
         }
 
-        if (_this === null) {
-            jsobj[PYOBJFCT] = res
-        } else if (_this[PYOBJFCTS] !== undefined) {
-            _this[PYOBJFCTS].set(jsobj, res)
-        }
+        made?.set(jsobj, res)
 
         res[JSOBJ] = jsobj
         Object.defineProperty(res, '$js_func',
@@ -304,12 +295,6 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
         return res
     }
 
-    /*
-    if (jsobj.$kw) {
-        return jsobj
-    }
-    */
-
     if (jsobj.constructor === Generator.constructor) {
         return JSGenerator.$factory(jsobj)
     }
@@ -324,7 +309,7 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
     return jsobj
 }
 
-var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj) {
+var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj, memo) {
     // conversion of a Python object into a Javascript object
     // Immutable types
 
@@ -337,6 +322,19 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj) {
         case null:
             // javascript.NULL
             return null
+    }
+
+    if (memo?.has(pyobj)) {
+        return memo.get(pyobj)
+    }
+    // An application embedding Brython can convert some values itself; a
+    // result other than undefined is used as the conversion. memo is passed
+    // on, so that the application keeps the graph of the call too
+    if ($B.pyobj2jsobj_hook !== undefined) {
+        let converted = $B.pyobj2jsobj_hook(pyobj, memo)
+        if (converted !== undefined) {
+            return converted
+        }
     }
 
     let _jsobj = pyobj[JSOBJ]
@@ -356,9 +354,13 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj) {
 
     if (has_type(klass, _b_.list) || has_type(klass, _b_.tuple)) {
         // Python list : transform its elements
-        var jsobj = pyobj.map(pyobj2jsobj)
+        var jsobj = []
+        memo = memo ?? new Map()
+        memo.set(pyobj, jsobj)
+        for (var item of pyobj) {
+            jsobj.push(pyobj2jsobj(item, memo))
+        }
         PYOBJ_MAP.set(jsobj, pyobj)
-        delete jsobj.ob_type // becomes a js_array
         return jsobj
     }
 
@@ -369,6 +371,8 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj) {
         // affect Python dicts such as {"1": 'a', 1: "b"}, the result will
         // be the Javascript object {1: "b"}
         let jsobj = {}
+        memo = memo ?? new Map()
+        memo.set(pyobj, jsobj)
         for (var entry of _b_.dict.$iter_items(pyobj)) {
             var key = entry.key
             if (typeof key !== "string") {
@@ -378,7 +382,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj) {
                 // set "this" to jsobj
                 entry.value.bind(jsobj)
             }
-            jsobj[key] = pyobj2jsobj(entry.value)
+            jsobj[key] = pyobj2jsobj(entry.value, memo)
         }
         pyobj[JSOBJ] = jsobj
         PYOBJ_MAP.set(jsobj, pyobj)
@@ -408,6 +412,12 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj) {
             // javascript.extends. Cf. issue #1439
             return pyobj
         }
+        // A bound method is a new object at each attribute read, so the same
+        // method is cached on its instance and function
+        let methods = klass === $B.method ? bound_methods(pyobj.im_self) : undefined
+        if (methods !== undefined && methods.has(pyobj.im_func)) {
+            return methods.get(pyobj.im_func)
+        }
         if (pyobj.$is_async) {
             // issue 2251 : calling the Python async function in Javascript
             // returns a Promise
@@ -418,6 +428,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj) {
 
             pyobj[JSOBJ] = jsobj
             PYOBJ_MAP.set(jsobj, pyobj)
+            methods?.set(pyobj.im_func, jsobj)
 
             return jsobj
         }
@@ -451,10 +462,43 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj) {
 
         pyobj[JSOBJ] = jsobj
         PYOBJ_MAP.set(jsobj, pyobj)
+        methods?.set(pyobj.im_func, jsobj)
 
         return jsobj
     }
+    if (klass !== $B.JSObj && ! $B.$isinstance(pyobj, _b_.type) &&
+            _b_.callable(pyobj)) {
+        // an instance of a class that defines __call__
+        let jsobj = function() {
+            try {
+                var args = new Array(arguments.length)
+                for (var i = 0; i < arguments.length; ++i) {
+                    args[i] = jsobj2pyobj(arguments[i])
+                }
+                return pyobj2jsobj($B.$call(pyobj, ...args))
+            } catch (err) {
+                $B.handle_error(err)
+            }
+        }
+        pyobj[JSOBJ] = jsobj
+        PYOBJ_MAP.set(jsobj, pyobj)
+        return jsobj
+    }
     return pyobj
+}
+
+const BOUND_METHODS = new WeakMap()
+
+function bound_methods(self) {
+    if (self === null || typeof self !== 'object') {
+        return undefined
+    }
+    let methods = BOUND_METHODS.get(self)
+    if (methods === undefined) {
+        methods = new WeakMap()
+        BOUND_METHODS.set(self, methods)
+    }
+    return methods
 }
 
 function convert_to_python(obj) {
@@ -490,8 +534,8 @@ function pyargs2jsargs(pyargs) {
     for (var i = 0, len = pyargs.length; i < len; i++) {
         var arg = pyargs[i]
         if(arg !== undefined && arg !== null &&
-                arg.$kw !== undefined &&
-                ! $B.keyword_is_empty(arg.$kw)){
+                arg[$B.KW] !== undefined &&
+                ! $B.keyword_is_empty(arg[$B.KW])){
             // Passing keyword arguments to a Javascript function
             // raises a TypeError : since we don't know the
             // signature of the function, the result of Brython
@@ -514,7 +558,7 @@ $B.JSClass = $B.make_builtin_class('JSClass', [_b_.type])
 $B.JSClass.tp_getattro = function(self, attr) {
     if (attr == 'new') {
         return function() {
-            var args = Array.from(arguments).map(pyobj2jsobj)
+            var args = Array.from(arguments, arg => pyobj2jsobj(arg))
             let jsobj = new self.js_class(...args)
             return jsobj2pyobj(jsobj)
         }
