@@ -800,6 +800,22 @@ _b_.SyntaxError.tp_init = function() {
     }
 }
 
+_b_.SyntaxError.tp_str = function(self) {
+    // the message, then the file's basename and the line if they are known
+    var msg = _b_.str.$factory(self.msg),
+        filename = $B.$isinstance(self.filename, _b_.str) ?
+            _b_.str.$factory(self.filename).split('/').pop() : null,
+        lineno = $B.exact_type(self.lineno, _b_.int) ? self.lineno : null
+    if (filename !== null && lineno !== null) {
+        return `${msg} (${filename}, line ${lineno})`
+    } else if (filename !== null) {
+        return `${msg} (${filename})`
+    } else if (lineno !== null) {
+        return `${msg} (line ${lineno})`
+    }
+    return msg
+}
+
 _b_.SyntaxError.tp_members = [
     ["msg", $B.TYPES.OBJECT, 'msg', 0],
     ["filename", $B.TYPES.OBJECT, "filename", 0],
@@ -976,14 +992,6 @@ _b_.UnicodeDecodeError.tp_init = function(self) {
     self.reason = reason
 }
 
-_b_.UnicodeDecodeError.tp_new = function(cls, args, kw) {
-    let obj = {
-        ob_type: cls
-    }
-    $B.init_dict(obj)
-    return obj
-}
-
 _b_.UnicodeDecodeError.tp_members = unicode_error_members
 
 /* UnicodeDecodeError end */
@@ -1028,14 +1036,6 @@ _b_.UnicodeEncodeError.tp_init = function(self) {
     self.start = start
     self.end = end
     self.reason = reason
-}
-
-_b_.UnicodeEncodeError.tp_new = function(cls, args, kw) {
-    let obj = {
-        ob_type: cls
-    }
-    $B.init_dict(obj)
-    return obj
 }
 
 _b_.UnicodeEncodeError.tp_members = unicode_error_members
@@ -1083,14 +1083,6 @@ _b_.UnicodeTranslateError.tp_init = function(self) {
     self.start = start
     self.end = end
     self.reason = reason
-}
-
-_b_.UnicodeTranslateError.tp_new = function(cls, args, kw) {
-    let obj = {
-        ob_type: cls
-    }
-    $B.init_dict(obj)
-    return obj
 }
 
 _b_.UnicodeTranslateError.tp_members = unicode_error_members
