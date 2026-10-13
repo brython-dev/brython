@@ -712,11 +712,6 @@ $B.INUM = Symbol('INUM') // for iterators
 $B.FAST_ITER = Symbol('FAST_ITER') // fast iteration
 $B.KW = Symbol('KW') // keyword arguments of a call: {[$B.KW]: [named, ...unpacked]}
 
-$B.make_kwarg = function(obj) {
-    let res = {}
-    res[$B.KW] = [obj]
-    return res
-}
 
 // special repr() for some codepoints, used in py_string.js and py_bytes.js
 $B.special_string_repr = {
