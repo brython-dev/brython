@@ -35,11 +35,11 @@ $B.is_XID_Start = function(cp) {
     if (! is_ID_Start(char)) {
         return false
     }
-    var norm = char.normalize('NFKC')
-    if (! is_ID_Start(norm[0])) {
+    var [first, ...rest] = char.normalize('NFKC')
+    if (! is_ID_Start(first)) {
         return false
     }
-    for (let char of norm.substr(1)) {
+    for (let char of rest) {
         if (! is_ID_Continue(char)) {
             return false
         }
@@ -52,8 +52,8 @@ $B.is_XID_Continue = function(cp) {
     if (! is_ID_Continue(char)) {
         return false
     }
-    var norm = char.normalize('NFKC')
-    for (let char of norm.substr(1)) {
+    var [, ...rest] = char.normalize('NFKC')
+    for (let char of rest) {
         if (! is_ID_Continue(char)) {
             return false
         }
@@ -718,7 +718,7 @@ $B.tokenizer = function(src, filename, mode, parser) {
                           line_num, indent, line))
                     }
                     state = null
-                    pos--
+                    pos -= char.length
                 }
                 break
 
