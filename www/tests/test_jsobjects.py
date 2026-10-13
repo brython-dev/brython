@@ -489,9 +489,16 @@ assert window.eval('Math.pow(2, 70)') == 2 ** 70
 assert window.eval('-Math.pow(2, 70)') == -2 ** 70
 
 # PR 3074
-class Text(str): 
+class Text(str):
     pass
 
 assert javascript.JSON.parse(Text('{"answer": 42}')) == {'answer': 42}
+
+# PR 3088
+rows = []
+rows.append(rows)
+
+assert window.eval("rows => rows[0] === rows")(rows)
+
 
 print("all tests ok...")
