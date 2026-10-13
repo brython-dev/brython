@@ -82,7 +82,7 @@ $B.future_features = function(mod, filename) {
             for (var alias of child.names) {
                 var name = alias.name
                 if (name == "braces") {
-                    raise_error_known_location(_b_.SyntaxError, filename,
+                    $B.raise_error_known_location(_b_.SyntaxError, filename,
                         alias.lineno, alias.col_offset,
                         alias.end_lineno, alias.end_col_offset,
                         get_line(filename, child.lineno),
@@ -90,7 +90,7 @@ $B.future_features = function(mod, filename) {
                 } else if (name == "annotations") {
                     features |= $B.CO_FUTURE_ANNOTATIONS
                 } else if (VALID_FUTURES.indexOf(name) == -1) {
-                    raise_error_known_location(_b_.SyntaxError, filename,
+                    $B.raise_error_known_location(_b_.SyntaxError, filename,
                         alias.lineno, alias.col_offset,
                         alias.end_lineno, alias.end_col_offset,
                         get_line(filename, child.lineno),
