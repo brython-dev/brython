@@ -1054,10 +1054,13 @@ $B.tokenizer = function(src, filename, mode, parser) {
                         line_num, pos - line_start,
                         line))
                     if (token_mode == 'regular_within_ft' && char == '}') {
-                        t.push(Token('OP', char,
+                        let closing_brace = Token('OP', char,
                             line_num, pos - line_start - 1,
                             line_num, pos - line_start,
-                            line))
+                            line)
+                        closing_brace.metadata = src.substring(
+                            line_start + ft_expr_start, pos - 1)
+                        t.push(closing_brace)
                         show_braces()
                         if ($B.last(braces).char == '{') {
                             token_modes.pop()
