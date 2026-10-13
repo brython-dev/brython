@@ -80,12 +80,13 @@ _b_.anext = function() {
     var $ = $B.args('anext', 2, {async_iterator: null, _default: null},
                 arguments, {_default: $B.NULL}, null, null)
     var awaitable = $B.$call($B.$getattr($.async_iterator, '__anext__'))
+    if ($._default === $B.NULL) {
+        return awaitable
+    }
     return $B.promise(awaitable).catch(
         function(err) {
             if ($B.is_exc(err, [_b_.StopAsyncIteration])) {
-                if ($._default !== $B.NULL) {
-                    return $._default
-                }
+                return $._default
             }
             throw err
         }
@@ -188,7 +189,13 @@ _b_.breakpoint = function() {
 _b_.callable = function(obj) {
     check_nb_args_no_kw('callable', 1, arguments)
 
-    return _b_.hasattr(obj, '__call__')
+    if (typeof obj == 'function') {
+        return true
+    }
+    // the slot $B.$call uses: __call__ is looked up on the type, not on
+    // the object, so neither __getattr__ nor an instance attribute counts
+    var call = $B.get_class(obj).tp_call
+    return call !== undefined && call !== $B.NULL
 }
 
 _b_.chr = function(i) {
@@ -1473,7 +1480,7 @@ _b_.map.tp_iternext = function*(self){
     for (var iter of self.args) {
         var arg = iter.next()
         if (arg.done) {
-            $B.RAISE(_b_.StopIteration, '')
+            $B.RAISE(_b_.StopIteration)
         }
         args.push(arg.value)
     }
