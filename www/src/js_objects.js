@@ -394,6 +394,12 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj) {
             // javascript.extends. Cf. issue #1439
             return pyobj
         }
+        // A bound method is a new object at each attribute read, so the same
+        // method is cached on its instance and function
+        let methods = klass === $B.method ? bound_methods(pyobj.im_self) : undefined
+        if (methods !== undefined && methods.has(pyobj.im_func)) {
+            return methods.get(pyobj.im_func)
+        }
         if (pyobj.$is_async) {
             // issue 2251 : calling the Python async function in Javascript
             // returns a Promise
@@ -404,6 +410,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj) {
 
             pyobj[JSOBJ] = jsobj
             PYOBJ_MAP.set(jsobj, pyobj)
+            methods?.set(pyobj.im_func, jsobj)
 
             return jsobj
         }
@@ -437,6 +444,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj) {
 
         pyobj[JSOBJ] = jsobj
         PYOBJ_MAP.set(jsobj, pyobj)
+        methods?.set(pyobj.im_func, jsobj)
 
         return jsobj
     }
@@ -459,6 +467,20 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj) {
         return jsobj
     }
     return pyobj
+}
+
+const BOUND_METHODS = new WeakMap()
+
+function bound_methods(self) {
+    if (self === null || typeof self !== 'object') {
+        return undefined
+    }
+    let methods = BOUND_METHODS.get(self)
+    if (methods === undefined) {
+        methods = new WeakMap()
+        BOUND_METHODS.set(self, methods)
+    }
+    return methods
 }
 
 function convert_to_python(obj) {
