@@ -135,8 +135,10 @@
         // is raised.
         var search = _info(chr)
         if (search === null) {
-            if (_default) {return _default}
-            $B.RAISE(_b_.KeyError, "undefined character name '" +
+            if (_default) {
+                return _default
+            }
+            $B.RAISE(_b_.ValueError, "no such name '" +
                 chr + "'")
         }
         return search.name

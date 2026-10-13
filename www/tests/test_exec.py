@@ -225,5 +225,129 @@ t.append(__name__)
 """, ns)
 assert ns['t'] == ['exec']
 
+# issue 3019: "from module import name" in code compiled with compile()
+# and then run with exec() raised a Javascript TypeError
+_ex = {}
+exec(compile("from math import sqrt", "<string>", "exec"), _ex)
+assert _ex['sqrt'](9) == 3
+
+# same with an alias
+_ex = {}
+exec(compile("from math import sqrt as sq", "<string>", "exec"), _ex)
+assert _ex['sq'](9) == 3
+
+# same with "from module import *"
+_ex = {}
+exec(compile("from math import *", "<string>", "exec"), _ex)
+assert _ex['sqrt'](9) == 3
+
+# same with a relative import (module is None in the ast)
+try:
+    exec(compile("from . import x", "<string>", "exec"), {})
+except ImportError:
+    pass
+
+# issue 3020: several constructs in code compiled with compile() and then
+# run with exec() generated invalid Javascript, because optional AST fields
+# were Python None instead of undefined
+
+# assert without message
+exec(compile("assert True", "<string>", "exec"), {})
+
+# raise with an exception
+try:
+    exec(compile("raise RuntimeError('MyError')", "<string>", "exec"), {})
+except RuntimeError as exc:
+    assert str(exc) == 'MyError'
+else:
+    raise AssertionError('raise was not executed')
+
+# bare raise in an except block
+try:
+    exec(compile(
+        "try:\n"
+        "    raise ValueError('x')\n"
+        "except ValueError:\n"
+        "    raise\n", "<string>", "exec"), {})
+except ValueError:
+    pass
+else:
+    raise AssertionError('bare raise was not executed')
+
+# except with a name
+exec(compile(
+    "try:\n"
+    "    raise ValueError('x')\n"
+    "except ValueError as exc:\n"
+    "    assert str(exc) == 'x'\n", "<string>", "exec"), {})
+
+# raise ... from ...
+try:
+    exec(compile("raise RuntimeError('e') from ValueError('c')",
+                 "<string>", "exec"), {})
+except RuntimeError as exc:
+    assert isinstance(exc.__cause__, ValueError)
+else:
+    raise AssertionError('raise from was not executed')
+
+# return / yield without a value
+_ns = {}
+exec(compile("def f():\n"
+             "    return\n"
+             "def g():\n"
+             "    return 1\n"
+             "def gen():\n"
+             "    yield\n", "<string>", "exec"), _ns)
+assert _ns['f']() is None
+assert _ns['g']() == 1
+assert list(_ns['gen']()) == [None]
+
+# slices with optional bounds
+_ns = {'x': [1, 2, 3, 4]}
+exec(compile("a = x[1:]\n"
+             "b = x[:2]\n"
+             "c = x[::2]\n"
+             "d = x[1:3:1]\n", "<string>", "exec"), _ns)
+assert _ns['a'] == [2, 3, 4]
+assert _ns['b'] == [1, 2]
+assert _ns['c'] == [1, 3]
+assert _ns['d'] == [2, 3]
+
+# with statement, with and without "as"
+_ns = {}
+exec(compile("class C:\n"
+             "    def __enter__(self):\n"
+             "        return 42\n"
+             "    def __exit__(self, *args):\n"
+             "        pass\n"
+             "with C():\n"
+             "    pass\n"
+             "with C() as v:\n"
+             "    r = v\n", "<string>", "exec"), _ns)
+assert _ns['r'] == 42
+
+# f-string without format spec
+assert eval(compile("f'{1 + 1}'", "<string>", "eval"), {}) == '2'
+
+# keyword unpacking
+_ns = {}
+exec(compile("def f(**kw):\n"
+             "    return kw\n"
+             "r = f(**{'a': 1})\n", "<string>", "exec"), _ns)
+assert _ns['r'] == {'a': 1}
+
+# match: mapping rest, sequence star, wildcard
+_ns = {}
+exec(compile("def f(x):\n"
+             "    match x:\n"
+             "        case {'a': 1, **rest}:\n"
+             "            return rest\n"
+             "        case [1, *rest]:\n"
+             "            return rest\n"
+             "        case _:\n"
+             "            return None\n", "<string>", "exec"), _ns)
+assert _ns['f']({'a': 1, 'b': 2}) == {'b': 2}
+assert _ns['f']([1, 2, 3]) == [2, 3]
+assert _ns['f']('other') is None
 
 print("passed all tests...")
