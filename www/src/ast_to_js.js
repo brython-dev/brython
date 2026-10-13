@@ -2973,7 +2973,11 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
         scope_name = make_scope_name(scopes, func_name_scope),
         func_ref
 
-    if (decorated) {
+    if (this.$is_lambda) {
+        // A lambda binds no name: the expression is the function itself, so
+        // nothing is added to the namespace that globals() or locals() read
+        this.$js_name = name2
+    } else if (decorated) {
         func_ref = `decorated${make_id()}`
         js += prefix + `var ${func_ref} = ${name2}\n`
     } else {
@@ -3381,10 +3385,9 @@ $B.ast.Lambda.prototype.to_js = function(scopes) {
     f[$B.ID] = fast_id(this) // FunctionDef accesses symtable through id
     f.$is_lambda = true
     indent()
-    var js = f.to_js(scopes),
-        lambda_ref = reference(scopes, last_scope(scopes), name)
+    var js = f.to_js(scopes)
     js = `(function() {\n${js}\n` +
-        prefix + `return ${lambda_ref}\n`
+        prefix + `return ${f.$js_name}\n`
     dedent()
     return js + prefix + `})()`
 }
