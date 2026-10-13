@@ -1762,7 +1762,9 @@ type_funcs.__mro___set = function(self) {
 }
 
 type_funcs.__name___get = function(cls) {
-    return $B.get_name(cls)
+    var name = $B.get_name(cls)
+    // a static type named "module.name" is called by its last part
+    return (cls.tp_flags & TPFLAGS.HEAPTYPE) ? name : name.split('.').pop()
 }
 
 type_funcs.__name___set = function(cls,value) {
