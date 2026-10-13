@@ -610,7 +610,9 @@ _b_.int.tp_hash = function(self) {
 }
 
 _b_.int.nb_negative = function(self) {
-    return - int_value(self)
+    var value = int_value(self)
+    // an int has no negative zero
+    return value === 0 ? 0 : - value
 }
 
 _b_.int.nb_positive = function(self) {
@@ -777,7 +779,9 @@ _b_.int.tp_new = function(cls, args, kw) {
         ob_type: cls,
         value: int.$factory(value, base)
     }
-    $B.init_dict(res)
+    if ($B.instance_has_dict(cls)) {
+        $B.init_dict(res)
+    }
     return res
 }
 
@@ -859,7 +863,7 @@ int_funcs.bit_length = function(self) {
 }
 
 int_funcs.conjugate = function(self) {
-
+    return int_value(self)
 }
 
 int_funcs.denominator_get = function(self) {

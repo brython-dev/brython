@@ -3,7 +3,31 @@
 var _b_ = $B.builtins,
     _keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
 
-var error = $B.make_type("error", [_b_.Exception])
+const BASE64_PAD = '='
+
+const ALPH_STR = {
+    ASCII85_ALPHABET: '!"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstu',
+    BASE32HEX_ALPHABET: '0123456789ABCDEFGHIJKLMNOPQRSTUV',
+    BASE32_ALPHABET: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567',
+    BASE64_ALPHABET: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/',
+    BASE85_ALPHABET: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!#$%&()*+-;<=>?@^_`{|}~',
+    BINHEX_ALPHABET: '!"#$%&\'()*+,-012345689@ABCDEFGHIJKLMNPQRSTUVXYZ[`abcdefhijklmpqr',
+    CRYPT_ALPHABET: './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
+    URLSAFE_BASE64_ALPHABET: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_',
+    UU_ALPHABET: ' !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_',
+    Z85_ALPHABET: '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.-:+=^!/*?&<>()[]{}@%$#'
+}
+
+const ALPH = {}
+
+// alphabets are bytes
+for (let alphabet in ALPH_STR) {
+    ALPH[alphabet] = $B.encode(ALPH_STR[alphabet], 'ascii')
+}
+
+const reversed_cache = new Map()
+
+var error = $B.make_type("error", [_b_.ValueError])
 
 $B.set_func_names(error, "binascii")
 $B.finalize_type(error)
@@ -69,6 +93,84 @@ function decode(bytes, altchars, validate) {
     return _b_.bytes.$factory(output)
 }
 
+function bin(x, size) {
+    let b = x.toString(2)
+    return '0'.repeat(size - b.length) + b
+}
+
+function base64_decode(bytes, alphabet, padded) {
+    let padding_byte = BASE64_PAD.codePointAt(0)
+
+    if (bytes.length % 4 !== 0) {
+        if (bytes[bytes.length - 1] == 10) {
+            bytes.pop()
+        }
+        if (padded && bytes.length % 4 !== 0){
+            $B.RAISE(error, "Incorrect padding")
+        }
+    }
+    let reversed = reversed_cache.get(alphabet)
+    if (reversed === undefined) {
+        reversed = {}
+        let i = 0
+        for (let byte of $B.to_bytes(alphabet)) {
+            reversed[byte] = i++
+        }
+        reversed_cache.set(alphabet, reversed)
+    }
+
+    let res = []
+    for (let i = 0, len = bytes.length; i < len; i += 4) {
+        let c1 = reversed[bytes[i]]
+        let c2 = reversed[bytes[i + 1]]
+        let x1 = (c1 << 2) + (c2 >> 4)
+        res.push(x1)
+        if (padded && bytes[i + 2] == padding_byte) {
+            break
+        }
+        let c3 = reversed[bytes[i + 2]]
+        let x2 = ((c2 & 0b1111) << 4) + (c3 >> 2)
+        res.push(x2)
+        if (padded && bytes[i + 3] == padding_byte) {
+            break
+        }
+        let c4 = reversed[bytes[i + 3]]
+        let x3 = ((c3 & 0b11) << 6) + c4
+        res.push(x3)
+    }
+    return $B.fast_bytes(res)
+}
+
+function base64_encode(bytes, alphabet, padded) {
+    let s = bytes
+    let padding = BASE64_PAD
+    let conv = ''
+    let alph_str = $B.decode(alphabet, 'ascii')
+    for (let i = 0, len = s.length; i < len; i += 3) {
+        let A = s[i]
+        let x1 = (A >> 2) & 0x3f
+        conv += alph_str[x1]
+        let x2 = A << 4
+        if (i + 1 == len) {
+            conv += alph_str[x2 & 0x3f] + (padded ? padding.repeat(2) : '')
+        } else {
+            let B = s[i + 1]
+            x2 += (B >> 4) & 0xf
+            conv += alph_str[x2 & 0x3f]
+            let x3 = B << 2
+            if (i + 2 == len) {
+                conv += alph_str[x3 & 0x3f] + (padded ? padding : '')
+            } else {
+                let C = s[i + 2]
+                x3 += (C >> 6) & 0x3
+                conv += alph_str[x3 & 0x3f]
+                let x4 = C & 0x3f
+                conv += alph_str[x4]
+            }
+        }
+    }
+    return conv
+}
 
 var hex2int = {},
     hex = '0123456789abcdef'
@@ -81,7 +183,7 @@ function make_alphabet(altchars) {
     var alphabet = _keyStr
     if (altchars !== undefined && altchars !== _b_.None) {
         // altchars is an instance of Python bytes
-        var source = altchars.source
+        var source = $B.to_bytes(altchars)
         alphabet = alphabet.substr(0,alphabet.length-3) +
             _b_.chr(source[0]) + _b_.chr(source[1]) + '='
     }
@@ -90,17 +192,59 @@ function make_alphabet(altchars) {
 
 var module = {
     a2b_base64: function() {
-        var $ = $B.args("a2b_base64", 2, {s: null, strict_mode: null},
-                    arguments, {strict_mode: false})
-        var bytes
-        if ($B.is_str($.s)) {
-            bytes = _b_.str.encode($.s, 'ascii')
-        } else if ($B.$isinstance($.s, [_b_.bytes, _b_.bytearray])) {
-            bytes = $.s
-        } else {
-            $B.RAISE(_b_.TypeError, 'wrong type: ' + $B.class_name($.s))
+        var [args, kw] = $B.parse_args_kw('a2b_base64', arguments)
+        if (args.length != 1) {
+            $B.RAISE(_b_.TypeError,
+                `a2b_base64() takes exactly 1 positional argument ` +
+                `(${args.length} given)`
+            )
         }
-        return decode(bytes)
+        let string = args[0]
+        // ignorechars,
+        let padded = true,
+            alphabet = ALPH.BASE64_ALPHABET,
+            strict_mode = true,
+            canonical = false
+        for (let entry of _b_.dict.$iter_items(kw)) {
+            switch (entry.key) {
+                case 'strict_mode':
+                    strict_mode = entry.value
+                    break
+                case 'alphabet':
+                    alphabet = entry.value
+                    if (! $B.exact_type(alphabet, _b_.bytes)) {
+                        $B.RAISE(_b_.TypeError,
+                            `a2b_base64() argument 'alphabet' must be ` +
+                            `bytes, not ${$B.class_name(alphabet)}`
+                        )
+                    }
+                    break
+                case 'padded':
+                    padded = $B.$bool(entry.value)
+                    break
+                case 'canonical':
+                    canonical = entry.value
+                    break
+                case 'ignorechars':
+                    ignorechars = entry.value
+                    break
+                default:
+                    $B.RAISE(_b_.TypeError,
+                        `a2b_base64() got an unexpected keyword argument ` +
+                        `'${entry.key}'`
+                    )
+            }
+        }
+        var bytes
+        if ($B.is_str(string)) {
+            bytes = _b_.str.encode(string, 'ascii')
+        } else if ($B.$isinstance(string, [_b_.bytes, _b_.bytearray])) {
+            bytes = string
+        } else {
+            $B.RAISE(_b_.TypeError, 'wrong type: ' + $B.class_name(string))
+        }
+        let bytes_list = $B.to_bytes(bytes)
+        return base64_decode(bytes_list, alphabet, padded)
     },
     a2b_hex: function() {
         var $ = $B.args("a2b_hex", 1, {s: null}, arguments)
@@ -125,20 +269,35 @@ var module = {
         return _b_.bytes.$factory(res)
     },
     b2a_base64: function() {
-        var $ = $B.args("b2a_base64", 1, {data: null}, arguments, null, null, 
+        let $ = $B.args("b2a_base64", 1, {data: null}, arguments, null, null,
                     "kw")
-        var newline = $B.str_dict_get($.kw, 'newline', false)
-
-        var bytes_list = $B.to_bytes($.data)
-        var i = 0
-        var size = 100000
-        var s = ''
-        while (i < bytes_list.length) {
-            s += String.fromCharCode.apply(null, bytes_list.slice(i, i + size))
-            i += size
+        let data = $.data
+        let newline = $B.str_dict_get($.kw, 'newline', true)
+        let alphabet = $B.str_dict_get($.kw, 'alphabet', $B.NULL)
+        if (alphabet === $B.NULL) {
+            alphabet = ALPH.BASE64_ALPHABET
+        } else {
+            if (! $B.exact_type(alphabet, _b_.bytes)) {
+                $B.RAISE(_b_.TypeError,
+                    `a bytes-like object is required, not ` +
+                    `'${$B.class_name(alphabet)}'`
+                )
+            }
+            if (_b_.bytes.mp_length(alphabet) !== 64) {
+                $B.RAISE(_b_.ValueError, 'alphabet must have length 64')
+            }
         }
+        let padded = $B.str_dict_get($.kw, 'padded', true)
 
-        var res = btoa(s)
+        if (! $B.is_bytes_like(data)) {
+            $B.RAISE(_b_.TypeError,
+                `a bytes-like object is required, not ` +
+                `'${$B.class_name(data)}'`
+            )
+        }
+        var bytes_list = $B.to_bytes(data)
+
+        var res = base64_encode(bytes_list, alphabet, padded)
 
         if (newline) {
             res += "\n"
@@ -182,6 +341,10 @@ var module = {
         return _b_.bytes.$factory(res + "\n", "ascii")
     },
     error: error
+}
+
+for (let alphabet in ALPH) {
+    module[alphabet] = ALPH[alphabet]
 }
 
 module.hexlify = module.b2a_hex

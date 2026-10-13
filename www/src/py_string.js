@@ -1856,7 +1856,9 @@ _b_.str.tp_new = function(cls, args, kw) {
         ob_type: cls,
         $brython_value: str.$factory(arg, encoding, errors)
     }
-    $B.init_dict(res)
+    if ($B.instance_has_dict(cls)) {
+        $B.init_dict(res)
+    }
     return res
 }
 
@@ -2173,12 +2175,12 @@ str_funcs.find = function(self, sub, start, end) {
     // arguments start and end are interpreted as in slice notation.
     // Return -1 if sub is not found.
     var args_length = arguments.length
-    if (args_length == 2 && ! sub.$kw) {
+    if (args_length == 2 && ! sub[$B.KW]) {
         start = 0
         end = _b_.None
-    } else if (args_length == 3 && ! start.$kw) {
+    } else if (args_length == 3 && ! start[$B.KW]) {
         end = _b_.None
-    } else if (args_length == 4 && ! end.$kw) {
+    } else if (args_length == 4 && ! end[$B.KW]) {
         //
     } else {
         var $ = $B.args("str.find", 4,
@@ -2966,12 +2968,12 @@ str_funcs.rstrip = function() {
 
 str_funcs.split = function(self, sep, maxsplit) {
     var locals
-    if (arguments.length == 3 && ! maxsplit.$kw) {
+    if (arguments.length == 3 && ! maxsplit[$B.KW]) {
         self = to_string(self)
-    } else if (arguments.length == 2 && ! sep.$kw) {
+    } else if (arguments.length == 2 && ! sep[$B.KW]) {
         self = to_string(self)
         maxsplit = -1
-    } else if (arguments.length == 1 && ! self.$kw) {
+    } else if (arguments.length == 1 && ! self[$B.KW]) {
         self = to_string(self)
         sep = _b_.None
         maxsplit = -1
@@ -3056,9 +3058,9 @@ str_funcs.split = function(self, sep, maxsplit) {
 
 str_funcs.splitlines = function(self, keepends) {
     var args_length = arguments.length
-    if (args_length == 1 && ! self.$kw) {
+    if (args_length == 1 && ! self[$B.KW]) {
         keepends = false
-    } else if (args_length == 2 && ! keepends.$kw) {
+    } else if (args_length == 2 && ! keepends[$B.KW]) {
         //
     } else {
         var $ = $B.args('splitlines', 2, {self: null, keepends: null},
@@ -3154,12 +3156,12 @@ str_funcs.startswith = function(self) {
 
 str_funcs.startswith = function(self, prefix, start, end) {
     var args_length = arguments.length
-    if (args_length == 2 && ! prefix.$kw) {
+    if (args_length == 2 && ! prefix[$B.KW]) {
         start = 0
         end = null
-    } else if (args_length == 3 && ! start.$kw) {
+    } else if (args_length == 3 && ! start[$B.KW]) {
         end = null
-    } else if (args_length == 4 && ! end.$kw) {
+    } else if (args_length == 4 && ! end[$B.KW]) {
         //
     } else {
         var $ = $B.args("startswith", 4,
@@ -3338,7 +3340,8 @@ $B.str_len = _b_.str.mp_length
 
 var Interpolation = $B.make_builtin_class('Interpolation')
 
-Interpolation.$factory = function(value, expression, conversion, format_spec) {
+Interpolation.$factory = function(value, expression = '', conversion = _b_.None,
+        format_spec = '') {
     return {
         ob_type: Interpolation,
         value,
@@ -3356,6 +3359,13 @@ Interpolation.tp_repr = function(self) {
     }
     return res + items.join(', ') + ')'
 }
+
+Interpolation.tp_members = [
+    ["value", $B.TYPES.OBJECT, "value", 1],
+    ["expression", $B.TYPES.OBJECT, "expression", 1],
+    ["conversion", $B.TYPES.OBJECT, "conversion", 1],
+    ["format_spec", $B.TYPES.OBJECT, "format_spec", 1]
+]
 
 $B.set_func_names(Interpolation, 'builtins')
 
@@ -3391,30 +3401,45 @@ Template.$factory = function() {
     }
 }
 
+var TemplateIter = $B.make_builtin_class('string.templatelib.TemplateIter')
+
+TemplateIter.tp_flags = 0b101000110000010 // not a BASETYPE, not instantiable
+
 Template.tp_iter = function(self) {
-    self.$counter = -1
-    self.$len = self.strings.length + self.interpolations.length
+    return {
+        ob_type: TemplateIter,
+        template: self,
+        $counter: -1,
+        $len: self.strings.length + self.interpolations.length
+    }
+}
+
+TemplateIter.tp_iter = function(self) {
     return self
 }
 
-Template.tp_iternext = function(self) {
+TemplateIter.tp_iternext = function*(self) {
     self.$counter++
     if (self.$counter >= self.$len) {
-        $B.RAISE(_b_.StopIteration, '')
+        return
     }
     var type = 'si'[self.$counter % 2]
     var rank = Math.floor(self.$counter / 2)
     switch (type) {
         case 's':
-            var s = self.strings[rank]
+            var s = self.template.strings[rank]
             if (s.length > 0) {
-                return s
+                yield s
+            } else {
+                yield* TemplateIter.tp_iternext(self)
             }
-            return Template.tp_iternext(self)
+            break
         case 'i':
-            return self.interpolations[rank]
+            yield self.template.interpolations[rank]
     }
 }
+
+$B.set_func_names(TemplateIter, 'builtins')
 
 
 Template.tp_new = function(cls, args, kw) {
@@ -3425,6 +3450,21 @@ Template.tp_new = function(cls, args, kw) {
     var res = Template.$factory(...args)
     res.ob_type = cls
     return res
+}
+
+Template.sq_concat = function(self, other) {
+    if ($B.get_class(other) !== Template) {
+        return _b_.NotImplemented
+    }
+    var last = self.strings.length - 1
+    return {
+        ob_type: Template,
+        strings: $B.fast_tuple([...self.strings.slice(0, last),
+            _b_.str.sq_concat(self.strings[last], other.strings[0]),
+            ...other.strings.slice(1)]),
+        interpolations: $B.fast_tuple([...self.interpolations,
+            ...other.interpolations])
+    }
 }
 
 Template.tp_repr = function(self) {
@@ -3442,7 +3482,7 @@ Template_funcs.__class_getitem__ = function() {
 }
 
 Template_funcs.__reduce__ = function(self) {
-    $B.$import('string.templatelib')
+    $B.import('string.templatelib')
     var module = $B.imported['string.templatelib']
     var _template_unpickle = $B.module_getattr(module, '_template_unpickle')
     return $B.fast_tuple([_template_unpickle,

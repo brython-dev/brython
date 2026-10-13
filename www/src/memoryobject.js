@@ -396,7 +396,7 @@ memoryview_funcs.obj_get = function(self) {
 memoryview_funcs.obj_set = _b_.None
 
 memoryview_funcs.readonly_get = function(self) {
-    return $B.is_bytes(self.obj)
+    return !!$B.is_bytes(self.obj)
 }
 
 memoryview_funcs.readonly_set = _b_.None

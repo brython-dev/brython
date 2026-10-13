@@ -35,11 +35,11 @@ $B.is_XID_Start = function(cp) {
     if (! is_ID_Start(char)) {
         return false
     }
-    var norm = char.normalize('NFKC')
-    if (! is_ID_Start(norm[0])) {
+    var [first, ...rest] = char.normalize('NFKC')
+    if (! is_ID_Start(first)) {
         return false
     }
-    for (let char of norm.substr(1)) {
+    for (let char of rest) {
         if (! is_ID_Continue(char)) {
             return false
         }
@@ -52,8 +52,8 @@ $B.is_XID_Continue = function(cp) {
     if (! is_ID_Continue(char)) {
         return false
     }
-    var norm = char.normalize('NFKC')
-    for (let char of norm.substr(1)) {
+    var [, ...rest] = char.normalize('NFKC')
+    for (let char of rest) {
         if (! is_ID_Continue(char)) {
             return false
         }
@@ -447,6 +447,10 @@ $B.tokenizer = function(src, filename, mode, parser) {
                     throw err
                 }
                 fstring_stack.pop()
+                if (fstring_stack.length > 0) {
+                    // back in the enclosing f-string or t-string
+                    ft_type = $B.last(fstring_stack).ft_type
+                }
                 // pop from token modes
                 token_modes.pop()
                 token_mode = $B.last(token_modes)
@@ -718,7 +722,7 @@ $B.tokenizer = function(src, filename, mode, parser) {
                           line_num, indent, line))
                     }
                     state = null
-                    pos--
+                    pos -= char.length
                 }
                 break
 
@@ -1030,7 +1034,8 @@ $B.tokenizer = function(src, filename, mode, parser) {
                             fstring_stack.push(
                                 {
                                     start: pos,
-                                    nb_braces_on_entry: braces.length
+                                    nb_braces_on_entry: braces.length,
+                                    ft_type
                                 }
                             )
                             continue
@@ -1054,10 +1059,13 @@ $B.tokenizer = function(src, filename, mode, parser) {
                         line_num, pos - line_start,
                         line))
                     if (token_mode == 'regular_within_ft' && char == '}') {
-                        t.push(Token('OP', char,
+                        let closing_brace = Token('OP', char,
                             line_num, pos - line_start - 1,
                             line_num, pos - line_start,
-                            line))
+                            line)
+                        closing_brace.metadata = src.substring(
+                            line_start + ft_expr_start, pos - 1)
+                        t.push(closing_brace)
                         show_braces()
                         if ($B.last(braces).char == '{') {
                             token_modes.pop()
