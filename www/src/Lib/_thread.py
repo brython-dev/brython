@@ -100,7 +100,7 @@ def stack_size(size=None):
     return 0
 
 def _get_main_thread_ident():
-    return 999
+    return get_ident()
 
 def _is_main_interpreter():
     return True
