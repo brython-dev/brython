@@ -347,7 +347,8 @@ $B._PyPegen.interpolation = function(p, expression,
     }
 
     var interpolation = $B._PyAST.Interpolation(
-        expression, final_exprstr, conversion_val, format ? format.result : NULL)
+        expression, final_exprstr, conversion_val, format ? format.result : NULL,
+        position)
 
     set_position_from_obj(interpolation, position)
 
