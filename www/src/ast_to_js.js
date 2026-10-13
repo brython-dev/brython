@@ -3932,6 +3932,20 @@ $B.ast.TemplateStr.prototype.to_js = function(scopes) {
     return js + `${items.join(', ')})\n`
 }
 
+function handler_to_js(handler, scopes, try_scope, err) {
+    if ($B.is_none(handler.name)) {
+        return add_body(handler.body, scopes) + '\n'
+    }
+    bind(handler.name, scopes)
+    var mangled = mangle(scopes, try_scope, handler.name)
+    var js = prefix + `locals.${mangled} = ${err}\n` + prefix + 'try {\n'
+    indent()
+    js += add_body(handler.body, scopes) + '\n'
+    dedent()
+    return js + prefix + '} finally {\n' +
+        prefix + tab + `delete locals.${mangled}\n` + prefix + '}\n'
+}
+
 $B.ast.Try.prototype.to_js = function(scopes) {
     compiler_check(this)
     var id = make_id(),
@@ -3992,12 +4006,7 @@ $B.ast.Try.prototype.to_js = function(scopes) {
                 js += '){\n'
             }
             indent()
-            if (! $B.is_none(handler.name)) {
-                bind(handler.name, scopes)
-                var mangled = mangle(scopes, try_scope, handler.name)
-                js += prefix + `locals.${mangled} = ${err}\n`
-            }
-            js += add_body(handler.body, scopes) + '\n'
+            js += handler_to_js(handler, scopes, try_scope, err)
             if (! ($B.last(handler.body) instanceof $B.ast.Return)) {
                 // delete current exception
                 js += prefix + '$B.del_exc(frame)\n'
@@ -4128,12 +4137,7 @@ $B.ast.TryStar.prototype.to_js = function(scopes) {
                 indent()
                 js += prefix + 'for (var err of matching.excs) {\n'
                 indent()
-                if (! $B.is_none(handler.name)) {
-                    bind(handler.name, scopes)
-                    var mangled = mangle(scopes, try_scope, handler.name)
-                    js += prefix + `locals.${mangled} = ${err}\n`
-                }
-                js += add_body(handler.body, scopes) + '\n'
+                js += handler_to_js(handler, scopes, try_scope, err)
                 if (! ($B.last(handler.body) instanceof $B.ast.Return)) {
                     // delete current exception
                     js += prefix + '$B.del_exc(frame)\n'
