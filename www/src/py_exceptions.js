@@ -817,7 +817,7 @@ _b_.KeyError.tp_str = function(self) {
     if (self.args.length == 1) {
         return _b_.repr(self.args[0])
     }
-    return _b_.BaseException.tp_repr(self)
+    return _b_.BaseException.tp_str(self)
 }
 
 $B.set_func_names(_b_.KeyError, 'builtins')
@@ -945,7 +945,7 @@ _b_.UnicodeDecodeError.tp_str = function(self) {
             ` in position ${start}: ${self.reason}`
     } else {
         result = `'${self.encoding}' codec can't decode bytes ` +
-        `in position ${start}-${end}: ${self.reason}`
+        `in position ${start}-${end - 1}: ${self.reason}`
     }
     return result
 }
@@ -991,14 +991,14 @@ _b_.UnicodeEncodeError.tp_str = function(self) {
         let c = _b_.str.mp_subscript(obj, self.start)
         let cp = _b_.ord(c)
         let s = cp.toString(16)
-        if (cp < 0xff) {
-            s = '0'.repeat(2 - s.length) + s
-        } else if (cp < 0xffff) {
-            s = '0'.repeat(4 - s.length) + s
+        if (cp <= 0xff) {
+            s = '\\x' + '0'.repeat(2 - s.length) + s
+        } else if (cp <= 0xffff) {
+            s = '\\u' + '0'.repeat(4 - s.length) + s
         } else {
-            s = '0'.repeat(8 - s.length) + s
+            s = '\\U' + '0'.repeat(8 - s.length) + s
         }
-        char = `character '\\x${s}'`
+        char = `character '${s}'`
         pos = self.start
     } else {
         char = `characters`
@@ -1045,14 +1045,14 @@ _b_.UnicodeTranslateError.tp_str = function(self) {
         let c = _b_.str.mp_subscript(obj, self.start)
         let cp = _b_.ord(c)
         let s = cp.toString(16)
-        if (cp < 0xff) {
-            s = '0'.repeat(2 - s.length) + s
-        } else if (cp < 0xffff) {
-            s = '0'.repeat(4 - s.length) + s
+        if (cp <= 0xff) {
+            s = '\\x' + '0'.repeat(2 - s.length) + s
+        } else if (cp <= 0xffff) {
+            s = '\\u' + '0'.repeat(4 - s.length) + s
         } else {
-            s = '0'.repeat(8 - s.length) + s
+            s = '\\U' + '0'.repeat(8 - s.length) + s
         }
-        char = `character '\\x${s}'`
+        char = `character '${s}'`
         pos = self.start
     } else {
         char = `characters`
