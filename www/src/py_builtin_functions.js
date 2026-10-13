@@ -80,12 +80,13 @@ _b_.anext = function() {
     var $ = $B.args('anext', 2, {async_iterator: null, _default: null},
                 arguments, {_default: $B.NULL}, null, null)
     var awaitable = $B.$call($B.$getattr($.async_iterator, '__anext__'))
+    if ($._default === $B.NULL) {
+        return awaitable
+    }
     return $B.promise(awaitable).catch(
         function(err) {
             if ($B.is_exc(err, [_b_.StopAsyncIteration])) {
-                if ($._default !== $B.NULL) {
-                    return $._default
-                }
+                return $._default
             }
             throw err
         }
