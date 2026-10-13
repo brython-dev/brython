@@ -43,7 +43,7 @@ $B.pyobj2structuredclone = function(obj, strict) {
             $B.exact_type(obj, js_array)){
         let res = new Array(obj.length)
         for (var i = 0, len = obj.length; i < len; ++i) {
-            res[i] = $B.pyobj2structuredclone(obj[i])
+            res[i] = $B.pyobj2structuredclone(obj[i], strict)
         }
         return res
     } else if ($B.is_dict(obj)) {
@@ -57,7 +57,7 @@ $B.pyobj2structuredclone = function(obj, strict) {
         }
         let res = {}
         for (var entry of _b_.dict.$iter_items(obj)) {
-            res[to_simple(entry.key)] = $B.pyobj2structuredclone(entry.value)
+            res[to_simple(entry.key)] = $B.pyobj2structuredclone(entry.value, strict)
         }
         return res
     } else if ($B.is_big_int(obj)) {
@@ -65,7 +65,7 @@ $B.pyobj2structuredclone = function(obj, strict) {
     } else if (Object.getPrototypeOf(obj).constructor === Object) {
         var res = {}
         for (var key in obj) {
-            res[key] = $B.pyobj2structuredclone(obj[key])
+            res[key] = $B.pyobj2structuredclone(obj[key], strict)
         }
         return res
     } else {
