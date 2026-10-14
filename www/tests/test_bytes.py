@@ -171,6 +171,25 @@ b'1 22 333 4444 55555'.count(32) == 4
 # issue 972
 assert b'a' in b'a'
 
+# a subclass of list or tuple whose __iter__ yields other items
+class TensList(list):
+    def __iter__(self):
+        return (x * 10 for x in list.__iter__(self))
+
+class TensPair(tuple):
+    def __iter__(self):
+        return (x * 10 for x in tuple.__iter__(self))
+
+for seq in (TensList([1, 2, 3]), TensPair((1, 2, 3))):
+    assert bytes(seq) == b'\n\x14\x1e'
+    assert bytearray(seq) == bytearray(b'\n\x14\x1e')
+
+# the items of a JavaScript array are read as Python values
+from browser import window
+assert bytes(window.Array.of(1, 2)) == b'\x01\x02'
+assert_raises(TypeError, bytes, window.Array.of(1.5))
+assert_raises(TypeError, bytearray, window.Array.of(1.5))
+
 # issue 1070
 try:
     b"\xff".decode('utf-8')
