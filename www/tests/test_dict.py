@@ -284,6 +284,12 @@ d = {1: 1}
 
 assert d.keys == d.keys
 
+# a dict display with a constant key whose hash is past 2 ** 53
+assert {1.5: 2.5}[1.5] == 2.5
+d = {}
+d[3000000000000000001] = 1
+assert {3000000000000000001: 1} == d
+
 
 # dict from mapping
 class A:
