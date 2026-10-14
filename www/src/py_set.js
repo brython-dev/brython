@@ -846,7 +846,9 @@ set_funcs.update = function(self) {
     // Update the set, adding elements from all others.
     var $ = $B.args("update", 1, {self: null}, arguments, null, "args")
     for (var iterable of $.args) {
-        if (Array.isArray(iterable)) {
+        // not a subclass of list or tuple, which may define __iter__
+        if (Array.isArray(iterable) && (! iterable.ob_type ||
+                iterable.ob_type === _b_.list || iterable.ob_type === _b_.tuple)) {
             for (let i = 0; i < iterable.length; i++) {
                 set_add(self, iterable[i])
             }

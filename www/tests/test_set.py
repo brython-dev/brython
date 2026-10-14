@@ -235,6 +235,21 @@ assert str(t1) == str(t2)
 assert list(t1) == list(t2)
 assert {tuple({1, 2}), tuple({2,1})} == {(1, 2)}
 
+# a subclass of list or tuple whose __iter__ yields other items
+class TensList(list):
+    def __iter__(self):
+        return (x * 10 for x in list.__iter__(self))
+
+class TensPair(tuple):
+    def __iter__(self):
+        return (x * 10 for x in tuple.__iter__(self))
+
+for seq in (TensList([1, 2, 3]), TensPair((1, 2, 3))):
+    assert set(seq) == {10, 20, 30}
+    s = set()
+    s.update(seq)
+    assert s == {10, 20, 30}
+
 # issue 1119
 L1 = [0, 70.5, 80, 10, 10, 20.0, 20.0, 40, 40.0, 60.0, 60, 70.5, 70.5, 80]
 S = set(L1)
