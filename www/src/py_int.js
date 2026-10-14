@@ -610,7 +610,9 @@ _b_.int.tp_hash = function(self) {
 }
 
 _b_.int.nb_negative = function(self) {
-    return - int_value(self)
+    var value = int_value(self)
+    // an int has no negative zero
+    return value === 0 ? 0 : - value
 }
 
 _b_.int.nb_positive = function(self) {
@@ -777,7 +779,9 @@ _b_.int.tp_new = function(cls, args, kw) {
         ob_type: cls,
         value: int.$factory(value, base)
     }
-    $B.init_dict(res)
+    if ($B.instance_has_dict(cls)) {
+        $B.init_dict(res)
+    }
     return res
 }
 
@@ -805,16 +809,19 @@ int_funcs.__format__ = function(self, format_spec) {
     fmt.align = fmt.align || ">"
     var res = preformat(self, fmt)
     if (fmt.comma) {
-        var sign = res[0] == "-" ? "-" : "",
-            rest = res.substr(sign.length),
+        // digits are grouped by 4 in bases 2, 8 and 16, after the sign and
+        // the prefix
+        var size = 'boxX'.includes(fmt.type) ? 4 : 3,
+            lead = res.match(/^[-+ ]?(0[bBoOxX])?/)[0],
+            rest = res.substr(lead.length),
             len = rest.length,
-            nb = Math.ceil(rest.length/3),
+            nb = Math.ceil(rest.length / size),
             chunks = []
         for (var i = 0; i < nb; i++) {
-            chunks.push(rest.substring(len - 3 * i - 3, len - 3 * i))
+            chunks.push(rest.substring(len - size * i - size, len - size * i))
         }
         chunks.reverse()
-        res = sign + chunks.join(",")
+        res = lead + chunks.join(fmt.grouping_option)
     }
     return $B.format_width(res, fmt)
 }
@@ -859,7 +866,7 @@ int_funcs.bit_length = function(self) {
 }
 
 int_funcs.conjugate = function(self) {
-
+    return int_value(self)
 }
 
 int_funcs.denominator_get = function(self) {

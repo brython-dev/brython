@@ -508,7 +508,7 @@ function _bufferedreader_readline(_self) {
     return $B.fast_bytes(b)
 }
 
-$B._BufferedReader = $B.make_builtin_class('_BufferedReader',
+$B._BufferedReader = $B.make_builtin_class('_io.BufferedReader',
     [$B._BufferedIOBase])
 // expose the underlying raw stream, like CPython (decomp._buffer.raw.tell())
 $B._BufferedReader.tp_getset = ['raw', 'name']
@@ -889,30 +889,6 @@ $B._TextIOBase.tp_methods = [
 
 $B._TextIOBase.tp_getset = [
     "encoding", "errors"
-]
-
-var $BufferedReader = $B.make_builtin_class('_io.BufferedReader', [_IOBase])
-
-$BufferedReader.$factory = function(content) {
-    return {
-        ob_type: $BufferedReader,
-        $binary: true,
-        $content: content,
-        $read_func: $B.$getattr(content, 'read')
-    }
-}
-
-var $BufferedReader_funcs = $BufferedReader.tp_funcs = {}
-
-$BufferedReader_funcs.read = function(self, size) {
-    if (self.$read_func === undefined) {
-        return _IOBase.tp_funcs.read(self, size === undefined ? -1 : size)
-    }
-    return self.$read_func(size || -1)
-}
-
-$BufferedReader.tp_methods = [
-    "read"
 ]
 
 $B._TextIOWrapper = $B.make_builtin_class('_io._TextIOWrapper', [$B._TextIOBase])

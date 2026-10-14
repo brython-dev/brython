@@ -6,7 +6,7 @@ var _b_ = $B.builtins
 const TPFLAGS = $B.TPFLAGS // defined ib brython_builtins.js
 
 // generic code for class constructor
-$B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
+$B.$class_constructor = function(qualname, dict, metaclass, resolved_bases,
         bases, extra_kwargs){
     var test = false // class_name == '_AllFieldTypes'
     if (test) {
@@ -16,6 +16,8 @@ $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
     if (metaclass.tp_mro === undefined) {
         console.log('no mro in metaclass', metaclass)
     }
+
+    let class_name = $B.last(qualname.split('.'))
 
     // bool is not a valid base
     for (var base of bases) {
@@ -79,7 +81,7 @@ $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
             }
         } else {
             kls = $B.$call(meta_new, metaclass, class_name, resolved_bases, dict,
-                           {$kw:[extra_kwargs]})
+                           {[$B.KW]: [extra_kwargs]})
         }
     } catch (err) {
         if (test) {
@@ -98,13 +100,15 @@ $B.$class_constructor = function(class_name, dict, metaclass, resolved_bases,
         // Initialize the class object by a call to metaclass __init__
         var meta_init = _b_.type.tp_getattro(metaclass, "__init__")
         $B.$call(meta_init, kls, class_name, resolved_bases, dict,
-                 {$kw: [extra_kwargs]})
+                 {[$B.KW]: [extra_kwargs]})
 
     }
 
     if (test) {
         console.log('kls', kls)
     }
+
+    kls.ht_qualname = qualname
 
     return kls
 }
@@ -427,7 +431,8 @@ $B.make_annotate_func = function(dict, annotations, class_frame) {
             __name__: '__annotate__',
             __module__: class_frame[2],
             __qualname__: class_frame[0] + '.__annotate__',
-            __file__: class_frame.__file__
+            __file__: class_frame.__file__,
+            free_vars: $B.fast_tuple(['__classdict__'])
         }
     )
     $B.set_func_attrs(__annotate_func__, $B.frame_obj.frame, class_frame[2])
@@ -1056,7 +1061,12 @@ $B.make_setattr = function(cls) {
     cls.tp_setattro = $B.NULL
     var setattr = $B.get_from_dict(cls, '__setattr__', $B.NULL)
     if (setattr !== $B.NULL) {
-        cls.tp_setattro = setattr
+        // __setattr__ is not always a Javascript function: it can be any
+        // callable, eg a method descriptor such as dict.__setitem__
+        cls.tp_setattro = typeof setattr == 'function' ? setattr :
+            function(obj, attr, value) {
+                return $B.$call(setattr, obj, attr, value)
+            }
     } else if (cls.tp_mro) {
         for (var kls of cls.tp_mro) {
             if(Object.hasOwn(kls, 'tp_setattro') &&
@@ -1418,9 +1428,13 @@ _b_.type.tp_new = function(cls, args, kw) {
         console.log($B.frame_obj.frame.__file__, 'line', $B.frame_obj.frame.$lineno)
     }
 
-    // Create the class dictionary
-    var module = $B.str_dict_get(cl_dict, '__module__', $B.frame_obj.frame[2])
-    $B.str_dict_set(cl_dict, '__module__', module)
+    // Create the class dictionary: __module__ is the __name__ of the current
+    // globals, and is not set if they have none
+    var module = $B.str_dict_get(cl_dict, '__module__',
+        $B.frame_obj.frame[3].__name__)
+    if (module !== undefined) {
+        $B.str_dict_set(cl_dict, '__module__', module)
+    }
 
     var qualname = $B.str_dict_get(cl_dict, '__qualname__', name)
     // __qualname__ is removed from class dict
@@ -1751,7 +1765,9 @@ type_funcs.__mro___set = function(self) {
 }
 
 type_funcs.__name___get = function(cls) {
-    return $B.get_name(cls)
+    var name = $B.get_name(cls)
+    // a static type named "module.name" is called by its last part
+    return (cls.tp_flags & TPFLAGS.HEAPTYPE) ? name : name.split('.').pop()
 }
 
 type_funcs.__name___set = function(cls,value) {
@@ -1766,14 +1782,25 @@ type_funcs.__qualname___get = function(cls) {
     // builtin descriptor types store their instance __qualname__ getset under
     // the same dict key; use the dict value only when it is the qualname string
     var q = $B.get_from_dict(cls, '__qualname__', $B.NULL)
-    return typeof q === 'string' ? q : (cls.ht_qualname ?? $B.get_name(cls))
+    if (typeof q === 'string') {
+        return q
+    }
+    if (cls.tp_flags & $B.TPFLAGS.HEAPTYPE) {
+        return cls.ht_qualname
+    } else {
+        return $B.get_name(cls)
+    }
 }
 
 type_funcs.__qualname___set = function(cls, value) {
     // write the dict, where __qualname___get reads it (tp_name alone left the
     // getter returning the stale auto-computed qualname); keep tp_name for repr
-    $B.set_to_dict(cls, '__qualname__', value)
-    cls.tp_name = value
+    if (cls.tp_flags & $B.TPFLAGS.HEAPTYPE) {
+        cls.ht_qualname = value
+    } else {
+        $B.RAISE(_b_.TypeError, `cannot set attribute '__qualname__' of ` +
+            `immutable type '${cls.tp_name}'`)
+    }
 }
 
 type_funcs.__sizeof__ = function(self) {
@@ -2347,6 +2374,9 @@ function _Py_subs_parameters(self, args, parameters, item) {
 $B.GenericAlias = $B.make_builtin_class("types.GenericAlias")
 
 $B.GenericAlias.$factory = function(origin, args) {
+    if (! $B.$isinstance(args, _b_.tuple)) {
+        args = $B.fast_tuple([args])
+    }
     var res = {
         ob_type: $B.GenericAlias,
         origin,
@@ -2553,14 +2583,22 @@ $B.UnionType.tp_richcompare = function(self, other, op) {
     if (! $B.$isinstance(other, $B.UnionType)) {
         return _b_.NotImplemented
     }
+    // unions compare as sets of types: int | str == str | int
+    var same = self.args.length == other.args.length &&
+        self.args.every(item => other.args.includes(item))
     switch (op) {
         case '__eq__':
-            return $B.list_eq(self.args, other.args)
+            return same
         case '__ne__':
-            return ! $B.list_eq(self.args, other.args)
+            return ! same
         default:
             return _b_.NotImplemented
     }
+}
+
+$B.UnionType.tp_hash = function(self) {
+    // equal unions must have the same hash, whatever the order of the types
+    return _b_.hash($B.$call(_b_.frozenset, $B.$list(self.args.slice())))
 }
 
 $B.UnionType.tp_repr = function(self) {

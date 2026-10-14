@@ -4,6 +4,8 @@
 
     $B.imported[$B.OB_TYPE] = _b_.dict
 
+    $B.lazy_modules = _b_.set.$factory()
+    
     var update = $B.update_obj = function(mod, data) {
         for (let attr in data) {
             mod[attr] = data[attr]
@@ -112,7 +114,7 @@
             var $ = $B.args('send', 1, {message: null}, arguments, null,
                         'args', null)
             var message = $B.pyobj2structuredclone($.message),
-                args = $.args.map($B.pyobj2jsobj)
+                args = $.args.map(arg => $B.pyobj2jsobj(arg))
             self.postMessage(message, ...args)
         }
         browser.document = {
@@ -679,6 +681,9 @@
     $B.assign_dict(modules.javascript.JSON,
         {
             parse: function(text, reviver) {
+                if ($B.is_str(text)) {
+                    text = _b_.str.$to_string(text)
+                }
                 return $B.structuredclone2pyobj(
                     JSON.parse(text, function(key, value, context) {
                         value = read_big(value, context)
@@ -791,7 +796,7 @@
                 modname = "builtins"
             }
             try {
-                $B.$import(modname)
+                $B.import(modname)
                 hook = $B.$getattr($B.imported[modname], funcname)
             } catch (err) {
                 console.warn("cannot import breakpoint", hookname)
@@ -871,6 +876,7 @@
                 $B.frame_obj.frame.$current_exception = value
             }
         },
+        lazy_modules: $B.lazy_modules,
         modules: $B.obj_dict($B.imported),
         path: {
             __get__: function() {
@@ -1500,7 +1506,7 @@
         Future,
         __getattr__: function(attr) {
             // search in _aio.py
-            $B.$import('_aio')
+            $B.import('_aio')
             return $B.$getattr($B.imported._aio, attr)
         }
     }
@@ -1700,11 +1706,11 @@ All Rights Reserved.
 `
 $B.module_setattr($B.imported.builtins, 'copyright', '')
 $B.module_setattr($B.imported.builtins, 'license', 'BSD 3')
-$B.module_setattr($B.imported.builtins, 'help', 'type help()')
 $B.module_setattr($B.imported.builtins, 'credits',
 `    Thanks to CWI, CNRI, BeOpen, Zope Corporation, the Python Software
     Foundation, and a cast of thousands for supporting Python
     development.  See www.python.org for more information.`
 )
+
 
 })(__BRYTHON__);
