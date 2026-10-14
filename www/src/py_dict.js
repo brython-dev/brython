@@ -775,8 +775,10 @@ function init_from_list(self, args) {
     var i = 0
     for (var item of args) {
         // item may be any Python sequence (eg an instance of a class with
-        // __iter__), not only a JS array: use the iteration protocol
-        var pair = Array.isArray(item) ? item :
+        // __iter__), not only a JS array: use the iteration protocol, unless
+        // it is an exact list or tuple
+        var klass = $B.get_class(item)
+        var pair = klass === _b_.list || klass === _b_.tuple ? item :
             Array.from($B.make_js_iterator_no_trace(item))
         if (pair.length != 2) {
             $B.RAISE(_b_.ValueError, "dictionary " +
