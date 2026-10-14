@@ -238,6 +238,21 @@ for (k, v) in d.items():
 
 assert d == {True: 'y'}
 
+# a str key removed from a dict that also has other keys
+d = {"a": 1, 2: "x"}
+del d["a"]
+assert d.get("a", "absent") == "absent"
+assert "a" not in d
+assert len(d) == 1
+
+d = {"a": 1, 2: "x"}
+assert d.pop("a") == 1
+assert d.get("a", "absent") == "absent"
+
+d = {2: "x", "a": 1}
+assert d.popitem() == ("a", 1)
+assert d.get("a", "absent") == "absent"
+
 # issue 2200
 d = {"Corriger les erreurs d'extraction" : 1}
 d[list(d.keys())[0]]
