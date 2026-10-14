@@ -624,7 +624,8 @@ var factory = function(obj) {
         )
     }
     var obj = args[0]
-    if (Array.isArray(obj) && obj.ob_type) { // most simple case
+    if (Array.isArray(obj) && (obj.ob_type === list || obj.ob_type === tuple)) {
+        // most simple case, not a subclass, which may define __iter__
         obj = obj.slice() // list(t) is not t
         obj.ob_type = klass
         return obj
