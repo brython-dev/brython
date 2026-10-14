@@ -2297,7 +2297,8 @@ $B.ast.Dict.prototype.to_js = function(scopes) {
                 } else {
                     try {
                         var hash = $B.$hash(this.keys[i].value)
-                        item += `, ${hash}`
+                        // a hash past 2 ** 53 is a BigInt, written as one
+                        item += `, ${hash}${typeof hash == 'bigint' ? 'n' : ''}`
                     } catch (err) {
                         // not hashable, will be raised at runtime
                     }
