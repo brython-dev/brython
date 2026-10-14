@@ -469,10 +469,13 @@ function index_by_key(d, key, hash) {
     var indices = d[TABLE][hash],
         index
     if (indices !== undefined) {
-        for (var index of indices) {
+        for (var i = 0; i < indices.length; i++) {
+            index = indices[i]
             var v = d[KEYS][index]
             if (v === undefined) {
-                d[TABLE][hash].splice(i, 1)
+                // an entry dict.popitem left behind: the next one takes its
+                // place
+                d[TABLE][hash].splice(i--, 1)
                 if (d[TABLE][hash].length == 0) {
                     delete d[TABLE][hash]
                     return null
