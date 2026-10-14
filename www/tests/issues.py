@@ -2694,6 +2694,19 @@ assert z == ['s', 'p', 'a', 'm']
 assert max([1, 2, 3], key=None) == 3
 assert min([1, 2, 3], key=None) == 1
 
+# max and min of a subclass of list or tuple whose __iter__ yields other items
+class TensList(list):
+    def __iter__(self):
+        return (x * 10 for x in list.__iter__(self))
+
+class TensPair(tuple):
+    def __iter__(self):
+        return (x * 10 for x in tuple.__iter__(self))
+
+for seq in (TensList([1, 2, 3]), TensPair((1, 2, 3))):
+    assert max(seq) == 30
+    assert min(seq) == 10
+
 # issue 1596
 x = 0
 y = 0
