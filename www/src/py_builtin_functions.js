@@ -1025,7 +1025,7 @@ var help = _b_.help = function(obj) {
                 doc_url = lib_url
             }
             globalThis.open(`${doc_url}/${url}.html#` + obj)
-            return
+            return _b_.None
         }
         // built-in functions or classes
         if (_b_[obj]) {
@@ -1040,7 +1040,7 @@ var help = _b_.help = function(obj) {
             }
             if (url) {
                 globalThis.open(url)
-                return
+                return _b_.None
             }
         }
         // use pydoc
@@ -1053,8 +1053,9 @@ var help = _b_.help = function(obj) {
     try {
         _b_.print($B.$getattr(obj, '__doc__'))
     } catch (err) {
-        return ''
+        // no docstring to print
     }
+    return _b_.None
 }
 
 help.__repr__ = help.__str__ = function() {
