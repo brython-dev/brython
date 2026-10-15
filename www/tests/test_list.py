@@ -536,6 +536,6 @@ assert [*L for L in lists] == [1, 2, 3, 4, 5]
 
 # PR 3124
 nan = float('nan')
-print([nan].index(nan))
+assert [nan].index(nan) == 0
 
 print("passed all tests..")
