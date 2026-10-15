@@ -40,8 +40,6 @@ $B.$class_constructor = function(qualname, dict, metaclass, resolved_bases,
 
     $B.str_dict_set(dict, '__module__', module)
 
-    $B.str_dict_set(dict, '__qualname__', class_name)
-
     // A class that overrides __eq__() and does not define __hash__()
     // will have its __hash__() implicitly set to None
     if($B.str_dict_get(dict, '__eq__', $B.NULL) !== $B.NULL &&
@@ -1455,6 +1453,7 @@ _b_.type.tp_new = function(cls, args, kw) {
         ob_type: metatype,
         tp_bases: bases,
         tp_name: name,
+        ht_qualname: qualname,
         tp_flags: $B.TPFLAGS.DEFAULT | $B.TPFLAGS.HEAPTYPE |
                    $B.TPFLAGS.BASETYPE | $B.TPFLAGS.HAVE_GC
     }
