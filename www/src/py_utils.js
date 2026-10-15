@@ -1358,6 +1358,12 @@ $B.$call = function(callable, ...args) {
             "' object is not callable")
     }
     if (typeof call_method !== 'function') {
+        // a descriptor, such as a classmethod, is bound before it is called
+        var call_getter = $B.search_slot($B.get_class(call_method),
+            'tp_descr_get', $B.NULL)
+        if (call_getter !== $B.NULL) {
+            return $B.$call(call_getter(call_method, callable, klass), ...args)
+        }
         if ($B.get_class(call_method).tp_call !== $B.NULL) {
             // for instance __call__ might be set to dict
             return $B.$call(call_method, ...args)
@@ -1918,21 +1924,20 @@ $B.is_none = function(o) {
 var repr_stack = new Set()
 
 $B.repr = {
+    depth: 0, // nested calls of repr()
     enter: function(obj) {
         var obj_id = _b_.id(obj)
         if (repr_stack.has(obj_id)) {
             return true
         } else {
             repr_stack.add(obj_id)
-            if (repr_stack.size > $B.recursion_limit) {
-                repr_stack.clear()
-                $B.RAISE(_b_.RecursionError, "maximum recursion depth " +
-                    "exceeded while getting the repr of an object")
-            }
         }
     },
     leave: function(obj) {
         repr_stack.delete(_b_.id(obj))
+    },
+    clear: function() {
+        repr_stack.clear()
     }
 }
 
