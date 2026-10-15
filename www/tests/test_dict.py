@@ -252,6 +252,21 @@ d = dict(t)
 
 assert list(d) == ['-1', '6', '7', '0']
 
+# a str key spelled like a method of JavaScript objects
+d = {"hasOwnProperty": 1}
+assert d["hasOwnProperty"] == 1
+assert "hasOwnProperty" in d
+assert d.get("hasOwnProperty") == 1
+assert d.setdefault("hasOwnProperty", 2) == 1
+assert d.pop("hasOwnProperty") == 1
+assert d == {}
+
+class HasOwn:
+    hasOwnProperty = 4
+
+assert HasOwn.hasOwnProperty == 4
+assert "hasOwnProperty" in vars(HasOwn)
+
 # issue 2323
 data = {
     "values": {
