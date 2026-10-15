@@ -449,6 +449,11 @@ $B.tokenizer = function(src, filename, mode, parser) {
                     throw err
                 }
                 fstring_stack.pop()
+                if (fstring_stack.length &&
+                        $B.last(fstring_stack).expr_start !== undefined) {
+                    // back in the replacement field of the enclosing f-string
+                    ft_expr_start = $B.last(fstring_stack).expr_start
+                }
                 if (fstring_stack.length > 0) {
                     // back in the enclosing f-string or t-string
                     ft_type = $B.last(fstring_stack).ft_type
@@ -475,6 +480,7 @@ $B.tokenizer = function(src, filename, mode, parser) {
                     token_mode = 'regular_within_ft'
                     $B.last(fstring_stack).nb_braces_on_entry = braces.length
                     ft_expr_start = pos - line_start
+                    $B.last(fstring_stack).expr_start = ft_expr_start
                     state = null
                     token_modes.push(token_mode)
                 }
