@@ -1399,11 +1399,10 @@ $B.format_width = function(s, fmt) {
             case ">":
                 return fill.repeat(missing) + s
             case "=":
-                if ("+-".indexOf(s.charAt(0)) > -1) {
-                    return s.charAt(0) + fill.repeat(missing) + s.substr(1)
-                } else {
-                    return fill.repeat(missing) + s
-                }
+                // the padding goes after the sign and the prefix of the base
+                var lead = s.match(fmt.alternate ? /^[+\- ]?(0[xXoObB])?/ :
+                    /^[+\- ]?/)[0]
+                return lead + fill.repeat(missing) + s.substr(lead.length)
             case "^":
                 var left = parseInt(missing / 2)
                 return fill.repeat(left) + s + fill.repeat(missing - left)
