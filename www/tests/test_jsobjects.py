@@ -479,6 +479,20 @@ d.update({'a': 1})
 assert d.get('a') == 1
 assert d['a'] == 1
 
+# A plain Javascript object is a mapping of its own keys
+record = window.eval('({"a": 1, "b": [2, 3]})')
+assert len(record) == 2
+assert record.get('a') == 1
+assert record.get('z') is None
+assert record.get('z', 0) == 0
+assert list(record.keys()) == ['a', 'b']
+assert list(record.items()) == [('a', 1), ('b', [2, 3])]
+assert list(record.values()) == [1, [2, 3]]
+# but a member of that name is its own, and another object keeps its methods
+assert window.eval('({"get": 42})').get == 42
+assert window.eval('new Map([["k", "v"]])').get('k') == 'v'
+assert_raises(TypeError, len, window.eval('(function () {})'))
+
 # A Javascript number above 2 ** 53 is the int it is, not the int its shortest
 # decimal spells, and one from 1e21 up is converted rather than refused
 assert window.eval('Math.pow(2, 53)') == 2 ** 53
