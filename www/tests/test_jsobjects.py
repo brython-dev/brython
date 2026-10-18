@@ -85,6 +85,11 @@ try:
 except TypeError:
     pass
 
+# a method whose own toString refuses is read without calling it
+holder = window.eval("(() => { const f = () => 1; "
+    "f.toString = () => { throw Error('toString') }; return {f} })()")
+assert holder.f() == 1
+
 # test parsing json with a null value
 import javascript
 obj = javascript.JSON.parse('{"foo": null}')
