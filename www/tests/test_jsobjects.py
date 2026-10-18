@@ -95,6 +95,11 @@ x = window.eval()
 assert x == javascript.UNDEFINED
 assert type(x) == javascript.UndefinedType
 
+# null and undefined are hashable, and hash alike since they are equal
+assert hash(javascript.NULL) == hash(javascript.UNDEFINED)
+assert javascript.NULL in {javascript.NULL: 1}
+assert len({None, javascript.NULL}) == 2
+
 # issue #1376
 setattr(window, 'foo', [])
 
