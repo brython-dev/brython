@@ -190,6 +190,23 @@ assert ls == ['c1', 'a2', 'b3']
 ls = ['a2', 'b3', 'c1']; ls.sort(key=None)
 assert ls == ['a2', 'b3', 'c1']
 
+# sorting compares with < alone, and keeps equal items in their order
+class OnlyLess:
+    def __init__(self, n, name):
+        self.n = n
+        self.name = name
+
+    def __lt__(self, other):
+        return self.n < other.n
+
+    def __eq__(self, other):
+        raise AssertionError("sorting asked ==")
+
+items = [OnlyLess(2, "a"), OnlyLess(1, "b"), OnlyLess(2, "c")]
+assert [x.name for x in sorted(items)] == ["b", "a", "c"]
+assert [x.name for x in sorted(items, reverse=True)] == ["a", "c", "b"]
+assert [x.name for x in sorted(items, key=lambda x: x)] == ["b", "a", "c"]
+
 # issue 1027
 t = (4, 5, 6)
 assert_raises(AttributeError, getattr, t, 'pop')
