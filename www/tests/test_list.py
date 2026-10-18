@@ -178,6 +178,22 @@ assert not [3] < [1, 2]
 assert not ['a'] < ['a']
 assert ['a'] < ['a', 2]
 
+# items are compared from the first, up to the first that differs
+class Logged:
+    def __init__(self, log):
+        self.log = log
+
+    def __eq__(self, other):
+        self.log.append(self)
+        return True
+
+log = []
+assert (1, Logged(log)) != (2, Logged(log))
+assert log == []
+first, second = Logged(log), Logged(log)
+assert [first, second] == [1, 2]
+assert len(log) == 2 and log[0] is first and log[1] is second
+
 # issue 993
 assert sorted(['b3', 'a2', 'c1']) == ['a2', 'b3', 'c1']
 assert sorted(['a2', 'b3', 'c1'], key=lambda a: a[1]) == ['c1', 'a2', 'b3']
