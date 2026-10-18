@@ -1080,7 +1080,7 @@ $B.IterableJSObj.tp_iternext = function*(self){
         self.it = self[Symbol.iterator]()
     }
     for (var value of self.it) {
-        yield value
+        yield jsobj2pyobj(value)
     }
 }
 
