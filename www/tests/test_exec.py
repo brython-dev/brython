@@ -116,6 +116,19 @@ var = 'hi'
 # bug 1 -- this assert statement should pass but doesn't
 assert 'var' in globals()
 
+# a name bound or deleted while globals() is iterated changes its size
+try:
+    for name in globals():
+        bound_while_iterating = 1
+    raise AssertionError('should have raised RuntimeError')
+except RuntimeError:
+    pass
+assert_raises(RuntimeError, exec, "for name in globals():\n    added = 1", {},
+              msg='dictionary changed size during iteration')
+assert_raises(RuntimeError, exec,
+              "name = gone = 1\nfor name in reversed(globals()):\n    del gone",
+              {}, msg='dictionary changed size during iteration')
+
 g = {}
 
 exec('''

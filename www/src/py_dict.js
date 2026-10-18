@@ -413,12 +413,20 @@ dict.$to_obj = function(d) {
     return res
 }
 
+// The dicts code binds its names in, a module's globals and those exec() is
+// given: an assignment or a del sets or deletes the property itself, past
+// $setitem, so VERSION does not count it, and their iteration counts their
+// keys instead
+$B.namespaces = new WeakSet()
+
 dict.$iter_items = function*(d){
     var version = d[VERSION]
     if (! d[KEYS]) {
+        var size = $B.namespaces.has(d) ? Object.keys(d).length : -1
         for (let key in d) {
             yield {key, value: d[key]}
-            if (d[VERSION] !== version) {
+            if (d[VERSION] !== version ||
+                    (size >= 0 && Object.keys(d).length !== size)) {
                 $B.RAISE(_b_.RuntimeError,
                     'dictionary changed size during iteration')
             }
@@ -826,9 +834,12 @@ function add_iterable(d, js_iterable) {
 dict.$iter_items_reversed = function*(d){
     var version = d[VERSION]
     if (! d[TABLE]) {
-        for (var item of Object.entries(d).reverse()) {
+        var entries = Object.entries(d),
+            size = $B.namespaces.has(d) ? entries.length : -1
+        for (var item of entries.reverse()) {
             yield $B.fast_tuple(item)
-            if (d[VERSION] !== version) {
+            if (d[VERSION] !== version ||
+                    (size >= 0 && Object.keys(d).length !== size)) {
                 $B.RAISE(_b_.RuntimeError, 'dictionary changed size during iteration')
             }
         }

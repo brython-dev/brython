@@ -107,6 +107,7 @@ var $$eval = _b_.eval = function() {
         }
         // _globals is used for both globals and locals
         exec_globals = $B.dict_as_jsobj(_globals)
+        $B.namespaces.add(exec_globals)
         // set module associated with __name__
         $B.imported[__name__] = $B.module.$factory(__name__)
         $B.set_dict($B.imported[__name__], exec_globals)

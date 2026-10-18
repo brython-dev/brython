@@ -16,6 +16,7 @@ $B.namespace = function(module_name) {
         // return an empty dict
         : $B.empty_dict()
 
+    $B.namespaces.add(res)
     return res
 }
 
