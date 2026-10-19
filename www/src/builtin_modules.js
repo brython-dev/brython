@@ -454,6 +454,10 @@
         }
     }
 
+    // null and undefined are equal, so they hash alike, as None does: neither
+    // can hold the hash object.__hash__ stores on its instance
+    NullType.tp_hash = $B.UndefinedType.tp_hash = $B.NoneType.tp_hash
+
     NullType.tp_repr = function(_self) {
         // in Javascript, null == undefined is true...
         return '<Javascript null>'
