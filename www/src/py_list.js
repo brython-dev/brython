@@ -926,7 +926,7 @@ list_funcs.sort = function(self) {
 
     function basic_cmp(a, b) {
         return $B.rich_comp("__lt__", a, b) ? -1:
-               $B.rich_comp('__eq__', a, b) ? 0 : 1
+               $B.rich_comp("__lt__", b, a) ? 1 : 0
     }
 
     function reverse_cmp(a, b) {
