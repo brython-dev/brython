@@ -1075,6 +1075,38 @@ assert a.x == 'I am x'
 assert_raises(AttributeError, setattr, a, 'x', 'coucou',
   msg="property 'x' of 'A' object has no setter")
 
+# a property with a deleter and no setter runs the deleter on del
+class A:
+
+  def __init__(self):
+    self.log = []
+
+  @property
+  def x(self):
+    return 'I am x'
+
+  @x.deleter
+  def x(self):
+    self.log.append('deleted')
+
+a = A()
+del a.x
+assert a.log == ['deleted']
+delattr(a, 'x')
+assert a.log == ['deleted', 'deleted']
+assert_raises(AttributeError, setattr, a, 'x', 'coucou',
+  msg="property 'x' of 'A' object has no setter")
+
+# and without a deleter, del says so
+class A:
+
+  @property
+  def x(self):
+    return 'I am x'
+
+assert_raises(AttributeError, delattr, A(), 'x',
+  msg="property 'x' of 'A' object has no deleter")
+
 # issue 2434
 class A:
     def f(self, __v, **__kw):
