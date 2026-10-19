@@ -1346,6 +1346,45 @@ js_array_funcs.extend = function(self) {
     return _b_.None
 }
 
+// The list methods that read a Javascript array or change it in place, done
+// by list's own, with the item converted as `in` converts it (sq_contains);
+// a copy is a Javascript array.
+js_array_funcs.count = function() {
+    var $ = $B.args("count", 2, {self: null, x: null}, arguments)
+    return _b_.list.tp_funcs.count($.self, pyobj2jsobj($.x))
+}
+
+js_array_funcs.index = function() {
+    var missing = {},
+        $ = $B.args("index", 4, {self: null, x: null, start: null, stop: null},
+                arguments, {start: 0, stop: missing}),
+        x = pyobj2jsobj($.x)
+    return $.stop === missing ?
+        _b_.list.tp_funcs.index($.self, x, $.start) :
+        _b_.list.tp_funcs.index($.self, x, $.start, $.stop)
+}
+
+js_array_funcs.insert = function() {
+    var $ = $B.args("insert", 3, {self: null, i: null, item: null}, arguments)
+    return _b_.list.tp_funcs.insert($.self, $.i, pyobj2jsobj($.item))
+}
+
+js_array_funcs.remove = function() {
+    var $ = $B.args("remove", 2, {self: null, x: null}, arguments)
+    return _b_.list.tp_funcs.remove($.self, pyobj2jsobj($.x))
+}
+
+js_array_funcs.copy = function() {
+    var $ = $B.args("copy", 1, {self: null}, arguments)
+    return $.self.slice()
+}
+
+js_array_funcs.clear = function() {
+    var $ = $B.args("clear", 1, {self: null}, arguments)
+    $.self.length = 0
+    return _b_.None
+}
+
 js_array_funcs.__reduce_ex__ = function(self, protocol) {
     // A JavascriptArray (a JS-side / C-extension list) is otherwise
     // unpicklable ("cannot pickle 'JavascriptArray' object"). Pickle it as a
@@ -1358,7 +1397,8 @@ js_array_funcs.__reduce_ex__ = function(self, protocol) {
     return $B.fast_tuple([_b_.list, $B.fast_tuple([$B.fast_tuple(items)])])
 }
 
-js_array.tp_methods = ["append", "extend", "__reduce_ex__"]
+js_array.tp_methods = ["append", "extend", "count", "index", "insert", "remove",
+    "copy", "clear", "__reduce_ex__"]
 
 $B.set_func_names(js_array, 'javascript')
 

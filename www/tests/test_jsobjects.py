@@ -475,6 +475,25 @@ js_array = window.eval(['a', 'b', 'c', 'd'])
 assert type(js_array[:2]) is javascript.Array
 assert js_array[:2] == ['a', 'b']
 
+# A Javascript array has the list methods that read it or change it in place
+letters = window.eval(['a', 'b', 'c', 'b'])
+assert letters.count('b') == 2
+assert letters.index('b') == 1
+assert letters.index('b', 2) == 3
+assert_raises(ValueError, letters.index, 'z')
+letters.insert(1, 'x')
+assert letters == ['a', 'x', 'b', 'c', 'b']
+letters.remove('b')
+assert letters == ['a', 'x', 'c', 'b']
+assert_raises(ValueError, letters.remove, 'z')
+copied = letters.copy()
+copied.append('y')
+assert type(copied) is javascript.Array
+assert letters == ['a', 'x', 'c', 'b']
+assert copied == ['a', 'x', 'c', 'b', 'y']
+letters.clear()
+assert letters == []
+
 # issue 2732
 d = {}
 javascript.pyobj2jsobj(d)
