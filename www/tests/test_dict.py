@@ -299,6 +299,24 @@ class A:
 
 assert dict(A()) == {0: 'a', 1: 'b', 2: 'c', 3: 'd'}
 
+# a pair that is a subclass of list or tuple whose __iter__ yields other items
+class TensPair(tuple):
+    def __iter__(self):
+        return (x * 10 for x in tuple.__iter__(self))
+
+class TensList(list):
+    def __iter__(self):
+        return (x * 10 for x in list.__iter__(self))
+
+assert dict([TensPair((1, 2))]) == {10: 20}
+assert dict([TensList([1, 2])]) == {10: 20}
+
+# a pair that is a JavaScript array holds Python values
+from browser import window
+d = dict([window.Array.of(1.5, 2.5)])
+assert type(list(d)[0]) is float
+assert d[1.5] == 2.5
+
 # dict from iterable
 class B:
 
