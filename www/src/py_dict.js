@@ -573,6 +573,11 @@ dict.$delitem  = function(self, key, hash) {
         delete self[VALUES][lookup.index]
         delete self[KEYS][lookup.index]
         delete self[HASHES][lookup.index]
+        // a str key is also set as an attribute (dict.$setitem), which
+        // dict.$getitem reads first
+        if (typeof lookup.key == 'string') {
+            delete self[lookup.key]
+        }
         self[VERSION]++
         return _b_.None
     }
@@ -1217,6 +1222,9 @@ dict_funcs.popitem = function(self) {
     while (index >= 0) {
         if (self[KEYS][index] !== undefined) {
             let res = $B.fast_tuple([self[KEYS][index], self[VALUES][index]])
+            if (typeof self[KEYS][index] == 'string') {
+                delete self[self[KEYS][index]]
+            }
             delete self[KEYS][index]
             delete self[VALUES][index]
             self[VERSION]++
