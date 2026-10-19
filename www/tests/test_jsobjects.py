@@ -95,6 +95,14 @@ x = window.eval()
 assert x == javascript.UNDEFINED
 assert x is None
 
+# null and undefined as a subscript are refused as any other object is
+for missing in (javascript.NULL, javascript.UNDEFINED):
+    try:
+        [1, 2][missing]
+        raise Exception("should have raised TypeError")
+    except TypeError:
+        pass
+
 # issue #1376
 setattr(window, 'foo', [])
 

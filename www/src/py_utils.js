@@ -853,7 +853,7 @@ $B.$getitem1 = function(obj, item) {
                 throw index_error(obj)
             }
         }
-    } else if (item.valueOf && typeof item.valueOf() == "string" && is_dict) {
+    } else if (item?.valueOf && typeof item.valueOf() == "string" && is_dict) {
         return _b_.dict.$getitem(obj, item)
     }
 
