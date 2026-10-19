@@ -337,11 +337,11 @@ var dict = _b_.dict
 dict.$match_mapping_pattern = true // for pattern matching (PEP 634)
 
 $B.str_dict_contains = function(d, key) {
-    return d.hasOwnProperty(key)
+    return Object.hasOwn(d, key)
 }
 
 $B.str_dict_get = function(d, key, _default) {
-    if (d.hasOwnProperty(key)) {
+    if (Object.hasOwn(d, key)) {
         return d[key]
     }
     return _default === undefined ? $B.NULL : _default
@@ -356,7 +356,7 @@ $B.str_dict_del = function(d, attr) {
 }
 
 $B.str_dict_pop = function(d, attr) {
-    if (! d.hasOwnProperty(attr)) {
+    if (! Object.hasOwn(d, attr)) {
         return $B.NULL
     }
     delete d[attr]
@@ -528,7 +528,7 @@ dict.$lookup_by_key = function(d, key, hash) {
 dict.$contains = function(self, key, hash) {
     if (! self[KEYS]) {
         if (typeof key == 'string') {
-            return self.hasOwnProperty(key)
+            return Object.hasOwn(self, key)
         }
         var hash_method = $B.$getattr($B.get_class(key), '__hash__')
         if (hash_method === $B.str_dict_get($B.get_dict(_b_.object), '__hash__')) {
@@ -552,7 +552,7 @@ dict.$delitem  = function(self, key, hash) {
     }
     if (! self[KEYS]) {
         if (typeof key == 'string') {
-            if (self.hasOwnProperty(key)) {
+            if (Object.hasOwn(self, key)) {
                 delete self[key]
                 return _b_.None
             } else {
@@ -587,7 +587,7 @@ function dict_eq(self, other) {
             return false
         }
         for (let k in self) {
-            if (! other.hasOwnProperty(k)) {
+            if (! Object.hasOwn(other, k)) {
                 return false
             }
             if (! $B.is_or_equals(self[k], other[k])) {
@@ -731,7 +731,7 @@ dict.$getitem = function(self, key, ignore_missing) {
         $B.RAISE(_b_.KeyError, key)
     }
     if (typeof key == 'string') {
-        if (self.hasOwnProperty(key)) {
+        if (Object.hasOwn(self, key)) {
             return self[key]
         }
     } else {
@@ -1236,7 +1236,7 @@ dict_funcs.setdefault = function(self) {
 
     if (! self[TABLE]) {
         if (typeof key === 'string') {
-            if (! self.hasOwnProperty(key)) {
+            if (! Object.hasOwn(self, key)) {
                 self[key] = _default
             }
             return self[key]
