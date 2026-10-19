@@ -762,6 +762,49 @@ $B.JSObj.tp_iter = function(self) {
     }
 }
 
+// A plain object, of Object.prototype or of none, is a mapping of its own
+// keys: len() counts them, and get(), keys(), items() and values() read them
+// where the object has no member of that name, so that a Map, a Headers or
+// any other object keeps its own methods.
+function is_plain(obj) {
+    if (obj === null || typeof obj != 'object') {
+        return false
+    }
+    var proto = Object.getPrototypeOf(obj)
+    return proto === Object.prototype || proto === null
+}
+
+$B.JSObj.mp_length = function(self) {
+    if (! is_plain(self)) {
+        $B.RAISE(_b_.TypeError, "object of type '" +
+            $B.class_name(self) + "' has no len()")
+    }
+    return Object.keys(self).length
+}
+
+var plain_funcs = {
+    get: function() {
+        var $ = $B.args("get", 3, {self: null, key: null, _default: null},
+                arguments, {_default: _b_.None})
+        return Object.hasOwn($.self, $.key) ? jsobj2pyobj($.self[$.key]) :
+            $._default
+    },
+    keys: function() {
+        var $ = $B.args("keys", 1, {self: null}, arguments)
+        return $B.$list(Object.keys($.self))
+    },
+    items: function() {
+        var $ = $B.args("items", 1, {self: null}, arguments)
+        return $B.$list(Object.keys($.self).map(
+            key => $B.fast_tuple([key, jsobj2pyobj($.self[key])])))
+    },
+    values: function() {
+        var $ = $B.args("values", 1, {self: null}, arguments)
+        return $B.$list(Object.keys($.self).map(
+            key => jsobj2pyobj($.self[key])))
+    }
+}
+
 $B.JSObj.tp_getattro = function(_self, attr) {
     var test = false // attr == "dictB"
     if (test) {
@@ -795,6 +838,11 @@ $B.JSObj.tp_getattro = function(_self, attr) {
             var res = _self.getNamedItem(attr)
             if (res !== undefined) {
                 return jsobj2pyobj(res)
+            }
+        }
+        if (is_plain(_self) && Object.hasOwn(plain_funcs, attr)) {
+            return function() {
+                return plain_funcs[attr](_self, ...arguments)
             }
         }
         var klass = $B.get_class(_self),
