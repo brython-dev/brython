@@ -506,7 +506,7 @@ $B.get_class = function(obj) {
     if (obj === undefined) {
         return $B.UndefinedType // idem
     }
-    if (obj.ob_type) {
+    if (klass?.tp_name !== undefined) {
         return obj.ob_type
     }
     if (obj[$B.OB_TYPE]) {

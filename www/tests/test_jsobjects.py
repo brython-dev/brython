@@ -64,6 +64,11 @@ for k, v in dict(jsobj).items():
     test[k] = v
 assert test == {"foo": "bar"}
 
+# a field "ob_type" of a Javascript object is its data, not its class
+record = window.JSON.parse('{"ob_type": "business", "value": 42}')
+assert record.value == 42
+assert record.ob_type == "business"
+
 # issue 1017
 t = window.a_table
 assert len(t.headers) == 1
