@@ -351,8 +351,7 @@ var eq = $B.list_eq = function(self, other) {
     var cls = $B.$isinstance(self, list) ? list : tuple
     if (isinstance(other, cls)) {
        if (other.length == self.length) {
-            var i = self.length
-            while (i--) {
+            for (var i = 0; i < self.length; i++) {
                 if (! $B.is_or_equals(self[i], other[i])) {
                     return false
                 }
