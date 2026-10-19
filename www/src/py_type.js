@@ -1938,13 +1938,6 @@ function property_copy(old, get, set, del) {
 
 /* property start */
 _b_.property.tp_descr_set = function(self, obj, value) {
-    if (self.prop_set === _b_.None) {
-        var fi = self.prop_get.$function_infos
-        var name = fi ? fi[$B.func_attrs.__name__] : (self.prop_name ?? self.__name__)
-        var msg = `property '${name}' of '${$B.class_name(obj)}' object ` +
-                  'has no setter'
-        $B.RAISE_ATTRIBUTE_ERROR(msg, self, '__set__')
-    }
     if (value === $B.NULL) {
         if (self.prop_del === _b_.None) {
             $B.RAISE(_b_.AttributeError,
@@ -1953,9 +1946,16 @@ _b_.property.tp_descr_set = function(self, obj, value) {
             )
         }
         $B.$call(self.prop_del, obj)
-    } else {
-        $B.$call(self.prop_set, obj, value)
+        return
     }
+    if (self.prop_set === _b_.None) {
+        var fi = self.prop_get.$function_infos
+        var name = fi ? fi[$B.func_attrs.__name__] : (self.prop_name ?? self.__name__)
+        var msg = `property '${name}' of '${$B.class_name(obj)}' object ` +
+                  'has no setter'
+        $B.RAISE_ATTRIBUTE_ERROR(msg, self, '__set__')
+    }
+    $B.$call(self.prop_set, obj, value)
 }
 
 _b_.property.tp_descr_get = function(self, obj, type) {
