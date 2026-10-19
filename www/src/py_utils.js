@@ -633,12 +633,13 @@ $B.unpack_mapping = function(func, obj) {
 
 $B.make_js_iterator_no_trace = function(iterator) {
     if (Array.isArray(iterator)) {
-        if (iterator.ob_type) {
+        if (iterator.ob_type === _b_.list || iterator.ob_type === _b_.tuple) {
             return iterator[Symbol.iterator]()
-        } else {
+        } else if (! iterator.ob_type) {
             return iterator.map($B.jsobj2pyobj)[Symbol.iterator]()
         }
     }
+    // a subclass of list or tuple may define __iter__
     return $B.make_js_iterator(iterator, $B.NULL)
 }
 
