@@ -722,6 +722,15 @@ a.message = "test"
 assert a.__dict__["message"] == "test"
 assert a.length == 0
 
+# an attribute spelled like a method of JavaScript objects
+class HasOwnAttribute:
+    pass
+
+has_own = HasOwnAttribute()
+has_own.hasOwnProperty = 13
+assert has_own.hasOwnProperty == 13
+assert vars(has_own) == {"hasOwnProperty": 13}
+
 # issue 1551
 class MyClass:
 
