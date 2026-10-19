@@ -185,6 +185,12 @@ window.jsFunction1696('asdf'.isupper)
 # issue 1918
 assert isinstance(window.test_jsobj, javascript.JSObject)
 
+# random.getrandbits leaves the globals of the page alone
+import random
+window.i = window.r = "page"
+random.getrandbits(40)
+assert window.i == window.r == "page"
+
 # import Javascript modules
 javascript.import_js('js_test.js')
 assert js_test.x == 1
