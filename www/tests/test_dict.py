@@ -242,6 +242,16 @@ assert d == {True: 'y'}
 d = {"Corriger les erreurs d'extraction" : 1}
 d[list(d.keys())[0]]
 
+# keys looked up after popitem in a dict with keys other than str, all of the
+# same hash
+m = 2 ** 61 - 1
+keys = [7 + k * m for k in range(5)]
+d = {key: key for key in keys}
+assert d.popitem() == (keys[4], keys[4])
+assert 7 + 5 * m not in d
+assert [key in d for key in keys] == [True, True, True, True, False]
+assert d.get(keys[4], "absent") == "absent"
+
 # issue 2256
 t = [('-1', ' Alle'),
      ('6', 'Radio'),
