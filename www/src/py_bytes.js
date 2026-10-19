@@ -203,8 +203,9 @@ function _new(cls, args, kw) {
         var array = $B.module_getattr($B.imported.array, 'array')
         source = array.tp_funcs.tobytes(source).source
     } else {
-        var int_list
-        if (Array.isArray(source)) {
+        var int_list,
+            klass = $B.get_class(source)
+        if (klass === _b_.list || klass === _b_.tuple) {
             int_list = source
         } else if ($B.$getattr(source, '__bytes__', $B.NULL) === $B.NULL &&
                 is_bytes_like(source)) {
@@ -1896,7 +1897,8 @@ bytes.$new = function(cls, source, encoding, errors) {
                 $B.RAISE(_b_.TypeError, "encoding without a string argument")
             }
             // tranform iterable "source" into a list
-            if (Array.isArray(source)) {
+            var klass = $B.get_class(source)
+            if (klass === _b_.list || klass === _b_.tuple) {
                 int_list = source
             } else {
                 try {
