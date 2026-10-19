@@ -25,6 +25,23 @@ except RecursionError as exc:
     assert re.search(r"[Previous line repeated \d+ more times]", trace)
     assert "RecursionError: maximum recursion depth exceeded" in trace
 
+# a stack overflow taken for a RecursionError writes nothing on the console
+from browser import window
+
+said = []
+log = window.console.log
+window.console.log = lambda *args: said.append(args)
+deep = []
+for _ in range(100000):
+    deep = [deep]
+try:
+    repr(deep)
+except RecursionError:
+    pass
+finally:
+    window.console.log = log
+assert said == []
+
 src = """x = 0
 
 def f():

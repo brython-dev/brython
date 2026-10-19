@@ -481,7 +481,6 @@ $B.is_exc = function(exc, exc_list) {
 
 $B.is_recursion_error = function(js_exc) {
     // Test if the JS exception matches Python RecursionError
-    console.log('js exc', js_exc)
     var msg = js_exc + "",
         parts = msg.split(":")
     if (parts.length == 1) {
