@@ -824,7 +824,7 @@ $B.JSObj.tp_getattro = function(_self, attr) {
     if(js_attr !== null &&
             js_attr.toString &&
             typeof js_attr == 'function' &&
-            js_attr.toString().startsWith('class ')){
+            Function.prototype.toString.call(js_attr).startsWith('class ')){
         // Javascript class
         return jsclass2pyclass(js_attr)
     } else if (typeof js_attr === 'function') {
@@ -947,7 +947,7 @@ JSObj_funcs.__getattr__ = function(self, attr) {
     if(js_attr !== null && js_attr !== undefined &&
             js_attr.toString &&
             typeof js_attr == 'function' &&
-            js_attr.toString().startsWith('class ')){
+            Function.prototype.toString.call(js_attr).startsWith('class ')){
         // Javascript class
         return jsclass2pyclass(js_attr)
     } else if (typeof js_attr === 'function') {
