@@ -211,6 +211,7 @@ function create_worker() {
     module.__file__ = "${filename}"
     module.__doc__ = _b_.None
     $B.script_domain = "${$B.script_domain}"
+    $B.recursion_limit = 600
     $B.imported["${script_id}"] = module\n`
 
     header += '$B.file_cache[module.__file__] = `' + src + '`\n'

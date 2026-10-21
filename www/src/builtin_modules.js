@@ -5,7 +5,7 @@
     $B.imported[$B.OB_TYPE] = _b_.dict
 
     $B.lazy_modules = _b_.set.$factory()
-    
+
     var update = $B.update_obj = function(mod, data) {
         for (let attr in data) {
             mod[attr] = data[attr]
