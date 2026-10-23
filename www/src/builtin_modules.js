@@ -1018,13 +1018,19 @@
             } else if ($B.$isinstance(message, _b_.Warning)) {
                 category = $B.get_class(message)
             }
+            
             var filters
             if ($B.imported.warnings) {
                 filters = $B.module_getattr($B.imported.warnings, 'filters')
             } else {
                 filters = $B.module_getattr(modules._warnings, 'filters')
             }
-            if (filters[0][0] == 'error') {
+
+            if (filters.length && filters[0][0] == 'ignore') {
+                return
+            }
+
+            if (filters.length && filters[0][0] == 'error') {
                 var syntax_error = $B.EXC(_b_.SyntaxError, message.args[0])
                 syntax_error.args[1] = [message.filename, message.lineno,
                     message.offset, message.line]

@@ -743,8 +743,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-10-21 22:27:08.004817"
-__BRYTHON__.timestamp=1792614428004
+__BRYTHON__.compiled_date="2026-10-23 17:50:49.462388"
+__BRYTHON__.timestamp=1792770649460
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -15316,7 +15316,8 @@ if($B.$isinstance(message,_b_.str)){message=$B.$call(category,message)}else if($
 var filters
 if($B.imported.warnings){filters=$B.module_getattr($B.imported.warnings,'filters')}else{
 filters=$B.module_getattr(modules._warnings,'filters')}
-if(filters[0][0]=='error'){var syntax_error=$B.EXC(_b_.SyntaxError,message.args[0])
+if(filters.length && filters[0][0]=='ignore'){return}
+if(filters.length && filters[0][0]=='error'){var syntax_error=$B.EXC(_b_.SyntaxError,message.args[0])
 syntax_error.args[1]=[message.filename,message.lineno,message.offset,message.line]
 syntax_error.filename=message.filename
 syntax_error.lineno=message.lineno
