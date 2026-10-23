@@ -123,6 +123,7 @@ JSONDecoder = _json.JSONDecoder
 
 class decoder:
     JSONDecoder = _json.JSONDecoder
+    JSONDecodeError = _json.JSONDecodeError
 
 class JSONDecodeError(ValueError):
     """Subclass of ValueError with the following additional properties:

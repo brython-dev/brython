@@ -2,10 +2,16 @@
 
 var _b_ = $B.builtins
 
-var JSONDecodeError = $B.make_type('JSONDecodeError', [_b_.Exception])
+var JSONDecodeError = $B.make_type('json.decoder.JSONDecodeError', [_b_.Exception])
 
 $B.finalize_type(JSONDecodeError)
-$B.set_func_names(JSONDecodeError, '_json')
+$B.set_func_names(JSONDecodeError, 'json.decoder')
+
+function Stop(index, line, column) {
+    this.index = index
+    this.line = line
+    this.column = column
+}
 
 function get_error() {
     // If module json is imported, use JSONDecodeError
@@ -36,7 +42,7 @@ function to_json(obj, level) {
             check_circular:_b_.True, allow_nan:_b_.True, cls:_b_.None,
             indent:_b_.None, separators:_b_.None, "default":_b_.None,
             sort_keys:_b_.False},
-        $ = $B.args("to_json", 2, {obj: null, level: null}, arguments, 
+        $ = $B.args("to_json", 2, {obj: null, level: null}, arguments,
                 {level: 1}, null, "kw")
 
     var kw = _b_.dict.$to_obj($.kw)
@@ -366,58 +372,6 @@ function num_at(s, i) {
   return [{type: 'num', value: s.substring(i, j)}, j]
 }
 
-var JSONError = $B.make_type('json.decoder.JSONError', [_b_.Exception])
-
-$B.finalize_type(JSONError)
-
-function* tokenize(s){
-  var i = 0,
-      len = s.length,
-      line_num = 1,
-      column_start = 0,
-      value,
-      end
-  while (i < len) {
-    if (s[i] == " " || s[i] == '\r' || s[i] == '\n' || s[i] == '\t') {
-      i++
-      line_num++
-      column_start = i
-    } else if ('[]{}:,'.indexOf(s[i]) > -1) {
-      yield [s[i], i]
-      i++
-    } else if (s.substr(i, 4) == 'null') {
-      yield [_b_.None , i]
-      i += 4
-    } else if (s.substr(i, 4) == 'true') {
-      yield [true, i]
-      i += 4
-    } else if (s.substr(i, 5) == 'false') {
-      yield [false, i]
-      i += 5
-    } else if (s.substr(i, 8) == 'Infinity') {
-      yield [{type: 'num', value: 'Infinity'}, i]
-      i += 8
-    } else if (s.substr(i, 9) == '-Infinity') {
-      yield [{type: 'num', value: '-Infinity'}, i]
-      i += 9
-    } else if (s.substr(i, 3) == 'NaN') {
-      yield [{type: 'num', value: 'NaN'}, i]
-      i += 3
-    } else if (s[i] == '"') {
-      value = string_at(s, i)
-      yield value
-      i = value[1]
-    } else if (s[i].match(/\d/) || s[i] == '-') {
-      value = num_at(s, i)
-      yield value
-      i = value[1]
-    } else {
-      throw $B.$call(JSONError, 'Extra data: ' +
-          `line ${line_num} column ${1 + i - column_start}`)
-    }
-  }
-}
-
 function Node(parent) {
     this.parent = parent
     if (parent instanceof List) {
@@ -546,6 +500,58 @@ List.prototype.transition = function(token) {
     }
 }
 
+function Tokenizer(s) {
+    this.s = s
+}
+
+Tokenizer.prototype.tokenize = function*(s){
+  this.i = 0
+  this.line_num = 1
+  this.column_start = 0
+  let len = s.length
+  let value,
+      end
+  while (this.i < len) {
+      let i = this.i
+      if (s[i] == " " || s[i] == '\r' || s[i] == '\n' || s[i] == '\t') {
+          this.i++
+          this.line_num++
+          this.column_start = i
+      } else if ('[]{}:,'.indexOf(s[i]) > -1) {
+          yield [s[i], i]
+          this.i++
+      } else if (s.substr(i, 4) == 'null') {
+          yield [_b_.None , i]
+          this.i += 4
+      } else if (s.substr(i, 4) == 'true') {
+          yield [true, i]
+          this.i += 4
+      } else if (s.substr(i, 5) == 'false') {
+          yield [false, i]
+          this.i += 5
+      } else if (s.substr(i, 8) == 'Infinity') {
+          yield [{type: 'num', value: 'Infinity'}, i]
+          this.i += 8
+      } else if (s.substr(i, 9) == '-Infinity') {
+          yield [{type: 'num', value: '-Infinity'}, i]
+          this.i += 9
+      } else if (s.substr(i, 3) == 'NaN') {
+          yield [{type: 'num', value: 'NaN'}, i]
+          this.i += 3
+      } else if (s[i] == '"') {
+          value = string_at(s, i)
+          yield value
+          this.i = value[1]
+      } else if (s[i].match(/\d/) || s[i] == '-') {
+          value = num_at(s, i)
+          yield value
+          this.i = value[1]
+      } else {
+          yield new Stop()
+      }
+    }
+}
+
 function parse(s) {
   var res,
       state,
@@ -553,15 +559,25 @@ function parse(s) {
       root = node,
       token
   var last_pos = 0
-  for (var item of tokenize(s)) {
+  let tok = new Tokenizer(s)
+  for (var item of tok.tokenize(s)) {
+      if (item instanceof Stop) {
+          $B.RAISE(JSONDecodeError,
+              `Expecting value: line ${tok.line_num} ` +
+              `column ${tok.i - tok.column_start} (char ${tok.i})`
+          )
+      }
       token = item[0]
       last_pos = item[1]
       try {
           node = node.transition(token)
       } catch (err) {
-          console.log('error, item', item)
-          console.log(err, err.message)
-          console.log('node', node)
+          if (tok.i < _b_.len(s)) {
+              $B.RAISE(JSONDecodeError,
+                  `Extra data: line ${tok.line_num} ` +
+                  `column ${1 + tok.i - tok.column_start} (char ${tok.i})`
+              )
+          }
           if (err.ob_type) {
               throw err
           } else {
@@ -584,7 +600,7 @@ function parse(s) {
   return root.content ? root.content : root.list[0]
 }
 
-var JSONDecoder = $B.make_type("JSONDecoder")
+var JSONDecoder = $B.make_type("json.decoder.JSONDecoder")
 
 JSONDecoder.$factory = function() {
     var $defaults = {cls: _b_.None, object_hook: _b_.None,
@@ -612,7 +628,7 @@ JSONDecoder.decode = function(self, s) {
     return to_py(parse(s), self)
 }
 
-$B.set_func_names(JSONDecoder, '_json')
+$B.set_func_names(JSONDecoder, 'json.decoder')
 $B.finalize_type(JSONDecoder)
 
 $B.addToImported('_json',
@@ -621,7 +637,8 @@ $B.addToImported('_json',
             return _b_.str.$factory(to_json.apply(null, arguments))
         },
         loads,
-        JSONDecoder
+        JSONDecoder,
+        JSONDecodeError
     }
 )
 
