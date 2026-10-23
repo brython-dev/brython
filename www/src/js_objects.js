@@ -1000,7 +1000,9 @@ JSObj_funcs.bind = function(_self, evt, func) {
         _self.$brython_events[evt] = _self.$brython_events[evt] || []
         _self.$brython_events[evt].push([func, js_func])
     }
+    
     _self.addEventListener(evt, js_func)
+
     return _b_.None
 }
 
