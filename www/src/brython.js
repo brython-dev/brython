@@ -743,8 +743,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-10-23 17:50:49.462388"
-__BRYTHON__.timestamp=1792770649460
+__BRYTHON__.compiled_date="2026-10-23 17:54:33.701674"
+__BRYTHON__.timestamp=1792770873701
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -11694,7 +11694,7 @@ if(self[TABLE]){delete self[TABLE][_b_.hash(key)]}}
 dict.$getitem=function(self,key,ignore_missing){
 if(Object.hasOwn(self,$B.JSOBJ)){if(Object.hasOwn(self[$B.JSOBJ],key)){return $B.jsobj2pyobj(self[$B.JSOBJ][key])}
 $B.RAISE(_b_.KeyError,key)}
-if(typeof key=='string'){if(self.hasOwnProperty(key)){return self[key]}}else{
+if(fast_string_key(key)){if(self.hasOwnProperty(key)){return self[key]}}else{
 if(! self[TABLE]){var hash_method=$B.$getattr($B.get_class(key),'__hash__')
 if(hash_method !==$B.str_dict_get($B.get_dict(_b_.object),'__hash__')){convert_all_str(self)
 let index=index_by_key(self,key)
@@ -11736,6 +11736,7 @@ for(var i=d[KEYS].length-1;i >=0;i--){var key=d[KEYS][i]
 if(key !==undefined){yield $B.fast_tuple([key,d[VALUES][i]])
 if(d[VERSION]!==version){$B.RAISE(_b_.RuntimeError,'dictionary changed size during iteration')}}}}
 if(d[VERSION]!==version){$B.RAISE(_b_.RuntimeError,'dictionary changed size during iteration')}}
+function fast_string_key(key){return typeof key=='string' && key !=='__proto__'}
 function convert_all_str(d){
 d[TABLE]=Object.create(null)
 d[KEYS]=[]
@@ -11748,10 +11749,10 @@ if(self[$B.JSOBJ]){
 value=$B.pyobj2jsobj(value)
 self[$B.JSOBJ][key]=value}
 var new_str_key
-if(typeof key=='string'){
+if(fast_string_key(key)){
 new_str_key=! Object.hasOwn(self,key)
 self[key]=value}
-if(! self[TABLE]){if(typeof key=='string'){var int=parseInt(key)
+if(! self[TABLE]){if(fast_string_key(key)){var int=parseInt(key)
 if(isNaN(int)||int >=0){if(new_str_key){self[VERSION]=self[VERSION]?? 0
 self[VERSION]++}
 self[key]=value
@@ -11902,7 +11903,7 @@ index--}}
 dict_funcs.setdefault=function(self){var $=$B.args("setdefault",3,{self:null,key:null,_default:null},arguments,{_default:_b_.None})
 var self=$.self,key=$.key,_default=$._default
 _default=_default===undefined ? _b_.None :_default
-if(! self[TABLE]){if(typeof key==='string'){if(! self.hasOwnProperty(key)){self[key]=_default}
+if(! self[TABLE]){if(fast_string_key(key)){if(! self.hasOwnProperty(key)){self[key]=_default}
 return self[key]}else{
 convert_all_str(self)}}
 var lookup=dict.$lookup_by_key(self,key)
