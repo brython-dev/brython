@@ -744,8 +744,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-10-27 07:57:05.234733"
-__BRYTHON__.timestamp=1793084225234
+__BRYTHON__.compiled_date="2026-10-27 08:16:03.677952"
+__BRYTHON__.timestamp=1793085363677
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -11572,7 +11572,7 @@ $B.str_dict_pop=function(d,attr){if(! d.hasOwnProperty(attr)){return $B.NULL}
 delete d[attr]}
 $B.str_dict_empty=function(d){return Object.keys(d).length==0}
 $B.str_dict_length=function(d){return Object.keys(d).length}
-$B.items_iterator=function(d){
+$B.dict_key_values=function(d){
 var res=[]
 if(d[KEYS]){for(var i=0,len=d[KEYS].length;i < len;i++){res.push([d[KEYS][i],d[VALUES][i]])}}else{
 for(let key in d){res.push([key,d[key]])}}
@@ -15007,7 +15007,7 @@ var browser={$package:true,$is_package:true,__initialized__:true,__package__:'br
 var $=$B.args("bind",3,{elt:null,evt:null,options:null},arguments,{options:_b_.None})
 var options=$.options
 if(typeof options=="boolean"){}else if($B.get_class(options)===_b_.dict){var _options={}
-for(var entry of _b_.dict.$iter_items(options)){_options[entry.key]=entry.value}
+for(let[k,v]of $B.dict_key_values(options)){_options[k]=v}
 options=_options}else{
 options==false}
 return function(callback){if($B.get_class($.elt)===$B.JSObj){
@@ -15077,8 +15077,7 @@ for(var item of items){$B.DOMNode.tp_funcs.attach(self,item)}}catch(err){if($B.g
 console.log("first",first)
 console.log(arguments)}
 throw err}}}}
-for(var item of _b_.dict.$iter_items($.kw)){
-var arg=item.key,value=item.value
+for(let[arg,value]of $B.dict_key_values($.kw)){
 if(arg.toLowerCase().substr(0,2)=="on"){
 $B.DOMNode.tp_setattro(self,arg,value)}else if(arg.toLowerCase()=="style"){$B.DOMNode.tp_setattro(self,"style",value)}else{
 if(value !==false){
@@ -15405,8 +15404,7 @@ return null}
 return suggestion}}
 var responseType={"text":"text","binary":"arraybuffer","dataURL":"arraybuffer"}
 function handle_kwargs(kw,method){var result={cache:false,format:'text',mode:'text',headers:{}}
-for(let item of _b_.dict.$iter_items(kw)){let key=item.key,value=item.value
-if(key=="data"){var params=value
+for(let[key,value]of $B.dict_key_values(kw)){if(key=="data"){var params=value
 if(typeof params=="string" ||params instanceof FormData){result.body=params}else if($B.is_bytes(params)){result.body=new ArrayBuffer(params.source.length)
 var array=new Int8Array(data)
 for(let i=0,len=params.source.length;i < len;i++){array[i]=params.source[i]}}else{
@@ -15414,10 +15412,10 @@ if($B.get_class(params)!==_b_.dict){$B.RAISE(_b_.TypeError,"wrong type for data,
 "expected dict, bytes or str, got "+
 $B.class_name(params))}
 var items=[]
-for(let subitem of _b_.dict.$iter_items(params)){items.push(encodeURIComponent(subitem.key)+"="+
-encodeURIComponent($B.pyobj2jsobj(subitem.value)))}
+for(let[k,v]of $B.dict_key_values(params)){items.push(encodeURIComponent(k)+"="+
+encodeURIComponent($B.pyobj2jsobj(v)))}
 result.body=items.join("&")}}else if(key=="headers"){if(! $B.is_dict(value)){$B.RAISE(_b_.ValueError,"headers must be a dict, not "+$B.class_name(value))}
-for(let subitem of _b_.dict.$iter_items(value)){result.headers[subitem.key.toLowerCase()]=subitem.value}}else if(["cache","format","mode"].includes(key)){result[key]=value}}
+for(let[k,v]of $B.dict_key_values(value)){result.headers[k.toLowerCase()]=v}}else if(["cache","format","mode"].includes(key)){result[key]=value}}
 if(method=="post"){
 if(! result.headers.hasOwnProperty("content-type")){result.headers["Content-Type"]="application/x-www-form-urlencoded"}}
 return result}

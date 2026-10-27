@@ -32,8 +32,8 @@
                 // ignore
             } else if ($B.get_class(options) === _b_.dict) {
                 var _options = {}
-                for (var entry of _b_.dict.$iter_items(options)) {
-                    _options[entry.key] = entry.value
+                for (let [k, v] of $B.dict_key_values(options)) {
+                    _options[k] = v
                 }
                 options = _options
             } else {
@@ -246,10 +246,8 @@
                     }
 
                     // attributes
-                    for (var item of _b_.dict.$iter_items($.kw)) {
+                    for (let [arg, value] of $B.dict_key_values($.kw)) {
                         // keyword arguments
-                        var arg = item.key,
-                            value = item.value
                         if (arg.toLowerCase().substr(0,2) == "on") {
                             // Event binding passed as argument "onclick", "onfocus"...
                             $B.DOMNode.tp_setattro(self, arg, value)
@@ -1248,9 +1246,7 @@
                 mode: 'text',
                 headers: {}
             }
-        for (let item of _b_.dict.$iter_items(kw)) {
-            let key = item.key,
-                value = item.value
+        for (let [key, value] of $B.dict_key_values(kw)) {
             if (key == "data") {
                 var params = value
                 if (typeof params == "string"  || params instanceof FormData) {
@@ -1268,9 +1264,9 @@
                             $B.class_name(params))
                     }
                     var items = []
-                    for (let subitem of _b_.dict.$iter_items(params)) {
-                        items.push(encodeURIComponent(subitem.key) + "=" +
-                                   encodeURIComponent($B.pyobj2jsobj(subitem.value)))
+                    for (let [k, v] of $B.dict_key_values(params)) {
+                        items.push(encodeURIComponent(k) + "=" +
+                                   encodeURIComponent($B.pyobj2jsobj(v)))
                     }
                     result.body = items.join("&")
                 }
@@ -1279,8 +1275,8 @@
                     $B.RAISE(_b_.ValueError,
                         "headers must be a dict, not " + $B.class_name(value))
                 }
-                for (let subitem of _b_.dict.$iter_items(value)) {
-                    result.headers[subitem.key.toLowerCase()] = subitem.value
+                for (let [k, v] of $B.dict_key_values(value)) {
+                    result.headers[k.toLowerCase()] = v
                 }
             } else if (["cache", "format", "mode"].includes(key)) {
                 result[key] = value

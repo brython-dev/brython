@@ -370,14 +370,19 @@ $B.str_dict_length = function(d) {
     return Object.keys(d).length
 }
 
-$B.items_iterator = function(d) {
+$B.dict_key_values = function(d) {
     // returns a JS array of [key, value] pairs
     var res = []
-    if (self[KEYS]) {
-        for (var i = 0, len = self[KEYS].length; i < len; i++) {
-            res.push([self[KEYS][i], self[VALUES[i]]])
+    if (d[KEYS]) {
+        for (var i = 0, len = d[KEYS].length; i < len; i++) {
+            res.push([d[KEYS][i], d[VALUES][i]])
+        }
+    } else {
+        for (let key in d) {
+            res.push([key, d[key]])
         }
     }
+    return res
 }
 
 $B.hasOnlyStringKeys = function(d) {
