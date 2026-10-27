@@ -639,6 +639,7 @@ $B.TYPES = {
     NONE: 20
 }
 
+$B.Py_READONLY = 1
 
 // minimum and maximum safe integers
 $B.max_int = Math.pow(2, 53) - 1

@@ -223,6 +223,7 @@ DEF_TYPE_PARAM,
 DEF_COMP_CELL,
 DEF_BOUND,SCOPE_OFFSET,SCOPE_OFF,SCOPE_MASK,LOCAL,GLOBAL_EXPLICIT,GLOBAL_IMPLICIT,FREE,CELL,TYPE_CLASS,TYPE_FUNCTION,TYPE_MODULE}
 $B.TYPES={SHORT:0,INT:1,LONG:2,FLOAT:3,DOUBLE:4,STRING:5,OBJECT:6,CHAR:7,BYTE:8,UBYTE:9,USHORT:10,UINT:11,ULONG:12,STRING_INPLACE:13,BOOL:14,OBJECT_EX:16,LONGLONG:17,ULONGLONG:18,PYSSIZET:19,NONE:20}
+$B.Py_READONLY=1
 $B.max_int=Math.pow(2,53)-1
 $B.min_int=-$B.max_int
 $B.int_max_str_digits=4300
@@ -743,8 +744,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-10-23 17:54:33.701674"
-__BRYTHON__.timestamp=1792770873701
+__BRYTHON__.compiled_date="2026-10-27 07:57:05.234733"
+__BRYTHON__.timestamp=1793084225234
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -11573,7 +11574,9 @@ $B.str_dict_empty=function(d){return Object.keys(d).length==0}
 $B.str_dict_length=function(d){return Object.keys(d).length}
 $B.items_iterator=function(d){
 var res=[]
-if(self[KEYS]){for(var i=0,len=self[KEYS].length;i < len;i++){res.push([self[KEYS][i],self[VALUES[i]]])}}}
+if(d[KEYS]){for(var i=0,len=d[KEYS].length;i < len;i++){res.push([d[KEYS][i],d[VALUES][i]])}}else{
+for(let key in d){res.push([key,d[key]])}}
+return res}
 $B.hasOnlyStringKeys=function(d){return ! d[KEYS]}
 $B.dict2kwarg=function(d){
 var kw=dict.$to_obj(d)
