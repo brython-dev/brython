@@ -1078,7 +1078,7 @@ function encoder_listencode_dict(s, writer, dct, indent_level, indent_cache) {
                 indent_level, indent_cache, separator)
         }
     } else {
-        for ([key, value] of $B.items_iterator(dct)) {
+        for ([key, value] of $B.dict_key_values(dct)) {
             encoder_encode_key_value(s, writer, first, dct, key, value,
                 indent_level, indent_cache, separator)
         }
@@ -1100,7 +1100,7 @@ function encoder_listencode_list(s, writer, seq, indent_level, indent_cache) {
     let ident
     let s_fast
 
-    s_fast = PySequence_Fast(seq, "_iterencode_list needs a sequence");
+    s_fast = PySequence_Fast(seq, "_iterencode_list needs a sequence")
     if (s_fast.length == 0) {
         return writer.write("[]")
     }
@@ -1124,13 +1124,14 @@ function encoder_listencode_list(s, writer, seq, indent_level, indent_cache) {
         separator = get_item_separator(s, indent_level, indent_cache)
         write_newline_indent(writer, indent_level, indent_cache)
     }
-    for (i = 0, len = s_fast.length; i < len; i++) {
+
+    for (let i = 0, len = s_fast.length; i < len; i++) {
         let obj = s_fast[i]
         if (i) {
             writer.write(separator)
         }
         if (encoder_listencode_obj(s, writer, obj, indent_level, indent_cache)) {
-            _PyErr_FormatNote("when serializing %T item %zd", seq, i);
+            _PyErr_FormatNote("when serializing %T item %zd", seq, i)
         }
     }
     if (ident !== undefined) {
@@ -1642,7 +1643,7 @@ function scan_once_unicode(s, memo, pystr, idx) {
             /* false */
             if ((idx + 4 < length) &&
                     slice(pystr, idx + 1, idx + 5) == 'alse')  {
-                return $B.fast_tuple([flase, idx + 5])
+                return $B.fast_tuple([false, idx + 5])
             }
             break
         case 'N':
