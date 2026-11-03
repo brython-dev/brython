@@ -80,12 +80,13 @@ _b_.anext = function() {
     var $ = $B.args('anext', 2, {async_iterator: null, _default: null},
                 arguments, {_default: $B.NULL}, null, null)
     var awaitable = $B.$call($B.$getattr($.async_iterator, '__anext__'))
+    if ($._default === $B.NULL) {
+        return awaitable
+    }
     return $B.promise(awaitable).catch(
         function(err) {
             if ($B.is_exc(err, [_b_.StopAsyncIteration])) {
-                if ($._default !== $B.NULL) {
-                    return $._default
-                }
+                return $._default
             }
             throw err
         }
@@ -176,7 +177,7 @@ _b_.bin = function(obj) {
 
 _b_.breakpoint = function() {
     // PEP 553
-    $B.$import('sys', [])
+    $B.import('sys', [])
     var missing = {},
         hook = $B.$getattr($B.imported.sys, 'breakpointhook', missing)
     if (hook === missing) {
@@ -188,7 +189,13 @@ _b_.breakpoint = function() {
 _b_.callable = function(obj) {
     check_nb_args_no_kw('callable', 1, arguments)
 
-    return _b_.hasattr(obj, '__call__')
+    if (typeof obj == 'function') {
+        return true
+    }
+    // the slot $B.$call uses: __call__ is looked up on the type, not on
+    // the object, so neither __getattr__ nor an instance attribute counts
+    var call = $B.get_class(obj).tp_call
+    return call !== undefined && call !== $B.NULL
 }
 
 _b_.chr = function(i) {
@@ -215,9 +222,10 @@ _b_.chr = function(i) {
 _b_.compile = function() {
     var $ = $B.args('compile', 7,
         {source:null, filename:null, mode:null, flags:null, dont_inherit:null,
-         optimize:null, _feature_version:null},
+         optimize:null, _feature_version:null, module: null},
          arguments,
-         {flags: 0, dont_inherit: false, optimize: -1, _feature_version: 0},
+         {flags: 0, dont_inherit: false, optimize: -1, _feature_version: 0,
+         module: _b_.None},
          null, null)
 
     var module_name = '$exec_' + $B.UUID()
@@ -756,12 +764,13 @@ $B.time_builtin_getattr = 0
 
 $B.$getattr = function(obj, attr, _default) {
     // Used internally to avoid having to parse the arguments
-    var test = false // attr == '__qualname__' && $B.class_name(obj) == 'TypeVar'
+    var test = false // attr == 'B' // && $B.class_name(obj) == 'TypeVar'
     if (test) {
         console.log('$getattr', obj, attr)
     }
     var res
     if (obj === undefined || obj === null) {
+        console.log(Error().stack)
         $B.RAISE_ATTRIBUTE_ERROR("Javascript object '" + obj +
             "' has no attribute", obj, attr)
     }
@@ -839,6 +848,8 @@ $B.$getattr = function(obj, attr, _default) {
             if (test) {
                 console.log('in klass dict', in_klass_dict)
                 console.log('in own dict', in_own_dict)
+                console.log('klass.$getattribute === _b_.object.tp_getattro',
+                    klass.$getattribute === _b_.object.tp_getattro)
             }
             if (in_klass_dict &&
                     klass.$getattribute === _b_.object.tp_getattro) {
@@ -849,8 +860,14 @@ $B.$getattr = function(obj, attr, _default) {
                         }
                         break
                     case _b_.staticmethod:
+                        if (test) {
+                            console.log('in_klass_dict is staticmethod')
+                            console.log()
+                            break
+                        }
                         if (in_own_dict === $B.NULL) {
-                            return in_klass_dict
+                            return _b_.staticmethod.tp_descr_get(
+                                in_klass_dict, obj, klass)
                         }
                         break
                 }
@@ -866,6 +883,9 @@ $B.$getattr = function(obj, attr, _default) {
             return $B.get_class(obj)
         }
         var in_dict = $B.get_dict(obj)[attr]
+        if (test) {
+            console.log('in dict of class', in_dict)
+        }
         if (in_dict && $B.get_class(obj) === _b_.type) {
             var res = $B.NULL
             // A data descriptor on the metatype wins over the type's own
@@ -987,7 +1007,7 @@ $B.$hash = function(obj) {
     return res
 }
 
-var help = _b_.help = function(obj) {
+var help = function(obj) {
     if (obj === undefined) {obj = 'help'}
 
     if (typeof obj == 'string') {
@@ -1013,7 +1033,7 @@ var help = _b_.help = function(obj) {
                 doc_url = lib_url
             }
             globalThis.open(`${doc_url}/${url}.html#` + obj)
-            return
+            return _b_.None
         }
         // built-in functions or classes
         if (_b_[obj]) {
@@ -1028,11 +1048,11 @@ var help = _b_.help = function(obj) {
             }
             if (url) {
                 globalThis.open(url)
-                return
+                return _b_.None
             }
         }
         // use pydoc
-        $B.$import('pydoc')
+        $B.import('pydoc')
         return $B.$call($B.$getattr($B.imported.pydoc, 'help'), obj)
     }
     if ($B.get_class(obj) === $B.module) {
@@ -1041,14 +1061,25 @@ var help = _b_.help = function(obj) {
     try {
         _b_.print($B.$getattr(obj, '__doc__'))
     } catch (err) {
-        return ''
+        // no docstring to print
     }
+    return _b_.None
 }
 
-help.__repr__ = help.__str__ = function() {
+// the builtin help is an instance of _sitebuiltins._Helper: calling it runs
+// help(), its repr says how to use it
+var Helper = $B.make_builtin_class('_sitebuiltins._Helper')
+
+Helper.tp_call = function(self, ...args) {
+    return help(...args)
+}
+
+Helper.tp_repr = function() {
     return "Type help() for interactive help, or help(object) " +
         "for help about object."
 }
+
+_b_.help = {ob_type: Helper}
 
 _b_.hex = function(obj) {
     check_nb_args_no_kw('hex', 1, arguments)
@@ -1078,7 +1109,6 @@ _b_.id = function(obj) {
 
 // The default __import__ function is a builtin
 _b_.__import__ = function() {
-    // TODO : Install $B.$__import__ in builtins module to avoid nested call
     var $ = $B.args('__import__', 5,
         {name: null, globals: null, locals: null, fromlist: null, level: null},
         arguments,
@@ -1088,6 +1118,19 @@ _b_.__import__ = function() {
         $B.RAISE(_b_.ValueError, "Empty module name")
     }
     return $B.$__import__($.name, $.globals, $.locals, $.fromlist)
+}
+
+// The default __import__ function is a builtin
+_b_.__lazy_import__ = function() {
+    var $ = $B.args('__lazy_import__', 5,
+        {name: null, globals: null, locals: null, fromlist: null, level: null},
+        arguments,
+        {globals:None, locals:None, fromlist:_b_.tuple.$factory(), level:0},
+        null, null)
+    if ($.name === '' && $.level === 0) {
+        $B.RAISE(_b_.ValueError, "Empty module name")
+    }
+    return $B.$__lazy_import__($.name, $.globals, $.locals, $.fromlist)
 }
 
 // not a direct alias of prompt: input has no default value
@@ -1418,7 +1461,8 @@ _b_.locals = function() {
     // is not a container or iterable"). Skip frame infrastructure keys.
     var d = $B.empty_dict()
     for (var key in locals_obj) {
-        if (key.startsWith('$') || key == '__class__') {
+        if (key.startsWith('$') || key == '__class__' || key == 'ob_type' ||
+                key.startsWith('lambda_' + $B.lambda_magic + '_')) {
             continue
         }
         _b_.dict.$setitem(d, key, locals_obj[key])
@@ -1455,7 +1499,7 @@ _b_.map.tp_iternext = function*(self){
     for (var iter of self.args) {
         var arg = iter.next()
         if (arg.done) {
-            $B.RAISE(_b_.StopIteration, '')
+            $B.RAISE(_b_.StopIteration)
         }
         args.push(arg.value)
     }
@@ -1504,9 +1548,9 @@ function $extreme(args, op) { // used by min() and max()
     var last = args[args.length - 1]
     var nb_args = args.length
     var kw
-    if (last.$kw) {
+    if (last[$B.KW]) {
         nb_args--
-        kw = $B.parse_kwargs(last.$kw)
+        kw = $B.parse_kwargs(last[$B.KW])
     }
 
     var has_default = false,
@@ -1787,7 +1831,23 @@ var repr = _b_.repr = function(obj) {
     check_nb_args_no_kw('repr', 1, arguments)
     var klass = $B.get_class(obj)
     var tp_repr = $B.search_slot(klass, 'tp_repr')
-    return tp_repr(obj)
+    $B.repr.depth++
+    try {
+        return tp_repr(obj)
+    } catch (err) {
+        // an error out of the outermost repr() leaves no object marked as
+        // being represented, and a stack overflow is a RecursionError
+        if ($B.repr.depth == 1) {
+            $B.repr.clear()
+            if ($B.is_recursion_error(err)) {
+                $B.RAISE(_b_.RecursionError, "maximum recursion depth " +
+                    "exceeded while getting the repr of an object")
+            }
+        }
+        throw err
+    } finally {
+        $B.repr.depth--
+    }
 }
 
 var reversed = _b_.reversed
@@ -2264,7 +2324,9 @@ _b_.super.tp_init = function(self, _type, object_or_type) {
             return
         }
     }
-    if (Array.isArray(object_or_type)) {
+    if (Array.isArray(object_or_type) && object_or_type.ob_type === undefined) {
+        // a plain Javascript array holds the arguments, an instance of a
+        // list subclass is an array too and must be kept as is
         object_or_type = object_or_type[0]
     }
     self.type = type
