@@ -3521,6 +3521,11 @@ class List_noargs(list):
 
 assert_raises(TypeError, lambda: List_noargs().copy(1),
     msg='list.copy() takes no arguments (1 given)')
+# a quote in the file name does not break the code generated for it
+namespace_quote = {}
+exec(compile("result = list(x for x in 'ab')", "O'Brien.py", "exec"),
+    namespace_quote)
+assert namespace_quote['result'] == ['a', 'b']
 
 # ==========================================
 # Finally, report that all tests have passed

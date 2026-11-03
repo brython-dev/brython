@@ -95,12 +95,9 @@ $B.builtin_object_getattro = function(self, klass, attr) {
 }
 
 $B.object_getattribute = function(obj, klass, attr) {
-    var test = false // attr === 'addEventListener'
+    var test = false // attr === 'B'
     if (test) {
         console.log('klass', klass, 'attr', attr)
-    }
-    if (! klass.$getattribute) {
-        console.log('no $getattribute', klass)
     }
     var getattribute = klass.$getattribute ?? $B.search_slot(klass, 'tp_getattro', $B.NULL)
     if (test) {
@@ -187,8 +184,8 @@ function getNewArguments(self, klass) {
 // constructor of the built-in class 'object'
 object.$factory = function() {
     if(arguments.length > 0 ||
-            (arguments.length == 1 && arguments[0].$kw &&
-                Object.keys(arguments[0].$kw).length > 0)
+            (arguments.length == 1 && arguments[0][$B.KW] &&
+                Object.keys(arguments[0][$B.KW]).length > 0)
             ){
         $B.RAISE(_b_.TypeError, 'object() takes no arguments')
     }
@@ -329,7 +326,29 @@ _b_.object.tp_repr = function(self) {
     }
 }
 
+// A Javascript symbol cannot hold a property: its hash is kept here, in a
+// WeakMap that does not keep the symbol alive when the engine accepts it as a
+// weak key, else in a Map (a symbol of Symbol.for is never a weak key, and
+// never dies)
+var weak_symbol_hashes = new WeakMap(),
+    symbol_hashes = new Map(),
+    symbols_are_weak_keys = true
+
+try {
+    new WeakMap().set(Symbol(), 0)
+} catch (err) {
+    symbols_are_weak_keys = false
+}
+
 _b_.object.tp_hash = function(self) {
+    if (typeof self == 'symbol') {
+        var hashes = symbols_are_weak_keys && Symbol.keyFor(self) === undefined ?
+                     weak_symbol_hashes : symbol_hashes
+        if (! hashes.has(self)) {
+            hashes.set(self, $B.$py_next_hash--)
+        }
+        return hashes.get(self)
+    }
     var hash = self.__hashvalue__
     if (hash !== undefined) {
         return hash
@@ -338,7 +357,7 @@ _b_.object.tp_hash = function(self) {
 }
 
 _b_.object.tp_str = function(self) {
-    if (self === undefined) {
+    if (arguments.length === 0) {
         $B.RAISE(_b_.TypeError, "descriptor '__str__' of 'object' " +
             "object needs an argument")
     }
@@ -355,7 +374,7 @@ _b_.object.tp_str = function(self) {
 $B.time_object_tp_getattro = 0
 
 _b_.object.tp_getattro = function(self, attr) {
-    var test = false // attr == '__qualname__' // && $B.class_name(self) == 'TypeVar'
+    var test = false // attr == 'B' // && $B.class_name(self) == 'TypeVar'
     var klass = $B.get_class(self)
     if (test) {
         console.log('getattr', attr, 'of self', self, klass)
@@ -381,7 +400,7 @@ _b_.object.tp_getattro = function(self, attr) {
     var getter = $B.NULL
     if (in_mro !== $B.NULL) {
         var in_mro_class = $B.get_class(in_mro)
-        var getter = in_mro_class.tp_descr_get
+        var getter = in_mro_class.tp_descr_get ?? $B.NULL
         if (test) {
             console.log('getter', getter)
         }
@@ -421,6 +440,10 @@ _b_.object.tp_getattro = function(self, attr) {
             return getter(in_mro, self, klass)
         }
         $B.nb_obj_ga++
+        if (test) {
+            console.log('call getter', getter)
+            console.log('args', in_mro, self, klass)
+        }
         return getter(in_mro, self, klass)
     } else if (in_mro !== $B.NULL) {
         if (test) {
@@ -491,17 +514,23 @@ _b_.object.tp_new = function(cls, args, kw) {
     var res = {
         ob_type: cls
     }
-    // the instance has no __dict__ only if every Python class in the MRO
+    if ($B.instance_has_dict(cls)) {
+        $B.init_dict(res)
+    }
+    return res
+}
+
+$B.instance_has_dict = function(cls) {
+    // An instance has no __dict__ only if every Python class in the MRO
     // defines __slots__ without '__dict__'
     for (var klass of cls.tp_mro) {
         if (klass.tp_flags & $B.TPFLAGS.HEAPTYPE &&
                 ($B.get_from_dict(klass, '__slots__', $B.NULL) === $B.NULL ||
                  klass.$slots_has_dict)) {
-            $B.init_dict(res)
-            break
+            return true
         }
     }
-    return res
+    return false
 }
 
 var object_funcs = _b_.object.tp_funcs = {}
@@ -621,7 +650,7 @@ object_funcs.__reduce__ = function(cls) {
         $B.RAISE(_b_.TypeError, `cannot pickle '${$B.class_name(cls)}' object`)
     }
     if ($B.imported.copyreg === undefined) {
-        $B.$import('copyreg')
+        $B.import('copyreg')
     }
     var res = [$B.module_getattr($B.imported.copyreg, '_reconstructor')]
     var D = $B.get_class(cls),
@@ -661,7 +690,7 @@ object_funcs.__reduce_ex__ = function(self, protocol) {
         return $B.$call(reduce, self)
     }
     if ($B.imported.copyreg === undefined) {
-        $B.$import('copyreg')
+        $B.import('copyreg')
     }
     if (protocol < 2) {
         var _reduce_ex = $B.module_getattr($B.imported.copyreg, '_reduce_ex')
