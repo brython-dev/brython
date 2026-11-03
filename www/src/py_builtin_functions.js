@@ -764,7 +764,7 @@ $B.time_builtin_getattr = 0
 
 $B.$getattr = function(obj, attr, _default) {
     // Used internally to avoid having to parse the arguments
-    var test = false // attr == '__qualname__' && $B.class_name(obj) == 'TypeVar'
+    var test = false // attr == 'B' // && $B.class_name(obj) == 'TypeVar'
     if (test) {
         console.log('$getattr', obj, attr)
     }
@@ -848,6 +848,8 @@ $B.$getattr = function(obj, attr, _default) {
             if (test) {
                 console.log('in klass dict', in_klass_dict)
                 console.log('in own dict', in_own_dict)
+                console.log('klass.$getattribute === _b_.object.tp_getattro',
+                    klass.$getattribute === _b_.object.tp_getattro)
             }
             if (in_klass_dict &&
                     klass.$getattribute === _b_.object.tp_getattro) {
@@ -858,8 +860,14 @@ $B.$getattr = function(obj, attr, _default) {
                         }
                         break
                     case _b_.staticmethod:
+                        if (test) {
+                            console.log('in_klass_dict is staticmethod')
+                            console.log()
+                            break
+                        }
                         if (in_own_dict === $B.NULL) {
-                            return in_klass_dict
+                            return _b_.staticmethod.tp_descr_get(
+                                in_klass_dict, obj, klass)
                         }
                         break
                 }

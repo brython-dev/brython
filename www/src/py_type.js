@@ -685,7 +685,7 @@ $B.search_own_slot = function(cls, slot, _default) {
 }
 
 $B.search_slot = function(cls, slot, _default) {
-    var test = false // cls.tp_name == 'MagicMock' && slot == 'tp_call'
+    var test = false // cls.tp_name == 'builtin_function_or_method' //&& slot == 'tp_call'
     if (test) {
         console.log('search slot', cls, slot)
     }
@@ -694,6 +694,9 @@ $B.search_slot = function(cls, slot, _default) {
         console.log('no mro', cls)
     }
     for (var klass of cls.tp_mro) {
+        if (test) {
+            console.log('in klass', klass, 'slot', slot, klass[slot])
+        }
         if (klass.hasOwnProperty(slot) && klass[slot] !== $B.NULL) {
             return klass[slot]
         }
@@ -701,9 +704,11 @@ $B.search_slot = function(cls, slot, _default) {
             try {
                 var v = $B.get_from_dict(klass, dunder, $B.NULL)
             } catch(err) {
-                console.log('error for klass', klass, 'slot', slot,
+                if (test) {
+                    console.log('error for klass', klass, 'slot', slot,
                     'dunder', dunder)
-                throw err
+                }
+                v = $B.NULL
             }
             if (v !== $B.NULL) {
                 if (test) {

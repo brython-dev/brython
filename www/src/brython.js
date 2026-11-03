@@ -744,8 +744,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-10-29 07:27:20.426543"
-__BRYTHON__.timestamp=1793255240426
+__BRYTHON__.compiled_date="2026-11-03 10:55:25.407420"
+__BRYTHON__.timestamp=1793699725407
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -2306,7 +2306,6 @@ console.log('self[attr]',self[attr])}
 return $B.NULL}
 $B.object_getattribute=function(obj,klass,attr){var test=false 
 if(test){console.log('klass',klass,'attr',attr)}
-if(! klass.$getattribute){console.log('no $getattribute',klass)}
 var getattribute=klass.$getattribute ?? $B.search_slot(klass,'tp_getattro',$B.NULL)
 if(test){console.log('attr',attr,'of obj',obj,'klass',klass,'\n  getattribute',getattribute)}
 var res
@@ -2431,7 +2430,7 @@ if(in_mro !==$B.NULL &&
 $B.get_class(in_mro)===$B.function &&((! $B.get_dict(self))||$B.get_from_dict(self,attr,$B.NULL)===$B.NULL)){return $B.method.tp_new($B.method,[in_mro,self])}
 var getter=$B.NULL
 if(in_mro !==$B.NULL){var in_mro_class=$B.get_class(in_mro)
-var getter=in_mro_class.tp_descr_get
+var getter=in_mro_class.tp_descr_get ?? $B.NULL
 if(test){console.log('getter',getter)}
 if(getter !==$B.NULL){var is_data_descr=in_mro_class.tp_descr_set !==$B.NULL
 if(is_data_descr){if(test){console.log('data descriptor')
@@ -2448,6 +2447,8 @@ if(test){console.log('call getter of non-data descr',in_mro,self,klass)}
 klass.$fast_attr=klass.$fast_attr ??{}
 klass.$fast_attr[attr]=function(self){return getter(in_mro,self,klass)}
 $B.nb_obj_ga++
+if(test){console.log('call getter',getter)
+console.log('args',in_mro,self,klass)}
 return getter(in_mro,self,klass)}else if(in_mro !==$B.NULL){if(test){console.log('return in_mro',in_mro)}
 return in_mro}
 if(test){console.log('attr',attr,'not found on self',self)
@@ -2831,10 +2832,11 @@ $B.search_slot=function(cls,slot,_default){var test=false
 if(test){console.log('search slot',cls,slot)}
 var dunder=$B.slot2dunder[slot]
 if(cls.tp_mro===undefined){console.log('no mro',cls)}
-for(var klass of cls.tp_mro){if(klass.hasOwnProperty(slot)&& klass[slot]!==$B.NULL){return klass[slot]}
+for(var klass of cls.tp_mro){if(test){console.log('in klass',klass,'slot',slot,klass[slot])}
+if(klass.hasOwnProperty(slot)&& klass[slot]!==$B.NULL){return klass[slot]}
 if(dunder){try{
-var v=$B.get_from_dict(klass,dunder,$B.NULL)}catch(err){console.log('error for klass',klass,'slot',slot,'dunder',dunder)
-throw err}
+var v=$B.get_from_dict(klass,dunder,$B.NULL)}catch(err){if(test){console.log('error for klass',klass,'slot',slot,'dunder',dunder)}
+v=$B.NULL}
 if(v !==$B.NULL){if(test){console.log('klass has __call__',v)}
 if(typeof v !=='function'){var v_type=$B.get_class(v)
 var getter=v_type.tp_descr_get
@@ -3819,14 +3821,14 @@ _b_.classmethod.tp_members=[["__func__",$B.TYPES.OBJECT,"cm_callable",1],["__wra
 _b_.classmethod.tp_getset=["__isabstractmethod__","__annotations__","__annotate__"]
 $B.set_func_names(classmethod,"builtins")
 var staticmethod=_b_.staticmethod
-staticmethod.$factory=function(func){let self=staticmethod.tp_new(staticmethod,[func])
-staticmethod.tp_init(self,func)
+staticmethod.$factory=function(callable){let self=staticmethod.tp_new(staticmethod,[callable])
+staticmethod.tp_init(self,callable)
 return self}
 _b_.staticmethod.tp_repr=function(self){return `<staticmethod(${_b_.repr(self.sm_callable)})>`}
-_b_.staticmethod.tp_call=function(self,...args){return self.sm_callable(...args)}
+_b_.staticmethod.tp_call=function(self,...args){return $B.$call(self.sm_callable,...args)}
 _b_.staticmethod.tp_descr_get=function(self){return self.sm_callable}
-_b_.staticmethod.tp_init=function(self,func){self.sm_callable=func
-for(let attr of['__module__','__name__','__qualname__','__doc__']){$B.set_to_dict(self,attr,func.$function_infos[$B.func_attrs[attr]])}}
+_b_.staticmethod.tp_init=function(self,callable){self.sm_callable=callable
+for(let attr of['__name__','__qualname__','__doc__']){$B.set_to_dict(self,attr,$B.$getattr(callable,attr,$B.NULL))}}
 _b_.staticmethod.tp_new=function(cls,args,kw){let res={ob_type:cls,sm_callable:_b_.None}
 $B.init_dict(res)
 return res}
@@ -4987,13 +4989,18 @@ var in_own_dict=own_dict
 :$B.NULL
 :$B.NULL
 if(test){console.log('in klass dict',in_klass_dict)
-console.log('in own dict',in_own_dict)}
+console.log('in own dict',in_own_dict)
+console.log('klass.$getattribute === _b_.object.tp_getattro',klass.$getattribute===_b_.object.tp_getattro)}
 if(in_klass_dict &&
 klass.$getattribute===_b_.object.tp_getattro){switch(in_klass_dict.ob_type){case $B.function:
 if(in_own_dict===$B.NULL){return $B.method.$factory(in_klass_dict,obj)}
 break
 case _b_.staticmethod:
-if(in_own_dict===$B.NULL){return in_klass_dict}
+if(test){console.log('in_klass_dict is staticmethod')
+console.log()
+break}
+if(in_own_dict===$B.NULL){return _b_.staticmethod.tp_descr_get(
+in_klass_dict,obj,klass)}
 break}}}catch(err){console.log('error',err)
 console.log('obj',obj,'klass',klass)
 throw err}
@@ -16235,10 +16242,12 @@ if(cls.tp_members){for(var descr of cls.tp_members){var[name,type,attr,flags]=de
 $B.set_to_dict(cls,name,{ob_type:$B.member_descriptor,d_member:{name,type,attr,flags},d_name:name,d_type:cls}
 )}}
 if(cls.classmethods){for(var descr of cls.classmethods){$B.set_to_dict(cls,descr,{ob_type:$B.classmethod_descriptor,d_name:descr,d_type:cls,d_method:cls.tp_funcs[descr]})}}
-if(cls.staticmethods){for(var descr of cls.staticmethods){let func=cls.tp_funcs[descr]
+if(cls.staticmethods){for(var descr of cls.staticmethods){console.log('static method',descr,'of class',cls,'module',$B.get_from_dict(cls,'__module__',$B.NULL))
+let func=cls.tp_funcs[descr]
 $B.set_type(func,$B.builtin_function_or_method)
 func.ml={ml_name:descr}
 func.m_self=cls
+func.m_module=$B.get_from_dict(cls,'__module__',$B.NULL)
 $B.set_to_dict(cls,descr,_b_.staticmethod.$factory(func))}}
 for(var slot in $B.wrapper_methods){if(cls[slot]){$B.wrapper_methods[slot](cls,slot)}else if(['tp_descr_get','tp_descr_set','tp_iter','tp_call','tp_new','tp_init','tp_setattro'].includes(slot)){cls[slot]=$B.NULL
 if(cls.tp_mro){for(var kls of cls.tp_mro.slice(1)){if(Object.hasOwn(kls,slot)){cls[slot]=kls[slot]
