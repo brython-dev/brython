@@ -2304,7 +2304,8 @@ _b_.super.tp_init = function(self, _type, object_or_type) {
                 code = $B.$getattr(pyframe, 'f_code'),
                 co_varnames = $B.$getattr(code, 'co_varnames')
             if (co_varnames.length > 0) {
-                type = $B.get_class(frame[1])
+                // The method's class, which the compiler binds as __class__
+                type = frame[1].__class__
                 if (type === undefined) {
                     $B.RAISE(_b_.RuntimeError, "super(): no arguments")
                 }
