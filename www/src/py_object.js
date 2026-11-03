@@ -95,12 +95,9 @@ $B.builtin_object_getattro = function(self, klass, attr) {
 }
 
 $B.object_getattribute = function(obj, klass, attr) {
-    var test = false // attr === 'addEventListener'
+    var test = false // attr === 'B'
     if (test) {
         console.log('klass', klass, 'attr', attr)
-    }
-    if (! klass.$getattribute) {
-        console.log('no $getattribute', klass)
     }
     var getattribute = klass.$getattribute ?? $B.search_slot(klass, 'tp_getattro', $B.NULL)
     if (test) {
@@ -355,7 +352,7 @@ _b_.object.tp_str = function(self) {
 $B.time_object_tp_getattro = 0
 
 _b_.object.tp_getattro = function(self, attr) {
-    var test = false // attr == '__qualname__' // && $B.class_name(self) == 'TypeVar'
+    var test = false // attr == 'B' // && $B.class_name(self) == 'TypeVar'
     var klass = $B.get_class(self)
     if (test) {
         console.log('getattr', attr, 'of self', self, klass)
@@ -381,7 +378,7 @@ _b_.object.tp_getattro = function(self, attr) {
     var getter = $B.NULL
     if (in_mro !== $B.NULL) {
         var in_mro_class = $B.get_class(in_mro)
-        var getter = in_mro_class.tp_descr_get
+        var getter = in_mro_class.tp_descr_get ?? $B.NULL
         if (test) {
             console.log('getter', getter)
         }
@@ -421,6 +418,10 @@ _b_.object.tp_getattro = function(self, attr) {
             return getter(in_mro, self, klass)
         }
         $B.nb_obj_ga++
+        if (test) {
+            console.log('call getter', getter)
+            console.log('args', in_mro, self, klass)
+        }
         return getter(in_mro, self, klass)
     } else if (in_mro !== $B.NULL) {
         if (test) {
