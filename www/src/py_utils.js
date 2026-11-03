@@ -465,6 +465,23 @@ $B.check_nb_args_no_kw = function(name, expected, args) {
     }
 }
 
+$B.meth_noargs = function(qualname, args) {
+    // Check the absence of keyword args and that there is only one
+    // positional argument (self)
+    var len = args.length,
+        last = args[len - 1]
+    if (last && last[$B.KW]) {
+        len--
+        if (! $B.keyword_is_empty(last[$B.KW])) {
+            $B.RAISE(_b_.TypeError, qualname + "() takes no keyword arguments")
+        }
+    }
+    if (len != 1) {
+        $B.RAISE(_b_.TypeError, `${qualname}() takes no arguments ` +
+            ` (${len - 1} given)`)
+    }
+}
+
 $B.unpack_args = function(name, args, vars, defaults) {
     var args_length = args.length
     for (var i = 0, len = vars.length; i < len; i++) {

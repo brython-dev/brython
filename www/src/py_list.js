@@ -811,10 +811,10 @@ list_funcs.append = function(self, x) {
     return _b_.None
 }
 
-list_funcs.clear = function() {
-    var $ = $B.args("clear", 1, {self: null}, arguments)
-    while ($.self.length) {
-        $.self.pop()
+list_funcs.clear = function(self) {
+    $B.meth_noargs("list.clear", arguments)
+    while (self.length) {
+        self.pop()
     }
     return _b_.None
 }
