@@ -89,9 +89,9 @@ $B.set_func_names(classmethod, "builtins")
 // staticmethod() built in function
 var staticmethod = _b_.staticmethod
 
-staticmethod.$factory = function(func) {
-    let self = staticmethod.tp_new(staticmethod, [func])
-    staticmethod.tp_init(self, func)
+staticmethod.$factory = function(callable) {
+    let self = staticmethod.tp_new(staticmethod, [callable])
+    staticmethod.tp_init(self, callable)
     return self
 }
 
@@ -101,17 +101,17 @@ _b_.staticmethod.tp_repr = function(self) {
 }
 
 _b_.staticmethod.tp_call = function(self, ...args) {
-    return self.sm_callable(...args)
+    return $B.$call(self.sm_callable, ...args)
 }
 
 _b_.staticmethod.tp_descr_get = function(self) {
     return self.sm_callable
 }
 
-_b_.staticmethod.tp_init = function(self, func) {
-    self.sm_callable = func
-    for (let attr of ['__module__', '__name__', '__qualname__', '__doc__']) {
-        $B.set_to_dict(self, attr, func.$function_infos[$B.func_attrs[attr]])
+_b_.staticmethod.tp_init = function(self, callable) {
+    self.sm_callable = callable
+    for (let attr of ['__name__', '__qualname__', '__doc__']) {
+        $B.set_to_dict(self, attr, $B.$getattr(callable, attr, $B.NULL))
     }
 }
 
