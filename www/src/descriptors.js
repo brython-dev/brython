@@ -500,7 +500,7 @@ $B.wrapper_descriptor.tp_repr = function(self) {
 }
 
 $B.wrapper_descriptor.tp_call = function(descr, ...args) {
-    var no_args = args.length == 0 || (args.length == 1 && args[0].$kw)
+    var no_args = args.length == 0 || (args.length == 1 && args[0][$B.KW])
 
     if (no_args) {
         $B.RAISE(_b_.TypeError,

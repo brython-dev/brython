@@ -561,8 +561,8 @@ _b_.slice.tp_richcompare = function(self, other, op) {
 
 _b_.slice.tp_repr = function(self) {
     $B.builtins_repr_check(slice, arguments) // in brython_builtins.js
-    return "slice(" + _b_.str.$factory(self.start) + ", " +
-        _b_.str.$factory(self.stop) + ", " + _b_.str.$factory(self.step) + ")"
+    return "slice(" + _b_.repr(self.start) + ", " +
+        _b_.repr(self.stop) + ", " + _b_.repr(self.step) + ")"
 }
 
 _b_.slice.tp_hash = function(self) {

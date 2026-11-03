@@ -46,7 +46,7 @@ languages = [
     ["fr", "Français"]
 ]
 
-doc_versions = ["3.14", "3.13", "3.12", "3.11", "3.10"]
+doc_versions = ["3.15", "3.14", "3.13", "3.12", "3.11", "3.10"]
 
 if 'static_doc' in window.location.href:
 
