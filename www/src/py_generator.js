@@ -229,6 +229,8 @@ generator_funcs.throw = function(self) {
 
 $B.generator.tp_methods = ["send", "throw", "close", "__sizeof__"]
 
+$B.generator.noargs_methods = ["close", "__sizeof__"]
+
 $B.generator.classmethods = ["__class_getitem__"]
 
 $B.generator.tp_getset = [
@@ -436,6 +438,8 @@ async_generator_funcs.athrow = async function(self, type, value, traceback) {
 }
 
 $B.async_generator.tp_methods = ["asend", "athrow", "aclose", "__sizeof__"]
+
+$B.async_generator.noargs_methods = ["aclose", "__sizeof__"]
 
 $B.async_generator.classmethods = ["__class_getitem__"]
 

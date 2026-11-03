@@ -831,7 +831,6 @@ int_funcs.__format__ = function(self, format_spec) {
 }
 
 int_funcs.__getnewargs__ = function(self) {
-    var self = $B.single_arg('__getnewargs__', 'self', arguments)
     return $B.fast_tuple([int_value(self)])
 }
 
@@ -848,7 +847,6 @@ int_funcs.__trunc__ = function(self) {
 }
 
 int_funcs.as_integer_ratio = function(self) {
-    var self = $B.single_arg('as_integer_ratio', 'self', arguments)
     return $B.fast_tuple([self, 1])
 }
 
@@ -1017,6 +1015,11 @@ _b_.int.tp_methods = [
     "conjugate", "bit_length", "bit_count", "to_bytes", "as_integer_ratio",
     "__trunc__", "__floor__", "__ceil__", "__round__", "__getnewargs__",
     "__format__", "__sizeof__", "is_integer", "__float__"]
+
+_b_.int.noargs_methods = [
+    "conjugate", "bit_length", "bit_count", "as_integer_ratio", "__trunc__",
+    "__floor__", "__ceil__", "__getnewargs__", "__sizeof__", "is_integer"
+]
 
 _b_.int.classmethods = ["from_bytes"]
 
