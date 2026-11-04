@@ -744,8 +744,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-11-03 10:55:25.407420"
-__BRYTHON__.timestamp=1793699725407
+__BRYTHON__.compiled_date="2026-11-04 22:20:57.180401"
+__BRYTHON__.timestamp=1793827257180
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -1680,6 +1680,12 @@ if(len !=expected){if(expected==0){$B.RAISE(_b_.TypeError,name+"() takes no argu
 $B.RAISE(_b_.TypeError,name+"() takes exactly "+
 expected+" argument"+(expected < 2 ? '' :'s')+
 " ("+len+" given)")}}}
+$B.meth_noargs=function(qualname,args){
+var len=args.length,last=args[len-1]
+if(last && last[$B.KW]){len--
+if(! $B.keyword_is_empty(last[$B.KW])){$B.RAISE(_b_.TypeError,qualname+"() takes no keyword arguments")}}
+if(len !=1){$B.RAISE(_b_.TypeError,`${qualname}() takes no arguments `+
+` (${len - 1} given)`)}}
 $B.unpack_args=function(name,args,vars,defaults){var args_length=args.length
 for(var i=0,len=vars.length;i < len;i++){if(i >=args.length){if(! defaults ||! defaults.hasOwnProperty(vars[i])){$B.RAISE(_b_.TypeError,`${name}() missing argument '${vars[i]}'`)}
 args[i]=defaults[vars[i]]}}
@@ -1695,7 +1701,8 @@ return[args,$B.empty_dict()]}
 $B.get_class=function(obj){
 if(obj===null){return $B.NullType }
 if(obj===undefined){return $B.UndefinedType }
-if(obj.ob_type){return obj.ob_type}
+var klass=obj.ob_type
+if(klass){return Object.hasOwn(obj,$B.OB_TYPE)? obj[$B.OB_TYPE]:klass}
 if(obj[$B.OB_TYPE]){return obj[$B.OB_TYPE]}
 var klass
 switch(typeof obj){case "number":
@@ -1779,7 +1786,7 @@ try{
 it=$B.make_js_iterator(obj)}catch(err){$B.set_inum(inum)
 $B.RAISE(_b_.TypeError,`cannot unpack non-iterable ${$B.class_name(obj)} object`
 )}
-var t=Array.from(it),right_length=t.length,left_length=nb_targets+(has_starred ? nb_after_starred-1 :0)
+var t=Array.from(it),right_length=t.length,left_length=has_starred ? nb_targets-1 :nb_targets
 if((! has_starred &&(right_length < nb_targets))||
 (has_starred &&(right_length < nb_targets-1))){$B.set_inum(inum)
 var exc=$B.EXC(_b_.ValueError,`not enough values to unpack `+
@@ -2407,7 +2414,14 @@ var module=klass.__module__
 if(module !==undefined && !module.startsWith("$")&&
 module !=="builtins"){return `<${module}.${$B.class_name(self)} object>`}else{
 return "<"+$B.class_name(self)+" object>"}}
-_b_.object.tp_hash=function(self){var hash=self.__hashvalue__
+var weak_symbol_hashes=new WeakMap(),symbol_hashes=new Map(),symbols_are_weak_keys=true
+try{
+new WeakMap().set(Symbol(),0)}catch(err){symbols_are_weak_keys=false}
+_b_.object.tp_hash=function(self){if(typeof self=='symbol'){var hashes=symbols_are_weak_keys && Symbol.keyFor(self)===undefined ?
+weak_symbol_hashes :symbol_hashes
+if(! hashes.has(self)){hashes.set(self,$B.$py_next_hash--)}
+return hashes.get(self)}
+var hash=self.__hashvalue__
 if(hash !==undefined){return hash}
 return self.__hashvalue__=$B.$py_next_hash--}
 _b_.object.tp_str=function(self){if(arguments.length===0){$B.RAISE(_b_.TypeError,"descriptor '__str__' of 'object' "+
@@ -3037,7 +3051,7 @@ qualname=(module===$B.NULL ||module=='builtins')? name :
 module+"."+name}else{
 qualname=name}
 return "<class '"+qualname+"'>"}
-_b_.type.tp_call=function(cls){var $=$B.args(cls?.tp_name ?? '__call__',1,{cls:null},arguments,null,'args','kw'),cls=$.cls,args=$.args,kw=$.kw,kw_len=_b_.dict.mp_length(kw)
+_b_.type.tp_call=function(cls){var $=$B.args(cls?.tp_name ?? '__call__',1,{cls:null},arguments,null,'args','kw',1),cls=$.cls,args=$.args,kw=$.kw,kw_len=_b_.dict.mp_length(kw)
 var test=false 
 if(test){console.log('type.tp_call',cls,args)
 console.log(Error('trace').stack)}
@@ -3690,7 +3704,7 @@ var class_name=self.d_type.tp_name
 return `<method '${name}' of '${class_name}' objects>`}
 $B.method_descriptor.tp_call=function(self,...args){if(args.length==0){var name=self.d_name
 var class_name=self.d_type.tp_name
-$B.RAISE(_b_.TypeError,`unbound method ${class_name}.${name} needs an argument`
+$B.RAISE(_b_.TypeError,`unbound method ${class_name}.${name}() needs an argument`
 )}
 try{
 var res=self.method(...args)
@@ -3700,6 +3714,7 @@ var f=self.method.bind(null,obj)
 f.ob_type=$B.builtin_method
 f.$infos=self.$infos
 f.$function_infos=self.method.$function_infos
+f.__text_signature__=self.method.__text_signature__
 f.ml={ml_name:self.d_name}
 f.m_self=obj
 return f}
@@ -3707,7 +3722,7 @@ var method_descriptor_funcs=$B.method_descriptor.tp_funcs={}
 method_descriptor_funcs.__qualname___get=function(self){return self.d_name}
 method_descriptor_funcs.__qualname___set=function(self,value){self.name=value}
 method_descriptor_funcs.__reduce__=function(self){return $B.fast_tuple([_b_.getattr,$B.fast_tuple([self.d_type,self.d_name])])}
-method_descriptor_funcs.__text_signature___get=function(self){}
+method_descriptor_funcs.__text_signature___get=function(self){return self.method.__text_signature__ ?? _b_.None}
 method_descriptor_funcs.__text_signature___set=function(self){}
 $B.method_descriptor.tp_methods=["__reduce__"]
 $B.method_descriptor.tp_members=[["__objclass__",$B.TYPES.OBJECT,"d_type",1],["__name__",$B.TYPES.OBJECT,"d_name",1]
@@ -3880,7 +3895,7 @@ if(self.m_self !==undefined && self.m_self !==null &&
 return name}
 builtin_function_or_method_funcs.__self___get=function(self){return self.m_self}
 builtin_function_or_method_funcs.__self___set=_b_.None
-builtin_function_or_method_funcs.__text_signature___get=function(self){}
+builtin_function_or_method_funcs.__text_signature___get=function(self){return self.__text_signature__ ?? _b_.None}
 builtin_function_or_method_funcs.__text_signature___set=function(self){}
 $B.builtin_function_or_method.tp_methods=["__reduce__"]
 $B.builtin_function_or_method.tp_members=[["__module__",$B.TYPES.OBJECT,"m_module",0]
@@ -5062,9 +5077,7 @@ if(hash_func !==$B.NULL && hash_func !==_b_.None){res=hash_func(obj)
 if(! $B.is_int(res)){$B.RAISE(_b_.TypeError,'__hash__ method should return an integer')}
 if(typeof res=='object'){
 res=_b_.int.tp_hash(res)}}else{
-$B.RAISE(_b_.TypeError,"unhashable type: '"+
-_b_.str.$factory($B.jsobj2pyobj(obj))+"'"
-)}}
+$B.RAISE(_b_.TypeError,`unhashable type: '${$B.class_name(obj)}'`)}}
 if(res===-1){res=-2 }
 return res}
 var help=function(obj){if(obj===undefined){obj='help'}
@@ -5196,7 +5209,7 @@ if(iter_func !==$B.NULL){var getter=$B.get_class(iter_func).tp_descr_get
 if(getter===$B.NULL){var in_dict=$B.search_in_dict(obj,'__iter__',$B.NULL)
 if(in_dict===iter_func){var res=$B.$call(in_dict)}}else{
 var res=$B.$call(iter_func,obj)}
-if($B.search_slot($B.get_class(res),'tp_iternext',$B.NULL)===$B.NULL){$B.RAISE(_b_.TypeError,`iter() returned non-iterable of type '${$B.class_name(res)}'`)}
+if($B.search_slot($B.get_class(res),'tp_iternext',$B.NULL)===$B.NULL){$B.RAISE(_b_.TypeError,`iter() returned non-iterator of type '${$B.class_name(res)}'`)}
 return res}
 var getitem_func=$B.search_in_mro(klass,'__getitem__',$B.NULL)
 if(test){console.log('getitem_func',getitem_func)}
@@ -5225,10 +5238,14 @@ check_nb_args('locals',0,arguments)
 var locals_obj=$B.frame_obj.frame[1]
 var class_locals=locals_obj.$target
 if(class_locals && $B.get_class(class_locals)===_b_.dict){return class_locals}
-var d=$B.empty_dict()
-for(var key in locals_obj){if(key.startsWith('$')||key=='__class__' ||key=='ob_type' ||
+var d=$B.empty_dict(),free=[]
+for(var key in locals_obj){if(key.startsWith('$')||key=='ob_type' ||
 key.startsWith('lambda_'+$B.lambda_magic+'_')){continue}
+if(key=='__class__' ||
+Object.getOwnPropertyDescriptor(locals_obj,key)?.get){free.push(key)
+continue}
 _b_.dict.$setitem(d,key,locals_obj[key])}
+for(var key of free){_b_.dict.$setitem(d,key,locals_obj[key])}
 return d}
 var map=_b_.map
 map.$factory=function(){var $=$B.args('map',2,{func:null,it1:null},arguments,null,'args',null),func=$.func
@@ -5539,8 +5556,9 @@ return $B.$call($$super,self.type,instance)}
 _b_.super.tp_init=function(self,_type,object_or_type){var $=$B.args('__init__',3,{self:null,type:null,object_or_type:null},arguments,{type:_b_.None,object_or_type:_b_.None})
 var self=$.self,type=$.type,object_or_type=$.object_or_type
 if(object_or_type===_b_.None){if(type===_b_.None){var frame=$B.frame_obj.frame,pyframe=$B.module_getattr($B.imported["_sys"],'_getframe')(),code=$B.$getattr(pyframe,'f_code'),co_varnames=$B.$getattr(code,'co_varnames')
-if(co_varnames.length > 0){type=$B.get_class(frame[1])
-if(type===undefined){$B.RAISE(_b_.RuntimeError,"super(): no arguments")}
+if(co_varnames.length > 0){
+type=frame[1].__class__
+if(type===undefined){$B.RAISE(_b_.RuntimeError,"super(): __class__ cell not found")}
 object_or_type=frame[1][co_varnames[0]]}else{
 $B.RAISE(_b_.RuntimeError,"super(): no arguments")}
 self.type=type
@@ -5551,8 +5569,6 @@ self.type=type
 self.obj=_b_.None
 self.obj_type=_b_.None
 return}}
-if(Array.isArray(object_or_type)&& object_or_type.ob_type===undefined){
-object_or_type=object_or_type[0]}
 self.type=type
 self.obj=object_or_type
 self.obj_type=supercheck(type,object_or_type)}
@@ -8382,7 +8398,12 @@ return res}
 function make_new_set_base_type(so){return $B.$isinstance(so,set)?
 set.$factory():
 frozenset.$factory()}
-function set_add(so,item,hash){hash=hash ?? $B.$hash(item)
+function set_hash(key){
+try{
+return $B.$hash(key)}catch(err){if($B.is_exc(err,[_b_.TypeError])&& err.args && err.args[0]){err.args[0]=`cannot use '${$B.class_name(key)}' as `+
+`a set element (${err.args[0]})`}
+throw err}}
+function set_add(so,item,hash){hash=hash ?? set_hash(item)
 var stored=so.$store[hash]
 if(stored){
 if(set_contains(so,item,hash)){return}
@@ -8445,9 +8466,7 @@ for(var other of args){result=set_intersection(result,other)}
 return result}
 function set_lookkey(so,key,hash){
 if(hash===undefined){try{
-hash=$B.$hash(key)}catch(err){if($B.$isinstance(key,set)){hash=$B.$hash(frozenset.$factory(key))}else{
-if(err.args && err.args[0]){err.args[0]=`cannot use '${$B.class_name(key)}' as `+
-`a set element (${err.args[0]})`}
+hash=set_hash(key)}catch(err){if($B.$isinstance(key,set)){hash=$B.$hash(frozenset.$factory(key))}else{
 throw err}}}
 var items=so.$store[hash]
 if(items===undefined){return false}
@@ -9636,7 +9655,7 @@ getitem=$B.$getattr(mapping,"__getitem__")
 var args=[]
 for(let i=0,len=arguments.length-1;i < len;i++){args.push(arguments[i])}
 $=$B.args("format",1,{self:null},args,null,"$args",null)}else{
-$=$B.args("format",1,{self:null},arguments,null,"$args","$kw")
+$=$B.args("format",1,{self:null},arguments,null,"$args","$kw",1)
 mapping=$.$kw,
 getitem=function(key){return _b_.dict.$getitem(mapping,key)}}
 var _self=to_string($.self),parts=$B.split_format(_self)
@@ -11610,8 +11629,13 @@ if(left[$B.JSOBJ]){left[$B.JSOBJ][key]=right[key]}}}else{
 for(let key in right){dict.$setitem(left,key,right[key])}}}else{
 for(var entry of dict.$iter_items(right)){dict.$setitem(left,entry.key,entry.value,entry.hash)
 if(right[VERSION]!=right_version){$B.RAISE(_b_.RuntimeError,"dict mutated during update")}}}}
+function dict_hash(key){
+try{
+return $B.$hash(key)}catch(err){if($B.is_exc(err,[_b_.TypeError])&& err.args && err.args[0]){err.args[0]=`cannot use '${$B.class_name(key)}' as `+
+`a dict key (${err.args[0]})`}
+throw err}}
 function index_by_key(d,key,hash){
-hash=hash ?? _b_.hash(key)
+hash=hash ?? dict_hash(key)
 var indices=d[TABLE][hash],index
 if(indices !==undefined){for(var index of indices){var v=d[KEYS][index]
 if(v===undefined){d[TABLE][hash].splice(i,1)
@@ -11620,7 +11644,7 @@ return null}
 continue}
 if(v===key ||$B.is_or_equals(v,key)){return index}}}
 return null}
-dict.$lookup_by_key=function(d,key,hash){hash=hash===undefined ? _b_.hash(key):hash
+dict.$lookup_by_key=function(d,key,hash){hash=hash===undefined ? dict_hash(key):hash
 var indices=d[TABLE][hash],index
 if(indices !==undefined){for(var i=0,len=indices.length;i < len;i++){index=indices[i]
 if(d[KEYS][index]===undefined){d[TABLE][hash].splice(i,1)
@@ -11637,7 +11661,7 @@ found:false,hash}}
 dict.$contains=function(self,key,hash){if(! self[KEYS]){if(typeof key=='string'){return self.hasOwnProperty(key)}
 var hash_method=$B.$getattr($B.get_class(key),'__hash__')
 if(hash_method===$B.str_dict_get($B.get_dict(_b_.object),'__hash__')){return false}
-var hash=$B.$call(hash_method,key)
+var hash=dict_hash(key)
 convert_all_str(self)}
 return index_by_key(self,key,hash)!==null}
 dict.$delitem=function(self,key,hash){if(self[$B.JSOBJ]){delete self[$B.JSOBJ][key]}
@@ -11770,7 +11794,7 @@ return _b_.None}else{
 convert_all_str(self)}}else{
 convert_all_str(self)}}
 if(key instanceof String){key=key.valueOf()}
-var hash=$hash !==undefined ? $hash :$B.$hash(key)
+var hash=$hash !==undefined ? $hash :dict_hash(key)
 var index
 if(self[TABLE][hash]===undefined){index=self[KEYS].length
 self[TABLE][hash]=[index]}else{
@@ -11866,8 +11890,7 @@ return _b_.None}
 dict_funcs.copy=function(self){
 var $=$B.args("copy",1,{self:null},arguments)
 var self=$.self,res=$B.empty_dict()
-if($B.exact_type(self,_b_.dict)){$copy_dict(res,self)
-return res}
+$copy_dict(res,self)
 return res}
 dict_funcs.fromkeys=function(){var $=$B.args("fromkeys",3,{cls:null,keys:null,value:null},arguments,{value:_b_.None})
 var keys=$.keys,value=$.value
@@ -11922,7 +11945,7 @@ return lookup.value}}
 var hash=lookup.hash
 dict.$setitem(self,key,_default,hash,true)
 return _default}
-dict_funcs.update=function(self){var $=$B.args("update",1,{"self":null},arguments,null,"args","kw")
+dict_funcs.update=function(self){var $=$B.args("update",1,{"self":null},arguments,null,"args","kw",1)
 var self=$.self,args=$.args,kw=$.kw
 if(args.length > 0){var o=args[0]
 if($B.$isinstance(o,dict)){$copy_dict(self,o)}else if(_b_.hasattr(o,"keys")){var _keys=_b_.list.$factory($B.$call($B.$getattr(o,"keys")))
@@ -12507,8 +12530,8 @@ if(self[$B.JSOBJ]){self[$B.JSOBJ].push($B.pyobj2jsobj(x))
 self.push($B.pyobj2jsobj(x))}else if(self.$is_js_array){self.push($B.pyobj2jsobj(x))}else{
 self[self.length]=x}
 return _b_.None}
-list_funcs.clear=function(){var $=$B.args("clear",1,{self:null},arguments)
-while($.self.length){$.self.pop()}
+list_funcs.clear=function(self){$B.meth_noargs("list.clear",arguments)
+while(self.length){self.pop()}
 return _b_.None}
 list_funcs.copy=function(self){var $=$B.args("copy",1,{self:null},arguments)
 var res=$.self.slice()
@@ -12545,7 +12568,8 @@ while(i--){var buf=$.self[i]
 $.self[i]=$.self[_len-i]
 $.self[_len-i]=buf}
 return _b_.None}
-list_funcs.sort=function(self){var $=$B.args("sort",1,{self:null},arguments,null,null,"kw")
+list_funcs.sort=function(self){var $=$B.args("sort",1,{self:null},arguments,null,"args","kw")
+if($.args.length > 0){$B.RAISE(_b_.TypeError,"sort() takes no positional arguments")}
 check_not_tuple(self,"sort")
 var func=_b_.None,reverse=false
 for(var item of _b_.dict.$iter_items($.kw)){if(item.key=="key"){func=item.value}else if(item.key=="reverse"){reverse=item.value}else{
@@ -12574,6 +12598,7 @@ for(let i=0,len=temp.length;i < len;i++){self[i]=saved[temp[i][1]]}}
 return self.$is_js_array ? self :_b_.None}
 $B.$TimSort(self,cmp)
 return self.$is_js_array ? self :_b_.None}
+list_funcs.sort.__text_signature__="($self, /, *, key=None, reverse=False)"
 _b_.list.tp_methods=["__reversed__","__sizeof__","clear","copy","append","insert","extend","pop","remove","index","count","reverse","sort"
 ]
 _b_.list.classmethods=["__class_getitem__"]
@@ -16242,8 +16267,7 @@ if(cls.tp_members){for(var descr of cls.tp_members){var[name,type,attr,flags]=de
 $B.set_to_dict(cls,name,{ob_type:$B.member_descriptor,d_member:{name,type,attr,flags},d_name:name,d_type:cls}
 )}}
 if(cls.classmethods){for(var descr of cls.classmethods){$B.set_to_dict(cls,descr,{ob_type:$B.classmethod_descriptor,d_name:descr,d_type:cls,d_method:cls.tp_funcs[descr]})}}
-if(cls.staticmethods){for(var descr of cls.staticmethods){console.log('static method',descr,'of class',cls,'module',$B.get_from_dict(cls,'__module__',$B.NULL))
-let func=cls.tp_funcs[descr]
+if(cls.staticmethods){for(var descr of cls.staticmethods){let func=cls.tp_funcs[descr]
 $B.set_type(func,$B.builtin_function_or_method)
 func.ml={ml_name:descr}
 func.m_self=cls
@@ -16604,52 +16628,34 @@ return prefix+`var next_func_${comp.id} = $B.make_js_iterator(expr, frame, ${com
 function init_genexpr(comp,scopes){var varnames=Object.keys(comp.varnames ||{}).map(x=> `'${x}'`).join(', ')
 return prefix+`var ${comp.locals_name} = {},\n`+
 prefix+tab+tab+`locals = ${comp.locals_name}\n`+
-prefix+`locals['.0'] = expr\n`+
+prefix+`locals['.0'] = _b_.iter(expr)\n`+
 prefix+`var frame = ["<${comp.type.toLowerCase()}>", ${comp.locals_name}, `+
-`"${comp.module_name}", ${comp.globals_name}]\n`+
+`${JSON.stringify(comp.module_name)}, ${comp.globals_name}]\n`+
 prefix+`frame.$has_generators = true\n`+
-prefix+`frame.__file__ = '${scopes.filename}'\n`+
+prefix+`frame.__file__ = ${JSON.stringify(scopes.filename)}\n`+
 prefix+`frame.$lineno = ${comp.ast.lineno}\n`+
 prefix+`$B.make_f_code(frame, [${varnames}])\n`+
-prefix+`var next_func_${comp.id} = $B.make_js_iterator(expr, frame, ${comp.ast.lineno})\n`+
 prefix+`frame.$f_trace = _b_.None\n`+
 prefix+`var _frame_obj = $B.frame_obj\n`}
-function comp_bindings(comp,bindings){if(comp.target instanceof $B.ast.Name){bindings.add(comp.target.id)}else if(comp.target.elts){for(var elt of comp.target.elts){comp_bindings({target:elt},bindings)}}
-return bindings}
 function make_comp(scopes){
-var bindings=new Set()
-for(var gen of this.generators){comp_bindings(gen,bindings)}
-var save_locals=new Set()
 var plen=prefix.length
-var comp_prefix=prefix
-var id=make_id(),type=this.constructor.$name,symtable_block=scopes.symtable.table.blocks.get(fast_id(this)),varnames=Object.keys($B.dict_as_jsobj(symtable_block.symbols)).map(x=> `"${x}"`),comp_iter,comp_scope=$B.last(scopes),upper_comp_scope=comp_scope
-for(var name of comp_scope.locals){if(bindings.has(name)){save_locals.add(name)}}
-while(upper_comp_scope.parent){upper_comp_scope=upper_comp_scope.parent
-for(var name of upper_comp_scope.locals){if(bindings.has(name)){save_locals.add(name)}}}
-var comp_scope_block=scopes.symtable.table.blocks.get(
-fast_id(upper_comp_scope.ast)),comp_scope_symbols=comp_scope_block.symbols
-var initial_nb_await_in_scope=upper_comp_scope.nb_await===undefined ? 0 :
-upper_comp_scope.nb_await
-for(let[key,value]of Object.entries(symtable_block.symbols)){if(value & SF.DEF_COMP_ITER){comp_iter=key}}
-var comp_iter_scope=name_scope(comp_iter,scopes)
+var id=make_id(),type=this.constructor.$name,symtable_block=scopes.symtable.table.blocks.get(fast_id(this)),varnames=Object.keys($B.dict_as_jsobj(symtable_block.symbols)).map(x=> `"${x}"`)
 var first_for=this.generators[0],
 outmost_expr=$B.js_from_ast(first_for.iter,scopes),nb_paren=1
 var comp={ast:this,id,type,varnames,module_name:scopes[0].name,locals_name:make_scope_name(scopes),globals_name:make_globals_name(scopes)}
 indent()
 if(prefix.length > plen+tab.length){console.warn('JS indentation issue')}
 var js=init_comprehension(comp,scopes)
-if(comp_iter_scope.found){js+=prefix+`var save_comp_iter = ${name_reference(comp_iter, scopes)}\n`}
-for(var name of save_locals){js+=prefix+`var save_${name} = ${name_reference(name, scopes)}\n`}
 if(this instanceof $B.ast.ListComp){js+=prefix+`var result_${id} = $B.$list([])\n`}else if(this instanceof $B.ast.SetComp){js+=prefix+`var result_${id} = _b_.set.$factory()\n`}else if(this instanceof $B.ast.DictComp){js+=prefix+`var result_${id} = $B.empty_dict()\n`}
+var own_scope=new Scope(`${type.toLowerCase()}_${id}`,'comprehension',this)
+scopes.push(own_scope)
+js+=prefix+`var ${make_scope_name(scopes)} = {},\n`+
+prefix+tab+tab+`locals = ${make_scope_name(scopes)}\n`
 var first=this.generators[0]
 js+=prefix+`try {\n`
 indent()
 js+=prefix+`for (var next_${id} of next_func_${id}) {\n`
 indent()
-var save_target_flags
-if(first.target instanceof $B.ast.Name){var target_name=first.target.id
-if($B.str_dict_get(comp_scope_symbols,target_name)!==$B.NULL){save_target_flags=$B.str_dict_get(comp_scope_symbols,target_name)
-$B.str_dict_set(comp_scope_symbols,target_name,SF.LOCAL << SF.SCOPE_OFF)}}
 var name=new $B.ast.Name(`next_${id}`,new $B.ast.Load())
 copy_position(name,first_for.iter)
 name.to_js=function(){return `next_${id}`}
@@ -16667,10 +16673,7 @@ var value
 if(this.value===undefined){}else{value=$B.js_from_ast(this.value,scopes)}}else{
 var elt
 if(this.elt instanceof $B.ast.Starred){elt=$B.js_from_ast(this.elt.value,scopes)}else{elt=$B.js_from_ast(this.elt,scopes)}}
-if(save_target_flags){$B.str_dict_set(comp_scope_symbols,target_name,save_target_flags)}
-var final_nb_await_in_scope=upper_comp_scope.nb_await===undefined ? 0 :
-upper_comp_scope.nb_await
-var has_await=final_nb_await_in_scope > initial_nb_await_in_scope
+var has_await=own_scope.has_await
 js=`(${has_await ? 'async ' : ''}function(expr) {\n`+js
 js+=has_await ? 'var save_frame_obj = $B.frame_obj;\n' :''
 if(this instanceof $B.ast.ListComp){if(this.elt instanceof $B.ast.Starred){js+=prefix+`for(var item of $B.make_js_iterator(${elt})){\n`
@@ -16697,15 +16700,10 @@ prefix+`throw err\n`
 dedent()
 js+=prefix+`}\n`+
 (has_await ? prefix+`\n$B.restore_frame_obj(save_frame_obj, ${comp.locals_name});` :'')
-for(var name of save_locals){js+=prefix+`${name_reference(name, scopes)} = save_${name}\n`}
-for(var comp_name of bindings){if(! save_locals.has(comp_name)){js+=prefix+`delete ${comp.locals_name}.${comp_name}\n`
-var comp_s=comp_scope
-while(comp_s){comp_s.locals.delete(comp_name)
-comp_s=comp_s.parent}}}
-if(comp_iter_scope.found){js+=prefix+`${name_reference(comp_iter, scopes)} = save_comp_iter\n`}
 js+=prefix+`return result_${id}\n`
 dedent()
 js+=prefix+`}`+`)(${outmost_expr})\n`
+scopes.pop()
 return js}
 function init_scopes(type,scopes){
 var filename=scopes?.symtable?.table?.filename,name=$B.url2name[filename]
@@ -16773,7 +16771,7 @@ prefix+`var FR = $B.module_getattr($B.imported.annotationlib, 'ForwardRef')\n`+
 prefix+`var int_format = $B.int_value(format)\n`+
 prefix+`var current_frame = $B.frame_obj.frame\n`+
 prefix+`var frame = ['__annotate__', {}, current_frame[2], current_frame[3]]\n`+
-prefix+`$B.enter_frame(frame, "${scopes.filename}", ${scope.ast.lineno})\n`+
+prefix+`$B.enter_frame(frame, ${JSON.stringify(scopes.filename)}, ${scope.ast.lineno})\n`+
 prefix+`frame.positions = [${scope.positions}]\n`+
 prefix+`var res = $B.empty_dict()\n`+
 prefix+`var anns = {\n`
@@ -16991,7 +16989,8 @@ while(scopes[ix].ast instanceof $B.ast.ListComp ||
 scopes[ix].ast instanceof $B.ast.DictComp ||
 scopes[ix].ast instanceof $B.ast.SetComp ||
 scopes[ix].ast instanceof $B.ast.GeneratorExp){scopes[ix].has_await=true
-ix--}
+ix--
+while(scopes[ix].parent){ix--}}
 if(scopes[ix].ast instanceof $B.ast.AsyncFunctionDef){scopes[ix].has_await=true
 return `await $B.promise(${$B.js_from_ast(this.value, scopes)})`}else if(scopes[ix].ast instanceof $B.ast.FunctionDef){compiler_error(this,"'await' outside async function",this.value)}else{
 compiler_error(this,"'await' outside function",this.value)}}
@@ -17115,10 +17114,10 @@ indent(2)
 js+=prefix+`locals = ${locals_name}\n`
 dedent(2)
 js+=prefix+`locals.__doc__ = ${docstring}\n`+
-prefix+`locals.__module__ = '${glob}'\n`+
+prefix+`locals.__module__ = ${JSON.stringify(glob)}\n`+
 prefix+`locals.__qualname__ = "${qualname}"\n`+
 prefix+`locals.__firstlineno__ = ${this.lineno}\n`
-js+=prefix+`var frame = [name, locals, '${glob}', ${globals_name}]\n`+
+js+=prefix+`var frame = [name, locals, ${JSON.stringify(glob)}, ${globals_name}]\n`+
 prefix+`$B.enter_frame(frame, __file__, ${this.lineno})\n`+
 prefix+`var _frame_obj = $B.frame_obj\n`+
 prefix+`if (frame.$f_trace !== _b_.None) {\n`+
@@ -17338,7 +17337,7 @@ var typevarscope=new Scope(name,'typevarbound',tp)
 scopes.push(typevarscope)
 js+=`function BOUND_OF_${name}() {\n`+
 `var current_frame = $B.frame_obj.frame,\n`+
-`frame = ['BOUND_OF_${name}', {}, '${gname}', ${globals_name}]\n`+
+`frame = ['BOUND_OF_${name}', {}, ${JSON.stringify(gname)}, ${globals_name}]\n`+
 `$B.enter_frame(frame, __file__, ${tp.bound.lineno})\n`+
 `try {\n`+
 `var res = ${tp.bound.to_js(scopes)}\n`+
@@ -17398,13 +17397,18 @@ type_params=prefix+`$B.import('_typing')\n`+
 prefix+`var _typing = $B.imported._typing\n`+
 prefix+`var locals_${type_params_ref} = $B.empty_dict(),\n`+
 prefix+tab+tab+`locals = locals_${type_params_ref},\n`+
-prefix+tab+tab+`frame = ['${type_params_ref}', locals, '${gname}', ${globals_name}],\n`+
+prefix+tab+tab+`frame = ['${type_params_ref}', locals, ${JSON.stringify(gname)}, ${globals_name}],\n`+
 prefix+tab+tab+`type_params = []\n`+
-prefix+`$B.enter_frame(frame, '${scopes.filename}', ${this.lineno})\n`
+prefix+`$B.enter_frame(frame, ${JSON.stringify(scopes.filename)}, ${this.lineno})\n`
 for(var item of this.type_params){type_params+=type_param_in_def(item,type_params_ref,scopes)}
 type_params_func+=type_params}
 var func_scope=new Scope(this.name,'def',this)
 scopes.push(func_scope)
+var class_cell=in_class &&
+$B.str_dict_contains(symtable_block.symbols,'__class__')&&
+(($B.str_dict_get(symtable_block.symbols,'__class__')>>
+SF.SCOPE_OFF)& SF.SCOPE_MASK)==SF.FREE
+if(class_cell){bind("__class__",scopes)}
 var args=positional.concat(this.args.kwonlyargs),slots=[],arg_names=[]
 for(let arg of args){slots.push(arg.arg+': null')
 bind(arg.arg,scopes)}
@@ -17430,7 +17434,7 @@ if(vararg===_b_.None && kwarg===_b_.None){js+=`function ${name2}(${positional.ma
 js+=`function ${name2}() {\n`}
 indent()
 if(is_generator){
-js+=prefix+'$B.frame_obj.frame.$has_generators = true\n'}
+js+=prefix+'if ($B.frame_obj) { $B.frame_obj.frame.$has_generators = true }\n'}
 var locals_name=make_scope_name(scopes,func_scope)
 js+=prefix+`var locals\n`
 parse_args.push('arguments')
@@ -17457,7 +17461,8 @@ prefix+`}\n`}else{
 js+=prefix+`var ${locals_name} = locals = `+
 `$B.args_parser(${name2}, arguments)\n`}
 var free_idents=[]
-for(var[ident,flag]of Object.entries(symtable_block.symbols)){if(((flag >> SF.SCOPE_OFF)& SF.SCOPE_MASK)==SF.FREE){free_idents.push(ident)}}
+for(var[ident,flag]of Object.entries(symtable_block.symbols)){if(((flag >> SF.SCOPE_OFF)& SF.SCOPE_MASK)==SF.FREE &&
+!(class_cell && ident=='__class__')){free_idents.push(ident)}}
 for(var free_ident of free_idents){var free_scope=name_scope(free_ident,scopes)
 if(free_scope.found){var free_ns=make_scope_name(scopes,free_scope.found)
 js+=prefix+`Object.defineProperty(locals, '${free_ident}', `+
@@ -17465,7 +17470,7 @@ js+=prefix+`Object.defineProperty(locals, '${free_ident}', `+
 `set: function(){}, `+
 `enumerable: true, configurable: true})\n`}}
 js+=prefix+`var frame = ["${this.$is_lambda ? '<lambda>': this.name}", `+
-`locals, "${gname}", ${globals_name}, ${name2}]\n`+
+`locals, ${JSON.stringify(gname)}, ${globals_name}, ${name2}]\n`+
 prefix+`$B.enter_frame(frame, __file__, ${this.lineno})\n`
 if(func_scope.positions){js+=prefix+`frame.positions = [${func_scope.positions}]\n`}
 if(func_scope.needs_stack_length){js+=prefix+`var stack_length = $B.count_frames()\n`}
@@ -17478,11 +17483,10 @@ indent()}
 js+=prefix+`try {\n`
 indent()
 js+=prefix+`$B.js_this = this\n`
-if(in_class){
+if(class_cell){
 var ix=scopes.indexOf(class_scope),parent=scopes[ix-1]
 var scope_ref=make_scope_name(scopes,parent),class_ref=class_scope.name,
 refs=class_ref.split('.').map(x=> `'${x}'`)
-bind("__class__",scopes)
 js+=prefix+`locals.ob_type =  locals.__class__ = `+
 `$B.get_method_class(${name2}, ${scope_ref}, "${class_ref}", [${refs}])\n`}
 js+=function_body+'\n'
@@ -17547,7 +17551,7 @@ anns=ann_items_values.length > 0}else{
 anns=false}
 var annotations=postponed ? anns_strings :'false'
 js+=prefix+`${name2}.$function_infos = [`+
-`'${gname}', `+
+`${JSON.stringify(gname)}, `+
 `'${this.$is_lambda ? '<lambda>': this.name}', `+
 `'${qualname}', `+
 `__file__, `+
@@ -17566,14 +17570,14 @@ prefix+tab+`${positional.length}, `+
 `[${varnames}], `+
 `${annotations}, `+
 `${has_type_params ? 'type_params' : '[]'}, frame]\n`
-js+=prefix+`$B.set_func_attrs(${name2}, frame, '${gname}')\n`
+js+=prefix+`$B.set_func_attrs(${name2}, frame, ${JSON.stringify(gname)})\n`
 js+=prefix+`${name2}.ob_type = $B.function\n`
 if(anns && ! postponed){
 var inum=add_to_positions(scopes,this)
 js+=prefix+`${name2}.__annotate__ = function(format) {\n`
 indent()
 js+=prefix+`var locals = {format}\n`+
-prefix+`var frame = ['__annotate__', locals, '${gname}', ${globals_name}]\n`+
+prefix+`var frame = ['__annotate__', locals, ${JSON.stringify(gname)}, ${globals_name}]\n`+
 prefix+`$B.enter_frame(frame, __file__, ${this.lineno})\n`+
 prefix+`frame.positions = $B.frame_obj.prev.frame.positions\n`+
 prefix+`frame.positions.push([${this.lineno}, ${this.end_lineno}, ${this.col_offset}, ${this.end_col_offset}])\n`+
@@ -17630,6 +17634,11 @@ scopes.push(comp_scope)
 var comp={ast:this,id,type:'genexpr',varnames,module_name:scopes[0].name,locals_name:make_scope_name(scopes),globals_name:make_globals_name(scopes)}
 indent()
 var head=init_comprehension(comp,scopes)
+for(var[ident,flag]of Object.entries(symtable_block.symbols)){if(((flag >> SF.SCOPE_OFF)& SF.SCOPE_MASK)==SF.FREE){var free_scope=name_scope(ident,scopes)
+if(free_scope.found){head+=prefix+`Object.defineProperty(locals, '${ident}', `+
+`{get: function(){return `+
+`${make_scope_name(scopes, free_scope.found)}.${ident}}, `+
+`set: function(){}, enumerable: true, configurable: true})\n`}}}
 var js=prefix+`var gen${id} = $B.generator.$factory(${has_await ? 'async ' : ''}function*(expr){\n`
 var first=this.generators[0]
 indent()
@@ -17678,7 +17687,7 @@ js+=prefix+'$B.leave_frame()\n'
 dedent()
 js+=prefix+'}\n'
 js+=prefix+'$B.leave_frame()\n'
-js+=prefix+'}, "<genexpr>")(expr)\n'
+js+=prefix+'}, "<genexpr>")(locals[".0"])\n'
 scopes.pop()
 var func=`${head}\n${js}\n`+prefix+`return gen${id}`
 dedent()
@@ -19520,7 +19529,7 @@ var debug=new $B.ast.Constant(debug_metadata)
 debug.lineno=arena.lineno
 debug.col_offset=arena.col_offset+1
 debug.end_lineno=debug_end_line
-debug.end_col_offset=debug_end_offset
+debug.end_col_offset=debug_end_offset-1
 var joined_str=new $B.ast.JoinedStr([debug,formatted_value])
 set_position_from_obj(joined_str,arena)
 return joined_str}
