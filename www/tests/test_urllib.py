@@ -4,8 +4,10 @@ assert urllib.parse.unquote("foo%20bar") == "foo bar"
 
 import urllib.request
 
-with urllib.request.urlopen('https://httpbin.org/headers') as f:
+"""
+with urllib.request.urlopen('https://brython.info') as f:
     f.read()
+"""
 
 # issue 1424
 text = """Hello

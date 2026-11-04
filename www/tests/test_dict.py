@@ -207,19 +207,6 @@ assert str(d) == "{'a': 1, True: 4, 'b': 3}"
 # issue 1859
 assert 'constructor' not in {}
 
-# syntax errors in comprehensions
-from tester import assert_raises
-
-assert_raises(SyntaxError,
-              exec,
-              "{**t for x in y}",
-              msg='dict unpacking cannot be used in dict comprehension')
-
-assert_raises(SyntaxError,
-              exec,
-              "{*t for x in y}",
-              msg='iterable unpacking cannot be used in comprehension')
-
 # issue 2037
 assert {} | {} == {}
 assert {} | {}.keys() == set()
@@ -297,5 +284,42 @@ d = {1: 1}
 
 assert d.keys == d.keys
 
+
+# dict from mapping
+class A:
+
+  def __init__(self):
+      self.data = 'abcd'
+
+  def keys(self):
+      return range(len(self.data))
+
+  def __getitem__(self, i):
+      return self.data[i]
+
+assert dict(A()) == {0: 'a', 1: 'b', 2: 'c', 3: 'd'}
+
+# dict from iterable
+class B:
+
+  def __init__(self):
+    self.data = 'efgh'
+
+  def __iter__(self):
+    self.counter = 0
+    return self
+
+  def __next__(self):
+    if self.counter < len(self.data):
+      res = [self.counter, self.data[self.counter]]
+      self.counter += 1
+      return res
+    raise StopIteration
+
+assert dict(B()) == {0: 'e', 1: 'f', 2: 'g', 3: 'h'}
+
+# unpacking in dict comprehensions (Python 3.15)
+dicts = [{'a': 1}, {'b': 2}, {'a': 3}]
+assert {**d for d in dicts} == {'a': 3, 'b': 2}
 
 print("passed all tests..")
