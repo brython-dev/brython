@@ -133,6 +133,7 @@ Object.assign($B.wrapper_methods,
         tp_init: wrap('__init__'),
         tp_iter: wrap('__iter__'),
         tp_iternext: make_next,
+        tp_match_args: make_match_args,
         tp_new: make_new,
         tp_repr: wrap('__repr__', 1),
         tp_str : wrap('__str__', 1),
@@ -146,6 +147,10 @@ function make_doc(cls) {
     if (in_dict === $B.NULL) {
         $B.set_to_dict(cls, '__doc__', cls.tp_doc)
     }
+}
+
+function make_match_args(cls) {
+    $B.set_to_dict(cls, '__match_args__', $B.fast_tuple(cls.tp_match_args))
 }
 
 function make_getattribute(cls) {
@@ -213,7 +218,7 @@ function make_set_del(cls) {
     ))
     $B.set_to_dict(cls, '__delete__', $B.wrapper_descriptor.$factory(
         cls,
-        '__set__',
+        '__delete__',
         (self, attr) => set_func(self, attr, $B.NULL)
     ))
 }
@@ -353,6 +358,7 @@ $B.finalize_type = function(cls) {
             $B.set_type(func, $B.builtin_function_or_method)
             func.ml = {ml_name: descr}
             func.m_self = cls
+            func.m_module = $B.get_from_dict(cls, '__module__', $B.NULL)
             $B.set_to_dict(cls, descr,
                 _b_.staticmethod.$factory(func))
         }
@@ -361,8 +367,8 @@ $B.finalize_type = function(cls) {
     for (var slot in $B.wrapper_methods) {
         if (cls[slot]) {
             $B.wrapper_methods[slot](cls, slot)
-        }else if(['tp_descr_get', 'tp_descr_set', 'tp_iter', 'tp_call',
-                'tp_new', 'tp_init', 'tp_setattro'].includes(slot)){
+        } else if (['tp_descr_get', 'tp_descr_set', 'tp_iter', 'tp_call',
+                'tp_new', 'tp_init', 'tp_setattro'].includes(slot)) {
             cls[slot] = $B.NULL
             if (cls.tp_mro) {
                 for (var kls of cls.tp_mro.slice(1)) {

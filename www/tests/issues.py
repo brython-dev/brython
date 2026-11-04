@@ -3510,6 +3510,11 @@ sorted_keyword.sort(key=len, reverse=True)
 assert sorted_keyword == ['bb', 'a']
 assert list.sort.__text_signature__ == '($self, /, *, key=None, reverse=False)'
 assert [].sort.__text_signature__ == list.sort.__text_signature__
+# a quote in the file name does not break the code generated for it
+namespace_quote = {}
+exec(compile("result = list(x for x in 'ab')", "O'Brien.py", "exec"),
+    namespace_quote)
+assert namespace_quote['result'] == ['a', 'b']
 
 # ==========================================
 # Finally, report that all tests have passed
