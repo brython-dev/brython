@@ -1459,12 +1459,13 @@ _b_.locals = function() {
     // CPython's locals() returns a dict snapshot; the raw frame object is
     // not a Python mapping ('x' in locals() raised "argument of type ...
     // is not a container or iterable"). Skip frame infrastructure keys.
+
     // The free variables come after the local names: those defined as
     // getters, and __class__, which a method sets for super()
     var d = $B.empty_dict(),
         free = []
     for (var key in locals_obj) {
-        if (key.startsWith('$') || key == '__class__' || key == 'ob_type' ||
+        if (key.startsWith('$') || key == 'ob_type' ||
                 key.startsWith('lambda_' + $B.lambda_magic + '_')) {
             continue
         }
