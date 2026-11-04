@@ -1459,12 +1459,23 @@ _b_.locals = function() {
     // CPython's locals() returns a dict snapshot; the raw frame object is
     // not a Python mapping ('x' in locals() raised "argument of type ...
     // is not a container or iterable"). Skip frame infrastructure keys.
-    var d = $B.empty_dict()
+    // The free variables come after the local names: those defined as
+    // getters, and __class__, which a method sets for super()
+    var d = $B.empty_dict(),
+        free = []
     for (var key in locals_obj) {
         if (key.startsWith('$') || key == '__class__' || key == 'ob_type' ||
                 key.startsWith('lambda_' + $B.lambda_magic + '_')) {
             continue
         }
+        if (key == '__class__' ||
+                Object.getOwnPropertyDescriptor(locals_obj, key)?.get) {
+            free.push(key)
+            continue
+        }
+        _b_.dict.$setitem(d, key, locals_obj[key])
+    }
+    for (var key of free) {
         _b_.dict.$setitem(d, key, locals_obj[key])
     }
     return d
@@ -2307,7 +2318,7 @@ _b_.super.tp_init = function(self, _type, object_or_type) {
                 // The method's class, which the compiler binds as __class__
                 type = frame[1].__class__
                 if (type === undefined) {
-                    $B.RAISE(_b_.RuntimeError, "super(): no arguments")
+                    $B.RAISE(_b_.RuntimeError, "super(): __class__ cell not found")
                 }
                 object_or_type = frame[1][co_varnames[0]]
             } else {
