@@ -1230,6 +1230,22 @@ class C:
 
 C().f()
 
+# PEP 798 – Unpacking in Comprehensions
+dicts = {'x': 1}, {'y': 2}, {'x': 3, 'z': 4}
+
+d = {**t for t in dicts}
+assert d == {'x': 3, 'y': 2, 'z': 4}
+
+lists = [[1, 2], [3, 4]]
+t = [*x for x in lists]
+assert t == [1, 2, 3, 4]
+
+sets = [{1, 2}, {2, 3}, {3, 4}]
+assert {*s for s in sets} == {1, 2, 3, 4}
+
+gen = (*L for L in lists)  # equivalent to (x for L in lists for x in L)
+assert list(gen) == [1, 2, 3, 4]
+
 # PR 2800
 assert type(str.count).__name__ == 'method_descriptor'
 
