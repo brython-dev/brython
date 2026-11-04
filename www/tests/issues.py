@@ -3518,6 +3518,19 @@ class With_cls_keyword(metaclass=Meta_cls_keyword):
         self.seen = cls
 
 assert With_cls_keyword(cls=1).seen == 1
+# list.sort takes keyword arguments only, and its signature says so
+assert_raises(TypeError, [].sort, 1,
+    msg='sort() takes no positional arguments')
+sorted_keyword = ['bb', 'a']
+sorted_keyword.sort(key=len, reverse=True)
+assert sorted_keyword == ['bb', 'a']
+assert list.sort.__text_signature__ == '($self, /, *, key=None, reverse=False)'
+assert [].sort.__text_signature__ == list.sort.__text_signature__
+# a quote in the file name does not break the code generated for it
+namespace_quote = {}
+exec(compile("result = list(x for x in 'ab')", "O'Brien.py", "exec"),
+    namespace_quote)
+assert namespace_quote['result'] == ['a', 'b']
 
 # ==========================================
 # Finally, report that all tests have passed
