@@ -1281,7 +1281,7 @@ dict_funcs.setdefault = function(self) {
 
 dict_funcs.update = function(self) {
     var $ = $B.args("update", 1, {"self": null}, arguments, null, "args",
-                "kw")
+                "kw", 1)
     var self = $.self,
         args = $.args,
         kw = $.kw
