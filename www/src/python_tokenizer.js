@@ -35,11 +35,11 @@ $B.is_XID_Start = function(cp) {
     if (! is_ID_Start(char)) {
         return false
     }
-    var norm = char.normalize('NFKC')
-    if (! is_ID_Start(norm[0])) {
+    var [first, ...rest] = char.normalize('NFKC')
+    if (! is_ID_Start(first)) {
         return false
     }
-    for (let char of norm.substr(1)) {
+    for (let char of rest) {
         if (! is_ID_Continue(char)) {
             return false
         }
@@ -52,8 +52,8 @@ $B.is_XID_Continue = function(cp) {
     if (! is_ID_Continue(char)) {
         return false
     }
-    var norm = char.normalize('NFKC')
-    for (let char of norm.substr(1)) {
+    var [, ...rest] = char.normalize('NFKC')
+    for (let char of rest) {
         if (! is_ID_Continue(char)) {
             return false
         }
@@ -162,6 +162,8 @@ function raise_error(err_type, filename,
     exc.args = $B.fast_tuple([message, $B.fast_tuple(args1)])
     throw exc
 }
+
+var MAXLEVEL = 200 // maximum depth of nested brackets
 
 var ops = '.,:;+-*/%~^|&=<>[](){}@', // ! is valid in f-strings
     op2 = ['**', '//', '>>', '<<'],
@@ -447,6 +449,15 @@ $B.tokenizer = function(src, filename, mode, parser) {
                     throw err
                 }
                 fstring_stack.pop()
+                if (fstring_stack.length &&
+                        $B.last(fstring_stack).expr_start !== undefined) {
+                    // back in the replacement field of the enclosing f-string
+                    ft_expr_start = $B.last(fstring_stack).expr_start
+                }
+                if (fstring_stack.length > 0) {
+                    // back in the enclosing f-string or t-string
+                    ft_type = $B.last(fstring_stack).ft_type
+                }
                 // pop from token modes
                 token_modes.pop()
                 token_mode = $B.last(token_modes)
@@ -469,6 +480,7 @@ $B.tokenizer = function(src, filename, mode, parser) {
                     token_mode = 'regular_within_ft'
                     $B.last(fstring_stack).nb_braces_on_entry = braces.length
                     ft_expr_start = pos - line_start
+                    $B.last(fstring_stack).expr_start = ft_expr_start
                     state = null
                     token_modes.push(token_mode)
                 }
@@ -718,7 +730,7 @@ $B.tokenizer = function(src, filename, mode, parser) {
                           line_num, indent, line))
                     }
                     state = null
-                    pos--
+                    pos -= char.length
                 }
                 break
 
@@ -922,6 +934,12 @@ $B.tokenizer = function(src, filename, mode, parser) {
                                 pos++
                             }
                             if ('[({'.includes(char)) {
+                                if (braces.length >= MAXLEVEL) {
+                                    var col = pos - line_start - op.length + 1
+                                    raise_error(_b_.SyntaxError, filename,
+                                        line_num, col + 1, line_num, col + 2,
+                                        line, 'too many nested parentheses')
+                                }
                                 braces.push({char, pos, line_num, line_start, line})
                             } else if ('])}'.includes(char)) {
                                 if (debug) {
@@ -954,7 +972,7 @@ $B.tokenizer = function(src, filename, mode, parser) {
                                     line)
                                 // used on fstring debug mode
                                 token.metadata = src.substring(
-                                    line_start + ft_start + 2, pos - 1)
+                                    line_start + ft_expr_start, pos - 1)
                                 t.push(token)
                             }
                         } else if (char == ' ' || char == '\t') {
@@ -1030,7 +1048,8 @@ $B.tokenizer = function(src, filename, mode, parser) {
                             fstring_stack.push(
                                 {
                                     start: pos,
-                                    nb_braces_on_entry: braces.length
+                                    nb_braces_on_entry: braces.length,
+                                    ft_type
                                 }
                             )
                             continue
@@ -1054,10 +1073,13 @@ $B.tokenizer = function(src, filename, mode, parser) {
                         line_num, pos - line_start,
                         line))
                     if (token_mode == 'regular_within_ft' && char == '}') {
-                        t.push(Token('OP', char,
+                        let closing_brace = Token('OP', char,
                             line_num, pos - line_start - 1,
                             line_num, pos - line_start,
-                            line))
+                            line)
+                        closing_brace.metadata = src.substring(
+                            line_start + ft_expr_start, pos - 1)
+                        t.push(closing_brace)
                         show_braces()
                         if ($B.last(braces).char == '{') {
                             token_modes.pop()
