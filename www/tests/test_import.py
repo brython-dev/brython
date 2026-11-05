@@ -143,4 +143,12 @@ from math import pi, pi as PI, pi as Pi
 assert PI == pi
 assert Pi == pi
 
+# lazy import (Python 3.15)
+lazy import faulthandler
+faulthandler.disable
+
+# PR 3043
+import math
+assert type(math.log) is type(abs) # builtin_function_or_method
+
 print('passed all tests')

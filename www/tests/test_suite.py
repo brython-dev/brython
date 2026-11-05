@@ -915,6 +915,30 @@ class A:
 
 assert A.__doc__ == "Docstring of class A."
 
+# identifiers are normalized to NFKC, strings are not
+class Box:
+    def __init__(self):
+        self.field = "field"
+        self.café = "composed"
+
+box = Box()
+assert box.ﬁeld == "field"
+namespace = {"box": box}
+exec("decomposed = box.café", namespace)
+assert namespace["decomposed"] == "composed"
+assert getattr(box, "ﬁeld", "missing") == "missing"
+
+ﬂag = 1
+assert flag == 1
+
+Ⅷ = 8
+assert VIII == 8
+
+def ｆｕｌｌ():
+    return "full"
+
+assert full() == "full"
+
 # chained assignments and unpacking
 x, y = info = (1, 2)
 assert x == 1
@@ -1229,6 +1253,22 @@ class C:
         assert nb == 1
 
 C().f()
+
+# PEP 798 – Unpacking in Comprehensions
+dicts = {'x': 1}, {'y': 2}, {'x': 3, 'z': 4}
+
+d = {**t for t in dicts}
+assert d == {'x': 3, 'y': 2, 'z': 4}
+
+lists = [[1, 2], [3, 4]]
+t = [*x for x in lists]
+assert t == [1, 2, 3, 4]
+
+sets = [{1, 2}, {2, 3}, {3, 4}]
+assert {*s for s in sets} == {1, 2, 3, 4}
+
+gen = (*L for L in lists)  # equivalent to (x for L in lists for x in L)
+assert list(gen) == [1, 2, 3, 4]
 
 # PR 2800
 assert type(str.count).__name__ == 'method_descriptor'
