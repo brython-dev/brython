@@ -744,8 +744,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-11-04 22:20:57.180401"
-__BRYTHON__.timestamp=1793827257180
+__BRYTHON__.compiled_date="2026-11-05 15:20:20.562760"
+__BRYTHON__.timestamp=1793888420562
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -8423,7 +8423,7 @@ function set_copy_and_difference(so,other){var result=set_copy(so)
 set_difference_update(result,other)
 return result}
 function set_difference(so,other){var other_size,other_is_dict
-if($B.$isinstance(other,[set,frozenset])){other_size=set.mp_length(other)}else if($B.is_dict(other)){other_size=_b_.dict.mp_length(other)
+if($B.$isinstance(other,[set,frozenset])){other_size=set.mp_length(other)}else if($B.get_class(other)===_b_.dict){other_size=_b_.dict.mp_length(other)
 other_is_dict=true}else{
 return set_copy_and_difference(so,other)}
 if(set.mp_length(so)>> 2 > other_size){return set_copy_and_difference(so,other)}
@@ -8434,7 +8434,7 @@ for(let entry of set_iter_with_hash(so)){if(! set_contains(other,entry.item,entr
 result.ob_type=$B.get_class(so)
 return result}
 function set_difference_update(so,other){if(so===other){return set.tp_funcs.clear(so)}
-if($B.$isinstance(other,[set,frozenset])){for(let entry of set_iter_with_hash(other)){set_discard_entry(so,entry.item,entry.hash)}}else if($B.is_dict(other)){for(let entry of _b_.dict.$iter_items(other)){set_discard_entry(so,entry.key,entry.hash)}}else{
+if($B.$isinstance(other,[set,frozenset])){for(let entry of set_iter_with_hash(other)){set_discard_entry(so,entry.item,entry.hash)}}else if($B.get_class(other)===_b_.dict){for(let entry of _b_.dict.$iter_items(other)){set_discard_entry(so,entry.key,entry.hash)}}else{
 var iterator=$B.make_js_iterator(other)
 for(let key of iterator){set_discard_key(so,key)}}}
 const DISCARD_NOTFOUND=0
@@ -8455,7 +8455,7 @@ var result=make_new_set_base_type(so)
 if($B.$isinstance(other,[set,frozenset])){if(other.$used > so.$used){var tmp=so
 so=other
 other=tmp}
-for(let entry of set_iter_with_hash(other)){if(set_contains(so,entry.item,entry.hash)){set_add(result,entry.item,entry.hash)}}}else if($B.is_dict(other)){for(let entry of _b_.dict.$iter_items(other)){if(set_contains(so,entry.key,entry.hash)){set_add(result,entry.key,entry.hash)}}}else{
+for(let entry of set_iter_with_hash(other)){if(set_contains(so,entry.item,entry.hash)){set_add(result,entry.item,entry.hash)}}}else if($B.get_class(other)===_b_.dict){for(let entry of _b_.dict.$iter_items(other)){if(set_contains(so,entry.key,entry.hash)){set_add(result,entry.key,entry.hash)}}}else{
 let iterator=$B.make_js_iterator(other)
 for(var other_item of iterator){var test=set_contains(so,other_item)
 if(test){set_add(result,other_item)}}}
@@ -8479,7 +8479,7 @@ a.$store=b.$store
 b.$used=temp.$used
 b.$store=temp.$store}
 function set_symmetric_difference_update(so,other){if(so==other){return set.tp_funcs.clear(so)}
-if($B.is_dict(other)){for(let entry of _b_.dict.$iter_items(other)){let rv=set_discard_entry(so,entry.key,entry.hash)
+if($B.get_class(other)===_b_.dict){for(let entry of _b_.dict.$iter_items(other)){let rv=set_discard_entry(so,entry.key,entry.hash)
 if(rv==DISCARD_NOTFOUND){set_add(so,entry.key,entry.hash)}}}else if($B.$isinstance(other,[set,frozenset])){for(let entry of set_iter_with_hash(other)){let rv=set_discard_entry(so,entry.item,entry.hash)
 if(rv==DISCARD_NOTFOUND){set_add(so,entry.item,entry.hash)}}}else{
 return set_symmetric_difference_update(so,set.$factory(other))}
@@ -8666,11 +8666,8 @@ set_funcs.issubset=function(self,other){
 $B.check_nb_args_no_kw('set.issubset',2,arguments)
 if($B.$isinstance(other,[set,frozenset])){if(set.mp_length(self)> set.mp_length(other)){return false}
 for(let entry of set_iter_with_hash(self)){if(! set_lookkey(other,entry.item,entry.hash)){return false}}
-return true}else if($B.is_dict(other)){for(let entry of _b_.dict.$iter_items(self)){if(! set_lookkey(other,entry.key,entry.hash)){return false}}
 return true}else{
-var member_func=$B.member_func(other)
-for(let entry of set_iter_with_hash(self)){if(! member_func(entry.item)){return false}}
-return true}}
+return set_funcs.issubset(self,set.$factory(other))}}
 set_funcs.issuperset=function(self,other){
 $B.check_nb_args_no_kw('set.issuperset',2,arguments)
 if($B.$isinstance(other,[set,frozenset])){return set_funcs.issubset(other,self)}else{
@@ -8709,7 +8706,8 @@ res=set.tp_funcs.union(res,other)}}
 return res}
 set_funcs.update=function(self){
 var $=$B.args("update",1,{self:null},arguments,null,"args")
-for(var iterable of $.args){if(Array.isArray(iterable)){for(let i=0;i < iterable.length;i++){set_add(self,iterable[i])}}else if($B.$isinstance(iterable,[set,frozenset])){for(let entry of set_iter_with_hash(iterable)){set_add(self,entry.item,entry.hash)}}else if($B.is_dict(iterable)){for(let entry of _b_.dict.$iter_items(iterable)){set_add(self,entry.key,entry.hash)}}else{
+for(var iterable of $.args){var klass=$B.get_class(iterable)
+if(klass===_b_.list ||klass===_b_.tuple){for(let i=0;i < iterable.length;i++){set_add(self,iterable[i])}}else if($B.$isinstance(iterable,[set,frozenset])){for(let entry of set_iter_with_hash(iterable)){set_add(self,entry.item,entry.hash)}}else if($B.get_class(iterable)===_b_.dict){for(let entry of _b_.dict.$iter_items(iterable)){set_add(self,entry.key,entry.hash)}}else{
 var iterator=$B.make_js_iterator(iterable)
 for(let item of iterator){set_add(self,item)}}}
 self.$version++
@@ -15030,7 +15028,7 @@ $B.imported["_importlib"]=_importlib_module})(__BRYTHON__);
 "use strict";
 (function($B){var _b_=$B.builtins
 $B.imported[$B.OB_TYPE]=_b_.dict
-$B.lazy_modules=_b_.set.$factory()
+$B.lazy_modules=_b_.set.tp_new(_b_.set,[])
 var update=$B.update_obj=function(mod,data){for(let attr in data){mod[attr]=data[attr]}}
 var modules={}
 var win=$B.jsobj2pyobj(globalThis)
