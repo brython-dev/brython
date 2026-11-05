@@ -99,4 +99,32 @@ a.__add__ = lambda other: 99
 
 assertRaises(TypeError, exec, "a + 7", globals())
 
+# a subscript finds its method in the class, never asking the metaclass
+class Hidden(type):
+    def __getattribute__(cls, name):
+        if name in ("__getitem__", "__setitem__", "__delitem__"):
+            raise AttributeError(name)
+        return type.__getattribute__(cls, name)
+
+class Store(metaclass=Hidden):
+    def __init__(self):
+        self.held = {}
+
+    def __getitem__(self, key):
+        return key
+
+    def __setitem__(self, key, value):
+        self.held[key] = value
+
+    def __delitem__(self, key):
+        del self.held[key]
+
+store = Store()
+assert store[0:1] == slice(0, 1)
+store["k"] = 1
+assert store.held == {"k": 1}
+del store["k"]
+assert store.held == {}
+assertRaises(TypeError, lambda: object()[0:1])
+
 print("tests pass")
