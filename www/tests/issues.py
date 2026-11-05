@@ -3502,6 +3502,108 @@ assert list(deque_2934(iterable=[1, 2])) == [1, 2]
 assert deque_2934().maxlen is None
 assert_raises(ValueError, deque_2934, [], -1)
 
+# the frame of a generator expression: .0 is the iterator, and its free
+# variables are in locals()
+def genexpr_frame():
+    y = 1
+    return list({k: type(v).__name__ for k, v in locals().items()}
+                for _ in range(1) if y)
+
+assert genexpr_frame() == [{'.0': 'range_iterator', '_': 'int', 'y': 'int'}]
+
+# super() in a function nested in a method, and __class__ in locals()
+class Base_class_cell:
+    def greet(self):
+        return "base"
+
+class Class_cell(Base_class_cell):
+    def plain(self):
+        return sorted(locals())
+
+    def uses_super(self):
+        super()
+        return sorted(locals())
+
+    def nested(self):
+        def inner(obj):
+            return super().greet(), sorted(locals())
+        return inner(self), sorted(locals())
+
+    def in_lambda(self):
+        return (lambda obj: super().greet())(self)
+
+assert Class_cell().plain() == ['self']
+assert Class_cell().uses_super() == ['__class__', 'self']
+assert Class_cell().nested() == (('base', ['__class__', 'obj']),
+                                 ['__class__', 'inner', 'self'])
+assert Class_cell().in_lambda() == 'base'
+
+class Class_cell_order(Base_class_cell):
+    def m(self):
+        def inner(obj):
+            x = 1
+            super()
+            return list(locals())
+        return inner(self), list(locals())
+
+assert Class_cell_order().m() == (['obj', 'x', '__class__'],
+                                  ['self', 'inner', '__class__'])
+
+def super_outside_class(x):
+    return super()
+
+assert_raises(RuntimeError, super_outside_class, 1,
+    msg="super(): __class__ cell not found")
+
+# super(type, obj) where obj is an instance of a list or tuple subclass
+class List_super(list):
+    def __init__(self, items):
+        super(List_super, self).__init__(items)
+
+assert list(List_super([1, 2])) == [1, 2]
+assert super(List_super, List_super([3])).copy() == [3]
+
+class Tuple_super(tuple):
+    pass
+
+assert super(Tuple_super, Tuple_super((1,))).count(1) == 1
+
+# an unbound method called with no argument
+try:
+    list.clear()
+    raise AssertionError("should have raised TypeError")
+except TypeError as exc:
+    assert exc.args[0] == "unbound method list.clear() needs an argument"
+# a keyword named like the receiver of a builtin is the caller's keyword
+assert "{self}".format(self=1) == "1"
+assert "{0}-{self}".format(1, self=2) == "1-2"
+assert dict({}, self=1) == {"self": 1}
+d_self = {}
+d_self.update(self=1)
+assert d_self == {"self": 1}
+
+class Meta_cls_keyword(type):
+    pass
+
+class With_cls_keyword(metaclass=Meta_cls_keyword):
+    def __init__(self, cls=None):
+        self.seen = cls
+
+assert With_cls_keyword(cls=1).seen == 1
+# list.sort takes keyword arguments only, and its signature says so
+assert_raises(TypeError, [].sort, 1,
+    msg='sort() takes no positional arguments')
+sorted_keyword = ['bb', 'a']
+sorted_keyword.sort(key=len, reverse=True)
+assert sorted_keyword == ['bb', 'a']
+assert list.sort.__text_signature__ == '($self, /, *, key=None, reverse=False)'
+assert [].sort.__text_signature__ == list.sort.__text_signature__
+# a quote in the file name does not break the code generated for it
+namespace_quote = {}
+exec(compile("result = list(x for x in 'ab')", "O'Brien.py", "exec"),
+    namespace_quote)
+assert namespace_quote['result'] == ['a', 'b']
+
 # ==========================================
 # Finally, report that all tests have passed
 # ==========================================
