@@ -1441,4 +1441,17 @@ class L(list):
 
 assert L([1, 2]).size() == 2
 
+# PR 3170
+class Base:
+
+    @property
+    def prop(self):
+        return "value"
+
+class Derived(Base):
+
+    pass
+
+assert type(super(Derived, Derived).prop) is property
+
 print('passed all tests..')
