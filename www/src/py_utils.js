@@ -413,7 +413,7 @@ $B.check_nb_args = function(name, expected, args) {
     }
     if (len != expected) {
         if (expected == 0) {
-            $B.RAISE(_b_.TypeError, name + "() takes no argument" +
+            $B.RAISE(_b_.TypeError, name + "() takes no arguments" +
                 " (" + len + " given)")
         } else {
             $B.RAISE(_b_.TypeError, name + "() takes exactly " +
@@ -455,7 +455,7 @@ $B.check_nb_args_no_kw = function(name, expected, args) {
     }
     if (len != expected) {
         if (expected == 0) {
-            $B.RAISE(_b_.TypeError, name + "() takes no argument" +
+            $B.RAISE(_b_.TypeError, name + "() takes no arguments" +
                 " (" + len + " given)")
         } else {
             $B.RAISE(_b_.TypeError, name + "() takes exactly " +
