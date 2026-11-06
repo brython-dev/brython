@@ -147,4 +147,8 @@ assert Pi == pi
 lazy import faulthandler
 faulthandler.disable
 
+# PR 3043
+import math
+assert type(math.log) is type(abs) # builtin_function_or_method
+
 print('passed all tests')

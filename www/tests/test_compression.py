@@ -46,5 +46,11 @@ print(len(s), len(comp))
 
 assert zlib.decompress(comp).decode('utf-8') == s
 
+# issue 2910
+ba = bytearray((1,) * 203)
+c = zlib.compress(ba)
+assert zlib.decompress(c) == ba
+
+
 
 print('all tests passed...')
