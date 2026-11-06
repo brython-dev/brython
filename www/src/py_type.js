@@ -4,6 +4,7 @@
 var _b_ = $B.builtins
 
 const TPFLAGS = $B.TPFLAGS // defined ib brython_builtins.js
+const MARKERS = ['__dict__', '__weakref__']
 
 // generic code for class constructor
 $B.$class_constructor = function(qualname, dict, metaclass, resolved_bases,
