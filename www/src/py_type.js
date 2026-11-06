@@ -1755,7 +1755,12 @@ type_funcs.__bases___set = function() {
     // Reset bases and mro
     cls.tp_bases = bases
     cls.tp_mro = $B.make_mro(cls)
-
+    cls.tp_base = best_base(bases)
+    for (var reset of [reset_call, reset_getattribute, reset_descr_get,
+            reset_descr_set, reset_setattr, reset_init, reset_new,
+            reset_factory, reset_iter]) {
+        reset(cls)
+    }
     for (var base of bases) {
         base.tp_subclasses.push(cls)
     }
