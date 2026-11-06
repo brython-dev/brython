@@ -1472,7 +1472,7 @@ class D(C):
 C.__bases__ = (B,)
 assert D.value == 1
 
-# PR
+# PR 3173
 class A: pass
 class B: pass
 class X(B): pass
@@ -1481,6 +1481,17 @@ assert B.__subclasses__() == [X]
 
 X.__bases__ = (A,)
 assert B.__subclasses__() == []
+
+# PR 3179
+assert_raises(TypeError, type, "P", (), {"__slots__": ("x,y",)},
+    msg="__slots__ must be identifiers")
+
+
+assert_raises(TypeError, type, "P", (), {"__slots__": (1,)},
+    msg="__slots__ items must be strings, not 'int'")
+
+assert_raises(TypeError, type, "P", (), {"__slots__": ("__dict__", "__dict__")},
+    msg="__dict__ slot disallowed: we already got one")
 
 
 
