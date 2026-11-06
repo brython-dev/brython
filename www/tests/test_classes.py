@@ -1454,4 +1454,34 @@ class Derived(Base):
 
 assert type(super(Derived, Derived).prop) is property
 
+# PR 3172
+class A:
+
+    value = 0
+
+class B:
+
+    value = 1
+
+class C(A):
+    pass
+
+class D(C):
+    pass
+
+C.__bases__ = (B,)
+assert D.value == 1
+
+# PR
+class A: pass
+class B: pass
+class X(B): pass
+
+assert B.__subclasses__() == [X]
+
+X.__bases__ = (A,)
+assert B.__subclasses__() == []
+
+
+
 print('passed all tests..')
