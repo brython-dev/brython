@@ -1709,16 +1709,31 @@ type_funcs.__bases___set = function() {
     var $ = $B.args('__bases__', 2, {cls: null, bases: null}, arguments)
     var cls = $.cls,
         bases = $.bases
+
     if (! $B.exact_type(bases, _b_.tuple)) {
         $B.RAISE(_b_.TypeError,
             `can only assign tuple to ${$B.get_name(cls)}.__bases__, ` +
             `not ${$B.class_name(bases)}`
         )
     }
-    var old_bases = cls.tp_bases,
-        old_mros = new Map(),
-        classes = [cls]
+
+    // Remove cls from subclasses of previous bases
+    var old_bases = cls.tp_bases
+    for (var base of old_bases) {
+        let ix = base.tp_subclasses.indexOf(cls)
+        if (ix != -1) {
+            base.tp_subclasses.splice(ix, 1)
+        }
+    }
+    // Reset bases and mro
     cls.tp_bases = bases
+    cls.tp_mro = $B.make_mro(cls)
+
+    for (var base of bases) {
+        base.tp_subclasses.push(cls)
+    }
+    var old_mros = new Map(),
+        classes = [cls]
     try {
         for (var klass of classes) {
             if (! old_mros.has(klass)) {

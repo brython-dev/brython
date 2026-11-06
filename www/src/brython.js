@@ -744,8 +744,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-11-05 15:52:14.155361"
-__BRYTHON__.timestamp=1793890334155
+__BRYTHON__.compiled_date="2026-11-06 08:11:51.083889"
+__BRYTHON__.timestamp=1793949111083
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -3179,7 +3179,7 @@ if(test){console.log('scan cl_dict')}
 for(var[key,v]of Object.entries(cl_dict)){if(test){console.log('item in cl dict',item)}
 if(test){}
 if(['__module__','__doc__','__dict__','__qualname__','__firstlineno__','__static_attributes__','__annotate_func__'].includes(key)){continue}
-if(key=='__class_getitem__'){
+if(key=='__class_getitem__' ||key=='__init_subclass__'){
 if($B.get_class(v)!==_b_.classmethod){var v1=$B.$call(_b_.classmethod,v)
 $B.str_dict_set(cl_dict,key,v1)}}
 if(test){console.log('set name',item)}
@@ -3248,8 +3248,19 @@ var cls=$.cls,bases=$.bases
 if(! $B.exact_type(bases,_b_.tuple)){$B.RAISE(_b_.TypeError,`can only assign tuple to ${$B.get_name(cls)}.__bases__, `+
 `not ${$B.class_name(bases)}`
 )}
+var old_bases=cls.tp_bases
+for(var base of old_bases){let ix=base.tp_subclasses.indexOf(cls)
+if(ix !=-1){base.tp_subclasses.splice(ix,1)}}
 cls.tp_bases=bases
-cls.tp_mro=$B.make_mro(cls)}
+cls.tp_mro=$B.make_mro(cls)
+for(var base of bases){base.tp_subclasses.push(cls)}
+var old_mros=new Map(),classes=[cls]
+try{
+for(var klass of classes){if(! old_mros.has(klass)){old_mros.set(klass,klass.tp_mro)}
+klass.tp_mro=$B.make_mro(klass)
+classes.push(...klass.tp_subclasses)}}catch(err){cls.tp_bases=old_bases
+for(var[klass,mro]of old_mros){klass.tp_mro=mro}
+throw err}}
 type_funcs.__dict___get=function(cls){return{
 ob_type:$B.mappingproxy,mapping:$B.get_dict(cls)}}
 type_funcs.__dict___set=function(self){}
@@ -5556,7 +5567,7 @@ var getter=f_cls.tp_descr_get
 var res
 if(getter !==$B.NULL){if($test){console.log('call getter',getter)
 console.log('args',self.obj,self.obj_type)}
-res=getter(f,self.obj,self.obj_type)}else{
+res=getter(f,self.obj===self.obj_type ? $B.NULL :self.obj,self.obj_type)}else{
 res=f}
 if($test){console.log('result of super.tp_getattro',attr,res)}
 if(res===$B.NULL){return _b_.object.tp_getattro(self,attr)}
@@ -5592,9 +5603,10 @@ _b_.super.tp_members=[["__thisclass__",$B.TYPES.OBJECT,"type",1],["__self__",$B.
 $B.set_func_names($$super,"builtins")
 _b_.vars=function(){var $=$B.args('vars',1,{obj:null},arguments,{obj:$B.NULL},null,null)
 var obj=$.obj
-if(obj===$B.NULL){return _b_.locals()}else{
-if($B.get_dict(obj)){return $B.get_dict(obj)}else{
-$B.RAISE(_b_.TypeError,"vars() argument must have __dict__ attribute")}}}
+if(obj===$B.NULL){return _b_.locals()}
+try{
+return $B.$getattr(obj,'__dict__')}catch(err){$B.RAISE_IF_NOT(err,_b_.AttributeError)
+$B.RAISE(_b_.TypeError,"vars() argument must have __dict__ attribute")}}
 var zip=_b_.zip
 zip.$factory=function(){var res={ob_type:zip,items:[]}
 if(arguments.length==0){return res}
