@@ -639,6 +639,7 @@ $B.TYPES = {
     NONE: 20
 }
 
+$B.Py_READONLY = 1
 
 // minimum and maximum safe integers
 $B.max_int = Math.pow(2, 53) - 1
@@ -710,6 +711,8 @@ $B.OB_TYPE = Symbol('OB_TYPE') // object type
 $B.ID = Symbol('ID') // used for built-in id()
 $B.INUM = Symbol('INUM') // for iterators
 $B.FAST_ITER = Symbol('FAST_ITER') // fast iteration
+$B.KW = Symbol('KW') // keyword arguments of a call: {[$B.KW]: [named, ...unpacked]}
+
 
 // special repr() for some codepoints, used in py_string.js and py_bytes.js
 $B.special_string_repr = {

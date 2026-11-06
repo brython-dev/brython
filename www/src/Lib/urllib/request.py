@@ -15,9 +15,50 @@ class FileIO:
     def read(self):
         return self._data
 
+class Request:
+
+    def __init__(self, url, data=None, headers={}, origin_req_host=None,
+                 unverifiable=False, method=None):
+        self.full_url = url
+        self.data = data
+        self.headers = {}
+        for key, value in headers.items():
+            self.add_header(key, value)
+        self.origin_req_host = origin_req_host
+        self.unverifiable = unverifiable
+        self.method = method
+
+    def get_full_url(self):
+        return self.full_url
+
+    def get_method(self):
+        if self.method is not None:
+            return self.method
+        return 'POST' if self.data is not None else 'GET'
+
+    def add_header(self, key, val):
+        self.headers[key.capitalize()] = val
+
+    def has_header(self, header_name):
+        return header_name in self.headers
+
+    def get_header(self, header_name, default=None):
+        return self.headers.get(header_name, default)
+
+    def header_items(self):
+        return list(self.headers.items())
+
+
 def urlopen(url, data=None, timeout=None):
     global result
     result = None
+    method = None
+    headers = {}
+    if isinstance(url, Request):
+        data = url.data if data is None else data
+        headers = url.headers
+        method = url.get_method()
+        url = url.full_url
 
     def on_complete(req):
         global result
@@ -29,12 +70,10 @@ def urlopen(url, data=None, timeout=None):
     if timeout is not None:
        _ajax.set_timeout(timeout)
 
-    if data is None:
-       _ajax.open('GET', url, False)
-       _ajax.send()
-    else:
-       _ajax.open('POST', url, False)
-       _ajax.send(data)
+    _ajax.open(method or ('GET' if data is None else 'POST'), url, False)
+    for key, value in headers.items():
+        _ajax.set_header(key, value)
+    _ajax.send(data)
 
     if result is not None:
         if isinstance(result.text, str):
