@@ -213,6 +213,10 @@ $B.make_mro = function(cls) {
         seqs = [],
         pos1 = 0
     for (var base of bases) {
+        if (bases.indexOf(base) != bases.lastIndexOf(base)) {
+            $B.RAISE(_b_.TypeError,
+                `duplicate base class ${$B.get_name(base)}`)
+        }
         // We can't simply push bases[i].__mro__
         // because it would be modified in the algorithm
         let bmro = [],
@@ -639,6 +643,7 @@ $B.TYPES = {
     NONE: 20
 }
 
+$B.Py_READONLY = 1
 
 // minimum and maximum safe integers
 $B.max_int = Math.pow(2, 53) - 1
@@ -710,6 +715,8 @@ $B.OB_TYPE = Symbol('OB_TYPE') // object type
 $B.ID = Symbol('ID') // used for built-in id()
 $B.INUM = Symbol('INUM') // for iterators
 $B.FAST_ITER = Symbol('FAST_ITER') // fast iteration
+$B.KW = Symbol('KW') // keyword arguments of a call: {[$B.KW]: [named, ...unpacked]}
+
 
 // special repr() for some codepoints, used in py_string.js and py_bytes.js
 $B.special_string_repr = {

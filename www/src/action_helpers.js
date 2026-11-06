@@ -347,7 +347,8 @@ $B._PyPegen.interpolation = function(p, expression,
     }
 
     var interpolation = $B._PyAST.Interpolation(
-        expression, final_exprstr, conversion_val, format ? format.result : NULL)
+        expression, final_exprstr, conversion_val, format ? format.result : NULL,
+        position)
 
     set_position_from_obj(interpolation, position)
 
@@ -373,8 +374,8 @@ $B._PyPegen.formatted_value = function(p,
     if (typeof conversion_val == 'string') {
         // Got a conversion character, validate and convert to charCode
         if (conversion_val.length > 1 || ! 'sra'.includes(conversion_val)) {
-            $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(conversion.result,
-                `f-string: invalid conversion character ${conversion_val}: ` +
+            $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, conversion.result,
+                `f-string: invalid conversion character '${conversion_val}': ` +
                 "expected 's', 'r', or 'a'")
         }
         conversion_val = conversion_val.charCodeAt(0)
@@ -405,7 +406,7 @@ $B._PyPegen.formatted_value = function(p,
         debug.lineno = arena.lineno
         debug.col_offset = arena.col_offset + 1
         debug.end_lineno = debug_end_line
-        debug.end_col_offset = debug_end_offset
+        debug.end_col_offset = debug_end_offset - 1
         var joined_str = new $B.ast.JoinedStr([debug, formatted_value])
         set_position_from_obj(joined_str, arena)
         return joined_str
@@ -1208,12 +1209,12 @@ $B._PyPegen.concatenate_strings = function(p, strings) {
         values = []
 
     function error(message) {
-        var a = {lineno: first.start[0],
-                 col_offset: first.start[1],
-                 end_lineno : last.end[0],
-                 end_col_offset: last.end[1]
+        var a = {lineno: first.lineno,
+                 col_offset: first.col_offset,
+                 end_lineno : last.end_lineno,
+                 end_col_offset: last.end_col_offset
                 }
-        $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(a, message)
+        $B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p, a, message)
     }
 
     function set_position_from_list(ast_obj, items) {
