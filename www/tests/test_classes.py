@@ -1573,4 +1573,8 @@ assert b.x == 2
 Box = type("Box", (), {"__class_getitem__": staticmethod(lambda key: key)})
 assert Box.__class_getitem__(3) == 3
 
+# PR 3199
+Box = type("Box", (), {"__dict__": property(lambda self: {"public": 1})})
+assert Box().__dict__ == {'public': 1}
+
 print('passed all tests..')
