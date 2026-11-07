@@ -49,6 +49,7 @@ class Node:
         self.is_leaf = char is not None
         self.level = level
         self.weight = weight
+        self.children = []
 
     def add(self, children):
         self.children = children
@@ -283,6 +284,7 @@ def cl_encode(lengths):
 
 
 def compress_dynamic(writer, store, lit_len_count, distance_count):
+
     t0 = timer()
 
     # Add 1 occurrence of the End Of Block character
@@ -480,11 +482,12 @@ class _Compressor:
             # From different tests, the tables take about 100 bytes, and each
             # (length, distance) tuple is encoded in about 20 bits
             score = replaced - 100 - (nb_tuples * 20 // 8)
+            counts = len(lit_len_count) + len(distance_count)
 
 
             writer.writeBit(is_final) # BFINAL = 1
 
-            if score < 0:
+            if score < 0 or counts < 10:
                 compress_fixed(writer, store)
             else:
                 compress_dynamic(writer, store, lit_len_count, distance_count)
