@@ -1562,7 +1562,7 @@ _b_.type.tp_new = function(cls, args, kw) {
             if (test) {
                 // console.log('check __set_name__ for', key, v)
             }
-            if (key == '__class_getitem__') {
+            if (key == '__class_getitem__' || key == '__init_subclass__') {
                 // always a classmethod
                 if ($B.get_class(v) !== _b_.classmethod) {
                     var v1 = $B.$call(_b_.classmethod, v)
