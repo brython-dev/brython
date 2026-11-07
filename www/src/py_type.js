@@ -1540,8 +1540,7 @@ _b_.type.tp_new = function(cls, args, kw) {
     } else {
         set_slots(cl_dict, class_obj)
 
-        if ($B.str_dict_get(cl_dict, '__slots__', $B.NULL) === $B.NULL ||
-                class_obj.$slots_has_dict) {
+        if ($B.get_from_dict(class_obj, '__dict__', $B.NULL) === $B.NULL) {
             $B.set_to_dict(class_obj, '__dict__',
                 $B.getset_descriptor.$factory(
                     class_obj,
