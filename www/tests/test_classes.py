@@ -1503,5 +1503,13 @@ class C(A):
 C.__bases__ = (B,)
 assert C()() == 'B'
 
+# PR 3186
+A = type("A", (), {"__slots__": ("x",)})
+B = type("B", (A,), {"__slots__": ("x",)})
+b = B()
+b.x = 2
+_ = A.x.__set__(b, 1)
+assert b.x == 2
+
 
 print('passed all tests..')
