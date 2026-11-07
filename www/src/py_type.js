@@ -1106,6 +1106,7 @@ function reset_setattr(cls) {
 function set_slots(cl_dict, class_obj) {
     let slots = $B.str_dict_get(cl_dict, '__slots__', $B.NULL)
     if (slots !== $B.NULL) {
+        class_obj.$slots = []
         if ($B.is_str(slots)) {
             slots = [slots]
         }
