@@ -612,4 +612,27 @@ for s, chars in ((Name("ab"), ["a", "b"]), (Name("😀a"), ["😀", "a"])):
     it.__setstate__(1)
     assert list(it) == chars[1:]
 
+# PR 3063
+class T(str):
+    pass
+
+def g(text):
+    return text
+
+assert g(**{T("text"): "abc"}) == 'abc'
+
+# PR 3100
+x = 3.14159
+assert str(list(t"a{x!r}b")) == "['a', Interpolation(3.14159, 'x', 'r', ''), 'b']"
+
+# PR 3101
+assert (t"Hello " + t"world").strings  == ('Hello world',)
+
+# PR 3102
+assert f"{t'a'.strings}" == "('a',)"
+
+# PR 3104
+x = 3.14159
+assert str(t"{x:.2f}".interpolations) == "(Interpolation(3.14159, 'x', None, '.2f'),)"
+
 print("passed all tests...")
