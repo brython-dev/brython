@@ -6,6 +6,10 @@ assert "center".center(30) == '            center            '
 y="center"
 assert y.center(30) == '            center            '
 assert str.center(y,30) == '            center            '
+# the odd fill char goes left when the width is odd too; an astral character
+# counts once
+assert "ab".center(5, "*") == "**ab*" and "abc".center(6, "*") == "*abc**"
+assert "😀".center(3, "*") == "*😀*"
 
 
 x = "azert$t y t"
