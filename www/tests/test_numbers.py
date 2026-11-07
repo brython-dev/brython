@@ -942,5 +942,7 @@ assert float("nan") is not float("nan")
 nan = float("nan")
 assert nan is nan
 
+# PR 3011
+assert format(2.5, '.0f') == '2'
 
 print('passed all tests...')
