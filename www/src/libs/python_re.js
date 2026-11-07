@@ -3279,23 +3279,6 @@ GroupMO.prototype.backtrack = function(string, groups) {
             nb0 = mos.length
         while (mos.length > 0) {
             var mo = mos.pop()
-            if (mo.node instanceof Case) {
-                var rank = mo.node.parent.items.indexOf(mo.node)
-                for (var _case of mo.node.parent.items.slice(rank + 1)) {
-                    var _mo = prefixmatch({node: _case, text: _case.text},
-                        string, mo.start)
-                    if (_mo) {
-                        // update GroupMO object
-                        mos.push(_mo)
-                        this.end = _mo.end
-                        if (this.$groups.$last.length > 0) {
-                            var ix = this.$groups.$last[this.$groups.$last.length - 1]
-                            this.$groups[ix].end = _mo.end
-                        }
-                        return true
-                    }
-                }
-            }
             if (mo.backtrack(string, groups)) {
                 mos.push(mo)
                 if (this.node.num !== undefined) {
@@ -3303,6 +3286,22 @@ GroupMO.prototype.backtrack = function(string, groups) {
                 }
                 this.end = mo.end
                 return true
+            }
+            if (mo.node instanceof Case) {
+                var rank = mo.node.parent.items.indexOf(mo.node)
+                for (var _case of mo.node.parent.items.slice(rank + 1)) {
+                    var _mo = prefixmatch({node: _case, text: _case.text},
+                        string, mo.start, this.endpos, false, groups)
+                    if (_mo) {
+                        // update GroupMO object
+                        mos.push(_mo)
+                        this.end = _mo.end
+                        if (this.node.num !== undefined) {
+                            groups[this.node.num].end = _mo.end
+                        }
+                        return true
+                    }
+                }
             }
         }
     }

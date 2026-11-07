@@ -926,3 +926,4 @@ def _setup_defaults():
     _wm.simplefilter("ignore", category=PendingDeprecationWarning, append=1)
     _wm.simplefilter("ignore", category=ImportWarning, append=1)
     _wm.simplefilter("ignore", category=ResourceWarning, append=1)
+
