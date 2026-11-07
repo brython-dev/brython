@@ -1974,13 +1974,10 @@ str_funcs.center = function() {
         return self
     }
 
-    var pad = parseInt(($.width - self.length) / 2),
-        res = $.fillchar.repeat(pad)
-    res += self + res
-    if (res.length < $.width) {
-        res += $.fillchar
-    }
-    return $B.String(res)
+    // the odd fill char goes left when the width is odd too
+    var left = Math.floor(marg / 2) + (marg & $.width & 1)
+    return $.fillchar.repeat(left) + self + 
+        $.fillchar.repeat(marg - left)
 }
 
 str_funcs.count = function() {
