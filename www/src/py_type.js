@@ -1563,8 +1563,8 @@ _b_.type.tp_new = function(cls, args, kw) {
                 // console.log('check __set_name__ for', key, v)
             }
             if (key == '__class_getitem__' || key == '__init_subclass__') {
-                // always a classmethod
-                if ($B.get_class(v) !== _b_.classmethod) {
+                // a plain function is made a classmethod
+                if ($B.get_class(v) === $B.function) {
                     var v1 = $B.$call(_b_.classmethod, v)
                     $B.str_dict_set(cl_dict, key, v1)
                 }

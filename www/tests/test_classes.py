@@ -1552,5 +1552,8 @@ b.x = 2
 _ = A.x.__set__(b, 1)
 assert b.x == 2
 
+# PR 3196
+Box = type("Box", (), {"__class_getitem__": staticmethod(lambda key: key)})
+assert Box.__class_getitem__(3) == 3
 
 print('passed all tests..')
