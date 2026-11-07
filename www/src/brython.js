@@ -748,8 +748,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-11-07 16:15:27.712673"
-__BRYTHON__.timestamp=1794064527712
+__BRYTHON__.compiled_date="2026-11-07 21:54:31.736359"
+__BRYTHON__.timestamp=1794084871736
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -972,7 +972,18 @@ if(ft_escape){if(char=='\n'){
 line_num++
 ft_escape=false
 continue}
-if(char=='U' &&/^[0-9a-f]{8}$/i.test(src.substr(pos,8))){ft_buffer+=String.fromCodePoint(parseInt(src.substr(pos,8),16))
+if(char=='N' && src.charAt(pos)=='{'){
+var end_name=src.indexOf('}',pos)
+var cp=$B.unicode_name_to_cp(src.substring(pos+1,end_name))
+if(cp===null){raise_error(_b_.SyntaxError,filename,line_num,pos-line_start,line_num,end_name-line_start+1,line,"(unicode error) 'unicodeescape' codec can't "+
+"decode bytes in position 0-"+
+(end_name-pos+1)+
+": unknown Unicode character name")}
+ft_buffer+=String.fromCodePoint(cp)
+pos=end_name+1
+ft_escape=false
+continue}else if(char=='U' &&/^[0-9a-f]{8}$/i.test(src.substr(pos,8))){
+ft_buffer+=String.fromCodePoint(parseInt(src.substr(pos,8),16))
 pos+=8
 ft_escape=false
 continue}else if(char=='a'){ft_buffer+='\\x07'
@@ -8842,6 +8853,7 @@ str.$is_sequence=true
 str.$to_string=to_string
 function normalize_start_end($){
 var len
+$.self=to_string($.self)
 if(typeof $.self=="string"){len=$.self.length}else{
 len=str.mp_length($.self)}
 for(var bound of['start','end']){if($[bound]===null ||$[bound]===_b_.None){$[bound]=bound=='start' ? 0 :len
@@ -8864,7 +8876,8 @@ function preformat(_self,fmt){if(fmt.empty){return _b_.str.$factory(_self)}
 if(fmt.type && fmt.type !="s"){$B.RAISE(_b_.ValueError,"Unknown format code '"+fmt.type+
 "' for object of type 'str'")}
 return _self}
-function startswith(self,prefix,start,end){if(end < start){return false}else if(prefix.length > end-start){return false}else{
+function startswith(self,prefix,start,end){prefix=to_string(prefix)
+if(end < start){return false}else if(prefix.length > end-start){return false}else{
 return self.startsWith(prefix,start)}}
 str.$getitem_slice=function(_self,slice){var len=str.mp_length(_self),s=_b_.slice.$conv_for_seq(slice,len),chars=_self.surrogates===undefined ? _self :to_chars(_self)
 var res=""
@@ -9476,8 +9489,10 @@ default:
 return _b_.NotImplemented}}
 _b_.str.sq_repeat=function(self,other){$B.check_nb_args_no_kw('str.__mul__',1,arguments,true)
 var _self=to_string(self)
-if(! $B.is_int(other)){$B.RAISE(_b_.TypeError,"Can't multiply sequence by non-int of type '"+
-$B.class_name(other)+"'")}
+if($B.$isinstance(other,[_b_.float,_b_.complex])){$B.RAISE(_b_.TypeError,"'"+$B.class_name(other)+
+"' object cannot be interpreted as an integer")}
+try{
+other=$B.PyNumber_Index(other)}catch(err){return _b_.NotImplemented}
 return $B.String(_self.repeat(other < 0 ? 0 :other))}
 _b_.str.nb_remainder=function(self,args){self=to_string(self)
 if(self===$B.NULL){return _b_.NotImplemented}
@@ -9612,9 +9627,10 @@ for(var i=0,len=_self.length;i < len ;i++){var char=_self.charAt(i)
 if(("a" <=char && char <="m")||("A" <=char && char <="M")){res+=String.fromCharCode(char.charCodeAt(0)+13)}else if(("m" < char && char <="z")||
 ("M" < char && char <="Z")){res+=String.fromCharCode(char.charCodeAt(0)-13)}else{res+=char}}
 return res}
-return _b_.bytes.tp_new(_b_.bytes,[$.self,$.encoding,$.errors],$B.empty_dict())}
+return _b_.bytes.tp_new(_b_.bytes,[_self,$.encoding,$.errors],$B.empty_dict())}
 str_funcs.endswith=function(self,suffix){
-if(arguments.length==2 && typeof suffix=='string'){return self.endsWith(suffix)}
+if(arguments.length==2 && typeof self=='string' &&
+typeof suffix=='string'){return self.endsWith(suffix)}
 var $=$B.args("endswith",4,{self:null,suffix:null,start:null,end:null},arguments,{start:0,end:null},null,null),_self
 normalize_start_end($)
 _self=to_string($.self)
@@ -9624,7 +9640,7 @@ var chars=to_chars(_self),s=chars.slice($.start,$.end)
 for(var i=0,len=suffixes.length;i < len;i++){var suffix=suffixes[i]
 if(! $B.is_str(suffix)){$B.RAISE(_b_.TypeError,"endswith first arg must be str or a tuple of str, not int")}
 if($.start > $.end){continue}
-suffix=suffix.ob_type ? suffix.$brython_value :suffix
+suffix=to_string(suffix)
 if(suffix.length <=s.length &&
 s.slice(s.length-suffix.length).join('')==suffix){return true}}
 return false}
@@ -9660,6 +9676,7 @@ start=$.start
 end=$.end}
 self=to_string(self)
 check_str(sub)
+sub=to_string(sub)
 var $={self,start,end}
 normalize_start_end($)
 if($.end-$.start < str.mp_length(sub)){return-1}
@@ -9806,7 +9823,7 @@ if(! $B.is_str(obj2)){console.log('str join',arguments)
 $B.RAISE(_b_.TypeError,"sequence item "+count+
 ": expected str instance, "+$B.class_name(obj2)+
 " found")}
-res.push(obj2)
+res.push(to_string(obj2))
 count++}catch(err){if($B.$isinstance(err,_b_.StopIteration)){break}else{
 throw err}}}
 return $B.String(res.join(_self))}
@@ -9816,7 +9833,7 @@ return $B.String(_self+$.fillchar.repeat($.width-len))}
 str_funcs.lower=function(self){$B.check_nb_args_no_kw('str.lower',1,arguments)
 var _self=to_string(self)
 return $B.String(_self.toLowerCase())}
-str_funcs.lstrip=function(self){var $=$B.args("lstrip",2,{self:null,chars:null},arguments,{chars:_b_.None},null,null),_self=$.self,chars=$.chars
+str_funcs.lstrip=function(self){var $=$B.args("lstrip",2,{self:null,chars:null},arguments,{chars:_b_.None},null,null),_self=to_string($.self),chars=$.chars
 if(chars===_b_.None){return $B.String(_self.trimStart())}else if(! $B.is_str(chars)){$B.RAISE(_b_.TypeError,"lstrip arg must be None or str")}
 [_self,chars]=to_string(_self,chars)
 while(_self.length > 0){var flag=false
@@ -9870,7 +9887,7 @@ if(! $B.is_str(suffix)){$B.RAISE(_b_.ValueError,"suffix should be str, not "+
 if(suffix.length > 0 && str.tp_funcs.endswith(_self,suffix)){return $B.String(_self.substr(0,_self.length-suffix.length))}
 return _self}
 str_funcs.replace=function(){
-var $=$B.args("replace",4,{self:null,old:null,new:null,count:null},arguments,{count:-1},null,null),count=$.count,_self=$.self,old=$.old,_new=$.new
+var $=$B.args("replace",4,{self:null,old:null,new:null,count:null},arguments,{count:-1},null,null),count=$.count,_self=to_string($.self),old=$.old,_new=$.new
 check_str(old,"replace() argument 1 ")
 check_str(_new,"replace() argument 2 ")
 if(! $B.$isinstance(count,[_b_.int,_b_.float])){$B.RAISE(_b_.TypeError,"'"+$B.class_name(count)+
@@ -9918,7 +9935,7 @@ if($.width <=len){return _self}
 return $B.String($.fillchar.repeat($.width-len)+_self)}
 str_funcs.rpartition=function(self,sep){$B.check_nb_args_no_kw('str.rpartition',1,arguments,true)
 check_str(sep)
-var _self=reverse(self),sep=reverse(sep)
+var _self=reverse(to_string(self)),sep=reverse(to_string(sep))
 var items=str_funcs.partition(_self,sep).reverse()
 for(var i=0;i < items.length;i++){items[i]=$B.String(items[i].split("").reverse().join(""))}
 return items}
@@ -9945,6 +9962,7 @@ sep=_b_.None
 maxsplit=-1}else{
 var $=$B.args("split",3,{self:null,sep:null,maxsplit:null},arguments,{sep:_b_.None,maxsplit:-1},null,null),maxsplit=$.maxsplit,sep=$.sep,self=to_string($.self)}
 var pos=0
+if($B.is_str(sep)){sep=to_string(sep)}
 if($B.is_big_int(maxsplit)){maxsplit=Number($B.int_value(maxsplit))}
 if(maxsplit < 0){
 maxsplit=-1}else if(maxsplit > self.length){
@@ -10012,19 +10030,6 @@ buf+=char
 pos++}}
 if(buf !=''){res.push(buf)}
 return $B.$list(res.map($B.String))}
-str_funcs.startswith=function(self){
-var $=$B.args("startswith",4,{self:null,prefix:null,start:null,end:null},arguments,{start:0,end:null},null,null),_self
-normalize_start_end($)
-_self=to_string($.self)
-var prefixes=$.prefix
-if(! $B.is_tuple(prefixes)){prefixes=[prefixes]}
-prefixes=to_string(...prefixes)
-prefixes=Array.isArray(prefixes)? prefixes :[prefixes]
-var s=_self.substring($.start,$.end)
-for(var prefix of prefixes){if(! $B.is_str(prefix)){$B.RAISE(_b_.TypeError,"endswith first arg must be str "+
-"or a tuple of str, not int")}
-if(s.substr(0,prefix.length)==prefix){return true}}
-return false}
 str_funcs.startswith=function(self,prefix,start,end){var args_length=arguments.length
 if(args_length==2 && ! prefix[$B.KW]){start=0
 end=null}else if(args_length==3 && ! start[$B.KW]){end=null}else if(args_length==4 && ! end[$B.KW]){}else{
@@ -10033,6 +10038,7 @@ self=$.self
 prefix=$.prefix
 start=$.start
 end=$.end}
+self=to_string(self)
 var $={self,start,end}
 normalize_start_end($)
 start=$.js_start ?? $.start
@@ -10701,9 +10707,7 @@ return fmt.type=="E" ? res.toUpperCase():res}
 var res
 if(fmt.precision !==undefined){
 let prec=fmt.precision
-if(prec==0){
-res=Math.round(value)+(fmt.alternate ? "." :"")
-return fmt.type=="%" ? res+"%" :res}
+if(prec==0){return $B.roundDownToFixed(value,0)}
 res=$B.roundDownToFixed(value,prec)
 let pt_pos=res.indexOf(".")
 if(fmt.type !==undefined &&
@@ -15310,8 +15314,9 @@ $io_funcs.write=function(self,msg){
 if(self.buf===undefined){self.buf=[]}
 if(! $B.is_str(msg)){$B.RAISE(_b_.TypeError,"write() argument must be str, not "+
 $B.class_name(msg))}
-self.buf.push(_b_.str.$to_string(msg))
-return _b_.None}
+let s=_b_.str.$to_string(msg)
+self.buf.push(s)
+return _b_.len(s)}
 $io.tp_methods=["flush","write"]
 $io.tp_getset=["encoding"]
 modules['_sys']={_getframe :function(){var $=$B.args("_getframe",1,{depth:null},arguments,{depth:0})
@@ -20024,6 +20029,15 @@ pos++}}
 return bytes}
 function string_error(p,token,msg){$B.helper_functions.RAISE_SYNTAX_ERROR_KNOWN_LOCATION(p,token,msg)}
 function SurrogatePair(value){this.value=value}
+$B.unicode_name_to_cp=function(name){
+if($B.unicodedb===undefined){var xhr=new XMLHttpRequest
+xhr.open("GET",$B.brython_path+"unicode.txt",false)
+xhr.onreadystatechange=function(){if(this.readyState==4){if(this.status==200){$B.unicodedb=this.responseText}else{
+console.log("Warning - could not load unicode.txt")}}}
+xhr.send()
+if($B.unicodedb===undefined){return undefined}}
+var re=new RegExp("^([0-9A-F]+);"+name.toUpperCase()+";.*$","m"),search=re.exec($B.unicodedb)
+return search===null ? null :parseInt(search[1],16)}
 function test_escape(p,token,context,text,string_start,antislash_pos){
 var seq_end,mo
 mo=/^[0-7]{1,3}/.exec(text.substr(antislash_pos+1))
@@ -20109,22 +20123,12 @@ if(search===null){string_error(p,token,"(unicode error) "+
 var end_lit=end_lit+search[0].length
 if(src.charAt(end_lit)!="}"){string_error(p,token,"(unicode error) "+
 "malformed \\N character escape")}
-var description=search[0].toUpperCase()
-if($B.unicodedb===undefined){var xhr=new XMLHttpRequest
-xhr.open("GET",$B.brython_path+"unicode.txt",false)
-xhr.onreadystatechange=function(){if(this.readyState==4){if(this.status==200){$B.unicodedb=this.responseText}else{
-console.log("Warning - could not "+
-"load unicode.txt")}}}
-xhr.send()}
-if($B.unicodedb !==undefined){var re=new RegExp("^([0-9A-F]+);"+
-description+";.*$","m")
-search=re.exec($B.unicodedb)
-if(search===null){string_error(p,token,"(unicode error) "+
-"unknown Unicode character name")}
-var cp=parseInt(search[1],16)
+var cp=$B.unicode_name_to_cp(search[0])
+if(cp===null){string_error(p,token,"(unicode error) "+
+"unknown Unicode character name")}else if(cp===undefined){
+end++}else{
 zone+=String.fromCodePoint(cp)
-end=end_lit+1}else{
-end++}}else{
+end=end_lit+1}}else{
 var esc=test_escape(p,token,context,src,string_start,end)
 if(esc){if(esc[0]=='\\'){zone+='\\\\'}else if(esc[0]instanceof SurrogatePair){zone+=String.fromCodePoint(esc[0].value)}else{
 zone+=esc[0]}

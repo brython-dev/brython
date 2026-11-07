@@ -97,8 +97,8 @@ class Output:
     def __init__(self, interpreter):
         self.interpreter = interpreter
 
-    def write(self, *args, **kw):
-        self.interpreter.write(*args, **kw)
+    def write(self, data, **kw):
+        self.interpreter.write(data + '\n', **kw)
 
     def __len__(self):
         return len(self.interpreter.buffer)
