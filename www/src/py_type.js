@@ -1136,19 +1136,14 @@ function set_slots(cl_dict, class_obj) {
                 }
                 continue
             }
-            // not a name the class statement sets itself, __doc__ when the
-            // class has no docstring
-            var found = $B.str_dict_get(cl_dict, key, $B.NULL)
-            if (found !== $B.NULL && key != '__qualname__' &&
-                    ! (key == '__doc__' && found === _b_.None) &&
-                    $B.get_class(found) !== $B.member_descriptor) {
-                $B.RAISE(_b_.ValueError, `'${key}' in __slots__ conflicts ` +
-                    'with class variable')
-            }
+            // a slot that redeclares a base's has a storage of its own
+            var shadowed = $B.search_in_mro(class_obj.tp_base, key, $B.NULL)
             var member = {
                 name: key,
                 type: $B.TYPES.OBJECT,
-                attr: 'slot_value_' + key,
+                attr: shadowed !== $B.NULL &&
+                    $B.get_class(shadowed) === $B.member_descriptor ?
+                    Symbol(key) : 'slot_value_' + key,
                 flags: 0
             }
             var md = {
