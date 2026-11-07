@@ -76,7 +76,9 @@ $B.bytearray_iterator.tp_iter = function(self) {
 
 $B.bytearray_iterator.tp_iternext = function*(self){
     self.index++
-    if (self.index >= self.len) {
+    if (self.index >= self.obj.source.length) {
+        // exhausted for good, whatever the bytearray grows to
+        self.index = Infinity
         return
     }
     yield self.obj.source[self.index]
@@ -1835,7 +1837,6 @@ var bytes_iterator = $B.bytes_iterator
 
 /* bytes_iterator start */
 $B.bytes_iterator.tp_iter = function(self) {
-    self.index = -1
     return self
 }
 

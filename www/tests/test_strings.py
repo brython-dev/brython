@@ -139,11 +139,31 @@ assert not "a" in ""
 # issue 285
 assert "ab"[1:0:-1] == 'b'
 
+# maketrans() reads characters, an astral one included
+assert str.maketrans("a😀", "😀a") == {97: 0x1F600, 0x1F600: 97}
+assert str.maketrans({"😀": "x"}) == {0x1F600: "x"}
+assert "a😀b".translate(str.maketrans("a", "x", "😀")) == "xb"
+
 # issue 361
 FULL_ENGLISH_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 FULL_ENTEAN_ALPHABET =  "AZYXEWVTISRLPNOMQKJHUGFDCB"
 tran_tab = str.maketrans(FULL_ENGLISH_ALPHABET, FULL_ENTEAN_ALPHABET, 'sh')
 assert "PETEshelley".translate(tran_tab) == "MEHEelley"
+
+# translate() keeps a character only on a LookupError of its table, and takes
+# a str, None or a code point
+class Failing:
+    def __getitem__(self, key):
+        raise RuntimeError("table failure")
+
+class Name(str):
+    pass
+
+assert_raises(RuntimeError, "ab".translate, Failing())
+assert_raises(ValueError, "ab".translate, {97: -1})
+assert_raises(TypeError, "ab".translate, {97: 1.0})
+assert "abc".translate({97: Name("x"), 98: "😀", 99: 0x1F600}) == "x😀😀"
+assert "ab".translate({97: True, 98: None}) == "\x01"
 
 # issue 423
 assert 'a'.islower()

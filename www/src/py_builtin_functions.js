@@ -559,7 +559,7 @@ _b_.enumerate.tp_new = function(cls, args, kw) {
         }
     }
     var res = {
-        ob_type: _b_.enumerate,
+        ob_type: cls,
         it: $B.make_js_iterator(iterable),
         counter: start ?? 0
     }
@@ -629,11 +629,15 @@ filter.tp_new = function(cls, args, kw) {
         ['func', 'iterable'], {})
     $B.check_kw_empty('filter', kw)
     var func = func === _b_.None ? (x) => x : func
-    return {
-        ob_type: _b_.filter,
+    var res = {
+        ob_type: cls,
         func,
         it: $B.make_js_iterator(iterable)
     }
+    if (cls !== _b_.filter) {
+        $B.init_dict(res)
+    }
+    return res
 }
 
 var filter_funcs = _b_.filter.tp_funcs = {}
@@ -720,17 +724,24 @@ $B.call_special_unary = function(obj, name, op_repr) {
         $B.RAISE(_b_.TypeError,
             `bad operand type for ${op_repr}: '${$B.class_name(obj)}'`)
     }
-    if (typeof raw == 'function') {
-        // fast path: plain method; binding to obj then calling with no
-        // argument is equivalent to calling with obj
-        return $B.$call(raw, obj)
+    return $B.call_special(raw, obj)
+}
+
+$B.call_special = function(raw, obj, ...args) {
+    // Calls `raw`, a special method found on the type of `obj`, bound to
+    // `obj` by the descriptor protocol, with `args`
+    var klass = $B.get_class(raw)
+    if (klass === $B.function) {
+        // fast path: plain method; binding to obj then calling with args
+        // is equivalent to calling with obj and args
+        return $B.$call(raw, obj, ...args)
     }
-    var descr_get = raw.ob_type && raw.ob_type.tp_descr_get
-    if (descr_get) {
-        return $B.$call(descr_get(raw, obj, klass))
+    var descr_get = $B.search_slot(klass, 'tp_descr_get', $B.NULL)
+    if (descr_get !== $B.NULL) {
+        return $B.$call(descr_get(raw, obj, $B.get_class(obj)), ...args)
     }
-    // non-descriptor class attribute: "bound" to nothing, call with no args
-    return $B.$call(raw)
+    // non-descriptor class attribute: "bound" to nothing
+    return $B.$call(raw, ...args)
 }
 
 $B.search_in_dict = function(obj, attr, _default) {
@@ -1271,14 +1282,6 @@ var issubclass = _b_.issubclass = function(cls, class_or_tuple) {
 
 /* iterator start */
 $B.iterator.tp_iter = function(self) {
-    var ob_type = $B.get_class(self.it_seq)
-    var getitem = $B.search_in_mro(ob_type, '__getitem__', $B.NULL)
-    if (getitem === $B.NULL) {
-        $B.RAISE(_b_.TypeError,
-            `'${$B.class_name(self.it_seq)}' object is not iterable`)
-    }
-    self.getitem = getitem
-    self.it_index = 0
     return self
 }
 
@@ -1286,11 +1289,15 @@ $B.iterator.tp_iternext = function*(self){
     // "sequence protocol" iteration: call __getitem__ with increasing
     // indices; IndexError ends the iteration (__len__ is not used, same
     // as CPython)
+    if (self.it_seq === null) {
+        return
+    }
     var res
     try {
-        res = $B.$call(self.getitem, self.it_seq, self.it_index)
+        res = $B.call_special(self.getitem, self.it_seq, self.it_index)
     } catch (err) {
         if ($B.is_exc(err, [_b_.IndexError, _b_.StopIteration])) {
+            self.it_seq = null
             return
         }
         throw err
@@ -1306,6 +1313,9 @@ iterator_funcs.__length_hint__ = function(self) {
 }
 
 iterator_funcs.__reduce__ = function(self) {
+    if (self.it_seq === null) {
+        return $B.fast_tuple([_b_.iter, $B.fast_tuple([$B.fast_tuple([])])])
+    }
     return $B.fast_tuple([_b_.iter,
         $B.fast_tuple([self.it_seq]), self.it_index])
 }
@@ -1397,11 +1407,12 @@ $B.$iter = function(obj, sentinel) {
             console.log('getitem_func', getitem_func)
         }
         if (getitem_func !== $B.NULL) {
-            var it = {
+            return {
                 ob_type: $B.iterator,
-                it_seq: obj
+                it_seq: obj,
+                getitem: getitem_func,
+                it_index: 0
             }
-            return $B.iterator.tp_iter(it)
 
         }
         $B.RAISE(_b_.TypeError,
@@ -1533,12 +1544,16 @@ _b_.map.tp_new = function(cls, args, kw) {
     for (var arg of extra_args) {
         iter_args.push($B.make_js_iterator(arg))
     }
-    return {
+    var res = {
         ob_type: cls,
         args: iter_args,
         func: func,
         iterables: [it1, ...extra_args]
     }
+    if (cls !== _b_.map) {
+        $B.init_dict(res)
+    }
+    return res
 }
 
 var map_funcs = _b_.map.tp_funcs = {}
@@ -1882,9 +1897,8 @@ reversed.$factory = function(seq) {
     if (rev_method !== null) {
         return $B.$call(rev_method, seq)
     }
-    try {
-        var method = $B.$getattr(klass, '__getitem__')
-    } catch (err) {
+    var method = $B.search_in_mro(klass, '__getitem__', $B.NULL)
+    if (method === $B.NULL) {
         $B.RAISE(_b_.TypeError, "argument to reversed() must be a sequence")
     }
 
@@ -1929,7 +1943,7 @@ _b_.reversed.tp_iternext = function*(self){
     if (self.counter < 0) {
         return
     }
-    yield $B.$call(self.getitem, self.seq, self.counter)
+    yield $B.call_special(self.getitem, self.seq, self.counter)
 }
 
 _b_.reversed.tp_new = function(cls, args, kw) {
@@ -1940,9 +1954,8 @@ _b_.reversed.tp_new = function(cls, args, kw) {
     if (rev_method !== $B.NULL) {
         return $B.$call(rev_method, seq)
     }
-    try {
-        var method = $B.$getattr($B.get_class(seq), '__getitem__')
-    } catch (err) {
+    var method = $B.search_in_mro($B.get_class(seq), '__getitem__', $B.NULL)
+    if (method === $B.NULL) {
         $B.RAISE(_b_.TypeError, "argument to reversed() must be a sequence")
     }
 
@@ -1967,6 +1980,9 @@ _b_.reversed.tp_new = function(cls, args, kw) {
         // index.
         counter: seqlen,
         getitem: method
+    }
+    if (cls !== _b_.reversed) {
+        $B.init_dict(res)
     }
     return res
 }
@@ -2384,13 +2400,6 @@ _b_.vars = function() {
 var zip = _b_.zip
 
 zip.$factory = function() {
-    var res = {
-        ob_type: zip,
-        items: []
-    }
-    if (arguments.length == 0) {
-        return res
-    }
     var [args, kw] = $B.parse_args_kw('zip', arguments)
     var strict = $B.$bool($B.str_dict_get(kw, 'strict', false))
     var iters = []
@@ -2412,6 +2421,9 @@ _b_.zip.tp_iter = function(self) {
 _b_.zip.tp_iternext = function*(self){
     var res = [],
         len = self.iters.length
+    if (len == 0) {
+        return
+    }
     for (var i = 0; i < len; i++) {
         var v = self.iters[i].next()
         if (v.done) {
@@ -2437,20 +2449,20 @@ _b_.zip.tp_iternext = function*(self){
 }
 
 _b_.zip.tp_new = function(cls, args, kw) {
-    var res = {
-        ob_type: cls,
-        items: []
-    }
     var strict = $B.$bool($B.str_dict_get(kw, 'strict', false))
     var iters = []
     for (var arg of args) {
         iters.push($B.make_js_iterator(arg))
     }
-    return {
+    var res = {
         ob_type: cls,
         iters,
         strict
     }
+    if (cls !== _b_.zip) {
+        $B.init_dict(res)
+    }
+    return res
 }
 
 var zip_funcs = _b_.zip.tp_funcs = {}

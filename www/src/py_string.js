@@ -98,29 +98,31 @@ str.$is_sequence = true
 str.$to_string = to_string
 
 function normalize_start_end($) {
+    // The bounds of a search in $.self: indices counted from the end when
+    // negative, the end clipped to the string. There is no region to search
+    // when $.start > $.end.
     var len
     if (typeof $.self == "string") {
         len = $.self.length
     } else {
         len = str.mp_length($.self)
     }
-    if ($.start === null || $.start === _b_.None) {
-        $.start = 0
-    } else if ($.start < 0) {
-        $.start += len
-        $.start = Math.max(0, $.start)
+    for (var bound of ['start', 'end']) {
+        if ($[bound] === null || $[bound] === _b_.None) {
+            $[bound] = bound == 'start' ? 0 : len
+            continue
+        }
+        try {
+            $[bound] = Number($B.PyNumber_Index($[bound]))
+        } catch (err) {
+            $B.RAISE(_b_.TypeError, "slice indices must be integers " +
+                "or None or have an __index__ method")
+        }
+        if ($[bound] < 0) {
+            $[bound] = Math.max(0, $[bound] + len)
+        }
     }
-    if ($.end === null || $.end === _b_.None) {
-        $.end = len
-    } else if ($.end < 0) {
-        $.end += len
-        $.end = Math.max(0, $.end)
-    }
-
-    if (! $B.is_int($.start) || ! $B.is_int($.end)) {
-        $B.RAISE(_b_.TypeError, "slice indices must be integers " +
-            "or None or have an __index__ method")
-    }
+    $.end = Math.min($.end, len)
     if ($.self.surrogates) {
         $.js_start = pypos2jspos($.self, $.start)
         $.js_end = pypos2jspos($.self, $.end)
@@ -158,9 +160,7 @@ function preformat(_self, fmt) {
 }
 
 function startswith(self, prefix, start, end) {
-    if (end === null) {
-        return self.startsWith(prefix, start)
-    } else if (end < start) {
+    if (end < start) {
         return false
     } else if (prefix.length > end - start) {
         return false
@@ -1994,28 +1994,15 @@ str_funcs.count = function() {
             "' object to str implicitly")
     }
     [_self, sub] = to_string($.self, $.sub)
-    var substr = _self
-    if ($.start !== null) {
-        var _slice
-        if ($.stop !== null) {
-            _slice = _b_.slice.$factory($.start, $.stop)
-        } else {
-            _slice = _b_.slice.$factory($.start, _self.length)
-        }
-        substr = str.mp_subscript.apply(null, [_self].concat(_slice))
-    } else {
-        if (_self.length + sub.length == 0) {
-            return 1
-        }
+    $.end = $.stop
+    normalize_start_end($)
+    if ($.start > $.end) {
+        return 0
     }
     if (sub.length == 0) {
-        if ($.start == _self.length) {
-            return 1
-        } else if (substr.length == 0) {
-            return 0
-        }
-        return substr.length + 1
+        return $.end - $.start + 1
     }
+    var substr = _self.substring($.js_start ?? $.start, $.js_end ?? $.end)
     var n = 0,
         pos = 0
     while (pos < substr.length) {
@@ -2081,6 +2068,9 @@ str_funcs.endswith = function(self, suffix) {
         if (! $B.is_str(suffix)) {
             $B.RAISE(_b_.TypeError,
                 "endswith first arg must be str or a tuple of str, not int")
+        }
+        if ($.start > $.end) {
+            continue
         }
         suffix = suffix.ob_type ? suffix.$brython_value : suffix
         if(suffix.length <= s.length &&
@@ -2156,42 +2146,13 @@ str_funcs.find = function(self, sub, start, end) {
     }
     self = to_string(self)
     check_str(sub)
-    var res
-    try {
-        start = $B.PyNumber_Index(start)
-    } catch (err) {
-        $B.RAISE(_b_.TypeError,
-            'slice indices must be integers or None or have an __index__ ' +
-            'method')
+    var $ = {self, start, end}
+    normalize_start_end($)
+    if ($.end - $.start < str.mp_length(sub)) {
+        return -1
     }
-    if (start < 0) {
-        start = Math.max(0, start + str.mp_length(self))
-    }
-    res = self.indexOf(sub, pypos2jspos(self, start))
-    if (end !== _b_.None) {
-        try {
-            end = $B.PyNumber_Index(end)
-        } catch (err) {
-            $B.RAISE(_b_.TypeError,
-                'slice indices must be integers or None or have an __index__ ' +
-                'method')
-        }
-        if (end < 0) {
-            end += str.mp_length(self)
-        }
-        if (str.mp_length(sub) > end - start) {
-            res = -1
-        }
-    }
-    var len = str.mp_length(self)
-
-    if (sub == '') {
-        if (self == '') {
-            res == -1
-        } else if (start == len) {
-            res = len
-        }
-    }
+    var res = self.substring(0, $.js_end ?? $.end).indexOf(sub,
+        $.js_start ?? $.start)
     if (res == -1) {
         return res
     }
@@ -2652,7 +2613,7 @@ str_funcs.maketrans = function() {
             let k = items[i][0],
                 v = items[i][1]
             if (! $B.is_int(k)) {
-                if ($B.is_str(k) && k.length == 1) {
+                if ($B.is_str(k) && to_chars(k).length == 1) {
                     k = _b_.ord(k)
                 } else {$B.RAISE(_b_.TypeError, "dictionary key " + k +
                     " is not int or 1-char string")}
@@ -2670,7 +2631,10 @@ str_funcs.maketrans = function() {
         // to the character at the same position in y
         if (! ($B.is_str($.x) && $B.is_str($.y))) {
             $B.RAISE(_b_.TypeError, "maketrans arguments must be strings")
-        } else if ($.x.length !== $.y.length) {
+        }
+        var x = to_chars($.x),
+            y = to_chars($.y)
+        if (x.length !== y.length) {
             $B.RAISE(_b_.TypeError,
                 "maketrans arguments must be strings or same length")
         } else {
@@ -2682,14 +2646,12 @@ str_funcs.maketrans = function() {
                     $B.RAISE(_b_.TypeError,
                         "maketrans third argument must be a string")
                 }
-                for (let i = 0, len = $.z.length; i < len; i++) {
-                    toNone[_b_.ord($.z.charAt(i))] = true
+                for (var char of to_chars($.z)) {
+                    toNone[_b_.ord(char)] = true
                 }
             }
-            for (let i = 0, len = $.x.length; i < len; i++) {
-                var key = _b_.ord($.x.charAt(i)),
-                    value = $.y.charCodeAt(i)
-                _b_.dict.$setitem(_t, key, value)
+            for (let i = 0, len = x.length; i < len; i++) {
+                _b_.dict.$setitem(_t, _b_.ord(x[i]), _b_.ord(y[i]))
             }
             for (let k in toNone) {
                 _b_.dict.$setitem(_t, parseInt(k), _b_.None)
@@ -2832,12 +2794,11 @@ str_funcs.rfind = function() {
     var len = str.mp_length(_self),
         sub_len = str.mp_length(sub)
 
+    if ($.end - $.start < sub_len) {
+        return -1
+    }
     if (sub_len == 0) {
-        if ($.js_start > len) {
-            return -1
-        } else {
-            return str.mp_length(_self)
-        }
+        return $.end
     }
 
     // Use .indexOf(), not .search(), to avoid conversion to reg exp
@@ -2847,7 +2808,7 @@ str_funcs.rfind = function() {
     if (ix == -1) {
         return -1
     }
-    return jspos2pypos(_self, js_start + ix) - $.start
+    return jspos2pypos(_self, js_start + ix)
 }
 
 str_funcs.rindex = function(self) {
@@ -3129,22 +3090,10 @@ str_funcs.startswith = function(self, prefix, start, end) {
         start = $.start
         end = $.end
     }
-    if (start !== 0) {
-        start = $B.PyNumber_Index(start)
-        if (start < 0) {
-            start += str.mp_length(self)
-        }
-    }
-    if (end !== null) {
-        end = $B.PyNumber_Index(end)
-        if (end < 0) {
-            end += str.mp_length(self)
-        }
-    }
-    start = pypos2jspos(self, start)
-    if (end !== null) {
-        end = pypos2jspos(self, end)
-    }
+    var $ = {self, start, end}
+    normalize_start_end($)
+    start = $.js_start ?? $.start
+    end = $.js_end ?? $.end
     if ($B.is_str(prefix)) {
         return startswith(self, prefix, start, end)
     } else if ($B.is_tuple(prefix)) {
@@ -3234,18 +3183,28 @@ str_funcs.translate = function(self, table) {
         cp,
         _self = to_string(self)
     for (var char of _self) {
-        cp = _b_.ord(char)
+        // only a LookupError of the table leaves the character as it is
         try {
-            var repl = $B.$call(getitem, cp)
-            if (repl !== _b_.None) {
-                if (typeof repl == "string") {
-                    res.push(repl)
-                } else if (typeof repl == "number") {
-                    res.push(String.fromCharCode(repl))
-                }
-            }
+            var repl = $B.$call(getitem, _b_.ord(char))
         } catch (err) {
+            if (! $B.is_exc(err, [_b_.LookupError])) {
+                throw err
+            }
             res.push(char)
+            continue
+        }
+        if ($B.is_str(repl)) {
+            res.push(to_string(repl))
+        } else if ($B.$isinstance(repl, _b_.int)) {
+            cp = $B.PyNumber_Index(repl)
+            if (cp < 0 || cp > 0x10FFFF) {
+                $B.RAISE(_b_.ValueError,
+                    "character mapping must be in range(0x110000)")
+            }
+            res.push(String.fromCodePoint(Number(cp)))
+        } else if (repl !== _b_.None) {
+            $B.RAISE(_b_.TypeError,
+                "character mapping must return integer, None or str")
         }
     }
     return $B.String(res.join(""))
