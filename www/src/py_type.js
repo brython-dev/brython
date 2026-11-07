@@ -1106,15 +1106,15 @@ function reset_setattr(cls) {
 function set_slots(cl_dict, class_obj) {
     let slots = $B.str_dict_get(cl_dict, '__slots__', $B.NULL)
     if (slots !== $B.NULL) {
-        if (typeof slots == 'string') {
+        if ($B.is_str(slots)) {
             slots = [slots]
         }
-        class_obj.$slots = []
         for (let key of $B.make_js_iterator(slots)) {
-            if (typeof key != 'string') {
+            if (! $B.is_str(key)) {
                 $B.RAISE(_b_.TypeError, '__slots__ items must be ' +
                     `strings, not '${$B.class_name(key)}'`)
             }
+            key = _b_.str.$to_string(key)
             if (! _b_.str.tp_funcs.isidentifier(key)) {
                 $B.RAISE(_b_.TypeError, '__slots__ must be identifiers')
             }

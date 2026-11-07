@@ -1407,6 +1407,21 @@ class A:
 a = A()
 assert a == a
 
+# a str subclass in __slots__ is one name, and the declaration is kept
+class Name(str):
+    def __iter__(self):
+        return iter(['other'])
+
+for declaration in (Name('field'), (Name('field'),)):
+    class Box:
+        __slots__ = declaration
+    for Box in (Box, type('Box', (), {'__slots__': declaration})):
+        assert hasattr(Box, 'field') and not hasattr(Box, 'other')
+        assert Box.__slots__ is declaration
+        box = Box()
+        box.field = 1
+        assert box.field == 1
+
 # a metaclass __getattribute__ is called with the class and the name
 class Meta(type):
     def __getattribute__(cls, name):
