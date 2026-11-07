@@ -102,6 +102,7 @@ function normalize_start_end($) {
     // negative, the end clipped to the string. There is no region to search
     // when $.start > $.end.
     var len
+    $.self = to_string($.self)
     if (typeof $.self == "string") {
         len = $.self.length
     } else {
@@ -160,6 +161,7 @@ function preformat(_self, fmt) {
 }
 
 function startswith(self, prefix, start, end) {
+    prefix = to_string(prefix)
     if (end < start) {
         return false
     } else if (prefix.length > end - start) {
@@ -1976,7 +1978,7 @@ str_funcs.center = function() {
 
     // the odd fill char goes left when the width is odd too
     var left = Math.floor(marg / 2) + (marg & $.width & 1)
-    return $.fillchar.repeat(left) + self + 
+    return $.fillchar.repeat(left) + self +
         $.fillchar.repeat(marg - left)
 }
 
@@ -2032,7 +2034,7 @@ str_funcs.encode = function() {
         }
         return res
     }
-    return _b_.bytes.tp_new(_b_.bytes, [$.self, $.encoding, $.errors],
+    return _b_.bytes.tp_new(_b_.bytes, [_self, $.encoding, $.errors],
         $B.empty_dict())
 }
 
@@ -2041,7 +2043,8 @@ str_funcs.endswith = function(self, suffix) {
     // return False. suffix can also be a tuple of suffixes to look for.
     // With optional start, test beginning at that position. With optional
     // end, stop comparing at that position.
-    if (arguments.length == 2 && typeof suffix == 'string') {
+    if (arguments.length == 2 && typeof self == 'string' &&
+            typeof suffix == 'string') {
         return self.endsWith(suffix)
     }
     var $ = $B.args("endswith", 4,
@@ -2069,7 +2072,7 @@ str_funcs.endswith = function(self, suffix) {
         if ($.start > $.end) {
             continue
         }
-        suffix = suffix.ob_type ? suffix.$brython_value : suffix
+        suffix = to_string(suffix)
         if(suffix.length <= s.length &&
                 s.slice(s.length - suffix.length).join('') == suffix){
             return true
@@ -2143,6 +2146,7 @@ str_funcs.find = function(self, sub, start, end) {
     }
     self = to_string(self)
     check_str(sub)
+    sub = to_string(sub)
     var $ = {self, start, end}
     normalize_start_end($)
     if ($.end - $.start < str.mp_length(sub)) {
@@ -2532,7 +2536,7 @@ str_funcs.join = function(self, iterable) {
                     ": expected str instance, " + $B.class_name(obj2) +
                     " found")
             }
-            res.push(obj2)
+            res.push(to_string(obj2))
             count++
         } catch (err) {
             if ($B.$isinstance(err, _b_.StopIteration)) {
@@ -2566,7 +2570,7 @@ str_funcs.lower = function(self) {
 str_funcs.lstrip = function(self) {
     var $ = $B.args("lstrip", 2, {self: null, chars: null},
                 arguments, {chars: _b_.None}, null, null),
-        _self = $.self,
+        _self = to_string($.self),
         chars = $.chars
     if (chars === _b_.None) {
         return $B.String(_self.trimStart())
@@ -2711,7 +2715,7 @@ str_funcs.replace = function() {
             {self: null, old: null, new: null, count: null},
             arguments, {count: -1}, null, null),
         count = $.count,
-        _self = $.self,
+        _self = to_string($.self),
         old = $.old,
         _new = $.new
     // Validate type of old
@@ -2831,8 +2835,8 @@ str_funcs.rjust = function() {
 str_funcs.rpartition = function(self, sep) {
     $B.check_nb_args_no_kw('str.rpartition', 1, arguments, true)
     check_str(sep)
-    var _self = reverse(self),
-    sep = reverse(sep)
+    var _self = reverse(to_string(self)),
+        sep = reverse(to_string(sep))
     var items = str_funcs.partition(_self, sep).reverse()
     for (var i = 0; i < items.length; i++) {
         items[i] = $B.String(items[i].split("").reverse().join(""))
@@ -2906,6 +2910,9 @@ str_funcs.split = function(self, sep, maxsplit) {
             self = to_string($.self)
     }
     var pos = 0
+    if ($B.is_str(sep)) {
+        sep = to_string(sep)
+    }
     if ($B.is_big_int(maxsplit)) {
         maxsplit = Number($B.int_value(maxsplit))
     }
@@ -3037,38 +3044,6 @@ str_funcs.splitlines = function(self, keepends) {
     return $B.$list(res.map($B.String))
 }
 
-str_funcs.startswith = function(self) {
-    // Return True if string starts with the prefix, otherwise return False.
-    // prefix can also be a tuple of prefixes to look for. With optional
-    // start, test string beginning at that position. With optional end,
-    // stop comparing string at that position.
-    var $ = $B.args("startswith", 4,
-                {self: null, prefix: null, start: null, end: null},
-                arguments, {start: 0, end: null}, null, null),
-        _self
-
-    normalize_start_end($)
-    _self = to_string($.self)
-
-    var prefixes = $.prefix
-    if (! $B.is_tuple(prefixes)) {
-        prefixes = [prefixes]
-    }
-    prefixes = to_string(...prefixes)
-    prefixes = Array.isArray(prefixes) ? prefixes : [prefixes]
-    var s = _self.substring($.start, $.end)
-    for (var prefix of prefixes) {
-        if (! $B.is_str(prefix)) {
-            $B.RAISE(_b_.TypeError, "endswith first arg must be str " +
-                "or a tuple of str, not int")
-        }
-        if (s.substr(0, prefix.length) == prefix) {
-            return true
-        }
-    }
-    return false
-}
-
 str_funcs.startswith = function(self, prefix, start, end) {
     var args_length = arguments.length
     if (args_length == 2 && ! prefix[$B.KW]) {
@@ -3087,6 +3062,7 @@ str_funcs.startswith = function(self, prefix, start, end) {
         start = $.start
         end = $.end
     }
+    self = to_string(self)
     var $ = {self, start, end}
     normalize_start_end($)
     start = $.js_start ?? $.start

@@ -110,4 +110,20 @@ assert s[::2] == '😀😀'
 assert s[3:0:-2] == 'ba'
 assert len(s[1::2]) == 2
 
+# PR 3219
+# a str method reads a str subclass, as receiver or argument, by its value
+class Name(str):
+    def __str__(self):
+        return "wrong"
+
+s, b = Name(" ab b "), Name("b")
+assert Name("ab").encode() == b"ab"
+assert s.endswith(Name("b ")) and s.endswith("b ")
+assert s.startswith(Name(" a")) and s.startswith(" a")
+assert " ab".find(b) == 2 and " ab".index(b) == 2
+assert "-".join([Name("a"), Name("b")]) == Name("-").join(["a", "b"]) == "a-b"
+assert s.lstrip() == "ab b "
+assert s.replace("b", "c") == " ac c " and "abc".replace(b, Name("x")) == "axc"
+assert "abc".split(b) == ["a", "c"]
+
 print("passed all tests...")
