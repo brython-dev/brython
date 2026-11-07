@@ -1453,7 +1453,7 @@ bytearray_funcs.decode = function(self) {
     var self = $.self,
         encoding = $.encoding,
         errors = $.errors
-    return decode(self, encoding, errors)
+    return $B.String(decode(self, encoding, errors))
 }
 
 bytearray_funcs.endswith = function(self) {
@@ -2829,7 +2829,7 @@ bytes_funcs.decode = function(self) {
     var self = $.self,
         encoding = $.encoding,
         errors = $.errors
-    return decode(self, encoding, errors)
+    return $B.String(decode(self, encoding, errors))
 }
 
 bytes_funcs.endswith = function(self) {
