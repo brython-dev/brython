@@ -1691,10 +1691,14 @@ _b_.str.tp_richcompare = function(self, other, op) {
 _b_.str.sq_repeat = function(self, other) {
     $B.check_nb_args_no_kw('str.__mul__', 1, arguments, true)
     var _self = to_string(self)
-    if (! $B.is_int(other)) {
-        $B.RAISE(_b_.TypeError,
-        "Can't multiply sequence by non-int of type '" +
-            $B.class_name(other) + "'")
+    if ($B.$isinstance(other, [_b_.float, _b_.complex])) {
+        $B.RAISE(_b_.TypeError, "'" + $B.class_name(other) +
+                "' object cannot be interpreted as an integer")
+    }
+    try {
+        other = $B.PyNumber_Index(other)
+    } catch (err) {
+        return _b_.NotImplemented
     }
     return $B.String(_self.repeat(other < 0 ? 0 : other))
 }
