@@ -1493,6 +1493,15 @@ assert_raises(TypeError, type, "P", (), {"__slots__": (1,)},
 assert_raises(TypeError, type, "P", (), {"__slots__": ("__dict__", "__dict__")},
     msg="__dict__ slot disallowed: we already got one")
 
+# PR 3181
+A = type("A", (), {"__call__": lambda self: "A"})
+B = type("B", (), {"__call__": lambda self: "B"})
+
+class C(A):
+    pass
+
+C.__bases__ = (B,)
+assert C()() == 'B'
 
 
 print('passed all tests..')
