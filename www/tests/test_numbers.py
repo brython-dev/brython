@@ -928,4 +928,19 @@ class Own(str):
 assert float(Name(" 1.5 ")) == 1.5 and float(Own("1.5")) == 9.0
 assert_raises(ValueError, float, "1.5😀")
 
+# PR 3038
+assert float('nan') is not float('nan')
+
+# PR 3050
+assert (-1+1j) ** 0.5 == (0.4550898605622274+1.0986841134678098j)
+
+# PR 3052
+assert str(2 * complex(float('inf'), 1)) == '(inf+2j)'
+
+# PR 3059
+assert float("nan") is not float("nan")
+nan = float("nan")
+assert nan is nan
+
+
 print('passed all tests...')
