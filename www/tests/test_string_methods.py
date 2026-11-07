@@ -92,4 +92,11 @@ assert s.rfind('🐑') == 4
 s = '£ف🐑'
 assert s.encode('ASCII', 'backslashreplace') == b'\\xa3\\u0641\\U0001f411'
 
+# a slice with a step counts characters, not UTF-16 code units
+s = '😀a😀b'
+assert s[::-1] == 'b😀a😀'
+assert s[::2] == '😀😀'
+assert s[3:0:-2] == 'ba'
+assert len(s[1::2]) == 2
+
 print("passed all tests...")

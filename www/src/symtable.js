@@ -1183,7 +1183,7 @@ visitor.stmt = function(st, s) {
         break
 
     case $B.ast.Return:
-        if (s.value) {
+        if (! $B.is_none(s.value)) {
             VISIT(st, expr, s.value)
             st.cur.returns_value = 1
         }
@@ -1220,7 +1220,7 @@ visitor.stmt = function(st, s) {
                                   SF.DEF_ANNOT | SF.DEF_LOCAL, LOCATION(e_name))){
                 VISIT_QUIT(st, 0)
             } else {
-                if(s.value
+                if(! $B.is_none(s.value)
                     && !symtable_add_def(st, e_name.id, SF.DEF_LOCAL, LOCATION(e_name))){
                     VISIT_QUIT(st, 0)
                 }
@@ -1232,7 +1232,7 @@ visitor.stmt = function(st, s) {
             VISIT_QUIT(st, 0)
         }
 
-        if (s.value) {
+        if (! $B.is_none(s.value)) {
             VISIT(st, expr, s.value)
         }
         break
@@ -1268,9 +1268,9 @@ visitor.stmt = function(st, s) {
         VISIT_SEQ(st, match_case, s.cases)
         break
     case $B.ast.Raise:
-        if (s.exc) {
+        if (! $B.is_none(s.exc)) {
             VISIT(st, expr, s.exc)
-            if (s.cause) {
+            if (! $B.is_none(s.cause)) {
                 VISIT(st, expr, s.cause)
             }
         }
@@ -1620,7 +1620,7 @@ visitor.expr = function(st, e) {
         if (!symtable_raise_if_annotation_block(st, "yield expression", e)) {
             VISIT_QUIT(st, 0)
         }
-        if (e.value) {
+        if (! $B.is_none(e.value)) {
             VISIT(st, expr, e.value)
         }
         st.cur.generator = 1
@@ -1656,13 +1656,13 @@ visitor.expr = function(st, e) {
         break
     case $B.ast.FormattedValue:
         VISIT(st, expr, e.value)
-        if (e.format_spec) {
+        if (! $B.is_none(e.format_spec)) {
             VISIT(st, expr, e.format_spec)
         }
         break
     case $B.ast.Interpolation:
         VISIT(st, expr, e.value)
-        if (e.format_spec) {
+        if (! $B.is_none(e.format_spec)) {
             VISIT(st, expr, e.format_spec)
         }
         break
@@ -1791,14 +1791,14 @@ visitor.pattern = function(st, p) {
         VISIT_SEQ(st, pattern, p.patterns)
         break
     case $B.ast.MatchStar:
-        if (p.name) {
+        if (! $B.is_none(p.name)) {
             symtable_add_def(st, p.name, SF.DEF_LOCAL, LOCATION(p))
         }
         break
     case $B.ast.MatchMapping:
         VISIT_SEQ(st, expr, p.keys)
         VISIT_SEQ(st, pattern, p.patterns)
-        if (p.rest) {
+        if (! $B.is_none(p.rest)) {
             symtable_add_def(st, p.rest, SF.DEF_LOCAL, LOCATION(p))
         }
         break
@@ -1808,10 +1808,10 @@ visitor.pattern = function(st, p) {
         VISIT_SEQ(st, pattern, p.kwd_patterns)
         break
     case $B.ast.MatchAs:
-        if (p.pattern) {
+        if (! $B.is_none(p.pattern)) {
             VISIT(st, pattern, p.pattern)
         }
-        if (p.name) {
+        if (! $B.is_none(p.name)) {
             symtable_add_def(st, p.name, SF.DEF_LOCAL, LOCATION(p))
         }
         break
@@ -1864,7 +1864,7 @@ visitor.argannotations = function(st, args) {
         return -1
     }
     for (var arg of args) {
-        if (arg.annotation) {
+        if (! $B.is_none(arg.annotation)) {
             VISIT(st, expr, arg.annotation)
         }
     }
@@ -1885,10 +1885,10 @@ visitor.annotations = function(st, o, a, returns) {
     if (a.args && !visitor.argannotations(st, a.args)) {
         return 0
     }
-    if (a.vararg && a.vararg.annotation) {
+    if (! $B.is_none(a.vararg) && ! $B.is_none(a.vararg.annotation)) {
         VISIT(st, expr, a.vararg.annotation)
     }
-    if (a.kwarg && a.kwarg.annotation) {
+    if (! $B.is_none(a.kwarg) && ! $B.is_none(a.kwarg.annotation)) {
         VISIT(st, expr, a.kwarg.annotation)
     }
     if (a.kwonlyargs && !visitor.argannotations(st, a.kwonlyargs)) {
@@ -1897,7 +1897,7 @@ visitor.annotations = function(st, o, a, returns) {
     if (future_annotations && !symtable_exit_block(st)) {
         VISIT_QUIT(st, 0)
     }
-    if (returns && !visitor.annotation(st, returns)) {
+    if (! $B.is_none(returns) && !visitor.annotation(st, returns)) {
         VISIT_QUIT(st, 0)
     }
     return 1
@@ -1916,13 +1916,13 @@ visitor.arguments = function(st, a) {
     if (a.kwonlyargs && !visitor.params(st, a.kwonlyargs)) {
         return 0
     }
-    if (a.vararg) {
+    if (! $B.is_none(a.vararg)) {
         if (!symtable_add_def(st, a.vararg.arg, SF.DEF_PARAM, LOCATION(a.vararg))) {
             return 0
         }
         st.cur.varargs = 1
     }
-    if (a.kwarg) {
+    if (! $B.is_none(a.kwarg)) {
         if (!symtable_add_def(st, a.kwarg.arg, SF.DEF_PARAM, LOCATION(a.kwarg))) {
             return 0
         }
@@ -1933,10 +1933,10 @@ visitor.arguments = function(st, a) {
 
 
 visitor.excepthandler = function(st, eh) {
-    if (eh.type) {
+    if (! $B.is_none(eh.type)) {
         VISIT(st, expr, eh.type)
     }
-    if (eh.name) {
+    if (! $B.is_none(eh.name)) {
         if (!symtable_add_def(st, eh.name, SF.DEF_LOCAL, LOCATION(eh))) {
             return 0
         }
@@ -1947,7 +1947,7 @@ visitor.excepthandler = function(st, eh) {
 
 visitor.withitem = function(st, item) {
     VISIT(st, expr, item.context_expr)
-    if (item.optional_vars) {
+    if (! $B.is_none(item.optional_vars)) {
         VISIT(st, expr, item.optional_vars)
     }
     return 1
@@ -1955,7 +1955,7 @@ visitor.withitem = function(st, item) {
 
 visitor.match_case = function(st, m) {
     VISIT(st, pattern, m.pattern)
-    if (m.guard) {
+    if (! $B.is_none(m.guard)) {
         VISIT(st, expr, m.guard)
     }
     VISIT_SEQ(st, stmt, m.body)

@@ -495,7 +495,7 @@ $B.is_recursion_error = function(js_exc) {
 }
 
 $B.RAISE = function(error_type, message) {
-    throw $B.$call(error_type, message ?? '')
+    throw message == null ? $B.$call(error_type) : $B.$call(error_type, message)
 }
 
 $B.RAISE_IF_NOT = function(exc, exc_type) {
@@ -544,6 +544,9 @@ function check_no_keywords(obj, kw) {
 
 /* BaseException start */
 _b_.BaseException.tp_repr = function(self) {
+    if (self.args.length > 1) {
+        return $B.class_name(self) + _b_.repr(self.args)
+    }
     var args = ''
     if (self.args.length > 0 && self.args[0] !== _b_.None) {
         args = _b_.repr(self.args[0])
@@ -553,6 +556,9 @@ _b_.BaseException.tp_repr = function(self) {
 }
 
 _b_.BaseException.tp_str = function(self) {
+    if (self.args.length > 1) {
+        return _b_.str.$factory(self.args)
+    }
     if (self.args.length > 0 && self.args[0] !== _b_.None) {
         return _b_.str.$factory(self.args[0])
     }
@@ -794,6 +800,22 @@ _b_.SyntaxError.tp_init = function() {
     }
 }
 
+_b_.SyntaxError.tp_str = function(self) {
+    // the message, then the file's basename and the line if they are known
+    var msg = _b_.str.$factory(self.msg),
+        filename = $B.$isinstance(self.filename, _b_.str) ?
+            _b_.str.$factory(self.filename).split('/').pop() : null,
+        lineno = $B.exact_type(self.lineno, _b_.int) ? self.lineno : null
+    if (filename !== null && lineno !== null) {
+        return `${msg} (${filename}, line ${lineno})`
+    } else if (filename !== null) {
+        return `${msg} (${filename})`
+    } else if (lineno !== null) {
+        return `${msg} (line ${lineno})`
+    }
+    return msg
+}
+
 _b_.SyntaxError.tp_members = [
     ["msg", $B.TYPES.OBJECT, 'msg', 0],
     ["filename", $B.TYPES.OBJECT, "filename", 0],
@@ -817,7 +839,7 @@ _b_.KeyError.tp_str = function(self) {
     if (self.args.length == 1) {
         return _b_.repr(self.args[0])
     }
-    return _b_.BaseException.tp_repr(self)
+    return _b_.BaseException.tp_str(self)
 }
 
 $B.set_func_names(_b_.KeyError, 'builtins')
@@ -881,7 +903,7 @@ $B.attr_error = function(name, obj) {
         msg = `'${$B.class_name(obj)}' object`
     }
     msg +=  ` has no attribute '${name}'`
-    return $B.$call(_b_.AttributeError, msg, [], {$kw:[{name, obj}]})
+    return $B.$call(_b_.AttributeError, msg, {[$B.KW]: [{name, obj}]})
 }
 
 // NameError supports keyword-only "name" parameter
@@ -945,7 +967,7 @@ _b_.UnicodeDecodeError.tp_str = function(self) {
             ` in position ${start}: ${self.reason}`
     } else {
         result = `'${self.encoding}' codec can't decode bytes ` +
-        `in position ${start}-${end}: ${self.reason}`
+        `in position ${start}-${end - 1}: ${self.reason}`
     }
     return result
 }
@@ -970,14 +992,6 @@ _b_.UnicodeDecodeError.tp_init = function(self) {
     self.reason = reason
 }
 
-_b_.UnicodeDecodeError.tp_new = function(cls, args, kw) {
-    let obj = {
-        ob_type: cls
-    }
-    $B.init_dict(obj)
-    return obj
-}
-
 _b_.UnicodeDecodeError.tp_members = unicode_error_members
 
 /* UnicodeDecodeError end */
@@ -991,14 +1005,14 @@ _b_.UnicodeEncodeError.tp_str = function(self) {
         let c = _b_.str.mp_subscript(obj, self.start)
         let cp = _b_.ord(c)
         let s = cp.toString(16)
-        if (cp < 0xff) {
-            s = '0'.repeat(2 - s.length) + s
-        } else if (cp < 0xffff) {
-            s = '0'.repeat(4 - s.length) + s
+        if (cp <= 0xff) {
+            s = '\\x' + '0'.repeat(2 - s.length) + s
+        } else if (cp <= 0xffff) {
+            s = '\\u' + '0'.repeat(4 - s.length) + s
         } else {
-            s = '0'.repeat(8 - s.length) + s
+            s = '\\U' + '0'.repeat(8 - s.length) + s
         }
-        char = `character '\\x${s}'`
+        char = `character '${s}'`
         pos = self.start
     } else {
         char = `characters`
@@ -1024,14 +1038,6 @@ _b_.UnicodeEncodeError.tp_init = function(self) {
     self.reason = reason
 }
 
-_b_.UnicodeEncodeError.tp_new = function(cls, args, kw) {
-    let obj = {
-        ob_type: cls
-    }
-    $B.init_dict(obj)
-    return obj
-}
-
 _b_.UnicodeEncodeError.tp_members = unicode_error_members
 
 /* UnicodeEncodeError end */
@@ -1045,14 +1051,14 @@ _b_.UnicodeTranslateError.tp_str = function(self) {
         let c = _b_.str.mp_subscript(obj, self.start)
         let cp = _b_.ord(c)
         let s = cp.toString(16)
-        if (cp < 0xff) {
-            s = '0'.repeat(2 - s.length) + s
-        } else if (cp < 0xffff) {
-            s = '0'.repeat(4 - s.length) + s
+        if (cp <= 0xff) {
+            s = '\\x' + '0'.repeat(2 - s.length) + s
+        } else if (cp <= 0xffff) {
+            s = '\\u' + '0'.repeat(4 - s.length) + s
         } else {
-            s = '0'.repeat(8 - s.length) + s
+            s = '\\U' + '0'.repeat(8 - s.length) + s
         }
-        char = `character '\\x${s}'`
+        char = `character '${s}'`
         pos = self.start
     } else {
         char = `characters`
@@ -1077,14 +1083,6 @@ _b_.UnicodeTranslateError.tp_init = function(self) {
     self.start = start
     self.end = end
     self.reason = reason
-}
-
-_b_.UnicodeTranslateError.tp_new = function(cls, args, kw) {
-    let obj = {
-        ob_type: cls
-    }
-    $B.init_dict(obj)
-    return obj
 }
 
 _b_.UnicodeTranslateError.tp_members = unicode_error_members
