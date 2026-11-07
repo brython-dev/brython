@@ -600,6 +600,18 @@ assert "a ".split(None, 1) == ["a"]
 # a run of whitespace is one separator; the unsplit tail keeps its spacing
 assert " a  b  c ".split(None, 1) == ["a", "b  c "]
 
+# a str subclass iterates over its characters, not over its __str__
+class Name(str):
+    def __str__(self):
+        return "wrong"
+
+for s, chars in ((Name("ab"), ["a", "b"]), (Name("😀a"), ["😀", "a"])):
+    assert list(s) == chars
+    assert [c for c in s] == chars
+    it = iter(s)
+    it.__setstate__(1)
+    assert list(it) == chars[1:]
+
 # PR 3063
 class T(str):
     pass
