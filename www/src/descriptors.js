@@ -256,8 +256,13 @@ $B.method_descriptor.tp_call = function(self, ...args) {
         var name = self.d_name
         var class_name = self.d_type.tp_name
         $B.RAISE(_b_.TypeError,
-            `unbound method ${class_name}.${name} needs an argument`
+            `unbound method ${class_name}.${name}() needs an argument`
         )
+    }
+    if (! $B.get_mro($B.get_class(args[0])).includes(self.d_type)) {
+        $B.RAISE(_b_.TypeError, `descriptor '${self.d_name}' for ` +
+            `'${$B.get_name(self.d_type)}' objects doesn't apply to a ` +
+            `'${$B.class_name(args[0])}' object`)
     }
     try {
         var res = self.method(...args)
@@ -279,6 +284,7 @@ $B.method_descriptor.tp_descr_get = function(self, obj, klass) {
     // getters (which read self.$function_infos[...] unguarded) work on
     // the bound method, as they do on the unbound descriptor's method.
     f.$function_infos = self.method.$function_infos
+    f.__text_signature__ = self.method.__text_signature__
     f.ml = {ml_name: self.d_name}
     f.m_self = obj
     return f
@@ -300,7 +306,7 @@ method_descriptor_funcs.__reduce__ = function(self) {
 }
 
 method_descriptor_funcs.__text_signature___get = function(self) {
-
+    return self.method.__text_signature__ ?? _b_.None
 }
 
 method_descriptor_funcs.__text_signature___set = function(self) {
@@ -500,7 +506,7 @@ $B.wrapper_descriptor.tp_repr = function(self) {
 }
 
 $B.wrapper_descriptor.tp_call = function(descr, ...args) {
-    var no_args = args.length == 0 || (args.length == 1 && args[0].$kw)
+    var no_args = args.length == 0 || (args.length == 1 && args[0][$B.KW])
 
     if (no_args) {
         $B.RAISE(_b_.TypeError,
