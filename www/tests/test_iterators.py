@@ -239,5 +239,9 @@ for base, args in ((enumerate, ("ab",)), (filter, (None, "ab")), (map, (str, "ab
     assert type(sub).__name__ == "Sub" and sub.label == "sub"
     sub.x = 1
     assert sub.x == 1 and len(list(sub)) == 2
+    
+# zip() with no iterable is empty
+assert list(zip()) == [] and list(zip(strict=True)) == []
+assert list(type("Z", (zip,), {})()) == []
 
 print("passed all tests...")

@@ -1,6 +1,8 @@
 """(Extremely) low-level import machinery bits as used by importlib and imp."""
 
-
+def _override_frozen_modules_for_tests(override):
+    OVERRIDE_FROZEN_MODULES = override
+    
 def _fix_co_filename(*args,**kw):
     """Changes code.co_filename to specify the passed-in file path.
       code
