@@ -145,6 +145,21 @@ FULL_ENTEAN_ALPHABET =  "AZYXEWVTISRLPNOMQKJHUGFDCB"
 tran_tab = str.maketrans(FULL_ENGLISH_ALPHABET, FULL_ENTEAN_ALPHABET, 'sh')
 assert "PETEshelley".translate(tran_tab) == "MEHEelley"
 
+# translate() keeps a character only on a LookupError of its table, and takes
+# a str, None or a code point
+class Failing:
+    def __getitem__(self, key):
+        raise RuntimeError("table failure")
+
+class Name(str):
+    pass
+
+assert_raises(RuntimeError, "ab".translate, Failing())
+assert_raises(ValueError, "ab".translate, {97: -1})
+assert_raises(TypeError, "ab".translate, {97: 1.0})
+assert "abc".translate({97: Name("x"), 98: "😀", 99: 0x1F600}) == "x😀😀"
+assert "ab".translate({97: True, 98: None}) == "\x01"
+
 # issue 423
 assert 'a'.islower()
 assert 'A'.isupper()
