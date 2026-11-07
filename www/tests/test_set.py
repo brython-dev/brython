@@ -320,4 +320,16 @@ assert_raises(TypeError, {1}.pop, 1)
 # PR 2818
 assert set([0, 2**61 - 1]) == {0, 2305843009213693951}
 
+# set comprehension
+sets = [{1, 2}, {2, 3}, {3, 4}]
+assert {*s for s in sets}  == {1, 2, 3, 4}
+
+# PR 3153
+class D(dict):
+
+    def __iter__(self):
+      return iter([9])
+
+assert set(D({1: 2})) == {9}
+
 print("passed all tests..")

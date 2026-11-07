@@ -520,4 +520,22 @@ assert tuple.__getitem__(example_tuple, slice(-16, None)) == \
 # PR 2764
 assert [1, 2, 3][0:-31:-1] == [1]
 
+# PR 2973
+class L(list): pass
+assert [1] + L([2]) == [1, 2]
+
+# PR 3010
+class T(tuple):
+    pass
+
+assert type(T([1, 2])[:2]) is tuple
+
+# unpacking in comprehension
+lists = [[1, 2], [3, 4], [5]]
+assert [*L for L in lists] == [1, 2, 3, 4, 5]
+
+# PR 3124
+nan = float('nan')
+assert [nan].index(nan) == 0
+
 print("passed all tests..")
