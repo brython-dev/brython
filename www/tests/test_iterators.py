@@ -232,6 +232,19 @@ assert next(flaky_it_2928) == "later"
 assert next(flaky_it_2928) == "later"
 assert next(flaky_it_2928, None) is None
 
+# a __getitem__ iterator keeps its position through iter() and stays exhausted
+class Sequence:
+    def __init__(self):
+        self.data = [1, 2, 3]
+    def __getitem__(self, index):
+        return self.data[index]
+seq = Sequence()
+it = iter(seq)
+next(it)
+assert iter(it) is it and list(it) == [2, 3]
+seq.data.append(4)
+assert next(it, "stop") == "stop"
+
 # a subclass of a builtin iterator makes instances of the subclass
 for base, args in ((enumerate, ("ab",)), (filter, (None, "ab")), (map, (str, "ab")),
                    (zip, ("ab",)), (reversed, ("ab",))):
