@@ -354,22 +354,13 @@ range_funcs.count = function(self, ob) {
     if ($B.$isinstance(ob, [_b_.int, _b_.float, _b_.bool])) {
         return _b_.int.$factory(range.sq_contains(self, ob))
     } else {
-        var comp = function(other) {return $B.rich_comp("__eq__", ob, other)},
-            it = range.tp_iter(self),
-            _next = RangeIterator.tp_iternext,
-            nb = 0
-        while (true) {
-            try {
-                if (comp(_next(it))) {
-                    nb++
-                }
-            } catch (err) {
-                if ($B.$isinstance(err, _b_.StopIteration)) {
-                    return nb
-                }
-                throw err
+        var nb = 0
+        for (var item of $B.range_iterator.tp_iternext(range.tp_iter(self))) {
+            if ($B.rich_comp("__eq__", ob, item)) {
+                nb++
             }
         }
+        return nb
     }
 }
 
@@ -380,26 +371,14 @@ range_funcs.index = function(self) {
     try {
         other = $B.int_or_bool(other)
     } catch (err) {
-        var comp = function(x) {
-                return $B.rich_comp("__eq__", other, x)
-            },
-            it = range.tp_iter(self),
-            _next = RangeIterator.tp_iternext,
-            nb = 0
-        while (true) {
-            try {
-                if (comp(_next(it))) {
-                    return nb
-                }
-                nb++
-            } catch (err) {
-                if ($B.$isinstance(err, _b_.StopIteration)) {
-                    $B.RAISE(_b_.ValueError, _b_.str.$factory(other) +
-                        " not in range")
-                }
-                throw err
+        var nb = 0
+        for (var item of $B.range_iterator.tp_iternext(range.tp_iter(self))) {
+            if ($B.rich_comp("__eq__", other, item)) {
+                return nb
             }
+            nb++
         }
+        $B.RAISE(_b_.ValueError, _b_.str.$factory(other) + " not in range")
     }
     var sub = $B.rich_op('__sub__', other, self.start),
         fl = $B.rich_op('__floordiv__', sub, self.step),
@@ -456,7 +435,7 @@ function conv_slice(self) {
             res.push(val)
         } else {
             try {
-                res.push($B.$call(_b_.int, val))
+                res.push($B.PyNumber_Index(val))
             } catch (err) {
                 $B.RAISE(_b_.TypeError, "slice indices must be " +
                     "integers or None or have an __index__ method")
@@ -469,18 +448,16 @@ function conv_slice(self) {
 slice.$conv_for_seq = function(self, len) {
     // Internal method, uses the integer len to set
     // start, stop, step to integers
-    var step = self.step === None ? 1 : $B.PyNumber_Index(self.step),
-        step_is_neg = $B.rich_comp('__gt__', 0, step),
+    var [start, stop, step] = conv_slice(self)
+    step = step === None ? 1 : step
+    var step_is_neg = $B.rich_comp('__gt__', 0, step),
         len_1 = $B.rich_op('__sub__', len, 1)
     if (step == 0) {
         $B.RAISE(_b_.ValueError, 'slice step cannot be zero')
     }
-    var start,
-        stop
-    if (self.start === None) {
+    if (start === None) {
         start = step_is_neg ? len_1 : 0
     } else {
-        start = $B.$call(_b_.int, self.start)
         if ($B.rich_comp('__gt__', 0, start)) {
             start = $B.rich_op('__add__', start, len)
             if ($B.rich_comp('__gt__', 0, start)) {
@@ -491,10 +468,9 @@ slice.$conv_for_seq = function(self, len) {
             start = step < 0 ? len_1 : len
         }
     }
-    if (self.stop === None) {
+    if (stop === None) {
         stop = step_is_neg ? -1 : len
     } else {
-        stop = $B.PyNumber_Index(self.stop)
         if ($B.rich_comp('__gt__', 0, stop)) {
             stop = $B.rich_op('__add__', stop, len)
             if ($B.rich_comp('__gt__', 0, stop)) {
@@ -556,7 +532,6 @@ slice.$fast_slice = function(start, stop, step) {
         stop: stop,
         step: step
     }
-    conv_slice(res) // to check types
     return res
 }
 
@@ -582,8 +557,8 @@ _b_.slice.tp_richcompare = function(self, other, op) {
 
 _b_.slice.tp_repr = function(self) {
     $B.builtins_repr_check(slice, arguments) // in brython_builtins.js
-    return "slice(" + _b_.str.$factory(self.start) + ", " +
-        _b_.str.$factory(self.stop) + ", " + _b_.str.$factory(self.step) + ")"
+    return "slice(" + _b_.repr(self.start) + ", " +
+        _b_.repr(self.stop) + ", " + _b_.repr(self.step) + ")"
 }
 
 _b_.slice.tp_hash = function(self) {
@@ -630,7 +605,8 @@ slice_funcs.indices = function() {
     // step or stride length of the slice. Missing or out-of-bounds indices
     // are handled in a manner consistent with regular slices.
     var $ = $B.args("indices", 2, {self: null, length: null}, arguments)
-    var self = $.self,
+    var [start, stop, step] = conv_slice($.self),
+        self = {start, stop, step}, // the indices, through __index__
         length = $.length
     var len = $B.PyNumber_Index(length)
     if (len < 0) {

@@ -5,8 +5,13 @@ var _b_ = $B.builtins
 var method_wrapper = $B.method_wrapper
 
 /* method_wrapper start */
-$B.method_wrapper.tp_richcompare = function(self) {
-
+$B.method_wrapper.tp_richcompare = function(self, other, op) {
+    if (op !== '__eq__' && op !== '__ne__' ||
+            ! $B.$isinstance(other, method_wrapper)) {
+        return _b_.NotImplemented
+    }
+    var eq = self.wrapped === other.wrapped && self.self === other.self
+    return op === '__eq__' ? eq : ! eq
 }
 
 $B.method_wrapper.tp_repr = function(self) {
@@ -16,7 +21,7 @@ $B.method_wrapper.tp_repr = function(self) {
 }
 
 $B.method_wrapper.tp_hash = function(self) {
-
+    return _b_.hash(self.self) ^ _b_.object.tp_hash(self.wrapped)
 }
 
 $B.method_wrapper.tp_call = function(self, ...args) {
@@ -42,7 +47,7 @@ method_wrapper_funcs.__objclass___set = function(self) {
 }
 
 method_wrapper_funcs.__qualname___get = function(self) {
-
+    return $B.$getattr(self.d_type, '__qualname__') + '.' + self.d_name
 }
 
 method_wrapper_funcs.__qualname___set = function(self) {
@@ -181,7 +186,7 @@ $B.method.tp_repr = function(self) {
 }
 
 $B.method.tp_hash = function(self) {
-
+    return _b_.object.tp_hash(self.im_self) ^ _b_.hash(self.im_func)
 }
 
 $B.method.tp_call = function(self, ...args) {
@@ -190,7 +195,10 @@ $B.method.tp_call = function(self, ...args) {
 
 $B.method.tp_getattro = function(self, attr) {
     var tp = $B.get_class(self)
-    var descr = $B.search_in_mro(tp, attr, $B.NULL)
+    // __module__ and __doc__ are in the dict of the method type; CPython
+    // reports the function's
+    var descr = attr == '__module__' || attr == '__doc__' ? $B.NULL :
+        $B.search_in_mro(tp, attr, $B.NULL)
     if (descr !== $B.NULL) {
         var getter = $B.search_slot($B.get_class(descr), 'tp_descr_get', $B.NULL)
         if (getter !== $B.NULL) {
@@ -248,8 +256,13 @@ $B.method_descriptor.tp_call = function(self, ...args) {
         var name = self.d_name
         var class_name = self.d_type.tp_name
         $B.RAISE(_b_.TypeError,
-            `unbound method ${class_name}.${name} needs an argument`
+            `unbound method ${class_name}.${name}() needs an argument`
         )
+    }
+    if (! $B.get_mro($B.get_class(args[0])).includes(self.d_type)) {
+        $B.RAISE(_b_.TypeError, `descriptor '${self.d_name}' for ` +
+            `'${$B.get_name(self.d_type)}' objects doesn't apply to a ` +
+            `'${$B.class_name(args[0])}' object`)
     }
     try {
         var res = self.method(...args)
@@ -271,6 +284,7 @@ $B.method_descriptor.tp_descr_get = function(self, obj, klass) {
     // getters (which read self.$function_infos[...] unguarded) work on
     // the bound method, as they do on the unbound descriptor's method.
     f.$function_infos = self.method.$function_infos
+    f.__text_signature__ = self.method.__text_signature__
     f.ml = {ml_name: self.d_name}
     f.m_self = obj
     return f
@@ -292,7 +306,7 @@ method_descriptor_funcs.__reduce__ = function(self) {
 }
 
 method_descriptor_funcs.__text_signature___get = function(self) {
-
+    return self.method.__text_signature__ ?? _b_.None
 }
 
 method_descriptor_funcs.__text_signature___set = function(self) {
@@ -492,7 +506,7 @@ $B.wrapper_descriptor.tp_repr = function(self) {
 }
 
 $B.wrapper_descriptor.tp_call = function(descr, ...args) {
-    var no_args = args.length == 0 || (args.length == 1 && args[0].$kw)
+    var no_args = args.length == 0 || (args.length == 1 && args[0][$B.KW])
 
     if (no_args) {
         $B.RAISE(_b_.TypeError,
@@ -518,6 +532,7 @@ $B.wrapper_descriptor.tp_descr_get = function(self, obj, type) {
     var res = {
         ob_type: $B.method_wrapper,
         d_name: self.d_name,
+        d_type: self.d_type,
         self: obj,
         wrapped: self.wrapped
     }

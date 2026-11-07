@@ -104,7 +104,7 @@ function index(self) {
         stop = Math.min(stop, self.length)
     }
     for (var i = start; i < stop; i++) {
-        if ($B.rich_comp('__eq__', $.x, self[i])) {
+        if ($B.is_or_equals($.x, self[i])) {
             return i
         }
     }
@@ -119,13 +119,6 @@ function mp_subscript(self, key) {
         return list_res
     }
 
-    if (! $B.$isinstance(key, [_b_.int, _b_.slice])) {
-        $B.RAISE(_b_.TypeError,
-            `list indices must be integers or slices, ` +
-            `not ${$B.class_name(key)}`
-        )
-    }
-
     if ($B.$isinstance(key, _b_.slice)) {
         return _b_.list.$getitem_slice(self, key)
     }
@@ -134,7 +127,7 @@ function mp_subscript(self, key) {
         var int_key = $B.PyNumber_Index(key)
     } catch (err) {
         $B.RAISE(_b_.TypeError, $B.class_name(self) +
-            " indices must be integer, not " + $B.class_name(key))
+            " indices must be integers or slices, not " + $B.class_name(key))
     }
 
     let items = self.valueOf(),
@@ -151,14 +144,15 @@ function mp_subscript(self, key) {
 }
 
 function sq_concat(self, other) {
-    if ($B.get_class(self) !== $B.get_class(other)) {
+    var cls = $B.$isinstance(self, tuple) ? tuple : list
+    if (! $B.$isinstance(other, cls)) {
         return _b_.NotImplemented
     }
     var res = self.slice()
     for (const item of other) {
         res.push(item)
     }
-    if ($B.$isinstance(self, tuple)) {
+    if (cls === tuple) {
         return tuple.$factory(res)
     } else {
         return $B.$list(res)
@@ -280,7 +274,8 @@ $B.list_delitem = function(self, arg) {
 
 
 list.$getitem_slice = function(self, key) {
-    var klass = $B.get_class(self)
+    // slicing a subclass returns a plain list or tuple
+    var klass = $B.$isinstance(self, tuple) ? tuple : list
     // Find integer values for start, stop and step
     if(key.start === _b_.None && key.stop === _b_.None &&
             key.step === _b_.None){
@@ -649,6 +644,11 @@ list.$unpack = function(obj) {
     try {
         return _b_.list.$factory(obj)
     } catch (err) {
+        if (! $B.is_exc(err, [_b_.TypeError])) {
+            // the iterable itself raised: report its exception, not the
+            // StopIteration of the re-probe below
+            throw err
+        }
         try {
             var it = $B.$iter(obj)
             $B.$call($B.$getattr(it, "__next__"))
@@ -731,7 +731,7 @@ _b_.list.tp_new = function(cls, args, kw) {
     }
     var res = []
     res.ob_type = cls
-    if (cls !== list) {
+    if ($B.instance_has_dict(cls)) {
         $B.init_dict(res)
     }
     return res
@@ -799,7 +799,7 @@ list_funcs.__sizeof__ = function(self) {
 }
 
 list_funcs.append = function(self, x) {
-    $B.check_nb_args_no_kw("append", 2, arguments)
+    $B.check_nb_args_no_kw("list.append", 1, arguments, true)
     if (self[$B.JSOBJ]) {
         self[$B.JSOBJ].push($B.pyobj2jsobj(x))
         self.push($B.pyobj2jsobj(x))
@@ -811,10 +811,10 @@ list_funcs.append = function(self, x) {
     return _b_.None
 }
 
-list_funcs.clear = function() {
-    var $ = $B.args("clear", 1, {self: null}, arguments)
-    while ($.self.length) {
-        $.self.pop()
+list_funcs.clear = function(self) {
+    $B.meth_noargs("list.clear", arguments)
+    while (self.length) {
+        self.pop()
     }
     return _b_.None
 }
@@ -880,7 +880,7 @@ list_funcs.pop = function(self) {
 list_funcs.remove = function(self) {
     var $ = $B.args("remove", 2, {self: null, x: null}, arguments)
     for (var i = 0, len = $.self.length; i < len; i++) {
-        if ($B.rich_comp("__eq__", $.self[i], $.x)) {
+        if ($B.is_or_equals($.self[i], $.x)) {
             $.self.splice(i, 1)
             return _b_.None
         }
@@ -901,7 +901,10 @@ list_funcs.reverse = function(self) {
 }
 
 list_funcs.sort = function(self) {
-    var $ = $B.args("sort", 1, {self: null}, arguments, null, null, "kw")
+    var $ = $B.args("sort", 1, {self: null}, arguments, null, "args", "kw")
+    if ($.args.length > 0) {
+        $B.RAISE(_b_.TypeError, "sort() takes no positional arguments")
+    }
 
     check_not_tuple(self, "sort")
     var func = _b_.None,
@@ -977,6 +980,8 @@ list_funcs.sort = function(self) {
     // Javascript libraries might use the return value
     return self.$is_js_array ? self : _b_.None
 }
+
+list_funcs.sort.__text_signature__ = "($self, /, *, key=None, reverse=False)"
 
 _b_.list.tp_methods = [
     "__reversed__", "__sizeof__", "clear", "copy", "append", "insert",
@@ -1091,7 +1096,7 @@ _b_.tuple.tp_new = function(cls, args, kw) {
     }
     var self = []
     self.ob_type = cls
-    if (cls !== tuple) {
+    if ($B.instance_has_dict(cls)) {
         $B.init_dict(self)
     }
     args = args ?? []
