@@ -706,6 +706,9 @@ float.$factory = function(value) {
         var index_method = $B.$getattr(klass, '__index__', null)
 
         if (index_method === null) {
+            if ($B.is_str(value)) {
+                return float.$factory(_b_.str.$to_string(value).valueOf())
+            }
             $B.RAISE(_b_.TypeError, "float() argument must be a string or a " +
                 "real number, not '" + $B.class_name(value) + "'")
         }

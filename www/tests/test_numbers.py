@@ -917,6 +917,17 @@ assert type(Int(4).__int__()) is int
 assert_raises(OverflowError, float, 10**1000,
   msg="int too large to convert to float")
 
+# float() reads a str subclass by its value, unless it defines __float__
+class Name(str):
+    pass
+
+class Own(str):
+    def __float__(self):
+        return 9.0
+
+assert float(Name(" 1.5 ")) == 1.5 and float(Own("1.5")) == 9.0
+assert_raises(ValueError, float, "1.5😀")
+
 # PR 3038
 assert float('nan') is not float('nan')
 
