@@ -80,12 +80,13 @@ _b_.anext = function() {
     var $ = $B.args('anext', 2, {async_iterator: null, _default: null},
                 arguments, {_default: $B.NULL}, null, null)
     var awaitable = $B.$call($B.$getattr($.async_iterator, '__anext__'))
+    if ($._default === $B.NULL) {
+        return awaitable
+    }
     return $B.promise(awaitable).catch(
         function(err) {
             if ($B.is_exc(err, [_b_.StopAsyncIteration])) {
-                if ($._default !== $B.NULL) {
-                    return $._default
-                }
+                return $._default
             }
             throw err
         }
@@ -188,7 +189,13 @@ _b_.breakpoint = function() {
 _b_.callable = function(obj) {
     check_nb_args_no_kw('callable', 1, arguments)
 
-    return _b_.hasattr(obj, '__call__')
+    if (typeof obj == 'function') {
+        return true
+    }
+    // the slot $B.$call uses: __call__ is looked up on the type, not on
+    // the object, so neither __getattr__ nor an instance attribute counts
+    var call = $B.get_class(obj).tp_call
+    return call !== undefined && call !== $B.NULL
 }
 
 _b_.chr = function(i) {
@@ -552,7 +559,7 @@ _b_.enumerate.tp_new = function(cls, args, kw) {
         }
     }
     var res = {
-        ob_type: _b_.enumerate,
+        ob_type: cls,
         it: $B.make_js_iterator(iterable),
         counter: start ?? 0
     }
@@ -622,11 +629,15 @@ filter.tp_new = function(cls, args, kw) {
         ['func', 'iterable'], {})
     $B.check_kw_empty('filter', kw)
     var func = func === _b_.None ? (x) => x : func
-    return {
-        ob_type: _b_.filter,
+    var res = {
+        ob_type: cls,
         func,
         it: $B.make_js_iterator(iterable)
     }
+    if (cls !== _b_.filter) {
+        $B.init_dict(res)
+    }
+    return res
 }
 
 var filter_funcs = _b_.filter.tp_funcs = {}
@@ -757,7 +768,7 @@ $B.time_builtin_getattr = 0
 
 $B.$getattr = function(obj, attr, _default) {
     // Used internally to avoid having to parse the arguments
-    var test = false // attr == '__qualname__' && $B.class_name(obj) == 'TypeVar'
+    var test = false // attr == 'B' // && $B.class_name(obj) == 'TypeVar'
     if (test) {
         console.log('$getattr', obj, attr)
     }
@@ -841,6 +852,8 @@ $B.$getattr = function(obj, attr, _default) {
             if (test) {
                 console.log('in klass dict', in_klass_dict)
                 console.log('in own dict', in_own_dict)
+                console.log('klass.$getattribute === _b_.object.tp_getattro',
+                    klass.$getattribute === _b_.object.tp_getattro)
             }
             if (in_klass_dict &&
                     klass.$getattribute === _b_.object.tp_getattro) {
@@ -851,8 +864,14 @@ $B.$getattr = function(obj, attr, _default) {
                         }
                         break
                     case _b_.staticmethod:
+                        if (test) {
+                            console.log('in_klass_dict is staticmethod')
+                            console.log()
+                            break
+                        }
                         if (in_own_dict === $B.NULL) {
-                            return in_klass_dict
+                            return _b_.staticmethod.tp_descr_get(
+                                in_klass_dict, obj, klass)
                         }
                         break
                 }
@@ -924,7 +943,14 @@ $B.$getattr = function(obj, attr, _default) {
                 return res
             }
         }
-        var res = $B.type_getattribute(obj, attr)
+        try {
+            var res = $B.type_getattribute(obj, attr)
+        } catch (err) {
+            if (_default !== undefined && $B.is_exc(err, _b_.AttributeError)) {
+                return _default
+            }
+            throw err
+        }
     }
     if (res === $B.NULL) {
         if (_default !== undefined) {
@@ -980,9 +1006,7 @@ $B.$hash = function(obj) {
                 res = _b_.int.tp_hash(res)
             }
         } else {
-            $B.RAISE(_b_.TypeError, "unhashable type: '" +
-                    _b_.str.$factory($B.jsobj2pyobj(obj)) + "'"
-            )
+            $B.RAISE(_b_.TypeError, `unhashable type: '${$B.class_name(obj)}'`)
         }
     }
     // CPython reserves -1 as the "hash failed" sentinel, so any value that
@@ -992,7 +1016,7 @@ $B.$hash = function(obj) {
     return res
 }
 
-var help = _b_.help = function(obj) {
+var help = function(obj) {
     if (obj === undefined) {obj = 'help'}
 
     if (typeof obj == 'string') {
@@ -1018,7 +1042,7 @@ var help = _b_.help = function(obj) {
                 doc_url = lib_url
             }
             globalThis.open(`${doc_url}/${url}.html#` + obj)
-            return
+            return _b_.None
         }
         // built-in functions or classes
         if (_b_[obj]) {
@@ -1033,7 +1057,7 @@ var help = _b_.help = function(obj) {
             }
             if (url) {
                 globalThis.open(url)
-                return
+                return _b_.None
             }
         }
         // use pydoc
@@ -1046,14 +1070,25 @@ var help = _b_.help = function(obj) {
     try {
         _b_.print($B.$getattr(obj, '__doc__'))
     } catch (err) {
-        return ''
+        // no docstring to print
     }
+    return _b_.None
 }
 
-help.__repr__ = help.__str__ = function() {
+// the builtin help is an instance of _sitebuiltins._Helper: calling it runs
+// help(), its repr says how to use it
+var Helper = $B.make_builtin_class('_sitebuiltins._Helper')
+
+Helper.tp_call = function(self, ...args) {
+    return help(...args)
+}
+
+Helper.tp_repr = function() {
     return "Type help() for interactive help, or help(object) " +
         "for help about object."
 }
+
+_b_.help = {ob_type: Helper}
 
 _b_.hex = function(obj) {
     check_nb_args_no_kw('hex', 1, arguments)
@@ -1353,7 +1388,7 @@ $B.$iter = function(obj, sentinel) {
             }
             if ($B.search_slot($B.get_class(res), 'tp_iternext', $B.NULL) === $B.NULL) {
                 $B.RAISE(_b_.TypeError,
-                    `iter() returned non-iterable of type '${$B.class_name(res)}'`)
+                    `iter() returned non-iterator of type '${$B.class_name(res)}'`)
             }
             return res
         }
@@ -1423,7 +1458,7 @@ var len = _b_.len = function(obj) {
 _b_.locals = function() {
     // $B.frame_obj.frame is
     // [locals_name, locals_obj, globals_name, globals_obj]
-    check_nb_args('locals', 0, arguments)
+    check_nb_args_no_kw('locals', 0, arguments)
     var locals_obj = $B.frame_obj.frame[1]
     // In a class body, locals() is a proxy around a dict(-like) object
     var class_locals = locals_obj.$target
@@ -1433,11 +1468,24 @@ _b_.locals = function() {
     // CPython's locals() returns a dict snapshot; the raw frame object is
     // not a Python mapping ('x' in locals() raised "argument of type ...
     // is not a container or iterable"). Skip frame infrastructure keys.
-    var d = $B.empty_dict()
+
+    // The free variables come after the local names: those defined as
+    // getters, and __class__, which a method sets for super()
+    var d = $B.empty_dict(),
+        free = []
     for (var key in locals_obj) {
-        if (key.startsWith('$') || key == '__class__' || key == 'ob_type') {
+        if (key.startsWith('$') || key == 'ob_type' ||
+                key.startsWith('lambda_' + $B.lambda_magic + '_')) {
             continue
         }
+        if (key == '__class__' ||
+                Object.getOwnPropertyDescriptor(locals_obj, key)?.get) {
+            free.push(key)
+            continue
+        }
+        _b_.dict.$setitem(d, key, locals_obj[key])
+    }
+    for (var key of free) {
         _b_.dict.$setitem(d, key, locals_obj[key])
     }
     return d
@@ -1472,7 +1520,7 @@ _b_.map.tp_iternext = function*(self){
     for (var iter of self.args) {
         var arg = iter.next()
         if (arg.done) {
-            $B.RAISE(_b_.StopIteration, '')
+            $B.RAISE(_b_.StopIteration)
         }
         args.push(arg.value)
     }
@@ -1489,12 +1537,16 @@ _b_.map.tp_new = function(cls, args, kw) {
     for (var arg of extra_args) {
         iter_args.push($B.make_js_iterator(arg))
     }
-    return {
+    var res = {
         ob_type: cls,
         args: iter_args,
         func: func,
         iterables: [it1, ...extra_args]
     }
+    if (cls !== _b_.map) {
+        $B.init_dict(res)
+    }
+    return res
 }
 
 var map_funcs = _b_.map.tp_funcs = {}
@@ -1521,9 +1573,9 @@ function $extreme(args, op) { // used by min() and max()
     var last = args[args.length - 1]
     var nb_args = args.length
     var kw
-    if (last.$kw) {
+    if (last[$B.KW]) {
         nb_args--
-        kw = $B.parse_kwargs(last.$kw)
+        kw = $B.parse_kwargs(last[$B.KW])
     }
 
     var has_default = false,
@@ -1804,7 +1856,23 @@ var repr = _b_.repr = function(obj) {
     check_nb_args_no_kw('repr', 1, arguments)
     var klass = $B.get_class(obj)
     var tp_repr = $B.search_slot(klass, 'tp_repr')
-    return tp_repr(obj)
+    $B.repr.depth++
+    try {
+        return tp_repr(obj)
+    } catch (err) {
+        // an error out of the outermost repr() leaves no object marked as
+        // being represented, and a stack overflow is a RecursionError
+        if ($B.repr.depth == 1) {
+            $B.repr.clear()
+            if ($B.is_recursion_error(err)) {
+                $B.RAISE(_b_.RecursionError, "maximum recursion depth " +
+                    "exceeded while getting the repr of an object")
+            }
+        }
+        throw err
+    } finally {
+        $B.repr.depth--
+    }
 }
 
 var reversed = _b_.reversed
@@ -1907,6 +1975,9 @@ _b_.reversed.tp_new = function(cls, args, kw) {
         // index.
         counter: seqlen,
         getitem: method
+    }
+    if (cls !== _b_.reversed) {
+        $B.init_dict(res)
     }
     return res
 }
@@ -2225,7 +2296,8 @@ _b_.super.tp_getattro = function(self, attr) {
             console.log('call getter', getter)
             console.log('args', self.obj, self.obj_type)
         }
-        res = getter(f, self.obj, self.obj_type)
+        res = getter(f, self.obj === self.obj_type ? $B.NULL : self.obj,
+            self.obj_type)
     } else {
         res = f
     }
@@ -2261,9 +2333,10 @@ _b_.super.tp_init = function(self, _type, object_or_type) {
                 code = $B.$getattr(pyframe, 'f_code'),
                 co_varnames = $B.$getattr(code, 'co_varnames')
             if (co_varnames.length > 0) {
-                type = $B.get_class(frame[1])
+                // The method's class, which the compiler binds as __class__
+                type = frame[1].__class__
                 if (type === undefined) {
-                    $B.RAISE(_b_.RuntimeError, "super(): no arguments")
+                    $B.RAISE(_b_.RuntimeError, "super(): __class__ cell not found")
                 }
                 object_or_type = frame[1][co_varnames[0]]
             } else {
@@ -2279,9 +2352,6 @@ _b_.super.tp_init = function(self, _type, object_or_type) {
             self.obj_type = _b_.None
             return
         }
-    }
-    if (Array.isArray(object_or_type)) {
-        object_or_type = object_or_type[0]
     }
     self.type = type
     self.obj = object_or_type
@@ -2313,25 +2383,18 @@ _b_.vars = function() {
     var obj = $.obj
     if (obj === $B.NULL) {
         return _b_.locals()
-    } else {
-        if ($B.get_dict(obj)) {
-            return $B.get_dict(obj)
-        } else {
-            $B.RAISE(_b_.TypeError, "vars() argument must have __dict__ attribute")
-        }
+    }
+    try {
+        return $B.$getattr(obj, '__dict__')
+    } catch (err) {
+        $B.RAISE_IF_NOT(err, _b_.AttributeError)
+        $B.RAISE(_b_.TypeError, "vars() argument must have __dict__ attribute")
     }
 }
 
 var zip = _b_.zip
 
 zip.$factory = function() {
-    var res = {
-        ob_type: zip,
-        items: []
-    }
-    if (arguments.length == 0) {
-        return res
-    }
     var [args, kw] = $B.parse_args_kw('zip', arguments)
     var strict = $B.$bool($B.str_dict_get(kw, 'strict', false))
     var iters = []
@@ -2353,6 +2416,9 @@ _b_.zip.tp_iter = function(self) {
 _b_.zip.tp_iternext = function*(self){
     var res = [],
         len = self.iters.length
+    if (len == 0) {
+        return
+    }
     for (var i = 0; i < len; i++) {
         var v = self.iters[i].next()
         if (v.done) {
@@ -2378,20 +2444,20 @@ _b_.zip.tp_iternext = function*(self){
 }
 
 _b_.zip.tp_new = function(cls, args, kw) {
-    var res = {
-        ob_type: cls,
-        items: []
-    }
     var strict = $B.$bool($B.str_dict_get(kw, 'strict', false))
     var iters = []
     for (var arg of args) {
         iters.push($B.make_js_iterator(arg))
     }
-    return {
+    var res = {
         ob_type: cls,
         iters,
         strict
     }
+    if (cls !== _b_.zip) {
+        $B.init_dict(res)
+    }
+    return res
 }
 
 var zip_funcs = _b_.zip.tp_funcs = {}
