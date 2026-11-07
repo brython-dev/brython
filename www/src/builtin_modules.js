@@ -758,8 +758,9 @@
             $B.RAISE(_b_.TypeError, "write() argument must be str, not " +
                 $B.class_name(msg))
         }
-        self.buf.push(_b_.str.$to_string(msg))
-        return _b_.None
+        let s = _b_.str.$to_string(msg)
+        self.buf.push(s)
+        return _b_.len(s)
     }
 
     $io.tp_methods = ["flush", "write"]
@@ -1016,7 +1017,7 @@
             } else if ($B.$isinstance(message, _b_.Warning)) {
                 category = $B.get_class(message)
             }
-            
+
             var filters
             if ($B.imported.warnings) {
                 filters = $B.module_getattr($B.imported.warnings, 'filters')
