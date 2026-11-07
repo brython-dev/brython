@@ -369,3 +369,91 @@ async def test_future():
     async_tester.assertEqual(result, "timeout!")
 
 aio.run(test_future())
+
+
+# issue 2943 - aclose() on an async generator
+aclose_log_2943 = {}
+
+async def agen_cleanup_2943():
+    try:
+        yield 1
+        yield 2
+    finally:
+        aclose_log_2943["finally"] = True
+
+async def agen_catches_2943():
+    try:
+        yield 1
+    except GeneratorExit:
+        aclose_log_2943["caught"] = True
+        raise
+
+class CM_2943:
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        aclose_log_2943["aexit"] = exc_type
+        return False
+
+async def agen_in_with_2943():
+    async with CM_2943():
+        yield 1
+
+async def agen_yields_on_exit_2943():
+    try:
+        yield 1
+    finally:
+        yield 2
+
+async def test_aclose():
+    aclose_log_2943.clear()
+    # aclose() is awaitable, and closing runs the generator's finally blocks
+    gen = agen_cleanup_2943()
+    async_tester.assertEqual(await anext(gen), 1)
+    await gen.aclose()
+    async_tester.assertTrue(aclose_log_2943.get("finally"))
+    # the generator is exhausted afterwards
+    try:
+        await anext(gen)
+        raise AssertionError("expected StopAsyncIteration")
+    except StopAsyncIteration:
+        pass
+    # closing twice, closing one that never started, and closing an exhausted
+    # one are all no-ops
+    await gen.aclose()
+    await agen_cleanup_2943().aclose()
+    aclose_log_2943.clear()
+    gen2 = agen_cleanup_2943()
+    async for _ in gen2:
+        pass
+    async_tester.assertTrue(aclose_log_2943.get("finally"))
+    await gen2.aclose()
+
+    # GeneratorExit is thrown in, so "except GeneratorExit" runs: a return
+    # completion would only run the finally blocks
+    aclose_log_2943.clear()
+    gen3 = agen_catches_2943()
+    async_tester.assertEqual(await anext(gen3), 1)
+    await gen3.aclose()
+    async_tester.assertTrue(aclose_log_2943.get("caught"))
+
+    # and a context manager the generator is suspended inside sees it
+    aclose_log_2943.clear()
+    gen4 = agen_in_with_2943()
+    async_tester.assertEqual(await anext(gen4), 1)
+    await gen4.aclose()
+    async_tester.assertIs(aclose_log_2943.get("aexit"), GeneratorExit)
+
+    # a generator that yields on the way out is an error, as in CPython
+    gen5 = agen_yields_on_exit_2943()
+    async_tester.assertEqual(await anext(gen5), 1)
+    try:
+        await gen5.aclose()
+        raise AssertionError("expected RuntimeError")
+    except RuntimeError as exc:
+        async_tester.assertEqual(str(exc),
+                                 "async generator ignored GeneratorExit")
+    print("aclose test ok")
+
+aio.run(test_aclose())

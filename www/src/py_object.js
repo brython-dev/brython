@@ -1,5 +1,5 @@
 "use strict";
-(function($B){
+(function($B) {
 
 var _b_ = $B.builtins
 _b_[$B.OB_TYPE] = _b_.dict
@@ -10,50 +10,49 @@ $B.time_object_getattribute = 0
 $B.time_getattribute = 0
 $B.time_search_slot = 0
 
-$B.builtin_object_getattro = function(self, klass, attr){
+$B.builtin_object_getattro = function(self, klass, attr) {
     var test = false // attr == '__dict__' // && self.ob_type && self.ob_type.tp_name == 'tuple'
     var klass = $B.get_class(self)
-    if(test){
+    if (test) {
         console.log('getattr', attr, 'of self', self, klass)
         console.log(Error('trace').stack)
-        if(self.jsobj){
+        if (self.jsobj) {
             console.log('in jsobj', self.jsobj[attr])
         }
-        if(klass.js_class){
+        if (klass.js_class) {
             console.log('in js_class', klass.js_class.prototype[attr])
         }
     }
     var in_mro = $B.search_in_mro(klass, attr, $B.NULL)
-    if(test){
+    if (test) {
         console.log('in mro', in_mro)
-        if(in_mro !== $B.NULL){
+        if (in_mro !== $B.NULL) {
             console.log('class of in_mro', $B.get_class(in_mro))
         }
     }
 
     if(in_mro !== $B.NULL &&
-            $B.get_class(in_mro) === $B.function &&
-            ((! $B.get_dict(self)) || $B.get_from_dict(self, attr, $B.NULL) === $B.NULL)){
+            $B.get_class(in_mro) === $B.function &&((! $B.get_dict(self)) || $B.get_from_dict(self, attr, $B.NULL) === $B.NULL)) {
         return $B.method.tp_new($B.method, [in_mro, self])
     }
 
 
     var getter = $B.NULL
-    if(in_mro !== $B.NULL){
+    if (in_mro !== $B.NULL) {
         var in_mro_class = $B.get_class(in_mro)
         var getter = in_mro_class.tp_descr_get
-        if(test){
+        if (test) {
             console.log('getter', getter)
         }
-        if(getter !== $B.NULL){
+        if (getter !== $B.NULL) {
             var is_data_descr = in_mro_class.tp_descr_set !== $B.NULL
-            if(is_data_descr){
-                if(test){
+            if (is_data_descr) {
+                if (test) {
                     console.log('data descriptor')
                     console.log('call getter with', in_mro, self, klass)
                 }
                 var res = getter(in_mro, self, klass)
-                if(test){
+                if (test) {
                     console.log('res', res)
                 }
                 return res
@@ -62,107 +61,106 @@ $B.builtin_object_getattro = function(self, klass, attr){
     }
     // search in self dict
     var in_dict = $B.search_in_dict(self, attr, $B.NULL)
-    if(test){
+    if (test) {
         console.log('in object dict', in_dict, '\n    type', $B.get_class(in_dict))
     }
-    if(in_dict !== $B.NULL){
+    if (in_dict !== $B.NULL) {
         return in_dict
-    }else if(getter !== $B.NULL){
+    } else if (getter !== $B.NULL) {
         // non-data descriptor
-        if(typeof getter !== 'function'){
+        if (typeof getter !== 'function') {
             console.log('not a function', getter)
             console.log('class of in_mro', in_mro_class)
         }
-        if(test){
+        if (test) {
             console.log('call getter of non-data descr', in_mro, self, klass)
         }
         klass.$fast_attr = klass.$fast_attr ?? {}
-        klass.$fast_attr[attr] = function(self){
+        klass.$fast_attr[attr] = function(self) {
             return getter(in_mro, self, klass)
         }
         $B.nb_obj_ga++
         return getter(in_mro, self, klass)
-    }else if(in_mro !== $B.NULL){
-        if(test){
+    } else if (in_mro !== $B.NULL) {
+        if (test) {
             console.log('return in_mro', in_mro)
         }
         return in_mro
     }
-    if(test){
+    if (test) {
         console.log('attr', attr, 'not found on self', self)
         console.log('self[attr]', self[attr])
     }
     return $B.NULL
 }
 
-$B.object_getattribute = function(obj, klass, attr){
-    var test = false // attr === 'addEventListener'
-    if(test){
+$B.object_getattribute = function(obj, klass, attr) {
+    var test = false // attr === 'B'
+    if (test) {
         console.log('klass', klass, 'attr', attr)
     }
-    if(! klass.$getattribute){
-        console.log('no $getattribute', klass)
-    }
     var getattribute = klass.$getattribute ?? $B.search_slot(klass, 'tp_getattro', $B.NULL)
-    if(test){
+    if (test) {
         console.log('attr', attr, 'of obj', obj, 'klass', klass,
             '\n  getattribute', getattribute)
     }
     var res
-    try{
+    try {
         res = getattribute(obj, attr)
-    }catch(err){
+    } catch (err) {
         $B.RAISE_IF_NOT(err, _b_.AttributeError)
         res = $B.NULL
     }
     return res
 }
 
-object.$new = function(cls){
-    return function(){
+object.$new = function(cls) {
+    return function() {
         var $ = $B.args('__new__', 0, [], arguments, null, 'args', 'kwargs')
-        if($.args.length > 0 || _b_.dict.mp_length($.kwargs) > 0){
+        if ($.args.length > 0 || _b_.dict.mp_length($.kwargs) > 0) {
             $B.RAISE(_b_.TypeError, "object() takes no parameters")
         }
         var res = Object.create(null)
         res.ob_type = cls
-        if(cls !== object){
+        if (cls !== object) {
             $B.set_dict(res, $B.obj_dict({}))
         }
         return res
     }
 }
 
-object.$no_new_init = function(cls){
+object.$no_new_init = function(cls) {
     // Used to create instances of classes with no explicit __new__ and an
     // explicit __init__
     var res = Object.create(null)
     res.ob_type = cls
-    if(cls !== object){
+    if (cls !== object) {
         $B.set_dict(res, $B.obj_dict({}))
     }
     return res
 }
 
-function getNewArguments(self, klass){
-    var newargs_ex = $B.$getattr(self, '__getnewargs_ex__', null)
-    if(newargs_ex !== null){
-        let newargs = newargs_ex()
-        if((! newargs) || $B.get_class(newargs) !== _b_.tuple){
+function getNewArguments(self, klass) {
+    // type-only lookup, like every implicit dunder: an instance getattr
+    // falls into a class __getattr__ hook on a miss
+    var newargs_ex = $B.$getattr(klass, '__getnewargs_ex__', null)
+    if (newargs_ex !== null) {
+        let newargs = $B.$call(newargs_ex, self)
+        if ((! newargs) || $B.get_class(newargs) !== _b_.tuple) {
             $B.RAISE(_b_.TypeError, "__getnewargs_ex__ should " +
                 `return a tuple, not '${$B.class_name(newargs)}'`)
         }
-        if(newargs.length != 2){
+        if (newargs.length != 2) {
             $B.RAISE(_b_.ValueError, "__getnewargs_ex__ should " +
                 `return a tuple of length 2, not ${newargs.length}`)
         }
         let args = newargs[0],
             kwargs = newargs[1]
-        if((! args) || $B.get_class(args) !== _b_.tuple){
+        if ((! args) || $B.get_class(args) !== _b_.tuple) {
             $B.RAISE(_b_.TypeError, "first item of the tuple returned " +
                 `by __getnewargs_ex__ must be a tuple, not '${$B.class_name(args)}'`)
         }
-        if((! kwargs) || $B.get_class(kwargs) !== _b_.dict){
+        if ((! kwargs) || $B.get_class(kwargs) !== _b_.dict) {
             $B.RAISE(_b_.TypeError, "second item of the tuple returned " +
                 `by __getnewargs_ex__ must be a dict, not '${$B.class_name(kwargs)}'`)
         }
@@ -170,12 +168,12 @@ function getNewArguments(self, klass){
     }
     let newargs = klass.$getnewargs,
         args
-    if(! newargs){
+    if (! newargs) {
         newargs = $B.$getattr(klass, '__getnewargs__', null)
     }
-    if(newargs){
+    if (newargs) {
         args = $B.$call(newargs, self)
-        if((! args) || $B.get_class(args) !== _b_.tuple){
+        if ((! args) || $B.get_class(args) !== _b_.tuple) {
             $B.RAISE(_b_.TypeError, "__getnewargs__ should " +
                 `return a tuple, not '${$B.class_name(args)}'`)
         }
@@ -184,10 +182,10 @@ function getNewArguments(self, klass){
 }
 
 // constructor of the built-in class 'object'
-object.$factory = function(){
+object.$factory = function() {
     if(arguments.length > 0 ||
-            (arguments.length == 1 && arguments[0].$kw &&
-                Object.keys(arguments[0].$kw).length > 0)
+            (arguments.length == 1 && arguments[0][$B.KW] &&
+                Object.keys(arguments[0][$B.KW]).length > 0)
             ){
         $B.RAISE(_b_.TypeError, 'object() takes no arguments')
     }
@@ -200,10 +198,10 @@ object.$factory = function(){
 }
 
 /* object start */
-_b_.object.tp_richcompare = function(self, other, op){
+_b_.object.tp_richcompare = function(self, other, op) {
     var res
 
-    switch(op){
+    switch (op) {
         case '__eq__':
             /* Return NotImplemented instead of False, so if two
                objects are compared, both get a chance at the
@@ -214,11 +212,11 @@ _b_.object.tp_richcompare = function(self, other, op){
             /* By default, __ne__() delegates to __eq__() and inverts the result,
                unless the latter returns NotImplemented. */
             var self_richcomp = $B.$getattr($B.get_class(self), '__eq__', $B.NULL)
-            if(self_richcomp === $B.NULL){
+            if (self_richcomp === $B.NULL) {
                 res = _b_.NotImplemented
-            }else{
+            } else {
                 res = $B.$call(self_richcomp, self, other)
-                if(res !== _b_.NotImplemented){
+                if (res !== _b_.NotImplemented) {
                     return ! $B.$bool(res)
                 }
                 return res
@@ -232,19 +230,23 @@ _b_.object.tp_richcompare = function(self, other, op){
     return res
 }
 
-_b_.object.tp_setattro = function(self, attr, value){
-    var test = false // attr == 'x' // && value === $B.NULL
+_b_.object.tp_setattro = function(self, attr, value) {
+    var test = false // attr == 'a' // && value === $B.NULL
     var klass = $B.get_class(self)
+    if (! $B.is_str(attr)) {
+        $B.RAISE(_b_.TypeError, "attribute name must be string, not '" +
+            $B.class_name(attr) + "'")
+    }
     var in_mro = $B.search_in_mro(klass, attr, $B.NULL)
-    if(test){
+    if (test) {
         console.log('object.tp_setattro', self, attr, value)
     }
-    if(value === $B.NULL){
+    if (value === $B.NULL) {
         // First check for data descriptor with __delete__ in class
-        if(test){
+        if (test) {
             console.log('in mro', in_mro, 'has delete', _b_.hasattr(in_mro, '__delete__'))
         }
-        if(in_mro !== $B.NULL && _b_.hasattr(in_mro, '__delete__')){
+        if (in_mro !== $B.NULL && _b_.hasattr(in_mro, '__delete__')) {
             return $B.$call($B.$getattr(in_mro, '__delete__'), self)
         }
         // No data descriptor, delete from instance __dict__
@@ -257,45 +259,45 @@ _b_.object.tp_setattro = function(self, attr, value){
         }
         throw $B.attr_error(attr, self)
     }
-    if(value === undefined){
+    if (value === undefined) {
         // setting an attribute to 'object' type is not allowed
         $B.RAISE(_b_.TypeError,
             "can't set attributes of built-in/extension type 'object'")
-    }else if(klass === object){
+    } else if (klass === object) {
         // setting an attribute to object() is not allowed
-        if(object[attr] === undefined){
+        if (object[attr] === undefined) {
             throw $B.attr_error(attr, self)
-        }else{
+        } else {
             $B.RAISE_ATTRIBUTE_ERROR(
                 "'object' object attribute '" + attr + "' is read-only",
                 self, attr)
         }
     }
-    if(in_mro !== $B.NULL){
-        if(test){
+    if (in_mro !== $B.NULL) {
+        if (test) {
             console.log(attr, 'in class mro', in_mro, $B.get_class(in_mro))
         }
         var setter = $B.get_class(in_mro).tp_descr_set
-        if(test){
+        if (test) {
             console.log('setter', setter)
         }
-        if(setter !== $B.NULL){
-            if(test){
+        if (setter !== $B.NULL) {
+            if (test) {
                 console.log('setter', setter)
             }
             return setter(in_mro, self, value)
         }
     }
-    var slots = $B.get_from_dict(klass, '__slots__', $B.NULL)
-    if(slots !== $B.NULL){
-        if(_b_.tuple.sq_contains(slots, attr)){
-            self.slot_values[attr] = value
-        }
-    }
     var dict = $B.get_dict(self)
-    if(dict){
-        $B.str_dict_set(dict, attr, value)
-    }else{
+    // a class whose __slots__ contains '__dict__' keeps a per-instance
+    // dict: create it lazily on the first out-of-slots setattr
+    if (! dict && klass.$slots_has_dict) {
+        self[$B.DICT] = $B.empty_dict()
+        dict = self[$B.DICT]
+    }
+    if (dict) {
+        _b_.dict.$setitem(dict, attr, value)
+    } else {
         var exc = $B.attr_error(attr, self)
         exc.args[0] = `'${$B.get_name(klass)}' object has no attribute ` +
             `'${attr}' and no __dict__ for setting new attributes`
@@ -304,36 +306,58 @@ _b_.object.tp_setattro = function(self, attr, value){
     return _b_.None
 }
 
-_b_.object.tp_repr = function(self){
+_b_.object.tp_repr = function(self) {
     var klass = $B.get_class(self)
-    if(klass === _b_.type) {
+    if (klass === _b_.type) {
         return "<class '" + $B.get_name(self) + "'>"
     }
     var module = klass.__module__
     if(module !== undefined && !module.startsWith("$") &&
             module !== "builtins"){
         return `<${module}.${$B.class_name(self)} object>`
-    }else{
+    } else {
         return "<" + $B.class_name(self) + " object>"
     }
 }
 
-_b_.object.tp_hash = function(self){
+// A Javascript symbol cannot hold a property: its hash is kept here, in a
+// WeakMap that does not keep the symbol alive when the engine accepts it as a
+// weak key, else in a Map (a symbol of Symbol.for is never a weak key, and
+// never dies)
+var weak_symbol_hashes = new WeakMap(),
+    symbol_hashes = new Map(),
+    symbols_are_weak_keys = true
+
+try {
+    new WeakMap().set(Symbol(), 0)
+} catch (err) {
+    symbols_are_weak_keys = false
+}
+
+_b_.object.tp_hash = function(self) {
+    if (typeof self == 'symbol') {
+        var hashes = symbols_are_weak_keys && Symbol.keyFor(self) === undefined ?
+                     weak_symbol_hashes : symbol_hashes
+        if (! hashes.has(self)) {
+            hashes.set(self, $B.$py_next_hash--)
+        }
+        return hashes.get(self)
+    }
     var hash = self.__hashvalue__
-    if(hash !== undefined){
+    if (hash !== undefined) {
         return hash
     }
     return self.__hashvalue__ = $B.$py_next_hash--
 }
 
-_b_.object.tp_str = function(self){
-    if(self === undefined){
+_b_.object.tp_str = function(self) {
+    if (arguments.length === 0) {
         $B.RAISE(_b_.TypeError, "descriptor '__str__' of 'object' " +
             "object needs an argument")
     }
     // Default to __repr__
     var klass = $B.get_class(self)
-    if($B.is_builtin_type(klass)){
+    if ($B.is_builtin_type(klass)) {
         var tp_repr = $B.builtin_slot(klass, 'tp_repr')
         return tp_repr(self)
     }
@@ -343,47 +367,46 @@ _b_.object.tp_str = function(self){
 
 $B.time_object_tp_getattro = 0
 
-_b_.object.tp_getattro = function(self, attr){
-    var test = false // attr == 'pattern' // && self.ob_type && self.ob_type.tp_name == 'super'
+_b_.object.tp_getattro = function(self, attr) {
+    var test = false // attr == 'B' // && $B.class_name(self) == 'TypeVar'
     var klass = $B.get_class(self)
-    if(test){
+    if (test) {
         console.log('getattr', attr, 'of self', self, klass)
-        if(self.jsobj){
+        if (self.jsobj) {
             console.log('in jsobj', self.jsobj[attr])
         }
-        if(klass.js_class){
+        if (klass.js_class) {
             console.log('in js_class', klass.js_class.prototype[attr])
         }
     }
     var in_mro = $B.search_in_mro(klass, attr, $B.NULL)
-    if(test){
+    if (test) {
         console.log('in mro', in_mro)
-        if(in_mro !== $B.NULL){
+        if (in_mro !== $B.NULL) {
             console.log('class of in_mro', $B.get_class(in_mro))
         }
     }
 
     if(in_mro !== $B.NULL &&
-            $B.get_class(in_mro) === $B.function &&
-            ((! $B.get_dict(self)) || $B.get_from_dict(self, attr, $B.NULL) === $B.NULL)){
+            $B.get_class(in_mro) === $B.function &&((! $B.get_dict(self)) || $B.get_from_dict(self, attr, $B.NULL) === $B.NULL)) {
         return $B.method.tp_new($B.method, [in_mro, self])
     }
     var getter = $B.NULL
-    if(in_mro !== $B.NULL){
+    if (in_mro !== $B.NULL) {
         var in_mro_class = $B.get_class(in_mro)
-        var getter = in_mro_class.tp_descr_get
-        if(test){
+        var getter = in_mro_class.tp_descr_get ?? $B.NULL
+        if (test) {
             console.log('getter', getter)
         }
-        if(getter !== $B.NULL){
+        if (getter !== $B.NULL) {
             var is_data_descr = in_mro_class.tp_descr_set !== $B.NULL
-            if(is_data_descr){
-                if(test){
+            if (is_data_descr) {
+                if (test) {
                     console.log('data descriptor')
                     console.log('call getter with', in_mro, self, klass)
                 }
                 var res = getter(in_mro, self, klass)
-                if(test){
+                if (test) {
                     console.log('res', res)
                 }
                 return res
@@ -392,56 +415,60 @@ _b_.object.tp_getattro = function(self, attr){
     }
     // search in self dict
     var in_dict = $B.search_in_dict(self, attr, $B.NULL)
-    if(test){
+    if (test) {
         console.log('in object dict', in_dict, '\n    type', $B.get_class(in_dict))
     }
-    if(in_dict !== $B.NULL){
+    if (in_dict !== $B.NULL) {
         return in_dict
-    }else if(getter !== $B.NULL){
+    } else if (getter !== $B.NULL) {
         // non-data descriptor
-        if(typeof getter !== 'function'){
+        if (typeof getter !== 'function') {
             console.log('not a function', getter)
             console.log('class of in_mro', in_mro_class)
         }
-        if(test){
+        if (test) {
             console.log('call getter of non-data descr', in_mro, self, klass)
         }
         klass.$fast_attr = klass.$fast_attr ?? {}
-        klass.$fast_attr[attr] = function(self){
+        klass.$fast_attr[attr] = function(self) {
             return getter(in_mro, self, klass)
         }
         $B.nb_obj_ga++
+        if (test) {
+            console.log('call getter', getter)
+            console.log('args', in_mro, self, klass)
+        }
         return getter(in_mro, self, klass)
-    }else if(in_mro !== $B.NULL){
-        if(test){
+    } else if (in_mro !== $B.NULL) {
+        if (test) {
             console.log('return in_mro', in_mro)
         }
         return in_mro
     }
-    if(test){
+    if (test) {
         console.log('attr', attr, 'not found on self', self)
         console.log('self[attr]', self[attr])
     }
     return $B.NULL
 }
 
-_b_.object.tp_init = function(){
+_b_.object.tp_init = function() {
     var [args, kw] = $B.parse_args_kw('__init__', arguments)
 
-    if(args.length == 0){
+    if (args.length == 0) {
         $B.RAISE(_b_.TypeError, "descriptor '__init__' of 'object' " +
             "object needs an argument")
-    }else if(args.length > 1 || _b_.len(kw) > 0){
+    } else if (args.length > 1 || _b_.len(kw) > 0) {
         var self = args[0]
         var type = $B.get_class(self)
         var self_init = type.tp_init
-        if(self_init !== _b_.object.tp_init){
+        if (self_init !== _b_.object.tp_init) {
             $B.RAISE(_b_.TypeError,
                 `object.__init__() takes exactly ` +
                 `one argument (the instance to initialize)`
             )
         }
-        if($B.search_slot(type, 'tp_new', $B.NULL) === object.tp_new){
+        if ($B.search_slot(type, 'tp_new', $B.NULL) === object.tp_new) {
             $B.RAISE(_b_.TypeError,
                 `${$B.get_name(type)}.__init__() takes exactly one ` +
                 `argument (the instance to initialize)`
@@ -451,19 +478,23 @@ _b_.object.tp_init = function(){
     return _b_.None
 }
 
-_b_.object.tp_new = function(cls, args, kw){
-    if(args.length > 0 || ! $B.str_dict_empty(kw)){
-        if(cls.tp_new !== _b_.object.tp_new){
+_b_.object.tp_new = function(cls, args, kw) {
+    if (! $B.is_type(cls)) {
+        $B.RAISE(_b_.TypeError,
+            `object.__new__(X): X is not a type object (${$B.class_name(cls)})`)
+    }
+    if (args.length > 0 || ! $B.str_dict_empty(kw)) {
+        if (cls.tp_new !== _b_.object.tp_new) {
             $B.RAISE(_b_.TypeError,
                 "object.__new__() takes exactly one argument "  +
                 "(the type to instantiate)"
             )
         }
-        if(cls.tp_init === _b_.object.tp_init){
+        if (cls.tp_init === _b_.object.tp_init) {
             $B.RAISE(_b_.TypeError, `${$B.get_name(cls)} takes no arguments`)
         }
     }
-    if(cls.tp_flags & $B.TPFLAGS.IS_ABSTRACT){
+    if (cls.tp_flags & $B.TPFLAGS.IS_ABSTRACT) {
         var abstractmethods = _b_.type.tp_funcs.__abstractmethods___get(cls)
         var am = Array.from($B.make_js_iterator(abstractmethods))
         am.sort()
@@ -471,27 +502,39 @@ _b_.object.tp_new = function(cls, args, kw){
         $B.RAISE(_b_.TypeError,
             `Can't instantiate abstract class ${$B.get_name(cls)} ` +
             `without an implementation for abstract method${plural} ` +
-            ` '${am.join(', ')}'`
+            am.map(m => `'${m}'`).join(', ')
         )
     }
     var res = {
         ob_type: cls
     }
-    if(cls !== object &&
-            $B.get_from_dict(cls, '__slots__', $B.NULL) === $B.NULL){
+    if ($B.instance_has_dict(cls)) {
         $B.init_dict(res)
     }
     return res
 }
 
+$B.instance_has_dict = function(cls) {
+    // An instance has no __dict__ only if every Python class in the MRO
+    // defines __slots__ without '__dict__'
+    for (var klass of cls.tp_mro) {
+        if (klass.tp_flags & $B.TPFLAGS.HEAPTYPE &&
+                ($B.get_from_dict(klass, '__slots__', $B.NULL) === $B.NULL ||
+                 klass.$slots_has_dict)) {
+            return true
+        }
+    }
+    return false
+}
+
 var object_funcs = _b_.object.tp_funcs = {}
 
-object_funcs.__class___get = function(self){
+object_funcs.__class___get = function(self) {
     return $B.get_class(self)
 }
 
-object_funcs.__class___set = function(cls, new_cls){
-    if(new_cls == $B.NULL){
+object_funcs.__class___set = function(cls, new_cls) {
+    if (new_cls == $B.NULL) {
         $B.RAISE(_b_.TypeError,
             "can't delete __class__ attribute")
     }
@@ -504,7 +547,7 @@ object_funcs.__class___set = function(cls, new_cls){
                      "__class__ assignment only supported for mutable types " +
                      "or ModuleType subclasses")
     }
-    if(! $B.is_type(new_cls)) {
+    if (! $B.is_type(new_cls)) {
         $B.$RAISE(_b_.TypeError, "__class__ must be set to a class," +
             ` not '${$B.class_name(new_cls)}' object"`)
     }
@@ -512,7 +555,7 @@ object_funcs.__class___set = function(cls, new_cls){
     cls.ob_type = new_cls
 }
 
-object_funcs.__dir__ = function(self){
+object_funcs.__dir__ = function(self) {
     var result
     var dict
     var itsclass
@@ -520,33 +563,33 @@ object_funcs.__dir__ = function(self){
     /* Get __dict__ (which may or may not be a real dict...) */
     dict = $B.get_dict(self)
     var temp
-    if(dict == undefined){
+    if (dict == undefined) {
         temp = $B.empty_dict()
-    }else if(! $B.is_dict(dict)){
+    } else if (! $B.is_dict(dict)) {
         temp = $B.empty_dict()
-    }else{
+    } else {
         /* Copy __dict__ to avoid mutating it. */
         var temp = _b_.dict.tp_funcs.copy(dict)
     }
 
-    if(temp == undefined){
+    if (temp == undefined) {
         $B.RAISE(_b_.ValueError, 'no __dir__')
     }
 
     /* Merge in attrs reachable from its class. */
     itsclass = $B.get_class(self)
-    if(itsclass != $B.NULL){
+    if (itsclass != $B.NULL) {
         $B.merge_class_dict(temp, itsclass)
     }
     result = $B.$list(Array.from($B.make_js_iterator(temp)))
     return result
 }
 
-object_funcs.__format__ = function(){
+object_funcs.__format__ = function() {
     var $ = $B.args("__format__", 2, {self: null, spec: null}, arguments)
     var self = $.self,
         spec = $.spec
-    if(spec !== ""){
+    if (spec !== "") {
         $B.RAISE(_b_.TypeError,
             "non-empty format string passed to object.__format__"
         )
@@ -554,23 +597,49 @@ object_funcs.__format__ = function(){
     return _b_.str.$factory(self)
 }
 
-object_funcs.__getstate__ = function(self){
+object_funcs.__getstate__ = function(self) {
     var dict = $B.get_dict(self)
+    // CPython 3.11+: instances with filled __slots__ return a 2-tuple
+    // (dict-or-None, {slot: value}); a slot is read as getattr reads it,
+    // through the first member descriptor of its name along the MRO
+    var sd = null,
+        seen = new Set()
+    for (var klass of $B.get_mro($B.get_class(self))) {
+        if (! (klass.tp_flags & $B.TPFLAGS.HEAPTYPE)) {
+            continue
+        }
+        for (var entry of _b_.dict.$iter_items($B.get_dict(klass))) {
+            var md = entry.value
+            if (seen.has(entry.key) || $B.get_class(md) !== $B.member_descriptor) {
+                continue
+            }
+            seen.add(entry.key)
+            if (self[md.d_member.attr] !== undefined) {
+                sd = sd ?? $B.empty_dict()
+                _b_.dict.$setitem(sd, entry.key, self[md.d_member.attr])
+            }
+        }
+    }
+    if (sd !== null) {
+        var d1 = (dict !== undefined && dict !== null &&
+            _b_.dict.mp_length(dict) > 0) ? dict : _b_.None
+        return $B.fast_tuple([d1, sd])
+    }
     return dict === undefined ? _b_.None : dict
 }
 
-object_funcs.__init_subclass__ = function(self){
+object_funcs.__init_subclass__ = function(self) {
     // Default implementation only checks that no keyword arguments were passed
     // Defined as classmethod after set_func_names is called
     var $ = $B.args("__init_subclass__", 1, {cls: null}, arguments, null,
                 "args", "kwargs")
-    if($.args.length > 0){
+    if ($.args.length > 0) {
         var qualname = $B.$getattr($.cls, '__qualname__', '<type>')
         $B.RAISE(_b_.TypeError,
             `${qualname}.__init_subclass__ takes no arguments ` +
             `(${$.args.length} given)`)
     }
-    if(_b_.dict.mp_length($.kwargs) > 0){
+    if (_b_.dict.mp_length($.kwargs) > 0) {
         var qualname = $B.$getattr($.cls, '__qualname__', '<type>')
         $B.RAISE(_b_.TypeError,
             `${qualname}.__init_subclass__() ` +
@@ -579,51 +648,54 @@ object_funcs.__init_subclass__ = function(self){
     return _b_.None
 }
 
-object_funcs.__reduce__ = function(cls){
-    if(! $B.get_dict(cls)){
+object_funcs.__reduce__ = function(cls) {
+    if (! $B.get_dict(cls)) {
         $B.RAISE(_b_.TypeError, `cannot pickle '${$B.class_name(cls)}' object`)
     }
-    if($B.imported.copyreg === undefined){
-        $B.$import('copyreg')
+    if ($B.imported.copyreg === undefined) {
+        $B.import('copyreg')
     }
     var res = [$B.module_getattr($B.imported.copyreg, '_reconstructor')]
     var D = $B.get_class(cls),
         B = object
-    for(var klass of $B.get_mro(D)){
-        if(klass.__module__ == 'builtins'){
+    for (var klass of $B.get_mro(D)) {
+        if (klass.__module__ == 'builtins') {
             B = klass
             break
         }
     }
     var args = $B.$list([D, B])
-    if(B === object){
+    if (B === object) {
         args.push(_b_.None)
-    }else{
+    } else {
         args.push($B.$call(B, cls))
     }
 
     res.push($B.fast_tuple(args))
     var d = $B.empty_dict()
-    for(var entry of _b_.dict.$iter_items($B.get_dict(cls))){
+    for (var entry of _b_.dict.$iter_items($B.get_dict(cls))) {
         $B.str_dict_set(d, entry.key, entry.value)
     }
     res.push(d)
     return _b_.tuple.$factory(res)
 }
 
-object_funcs.__reduce_ex__ = function(self, protocol){
+object_funcs.__reduce_ex__ = function(self, protocol) {
     var klass = $B.get_class(self)
     var reduce = $B.$getattr(klass, '__reduce__')
 
-    if(reduce !== object.tp_funcs.__reduce__ &&
-            ((reduce.ob_type === $B.method_descriptor) &&
-             (reduce.method !== object.tp_funcs.__reduce__))){
+    // Honor ANY non-default override: a Python-level __reduce__ is a plain
+    // function (not a method_descriptor) and was silently ignored.
+    var reduce_is_default = (reduce === object.tp_funcs.__reduce__) ||
+            (reduce.ob_type === $B.method_descriptor &&
+             reduce.method === object.tp_funcs.__reduce__)
+    if(! reduce_is_default){
         return $B.$call(reduce, self)
     }
-    if($B.imported.copyreg === undefined){
-        $B.$import('copyreg')
+    if ($B.imported.copyreg === undefined) {
+        $B.import('copyreg')
     }
-    if(protocol < 2){
+    if (protocol < 2) {
         var _reduce_ex = $B.module_getattr($B.imported.copyreg, '_reduce_ex')
         return $B.$call(_reduce_ex, self, protocol)
     }
@@ -631,26 +703,37 @@ object_funcs.__reduce_ex__ = function(self, protocol){
     var res = [$B.module_getattr($B.imported.copyreg, '__newobj__')]
     var arg2 = [klass]
     var newargs = getNewArguments(self, klass)
-    if(newargs){
-        arg2 = arg2.concat(newargs.args)
+    if (! newargs && klass !== object && $B.is_builtin_type(klass)) {
+        // a non-heap builtin with no __getnewargs__ has no reconstruction
+        // path; copyreg._reduce_ex raises likewise for protocol < 2
+        $B.RAISE(_b_.TypeError,
+            `cannot pickle '${$B.class_name(self)}' object`)
+    }
+    if (newargs) {
+        if (newargs.kwargs && _b_.dict.mp_length(newargs.kwargs) > 0) {
+            res = [$B.module_getattr($B.imported.copyreg, '__newobj_ex__')]
+            arg2 = [klass, newargs.args, newargs.kwargs]
+        } else {
+            arg2 = arg2.concat(newargs.args)
+        }
     }
     res.push($B.fast_tuple(arg2))
     var getstate = $B.search_in_mro(klass, '__getstate__')
-    if(getstate){
+    if (getstate) {
         var d = $B.$call(getstate, self)
-    }else{
+    } else {
         var d = $B.empty_dict(),
             nb = 0
-        if($B.get_dict(self)){
-            for(var item of _b_.dict.$iter_items($B.get_dict(self))){
-                if(item.key == "__class__" || item.key.startsWith("$")){
+        if ($B.get_dict(self)) {
+            for (var item of _b_.dict.$iter_items($B.get_dict(self))) {
+                if (item.key == "__class__" || item.key.startsWith("$")) {
                     continue
                 }
                 _b_.dict.$setitem(d, item.key, item.value)
                 nb++
             }
         }
-        if(nb == 0){
+        if (nb == 0) {
             d = _b_.None
         }
     }
@@ -662,18 +745,24 @@ object_funcs.__reduce_ex__ = function(self, protocol){
     }
     res.push(list_like_iterator)
     var key_value_iterator = _b_.None
-    if($B.is_dict(self)){
-        key_value_iterator = _b_.dict.tp_funcs.items(self)
+    if ($B.is_dict(self)) {
+        // CPython's reduce_2 passes an ITERATOR (PyObject_GetIter on the
+        // items view); pickle's C implementation rejects the bare view
+        // ("fifth item ... must be an iterator, not dict_items").
+        key_value_iterator = _b_.iter(_b_.dict.tp_funcs.items(self))
     }
     res.push(key_value_iterator)
     return $B.fast_tuple(res)
 }
 
-object_funcs.__sizeof__ = function(self){
-
+object_funcs.__sizeof__ = function(self) {
+    // CPython: _PyObject_SIZE(Py_TYPE(self)). 16 is the 64-bit build
+    // value (Brython emulates a 64-bit CPython; a 32-bit build, e.g.
+    // Pyodide, says 8)
+    return 16
 }
 
-object_funcs.__subclasshook__ = function(self){
+object_funcs.__subclasshook__ = function(self) {
     return _b_.NotImplemented
 }
 

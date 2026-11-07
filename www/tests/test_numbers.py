@@ -634,6 +634,8 @@ class Int(int):
 
 assert hash(Int(2**61)) == 1
 
+assert type(Int()) is Int # PR 2811
+
 class IntH(int):
 
   def __hash__(self):
@@ -870,5 +872,75 @@ assert 2 ** 53 == float(2 ** 53)
 
 # issue 2661
 assert_raises(ValueError, int, '+')
+
+# PR 2728
+assert 2 | True == 3
+assert 2 & True == 0
+assert 2 ^ True == 3
+assert 2 | False == 2
+assert 2 & False == 0
+assert 3 ^ False == 3
+
+# PR 2745
+assert int.from_bytes(b'\xff\xff', 'little', signed=True) == -1
+
+# PR 2749
+assert (2**1200) / (2**1100) == 1.2676506002282294e+30
+assert 1 / 2**1074 == 5e-324
+
+# PR 2750
+class MyInt(int):
+    pass
+
+from fractions import Fraction
+assert MyInt(Fraction(17)) == 17
+
+# float.__float__
+assert (0.5).__float__() == 0.5
+assert (5.2).__float__() == 5.2
+assert (5).__float__() == 5.0
+
+class Float(float):
+  pass
+
+assert Float(8.4).__float__()
+assert type(Float(8.4).__float__()) is float
+
+# int.__int__
+class Int(int):
+  pass
+
+assert Int(4).__int__() == 4
+assert type(Int(4).__int__()) is int
+
+# PR 2801
+assert_raises(OverflowError, float, 10**1000,
+  msg="int too large to convert to float")
+
+# float() reads a str subclass by its value, unless it defines __float__
+class Name(str):
+    pass
+
+class Own(str):
+    def __float__(self):
+        return 9.0
+
+assert float(Name(" 1.5 ")) == 1.5 and float(Own("1.5")) == 9.0
+assert_raises(ValueError, float, "1.5😀")
+
+# PR 3038
+assert float('nan') is not float('nan')
+
+# PR 3050
+assert (-1+1j) ** 0.5 == (0.4550898605622274+1.0986841134678098j)
+
+# PR 3052
+assert str(2 * complex(float('inf'), 1)) == '(inf+2j)'
+
+# PR 3059
+assert float("nan") is not float("nan")
+nan = float("nan")
+assert nan is nan
+
 
 print('passed all tests...')

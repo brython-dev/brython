@@ -1,78 +1,78 @@
-(function($B){
+(function($B) {
 var _b_ = $B.builtins
 
 var FAIL = {FAIL: true}
 var DONE = {DONE: true}
 var END = {END: true}
 
-function is_id_start(char){
+function is_id_start(char) {
   return char !== END && char.match(/[a-zA-Z_]/)
 }
 
-function is_id_continue(char){
+function is_id_continue(char) {
   return char !== END && (".-:_".includes(char) || char.match(/[a-zA-Z_0-9]/))
 }
 
-function is_space(char){
+function is_space(char) {
     return char !== END && ' \t\r\n'.includes(char)
 }
 
-function is_num(char){
+function is_num(char) {
     return char !== END && char.match(/\d/)
 }
 
-function is_char(char){
+function is_char(char) {
     return char !== END && ! '<&"'.includes(char)
 }
 
-function get_top(element){
-    while(element.origin){
+function get_top(element) {
+    while (element.origin) {
         element = element.origin
     }
     return element
 }
 
-function get_pos(element){
+function get_pos(element) {
     return get_top(element)._pos
 }
 
-function get_sub(element, start, end){
+function get_sub(element, start, end) {
     return get_top(element)._buffer.substring(start, end)
 }
 
-function show_position(element, pos){
+function show_position(element, pos) {
     var src = get_top(element)._buffer
     console.log('    ' + src)
     console.log('    ' + ' '.repeat(pos) + '^')
 }
 
-function reset_pos(element, pos){
-    if(pos === undefined){
+function reset_pos(element, pos) {
+    if (pos === undefined) {
         throw Error('reset at undefined')
     }
     get_top(element)._pos = pos
 }
 
-function update_pos(element, pos){
+function update_pos(element, pos) {
     element.pos = pos
 }
 
-function show_path(rule){
-    if(rule.constructor === undefined){
+function show_path(rule) {
+    if (rule.constructor === undefined) {
         console.log('rule', rule, 'no constructor')
         alert()
     }
     var name = rule.constructor.name
-    if(name.endsWith('_rule')){
+    if (name.endsWith('_rule')) {
         name = name.substr(0, name.length - 5)
     }
     var t = [name + '@' + rule.pos]
-    while(rule.origin){
-        if(rule.origin.constructor === Object){
+    while (rule.origin) {
+        if (rule.origin.constructor === Object) {
             break
         }
         name = rule.origin.constructor.name
-        if(name.endsWith('_rule_')){
+        if (name.endsWith('_rule_')) {
             name = name.substr(0, name.length - 5)
         }
         t.push(name + '@' + rule.origin.pos)
@@ -82,34 +82,34 @@ function show_path(rule){
     console.log('show path', t)
 }
 
-function set_expect(element, expect){
+function set_expect(element, expect) {
     var test = false // element.constructor.name == 'Attribute_rule' && expect == 1
-    if(test){
+    if (test) {
         console.log('set expect of', element)
         console.log(`  >>> set expect of ${element.constructor.name} to ${expect}`)
         alert()
     }
     element.expect = expect
-    if(element.rules[expect]){
+    if (element.rules[expect]) {
         var rule = element.rules[expect]
         rule.start = get_pos(element)
     }
-    if(test){
+    if (test) {
         console.log('   !!! after set expect', element)
         alert()
     }
 }
 
-function read_char(element){
+function read_char(element) {
     var parser = get_top(element)
     return parser._buffer[parser._pos] || END
 }
 
-function raise_error_known_position(parser, message){
+function raise_error_known_position(parser, message) {
     var pos = parser._pos
     message += ' at position ' + pos
     var ix = pos
-    while(ix >= 0 && parser._buffer[ix] !== '\\n'){
+    while (ix >= 0 && parser._buffer[ix] !== '\\n') {
         ix--
     }
     message += '\\n' + parser._buffer.substring(ix, pos + 1)
@@ -117,9 +117,9 @@ function raise_error_known_position(parser, message){
     throw Error(message)
 }
 
-function raise_error(element, char){
+function raise_error(element, char) {
     var head = element
-    while(head.origin){
+    while (head.origin) {
         head = head.origin
     }
     console.log('head', head)
@@ -129,56 +129,56 @@ function raise_error(element, char){
     raise_error_known_position(head, message)
 }
 
-function get_string(rule){
-    if(rule instanceof LITERAL){
+function get_string(rule) {
+    if (rule instanceof LITERAL) {
         return rule.string
     }else if(rule instanceof Letter_rule ||
             rule instanceof CHARSET_rule){
         var s = get_sub(rule, rule.pos, rule.pos + 1)
         return s
     }
-    if(rule.items === undefined){
+    if (rule.items === undefined) {
         console.log('no items for rule', rule)
     }
-    if(rule.constructor.name == 'element_rule'){
+    if (rule.constructor.name == 'element_rule') {
         console.log('get string of', rule)
         alert()
     }
     var s = ''
-    for(var i = 0, len = rule.items.length; i < len; i++){
+    for (var i = 0, len = rule.items.length; i < len; i++) {
         var item = rule.items[i],
             last = item[item.length - 1]
-        if(rule.result_store[i] === undefined){
+        if (rule.result_store[i] === undefined) {
             continue
         }
-        if('?+*'.includes(last)){
+        if ('?+*'.includes(last)) {
             s += rule.result_store[i].join('')
-        }else{
+        } else {
             s += rule.result_store[i]
         }
     }
     return s
 }
 
-function get_value(rule){
+function get_value(rule) {
     // get string value for rule
-    if(rule === undefined){
+    if (rule === undefined) {
         console.log(Error().stack)
     }
     var res = ''
-    if(rule.value){
+    if (rule.value) {
         return rule.value
-    }else if(rule.alt && rule.selected_rule){
-        if(false){ //get_parent(rule, tmp_7_rule)){
+    } else if (rule.alt && rule.selected_rule) {
+        if (false) { //get_parent(rule, tmp_7_rule)){
             console.log('get_value, selected rule', rule.selected_rule)
         }
         return get_value(rule.selected_rule)
-    }else{
-        for(var rank in rule.result_store){
+    } else {
+        for (var rank in rule.result_store) {
             var rules = rule.result_store[rank]
-            if(Array.isArray(rules)){
+            if (Array.isArray(rules)) {
                 res += rules.map(get_value).join('')
-            }else{
+            } else {
                 res += get_value(rules)
             }
         }
@@ -186,14 +186,14 @@ function get_value(rule){
     return res
 }
 
-function get_rank(rule){
+function get_rank(rule) {
     return parseInt(Object.keys(rule.result_store)[0])
 }
 
-function get_parent(rule, type){
+function get_parent(rule, type) {
     var parent = rule.origin
-    while(parent){
-        if(parent instanceof type){
+    while (parent) {
+        if (parent instanceof type) {
             return parent
         }
         parent = parent.origin
@@ -201,11 +201,11 @@ function get_parent(rule, type){
     return null
 }
 
-function get_doctype_info(rule){
+function get_doctype_info(rule) {
     console.log('get doctype info', rule)
     var systemId = _b_.None,
         publicId = _b_.None
-    if(get_value(rule.rules[3])){
+    if (get_value(rule.rules[3])) {
         ext_id = external_id(rule.rules[3].rules[1])
         console.log('ext_id 259', ext_id)
         systemId = ext_id.systemId
@@ -215,12 +215,12 @@ function get_doctype_info(rule){
     return {name, systemId, publicId}
 }
 
-function external_id(ext_id){
+function external_id(ext_id) {
     var ext_id_value = get_value(ext_id),
         systemId = _b_.None,
         publicId = _b_.None
-    if(ext_id_value){
-        switch(ext_id.selected_option){
+    if (ext_id_value) {
+        switch (ext_id.selected_option) {
             case 0:
                 systemId = get_value(ext_id.selected_rule.rules[2])
                 systemId = systemId.substr(1, systemId.length - 2)
@@ -236,22 +236,22 @@ function external_id(ext_id){
     return {publicId, systemId}
 }
 
-function fromCharRef(v){
-    if(v.startsWith('&#x')){
+function fromCharRef(v) {
+    if (v.startsWith('&#x')) {
         v = String.fromCodePoint(parseInt(v.substr(3)))
-    }else if(v.startsWith('&#')){
+    } else if (v.startsWith('&#')) {
         v = String.fromCodePoint(parseInt(v.substr(2)))
     }
     return v
 }
 
 var handler = {
-    AttDef: function(parser, rule){
+    AttDef: function(parser, rule) {
         // S Name S AttType S DefaultDecl
         var defaultdecl = rule.rules[5],
             def_value = _b_.None,
             required = 0
-        switch(defaultdecl.selected_option){
+        switch (defaultdecl.selected_option) {
             case 0:
                 required = true
                 break
@@ -267,108 +267,108 @@ var handler = {
             required
         }
         var f = $B.$getattr(parser, "AttlistDeclHandler", null)
-        if(f !== null){
+        if (f !== null) {
             $B.$call(f)(res.elname, res.attname, res.type, res.default, res.required)
         }
         return res
     },
-    CData: function(parser, rule){
+    CData: function(parser, rule) {
         var f = $B.$getattr(parser, "StartCdataSectionHandler", null)
-        if(f !== null){
+        if (f !== null) {
             $B.$call(f)()
         }
         var chardata = get_value(rule)
         var f = $B.$getattr(parser, "CharacterDataHandler", null)
-        if(f !== null){
+        if (f !== null) {
             $B.$call(f)(chardata)
         }
         var f = $B.$getattr(parser, "EndCdataSectionHandler", null)
-        if(f !== null){
+        if (f !== null) {
             $B.$call(f)()
         }
         return {value: get_value(rule)}
     },
-    CharData: function(parser, rule){
+    CharData: function(parser, rule) {
         console.log('chardata', rule)
         var value = get_value(rule)
         var f = $B.$getattr(parser, "CharacterDataHandler", null)
-        if(f !== null){
+        if (f !== null) {
             $B.$call(f)(value)
         }
         return {value: get_value(rule)}
     },
-    Comment: function(parser, rule){
+    Comment: function(parser, rule) {
         console.log('comment', rule)
         var value = get_value(rule.rules[1])
         var f = $B.$getattr(parser, "CommentHandler", null)
-        if(f !== null){
+        if (f !== null) {
             $B.$call(f)(value)
         }
         return {value}
     },
-    doctypedecl: function(parser, rule){
+    doctypedecl: function(parser, rule) {
         console.log('doctype', rule, 'ext id', get_value(rule.rules[3]))
-        if(! rule.start_done){
+        if (! rule.start_done) {
             // if doctype has no intSubset
             var info = get_doctype_info(rule)
             var f = $B.$getattr(parser, "StartDoctypeDeclHandler", null)
-            if(f !== null){
+            if (f !== null) {
                 $B.$call(f)(info.name, info.systemId, info.publicId, false)
             }
         }
-        if(rule.hasExternal && parser.standalone == 0){
+        if (rule.hasExternal && parser.standalone == 0) {
             var f = $B.$getattr(parser, "NotStandaloneHandler", null)
-            if(f !== null){
+            if (f !== null) {
                 $B.$call(f)()
             }
         }
         var f = $B.$getattr(parser, "EndDoctypeDeclHandler", null)
-        if(f !== null){
+        if (f !== null) {
             $B.$call(f)()
         }
 
     },
-    elementdecl: function(parser, rule){
+    elementdecl: function(parser, rule) {
         console.log('element decl', rule)
         var name = get_value(rule.rules[2]),
             model = get_value(rule.rules[4])
-        switch(model){
+        switch (model) {
             case 'ANY':
                 model = $B.fast_tuple([models.XML_CTYPE_ANY, 0, _b_.None, $B.fast_tuple([])])
                 break
         }
         var f = $B.$getattr(parser, "ElementDeclHandler", null)
-        if(f !== null){
+        if (f !== null) {
             $B.$call(f)(name, model)
         }
 
         return {name, model}
     },
-    ETag: function(parser, rule){
+    ETag: function(parser, rule) {
         var name = get_value(rule.rules[1]),
             is_ns_decl
-        if(parser.namespaces && parser.namespaces.hasOwnProperty(name)){
+        if (parser.namespaces && parser.namespaces.hasOwnProperty(name)) {
             var ns_name = name.split(':')[0]
             is_ns_decl = true
             name = parser.namespaces[name]
         }
         var f = $B.$getattr(parser, "EndElementHandler", null)
-        if(f !== null){
+        if (f !== null) {
             $B.$call(f)(name)
         }
-        if(is_ns_decl){
+        if (is_ns_decl) {
             var f = $B.$getattr(parser, "EndNamespaceDeclHandler", null)
-            if(f !== null){
+            if (f !== null) {
                 $B.$call(f)(ns_name)
             }
         }
         return {name: get_value(rule.rules[1])}
     },
-    ExternalID: function(parser, rule){
+    ExternalID: function(parser, rule) {
         var doctype = get_parent(rule, doctypedecl_rule)
         doctype.hasExternal = true
     },
-    GEDecl: function(parser, rule){
+    GEDecl: function(parser, rule) {
         // '<!ENTITY' S Name S EntityDef S? '>'
         var entitydef = rule.rules[4],
             value = _b_.None,
@@ -377,14 +377,14 @@ var handler = {
             publicId = _b_.None,
             notationName = _b_.None
         // EntityValue | (ExternalID NDataDecl?)
-        switch(entitydef.selected_option){
+        switch (entitydef.selected_option) {
             case 0:
                 // EntityValue    ::=  '"' ([^%&"] | PEReference | Reference)* '"'
                 //  |  "'" ([^%&'] | PEReference | Reference)* "'"
                 var entity_value = entitydef.selected_rule.selected_rule
                 console.log('entity value', entity_value)
                 var value = ''
-                for(var item of entity_value.result_store[1]){
+                for (var item of entity_value.result_store[1]) {
                     var v = get_value(entity_value.result_store[1][0])
                     value += fromCharRef(v)
                 }
@@ -394,7 +394,7 @@ var handler = {
                 var ext_id = external_id(entitydef.selected_rule.rules[0])
                 systemId = ext_id.systemId
                 publicId = ext_id.publicId
-                if(entitydef.selected_rule.result_store[1]){
+                if (entitydef.selected_rule.result_store[1]) {
                     // NDataDecl ::=  S 'NDATA' S Name
                     notationName = get_value(entitydef.selected_rule.rules[1].rules[3])
                 }
@@ -409,50 +409,50 @@ var handler = {
             notationName
         }
         var unparsed_handled
-        if(res.name == "unparsed_entity"){
+        if (res.name == "unparsed_entity") {
             var f = $B.$getattr(parser, "UnparsedEntityDeclHandler", null)
-            if(f !== null){
+            if (f !== null) {
                 unparsed_handled = true
                 $B.$call(f)(res.name, base,
                             res.systemId, res.publicId, res.notationName)
             }
         }
-        if(! unparsed_handled){
+        if (! unparsed_handled) {
             var f = $B.$getattr(parser, "EntityDeclHandler", null)
-            if(f !== null){
+            if (f !== null) {
                 $B.$call(f)(res.name, res.is_parameter_entity, res.value, base,
                             res.systemId, res.publicId, res.notationName)
             }
         }
         return res
     },
-    start_intSubset: function(parser, rule){
+    start_intSubset: function(parser, rule) {
         // Found when starting an internal subset inside a doctype declaration
         // Used to call StartDoctypeHandler with has_internal_subset set
         var doctype_decl = get_parent(rule, doctypedecl_rule),
             info = get_doctype_info(doctype_decl)
-        if(doctype_decl.hasExternal && ! parser.standalone){
+        if (doctype_decl.hasExternal && ! parser.standalone) {
             var f = $B.$getattr(parser, "NotStandaloneHandler", null)
-            if(f !== null){
+            if (f !== null) {
                 $B.$call(f)()
             }
         }
         doctype_decl.start_done = true
         delete doctype_decl.sentNotStandalone
         var f = $B.$getattr(parser, "StartDoctypeDeclHandler", null)
-        if(f !== null){
+        if (f !== null) {
             $B.$call(f)(info.name, info.systemId, info.publicId, true)
         }
 
     },
-    NotationDecl: function(parser, rule){
+    NotationDecl: function(parser, rule) {
         // '<!NOTATION' S Name S (ExternalID | PublicID) S? '>'
         var base = _b_.None,
             systemId = _b_.None,
             publicId = _b_.None,
             ext_or_public = rule.rules[4]
 
-        switch(ext_or_public.selected_option){
+        switch (ext_or_public.selected_option) {
             case 0:
                 var ext_id = external_id(ext_or_public.selected_rule)
                 systemId = ext_id.systemId
@@ -469,36 +469,36 @@ var handler = {
             publicId
         }
         var f = $B.$getattr(parser, "NotationDeclHandler", null)
-        if(f !== null){
+        if (f !== null) {
             $B.$call(f)(res.name, res.base, res.systemId, res.publicId)
         }
 
         return res
     },
-    PI: function(parser, rule){
+    PI: function(parser, rule) {
         console.log('PI', rule)
         var name = get_value(rule.rules[1].rules[0]),
             attrs = get_value(rule.rules[2]).trimLeft()
         var f = $B.$getattr(parser, "ProcessingInstructionHandler", null)
-        if(f !== null){
+        if (f !== null) {
             $B.$call(f)(name, attrs)
         }
         return {name, attrs}
     },
-    STag: function(parser, rule){
+    STag: function(parser, rule) {
         var name = get_value(rule.rules[1])
         var attrs = rule.result_store[2],
             attr_result = $B.empty_dict()
-        if(attrs){
-            for(var attr of attrs){
+        if (attrs) {
+            for (var attr of attrs) {
                 var attr_value_store = attr.result_store[1].result_store[2].selected_rule.result_store[1],
                     attr_value = ''
-                for(var item of attr_value_store){
+                for (var item of attr_value_store) {
                     var v = get_value(item)
                     attr_value += fromCharRef(v)
                 }
                 var attr_name = get_value(attr.result_store[1].result_store[0])
-                if(attr_name.startsWith('xmlns:')){
+                if (attr_name.startsWith('xmlns:')) {
                     var prefix = attr_name.substr(6),
                         uri = attr_value
                     var name1 = uri + '!' + name.split(':')[1]
@@ -506,29 +506,29 @@ var handler = {
                     parser.namespaces[name] = name1
                     name = name1
                     var f = $B.$getattr(parser, "StartNamespaceDeclHandler", null)
-                    if(f !== null){
+                    if (f !== null) {
                         $B.$call(f)(prefix, uri)
                     }
-                }else{
+                } else {
                     _b_.dict.$setitem(attr_result, attr_name, attr_value)
                 }
             }
         }
         var f = $B.$getattr(parser, "StartElementHandler", null)
-        if(f !== null){
+        if (f !== null) {
             $B.$call(f)(name, attr_result)
         }
         return {name, attr_result}
     },
-    XMLDecl: function(parser, rule){
+    XMLDecl: function(parser, rule) {
         // '<?xml' VersionInfo EncodingDecl? SDDecl? S? '?>'
         var encoding,
             standalone = -1
-        if(rule.result_store[2]){
+        if (rule.result_store[2]) {
             // S 'encoding' Eq ('"' EncName '"' | "'" EncName "'" )
             encoding = get_value(rule.rules[2].rules[3].selected_rule.rules[1])
         }
-        if(rule.result_store[3]){
+        if (rule.result_store[3]) {
             // S 'standalone' Eq (("'" ('yes' | 'no') "'") | ('"' ('yes' | 'no') '"'))
             sddecl = rule.rules[3]
             standalone = get_value(sddecl.rules[3].selected_rule.rules[1])
@@ -541,11 +541,11 @@ var handler = {
                 encoding,
                 standalone
             }
-        for(var attr in attrs){
+        for (var attr in attrs) {
             _b_.dict.$setitem(attr_result, attr, attrs[attr])
         }
         var f = $B.$getattr(parser, "XmlDeclHandler", null)
-        if(f !== null){
+        if (f !== null) {
             $B.$call(f)(attrs.version, attrs.encoding, attrs.standalone)
         }
         return {name, attr_result}
@@ -553,24 +553,24 @@ var handler = {
 }
 
 
-function emit(rule){
+function emit(rule) {
     // called when a rule is done
     var rname = rule.constructor.name
     rname = rname.substr(0, rname.length - 5)
-    if(handler[rname]){
+    if (handler[rname]) {
         var parser = get_top(rule)
         // console.log('emit', rname)
         handler[rname](parser, rule)
     }
 }
 
-function handle_simple(element, next_if_ok, rule, char){
-    if(char === FAIL){
-        if(typeof element.origin.feed !== 'function'){
+function handle_simple(element, next_if_ok, rule, char) {
+    if (char === FAIL) {
+        if (typeof element.origin.feed !== 'function') {
             console.log('not a func', element)
         }
         return element.origin.feed(FAIL)
-    }else if(char === DONE){
+    } else if (char === DONE) {
         element.result_store[element.expect] = rule // get_sub(rule, rule.pos, get_pos(rule)) // get_string(rule)
         var test = (rule.constructor.name == 'element_rule' ||
                 rule.constructor.name == 'Attribute_rule')
@@ -578,17 +578,17 @@ function handle_simple(element, next_if_ok, rule, char){
         emit(rule)
         set_expect(element, next_if_ok)
         return element.feed(read_char(element))
-    }else if(char === END){
+    } else if (char === END) {
         set_expect(element, next_if_ok)
         return element
-    }else{
+    } else {
         return rule.feed(char)
     }
 }
 
-function handle_plus(element, rank, next_if_ok, rule, char){
-    if(char === FAIL){
-        if(element.repeats[rank] == 0){
+function handle_plus(element, rank, next_if_ok, rule, char) {
+    if (char === FAIL) {
+        if (element.repeats[rank] == 0) {
             reset_pos(element, rule.pos)
             return element.origin.feed(FAIL)
         }
@@ -596,7 +596,7 @@ function handle_plus(element, rank, next_if_ok, rule, char){
         reset_pos(element, rule.pos)
         rule.reset()
         return element.feed(read_char(element))
-    }else if(char === DONE){
+    } else if (char === DONE) {
         element.result_store[rank] = element.result_store[rank] || []
         element.result_store[rank].push(rule)
         element.repeats[rank] += 1
@@ -606,29 +606,29 @@ function handle_plus(element, rank, next_if_ok, rule, char){
         set_expect(element, next_if_ok)
         delete element.rules[rank]
         return element.feed(read_char(element))
-    }else if(char === END){
+    } else if (char === END) {
         set_expect(element, next_if_ok)
         return element.feed(char)
-    }else{
+    } else {
         return rule.feed(char)
     }
 }
 
-function handle_star(element, rank, next_if_ok, rule, char){
+function handle_star(element, rank, next_if_ok, rule, char) {
     var test = false // rule instanceof tmp_6_rule
-    if(test){
+    if (test) {
         console.log('HANDLE STAR', rule, 'char', char)
     }
-    if(char === FAIL){
+    if (char === FAIL) {
         set_expect(element, next_if_ok)
         reset_pos(element, rule.pos)
         rule.reset()
         return element.feed(read_char(element))
-    }else if(char === DONE){
-        if(test){
+    } else if (char === DONE) {
+        if (test) {
             console.log(rule, 'DONE')
         }
-        if(rule.alt){
+        if (rule.alt) {
             element.selected_option = element.expect
             element.selected_rule = rule
         }
@@ -640,21 +640,21 @@ function handle_star(element, rank, next_if_ok, rule, char){
         emit(rule)
         delete element.rules[rank]
         return element.feed(read_char(element))
-    }else if(char === END){
+    } else if (char === END) {
         set_expect(element, next_if_ok)
         return element.feed(char)
-    }else{
+    } else {
         return rule.feed(char)
     }
 }
 
-function handle_zero_or_one(element, rank, next_if_ok, rule, char){
-    if(char === FAIL){
+function handle_zero_or_one(element, rank, next_if_ok, rule, char) {
+    if (char === FAIL) {
         set_expect(element, next_if_ok)
         reset_pos(element, rule.pos)
         rule.reset()
         return element.feed(read_char(element))
-    }else if(char === DONE){
+    } else if (char === DONE) {
         element.result_store[rank] = element.result_store[rank] || []
         element.result_store[rank].push(rule)
         element.repeats[rank] += 1
@@ -663,21 +663,21 @@ function handle_zero_or_one(element, rank, next_if_ok, rule, char){
         rule.reset()
         set_expect(element, next_if_ok)
         return element.feed(read_char(element))
-    }else if(char === END){
+    } else if (char === END) {
         set_expect(element, next_if_ok)
         return element.feed(char)
-    }else{
+    } else {
         return rule.feed(char)
     }
 }
 
-function handle_alt(element, alt_index, rule, char){
-    if(char === FAIL){
+function handle_alt(element, alt_index, rule, char) {
+    if (char === FAIL) {
         set_expect(element, alt_index)
         reset_pos(element, element.pos)
         return element.origin.feed(read_char(element))
-    }else if(char === DONE){
-        if(['AttValue_rule'].includes(rule.constructor.name)){
+    } else if (char === DONE) {
+        if (['AttValue_rule'].includes(rule.constructor.name)) {
             console.log('DONE', rule.constructor.name, get_sub(rule, rule.pos, get_pos(rule)))
             console.log('  ', rule)
             alert()
@@ -688,28 +688,28 @@ function handle_alt(element, alt_index, rule, char){
         emit(rule)
         rule.reset()
         return element.origin.feed(char)
-    }else if(char === END){
+    } else if (char === END) {
         set_expect(element, -1)
         return element
-    }else{
+    } else {
         return rule.feed(char)
     }
 }
 
-function handle_last(element, rule, char){
+function handle_last(element, rule, char) {
     var test = false // element instanceof tmp_6_rule
-    if(test){
+    if (test) {
         console.log('handle_last', rule, char)
         alert()
     }
-    if(char === FAIL){
+    if (char === FAIL) {
         return element.origin.feed(FAIL)
-    }else if(char === DONE){
+    } else if (char === DONE) {
         element.result_store[element.expect] = rule
-        if(element.alt){
+        if (element.alt) {
             element.selected_option = element.expect
             element.selected_rule = rule
-            if(test){
+            if (test) {
                 console.log('set selected', element)
                 console.log('value', get_value(rule))
                 element.coucou = 'ici'
@@ -719,36 +719,36 @@ function handle_last(element, rule, char){
         emit(rule)
         rule.reset()
         set_expect(element, -1)
-        if(test){
+        if (test) {
             console.log('return control to element', element)
             alert()
         }
         return element.feed(char)
-    }else if(char === END){
+    } else if (char === END) {
         set_expect(element, -1)
         return element
-    }else{
+    } else {
         return rule.feed(char)
     }
 }
 
-function expect_literal(element, literal, char){
-    if(! element.hasOwnProperty('expected_pos')){
+function expect_literal(element, literal, char) {
+    if (! element.hasOwnProperty('expected_pos')) {
         element.expected_pos = 0
     }
-    if(literal[element.expected_pos] == char){
+    if (literal[element.expected_pos] == char) {
         element.expected_pos++
-        if(element.expected_pos == literal.length){
+        if (element.expected_pos == literal.length) {
             delete element.expected_pos
             return {value: literal}
-        }else{
+        } else {
             return {value: null}
         }
     }
     return FAIL
 }
 
-function LITERAL(origin, string, next_if_ok, args){
+function LITERAL(origin, string, next_if_ok, args) {
     this.origin = origin
     this.string = string
     this.next_if_ok = next_if_ok
@@ -757,28 +757,28 @@ function LITERAL(origin, string, next_if_ok, args){
     this.str_pos = 0
 }
 
-LITERAL.prototype.reset = function(){
+LITERAL.prototype.reset = function() {
     this.str_pos = 0
 }
 
-LITERAL.prototype.feed = function(char){
+LITERAL.prototype.feed = function(char) {
     //console.log('LITERAL', this.string, 'expects', this.string[this.str_pos], 'char', char)
-    if(this.string == '<!DOCTYPE>'){
+    if (this.string == '<!DOCTYPE>') {
         console.log('LITERAL feed', this.string, char, this.str_pos)
     }
-    if(this.str_pos == this.string.length){
+    if (this.str_pos == this.string.length) {
         this.value = this.string
         return this.origin.feed(DONE)
     }
-    if(char == this.string[this.str_pos]){
+    if (char == this.string[this.str_pos]) {
         this.str_pos++
         return this
-    }else{
+    } else {
         return this.origin.feed(FAIL)
     }
 }
 
-function NAME_rule(origin, next_if_ok){
+function NAME_rule(origin, next_if_ok) {
   this.origin = origin
   this.rank = this.origin.expect
   this.next_if_ok = next_if_ok
@@ -786,27 +786,27 @@ function NAME_rule(origin, next_if_ok){
   this.pos = get_pos(this)
 }
 
-NAME_rule.prototype.reset = function(){
+NAME_rule.prototype.reset = function() {
     this.value = ''
 }
 
-NAME_rule.prototype.feed = function(char){
+NAME_rule.prototype.feed = function(char) {
     console.log('NAME_rule, value', this.value, 'char', char)
-  if(this.value == ''){
-    if(is_id_start(char)){
+  if (this.value == '') {
+    if (is_id_start(char)) {
       this.value = char
-    }else{
+    } else {
       return this.origin.feed(FAIL)
     }
-  }else if(is_id_continue(char)){
+  } else if (is_id_continue(char)) {
     this.value += char
-  }else{
+  } else {
     return this.origin.feed(DONE)
   }
   return this
 }
 
-function NUMBER_rule(origin, next_if_ok, args){
+function NUMBER_rule(origin, next_if_ok, args) {
   this.origin = origin
   this.rank = this.origin.expect
   this.next_if_ok = next_if_ok
@@ -815,23 +815,23 @@ function NUMBER_rule(origin, next_if_ok, args){
   this.value = ''
 }
 
-NUMBER_rule.prototype.reset = function(){
+NUMBER_rule.prototype.reset = function() {
     this.value = ''
 }
 
-NUMBER_rule.prototype.feed = function(char){
-  if(this.value == ''){
-    if(is_num(char)){
+NUMBER_rule.prototype.feed = function(char) {
+  if (this.value == '') {
+    if (is_num(char)) {
       this.value = char
-    }else if(this.args.next_if_fail !== undefined){
+    } else if (this.args.next_if_fail !== undefined) {
         this.origin.expect = this.args.next_if_fail
         return this.origin.feed(char)
-    }else{
+    } else {
       return FAIL
     }
-  }else if(is_num(char)){
+  } else if (is_num(char)) {
     this.value += char
-  }else{
+  } else {
     this.origin.expect = this.next_if_ok
     this.origin.store_result(this)
     return this.origin.feed(char)
@@ -839,55 +839,55 @@ NUMBER_rule.prototype.feed = function(char){
   return this
 }
 
-function start_intSubset_rule(origin){
+function start_intSubset_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.rank = this.origin.expect
   this.value = ''
 }
 
-start_intSubset_rule.prototype.feed = function(char){
+start_intSubset_rule.prototype.feed = function(char) {
     // always succeeds
     return this.origin.feed(DONE)
 }
 
-start_intSubset_rule.prototype.reset = function(){
+start_intSubset_rule.prototype.reset = function() {
     // ignore
 }
 
-function S_rule(origin){
+function S_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.rank = this.origin.expect
   this.value = ''
 }
 
-S_rule.prototype.reset = function(){
+S_rule.prototype.reset = function() {
     this.value = ''
 }
 
-S_rule.prototype.feed = function(char){
-  if(is_space(char)){
+S_rule.prototype.feed = function(char) {
+  if (is_space(char)) {
       this.value += char
       return this
-  }else if(this.value.length > 0){
+  } else if (this.value.length > 0) {
       return this.origin.feed(DONE)
-  }else{
+  } else {
       return this.origin.feed(FAIL)
   }
 }
 
-function CHAR_rule(origin, next_if_ok, args){
+function CHAR_rule(origin, next_if_ok, args) {
   this.origin = origin
   this.next_if_ok = next_if_ok
   this.args = args
 }
 
-CHAR_rule.prototype.feed = function(char){
-    if(is_char(char)){
+CHAR_rule.prototype.feed = function(char) {
+    if (is_char(char)) {
         this.value = char
         return this.origin
-    }else{
+    } else {
         return FAIL
     }
 }
@@ -896,7 +896,7 @@ var hex_range_re = /^#x([a-fA-F0-9]+)-#x([a-fA-F0-9]+)$/
 var charset_range_re = /(\w)-(\w)/g
 
 
-function CHARSET_rule(origin, charset, next_if_ok){
+function CHARSET_rule(origin, charset, next_if_ok) {
     this.origin = origin
     this.charset = charset
     this.next_if_ok = next_if_ok
@@ -906,16 +906,16 @@ function CHARSET_rule(origin, charset, next_if_ok){
         body = negative ? charset.substr(1) : charset
 
     var mo = body.match(hex_range_re)
-    if(mo){
+    if (mo) {
         var left = parseInt(`0x${mo[1]}`, 16),
             right = parseInt(`0x${mo[2]}`, 16)
-        if(negative){
-            this.test = function(char){
+        if (negative) {
+            this.test = function(char) {
                 var cp = char.charCodeAt(0)
                 return (cp < left) || (cp > right)
             }
-        }else{
-            this.test = function(char){
+        } else {
+            this.test = function(char) {
                 var cp = char.charCodeAt(0)
                 return (cp >= left) && (cp <= right)
             }
@@ -924,23 +924,23 @@ function CHARSET_rule(origin, charset, next_if_ok){
     }
 
     var ranges = []
-    for(var mo of body.matchAll(charset_range_re)){
+    for (var mo of body.matchAll(charset_range_re)) {
         ranges.push(mo.slice(1))
     }
-    if(ranges.length > 0){
-        if(negative){
-            this.test = function(char){
-                for(var range of ranges){
-                    if(char >= range[0] && char <= range[1]){
+    if (ranges.length > 0) {
+        if (negative) {
+            this.test = function(char) {
+                for (var range of ranges) {
+                    if (char >= range[0] && char <= range[1]) {
                         return false
                     }
                 }
                 return true
             }
-        }else{
-            this.test = function(char){
-                for(var range of ranges){
-                    if(char >= range[0] && char <= range[1]){
+        } else {
+            this.test = function(char) {
+                for (var range of ranges) {
+                    if (char >= range[0] && char <= range[1]) {
                         return true
                     }
                 }
@@ -950,71 +950,71 @@ function CHARSET_rule(origin, charset, next_if_ok){
         return
     }
 
-    if(charset.startsWith('^')){
+    if (charset.startsWith('^')) {
         this.test = char => ! charset.substr(1).includes(char)
-    }else{
+    } else {
         this.test = char => charset.includes(char)
     }
 }
 
-CHARSET_rule.prototype.reset = function(){
+CHARSET_rule.prototype.reset = function() {
     delete this.done
 }
 
-CHARSET_rule.prototype.feed = function(char){
-    if(char !== END && this.test(char)){
+CHARSET_rule.prototype.feed = function(char) {
+    if (char !== END && this.test(char)) {
         this.value += char
         return this
-    }else if(this.value.length > 0){
+    } else if (this.value.length > 0) {
         return this.origin.feed(DONE)
-    }else{
+    } else {
         return this.origin.feed(FAIL)
     }
 }
 
-function BaseChar_rule(origin){
+function BaseChar_rule(origin) {
     this.origin = origin
     this.pos = get_pos(origin)
 }
 
-BaseChar_rule.prototype.reset = function(){
+BaseChar_rule.prototype.reset = function() {
     delete this.done
 }
 
-BaseChar_rule.prototype.feed = function(char){
+BaseChar_rule.prototype.feed = function(char) {
     //console.log('BaseChar_rule, char', char, 'this.done', this.done)
-    if(this.done){
+    if (this.done) {
         return this.origin.feed(DONE)
-    }else if(/\p{L}/u.exec(char)){
+    } else if (/\p{L}/u.exec(char)) {
         this.done = true
         return this
-    }else{
+    } else {
         return this.origin.feed(FAIL)
     }
 }
 
-function Letter_rule(origin){
+function Letter_rule(origin) {
     this.origin = origin
     this.pos = get_pos(origin)
 }
 
-Letter_rule.prototype.reset = function(){
+Letter_rule.prototype.reset = function() {
     delete this.done
 }
 
-Letter_rule.prototype.feed = function(char){
-    if(this.done){
+Letter_rule.prototype.feed = function(char) {
+    if (this.done) {
         return this.origin.feed(DONE)
-    }else if(/\p{L}/u.exec(char)){
+    } else if (/\p{L}/u.exec(char)) {
         this.done = true
         this.value = char
         return this
-    }else{
+    } else {
         return this.origin.feed(FAIL)
     }
 }
 
-function NameChar_rule(origin){
+function NameChar_rule(origin) {
     this.origin = origin
     this.rank = origin.expect
     this.value = ''
@@ -1023,38 +1023,38 @@ function NameChar_rule(origin){
     this.pos = get_pos(origin)
 }
 
-NameChar_rule.prototype.reset = function(){
+NameChar_rule.prototype.reset = function() {
     delete this.done
 }
 
-NameChar_rule.prototype.feed = function(char){
-    if(this.done){
+NameChar_rule.prototype.feed = function(char) {
+    if (this.done) {
         return this.origin.feed(DONE)
-    }else if(is_id_continue(char)){
+    } else if (is_id_continue(char)) {
         this.value += char
         return this
-    }else{
-        if(this.value == ''){
+    } else {
+        if (this.value == '') {
             return this.origin.feed(FAIL)
         }
         return this.origin.feed(DONE)
     }
 }
 
-function PIText_rule(origin){
+function PIText_rule(origin) {
     this.origin = origin
     this.value = ''
     this.pos = get_pos(origin)
 }
 
-PIText_rule.prototype.reset = function(){}
+PIText_rule.prototype.reset = function() {}
 
-PIText_rule.prototype.feed = function(char){
-    if(char === END){
+PIText_rule.prototype.feed = function(char) {
+    if (char === END) {
         return this.origin.feed(FAIL)
     }
     this.value += char
-    if(this.value.endsWith('?>')){
+    if (this.value.endsWith('?>')) {
         reset_pos(this, get_pos(this) - 1)
         this.value = this.value.substr(0, this.value.length - 2)
         return this.origin.feed(DONE)
@@ -1062,23 +1062,23 @@ PIText_rule.prototype.feed = function(char){
     return this
 }
 
-function CommentText_rule(origin){
+function CommentText_rule(origin) {
     this.origin = origin
     this.value = ''
     this.pos = get_pos(origin)
 }
 
-CommentText_rule.prototype.reset = function(){}
+CommentText_rule.prototype.reset = function() {}
 
-CommentText_rule.prototype.feed = function(char){
-    if(char === END){
+CommentText_rule.prototype.feed = function(char) {
+    if (char === END) {
         return this.origin.feed(FAIL)
     }
     this.value += char
-    if(this.value.endsWith('-->')){
+    if (this.value.endsWith('-->')) {
         reset_pos(this, get_pos(this) - 2)
         this.value = this.value.substr(0, this.value.length - 3)
-        if(this.value.endsWith('-')){
+        if (this.value.endsWith('-')) {
             return this.origin.feed(FAIL)
         }
         return this.origin.feed(DONE)
@@ -1086,24 +1086,24 @@ CommentText_rule.prototype.feed = function(char){
     return this
 }
 
-function CharData_rule(origin){
+function CharData_rule(origin) {
     this.origin = origin
     this.pos = get_pos(origin)
     this.value = ''
 }
 
-CharData_rule.prototype.reset = function(){}
+CharData_rule.prototype.reset = function() {}
 
-CharData_rule.prototype.feed = function(char){
+CharData_rule.prototype.feed = function(char) {
     // [^<&]* - ([^<&]* ']]>' [^<&]*)
-    if(char === END){
+    if (char === END) {
         return this.origin.feed(FAIL)
     }
-    if('<&'.includes(char)){
+    if ('<&'.includes(char)) {
         return this.origin.feed(DONE)
     }
     this.value += char
-    if(this.value.endsWith(']]>')){
+    if (this.value.endsWith(']]>')) {
         reset_pos(this, get_pos(this) - 2)
         this.value = this.value.substr(0, this.value.length - 3)
         return this.origin.feed(DONE)
@@ -1111,21 +1111,21 @@ CharData_rule.prototype.feed = function(char){
     return this
 }
 
-function CData_rule(origin){
+function CData_rule(origin) {
     this.origin = origin
     this.pos = get_pos(origin)
     this.value = ''
 }
 
-CData_rule.prototype.reset = function(){}
+CData_rule.prototype.reset = function() {}
 
-CData_rule.prototype.feed = function(char){
+CData_rule.prototype.feed = function(char) {
     // (Char* - (Char* ']]>' Char*))
-    if(char === END){
+    if (char === END) {
         return this.origin.feed(FAIL)
     }
     this.value += char
-    if(this.value.endsWith(']]>')){
+    if (this.value.endsWith(']]>')) {
         reset_pos(this, get_pos(this) - 2)
         this.value = this.value.substr(0, this.value.length - 3)
         return this.origin.feed(DONE)
@@ -1133,21 +1133,21 @@ CData_rule.prototype.feed = function(char){
     return this
 }
 
-function Ignore_rule(origin){
+function Ignore_rule(origin) {
     this.origin = origin
     this.pos = get_pos(origin)
     this.value = ''
 }
 
-Ignore_rule.prototype.reset = function(){}
+Ignore_rule.prototype.reset = function() {}
 
-Ignore_rule.prototype.feed = function(char){
+Ignore_rule.prototype.feed = function(char) {
     // Char* - (Char* ('<![' | ']]>') Char*)
-    if(char === END){
+    if (char === END) {
         return this.origin.feed(FAIL)
     }
     this.value += char
-    if(this.value.endsWith('<![') || this.value.endsWith(']]>')){
+    if (this.value.endsWith('<![') || this.value.endsWith(']]>')) {
         reset_pos(this, get_pos(this) - 2)
         this.value = this.value.substr(0, this.value.length - 3)
         return this.origin.feed(DONE)
@@ -1155,7 +1155,7 @@ Ignore_rule.prototype.feed = function(char){
     return this
 }
 
-function PITarget_rule(origin){
+function PITarget_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -1165,18 +1165,18 @@ function PITarget_rule(origin){
   this.repeats = []
 }
 
-PITarget_rule.prototype.feed = function(char){
+PITarget_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // Name
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new Name_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_last(this, rule, char)
     case 1: // tmp_21
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new tmp_21_rule(this)
       }
       rule = this.rules[1]
@@ -1184,7 +1184,7 @@ PITarget_rule.prototype.feed = function(char){
       return handle_last(this, rule, char)
     case -1:
       var value = get_value(this)
-      if(value.toLowerCase() == 'xml'){
+      if (value.toLowerCase() == 'xml') {
           return this.origin.feed(FAIL)
       }
       return this.origin.feed(DONE)
@@ -1192,7 +1192,7 @@ PITarget_rule.prototype.feed = function(char){
   return this
 }
 
-PITarget_rule.prototype.reset = function(){
+PITarget_rule.prototype.reset = function() {
   this.expect = 0
 }
 
@@ -1331,7 +1331,7 @@ NotationDecl: `['<!NOTATION', S, Name, S, tmp_59, S?, '>']`,
 tmp_59: `[ExternalID, PublicID]`,
 PublicID: `['PUBLIC', S, PubidLiteral]`,
 }
-function document_rule(origin){
+function document_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -1341,25 +1341,25 @@ function document_rule(origin){
   this.repeats = []
 }
 
-document_rule.prototype.feed = function(char){
+document_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // prolog
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new prolog_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // element
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new element_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // Misc*
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new Misc_rule(this)
         this.repeats[2] = 0
       }
@@ -1368,7 +1368,7 @@ document_rule.prototype.feed = function(char){
       return handle_star(this, 2, 3, rule, char)
     case -1:
     case 3:
-      if(char == END){
+      if (char == END) {
         return DONE
       }
       return FAIL
@@ -1376,11 +1376,11 @@ document_rule.prototype.feed = function(char){
   return this
 }
 
-document_rule.prototype.reset = function(){
+document_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function Char_rule(origin){
+function Char_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -1391,46 +1391,46 @@ function Char_rule(origin){
   this.repeats = []
 }
 
-Char_rule.prototype.feed = function(char){
+Char_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '\t'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, String.fromCharCode(9))
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // '\n'
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new LITERAL(this, String.fromCharCode(10))
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 2, rule, char)
     case 2: // '\r'
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new LITERAL(this, String.fromCharCode(13))
       }
       rule = this.rules[2]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 3, rule, char)
     case 3: // [#x20-#xD7FF]
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new CHARSET_rule(this, '#x20-#xD7FF')
       }
       rule = this.rules[3]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 4, rule, char)
     case 4: // [#xE000-#xFFFD]
-      if(! this.rules[4]){
+      if (! this.rules[4]) {
         this.rules[4] = new CHARSET_rule(this, '#xE000-#xFFFD')
       }
       rule = this.rules[4]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 5, rule, char)
     case 5: // [#x10000-#x10FFFF]
-      if(! this.rules[5]){
+      if (! this.rules[5]) {
         this.rules[5] = new CHARSET_rule(this, '#x10000-#x10FFFF')
       }
       rule = this.rules[5]
@@ -1442,11 +1442,11 @@ Char_rule.prototype.feed = function(char){
   return this
 }
 
-Char_rule.prototype.reset = function(){
+Char_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function S_rule(origin){
+function S_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -1456,11 +1456,11 @@ function S_rule(origin){
   this.repeats = []
 }
 
-S_rule.prototype.feed = function(char){
+S_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_1+
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new tmp_1_rule(this)
         this.repeats[0] = 0
       }
@@ -1473,11 +1473,11 @@ S_rule.prototype.feed = function(char){
   return this
 }
 
-S_rule.prototype.reset = function(){
+S_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_1_rule(origin){
+function tmp_1_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -1488,32 +1488,32 @@ function tmp_1_rule(origin){
   this.repeats = []
 }
 
-tmp_1_rule.prototype.feed = function(char){
+tmp_1_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // ' '
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, String.fromCharCode(32))
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // '\t'
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new LITERAL(this, String.fromCharCode(9))
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 2, rule, char)
     case 2: // '\r'
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new LITERAL(this, String.fromCharCode(13))
       }
       rule = this.rules[2]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 3, rule, char)
     case 3: // '\n'
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new LITERAL(this, String.fromCharCode(10))
       }
       rule = this.rules[3]
@@ -1525,11 +1525,11 @@ tmp_1_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_1_rule.prototype.reset = function(){
+tmp_1_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function Name_rule(origin){
+function Name_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -1539,18 +1539,18 @@ function Name_rule(origin){
   this.repeats = []
 }
 
-Name_rule.prototype.feed = function(char){
+Name_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_2
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new tmp_2_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // NameChar*
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new NameChar_rule(this)
         this.repeats[1] = 0
       }
@@ -1563,11 +1563,11 @@ Name_rule.prototype.feed = function(char){
   return this
 }
 
-Name_rule.prototype.reset = function(){
+Name_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_2_rule(origin){
+function tmp_2_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -1578,25 +1578,25 @@ function tmp_2_rule(origin){
   this.repeats = []
 }
 
-tmp_2_rule.prototype.feed = function(char){
+tmp_2_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // Letter
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new Letter_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // '_'
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new LITERAL(this, '_')
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 2, rule, char)
     case 2: // ':'
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new LITERAL(this, ':')
       }
       rule = this.rules[2]
@@ -1608,11 +1608,11 @@ tmp_2_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_2_rule.prototype.reset = function(){
+tmp_2_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function Names_rule(origin){
+function Names_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -1622,18 +1622,18 @@ function Names_rule(origin){
   this.repeats = []
 }
 
-Names_rule.prototype.feed = function(char){
+Names_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // Name
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new Name_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // tmp_3*
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new tmp_3_rule(this)
         this.repeats[1] = 0
       }
@@ -1646,11 +1646,11 @@ Names_rule.prototype.feed = function(char){
   return this
 }
 
-Names_rule.prototype.reset = function(){
+Names_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_3_rule(origin){
+function tmp_3_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -1660,18 +1660,18 @@ function tmp_3_rule(origin){
   this.repeats = []
 }
 
-tmp_3_rule.prototype.feed = function(char){
+tmp_3_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // ' '
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, String.fromCharCode(32))
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // Name
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new Name_rule(this)
       }
       rule = this.rules[1]
@@ -1683,11 +1683,11 @@ tmp_3_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_3_rule.prototype.reset = function(){
+tmp_3_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function Nmtoken_rule(origin){
+function Nmtoken_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -1697,11 +1697,11 @@ function Nmtoken_rule(origin){
   this.repeats = []
 }
 
-Nmtoken_rule.prototype.feed = function(char){
+Nmtoken_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // NameChar+
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new NameChar_rule(this)
         this.repeats[0] = 0
       }
@@ -1714,11 +1714,11 @@ Nmtoken_rule.prototype.feed = function(char){
   return this
 }
 
-Nmtoken_rule.prototype.reset = function(){
+Nmtoken_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function Nmtokens_rule(origin){
+function Nmtokens_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -1728,18 +1728,18 @@ function Nmtokens_rule(origin){
   this.repeats = []
 }
 
-Nmtokens_rule.prototype.feed = function(char){
+Nmtokens_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // Nmtoken
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new Nmtoken_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // tmp_4*
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new tmp_4_rule(this)
         this.repeats[1] = 0
       }
@@ -1752,11 +1752,11 @@ Nmtokens_rule.prototype.feed = function(char){
   return this
 }
 
-Nmtokens_rule.prototype.reset = function(){
+Nmtokens_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_4_rule(origin){
+function tmp_4_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -1766,18 +1766,18 @@ function tmp_4_rule(origin){
   this.repeats = []
 }
 
-tmp_4_rule.prototype.feed = function(char){
+tmp_4_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // ' '
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, String.fromCharCode(32))
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // Nmtoken
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new Nmtoken_rule(this)
       }
       rule = this.rules[1]
@@ -1789,11 +1789,11 @@ tmp_4_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_4_rule.prototype.reset = function(){
+tmp_4_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function EntityValue_rule(origin){
+function EntityValue_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -1804,18 +1804,18 @@ function EntityValue_rule(origin){
   this.repeats = []
 }
 
-EntityValue_rule.prototype.feed = function(char){
+EntityValue_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_7
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new tmp_7_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // tmp_8
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new tmp_8_rule(this)
       }
       rule = this.rules[1]
@@ -1827,11 +1827,11 @@ EntityValue_rule.prototype.feed = function(char){
   return this
 }
 
-EntityValue_rule.prototype.reset = function(){
+EntityValue_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_5_rule(origin){
+function tmp_5_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -1842,25 +1842,25 @@ function tmp_5_rule(origin){
   this.repeats = []
 }
 
-tmp_5_rule.prototype.feed = function(char){
+tmp_5_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // [^%&']
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new CHARSET_rule(this, '^%&\'')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // PEReference
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new PEReference_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 2, rule, char)
     case 2: // Reference
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new Reference_rule(this)
       }
       rule = this.rules[2]
@@ -1872,11 +1872,11 @@ tmp_5_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_5_rule.prototype.reset = function(){
+tmp_5_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_6_rule(origin){
+function tmp_6_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -1887,25 +1887,25 @@ function tmp_6_rule(origin){
   this.repeats = []
 }
 
-tmp_6_rule.prototype.feed = function(char){
+tmp_6_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // [^%&"]
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new CHARSET_rule(this, '^%&"')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // PEReference
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new PEReference_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 2, rule, char)
     case 2: // Reference
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new Reference_rule(this)
       }
       rule = this.rules[2]
@@ -1917,11 +1917,11 @@ tmp_6_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_6_rule.prototype.reset = function(){
+tmp_6_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_7_rule(origin){
+function tmp_7_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -1931,18 +1931,18 @@ function tmp_7_rule(origin){
   this.repeats = []
 }
 
-tmp_7_rule.prototype.feed = function(char){
+tmp_7_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '"'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '"')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // tmp_6*
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new tmp_6_rule(this)
         this.repeats[1] = 0
       }
@@ -1950,7 +1950,7 @@ tmp_7_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_star(this, 1, 2, rule, char)
     case 2: // '"'
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new LITERAL(this, '"')
       }
       rule = this.rules[2]
@@ -1962,11 +1962,11 @@ tmp_7_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_7_rule.prototype.reset = function(){
+tmp_7_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_8_rule(origin){
+function tmp_8_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -1976,18 +1976,18 @@ function tmp_8_rule(origin){
   this.repeats = []
 }
 
-tmp_8_rule.prototype.feed = function(char){
+tmp_8_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // "'"
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '\'')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // tmp_5*
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new tmp_5_rule(this)
         this.repeats[1] = 0
       }
@@ -1995,7 +1995,7 @@ tmp_8_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_star(this, 1, 2, rule, char)
     case 2: // "'"
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new LITERAL(this, '\'')
       }
       rule = this.rules[2]
@@ -2007,11 +2007,11 @@ tmp_8_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_8_rule.prototype.reset = function(){
+tmp_8_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function AttValue_rule(origin){
+function AttValue_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -2022,18 +2022,18 @@ function AttValue_rule(origin){
   this.repeats = []
 }
 
-AttValue_rule.prototype.feed = function(char){
+AttValue_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_11
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new tmp_11_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // tmp_12
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new tmp_12_rule(this)
       }
       rule = this.rules[1]
@@ -2045,11 +2045,11 @@ AttValue_rule.prototype.feed = function(char){
   return this
 }
 
-AttValue_rule.prototype.reset = function(){
+AttValue_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_9_rule(origin){
+function tmp_9_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -2060,18 +2060,18 @@ function tmp_9_rule(origin){
   this.repeats = []
 }
 
-tmp_9_rule.prototype.feed = function(char){
+tmp_9_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // [^<&']
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new CHARSET_rule(this, '^<&\'')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // Reference
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new Reference_rule(this)
       }
       rule = this.rules[1]
@@ -2083,11 +2083,11 @@ tmp_9_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_9_rule.prototype.reset = function(){
+tmp_9_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_10_rule(origin){
+function tmp_10_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -2098,18 +2098,18 @@ function tmp_10_rule(origin){
   this.repeats = []
 }
 
-tmp_10_rule.prototype.feed = function(char){
+tmp_10_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // [^<&"]
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new CHARSET_rule(this, '^<&"')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // Reference
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new Reference_rule(this)
       }
       rule = this.rules[1]
@@ -2121,11 +2121,11 @@ tmp_10_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_10_rule.prototype.reset = function(){
+tmp_10_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_11_rule(origin){
+function tmp_11_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -2135,18 +2135,18 @@ function tmp_11_rule(origin){
   this.repeats = []
 }
 
-tmp_11_rule.prototype.feed = function(char){
+tmp_11_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '"'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '"')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // tmp_10*
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new tmp_10_rule(this)
         this.repeats[1] = 0
       }
@@ -2154,7 +2154,7 @@ tmp_11_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_star(this, 1, 2, rule, char)
     case 2: // '"'
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new LITERAL(this, '"')
       }
       rule = this.rules[2]
@@ -2166,11 +2166,11 @@ tmp_11_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_11_rule.prototype.reset = function(){
+tmp_11_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_12_rule(origin){
+function tmp_12_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -2180,18 +2180,18 @@ function tmp_12_rule(origin){
   this.repeats = []
 }
 
-tmp_12_rule.prototype.feed = function(char){
+tmp_12_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // "'"
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '\'')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // tmp_9*
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new tmp_9_rule(this)
         this.repeats[1] = 0
       }
@@ -2199,7 +2199,7 @@ tmp_12_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_star(this, 1, 2, rule, char)
     case 2: // "'"
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new LITERAL(this, '\'')
       }
       rule = this.rules[2]
@@ -2211,11 +2211,11 @@ tmp_12_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_12_rule.prototype.reset = function(){
+tmp_12_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function SystemLiteral_rule(origin){
+function SystemLiteral_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -2226,18 +2226,18 @@ function SystemLiteral_rule(origin){
   this.repeats = []
 }
 
-SystemLiteral_rule.prototype.feed = function(char){
+SystemLiteral_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_14
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new tmp_14_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // tmp_13
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new tmp_13_rule(this)
       }
       rule = this.rules[1]
@@ -2249,11 +2249,11 @@ SystemLiteral_rule.prototype.feed = function(char){
   return this
 }
 
-SystemLiteral_rule.prototype.reset = function(){
+SystemLiteral_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_13_rule(origin){
+function tmp_13_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -2263,18 +2263,18 @@ function tmp_13_rule(origin){
   this.repeats = []
 }
 
-tmp_13_rule.prototype.feed = function(char){
+tmp_13_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // "'"
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '\'')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // [^']
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new CHARSET_rule(this, '^\'')
         this.repeats[1] = 0
       }
@@ -2282,7 +2282,7 @@ tmp_13_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_star(this, 1, 2, rule, char)
     case 2: // "'"
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new LITERAL(this, '\'')
       }
       rule = this.rules[2]
@@ -2294,11 +2294,11 @@ tmp_13_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_13_rule.prototype.reset = function(){
+tmp_13_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_14_rule(origin){
+function tmp_14_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -2308,18 +2308,18 @@ function tmp_14_rule(origin){
   this.repeats = []
 }
 
-tmp_14_rule.prototype.feed = function(char){
+tmp_14_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '"'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '"')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // [^"]
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new CHARSET_rule(this, '^"')
         this.repeats[1] = 0
       }
@@ -2327,7 +2327,7 @@ tmp_14_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_star(this, 1, 2, rule, char)
     case 2: // '"'
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new LITERAL(this, '"')
       }
       rule = this.rules[2]
@@ -2339,11 +2339,11 @@ tmp_14_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_14_rule.prototype.reset = function(){
+tmp_14_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function PubidLiteral_rule(origin){
+function PubidLiteral_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -2354,18 +2354,18 @@ function PubidLiteral_rule(origin){
   this.repeats = []
 }
 
-PubidLiteral_rule.prototype.feed = function(char){
+PubidLiteral_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_15
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new tmp_15_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // tmp_16
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new tmp_16_rule(this)
       }
       rule = this.rules[1]
@@ -2377,11 +2377,11 @@ PubidLiteral_rule.prototype.feed = function(char){
   return this
 }
 
-PubidLiteral_rule.prototype.reset = function(){
+PubidLiteral_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_15_rule(origin){
+function tmp_15_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -2391,18 +2391,18 @@ function tmp_15_rule(origin){
   this.repeats = []
 }
 
-tmp_15_rule.prototype.feed = function(char){
+tmp_15_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '"'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '"')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // PubidChar*
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new PubidChar_rule(this)
         this.repeats[1] = 0
       }
@@ -2410,7 +2410,7 @@ tmp_15_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_star(this, 1, 2, rule, char)
     case 2: // '"'
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new LITERAL(this, '"')
       }
       rule = this.rules[2]
@@ -2422,11 +2422,11 @@ tmp_15_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_15_rule.prototype.reset = function(){
+tmp_15_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_16_rule(origin){
+function tmp_16_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -2436,18 +2436,18 @@ function tmp_16_rule(origin){
   this.repeats = []
 }
 
-tmp_16_rule.prototype.feed = function(char){
+tmp_16_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // "'"
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '\'')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // PubidCharNoQuote*
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new PubidCharNoQuote_rule(this)
         this.repeats[1] = 0
       }
@@ -2455,7 +2455,7 @@ tmp_16_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_star(this, 1, 2, rule, char)
     case 2: // "'"
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new LITERAL(this, '\'')
       }
       rule = this.rules[2]
@@ -2467,11 +2467,11 @@ tmp_16_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_16_rule.prototype.reset = function(){
+tmp_16_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function PubidChar_rule(origin){
+function PubidChar_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -2482,39 +2482,39 @@ function PubidChar_rule(origin){
   this.repeats = []
 }
 
-PubidChar_rule.prototype.feed = function(char){
+PubidChar_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // ' '
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, String.fromCharCode(32))
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // '\r'
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new LITERAL(this, String.fromCharCode(13))
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 2, rule, char)
     case 2: // '\n'
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new LITERAL(this, String.fromCharCode(10))
       }
       rule = this.rules[2]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 3, rule, char)
     case 3: // [a-zA-Z0-9]
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new CHARSET_rule(this, 'a-zA-Z0-9')
       }
       rule = this.rules[3]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 4, rule, char)
     case 4: // [-'()+,./:=?;!*#@$_%]
-      if(! this.rules[4]){
+      if (! this.rules[4]) {
         this.rules[4] = new CHARSET_rule(this, '-\'()+,./:=?;!*#@$_%')
       }
       rule = this.rules[4]
@@ -2526,11 +2526,11 @@ PubidChar_rule.prototype.feed = function(char){
   return this
 }
 
-PubidChar_rule.prototype.reset = function(){
+PubidChar_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function PubidCharNoQuote_rule(origin){
+function PubidCharNoQuote_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -2541,39 +2541,39 @@ function PubidCharNoQuote_rule(origin){
   this.repeats = []
 }
 
-PubidCharNoQuote_rule.prototype.feed = function(char){
+PubidCharNoQuote_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // ' '
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, String.fromCharCode(32))
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // '\r'
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new LITERAL(this, String.fromCharCode(13))
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 2, rule, char)
     case 2: // '\n'
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new LITERAL(this, String.fromCharCode(10))
       }
       rule = this.rules[2]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 3, rule, char)
     case 3: // [a-zA-Z0-9]
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new CHARSET_rule(this, 'a-zA-Z0-9')
       }
       rule = this.rules[3]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 4, rule, char)
     case 4: // [-()+,./:=?;!*#@$_%]
-      if(! this.rules[4]){
+      if (! this.rules[4]) {
         this.rules[4] = new CHARSET_rule(this, '-()+,./:=?;!*#@$_%')
       }
       rule = this.rules[4]
@@ -2585,11 +2585,11 @@ PubidCharNoQuote_rule.prototype.feed = function(char){
   return this
 }
 
-PubidCharNoQuote_rule.prototype.reset = function(){
+PubidCharNoQuote_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function Comment_rule(origin){
+function Comment_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -2599,25 +2599,25 @@ function Comment_rule(origin){
   this.repeats = []
 }
 
-Comment_rule.prototype.feed = function(char){
+Comment_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '<!--'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '<!--')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // CommentText
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new CommentText_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // '-->'
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new LITERAL(this, '-->')
       }
       rule = this.rules[2]
@@ -2629,11 +2629,11 @@ Comment_rule.prototype.feed = function(char){
   return this
 }
 
-Comment_rule.prototype.reset = function(){
+Comment_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function PI_rule(origin){
+function PI_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -2643,25 +2643,25 @@ function PI_rule(origin){
   this.repeats = []
 }
 
-PI_rule.prototype.feed = function(char){
+PI_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '<?'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '<?')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // PITarget
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new PITarget_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // tmp_17?
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new tmp_17_rule(this)
         this.repeats[2] = 0
       }
@@ -2669,7 +2669,7 @@ PI_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 2, 3, rule, char)
     case 3: // '?>'
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new LITERAL(this, '?>')
       }
       rule = this.rules[3]
@@ -2681,11 +2681,11 @@ PI_rule.prototype.feed = function(char){
   return this
 }
 
-PI_rule.prototype.reset = function(){
+PI_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_17_rule(origin){
+function tmp_17_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -2695,18 +2695,18 @@ function tmp_17_rule(origin){
   this.repeats = []
 }
 
-tmp_17_rule.prototype.feed = function(char){
+tmp_17_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // S
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new S_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // PIText
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new PIText_rule(this)
       }
       rule = this.rules[1]
@@ -2718,11 +2718,11 @@ tmp_17_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_17_rule.prototype.reset = function(){
+tmp_17_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function CDSect_rule(origin){
+function CDSect_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -2732,25 +2732,25 @@ function CDSect_rule(origin){
   this.repeats = []
 }
 
-CDSect_rule.prototype.feed = function(char){
+CDSect_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // CDStart
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new CDStart_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // CData
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new CData_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // CDEnd
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new CDEnd_rule(this)
       }
       rule = this.rules[2]
@@ -2762,11 +2762,11 @@ CDSect_rule.prototype.feed = function(char){
   return this
 }
 
-CDSect_rule.prototype.reset = function(){
+CDSect_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function CDStart_rule(origin){
+function CDStart_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -2776,11 +2776,11 @@ function CDStart_rule(origin){
   this.repeats = []
 }
 
-CDStart_rule.prototype.feed = function(char){
+CDStart_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '<![CDATA['
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '<![CDATA[')
       }
       rule = this.rules[0]
@@ -2792,11 +2792,11 @@ CDStart_rule.prototype.feed = function(char){
   return this
 }
 
-CDStart_rule.prototype.reset = function(){
+CDStart_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function CDEnd_rule(origin){
+function CDEnd_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -2806,11 +2806,11 @@ function CDEnd_rule(origin){
   this.repeats = []
 }
 
-CDEnd_rule.prototype.feed = function(char){
+CDEnd_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // ']]>'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, ']]>')
       }
       rule = this.rules[0]
@@ -2822,11 +2822,11 @@ CDEnd_rule.prototype.feed = function(char){
   return this
 }
 
-CDEnd_rule.prototype.reset = function(){
+CDEnd_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function prolog_rule(origin){
+function prolog_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -2836,11 +2836,11 @@ function prolog_rule(origin){
   this.repeats = []
 }
 
-prolog_rule.prototype.feed = function(char){
+prolog_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // XMLDecl?
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new XMLDecl_rule(this)
         this.repeats[0] = 0
       }
@@ -2848,7 +2848,7 @@ prolog_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 0, 1, rule, char)
     case 1: // Misc*
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new Misc_rule(this)
         this.repeats[1] = 0
       }
@@ -2856,7 +2856,7 @@ prolog_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_star(this, 1, 2, rule, char)
     case 2: // tmp_18?
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new tmp_18_rule(this)
         this.repeats[2] = 0
       }
@@ -2869,11 +2869,11 @@ prolog_rule.prototype.feed = function(char){
   return this
 }
 
-prolog_rule.prototype.reset = function(){
+prolog_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_18_rule(origin){
+function tmp_18_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -2883,18 +2883,18 @@ function tmp_18_rule(origin){
   this.repeats = []
 }
 
-tmp_18_rule.prototype.feed = function(char){
+tmp_18_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // doctypedecl
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new doctypedecl_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // Misc*
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new Misc_rule(this)
         this.repeats[1] = 0
       }
@@ -2907,11 +2907,11 @@ tmp_18_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_18_rule.prototype.reset = function(){
+tmp_18_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function XMLDecl_rule(origin){
+function XMLDecl_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -2921,25 +2921,25 @@ function XMLDecl_rule(origin){
   this.repeats = []
 }
 
-XMLDecl_rule.prototype.feed = function(char){
+XMLDecl_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '<?xml'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '<?xml')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // VersionInfo
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new VersionInfo_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // EncodingDecl?
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new EncodingDecl_rule(this)
         this.repeats[2] = 0
       }
@@ -2947,7 +2947,7 @@ XMLDecl_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 2, 3, rule, char)
     case 3: // SDDecl?
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new SDDecl_rule(this)
         this.repeats[3] = 0
       }
@@ -2955,7 +2955,7 @@ XMLDecl_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 3, 4, rule, char)
     case 4: // S?
-      if(! this.rules[4]){
+      if (! this.rules[4]) {
         this.rules[4] = new S_rule(this)
         this.repeats[4] = 0
       }
@@ -2963,7 +2963,7 @@ XMLDecl_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 4, 5, rule, char)
     case 5: // '?>'
-      if(! this.rules[5]){
+      if (! this.rules[5]) {
         this.rules[5] = new LITERAL(this, '?>')
       }
       rule = this.rules[5]
@@ -2975,11 +2975,11 @@ XMLDecl_rule.prototype.feed = function(char){
   return this
 }
 
-XMLDecl_rule.prototype.reset = function(){
+XMLDecl_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function VersionInfo_rule(origin){
+function VersionInfo_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -2989,32 +2989,32 @@ function VersionInfo_rule(origin){
   this.repeats = []
 }
 
-VersionInfo_rule.prototype.feed = function(char){
+VersionInfo_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // S
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new S_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // 'version'
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new LITERAL(this, 'version')
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // Eq
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new Eq_rule(this)
       }
       rule = this.rules[2]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 3, rule, char)
     case 3: // tmp_19
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new tmp_19_rule(this)
       }
       rule = this.rules[3]
@@ -3026,11 +3026,11 @@ VersionInfo_rule.prototype.feed = function(char){
   return this
 }
 
-VersionInfo_rule.prototype.reset = function(){
+VersionInfo_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_19_rule(origin){
+function tmp_19_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -3041,18 +3041,18 @@ function tmp_19_rule(origin){
   this.repeats = []
 }
 
-tmp_19_rule.prototype.feed = function(char){
+tmp_19_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_20
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new tmp_20_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // tmp_21
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new tmp_21_rule(this)
       }
       rule = this.rules[1]
@@ -3064,11 +3064,11 @@ tmp_19_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_19_rule.prototype.reset = function(){
+tmp_19_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_20_rule(origin){
+function tmp_20_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -3078,25 +3078,25 @@ function tmp_20_rule(origin){
   this.repeats = []
 }
 
-tmp_20_rule.prototype.feed = function(char){
+tmp_20_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // "'"
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '\'')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // VersionNum
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new VersionNum_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // "'"
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new LITERAL(this, '\'')
       }
       rule = this.rules[2]
@@ -3108,11 +3108,11 @@ tmp_20_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_20_rule.prototype.reset = function(){
+tmp_20_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_21_rule(origin){
+function tmp_21_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -3122,25 +3122,25 @@ function tmp_21_rule(origin){
   this.repeats = []
 }
 
-tmp_21_rule.prototype.feed = function(char){
+tmp_21_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '"'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '"')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // VersionNum
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new VersionNum_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // '"'
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new LITERAL(this, '"')
       }
       rule = this.rules[2]
@@ -3152,11 +3152,11 @@ tmp_21_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_21_rule.prototype.reset = function(){
+tmp_21_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function Eq_rule(origin){
+function Eq_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -3166,11 +3166,11 @@ function Eq_rule(origin){
   this.repeats = []
 }
 
-Eq_rule.prototype.feed = function(char){
+Eq_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // S?
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new S_rule(this)
         this.repeats[0] = 0
       }
@@ -3178,14 +3178,14 @@ Eq_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 0, 1, rule, char)
     case 1: // '='
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new LITERAL(this, '=')
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // S?
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new S_rule(this)
         this.repeats[2] = 0
       }
@@ -3198,11 +3198,11 @@ Eq_rule.prototype.feed = function(char){
   return this
 }
 
-Eq_rule.prototype.reset = function(){
+Eq_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function VersionNum_rule(origin){
+function VersionNum_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -3212,11 +3212,11 @@ function VersionNum_rule(origin){
   this.repeats = []
 }
 
-VersionNum_rule.prototype.feed = function(char){
+VersionNum_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '1.0'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '1.0')
       }
       rule = this.rules[0]
@@ -3228,11 +3228,11 @@ VersionNum_rule.prototype.feed = function(char){
   return this
 }
 
-VersionNum_rule.prototype.reset = function(){
+VersionNum_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function Misc_rule(origin){
+function Misc_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -3243,25 +3243,25 @@ function Misc_rule(origin){
   this.repeats = []
 }
 
-Misc_rule.prototype.feed = function(char){
+Misc_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // Comment
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new Comment_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // PI
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new PI_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 2, rule, char)
     case 2: // S
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new S_rule(this)
       }
       rule = this.rules[2]
@@ -3273,11 +3273,11 @@ Misc_rule.prototype.feed = function(char){
   return this
 }
 
-Misc_rule.prototype.reset = function(){
+Misc_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function doctypedecl_rule(origin){
+function doctypedecl_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -3287,32 +3287,32 @@ function doctypedecl_rule(origin){
   this.repeats = []
 }
 
-doctypedecl_rule.prototype.feed = function(char){
+doctypedecl_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '<!DOCTYPE'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '<!DOCTYPE')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // S
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new S_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // Name
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new Name_rule(this)
       }
       rule = this.rules[2]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 3, rule, char)
     case 3: // tmp_23?
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new tmp_23_rule(this)
         this.repeats[3] = 0
       }
@@ -3320,7 +3320,7 @@ doctypedecl_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 3, 4, rule, char)
     case 4: // S?
-      if(! this.rules[4]){
+      if (! this.rules[4]) {
         this.rules[4] = new S_rule(this)
         this.repeats[4] = 0
       }
@@ -3328,7 +3328,7 @@ doctypedecl_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 4, 5, rule, char)
     case 5: // tmp_22?
-      if(! this.rules[5]){
+      if (! this.rules[5]) {
         this.rules[5] = new tmp_22_rule(this)
         this.repeats[5] = 0
       }
@@ -3336,7 +3336,7 @@ doctypedecl_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 5, 6, rule, char)
     case 6: // '>'
-      if(! this.rules[6]){
+      if (! this.rules[6]) {
         this.rules[6] = new LITERAL(this, '>')
       }
       rule = this.rules[6]
@@ -3348,11 +3348,11 @@ doctypedecl_rule.prototype.feed = function(char){
   return this
 }
 
-doctypedecl_rule.prototype.reset = function(){
+doctypedecl_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_22_rule(origin){
+function tmp_22_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -3362,39 +3362,39 @@ function tmp_22_rule(origin){
   this.repeats = []
 }
 
-tmp_22_rule.prototype.feed = function(char){
+tmp_22_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '['
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '[')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // start_intSubset
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new start_intSubset_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // intSubset
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new intSubset_rule(this)
       }
       rule = this.rules[2]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 3, rule, char)
     case 3: // ']'
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new LITERAL(this, ']')
       }
       rule = this.rules[3]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 4, rule, char)
     case 4: // S?
-      if(! this.rules[4]){
+      if (! this.rules[4]) {
         this.rules[4] = new S_rule(this)
         this.repeats[4] = 0
       }
@@ -3407,11 +3407,11 @@ tmp_22_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_22_rule.prototype.reset = function(){
+tmp_22_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_23_rule(origin){
+function tmp_23_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -3421,18 +3421,18 @@ function tmp_23_rule(origin){
   this.repeats = []
 }
 
-tmp_23_rule.prototype.feed = function(char){
+tmp_23_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // S
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new S_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // ExternalID
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new ExternalID_rule(this)
       }
       rule = this.rules[1]
@@ -3444,11 +3444,11 @@ tmp_23_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_23_rule.prototype.reset = function(){
+tmp_23_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function DeclSep_rule(origin){
+function DeclSep_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -3459,18 +3459,18 @@ function DeclSep_rule(origin){
   this.repeats = []
 }
 
-DeclSep_rule.prototype.feed = function(char){
+DeclSep_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // PEReference
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new PEReference_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // S
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new S_rule(this)
       }
       rule = this.rules[1]
@@ -3482,11 +3482,11 @@ DeclSep_rule.prototype.feed = function(char){
   return this
 }
 
-DeclSep_rule.prototype.reset = function(){
+DeclSep_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function intSubset_rule(origin){
+function intSubset_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -3496,11 +3496,11 @@ function intSubset_rule(origin){
   this.repeats = []
 }
 
-intSubset_rule.prototype.feed = function(char){
+intSubset_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_24*
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new tmp_24_rule(this)
         this.repeats[0] = 0
       }
@@ -3513,11 +3513,11 @@ intSubset_rule.prototype.feed = function(char){
   return this
 }
 
-intSubset_rule.prototype.reset = function(){
+intSubset_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_24_rule(origin){
+function tmp_24_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -3528,18 +3528,18 @@ function tmp_24_rule(origin){
   this.repeats = []
 }
 
-tmp_24_rule.prototype.feed = function(char){
+tmp_24_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // markupdecl
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new markupdecl_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // DeclSep
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new DeclSep_rule(this)
       }
       rule = this.rules[1]
@@ -3551,11 +3551,11 @@ tmp_24_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_24_rule.prototype.reset = function(){
+tmp_24_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function markupdecl_rule(origin){
+function markupdecl_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -3566,46 +3566,46 @@ function markupdecl_rule(origin){
   this.repeats = []
 }
 
-markupdecl_rule.prototype.feed = function(char){
+markupdecl_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // elementdecl
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new elementdecl_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // AttlistDecl
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new AttlistDecl_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 2, rule, char)
     case 2: // EntityDecl
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new EntityDecl_rule(this)
       }
       rule = this.rules[2]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 3, rule, char)
     case 3: // NotationDecl
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new NotationDecl_rule(this)
       }
       rule = this.rules[3]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 4, rule, char)
     case 4: // PI
-      if(! this.rules[4]){
+      if (! this.rules[4]) {
         this.rules[4] = new PI_rule(this)
       }
       rule = this.rules[4]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 5, rule, char)
     case 5: // Comment
-      if(! this.rules[5]){
+      if (! this.rules[5]) {
         this.rules[5] = new Comment_rule(this)
       }
       rule = this.rules[5]
@@ -3617,11 +3617,11 @@ markupdecl_rule.prototype.feed = function(char){
   return this
 }
 
-markupdecl_rule.prototype.reset = function(){
+markupdecl_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function extSubset_rule(origin){
+function extSubset_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -3631,11 +3631,11 @@ function extSubset_rule(origin){
   this.repeats = []
 }
 
-extSubset_rule.prototype.feed = function(char){
+extSubset_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // TextDecl?
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new TextDecl_rule(this)
         this.repeats[0] = 0
       }
@@ -3643,7 +3643,7 @@ extSubset_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 0, 1, rule, char)
     case 1: // extSubsetDecl
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new extSubsetDecl_rule(this)
       }
       rule = this.rules[1]
@@ -3655,11 +3655,11 @@ extSubset_rule.prototype.feed = function(char){
   return this
 }
 
-extSubset_rule.prototype.reset = function(){
+extSubset_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function extSubsetDecl_rule(origin){
+function extSubsetDecl_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -3669,11 +3669,11 @@ function extSubsetDecl_rule(origin){
   this.repeats = []
 }
 
-extSubsetDecl_rule.prototype.feed = function(char){
+extSubsetDecl_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_25*
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new tmp_25_rule(this)
         this.repeats[0] = 0
       }
@@ -3686,11 +3686,11 @@ extSubsetDecl_rule.prototype.feed = function(char){
   return this
 }
 
-extSubsetDecl_rule.prototype.reset = function(){
+extSubsetDecl_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_25_rule(origin){
+function tmp_25_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -3701,25 +3701,25 @@ function tmp_25_rule(origin){
   this.repeats = []
 }
 
-tmp_25_rule.prototype.feed = function(char){
+tmp_25_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // markupdecl
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new markupdecl_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // conditionalSect
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new conditionalSect_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 2, rule, char)
     case 2: // DeclSep
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new DeclSep_rule(this)
       }
       rule = this.rules[2]
@@ -3731,11 +3731,11 @@ tmp_25_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_25_rule.prototype.reset = function(){
+tmp_25_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function SDDecl_rule(origin){
+function SDDecl_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -3745,32 +3745,32 @@ function SDDecl_rule(origin){
   this.repeats = []
 }
 
-SDDecl_rule.prototype.feed = function(char){
+SDDecl_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // S
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new S_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // 'standalone'
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new LITERAL(this, 'standalone')
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // Eq
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new Eq_rule(this)
       }
       rule = this.rules[2]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 3, rule, char)
     case 3: // tmp_30
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new tmp_30_rule(this)
       }
       rule = this.rules[3]
@@ -3782,11 +3782,11 @@ SDDecl_rule.prototype.feed = function(char){
   return this
 }
 
-SDDecl_rule.prototype.reset = function(){
+SDDecl_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_26_rule(origin){
+function tmp_26_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -3797,18 +3797,18 @@ function tmp_26_rule(origin){
   this.repeats = []
 }
 
-tmp_26_rule.prototype.feed = function(char){
+tmp_26_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // 'yes'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, 'yes')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // 'no'
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new LITERAL(this, 'no')
       }
       rule = this.rules[1]
@@ -3820,11 +3820,11 @@ tmp_26_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_26_rule.prototype.reset = function(){
+tmp_26_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_27_rule(origin){
+function tmp_27_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -3835,18 +3835,18 @@ function tmp_27_rule(origin){
   this.repeats = []
 }
 
-tmp_27_rule.prototype.feed = function(char){
+tmp_27_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // 'yes'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, 'yes')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // 'no'
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new LITERAL(this, 'no')
       }
       rule = this.rules[1]
@@ -3858,11 +3858,11 @@ tmp_27_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_27_rule.prototype.reset = function(){
+tmp_27_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_28_rule(origin){
+function tmp_28_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -3872,25 +3872,25 @@ function tmp_28_rule(origin){
   this.repeats = []
 }
 
-tmp_28_rule.prototype.feed = function(char){
+tmp_28_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '"'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '"')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // tmp_26
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new tmp_26_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // '"'
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new LITERAL(this, '"')
       }
       rule = this.rules[2]
@@ -3902,11 +3902,11 @@ tmp_28_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_28_rule.prototype.reset = function(){
+tmp_28_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_29_rule(origin){
+function tmp_29_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -3916,25 +3916,25 @@ function tmp_29_rule(origin){
   this.repeats = []
 }
 
-tmp_29_rule.prototype.feed = function(char){
+tmp_29_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // "'"
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '\'')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // tmp_27
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new tmp_27_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // "'"
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new LITERAL(this, '\'')
       }
       rule = this.rules[2]
@@ -3946,11 +3946,11 @@ tmp_29_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_29_rule.prototype.reset = function(){
+tmp_29_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_30_rule(origin){
+function tmp_30_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -3961,18 +3961,18 @@ function tmp_30_rule(origin){
   this.repeats = []
 }
 
-tmp_30_rule.prototype.feed = function(char){
+tmp_30_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_29
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new tmp_29_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // tmp_28
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new tmp_28_rule(this)
       }
       rule = this.rules[1]
@@ -3984,11 +3984,11 @@ tmp_30_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_30_rule.prototype.reset = function(){
+tmp_30_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function element_rule(origin){
+function element_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -3999,18 +3999,18 @@ function element_rule(origin){
   this.repeats = []
 }
 
-element_rule.prototype.feed = function(char){
+element_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // EmptyElemTag
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new EmptyElemTag_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // tmp_31
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new tmp_31_rule(this)
       }
       rule = this.rules[1]
@@ -4022,11 +4022,11 @@ element_rule.prototype.feed = function(char){
   return this
 }
 
-element_rule.prototype.reset = function(){
+element_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_31_rule(origin){
+function tmp_31_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -4036,25 +4036,25 @@ function tmp_31_rule(origin){
   this.repeats = []
 }
 
-tmp_31_rule.prototype.feed = function(char){
+tmp_31_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // STag
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new STag_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // content
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new content_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // ETag
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new ETag_rule(this)
       }
       rule = this.rules[2]
@@ -4066,11 +4066,11 @@ tmp_31_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_31_rule.prototype.reset = function(){
+tmp_31_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function STag_rule(origin){
+function STag_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -4080,25 +4080,25 @@ function STag_rule(origin){
   this.repeats = []
 }
 
-STag_rule.prototype.feed = function(char){
+STag_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '<'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '<')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // Name
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new Name_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // tmp_32*
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new tmp_32_rule(this)
         this.repeats[2] = 0
       }
@@ -4106,7 +4106,7 @@ STag_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_star(this, 2, 3, rule, char)
     case 3: // S?
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new S_rule(this)
         this.repeats[3] = 0
       }
@@ -4114,7 +4114,7 @@ STag_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 3, 4, rule, char)
     case 4: // '>'
-      if(! this.rules[4]){
+      if (! this.rules[4]) {
         this.rules[4] = new LITERAL(this, '>')
       }
       rule = this.rules[4]
@@ -4126,11 +4126,11 @@ STag_rule.prototype.feed = function(char){
   return this
 }
 
-STag_rule.prototype.reset = function(){
+STag_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_32_rule(origin){
+function tmp_32_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -4140,18 +4140,18 @@ function tmp_32_rule(origin){
   this.repeats = []
 }
 
-tmp_32_rule.prototype.feed = function(char){
+tmp_32_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // S
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new S_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // Attribute
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new Attribute_rule(this)
       }
       rule = this.rules[1]
@@ -4163,11 +4163,11 @@ tmp_32_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_32_rule.prototype.reset = function(){
+tmp_32_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function Attribute_rule(origin){
+function Attribute_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -4177,25 +4177,25 @@ function Attribute_rule(origin){
   this.repeats = []
 }
 
-Attribute_rule.prototype.feed = function(char){
+Attribute_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // Name
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new Name_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // Eq
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new Eq_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // AttValue
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new AttValue_rule(this)
       }
       rule = this.rules[2]
@@ -4207,11 +4207,11 @@ Attribute_rule.prototype.feed = function(char){
   return this
 }
 
-Attribute_rule.prototype.reset = function(){
+Attribute_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function ETag_rule(origin){
+function ETag_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -4221,25 +4221,25 @@ function ETag_rule(origin){
   this.repeats = []
 }
 
-ETag_rule.prototype.feed = function(char){
+ETag_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '</'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '</')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // Name
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new Name_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // S?
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new S_rule(this)
         this.repeats[2] = 0
       }
@@ -4247,7 +4247,7 @@ ETag_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 2, 3, rule, char)
     case 3: // '>'
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new LITERAL(this, '>')
       }
       rule = this.rules[3]
@@ -4259,11 +4259,11 @@ ETag_rule.prototype.feed = function(char){
   return this
 }
 
-ETag_rule.prototype.reset = function(){
+ETag_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function content_rule(origin){
+function content_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -4273,11 +4273,11 @@ function content_rule(origin){
   this.repeats = []
 }
 
-content_rule.prototype.feed = function(char){
+content_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // CharData?
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new CharData_rule(this)
         this.repeats[0] = 0
       }
@@ -4285,7 +4285,7 @@ content_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 0, 1, rule, char)
     case 1: // tmp_34*
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new tmp_34_rule(this)
         this.repeats[1] = 0
       }
@@ -4298,11 +4298,11 @@ content_rule.prototype.feed = function(char){
   return this
 }
 
-content_rule.prototype.reset = function(){
+content_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_33_rule(origin){
+function tmp_33_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -4313,39 +4313,39 @@ function tmp_33_rule(origin){
   this.repeats = []
 }
 
-tmp_33_rule.prototype.feed = function(char){
+tmp_33_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // element
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new element_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // Reference
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new Reference_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 2, rule, char)
     case 2: // CDSect
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new CDSect_rule(this)
       }
       rule = this.rules[2]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 3, rule, char)
     case 3: // PI
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new PI_rule(this)
       }
       rule = this.rules[3]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 4, rule, char)
     case 4: // Comment
-      if(! this.rules[4]){
+      if (! this.rules[4]) {
         this.rules[4] = new Comment_rule(this)
       }
       rule = this.rules[4]
@@ -4357,11 +4357,11 @@ tmp_33_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_33_rule.prototype.reset = function(){
+tmp_33_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_34_rule(origin){
+function tmp_34_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -4371,18 +4371,18 @@ function tmp_34_rule(origin){
   this.repeats = []
 }
 
-tmp_34_rule.prototype.feed = function(char){
+tmp_34_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_33
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new tmp_33_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // CharData?
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new CharData_rule(this)
         this.repeats[1] = 0
       }
@@ -4395,11 +4395,11 @@ tmp_34_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_34_rule.prototype.reset = function(){
+tmp_34_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function EmptyElemTag_rule(origin){
+function EmptyElemTag_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -4409,25 +4409,25 @@ function EmptyElemTag_rule(origin){
   this.repeats = []
 }
 
-EmptyElemTag_rule.prototype.feed = function(char){
+EmptyElemTag_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '<'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '<')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // Name
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new Name_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // tmp_35*
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new tmp_35_rule(this)
         this.repeats[2] = 0
       }
@@ -4435,7 +4435,7 @@ EmptyElemTag_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_star(this, 2, 3, rule, char)
     case 3: // S?
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new S_rule(this)
         this.repeats[3] = 0
       }
@@ -4443,7 +4443,7 @@ EmptyElemTag_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 3, 4, rule, char)
     case 4: // '/>'
-      if(! this.rules[4]){
+      if (! this.rules[4]) {
         this.rules[4] = new LITERAL(this, '/>')
       }
       rule = this.rules[4]
@@ -4455,11 +4455,11 @@ EmptyElemTag_rule.prototype.feed = function(char){
   return this
 }
 
-EmptyElemTag_rule.prototype.reset = function(){
+EmptyElemTag_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_35_rule(origin){
+function tmp_35_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -4469,18 +4469,18 @@ function tmp_35_rule(origin){
   this.repeats = []
 }
 
-tmp_35_rule.prototype.feed = function(char){
+tmp_35_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // S
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new S_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // Attribute
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new Attribute_rule(this)
       }
       rule = this.rules[1]
@@ -4492,11 +4492,11 @@ tmp_35_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_35_rule.prototype.reset = function(){
+tmp_35_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function elementdecl_rule(origin){
+function elementdecl_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -4506,46 +4506,46 @@ function elementdecl_rule(origin){
   this.repeats = []
 }
 
-elementdecl_rule.prototype.feed = function(char){
+elementdecl_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '<!ELEMENT'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '<!ELEMENT')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // S
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new S_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // Name
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new Name_rule(this)
       }
       rule = this.rules[2]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 3, rule, char)
     case 3: // S
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new S_rule(this)
       }
       rule = this.rules[3]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 4, rule, char)
     case 4: // contentspec
-      if(! this.rules[4]){
+      if (! this.rules[4]) {
         this.rules[4] = new contentspec_rule(this)
       }
       rule = this.rules[4]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 5, rule, char)
     case 5: // S?
-      if(! this.rules[5]){
+      if (! this.rules[5]) {
         this.rules[5] = new S_rule(this)
         this.repeats[5] = 0
       }
@@ -4553,7 +4553,7 @@ elementdecl_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 5, 6, rule, char)
     case 6: // '>'
-      if(! this.rules[6]){
+      if (! this.rules[6]) {
         this.rules[6] = new LITERAL(this, '>')
       }
       rule = this.rules[6]
@@ -4565,11 +4565,11 @@ elementdecl_rule.prototype.feed = function(char){
   return this
 }
 
-elementdecl_rule.prototype.reset = function(){
+elementdecl_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function contentspec_rule(origin){
+function contentspec_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -4580,32 +4580,32 @@ function contentspec_rule(origin){
   this.repeats = []
 }
 
-contentspec_rule.prototype.feed = function(char){
+contentspec_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // 'EMPTY'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, 'EMPTY')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // 'ANY'
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new LITERAL(this, 'ANY')
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 2, rule, char)
     case 2: // Mixed
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new Mixed_rule(this)
       }
       rule = this.rules[2]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 3, rule, char)
     case 3: // children
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new children_rule(this)
       }
       rule = this.rules[3]
@@ -4617,11 +4617,11 @@ contentspec_rule.prototype.feed = function(char){
   return this
 }
 
-contentspec_rule.prototype.reset = function(){
+contentspec_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function children_rule(origin){
+function children_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -4631,18 +4631,18 @@ function children_rule(origin){
   this.repeats = []
 }
 
-children_rule.prototype.feed = function(char){
+children_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_37
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new tmp_37_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // tmp_36?
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new tmp_36_rule(this)
         this.repeats[1] = 0
       }
@@ -4655,11 +4655,11 @@ children_rule.prototype.feed = function(char){
   return this
 }
 
-children_rule.prototype.reset = function(){
+children_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_36_rule(origin){
+function tmp_36_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -4670,25 +4670,25 @@ function tmp_36_rule(origin){
   this.repeats = []
 }
 
-tmp_36_rule.prototype.feed = function(char){
+tmp_36_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '?'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '?')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // '*'
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new LITERAL(this, '*')
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 2, rule, char)
     case 2: // '+'
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new LITERAL(this, '+')
       }
       rule = this.rules[2]
@@ -4700,11 +4700,11 @@ tmp_36_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_36_rule.prototype.reset = function(){
+tmp_36_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_37_rule(origin){
+function tmp_37_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -4715,18 +4715,18 @@ function tmp_37_rule(origin){
   this.repeats = []
 }
 
-tmp_37_rule.prototype.feed = function(char){
+tmp_37_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // choice
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new choice_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // seq
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new seq_rule(this)
       }
       rule = this.rules[1]
@@ -4738,11 +4738,11 @@ tmp_37_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_37_rule.prototype.reset = function(){
+tmp_37_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function cp_rule(origin){
+function cp_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -4752,18 +4752,18 @@ function cp_rule(origin){
   this.repeats = []
 }
 
-cp_rule.prototype.feed = function(char){
+cp_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_39
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new tmp_39_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // tmp_38?
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new tmp_38_rule(this)
         this.repeats[1] = 0
       }
@@ -4776,11 +4776,11 @@ cp_rule.prototype.feed = function(char){
   return this
 }
 
-cp_rule.prototype.reset = function(){
+cp_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_38_rule(origin){
+function tmp_38_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -4791,25 +4791,25 @@ function tmp_38_rule(origin){
   this.repeats = []
 }
 
-tmp_38_rule.prototype.feed = function(char){
+tmp_38_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '?'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '?')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // '*'
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new LITERAL(this, '*')
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 2, rule, char)
     case 2: // '+'
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new LITERAL(this, '+')
       }
       rule = this.rules[2]
@@ -4821,11 +4821,11 @@ tmp_38_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_38_rule.prototype.reset = function(){
+tmp_38_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_39_rule(origin){
+function tmp_39_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -4836,25 +4836,25 @@ function tmp_39_rule(origin){
   this.repeats = []
 }
 
-tmp_39_rule.prototype.feed = function(char){
+tmp_39_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // Name
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new Name_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // choice
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new choice_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 2, rule, char)
     case 2: // seq
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new seq_rule(this)
       }
       rule = this.rules[2]
@@ -4866,11 +4866,11 @@ tmp_39_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_39_rule.prototype.reset = function(){
+tmp_39_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function choice_rule(origin){
+function choice_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -4880,18 +4880,18 @@ function choice_rule(origin){
   this.repeats = []
 }
 
-choice_rule.prototype.feed = function(char){
+choice_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '('
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '(')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // S?
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new S_rule(this)
         this.repeats[1] = 0
       }
@@ -4899,14 +4899,14 @@ choice_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 1, 2, rule, char)
     case 2: // cp
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new cp_rule(this)
       }
       rule = this.rules[2]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 3, rule, char)
     case 3: // tmp_40+
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new tmp_40_rule(this)
         this.repeats[3] = 0
       }
@@ -4914,7 +4914,7 @@ choice_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_plus(this, 3,4, rule, char)
     case 4: // S?
-      if(! this.rules[4]){
+      if (! this.rules[4]) {
         this.rules[4] = new S_rule(this)
         this.repeats[4] = 0
       }
@@ -4922,7 +4922,7 @@ choice_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 4, 5, rule, char)
     case 5: // ')'
-      if(! this.rules[5]){
+      if (! this.rules[5]) {
         this.rules[5] = new LITERAL(this, ')')
       }
       rule = this.rules[5]
@@ -4934,11 +4934,11 @@ choice_rule.prototype.feed = function(char){
   return this
 }
 
-choice_rule.prototype.reset = function(){
+choice_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_40_rule(origin){
+function tmp_40_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -4948,11 +4948,11 @@ function tmp_40_rule(origin){
   this.repeats = []
 }
 
-tmp_40_rule.prototype.feed = function(char){
+tmp_40_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // S?
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new S_rule(this)
         this.repeats[0] = 0
       }
@@ -4960,14 +4960,14 @@ tmp_40_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 0, 1, rule, char)
     case 1: // '|'
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new LITERAL(this, '|')
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // S?
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new S_rule(this)
         this.repeats[2] = 0
       }
@@ -4975,7 +4975,7 @@ tmp_40_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 2, 3, rule, char)
     case 3: // cp
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new cp_rule(this)
       }
       rule = this.rules[3]
@@ -4987,11 +4987,11 @@ tmp_40_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_40_rule.prototype.reset = function(){
+tmp_40_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function seq_rule(origin){
+function seq_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -5001,18 +5001,18 @@ function seq_rule(origin){
   this.repeats = []
 }
 
-seq_rule.prototype.feed = function(char){
+seq_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '('
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '(')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // S?
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new S_rule(this)
         this.repeats[1] = 0
       }
@@ -5020,14 +5020,14 @@ seq_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 1, 2, rule, char)
     case 2: // cp
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new cp_rule(this)
       }
       rule = this.rules[2]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 3, rule, char)
     case 3: // tmp_41*
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new tmp_41_rule(this)
         this.repeats[3] = 0
       }
@@ -5035,7 +5035,7 @@ seq_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_star(this, 3, 4, rule, char)
     case 4: // S?
-      if(! this.rules[4]){
+      if (! this.rules[4]) {
         this.rules[4] = new S_rule(this)
         this.repeats[4] = 0
       }
@@ -5043,7 +5043,7 @@ seq_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 4, 5, rule, char)
     case 5: // ')'
-      if(! this.rules[5]){
+      if (! this.rules[5]) {
         this.rules[5] = new LITERAL(this, ')')
       }
       rule = this.rules[5]
@@ -5055,11 +5055,11 @@ seq_rule.prototype.feed = function(char){
   return this
 }
 
-seq_rule.prototype.reset = function(){
+seq_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_41_rule(origin){
+function tmp_41_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -5069,11 +5069,11 @@ function tmp_41_rule(origin){
   this.repeats = []
 }
 
-tmp_41_rule.prototype.feed = function(char){
+tmp_41_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // S?
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new S_rule(this)
         this.repeats[0] = 0
       }
@@ -5081,14 +5081,14 @@ tmp_41_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 0, 1, rule, char)
     case 1: // ','
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new LITERAL(this, ',')
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // S?
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new S_rule(this)
         this.repeats[2] = 0
       }
@@ -5096,7 +5096,7 @@ tmp_41_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 2, 3, rule, char)
     case 3: // cp
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new cp_rule(this)
       }
       rule = this.rules[3]
@@ -5108,11 +5108,11 @@ tmp_41_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_41_rule.prototype.reset = function(){
+tmp_41_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function Mixed_rule(origin){
+function Mixed_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -5123,18 +5123,18 @@ function Mixed_rule(origin){
   this.repeats = []
 }
 
-Mixed_rule.prototype.feed = function(char){
+Mixed_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_43
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new tmp_43_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // tmp_44
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new tmp_44_rule(this)
       }
       rule = this.rules[1]
@@ -5146,11 +5146,11 @@ Mixed_rule.prototype.feed = function(char){
   return this
 }
 
-Mixed_rule.prototype.reset = function(){
+Mixed_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_42_rule(origin){
+function tmp_42_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -5160,11 +5160,11 @@ function tmp_42_rule(origin){
   this.repeats = []
 }
 
-tmp_42_rule.prototype.feed = function(char){
+tmp_42_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // S?
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new S_rule(this)
         this.repeats[0] = 0
       }
@@ -5172,14 +5172,14 @@ tmp_42_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 0, 1, rule, char)
     case 1: // '|'
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new LITERAL(this, '|')
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // S?
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new S_rule(this)
         this.repeats[2] = 0
       }
@@ -5187,7 +5187,7 @@ tmp_42_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 2, 3, rule, char)
     case 3: // Name
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new Name_rule(this)
       }
       rule = this.rules[3]
@@ -5199,11 +5199,11 @@ tmp_42_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_42_rule.prototype.reset = function(){
+tmp_42_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_43_rule(origin){
+function tmp_43_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -5213,18 +5213,18 @@ function tmp_43_rule(origin){
   this.repeats = []
 }
 
-tmp_43_rule.prototype.feed = function(char){
+tmp_43_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '('
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '(')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // S?
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new S_rule(this)
         this.repeats[1] = 0
       }
@@ -5232,14 +5232,14 @@ tmp_43_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 1, 2, rule, char)
     case 2: // '#PCDATA'
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new LITERAL(this, '#PCDATA')
       }
       rule = this.rules[2]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 3, rule, char)
     case 3: // tmp_42*
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new tmp_42_rule(this)
         this.repeats[3] = 0
       }
@@ -5247,7 +5247,7 @@ tmp_43_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_star(this, 3, 4, rule, char)
     case 4: // S?
-      if(! this.rules[4]){
+      if (! this.rules[4]) {
         this.rules[4] = new S_rule(this)
         this.repeats[4] = 0
       }
@@ -5255,7 +5255,7 @@ tmp_43_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 4, 5, rule, char)
     case 5: // ')*'
-      if(! this.rules[5]){
+      if (! this.rules[5]) {
         this.rules[5] = new LITERAL(this, ')*')
       }
       rule = this.rules[5]
@@ -5267,11 +5267,11 @@ tmp_43_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_43_rule.prototype.reset = function(){
+tmp_43_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_44_rule(origin){
+function tmp_44_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -5281,18 +5281,18 @@ function tmp_44_rule(origin){
   this.repeats = []
 }
 
-tmp_44_rule.prototype.feed = function(char){
+tmp_44_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '('
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '(')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // S?
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new S_rule(this)
         this.repeats[1] = 0
       }
@@ -5300,14 +5300,14 @@ tmp_44_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 1, 2, rule, char)
     case 2: // '#PCDATA'
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new LITERAL(this, '#PCDATA')
       }
       rule = this.rules[2]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 3, rule, char)
     case 3: // S?
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new S_rule(this)
         this.repeats[3] = 0
       }
@@ -5315,7 +5315,7 @@ tmp_44_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 3, 4, rule, char)
     case 4: // ')'
-      if(! this.rules[4]){
+      if (! this.rules[4]) {
         this.rules[4] = new LITERAL(this, ')')
       }
       rule = this.rules[4]
@@ -5327,11 +5327,11 @@ tmp_44_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_44_rule.prototype.reset = function(){
+tmp_44_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function AttlistDecl_rule(origin){
+function AttlistDecl_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -5341,32 +5341,32 @@ function AttlistDecl_rule(origin){
   this.repeats = []
 }
 
-AttlistDecl_rule.prototype.feed = function(char){
+AttlistDecl_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '<!ATTLIST'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '<!ATTLIST')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // S
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new S_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // Name
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new Name_rule(this)
       }
       rule = this.rules[2]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 3, rule, char)
     case 3: // AttDef*
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new AttDef_rule(this)
         this.repeats[3] = 0
       }
@@ -5374,7 +5374,7 @@ AttlistDecl_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_star(this, 3, 4, rule, char)
     case 4: // S?
-      if(! this.rules[4]){
+      if (! this.rules[4]) {
         this.rules[4] = new S_rule(this)
         this.repeats[4] = 0
       }
@@ -5382,7 +5382,7 @@ AttlistDecl_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 4, 5, rule, char)
     case 5: // '>'
-      if(! this.rules[5]){
+      if (! this.rules[5]) {
         this.rules[5] = new LITERAL(this, '>')
       }
       rule = this.rules[5]
@@ -5394,11 +5394,11 @@ AttlistDecl_rule.prototype.feed = function(char){
   return this
 }
 
-AttlistDecl_rule.prototype.reset = function(){
+AttlistDecl_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function AttDef_rule(origin){
+function AttDef_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -5408,46 +5408,46 @@ function AttDef_rule(origin){
   this.repeats = []
 }
 
-AttDef_rule.prototype.feed = function(char){
+AttDef_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // S
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new S_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // Name
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new Name_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // S
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new S_rule(this)
       }
       rule = this.rules[2]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 3, rule, char)
     case 3: // AttType
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new AttType_rule(this)
       }
       rule = this.rules[3]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 4, rule, char)
     case 4: // S
-      if(! this.rules[4]){
+      if (! this.rules[4]) {
         this.rules[4] = new S_rule(this)
       }
       rule = this.rules[4]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 5, rule, char)
     case 5: // DefaultDecl
-      if(! this.rules[5]){
+      if (! this.rules[5]) {
         this.rules[5] = new DefaultDecl_rule(this)
       }
       rule = this.rules[5]
@@ -5459,11 +5459,11 @@ AttDef_rule.prototype.feed = function(char){
   return this
 }
 
-AttDef_rule.prototype.reset = function(){
+AttDef_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function AttType_rule(origin){
+function AttType_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -5474,25 +5474,25 @@ function AttType_rule(origin){
   this.repeats = []
 }
 
-AttType_rule.prototype.feed = function(char){
+AttType_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // StringType
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new StringType_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // TokenizedType
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new TokenizedType_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 2, rule, char)
     case 2: // EnumeratedType
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new EnumeratedType_rule(this)
       }
       rule = this.rules[2]
@@ -5504,11 +5504,11 @@ AttType_rule.prototype.feed = function(char){
   return this
 }
 
-AttType_rule.prototype.reset = function(){
+AttType_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function StringType_rule(origin){
+function StringType_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -5518,11 +5518,11 @@ function StringType_rule(origin){
   this.repeats = []
 }
 
-StringType_rule.prototype.feed = function(char){
+StringType_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // 'CDATA'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, 'CDATA')
       }
       rule = this.rules[0]
@@ -5534,11 +5534,11 @@ StringType_rule.prototype.feed = function(char){
   return this
 }
 
-StringType_rule.prototype.reset = function(){
+StringType_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function TokenizedType_rule(origin){
+function TokenizedType_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -5549,53 +5549,53 @@ function TokenizedType_rule(origin){
   this.repeats = []
 }
 
-TokenizedType_rule.prototype.feed = function(char){
+TokenizedType_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // 'ID'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, 'ID')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // 'IDREF'
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new LITERAL(this, 'IDREF')
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 2, rule, char)
     case 2: // 'IDREFS'
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new LITERAL(this, 'IDREFS')
       }
       rule = this.rules[2]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 3, rule, char)
     case 3: // 'ENTITY'
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new LITERAL(this, 'ENTITY')
       }
       rule = this.rules[3]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 4, rule, char)
     case 4: // 'ENTITIES'
-      if(! this.rules[4]){
+      if (! this.rules[4]) {
         this.rules[4] = new LITERAL(this, 'ENTITIES')
       }
       rule = this.rules[4]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 5, rule, char)
     case 5: // 'NMTOKEN'
-      if(! this.rules[5]){
+      if (! this.rules[5]) {
         this.rules[5] = new LITERAL(this, 'NMTOKEN')
       }
       rule = this.rules[5]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 6, rule, char)
     case 6: // 'NMTOKENS'
-      if(! this.rules[6]){
+      if (! this.rules[6]) {
         this.rules[6] = new LITERAL(this, 'NMTOKENS')
       }
       rule = this.rules[6]
@@ -5607,11 +5607,11 @@ TokenizedType_rule.prototype.feed = function(char){
   return this
 }
 
-TokenizedType_rule.prototype.reset = function(){
+TokenizedType_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function EnumeratedType_rule(origin){
+function EnumeratedType_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -5622,18 +5622,18 @@ function EnumeratedType_rule(origin){
   this.repeats = []
 }
 
-EnumeratedType_rule.prototype.feed = function(char){
+EnumeratedType_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // NotationType
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new NotationType_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // Enumeration
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new Enumeration_rule(this)
       }
       rule = this.rules[1]
@@ -5645,11 +5645,11 @@ EnumeratedType_rule.prototype.feed = function(char){
   return this
 }
 
-EnumeratedType_rule.prototype.reset = function(){
+EnumeratedType_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function NotationType_rule(origin){
+function NotationType_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -5659,32 +5659,32 @@ function NotationType_rule(origin){
   this.repeats = []
 }
 
-NotationType_rule.prototype.feed = function(char){
+NotationType_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // 'NOTATION'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, 'NOTATION')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // S
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new S_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // '('
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new LITERAL(this, '(')
       }
       rule = this.rules[2]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 3, rule, char)
     case 3: // S?
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new S_rule(this)
         this.repeats[3] = 0
       }
@@ -5692,14 +5692,14 @@ NotationType_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 3, 4, rule, char)
     case 4: // Name
-      if(! this.rules[4]){
+      if (! this.rules[4]) {
         this.rules[4] = new Name_rule(this)
       }
       rule = this.rules[4]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 5, rule, char)
     case 5: // tmp_45*
-      if(! this.rules[5]){
+      if (! this.rules[5]) {
         this.rules[5] = new tmp_45_rule(this)
         this.repeats[5] = 0
       }
@@ -5707,7 +5707,7 @@ NotationType_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_star(this, 5, 6, rule, char)
     case 6: // S?
-      if(! this.rules[6]){
+      if (! this.rules[6]) {
         this.rules[6] = new S_rule(this)
         this.repeats[6] = 0
       }
@@ -5715,7 +5715,7 @@ NotationType_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 6, 7, rule, char)
     case 7: // ')'
-      if(! this.rules[7]){
+      if (! this.rules[7]) {
         this.rules[7] = new LITERAL(this, ')')
       }
       rule = this.rules[7]
@@ -5727,11 +5727,11 @@ NotationType_rule.prototype.feed = function(char){
   return this
 }
 
-NotationType_rule.prototype.reset = function(){
+NotationType_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_45_rule(origin){
+function tmp_45_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -5741,11 +5741,11 @@ function tmp_45_rule(origin){
   this.repeats = []
 }
 
-tmp_45_rule.prototype.feed = function(char){
+tmp_45_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // S?
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new S_rule(this)
         this.repeats[0] = 0
       }
@@ -5753,14 +5753,14 @@ tmp_45_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 0, 1, rule, char)
     case 1: // '|'
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new LITERAL(this, '|')
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // S?
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new S_rule(this)
         this.repeats[2] = 0
       }
@@ -5768,7 +5768,7 @@ tmp_45_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 2, 3, rule, char)
     case 3: // Name
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new Name_rule(this)
       }
       rule = this.rules[3]
@@ -5780,11 +5780,11 @@ tmp_45_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_45_rule.prototype.reset = function(){
+tmp_45_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function Enumeration_rule(origin){
+function Enumeration_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -5794,18 +5794,18 @@ function Enumeration_rule(origin){
   this.repeats = []
 }
 
-Enumeration_rule.prototype.feed = function(char){
+Enumeration_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '('
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '(')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // S?
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new S_rule(this)
         this.repeats[1] = 0
       }
@@ -5813,14 +5813,14 @@ Enumeration_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 1, 2, rule, char)
     case 2: // Nmtoken
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new Nmtoken_rule(this)
       }
       rule = this.rules[2]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 3, rule, char)
     case 3: // tmp_46*
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new tmp_46_rule(this)
         this.repeats[3] = 0
       }
@@ -5828,7 +5828,7 @@ Enumeration_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_star(this, 3, 4, rule, char)
     case 4: // S?
-      if(! this.rules[4]){
+      if (! this.rules[4]) {
         this.rules[4] = new S_rule(this)
         this.repeats[4] = 0
       }
@@ -5836,7 +5836,7 @@ Enumeration_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 4, 5, rule, char)
     case 5: // ')'
-      if(! this.rules[5]){
+      if (! this.rules[5]) {
         this.rules[5] = new LITERAL(this, ')')
       }
       rule = this.rules[5]
@@ -5848,11 +5848,11 @@ Enumeration_rule.prototype.feed = function(char){
   return this
 }
 
-Enumeration_rule.prototype.reset = function(){
+Enumeration_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_46_rule(origin){
+function tmp_46_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -5862,11 +5862,11 @@ function tmp_46_rule(origin){
   this.repeats = []
 }
 
-tmp_46_rule.prototype.feed = function(char){
+tmp_46_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // S?
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new S_rule(this)
         this.repeats[0] = 0
       }
@@ -5874,14 +5874,14 @@ tmp_46_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 0, 1, rule, char)
     case 1: // '|'
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new LITERAL(this, '|')
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // S?
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new S_rule(this)
         this.repeats[2] = 0
       }
@@ -5889,7 +5889,7 @@ tmp_46_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 2, 3, rule, char)
     case 3: // Nmtoken
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new Nmtoken_rule(this)
       }
       rule = this.rules[3]
@@ -5901,11 +5901,11 @@ tmp_46_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_46_rule.prototype.reset = function(){
+tmp_46_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function DefaultDecl_rule(origin){
+function DefaultDecl_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -5916,25 +5916,25 @@ function DefaultDecl_rule(origin){
   this.repeats = []
 }
 
-DefaultDecl_rule.prototype.feed = function(char){
+DefaultDecl_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '#REQUIRED'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '#REQUIRED')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // '#IMPLIED'
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new LITERAL(this, '#IMPLIED')
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 2, rule, char)
     case 2: // tmp_48
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new tmp_48_rule(this)
       }
       rule = this.rules[2]
@@ -5946,11 +5946,11 @@ DefaultDecl_rule.prototype.feed = function(char){
   return this
 }
 
-DefaultDecl_rule.prototype.reset = function(){
+DefaultDecl_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_47_rule(origin){
+function tmp_47_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -5960,18 +5960,18 @@ function tmp_47_rule(origin){
   this.repeats = []
 }
 
-tmp_47_rule.prototype.feed = function(char){
+tmp_47_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '#FIXED'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '#FIXED')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // S
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new S_rule(this)
       }
       rule = this.rules[1]
@@ -5983,11 +5983,11 @@ tmp_47_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_47_rule.prototype.reset = function(){
+tmp_47_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_48_rule(origin){
+function tmp_48_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -5997,11 +5997,11 @@ function tmp_48_rule(origin){
   this.repeats = []
 }
 
-tmp_48_rule.prototype.feed = function(char){
+tmp_48_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_47?
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new tmp_47_rule(this)
         this.repeats[0] = 0
       }
@@ -6009,7 +6009,7 @@ tmp_48_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 0, 1, rule, char)
     case 1: // AttValue
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new AttValue_rule(this)
       }
       rule = this.rules[1]
@@ -6021,11 +6021,11 @@ tmp_48_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_48_rule.prototype.reset = function(){
+tmp_48_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function conditionalSect_rule(origin){
+function conditionalSect_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -6036,18 +6036,18 @@ function conditionalSect_rule(origin){
   this.repeats = []
 }
 
-conditionalSect_rule.prototype.feed = function(char){
+conditionalSect_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // includeSect
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new includeSect_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // ignoreSect
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new ignoreSect_rule(this)
       }
       rule = this.rules[1]
@@ -6059,11 +6059,11 @@ conditionalSect_rule.prototype.feed = function(char){
   return this
 }
 
-conditionalSect_rule.prototype.reset = function(){
+conditionalSect_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function includeSect_rule(origin){
+function includeSect_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -6073,18 +6073,18 @@ function includeSect_rule(origin){
   this.repeats = []
 }
 
-includeSect_rule.prototype.feed = function(char){
+includeSect_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '<!['
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '<![')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // S?
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new S_rule(this)
         this.repeats[1] = 0
       }
@@ -6092,14 +6092,14 @@ includeSect_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 1, 2, rule, char)
     case 2: // 'INCLUDE'
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new LITERAL(this, 'INCLUDE')
       }
       rule = this.rules[2]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 3, rule, char)
     case 3: // S?
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new S_rule(this)
         this.repeats[3] = 0
       }
@@ -6107,21 +6107,21 @@ includeSect_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 3, 4, rule, char)
     case 4: // '['
-      if(! this.rules[4]){
+      if (! this.rules[4]) {
         this.rules[4] = new LITERAL(this, '[')
       }
       rule = this.rules[4]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 5, rule, char)
     case 5: // extSubsetDecl
-      if(! this.rules[5]){
+      if (! this.rules[5]) {
         this.rules[5] = new extSubsetDecl_rule(this)
       }
       rule = this.rules[5]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 6, rule, char)
     case 6: // ']]>'
-      if(! this.rules[6]){
+      if (! this.rules[6]) {
         this.rules[6] = new LITERAL(this, ']]>')
       }
       rule = this.rules[6]
@@ -6133,11 +6133,11 @@ includeSect_rule.prototype.feed = function(char){
   return this
 }
 
-includeSect_rule.prototype.reset = function(){
+includeSect_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function ignoreSect_rule(origin){
+function ignoreSect_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -6147,18 +6147,18 @@ function ignoreSect_rule(origin){
   this.repeats = []
 }
 
-ignoreSect_rule.prototype.feed = function(char){
+ignoreSect_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '<!['
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '<![')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // S?
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new S_rule(this)
         this.repeats[1] = 0
       }
@@ -6166,14 +6166,14 @@ ignoreSect_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 1, 2, rule, char)
     case 2: // 'IGNORE'
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new LITERAL(this, 'IGNORE')
       }
       rule = this.rules[2]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 3, rule, char)
     case 3: // S?
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new S_rule(this)
         this.repeats[3] = 0
       }
@@ -6181,14 +6181,14 @@ ignoreSect_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 3, 4, rule, char)
     case 4: // '['
-      if(! this.rules[4]){
+      if (! this.rules[4]) {
         this.rules[4] = new LITERAL(this, '[')
       }
       rule = this.rules[4]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 5, rule, char)
     case 5: // ignoreSectContents*
-      if(! this.rules[5]){
+      if (! this.rules[5]) {
         this.rules[5] = new ignoreSectContents_rule(this)
         this.repeats[5] = 0
       }
@@ -6196,7 +6196,7 @@ ignoreSect_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_star(this, 5, 6, rule, char)
     case 6: // ']]>'
-      if(! this.rules[6]){
+      if (! this.rules[6]) {
         this.rules[6] = new LITERAL(this, ']]>')
       }
       rule = this.rules[6]
@@ -6208,11 +6208,11 @@ ignoreSect_rule.prototype.feed = function(char){
   return this
 }
 
-ignoreSect_rule.prototype.reset = function(){
+ignoreSect_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function ignoreSectContents_rule(origin){
+function ignoreSectContents_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -6222,18 +6222,18 @@ function ignoreSectContents_rule(origin){
   this.repeats = []
 }
 
-ignoreSectContents_rule.prototype.feed = function(char){
+ignoreSectContents_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // Ignore
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new Ignore_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // tmp_49*
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new tmp_49_rule(this)
         this.repeats[1] = 0
       }
@@ -6246,11 +6246,11 @@ ignoreSectContents_rule.prototype.feed = function(char){
   return this
 }
 
-ignoreSectContents_rule.prototype.reset = function(){
+ignoreSectContents_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_49_rule(origin){
+function tmp_49_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -6260,32 +6260,32 @@ function tmp_49_rule(origin){
   this.repeats = []
 }
 
-tmp_49_rule.prototype.feed = function(char){
+tmp_49_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '<!['
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '<![')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // ignoreSectContents
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new ignoreSectContents_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // ']]>'
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new LITERAL(this, ']]>')
       }
       rule = this.rules[2]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 3, rule, char)
     case 3: // Ignore
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new Ignore_rule(this)
       }
       rule = this.rules[3]
@@ -6297,11 +6297,11 @@ tmp_49_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_49_rule.prototype.reset = function(){
+tmp_49_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function CharRef_rule(origin){
+function CharRef_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -6312,18 +6312,18 @@ function CharRef_rule(origin){
   this.repeats = []
 }
 
-CharRef_rule.prototype.feed = function(char){
+CharRef_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_50
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new tmp_50_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // tmp_51
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new tmp_51_rule(this)
       }
       rule = this.rules[1]
@@ -6335,11 +6335,11 @@ CharRef_rule.prototype.feed = function(char){
   return this
 }
 
-CharRef_rule.prototype.reset = function(){
+CharRef_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_50_rule(origin){
+function tmp_50_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -6349,18 +6349,18 @@ function tmp_50_rule(origin){
   this.repeats = []
 }
 
-tmp_50_rule.prototype.feed = function(char){
+tmp_50_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '&#'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '&#')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // [0-9]
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new CHARSET_rule(this, '0-9')
         this.repeats[1] = 0
       }
@@ -6368,7 +6368,7 @@ tmp_50_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_plus(this, 1,2, rule, char)
     case 2: // ';'
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new LITERAL(this, ';')
       }
       rule = this.rules[2]
@@ -6380,11 +6380,11 @@ tmp_50_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_50_rule.prototype.reset = function(){
+tmp_50_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_51_rule(origin){
+function tmp_51_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -6394,18 +6394,18 @@ function tmp_51_rule(origin){
   this.repeats = []
 }
 
-tmp_51_rule.prototype.feed = function(char){
+tmp_51_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '&#x'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '&#x')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // [0-9a-fA-F]
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new CHARSET_rule(this, '0-9a-fA-F')
         this.repeats[1] = 0
       }
@@ -6413,7 +6413,7 @@ tmp_51_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_plus(this, 1,2, rule, char)
     case 2: // ';'
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new LITERAL(this, ';')
       }
       rule = this.rules[2]
@@ -6425,11 +6425,11 @@ tmp_51_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_51_rule.prototype.reset = function(){
+tmp_51_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function Reference_rule(origin){
+function Reference_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -6440,18 +6440,18 @@ function Reference_rule(origin){
   this.repeats = []
 }
 
-Reference_rule.prototype.feed = function(char){
+Reference_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // EntityRef
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new EntityRef_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // CharRef
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new CharRef_rule(this)
       }
       rule = this.rules[1]
@@ -6463,11 +6463,11 @@ Reference_rule.prototype.feed = function(char){
   return this
 }
 
-Reference_rule.prototype.reset = function(){
+Reference_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function EntityRef_rule(origin){
+function EntityRef_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -6477,25 +6477,25 @@ function EntityRef_rule(origin){
   this.repeats = []
 }
 
-EntityRef_rule.prototype.feed = function(char){
+EntityRef_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '&'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '&')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // Name
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new Name_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // ';'
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new LITERAL(this, ';')
       }
       rule = this.rules[2]
@@ -6507,11 +6507,11 @@ EntityRef_rule.prototype.feed = function(char){
   return this
 }
 
-EntityRef_rule.prototype.reset = function(){
+EntityRef_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function PEReference_rule(origin){
+function PEReference_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -6521,25 +6521,25 @@ function PEReference_rule(origin){
   this.repeats = []
 }
 
-PEReference_rule.prototype.feed = function(char){
+PEReference_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '%'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '%')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // Name
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new Name_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // ';'
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new LITERAL(this, ';')
       }
       rule = this.rules[2]
@@ -6551,11 +6551,11 @@ PEReference_rule.prototype.feed = function(char){
   return this
 }
 
-PEReference_rule.prototype.reset = function(){
+PEReference_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function EntityDecl_rule(origin){
+function EntityDecl_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -6566,18 +6566,18 @@ function EntityDecl_rule(origin){
   this.repeats = []
 }
 
-EntityDecl_rule.prototype.feed = function(char){
+EntityDecl_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // GEDecl
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new GEDecl_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // PEDecl
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new PEDecl_rule(this)
       }
       rule = this.rules[1]
@@ -6589,11 +6589,11 @@ EntityDecl_rule.prototype.feed = function(char){
   return this
 }
 
-EntityDecl_rule.prototype.reset = function(){
+EntityDecl_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function GEDecl_rule(origin){
+function GEDecl_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -6603,46 +6603,46 @@ function GEDecl_rule(origin){
   this.repeats = []
 }
 
-GEDecl_rule.prototype.feed = function(char){
+GEDecl_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '<!ENTITY'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '<!ENTITY')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // S
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new S_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // Name
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new Name_rule(this)
       }
       rule = this.rules[2]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 3, rule, char)
     case 3: // S
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new S_rule(this)
       }
       rule = this.rules[3]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 4, rule, char)
     case 4: // EntityDef
-      if(! this.rules[4]){
+      if (! this.rules[4]) {
         this.rules[4] = new EntityDef_rule(this)
       }
       rule = this.rules[4]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 5, rule, char)
     case 5: // S?
-      if(! this.rules[5]){
+      if (! this.rules[5]) {
         this.rules[5] = new S_rule(this)
         this.repeats[5] = 0
       }
@@ -6650,7 +6650,7 @@ GEDecl_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 5, 6, rule, char)
     case 6: // '>'
-      if(! this.rules[6]){
+      if (! this.rules[6]) {
         this.rules[6] = new LITERAL(this, '>')
       }
       rule = this.rules[6]
@@ -6662,11 +6662,11 @@ GEDecl_rule.prototype.feed = function(char){
   return this
 }
 
-GEDecl_rule.prototype.reset = function(){
+GEDecl_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function PEDecl_rule(origin){
+function PEDecl_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -6676,60 +6676,60 @@ function PEDecl_rule(origin){
   this.repeats = []
 }
 
-PEDecl_rule.prototype.feed = function(char){
+PEDecl_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '<!ENTITY'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '<!ENTITY')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // S
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new S_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // '%'
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new LITERAL(this, '%')
       }
       rule = this.rules[2]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 3, rule, char)
     case 3: // S
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new S_rule(this)
       }
       rule = this.rules[3]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 4, rule, char)
     case 4: // Name
-      if(! this.rules[4]){
+      if (! this.rules[4]) {
         this.rules[4] = new Name_rule(this)
       }
       rule = this.rules[4]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 5, rule, char)
     case 5: // S
-      if(! this.rules[5]){
+      if (! this.rules[5]) {
         this.rules[5] = new S_rule(this)
       }
       rule = this.rules[5]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 6, rule, char)
     case 6: // PEDef
-      if(! this.rules[6]){
+      if (! this.rules[6]) {
         this.rules[6] = new PEDef_rule(this)
       }
       rule = this.rules[6]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 7, rule, char)
     case 7: // S?
-      if(! this.rules[7]){
+      if (! this.rules[7]) {
         this.rules[7] = new S_rule(this)
         this.repeats[7] = 0
       }
@@ -6737,7 +6737,7 @@ PEDecl_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 7, 8, rule, char)
     case 8: // '>'
-      if(! this.rules[8]){
+      if (! this.rules[8]) {
         this.rules[8] = new LITERAL(this, '>')
       }
       rule = this.rules[8]
@@ -6749,11 +6749,11 @@ PEDecl_rule.prototype.feed = function(char){
   return this
 }
 
-PEDecl_rule.prototype.reset = function(){
+PEDecl_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function EntityDef_rule(origin){
+function EntityDef_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -6764,18 +6764,18 @@ function EntityDef_rule(origin){
   this.repeats = []
 }
 
-EntityDef_rule.prototype.feed = function(char){
+EntityDef_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // EntityValue
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new EntityValue_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // tmp_52
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new tmp_52_rule(this)
       }
       rule = this.rules[1]
@@ -6787,11 +6787,11 @@ EntityDef_rule.prototype.feed = function(char){
   return this
 }
 
-EntityDef_rule.prototype.reset = function(){
+EntityDef_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_52_rule(origin){
+function tmp_52_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -6801,18 +6801,18 @@ function tmp_52_rule(origin){
   this.repeats = []
 }
 
-tmp_52_rule.prototype.feed = function(char){
+tmp_52_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // ExternalID
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new ExternalID_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // NDataDecl?
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new NDataDecl_rule(this)
         this.repeats[1] = 0
       }
@@ -6825,11 +6825,11 @@ tmp_52_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_52_rule.prototype.reset = function(){
+tmp_52_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function PEDef_rule(origin){
+function PEDef_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -6840,18 +6840,18 @@ function PEDef_rule(origin){
   this.repeats = []
 }
 
-PEDef_rule.prototype.feed = function(char){
+PEDef_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // EntityValue
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new EntityValue_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // ExternalID
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new ExternalID_rule(this)
       }
       rule = this.rules[1]
@@ -6863,11 +6863,11 @@ PEDef_rule.prototype.feed = function(char){
   return this
 }
 
-PEDef_rule.prototype.reset = function(){
+PEDef_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function ExternalID_rule(origin){
+function ExternalID_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -6878,18 +6878,18 @@ function ExternalID_rule(origin){
   this.repeats = []
 }
 
-ExternalID_rule.prototype.feed = function(char){
+ExternalID_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_53
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new tmp_53_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // tmp_54
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new tmp_54_rule(this)
       }
       rule = this.rules[1]
@@ -6901,11 +6901,11 @@ ExternalID_rule.prototype.feed = function(char){
   return this
 }
 
-ExternalID_rule.prototype.reset = function(){
+ExternalID_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_53_rule(origin){
+function tmp_53_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -6915,25 +6915,25 @@ function tmp_53_rule(origin){
   this.repeats = []
 }
 
-tmp_53_rule.prototype.feed = function(char){
+tmp_53_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // 'SYSTEM'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, 'SYSTEM')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // S
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new S_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // SystemLiteral
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new SystemLiteral_rule(this)
       }
       rule = this.rules[2]
@@ -6945,11 +6945,11 @@ tmp_53_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_53_rule.prototype.reset = function(){
+tmp_53_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_54_rule(origin){
+function tmp_54_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -6959,39 +6959,39 @@ function tmp_54_rule(origin){
   this.repeats = []
 }
 
-tmp_54_rule.prototype.feed = function(char){
+tmp_54_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // 'PUBLIC'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, 'PUBLIC')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // S
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new S_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // PubidLiteral
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new PubidLiteral_rule(this)
       }
       rule = this.rules[2]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 3, rule, char)
     case 3: // S
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new S_rule(this)
       }
       rule = this.rules[3]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 4, rule, char)
     case 4: // SystemLiteral
-      if(! this.rules[4]){
+      if (! this.rules[4]) {
         this.rules[4] = new SystemLiteral_rule(this)
       }
       rule = this.rules[4]
@@ -7003,11 +7003,11 @@ tmp_54_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_54_rule.prototype.reset = function(){
+tmp_54_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function NDataDecl_rule(origin){
+function NDataDecl_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -7017,32 +7017,32 @@ function NDataDecl_rule(origin){
   this.repeats = []
 }
 
-NDataDecl_rule.prototype.feed = function(char){
+NDataDecl_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // S
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new S_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // 'NDATA'
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new LITERAL(this, 'NDATA')
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // S
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new S_rule(this)
       }
       rule = this.rules[2]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 3, rule, char)
     case 3: // Name
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new Name_rule(this)
       }
       rule = this.rules[3]
@@ -7054,11 +7054,11 @@ NDataDecl_rule.prototype.feed = function(char){
   return this
 }
 
-NDataDecl_rule.prototype.reset = function(){
+NDataDecl_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function TextDecl_rule(origin){
+function TextDecl_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -7068,18 +7068,18 @@ function TextDecl_rule(origin){
   this.repeats = []
 }
 
-TextDecl_rule.prototype.feed = function(char){
+TextDecl_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '<?xml'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '<?xml')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // VersionInfo?
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new VersionInfo_rule(this)
         this.repeats[1] = 0
       }
@@ -7087,14 +7087,14 @@ TextDecl_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 1, 2, rule, char)
     case 2: // EncodingDecl
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new EncodingDecl_rule(this)
       }
       rule = this.rules[2]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 3, rule, char)
     case 3: // S?
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new S_rule(this)
         this.repeats[3] = 0
       }
@@ -7102,7 +7102,7 @@ TextDecl_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 3, 4, rule, char)
     case 4: // '?>'
-      if(! this.rules[4]){
+      if (! this.rules[4]) {
         this.rules[4] = new LITERAL(this, '?>')
       }
       rule = this.rules[4]
@@ -7114,11 +7114,11 @@ TextDecl_rule.prototype.feed = function(char){
   return this
 }
 
-TextDecl_rule.prototype.reset = function(){
+TextDecl_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function extParsedEnt_rule(origin){
+function extParsedEnt_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -7128,11 +7128,11 @@ function extParsedEnt_rule(origin){
   this.repeats = []
 }
 
-extParsedEnt_rule.prototype.feed = function(char){
+extParsedEnt_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // TextDecl?
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new TextDecl_rule(this)
         this.repeats[0] = 0
       }
@@ -7140,7 +7140,7 @@ extParsedEnt_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 0, 1, rule, char)
     case 1: // content
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new content_rule(this)
       }
       rule = this.rules[1]
@@ -7152,11 +7152,11 @@ extParsedEnt_rule.prototype.feed = function(char){
   return this
 }
 
-extParsedEnt_rule.prototype.reset = function(){
+extParsedEnt_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function EncodingDecl_rule(origin){
+function EncodingDecl_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -7166,32 +7166,32 @@ function EncodingDecl_rule(origin){
   this.repeats = []
 }
 
-EncodingDecl_rule.prototype.feed = function(char){
+EncodingDecl_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // S
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new S_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // 'encoding'
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new LITERAL(this, 'encoding')
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // Eq
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new Eq_rule(this)
       }
       rule = this.rules[2]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 3, rule, char)
     case 3: // tmp_55
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new tmp_55_rule(this)
       }
       rule = this.rules[3]
@@ -7203,11 +7203,11 @@ EncodingDecl_rule.prototype.feed = function(char){
   return this
 }
 
-EncodingDecl_rule.prototype.reset = function(){
+EncodingDecl_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_55_rule(origin){
+function tmp_55_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -7218,18 +7218,18 @@ function tmp_55_rule(origin){
   this.repeats = []
 }
 
-tmp_55_rule.prototype.feed = function(char){
+tmp_55_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // tmp_56
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new tmp_56_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // tmp_57
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new tmp_57_rule(this)
       }
       rule = this.rules[1]
@@ -7241,11 +7241,11 @@ tmp_55_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_55_rule.prototype.reset = function(){
+tmp_55_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_56_rule(origin){
+function tmp_56_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -7255,25 +7255,25 @@ function tmp_56_rule(origin){
   this.repeats = []
 }
 
-tmp_56_rule.prototype.feed = function(char){
+tmp_56_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '"'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '"')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // EncName
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new EncName_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // '"'
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new LITERAL(this, '"')
       }
       rule = this.rules[2]
@@ -7285,11 +7285,11 @@ tmp_56_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_56_rule.prototype.reset = function(){
+tmp_56_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_57_rule(origin){
+function tmp_57_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -7299,25 +7299,25 @@ function tmp_57_rule(origin){
   this.repeats = []
 }
 
-tmp_57_rule.prototype.feed = function(char){
+tmp_57_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // "'"
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '\'')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // EncName
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new EncName_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // "'"
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new LITERAL(this, '\'')
       }
       rule = this.rules[2]
@@ -7329,11 +7329,11 @@ tmp_57_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_57_rule.prototype.reset = function(){
+tmp_57_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function EncName_rule(origin){
+function EncName_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -7343,18 +7343,18 @@ function EncName_rule(origin){
   this.repeats = []
 }
 
-EncName_rule.prototype.feed = function(char){
+EncName_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // [A-Za-z]
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new CHARSET_rule(this, 'A-Za-z')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // tmp_58*
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new tmp_58_rule(this)
         this.repeats[1] = 0
       }
@@ -7367,11 +7367,11 @@ EncName_rule.prototype.feed = function(char){
   return this
 }
 
-EncName_rule.prototype.reset = function(){
+EncName_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_58_rule(origin){
+function tmp_58_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -7382,18 +7382,18 @@ function tmp_58_rule(origin){
   this.repeats = []
 }
 
-tmp_58_rule.prototype.feed = function(char){
+tmp_58_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // [A-Za-z0-9._]
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new CHARSET_rule(this, 'A-Za-z0-9._')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // '-'
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new LITERAL(this, '-')
       }
       rule = this.rules[1]
@@ -7405,11 +7405,11 @@ tmp_58_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_58_rule.prototype.reset = function(){
+tmp_58_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function NotationDecl_rule(origin){
+function NotationDecl_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -7419,46 +7419,46 @@ function NotationDecl_rule(origin){
   this.repeats = []
 }
 
-NotationDecl_rule.prototype.feed = function(char){
+NotationDecl_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // '<!NOTATION'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, '<!NOTATION')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // S
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new S_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // Name
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new Name_rule(this)
       }
       rule = this.rules[2]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 3, rule, char)
     case 3: // S
-      if(! this.rules[3]){
+      if (! this.rules[3]) {
         this.rules[3] = new S_rule(this)
       }
       rule = this.rules[3]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 4, rule, char)
     case 4: // tmp_59
-      if(! this.rules[4]){
+      if (! this.rules[4]) {
         this.rules[4] = new tmp_59_rule(this)
       }
       rule = this.rules[4]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 5, rule, char)
     case 5: // S?
-      if(! this.rules[5]){
+      if (! this.rules[5]) {
         this.rules[5] = new S_rule(this)
         this.repeats[5] = 0
       }
@@ -7466,7 +7466,7 @@ NotationDecl_rule.prototype.feed = function(char){
       rule.pos = rule.pos ?? get_pos(this)
       return handle_zero_or_one(this, 5, 6, rule, char)
     case 6: // '>'
-      if(! this.rules[6]){
+      if (! this.rules[6]) {
         this.rules[6] = new LITERAL(this, '>')
       }
       rule = this.rules[6]
@@ -7478,11 +7478,11 @@ NotationDecl_rule.prototype.feed = function(char){
   return this
 }
 
-NotationDecl_rule.prototype.reset = function(){
+NotationDecl_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function tmp_59_rule(origin){
+function tmp_59_rule(origin) {
   this.alt = true
   this.origin = origin
   this.pos = get_pos(this)
@@ -7493,18 +7493,18 @@ function tmp_59_rule(origin){
   this.repeats = []
 }
 
-tmp_59_rule.prototype.feed = function(char){
+tmp_59_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // ExternalID
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new ExternalID_rule(this)
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_alt(this, 1, rule, char)
     case 1: // PublicID
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new PublicID_rule(this)
       }
       rule = this.rules[1]
@@ -7516,11 +7516,11 @@ tmp_59_rule.prototype.feed = function(char){
   return this
 }
 
-tmp_59_rule.prototype.reset = function(){
+tmp_59_rule.prototype.reset = function() {
   this.expect = 0
 }
 
-function PublicID_rule(origin){
+function PublicID_rule(origin) {
   this.origin = origin
   this.pos = get_pos(this)
   this.result_store = {}
@@ -7530,25 +7530,25 @@ function PublicID_rule(origin){
   this.repeats = []
 }
 
-PublicID_rule.prototype.feed = function(char){
+PublicID_rule.prototype.feed = function(char) {
   var res, rule
-  switch(this.expect){
+  switch (this.expect) {
     case 0: // 'PUBLIC'
-      if(! this.rules[0]){
+      if (! this.rules[0]) {
         this.rules[0] = new LITERAL(this, 'PUBLIC')
       }
       rule = this.rules[0]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 1, rule, char)
     case 1: // S
-      if(! this.rules[1]){
+      if (! this.rules[1]) {
         this.rules[1] = new S_rule(this)
       }
       rule = this.rules[1]
       rule.pos = rule.pos ?? get_pos(this)
       return handle_simple(this, 2, rule, char)
     case 2: // PubidLiteral
-      if(! this.rules[2]){
+      if (! this.rules[2]) {
         this.rules[2] = new PubidLiteral_rule(this)
       }
       rule = this.rules[2]
@@ -7560,7 +7560,7 @@ PublicID_rule.prototype.feed = function(char){
   return this
 }
 
-PublicID_rule.prototype.reset = function(){
+PublicID_rule.prototype.reset = function() {
   this.expect = 0
 }
 

@@ -31,9 +31,10 @@ BLOCKSIZ = n+2
 class deque:
 
     def __new__(cls, iterable=(), *args, **kw):
-        #fixme
-        #self = super(deque, cls).__new__(cls, *args, **kw)
-        self=object.__new__(cls, *args, **kw)
+        # object.__new__() rejects extra arguments when __new__ is
+        # overridden, so the constructor arguments stop here: __init__
+        # consumes them.
+        self = object.__new__(cls)
         self.clear()
         return self
 
@@ -438,7 +439,11 @@ class defaultdict(dict):
 
         #   This API is used by pickle.py and copy.py.
         #
-        return (type(self), (self.default_factory,), None, None, self.items())
+        return (type(self), (self.default_factory,), None, None, iter(self.items()))
+
+# defaultdict is exposed as collections.defaultdict (CPython sets __module__
+# to 'collections', not the implementation module).
+defaultdict.__module__ = 'collections'
 
 from operator import itemgetter as _itemgetter
 from keyword import iskeyword as _iskeyword

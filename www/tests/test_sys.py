@@ -1,5 +1,8 @@
 import sys
 
+# the console's write() returns the number of characters written
+assert sys.__stdout__.write("ab\n") == 3
+
 # issue 1218
 x = "Outer stack frame"
 
@@ -213,5 +216,24 @@ y = 4
 sys._getframe().f_locals['y'] = 5
 assert y == 5
 assert z == 10
+
+# minimal test of module gc (cf. PR #2716)
+# gc module stub sanity and type assertions
+import gc
+assert gc.DEBUG_STATS == 1
+assert gc.DEBUG_COLLECTABLE == 2
+assert gc.DEBUG_UNCOLLECTABLE == 4
+assert gc.DEBUG_SAVEALL == 32
+assert gc.DEBUG_LEAK == 38
+assert callable(gc.collect)
+assert callable(gc.is_tracked)
+
+# the console's write() takes any str: one holding an astral character, and
+# an instance of a str subclass
+class Name(str):
+    pass
+
+for text in ("😀\n", Name("x\n")):
+    sys.__stdout__.write(text)
 
 print('all tests ok...')

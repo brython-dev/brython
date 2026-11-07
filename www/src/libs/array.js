@@ -1,4 +1,4 @@
-(function($B){
+(function($B) {
 
 var _b_ = $B.builtins
 
@@ -8,38 +8,37 @@ var typecodes = {
     'u': Uint32Array,  // Py_UNICODE Unicode character, 2 (deprecated)
     'h': Int16Array,   // signed short, 2
     'H': Uint16Array,  // unsigned short, 2
-    'i': Int16Array,   //  signed int, 2
-    'I': Uint16Array,  // unsigned int, 2
+    'i': Int32Array,   //  signed int, 4 (CPython itemsize)
+    'I': Uint32Array,  // unsigned int, 4
     'l': Int32Array,   // signed long, 4
     'L': Uint32Array,  // unsigned long, 4
-    'q': null,         // signed long, 8 (not implemented)
-    'Q': null,         // unsigned long, 8 (not implemented)
+    'q': BigInt64Array,  // signed long long, 8
+    'Q': BigUint64Array, // unsigned long long, 8
     'f': Float32Array, // float, 4
     'd': Float64Array  // double float, 8
 }
 
 
-function normalize_index(self, i){
+function normalize_index(self, i) {
     // return an index i between 0 and self.obj.length - 1
-    if(i < 0){
+    if (i < 0) {
         i = self.obj.length + i
     }
-    if(i < 0){i = 0}
-    else if(i > self.obj.length - 1){
+    if (i < 0) {i = 0} else if (i > self.obj.length - 1) {
         i = self.obj.length
     }
     return i
 }
 
-function make_array(args, kw){
+function make_array(args, kw) {
     $B.check_kw_empty(kw)
     var [typecode, initializer] = $B.unpack_args('array', args,
         ['typecode', 'initializer'], {initializer: $B.NULL})
-    if(! typecodes.hasOwnProperty(typecode)){
+    if (! typecodes.hasOwnProperty(typecode)) {
         $B.RAISE(_b_.ValueError, "bad typecode (must be b, " +
             "B, u, h, H, i, I, l, L, q, Q, f or d)")
     }
-    if(typecodes[typecode] === null){
+    if (typecodes[typecode] === null) {
         $B.RAISE(_b_.NotImplementedError, "type code " +
             typecode + " is not implemented")
     }
@@ -48,12 +47,12 @@ function make_array(args, kw){
         typecode: typecode,
         obj: null
     }
-    if(initializer !== $B.NULL){
-        if(Array.isArray(initializer)){
+    if (initializer !== $B.NULL) {
+        if (Array.isArray(initializer)) {
             array_funcs.fromlist(res, initializer)
-        }else if($B.is_bytes(initializer)){
+        } else if ($B.is_bytes(initializer)) {
             array_funcs.frombytes(res, initializer)
-        }else{
+        } else {
             array_funcs.extend(res, initializer)
         }
     }
@@ -65,15 +64,19 @@ var array = $B.make_type("array")
 array.$buffer_protocol = true
 array.$match_sequence_pattern = true // for Pattern Matching (PEP 634)
 
-array.bf_getbuffer = function(_self, flag){
+array.bf_getbuffer = function(_self, flag) {
     return $B.$call(_b_.memoryview, _self)
 }
 
-array.mp_subscript = function(_self, key){
-    if(_self.obj){
-        if(_self.obj[key] !== undefined){
+array.mp_subscript = function(_self, key) {
+    if (_self.obj) {
+        if ($B.is_int(key) && key < 0) {
+            // Python semantics: negative indices count from the end
+            key = _self.obj.length + Number(key)
+        }
+        if (_self.obj[key] !== undefined) {
             return _self.obj[key]
-        }else if($B.$isinstance(key, _b_.slice)){
+        } else if ($B.$isinstance(key, _b_.slice)) {
             var t = _self.obj.slice(key.start, key.stop)
             return {
                 ob_type: array,
@@ -85,7 +88,7 @@ array.mp_subscript = function(_self, key){
     $B.RAISE(_b_.IndexError, "array index out of range")
 }
 
-array.tp_iter = function(self){
+array.tp_iter = function(self) {
     var obj = self.obj ?? []
     return {
         ob_type: array_iterator,
@@ -94,15 +97,15 @@ array.tp_iter = function(self){
     }
 }
 
-array.sq_length = function(self){
+array.sq_length = function(self) {
     return self.obj === null ? 0 : self.obj.length
 }
 
-array.sq_repeat = function(self, nb){
-    if(typeof nb == "number" || $B.is_int(nb)){
+array.sq_repeat = function(self, nb) {
+    if (typeof nb == "number" || $B.is_int(nb)) {
         var t = [],
             copy = self.obj.slice()
-        for(var i = 0; i < nb; i++){
+        for (var i = 0; i < nb; i++) {
             t = t.concat(copy)
         }
         return {
@@ -115,28 +118,32 @@ array.sq_repeat = function(self, nb){
         $B.class_name(nb))
 }
 
-array.bf_release_buffer = function(_self, buffer){
+array.bf_release_buffer = function(_self, buffer) {
     _b_.memoryview.tp_funcs.release(buffer)
 }
 
-array.mp_ass_subscript = function(_self, index, value){
-    if($B.is_int(index)){
-        if(_self.obj[index] === undefined){
+array.mp_ass_subscript = function(_self, index, value) {
+    if ($B.is_int(index)) {
+        if (index < 0) {
+            // Python semantics: negative indices count from the end
+            index = _self.obj.length + Number(index)
+        }
+        if (_self.obj[index] === undefined) {
             $B.RAISE(_b_.IndexError, "array index out of range")
         }
         _self.obj[index] = value
-    }else if($B.$isinstance(index, _b_.slice)){
-        if(! $B.$isinstance(value, array)){
+    } else if ($B.$isinstance(index, _b_.slice)) {
+        if (! $B.$isinstance(value, array)) {
             $B.RAISE(_b_.TypeError, 'can only assign array ' +
                 `(not "${$B.class_name(value)}") to array slice`)
-        }else if(value.typecode !== _self.typecode){
+        } else if (value.typecode !== _self.typecode) {
             $B.RAISE(_b_.TypeError, 'can only assign array of the same typecode')
         }
 
         var itemsize = array.itemsize(_self)
         var slice = _b_.slice.$conv_for_seq(index, _self.obj.length / itemsize)
-        if(slice.start * itemsize + value.obj.length > _self.obj.length){
-            if(_self.exports > 0){
+        if (slice.start * itemsize + value.obj.length > _self.obj.length) {
+            if (_self.exports > 0) {
                 $B.RAISE(_b_.BufferError,
                     'cannot resize an array that is exporting buffers')
             }
@@ -144,22 +151,28 @@ array.mp_ass_subscript = function(_self, index, value){
         _self.obj.splice(slice.start * itemsize,
             (slice.stop - slice.start) *itemsize,
             ...value.obj)
-    }else{
+    } else {
         $B.RAISE(_b_.TypeError, 'array indices must be integers')
     }
 }
 
-array.tp_new = function(cls, args, kw){
-    var [cls, ...args] = arguments
+array.tp_new = function(cls, args, kw) {
+    // (the redundant `var [cls, ...args] = arguments` line that used to be
+    // here re-bound `args` to `[args, kw]` — function parameters are
+    // already destructured from arguments[]. Removing the line restores
+    // the intended (cls, args, kw) shape so make_array's unpack_args sees
+    // the real positional arg list. Previously `array.array('b', [1,2,3])`
+    // raised `ValueError: bad typecode` because unpack_args received
+    // `typecode = ['b', [1,2,3]]`.)
     var obj = make_array(args, kw)
     obj.cls = cls
     return obj
 }
 
-array.tp_repr = function(self){
+array.tp_repr = function(self) {
     $B.args("__repr__", 1, {self: null}, arguments)
     var res = "array('" + self.typecode + "'"
-    if(self.obj !== null){
+    if (self.obj !== null) {
         res += ", [" + self.obj.join(', ') + "]"
     }
     return res + ")"
@@ -167,62 +180,62 @@ array.tp_repr = function(self){
 
 var array_funcs = array.tp_funcs = {}
 
-array_funcs.__class_getitem__ = function(){
+array_funcs.__class_getitem__ = function() {
     return $B.$class_getitem.apply(null, arguments)
 }
 
-array_funcs.__copy__ = function(){
+array_funcs.__copy__ = function() {
     $B.RAISE(_b_.NotImplementedError)
 }
 
-array_funcs.__deepcopy__ = function(){
+array_funcs.__deepcopy__ = function() {
     $B.RAISE(_b_.NotImplementedError)
 }
 
-array_funcs.__reduce_ex__ = function(){
+array_funcs.__reduce_ex__ = function() {
     $B.RAISE(_b_.NotImplementedError)
 }
 
-array_funcs.__sizeof__ = function(){
+array_funcs.__sizeof__ = function() {
     $B.RAISE(_b_.NotImplementedError)
 }
 
-array_funcs.append = function(self, value){
+array_funcs.append = function(self, value) {
     $B.args("append", 2, {self: null, value: null}, arguments)
     var pos = self.obj === null ? 0 : self.obj.length
-    return array.insert(self, pos, value)
+    return array_funcs.insert(self, pos, value)
 }
 
-array_funcs.buffer_info = function(){
+array_funcs.buffer_info = function() {
     return _b_.NotImplemented
 }
 
-array_funcs.byteswap = function(){
+array_funcs.byteswap = function() {
     $B.RAISE(_b_.NotImplementedError)
 }
 
-array_funcs.clear = function(self){
-    if(self.obj){
+array_funcs.clear = function(self) {
+    if (self.obj) {
         self.obj.length = 0
     }
 }
 
-array_funcs.count = function(self, x){
+array_funcs.count = function(self, x) {
     $B.args("count", 2, {self: null, x: null}, arguments)
-    if(self.obj === null){
+    if (self.obj === null) {
         return 0
     }
-    return self.obj.filter(function(item){return item == x}).length
+    return self.obj.filter(function(item) {return item == x}).length
 }
 
-array_funcs.extend = function(self, iterable){
+array_funcs.extend = function(self, iterable) {
     $B.args("extend", 2, {self: null, iterable: null}, arguments)
-    if($B.exact_type(iterable, array)){
-        if(iterable.typecode !== self.typecode){
+    if ($B.exact_type(iterable, array)) {
+        if (iterable.typecode !== self.typecode) {
             $B.RAISE(_b_.TypeError, "can only extend with array " +
                 "of same kind")
         }
-        if(iterable.obj === null){return _b_.None}
+        if (iterable.obj === null) {return _b_.None}
         // create new object with length = sum of lengths
         var newobj = new typecodes[self.typecode](self.obj.length +
             iterable.obj.length)
@@ -231,13 +244,13 @@ array_funcs.extend = function(self, iterable){
         // copy iterable.obj
         newobj.set(iterable.obj, self.obj.length)
         self.obj = newobj
-    }else{
+    } else {
         var it = _b_.iter(iterable)
-        while(true){
-            try{
+        while (true) {
+            try {
                 var item = _b_.next(it)
-                array.append(self, item)
-            }catch(err){
+                array_funcs.append(self, item)
+            } catch (err) {
                 $B.RAISE_IF_NOT(err, _b_.StopIteration)
                 break
             }
@@ -246,34 +259,46 @@ array_funcs.extend = function(self, iterable){
     return _b_.None
 }
 
-array_funcs.frombytes = function(self, s){
+array_funcs.frombytes = function(self, s) {
     $B.args("frombytes", 2, {self: null, s: null}, arguments)
-    if(! $B.is_bytes(s)){
+    if (! $B.is_bytes(s)) {
         $B.RAISE(_b_.TypeError, "a bytes-like object is required, " +
             "not '" + $B.class_name(s) + "'")
     }
-    self.obj = new typecodes[self.typecode](s.source)
+    var T = typecodes[self.typecode]
+    var u8 = new Uint8Array(s.source)
+    if (u8.length % T.BYTES_PER_ELEMENT !== 0) {
+        $B.RAISE(_b_.ValueError,
+            "bytes length not a multiple of item size")
+    }
+    // read itemsize-wide machine values, appending to existing content
+    var items = Array.from(new T(u8.buffer))
+    if (self.obj === null) {
+        self.obj = items
+    } else {
+        self.obj.push(...items)
+    }
     return _b_.None
 }
 
-array_funcs.fromfile = function(){
+array_funcs.fromfile = function() {
     $B.RAISE(_b_.NotImplementedError)
 }
 
-array_funcs.fromlist = function(self, list){
+array_funcs.fromlist = function(self, list) {
     $B.args("fromlist", 2, {self: null, list: null}, arguments)
     var it = _b_.iter(list)
-    while(true){
-        try{
+    while (true) {
+        try {
             var item = _b_.next(it)
-            try{
-                array.append(self, item)
-            }catch(err){
+            try {
+                array_funcs.append(self, item)
+            } catch (err) {
                 console.log(err)
                 return _b_.None
             }
-        }catch(err){
-            if($B.is_exc(err, _b_.StopIteration)){
+        } catch (err) {
+            if ($B.is_exc(err, _b_.StopIteration)) {
                 return _b_.None
             }
             throw err
@@ -283,37 +308,37 @@ array_funcs.fromlist = function(self, list){
 
 array_funcs.fromunicode = array_funcs.frombytes
 
-array_funcs.index = function(self, x){
+array_funcs.index = function(self, x) {
     $B.args("index", 2, {self: null, x: null}, arguments)
-    var res = self.obj.findIndex(function(item){return x == item})
-    if(res == -1){
+    var res = self.obj.findIndex(function(item) {return x == item})
+    if (res == -1) {
         $B.RAISE(_b_.ValueError, "array.index(x): x not in array")
     }
     return res
 }
 
-array_funcs.insert = function(self, i, value){
+array_funcs.insert = function(self, i, value) {
     $B.args("insert", 3, {self: null, i: null, value: null}, arguments)
-    if(self.obj === null){
+    if (self.obj === null) {
         self.obj = [value]
-    }else{
+    } else {
         self.obj.splice(i, 0, value)
     }
     return _b_.None
 }
 
-array_funcs.itemsize_get = function(self){
+array_funcs.itemsize_get = function(self) {
     return typecodes[self.typecode].BYTES_PER_ELEMENT
 }
 
 array_funcs.itemsize_set = _b_.None
 
-array_funcs.pop = function(self, i){
+array_funcs.pop = function(self, i) {
     var $ = $B.args("count", 2, {self: null, i: null}, arguments, {i: -1})
     i = $.i
-    if(self.obj === null){
+    if (self.obj === null) {
         $B.RAISE(_b_.IndexError, "pop from empty array")
-    }else if(self.obj.length == 1){
+    } else if (self.obj.length == 1) {
         var res = self.obj[0]
         self.obj = null
         return res
@@ -333,44 +358,44 @@ array_funcs.pop = function(self, i){
     return res
 }
 
-array_funcs.remove = function(self, x){
+array_funcs.remove = function(self, x) {
     $B.args("remove", 2, {self: null, x: null}, arguments)
-    var res = self.obj.findIndex(function(item){return x == item})
-    if(res == -1){
+    var res = self.obj.findIndex(function(item) {return x == item})
+    if (res == -1) {
         $B.RAISE(_b_.ValueError, "array.remove(x): x not in array")
     }
-    array.pop(self, res)
+    array_funcs.pop(self, res)
     return _b_.None
 }
 
-array_funcs.reverse = function(self){
+array_funcs.reverse = function(self) {
     $B.args("reverse", 1, {self: null}, arguments)
-    if(self.obj === null){return _b_.None}
+    if (self.obj === null) {return _b_.None}
     self.obj.reverse()
     return _b_.None
 }
 
-array_funcs.tobytes = function(self){
+array_funcs.tobytes = function(self) {
     $B.args("tobytes", 1, {self: null}, arguments)
-    var items = Array.prototype.slice.call(self.obj),
-        res = []
-    items.forEach(function(item){
-        while(item > 256){
-            res.push(item % 256)
-            item = Math.floor(item / 256)
-        }
-        res.push(item)
-    })
-    return _b_.bytes.$factory(res)
+    // machine representation, itemsize bytes per item (little-endian),
+    // via the typecode's TypedArray (the previous variable-length
+    // encoding dropped the padding: array('i', [1]).tobytes() was b'\x01')
+    var T = typecodes[self.typecode]
+    var items = self.obj === null ? [] : Array.prototype.slice.call(self.obj)
+    if (T === BigInt64Array || T === BigUint64Array) {
+        items = items.map(BigInt)
+    }
+    var ta = new T(items)
+    return _b_.bytes.$factory(Array.from(new Uint8Array(ta.buffer)))
 }
 
-array_funcs.tofile = function(){
+array_funcs.tofile = function() {
     $B.RAISE(_b_.NotImplementedError)
 }
 
-array_funcs.tolist = function(self){
+array_funcs.tolist = function(self) {
     $B.args("tolist", 1, {self: null}, arguments)
-    if(self.obj === null){
+    if (self.obj === null) {
         return $B.$list([])
     }
     return $B.$list(Array.prototype.slice.call(self.obj))
@@ -378,7 +403,7 @@ array_funcs.tolist = function(self){
 
 array_funcs.tounicode = array_funcs.tobytes
 
-array_funcs.typecode_get = function(self){
+array_funcs.typecode_get = function(self) {
     return self.typecode
 }
 
@@ -400,12 +425,12 @@ $B.finalize_type(array)
 
 var array_iterator = $B.make_type("array_iterator")
 
-array_iterator.tp_iter = function(self){
+array_iterator.tp_iter = function(self) {
     return self
 }
 
 array_iterator.tp_iternext = function*(self){
-    for(var item of self.it){
+    for (var item of self.it) {
         yield item
     }
 }

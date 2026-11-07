@@ -12,7 +12,7 @@ import inspect
 import types
 
 
-stdlib_name = '_opcode'
+stdlib_name = '_imp'
 
 include_doc = False
 include_base_classes = False

@@ -31,6 +31,42 @@ class RegexFlag:
     __str__ = object.__str__
     _numeric_repr_ = hex
 
+class PatternError(Exception):
+    """Exception raised for invalid regular expressions.
+
+    Attributes:
+
+        msg: The unformatted error message
+        pattern: The regular expression pattern
+        pos: The index in the pattern where compilation failed (may be None)
+        lineno: The line corresponding to pos (may be None)
+        colno: The column corresponding to pos (may be None)
+    """
+
+    __module__ = 're'
+
+    def __init__(self, msg, pattern=None, pos=None):
+        self.msg = msg
+        self.pattern = pattern
+        self.pos = pos
+        if pattern is not None and pos is not None:
+            msg = '%s at position %d' % (msg, pos)
+            if isinstance(pattern, str):
+                newline = '\n'
+            else:
+                newline = b'\n'
+            self.lineno = pattern.count(newline, 0, pos) + 1
+            self.colno = pos - pattern.rfind(newline, 0, pos)
+            if newline in pattern:
+                msg = '%s (line %d, column %d)' % (msg, self.lineno, self.colno)
+        else:
+            self.lineno = self.colno = None
+        super().__init__(msg)
+
+
+# Backward compatibility after renaming in 3.13
+error = PatternError
+
 
 from python_re import *
 import python_re

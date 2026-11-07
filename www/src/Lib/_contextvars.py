@@ -1,5 +1,6 @@
 """Context Variables"""
 
+from types import GenericAlias
 
 class Context(object):
 
@@ -14,7 +15,9 @@ class Context(object):
 
     keys = "<method 'keys' of 'Context' objects>"
 
-    run = "<method 'run' of 'Context' objects>"
+    def run(self, callable, *args, **kwargs):
+        # single-threaded environment: just call (no context switching)
+        return callable(*args, **kwargs)
 
     values = "<method 'values' of 'Context' objects>"
 
@@ -42,8 +45,11 @@ class ContextVar:
             self.value = token.old_value
 
     def set(self, value):
+        token = Token(self)
         self.value = value
-        return Token(self)
+        return token
+
+    __class_getitem__ = classmethod(GenericAlias)
 
 class Token(object):
 
@@ -51,10 +57,7 @@ class Token(object):
 
     def __init__(self, contextvar):
         self.var = contextvar
-        try:
-            self.old_value = contextvar.get()
-        except LookupError:
-            self.old_value = Token.MISSING
+        self.old_value = getattr(contextvar, 'value', Token.MISSING)
 
 def copy_context(*args,**kw):
     pass

@@ -64,7 +64,11 @@ def start_new_thread(function, args, kwargs={}):
         _interrupt = False
         raise KeyboardInterrupt
 
-start_joinable_thread = start_new_thread # lazy
+def start_joinable_thread(function, handle=None, daemon=True):
+    """3.14 signature: threading.Thread.start() calls
+    _start_joinable_thread(bootstrap, handle=..., daemon=...)."""
+    start_new_thread(function, ())
+    return handle if handle is not None else _ThreadHandle()
 
 def _make_thread_handle(ident):
     return 999
@@ -83,7 +87,7 @@ def get_ident():
     available, it is safe to assume that the current process is the
     only thread.  Thus a constant can be safely returned.
     """
-    return -1
+    return 1
 
 def allocate_lock():
     """Dummy implementation of _thread.allocate_lock()."""
@@ -96,13 +100,21 @@ def stack_size(size=None):
     return 0
 
 def _get_main_thread_ident():
-    return 999
+    return get_ident()
 
 def _is_main_interpreter():
     return True
 
 class _ThreadHandle:
-    pass
+    # threads run synchronously in start_joinable_thread, so a handle is
+    # always already done; threading.Thread relies on join()/is_done()
+    ident = -1
+
+    def join(self, timeout=None):
+        pass
+
+    def is_done(self):
+        return True
 
 
 class LockType(object):

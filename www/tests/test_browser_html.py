@@ -33,4 +33,30 @@ assert(len(html.tags.keys())) == nb - 1
 assert(len(html.tags.values())) == nb - 1
 assert 'H6' not in html.tags
 
+
+# issue 619
+from browser.html import H2
+
+class _ElementMixIn:
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._sargs = []
+        self._kargs = {}
+
+    def mytest(self):
+        self._sargs.append(5)
+
+    def mytest2(self):
+        self._kargs[5] = '5'
+
+
+kls = type('h2', (_ElementMixIn, H2,), {})
+
+x = kls()
+x.mytest()
+assert x._sargs == [5]
+x.mytest2()
+assert x._kargs[5] == '5'
+
 print('all tests passed...')

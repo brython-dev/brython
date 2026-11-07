@@ -1,11 +1,11 @@
-(function($B){
+(function($B) {
 
 var _b_ = $B.builtins,
     _keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="
 
-function make_alphabet(altchars){
+function make_alphabet(altchars) {
     var alphabet = _keyStr
-    if(altchars !== undefined && altchars !== _b_.None){
+    if (altchars !== undefined && altchars !== _b_.None) {
         // altchars is an instance of Python bytes
         var source = altchars.source
         alphabet = alphabet.substr(0,alphabet.length-3) +
@@ -15,9 +15,9 @@ function make_alphabet(altchars){
 }
 
 var Base64 = {
-    error: function(){return 'binascii_error'},
+    error: function() {return 'binascii_error'},
 
-    encode: function(bytes, altchars){
+    encode: function(bytes, altchars) {
 
         var input = bytes.source,
             output = "",
@@ -26,7 +26,7 @@ var Base64 = {
 
         var alphabet = make_alphabet(altchars)
 
-        while(i < input.length){
+        while (i < input.length) {
 
             chr1 = input[i++]
             chr2 = input[i++]
@@ -37,9 +37,9 @@ var Base64 = {
             enc3 = ((chr2 & 15) << 2) | (chr3 >> 6)
             enc4 = chr3 & 63
 
-            if(isNaN(chr2)){
+            if (isNaN(chr2)) {
                 enc3 = enc4 = 64
-            }else if(isNaN(chr3)){
+            } else if (isNaN(chr3)) {
                 enc4 = 64
             }
 
@@ -53,7 +53,7 @@ var Base64 = {
     },
 
 
-    decode: function(bytes, altchars, validate){
+    decode: function(bytes, altchars, validate) {
         var output = [],
             chr1, chr2, chr3,
             enc1, enc2, enc3, enc4
@@ -66,34 +66,34 @@ var Base64 = {
         // are in the alphabet
         var _input = ''
         var padding = 0
-        for(var i = 0, len = input.length; i < len; i++){
+        for (var i = 0, len = input.length; i < len; i++) {
             var car = String.fromCharCode(input[i])
             var char_num = alphabet.indexOf(car)
-            if(char_num == -1){
-                if(validate){
+            if (char_num == -1) {
+                if (validate) {
                     throw Base64.error("Non-base64 digit found: " + car)
                 }
-            }else if(char_num == 64 && i < input.length - 2){
-                if(validate){
+            } else if (char_num == 64 && i < input.length - 2) {
+                if (validate) {
                     throw Base64.error("Non-base64 digit found: " + car)
                 }
-            }else if(char_num == 64 && i >= input.length - 2){
+            } else if (char_num == 64 && i >= input.length - 2) {
                 padding++
                 _input += car
-            }else{
+            } else {
                 _input += car
             }
         }
         input = _input
-        if(_input.length == padding){
+        if (_input.length == padding) {
             return _b_.bytes.$factory([])
         }
-        if( _input.length % 4 > 0){
+        if ( _input.length % 4 > 0) {
             throw Base64.error("Incorrect padding")
         }
 
         var i = 0
-        while(i < input.length){
+        while (i < input.length) {
 
             enc1 = alphabet.indexOf(input.charAt(i++))
             enc2 = alphabet.indexOf(input.charAt(i++))
@@ -106,10 +106,10 @@ var Base64 = {
 
             output.push(chr1)
 
-            if(enc3 != 64){
+            if (enc3 != 64) {
                 output.push(chr2)
             }
-            if(enc4 != 64){
+            if (enc4 != 64) {
                 output.push(chr3)
             }
 
@@ -119,20 +119,20 @@ var Base64 = {
 
     },
 
-    _utf8_encode: function(string){
+    _utf8_encode: function(string) {
         string = string.replace(/\r\n/g, "\n")
         var utftext = "";
 
-        for(var n = 0; n < string.length; n++){
+        for (var n = 0; n < string.length; n++) {
 
             var c = string.charCodeAt(n)
 
-            if(c < 128){
+            if (c < 128) {
                 utftext += String.fromCharCode(c)
-            }else if((c > 127) && (c < 2048)){
+            } else if ((c > 127) && (c < 2048)) {
                 utftext += String.fromCharCode((c >> 6) | 192)
                 utftext += String.fromCharCode((c & 63) | 128)
-            }else{
+            } else {
                 utftext += String.fromCharCode((c >> 12) | 224)
                 utftext += String.fromCharCode(((c >> 6) & 63) | 128)
                 utftext += String.fromCharCode((c & 63) | 128)
@@ -148,18 +148,18 @@ var Base64 = {
             i = 0,
             c = c1 = c2 = 0
 
-        while(i < utftext.length){
+        while (i < utftext.length) {
 
             c = utftext.charCodeAt(i)
 
-            if(c < 128){
+            if (c < 128) {
                 string += String.fromCharCode(c)
                 i++
-            }else if((c > 191) && (c < 224)){
+            } else if ((c > 191) && (c < 224)) {
                 c2 = utftext.charCodeAt(i + 1)
                 string += String.fromCharCode(((c & 31) << 6) | (c2 & 63))
                 i += 2
-            }else{
+            } else {
                 c2 = utftext.charCodeAt(i + 1)
                 c3 = utftext.charCodeAt(i + 2)
                 string += String.fromCharCode(

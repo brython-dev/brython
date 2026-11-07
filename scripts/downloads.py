@@ -14,7 +14,7 @@ print('Python.asdl and python.gram from CPython Github repository')
 ast_url = f"https://raw.githubusercontent.com/python/cpython/{vnum}/Parser/Python.asdl"
 f = urllib.request.urlopen(ast_url)
 
-with open('Python.asdl', 'wb') as out:
+with open(f'Python{vnum}.asdl', 'wb') as out:
     out.write(f.read())
 
 # read python.gram from CPython Github site
@@ -57,6 +57,7 @@ if not os.path.exists("ucd"):
 for path in ["UnicodeData.txt",
              "CaseFolding.txt",
              "DerivedCoreProperties.txt",
+             "EastAsianWidth.txt",
              "NameAliases.txt"]:
     abs_path = os.path.join("ucd", path)
     f = urllib.request.urlopen(unicode_url + path)

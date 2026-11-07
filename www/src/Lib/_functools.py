@@ -78,6 +78,8 @@ class partial:
         self.args = args
         self.keywords = kwds
 
+partial.__module__ = 'functools'
+
 def reduce(func,iterable,initializer=None):
     args = iter(iterable)
     if initializer is not None:

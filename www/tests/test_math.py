@@ -374,5 +374,25 @@ def f():
 
 assert_raises(TypeError, math.sqrt, f,
     msg = "must be real number, not function")
-    
+
+# PR 2727
+assert_raises(ValueError, math.fsum, [float('inf'), float('-inf')])
+
+# a function of math refuses a keyword and a wrong number of arguments
+for func in [math.sin, math.cbrt, math.floor, math.isnan]:
+    name = func.__name__
+    assert_raises(TypeError, func,
+        msg=f'math.{name}() takes exactly one argument (0 given)')
+    assert_raises(TypeError, func, 1, 2,
+        msg=f'math.{name}() takes exactly one argument (2 given)')
+    assert_raises(TypeError, func, x=1,
+        msg=f'math.{name}() takes no keyword arguments')
+
+for func in [math.atan2, math.copysign, math.ldexp]:
+    name = func.__name__
+    assert_raises(TypeError, func, 1,
+        msg=f'{name} expected 2 arguments, got 1')
+    assert_raises(TypeError, func, 1, y=2,
+        msg=f'math.{name}() takes no keyword arguments')
+
 print("passed all tests..")

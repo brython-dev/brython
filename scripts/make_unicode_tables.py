@@ -22,6 +22,8 @@ gc = None
 bidi_ws = [] # characters with bidirectional class in "WS", "B", "S"
 count = {}
 
+titles = {}
+
 def to_int(codepoint):
     return int("0x" + codepoint, 16)
 
@@ -39,6 +41,11 @@ with open(os.path.join("ucd", "UnicodeData.txt")) as f:
                 print('to int', int(chr(char)))
             except:
                 pass
+        elif gc == 'Lt':
+            title = chr(char)
+            titles[title] = title
+            titles[title.lower()] = title
+            titles[title.upper()] = title
         if bidi_class in ["WS", "B", "S"]:
             bidi_ws.append(char)
 
@@ -108,6 +115,7 @@ for i in range(918000):
         if unicodedata.category(chr(i)) == 'Lo':
             add(i, "Lo_numeric")
 
+
 import json
 data = {}
 for cat in tables:
@@ -130,3 +138,5 @@ with open(os.path.join(dest_dir, "unicode_data.js"), "w",
         str(casefold).replace(" ", ""))
     out.write("\n$B.unicode_bidi_whitespace = " +
         str(bidi_ws).replace(" ", ""))
+    out.write("\n$B.unicode_titles = " +
+        json.dumps(titles))

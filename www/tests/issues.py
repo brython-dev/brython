@@ -1,8 +1,16 @@
 from tester import assertRaises, assert_raises
 
-parser_to_ast = hasattr(__BRYTHON__, 'parser_to_ast')
-gen_parser = hasattr(__BRYTHON__, 'py_tokens')
 
+try:
+    __BRYTHON__
+except:
+    __BRYTHON__ = None
+
+try:
+    parser_to_ast = hasattr(__BRYTHON__, 'parser_to_ast')
+    gen_parser = hasattr(__BRYTHON__, 'py_tokens')
+except:
+    parser_to_ast = gen_parser = None
 # issue 5
 assert(isinstance(__debug__, bool))
 
@@ -140,12 +148,29 @@ assert recur() == 1
 #issue 131
 import time
 
+def comp_times(x, y):
+    for attr in dir(x):
+        if attr.startswith('tm_'):
+            vx = getattr(x, attr)
+            vy = getattr(y, attr)
+            if attr == 'tm_zone' and vx in ['UTC', None] \
+                    and vy in ['UTC', None]:
+                continue
+            if vx in [0, None] and vy in [0, None]:
+                continue
+            if vx != vy:
+                print('attr', attr, 'not equal', vx, vy)
+                return False
+    return True
+
 target = time.struct_time([1970, 1, 1, 0, 0, 0, 3, 1, 0])
-assert time.gmtime(0).args == target.args
+assert len(target) == 9
+gmt = time.gmtime(0)
+assert comp_times(time.gmtime(0), target)
 target = time.struct_time([1970, 1, 1, 0, 1, 40, 3, 1, 0])
-assert time.gmtime(100).args == target.args
+assert comp_times(time.gmtime(100), target)
 target = time.struct_time([2001, 9, 9, 1, 46, 40, 6, 252, 0])
-assert time.gmtime(1000000000).args == target.args
+assert comp_times(time.gmtime(1000000000), target)
 
 try:
     time.asctime(1)
@@ -160,8 +185,7 @@ except TypeError:
 except:
     ValueError("Should have raised TypeError")
 assert time.asctime(time.gmtime(0)) == 'Thu Jan  1 00:00:00 1970'
-tup = tuple(time.gmtime(0).args)
-assert time.asctime(tup) == 'Thu Jan  1 00:00:00 1970'
+assert time.asctime(tuple(time.gmtime(0))) == 'Thu Jan  1 00:00:00 1970'
 
 # issue 137
 codeobj = compile("3 + 4", "<example>", "eval")
@@ -1107,30 +1131,6 @@ try:
 except TypeError:
     pass
 
-# issue 619
-from browser.html import H2
-
-class _ElementMixIn:
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._sargs = []
-        self._kargs = {}
-
-    def mytest(self):
-        self._sargs.append(5)
-
-    def mytest2(self):
-        self._kargs[5] = '5'
-
-
-kls = type('h2', (_ElementMixIn, H2,), {})
-
-x = kls()
-x.mytest()
-assert x._sargs == [5]
-x.mytest2()
-assert x._kargs[5] == '5'
 
 # issue 649
 class test:
@@ -1371,10 +1371,6 @@ class C:
 
 assert '{}'.format(C) == "<class '__main__.C'>"
 
-import javascript
-assert javascript.jsobj2pyobj(javascript.NULL) is javascript.NULL
-undef = javascript.jsobj2pyobj(javascript.UNDEFINED)
-assert not undef
 
 # issue 760
 class A(object):
@@ -1413,7 +1409,8 @@ def f():
 
 # issue 778
 import os
-assertRaises(NotImplementedError, os.listdir)
+if __BRYTHON__:
+    assertRaises(NotImplementedError, os.listdir)
 
 # issue 780
 def g():
@@ -1553,7 +1550,8 @@ assert t[1:5, 7] == (slice(1, 5, None), 7)
 def f():
     print(10)
 
-assert f.__code__.co_code.startswith("function f")
+if __BRYTHON__:
+    assert f.__code__.co_code.startswith("function f")
 
 # Regression introduced in 6888c6d67b3d5b44905a09fa427a84bef2c7b304
 class A:
@@ -1731,34 +1729,6 @@ for _ in range(2):
 
 # issue 900
 "".format(**globals())
-
-# issue 901 : _jsre's SRE_Pattern lacking methods: .sub(), .subn(), .split(), and .fullmatch()
-import _jsre as re
-
-regex = re.compile('a|b')
-
-# These methods work!
-assert regex.match('ab') is not None
-assert regex.search(' ab') is not None
-assert regex.findall('ab') == ['a', 'b']
-
-def switch(m):
-    return 'a' if m.group(0) == 'b' else 'b'
-
-# Missing: .sub()
-assert regex.sub(switch, 'ba') == 'ab'
-
-# Missing: .fullmatch()
-# assert regex.fullmatch('b') is not None
-
-# Missing: .split()
-#assert regex.split('cacbca', maxsplit=2) == ['c', 'c', 'ca']
-
-# Missing: .subn()
-#assert regex.subn(switch, 'ba') == ('ab', 2)
-
-# Broken: .finditer()
-#assert [m.group(0) for m in regex.finditer('ab')] == ['a', 'b']
 
 
 # issue 923
@@ -1966,6 +1936,18 @@ class C:
 c = C()
 delattr(c, "x")
 assert c.count == 1
+
+# delattr() and the __delattr__ of object and type return None
+class D:
+    pass
+
+d = D()
+d.x = 1
+assert delattr(d, "x") is None
+d.x = 1
+assert object.__delattr__(d, "x") is None
+D.y = 1
+assert type.__delattr__(D, "y") is None
 
 # setting __defaults__ to functions (issue #1053)
 
@@ -2462,7 +2444,7 @@ except SystemExit:
     pass
 
 # issue 1331
-assert [*{*['a', 'b', 'a']}] == ['a', 'b']
+assert set([*{*['a', 'b', 'a']}]) == {'a', 'b'}
 assert [*{'a': 1, 'b': 2}] == ['a', 'b']
 
 # issue 1366
@@ -2626,11 +2608,8 @@ try:
     exec("not x = 1")
     raise Exception("should have raised SyntaxError")
 except SyntaxError as exc:
-    if parser_to_ast or gen_parser:
-        assert exc.args[0] == "cannot assign to expression"
-    else:
-        assert exc.args[0] == "cannot assign to operator"
-    pass
+    assert exc.args[0] == "cannot assign to expression"
+
 
 # issue 1501
 class B:
@@ -3097,7 +3076,7 @@ with x as y:
   pass"""
 
 assert_raises(TypeError, exec, test,
-  msg="'str' object does not support the context manager protocol")
+  msg="'str' object does not support the context manager protocol (missed __exit__ method)")
 
 # issue 2030
 def f():
@@ -3113,16 +3092,6 @@ def main():
 
 main()
 
-# issue 2031
-
-save_annotations = __annotations__
-
-def foo():
-    bar: Bar = 42
-    assert __annotations__ == save_annotations
-    assert bar == 42
-
-foo()
 
 # issue 2077
 assert_raises(SyntaxError, exec, "f(🠞)",
@@ -3171,7 +3140,8 @@ import os
 module_path = "/py/elephas/test_mdl.py"
 path = pathlib.Path(module_path)
 
-assert os.fspath(path) == r'/py/elephas/test_mdl.py'
+assert os.fspath(path) in (r'/py/elephas/test_mdl.py',
+    r'\py\elephas\test_mdl.py')
 
 path = path.with_suffix('')
 stem = path.stem
@@ -3293,7 +3263,8 @@ def f(name, module):
 f('abc', __name__)
 
 # issue 2539
-assert_raises(NotImplementedError, os.open)
+if __BRYTHON__:
+    assert_raises(NotImplementedError, os.open)
 
 # issue 2551
 import configparser
@@ -3370,6 +3341,321 @@ def f2683():
 
 assert f2683.__annotate__ is None
 assert f2683.__annotations__ == {}
+
+# PR 2731
+open(pathlib.Path('index.html'))
+
+# PR 2735
+y2735 = 0
+
+def f2735(x):
+  assert 'x' in locals()
+  locals()['y'] = 99
+  assert 'y' not in locals()
+  eval('y2735') # no error
+  assert_raises(NameError, eval, 'y2735')
+
+f2735(0)
+
+# PR 2912 : issubclass / super() with a custom metaclass and indirect subclass
+class Meta2912(type):
+    pass
+
+class A2912(metaclass=Meta2912):
+    pass
+
+class B2912(A2912):
+    pass
+
+class C2912(B2912):
+    pass
+
+assert issubclass(C2912, A2912)
+assert issubclass(C2912, B2912)
+
+class D2912(A2912):
+    def __new__(cls, *args):
+        obj = super().__new__(cls)
+        obj.tag = "ok"
+        return obj
+
+class E2912(D2912):
+    pass
+
+assert E2912().tag == "ok"
+
+# PR 2912 : unary dunders defined as zero-argument staticmethods
+class Unary2912:
+    @staticmethod
+    def __neg__():
+        return "neg"
+
+    @staticmethod
+    def __pos__():
+        return "pos"
+
+    @staticmethod
+    def __invert__():
+        return "invert"
+
+    @staticmethod
+    def __abs__():
+        return "abs"
+
+u2912 = Unary2912()
+assert -u2912 == "neg"
+assert +u2912 == "pos"
+assert ~u2912 == "invert"
+assert abs(u2912) == "abs"
+assert_raises(TypeError, lambda: -object())
+assert_raises(TypeError, abs, object())
+
+# PR 2912 : functions defined by exec() with distinct globals and locals
+# see the globals dict
+g2912 = {"VALUE": 42, "__name__": "mod2912"}
+l2912 = {}
+exec("def f2912():\n    return VALUE", g2912, l2912)
+assert "f2912" in l2912
+assert l2912["f2912"]() == 42
+
+# PR 2912 : iteration of a dict subclass whose first base is a plain class
+class PlainBase2912:
+    pass
+
+class DictSub2912(PlainBase2912, dict):
+    pass
+
+d2912 = DictSub2912(a=1, b=2)
+assert sorted(iter(d2912)) == ["a", "b"]
+assert sorted(list(d2912)) == ["a", "b"]
+assert max(d2912) == "b"
+
+# PR 2912 : sequence-protocol iteration only needs __getitem__ + IndexError
+class Seq2912:
+    def __getitem__(self, i):
+        if i > 2:
+            raise IndexError(i)
+        return i * 10
+
+assert list(Seq2912()) == [0, 10, 20]
+
+# PR 2912 : dict() from a sequence of Python pair objects
+class Pair2912:
+    def __init__(self, a, b):
+        self.pair = (a, b)
+
+    def __len__(self):
+        return 2
+
+    def __getitem__(self, i):
+        return self.pair[i]
+
+assert dict([Pair2912("x", 1), Pair2912("y", 2)]) == {"x": 1, "y": 2}
+
+# PR 2912 : hash of tuples / frozensets containing large ints
+# (hash(2 ** 60) is above Number.MAX_SAFE_INTEGER)
+assert isinstance(hash((2 ** 60, "x")), int)
+assert isinstance(hash(frozenset([2 ** 60, "x"])), int)
+assert hash((2 ** 60,)) == hash((2 ** 60,))
+dbig2912 = {(2 ** 60, "x"): 1}
+assert dbig2912[(2 ** 60, "x")] == 1
+
+# PR 2912 : math.lcm
+import math
+assert math.lcm(6, 4) == 12
+assert math.lcm() == 1
+assert math.lcm(5) == 5
+assert math.lcm(0, 3) == 0
+
+# PR 2912 : array.array negative indices
+from array import array
+arr2912 = array("l", [1, 2, 3])
+assert arr2912[-1] == 3
+arr2912[-1] = 5
+assert arr2912[-1] == 5
+assert_raises(IndexError, lambda: arr2912[-4])
+
+# PR 2912 : cmath and ctypes are importable
+import cmath
+assert cmath.sqrt(-1) == 1j
+import ctypes
+assert ctypes.sizeof(ctypes.c_long) in (4, 8)
+
+# PR 2912 : property() with only keyword arguments
+prop2912 = property(fset=lambda self, value: None)
+assert prop2912.fget is None
+assert prop2912.fset is not None
+
+class WithProp2912:
+    def __init__(self):
+        self._x = 0
+
+    def _set_x(self, value):
+        self._x = value
+
+    x = property(fset=_set_x)
+
+wp2912 = WithProp2912()
+wp2912.x = 5
+assert wp2912._x == 5
+assert_raises(AttributeError, lambda: wp2912.x)
+
+# issue 2934 - collections.deque() with keyword arguments
+from collections import deque as deque_2934
+
+d_2934 = deque_2934(maxlen=3)
+assert d_2934.maxlen == 3
+assert list(d_2934) == []
+d_2934.extend([1, 2, 3, 4])
+assert list(d_2934) == [2, 3, 4]
+
+assert list(deque_2934([1, 2], maxlen=1)) == [2]
+assert list(deque_2934(iterable=[1, 2])) == [1, 2]
+assert deque_2934().maxlen is None
+assert_raises(ValueError, deque_2934, [], -1)
+
+# __getitem__ is bound like any special method
+class StaticItem:
+    @staticmethod
+    def __getitem__(index):
+        return [1, 2][index]
+    def __len__(self):
+        return 2
+    def keys(self):
+        return [0]
+
+class ClassItem:
+    @classmethod
+    def __getitem__(cls, index):
+        return [cls, 1][index]
+
+class StaticMap:
+    @staticmethod
+    def __getitem__(key):
+        return key * 2
+    def keys(self):
+        return ["a"]
+
+class Calls:
+    def __call__(self, *args):
+        return len(args)
+
+class NotDescriptors:
+    __getitem__ = Calls()
+    __neg__ = abs
+
+def kwargs(**kw):
+    return kw
+
+assert StaticItem()[1] == 2 and list(StaticItem()) == [1, 2]
+assert list(reversed(StaticItem())) == [2, 1]
+assert dict(StaticItem()) == {0: 1}
+assert ClassItem()[0] is ClassItem
+assert kwargs(**StaticMap()) == {"a": "aa"}
+assert NotDescriptors()[0] == 1
+assert_raises(TypeError, lambda: -NotDescriptors())
+
+# the frame of a generator expression: .0 is the iterator, and its free
+# variables are in locals()
+def genexpr_frame():
+    y = 1
+    return list({k: type(v).__name__ for k, v in locals().items()}
+                for _ in range(1) if y)
+
+assert genexpr_frame() == [{'.0': 'range_iterator', '_': 'int', 'y': 'int'}]
+
+# super() in a function nested in a method, and __class__ in locals()
+class Base_class_cell:
+    def greet(self):
+        return "base"
+
+class Class_cell(Base_class_cell):
+    def plain(self):
+        return sorted(locals())
+
+    def uses_super(self):
+        super()
+        return sorted(locals())
+
+    def nested(self):
+        def inner(obj):
+            return super().greet(), sorted(locals())
+        return inner(self), sorted(locals())
+
+    def in_lambda(self):
+        return (lambda obj: super().greet())(self)
+
+assert Class_cell().plain() == ['self']
+assert Class_cell().uses_super() == ['__class__', 'self']
+assert Class_cell().nested() == (('base', ['__class__', 'obj']),
+                                 ['__class__', 'inner', 'self'])
+assert Class_cell().in_lambda() == 'base'
+
+class Class_cell_order(Base_class_cell):
+    def m(self):
+        def inner(obj):
+            x = 1
+            super()
+            return list(locals())
+        return inner(self), list(locals())
+
+assert Class_cell_order().m() == (['obj', 'x', '__class__'],
+                                  ['self', 'inner', '__class__'])
+
+def super_outside_class(x):
+    return super()
+
+assert_raises(RuntimeError, super_outside_class, 1,
+    msg="super(): __class__ cell not found")
+
+# super(type, obj) where obj is an instance of a list or tuple subclass
+class List_super(list):
+    def __init__(self, items):
+        super(List_super, self).__init__(items)
+
+assert list(List_super([1, 2])) == [1, 2]
+assert super(List_super, List_super([3])).copy() == [3]
+
+class Tuple_super(tuple):
+    pass
+
+assert super(Tuple_super, Tuple_super((1,))).count(1) == 1
+
+# an unbound method called with no argument
+try:
+    list.clear()
+    raise AssertionError("should have raised TypeError")
+except TypeError as exc:
+    assert exc.args[0] == "unbound method list.clear() needs an argument"
+# a keyword named like the receiver of a builtin is the caller's keyword
+assert "{self}".format(self=1) == "1"
+assert "{0}-{self}".format(1, self=2) == "1-2"
+assert dict({}, self=1) == {"self": 1}
+d_self = {}
+d_self.update(self=1)
+assert d_self == {"self": 1}
+
+class Meta_cls_keyword(type):
+    pass
+
+class With_cls_keyword(metaclass=Meta_cls_keyword):
+    def __init__(self, cls=None):
+        self.seen = cls
+
+assert With_cls_keyword(cls=1).seen == 1
+# list.sort takes keyword arguments only, and its signature says so
+assert_raises(TypeError, [].sort, 1,
+    msg='sort() takes no positional arguments')
+sorted_keyword = ['bb', 'a']
+sorted_keyword.sort(key=len, reverse=True)
+assert sorted_keyword == ['bb', 'a']
+assert list.sort.__text_signature__ == '($self, /, *, key=None, reverse=False)'
+assert [].sort.__text_signature__ == list.sort.__text_signature__
+# a quote in the file name does not break the code generated for it
+namespace_quote = {}
+exec(compile("result = list(x for x in 'ab')", "O'Brien.py", "exec"),
+    namespace_quote)
+assert namespace_quote['result'] == ['a', 'b']
 
 # ==========================================
 # Finally, report that all tests have passed

@@ -76,6 +76,8 @@ class FormattedTuple(tuple):
         return tuple.__new__(cls, (x, y))
     def __repr__(self):
         return "(%.2f, %.2f)" % self
+    def __abs__(self):
+        return math.hypot(*self)
 
 def create_circle(r):
     '''Creates a circle of radius r centered at the origin'''

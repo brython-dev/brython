@@ -648,6 +648,16 @@ assert str(list[int, ...]) == 'list[int, ...]'
 assert str(tuple[str]) == 'tuple[str]'
 assert isinstance(list[str], types.GenericAlias)
 
+# __class_getitem__ receives the subscript as written, a lone one unpacked
+class G:
+    def __class_getitem__(cls, item):
+        return item
+
+assert G[int] is int
+assert G[int, str] == (int, str)
+assert list[int].__args__ == (int,)
+assert type[int].__args__ == (int,)
+
 try:
     isinstance([1, 2, 3], list[str])
     raise Exception("should have raised TypeError")
@@ -914,6 +924,30 @@ class A:
     """Docstring of class A."""
 
 assert A.__doc__ == "Docstring of class A."
+
+# identifiers are normalized to NFKC, strings are not
+class Box:
+    def __init__(self):
+        self.field = "field"
+        self.café = "composed"
+
+box = Box()
+assert box.ﬁeld == "field"
+namespace = {"box": box}
+exec("decomposed = box.café", namespace)
+assert namespace["decomposed"] == "composed"
+assert getattr(box, "ﬁeld", "missing") == "missing"
+
+ﬂag = 1
+assert flag == 1
+
+Ⅷ = 8
+assert VIII == 8
+
+def ｆｕｌｌ():
+    return "full"
+
+assert full() == "full"
 
 # chained assignments and unpacking
 x, y = info = (1, 2)
@@ -1210,5 +1244,43 @@ try:
   raise AssertionError('should have raised NameError')
 except NameError:
   pass
+
+# issue 2694
+assert 0xEC30A437.to_bytes(4, byteorder='little') == b'7\xa40\xec'
+
+# issue 2712
+class C:
+    def f(self):
+        def g():
+            nonlocal nb  # <==
+            if nb == 0:
+                nb += 1
+                assert nb == 1
+            assert nb == 1
+
+        nb = 0
+        g()
+        assert nb == 1
+
+C().f()
+
+# PEP 798 – Unpacking in Comprehensions
+dicts = {'x': 1}, {'y': 2}, {'x': 3, 'z': 4}
+
+d = {**t for t in dicts}
+assert d == {'x': 3, 'y': 2, 'z': 4}
+
+lists = [[1, 2], [3, 4]]
+t = [*x for x in lists]
+assert t == [1, 2, 3, 4]
+
+sets = [{1, 2}, {2, 3}, {3, 4}]
+assert {*s for s in sets} == {1, 2, 3, 4}
+
+gen = (*L for L in lists)  # equivalent to (x for L in lists for x in L)
+assert list(gen) == [1, 2, 3, 4]
+
+# PR 2800
+assert type(str.count).__name__ == 'method_descriptor'
 
 print('passed all tests...')

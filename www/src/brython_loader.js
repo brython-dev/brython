@@ -38,7 +38,7 @@
           
        try {
          return JSON.parse(json_string)
-       } catch(e) {
+       } catch (e) {
          console.log(e)   // display an error to show that options cannot be parsed.
        }
 
