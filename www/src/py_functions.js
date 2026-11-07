@@ -820,21 +820,25 @@ function make_arguments_parser(f) {
                 add_key(key, elt[$B.KW][0][key])
             }
             for (let i = 1; i< elt[$B.KW].length; i++) {
-                if ($B.get_class(elt[$B.KW][i]) === _b_.dict) {
-                    for (let item of _b_.dict.$iter_items(elt[$B.KW][i])) {
-                        add_key(item.key, item.value)
+                let mapping = elt[$B.KW][i]
+                let klass = $B.get_class(mapping)
+                if (klass === _b_.dict) {
+                    for (let [k, v] of $B.dict_key_values(mapping)) {
+                        add_key(k, v)
                     }
                 } else {
-                    let klass = $B.get_class(elt[$B.KW][i])
                     let keys_method = $B.$getattr(klass, 'keys', null)
-                    let getitem = $B.$getattr(klass, '__getitem__', null)
+                    // getitem is the instance's __getitem__, not the classe's
+                    // because klass.__getitem__ might be a staticmethod
+                    // Cf. PR #3210
+                    let getitem = $B.$getattr(mapping, '__getitem__', null)
                     if (keys_method === null || getitem === null) {
                         $B.RAISE(_b_.TypeError,
                             `${name} argument after ** must be a mapping, ` +
                             `not ${$B.class_name(elt[$B.KW][i])}`)
                     }
                     for (let key of $B.make_js_iterator(keys_method(elt[$B.KW][i]))) {
-                        add_key(key, getitem(elt[$B.KW][i], key))
+                        add_key(key, $B.$call(getitem, key))
                     }
                 }
             }
