@@ -86,7 +86,7 @@ $B.get_mro=function(cls){return cls.tp_mro ?? cls.__mro__}
 $B.make_mro=function(cls){
 if(cls===undefined){$B.RAISE(_b_.TypeError,'unbound method type.mro() needs an argument')}
 var bases=cls.tp_bases,seqs=[],pos1=0
-for(var base of bases){
+for(var base of bases){if(bases.indexOf(base)!=bases.lastIndexOf(base)){$B.RAISE(_b_.TypeError,`duplicate base class ${$B.get_name(base)}`)}
 let bmro=[],pos=0
 if(base===undefined ||
 $B.get_mro(base)===undefined){if(base===undefined){console.log('no base',cls)}
@@ -113,7 +113,10 @@ for(let j=0;j < non_empty.length;j++){let s=non_empty[j]
 if(s.slice(1).indexOf(candidate)>-1){not_head[pos++]=s}}
 if(not_head.length > 0){candidate=null}else{
 break}}
-if(candidate===null){$B.RAISE(_b_.TypeError,"inconsistent hierarchy, no C3 MRO is possible")}
+if(candidate===null){var heads=new Set(non_empty.map(seq=> seq[0]))
+$B.RAISE(_b_.TypeError,'Cannot create a consistent method '+
+'resolution order (MRO) for bases '+
+Array.from(heads,$B.get_name).join(', '))}
 mro[mpos++]=candidate
 for(let i=0;i < seqs.length;i++){let seq=seqs[i]
 if(seq[0]===candidate){
@@ -744,8 +747,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-11-06 08:11:51.083889"
-__BRYTHON__.timestamp=1793949111083
+__BRYTHON__.compiled_date="2026-11-07 10:59:05.198710"
+__BRYTHON__.timestamp=1794045545179
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -2531,9 +2534,13 @@ if(spec !==""){$B.RAISE(_b_.TypeError,"non-empty format string passed to object.
 )}
 return _b_.str.$factory(self)}
 object_funcs.__getstate__=function(self){var dict=$B.get_dict(self)
-var sd=null
-for(var k in self){if(k.startsWith('slot_value_')&& self[k]!==undefined){if(sd===null){sd=$B.empty_dict()}
-_b_.dict.$setitem(sd,k.slice(11),self[k])}}
+var sd=null,seen=new Set()
+for(var klass of $B.get_mro($B.get_class(self))){if(!(klass.tp_flags & $B.TPFLAGS.HEAPTYPE)){continue}
+for(var entry of _b_.dict.$iter_items($B.get_dict(klass))){var md=entry.value
+if(seen.has(entry.key)||$B.get_class(md)!==$B.member_descriptor){continue}
+seen.add(entry.key)
+if(self[md.d_member.attr]!==undefined){sd=sd ?? $B.empty_dict()
+_b_.dict.$setitem(sd,entry.key,self[md.d_member.attr])}}}
 if(sd !==null){var d1=(dict !==undefined && dict !==null &&
 _b_.dict.mp_length(dict)> 0)? dict :_b_.None
 return $B.fast_tuple([d1,sd])}
@@ -2609,6 +2616,7 @@ $B.set_func_names(object,"builtins")})(__BRYTHON__);
 "use strict";
 (function($B){var _b_=$B.builtins
 const TPFLAGS=$B.TPFLAGS 
+const MARKERS=['__dict__','__weakref__']
 $B.$class_constructor=function(qualname,dict,metaclass,resolved_bases,bases,extra_kwargs){var test=false 
 if(test){console.log('class constructor',class_name,'dict',dict)
 console.log('metaclass',metaclass)}
@@ -2624,11 +2632,6 @@ if(Object.hasOwn(classdef_frame[1],'__name__')){module=classdef_frame[1].__name_
 $B.str_dict_set(dict,'__module__',module)
 if($B.str_dict_get(dict,'__eq__',$B.NULL)!==$B.NULL &&
 $B.str_dict_get(dict,'__hash__',$B.NULL)===$B.NULL){$B.str_dict_set(dict,'__hash__',_b_.None)}
-var slots=$B.str_dict_get(dict,'__slots__',$B.NULL)
-if(slots !==$B.NULL){if(typeof slots=="string"){slots=[slots]}else{
-for(let item of $B.make_js_iterator(slots)){if(typeof item !='string'){$B.RAISE(_b_.TypeError,'__slots__ items must be '+
-`strings, not '${$B.class_name(item)}'`)}}}
-$B.str_dict_set(dict,'__slots__',slots)}
 set_type_new(dict)
 var meta_new=metaclass.tp_new
 if(test){console.log('metaclass',metaclass,'meta_new',meta_new)}
@@ -2682,14 +2685,14 @@ $B.RAISE(_b_.TypeError,"metaclass conflict: the metaclass of a derived class mus
 "a (non-strict) subclass of the metaclasses of all its bases"
 )}
 return winner}
-function shape_differs(t1,t2){console.log('shape differs',t1,t2)
-return(
+function shape_differs(t1,t2){return(
 t1.tp_basicsize !=t2.tp_basicsize ||
 t1.tp_itemsize !=t2.tp_itemsize
 )}
 function solid_base(type){var base
 if(type.tp_base){base=solid_base(type.tp_base)}else{
 base=_b_.object}
+if(!(type.tp_flags & TPFLAGS.HEAPTYPE)){return shape_differs(type,base)? type :base}
 try{
 var slots=$B.search_in_dict(type,'__slots__',$B.NULL)}catch(err){console.log('error searching __slots__ in type',type)
 throw err}
@@ -2700,7 +2703,7 @@ var n=bases.length
 var base,winner,candidate
 for(let base_i of bases){if(! $B.is_type(base_i)){$B.RAISE(_b_.TypeError,"bases must be types")}
 if(base_i.tp_flags !==undefined &&
-!(base_i.tp_flags & TPFLAGS.BASETYPE)){$B.RAISE(_b_.TypeError,`type '${base.__name__}' is not an acceptable base type`)}
+!(base_i.tp_flags & TPFLAGS.BASETYPE)){$B.RAISE(_b_.TypeError,`type '${$B.get_name(base_i)}' is not an acceptable base type`)}
 candidate=solid_base(base_i)
 if(test){console.log('base_i',base_i,'candidate',candidate,'winner',winner,'base',base)}
 if(winner==undefined){winner=candidate
@@ -2880,6 +2883,9 @@ return $B.NULL}
 try{
 return $B.$call(getattr,klass,attr)}catch(err){if($B.is_exc(err,_b_.AttributeError)){return $B.NULL}
 throw err}}
+$B.subclasses=function(){var refs=[]
+return{
+push:cls=> refs=refs.filter(ref=> ref.deref()).concat(new WeakRef(cls)),remove:cls=> refs=refs.filter(ref=> ![cls,undefined].includes(ref.deref())),[Symbol.iterator]:()=> refs.map(ref=> ref.deref()).filter(cls=> cls).values()}}
 function update_subclasses(kls,name,alias,value){
 for(var subclass of kls.tp_subclasses){if(! subclass.hasOwnProperty(name)){subclass[alias]=value
 update_subclasses(subclass,name,alias,value)}}}
@@ -2992,13 +2998,23 @@ function reset_setattr(cls){$B.make_setattr(cls)
 if(cls.tp_subclasses===undefined){console.log('no subclasses',cls)}
 for(var kls of cls.tp_subclasses){reset_setattr(kls)}}
 function set_slots(cl_dict,class_obj){let slots=$B.str_dict_get(cl_dict,'__slots__',$B.NULL)
-if(slots !==$B.NULL){for(let key of $B.make_js_iterator(slots)){
+if(slots !==$B.NULL){if(typeof slots=='string'){slots=[slots]}
+class_obj.$slots=[]
+for(let key of $B.make_js_iterator(slots)){if(typeof key !='string'){$B.RAISE(_b_.TypeError,'__slots__ items must be '+
+`strings, not '${$B.class_name(key)}'`)}
+if(! _b_.str.tp_funcs.isidentifier(key)){$B.RAISE(_b_.TypeError,'__slots__ must be identifiers')}
+if(MARKERS.includes(key)&& class_obj.$slots.includes(key)){$B.RAISE(_b_.TypeError,`${key} slot disallowed: we already got one`)}
 if(key.startsWith('__')&& ! key.endsWith('__')){key='_'+$B.get_name(class_obj).replace(/^_+/,'')+key}
+class_obj.$slots.push(key)
 if(key=='__dict__' ||key=='__weakref__'){if(key=='__dict__'){class_obj.$slots_has_dict=true}
 continue}
-var member={name:key,type:$B.TYPES.OBJECT,attr:'slot_value_'+key,flags:0}
+var shadowed=$B.search_in_mro(class_obj.tp_base,key,$B.NULL)
+var member={name:key,type:$B.TYPES.OBJECT,attr:shadowed !==$B.NULL &&
+$B.get_class(shadowed)===$B.member_descriptor ?
+Symbol(key):'slot_value_'+key,flags:0}
 var md={ob_type:$B.member_descriptor,d_type:class_obj,d_name:key,d_member:member}
-$B.str_dict_set(cl_dict,key,md)}}}
+$B.str_dict_set(cl_dict,key,md)}
+class_obj.$slots.sort()}}
 _b_.type.tp_setattro=function(kls,attr,value){var $test=false 
 if($test){console.log('set attr',attr,'of class',kls,'to',value)
 console.log('kls dict',$B.get_dict(kls))}
@@ -3151,7 +3167,7 @@ class_obj.tp_flags |=base.tp_flags & $B.TPFLAGS.BASE_EXC_SUBCLASS
 class_obj.tp_flags |=base.tp_flags & $B.TPFLAGS.TYPE_SUBCLASS}
 $B.set_dict(class_obj,cl_dict)
 class_obj.tp_mro=$B.make_mro(class_obj)
-class_obj.tp_subclasses=[]
+class_obj.tp_subclasses=$B.subclasses()
 $B.make_getattr(class_obj)
 set_type_new(cl_dict)
 var res=type_new_get_bases(ctx,class_obj)
@@ -3206,7 +3222,7 @@ $B.make_descr_get(class_obj)
 $B.make_descr_set(class_obj)
 $B.make_call(class_obj)
 make_factory(class_obj)
-for(var base of class_obj.tp_bases){base.tp_subclasses=base.tp_subclasses ||[]
+for(var base of class_obj.tp_bases){base.tp_subclasses=base.tp_subclasses ||$B.subclasses()
 base.tp_subclasses.push(class_obj)}
 return class_obj}
 var type_funcs=_b_.type.tp_funcs={}
@@ -3248,11 +3264,18 @@ var cls=$.cls,bases=$.bases
 if(! $B.exact_type(bases,_b_.tuple)){$B.RAISE(_b_.TypeError,`can only assign tuple to ${$B.get_name(cls)}.__bases__, `+
 `not ${$B.class_name(bases)}`
 )}
+if(bases.length==0){$B.RAISE(_b_.TypeError,'can only assign non-empty tuple to '+
+`${$B.get_name(cls)}.__bases__, not ()`)}
+for(var base of bases){if(! $B.is_type(base)){$B.RAISE(_b_.TypeError,`${$B.get_name(cls)}.__bases__ must `+
+`be tuple of classes, not '${$B.class_name(base)}'`)}
+if($B.get_mro(base).includes(cls)){$B.RAISE(_b_.TypeError,'a __bases__ item causes an inheritance cycle')}}
+cls.tp_base=best_base(bases)
 var old_bases=cls.tp_bases
-for(var base of old_bases){let ix=base.tp_subclasses.indexOf(cls)
-if(ix !=-1){base.tp_subclasses.splice(ix,1)}}
+for(var base of old_bases){base.tp_subclasses.remove(cls)}
 cls.tp_bases=bases
 cls.tp_mro=$B.make_mro(cls)
+cls.tp_base=best_base(bases)
+for(var reset of[reset_call,reset_getattribute,reset_descr_get,reset_descr_set,reset_setattr,reset_init,reset_new,reset_factory,reset_iter]){reset(cls)}
 for(var base of bases){base.tp_subclasses.push(cls)}
 var old_mros=new Map(),classes=[cls]
 try{
@@ -3300,7 +3323,7 @@ if(! $B.$isinstance(subclass,$B.UnionType)&& ! $B.is_type(subclass)){$B.RAISE(_b
 if(self===subclass){return true}
 if(subclass.tp_bases===undefined){return self===_b_.object}
 return $B.get_mro(subclass).indexOf(self)>-1}
-type_funcs.__subclasses__=function(cls){return $B.$list(cls.tp_subclasses)}
+type_funcs.__subclasses__=function(cls){return $B.$list([...cls.tp_subclasses])}
 type_funcs.__text_signature___get=function(self){}
 type_funcs.__text_signature___set=function(self){}
 type_funcs.__type_params___get=function(self){}
@@ -15962,16 +15985,18 @@ var ast=$B.ast={}
 let base_class={}
 for(let[name,value]of Object.entries($B.ast_classes)){if(Array.isArray(value)){for(let subclass of value){base_class[subclass]=name}}}
 for(let name in $B.ast_classes){if(! Object.hasOwn(base_class,name)){base_class[name]='AST'}}
-for(var kl in $B.ast_classes){var args=$B.ast_classes[kl],body='',arg_list=[],fields=[]
+for(var kl in $B.ast_classes){var args=$B.ast_classes[kl],body='',arg_list=[],fields=[],optional=[]
 if(typeof args=="string"){if(args.length > 0){for(var arg of args.split(',')){let[arg_type,arg_name]=arg.split(/\s+/)
 arg_list.push(arg_name)
 if(arg_type.endsWith('*')){
 body+=` this.${arg_name} = $B.$list(${arg_name} === undefined ? [] : ${arg_name})\n`}else if(arg_type.endsWith('?')){
+optional.push(arg_name)
 body+=` this.${arg_name} = ${arg_name}\n`}else{
 body+=` this.${arg_name} = ${arg_name}\n`}}
 fields=args.split(',').map(x=> x.trim().split(/\s+/)[1])}
 ast[kl]=Function(...arg_list,body)
-ast[kl]._fields=fields}else{
+ast[kl]._fields=fields
+ast[kl]._optional=optional}else{
 ast[kl]=args.map(x=> ast[x])
 if(Object.hasOwn($B.ast_attributes,kl)){let attrs=$B.ast_attributes[kl]
 attrs=attrs.split(',').map(x=> x.trim().split(' '))
@@ -16002,7 +16027,10 @@ let js_class=$B.ast[class_name]
 if(js_class===undefined){return obj}
 var js_ast_obj=new js_class()
 for(var field of js_class._fields){if(field.endsWith('?')||field.endsWith('*')){field=field.substr(0,field.length-1)}
-js_ast_obj[field]=$B.ast_py_to_js($B.get_from_dict(obj,field))}
+let value=$B.get_from_dict(obj,field)
+js_ast_obj[field]=value===_b_.None &&
+js_class._optional.includes(field)? undefined :
+$B.ast_py_to_js(value)}
 for(var loc of['lineno','col_offset','end_lineno','end_col_offset']){let v=$B.get_from_dict(obj,loc,$B.NULL)
 if(v !==$B.NULL){js_ast_obj[loc]=v}}
 return js_ast_obj}}
@@ -16235,10 +16263,10 @@ cls,'__next__',next_func
 $B.set_to_dict(cls,'__next__',next_func)}
 function make_set_del(cls){var set_func=cls.tp_descr_set
 $B.set_to_dict(cls,'__set__',$B.wrapper_descriptor.$factory(
-cls,'__set__',set_func
+cls,'__set__',(self,obj,value)=>(set_func(self,obj,value),_b_.None)
 ))
 $B.set_to_dict(cls,'__delete__',$B.wrapper_descriptor.$factory(
-cls,'__delete__',(self,attr)=> set_func(self,attr,$B.NULL)
+cls,'__delete__',(self,obj)=>(set_func(self,obj,$B.NULL),_b_.None)
 ))}
 function make_setitem_delitem(cls){var setitem=cls.sq_ass_item ?? cls.mp_ass_subscript
 var setitem_func=function(){var $=$B.args("__setitem__",3,{self:null,key:null,value:null},arguments)
@@ -16272,7 +16300,7 @@ cls,op,func
 )}}
 $B.finalize_type=function(cls){cls.tp_mro=$B.make_mro(cls)
 $B.set_dict(cls,$B.get_dict(cls)?? $B.empty_dict())
-cls.tp_subclasses=[]
+cls.tp_subclasses=$B.subclasses()
 for(var base of cls.tp_bases){base.tp_subclasses.push(cls)}
 var parts=cls.tp_name.split('.')
 var module=parts.length==1 ? 'builtins' :
