@@ -748,8 +748,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-11-07 21:54:31.736359"
-__BRYTHON__.timestamp=1794084871736
+__BRYTHON__.compiled_date="2026-11-08 09:54:22.869264"
+__BRYTHON__.timestamp=1794128062849
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -16225,6 +16225,7 @@ cls,'__getattribute__',ga_func
 function make_new(cls){function new_func(){var $=$B.args('__new__',1,{cls:null},arguments,null,'args','kw')
 return cls.tp_new($.cls,$.args,$.kw)}
 new_func.ob_type=$B.builtin_function_or_method
+new_func.m_module=_b_.None
 new_func.m_self=cls
 new_func.ml={ml_name:'__new__'}
 $B.set_function_infos(new_func,{__name__:'__new__',__qualname__:'__new__'}
