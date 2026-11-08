@@ -1283,4 +1283,7 @@ assert list(gen) == [1, 2, 3, 4]
 # PR 2800
 assert type(str.count).__name__ == 'method_descriptor'
 
+# reported in PR #3031
+assert object.__new__.__module__ is None
+
 print('passed all tests...')

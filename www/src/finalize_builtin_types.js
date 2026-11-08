@@ -178,6 +178,7 @@ function make_new(cls) {
         return cls.tp_new($.cls, $.args, $.kw)
     }
     new_func.ob_type = $B.builtin_function_or_method
+    new_func.m_module = _b_.None
     new_func.m_self = cls
     new_func.ml = {ml_name: '__new__'}
     $B.set_function_infos(new_func,
