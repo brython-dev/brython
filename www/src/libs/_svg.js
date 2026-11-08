@@ -37,7 +37,7 @@ function makeTagDict(tagName) {
         for (var item of _b_.dict.$iter_items($.kw)) {
             // keyword arguments
             var arg = item.key,
-                value = $B.py_immutable_to_js(item.value)
+                value = $B.pyobj2jsobj(item.value)
             if (arg.toLowerCase().substr(0,2) == "on") {
                 // Event binding passed as argument "onclick", "onfocus"...
                 // Better use method bind of DOMNode objects

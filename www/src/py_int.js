@@ -88,19 +88,23 @@ function preformat(self, fmt) {
             res = value.toString()
             break
         case "b":
-            res = (fmt.alternate ? "0b" : "") + value.toString(2)
+            res = (value < 0 ? "-" : "") + (fmt.alternate ? "0b" : "") +
+                (value < 0 ? -value : value).toString(2)
             break
         case "c":
             res = _b_.chr(value)
             break
         case "o":
-            res = (fmt.alternate ? "0o" : "") + value.toString(8)
+            res = (value < 0 ? "-" : "") + (fmt.alternate ? "0o" : "") +
+                (value < 0 ? -value : value).toString(8)
             break
         case "x":
-            res = (fmt.alternate ? "0x" : "") + value.toString(16)
+            res = (value < 0 ? "-" : "") + (fmt.alternate ? "0x" : "") +
+                (value < 0 ? -value : value).toString(16)
             break
         case "X":
-            res = (fmt.alternate ? "0X" : "") + value.toString(16).toUpperCase()
+            res = (value < 0 ? "-" : "") + (fmt.alternate ? "0X" : "") +
+                (value < 0 ? -value : value).toString(16).toUpperCase()
             break
         case "n":
             return self // fix me
@@ -610,7 +614,9 @@ _b_.int.tp_hash = function(self) {
 }
 
 _b_.int.nb_negative = function(self) {
-    return - int_value(self)
+    var value = int_value(self)
+    // an int has no negative zero
+    return value === 0 ? 0 : - value
 }
 
 _b_.int.nb_positive = function(self) {
@@ -777,7 +783,9 @@ _b_.int.tp_new = function(cls, args, kw) {
         ob_type: cls,
         value: int.$factory(value, base)
     }
-    $B.init_dict(res)
+    if ($B.instance_has_dict(cls)) {
+        $B.init_dict(res)
+    }
     return res
 }
 
@@ -794,22 +802,30 @@ int_funcs.__floor__ = function(self) {
 int_funcs.__format__ = function(self, format_spec) {
     var fmt = new $B.parse_format_spec(format_spec, self)
     if (fmt.type && 'eEfFgG%'.indexOf(fmt.type) != -1) {
-        // Call __format__ on float(self)
-        return _b_.float.tp_funcs.__format__($B.fast_float(self), format_spec)
+        // Call __format__ on float(self). nb_float, not fast_float: an int of
+        // 2**53 or more is held as a BigInt, and fast_float wraps it without
+        // converting, so the arithmetic inside float.__format__ raised
+        // "Cannot convert a BigInt value to a number" for format(2 ** 53, '.2f').
+        // nb_float is the int-to-float conversion, and it raises CPython's own
+        // OverflowError for an int too large to be a float.
+        return _b_.float.tp_funcs.__format__(_b_.int.nb_float(self), format_spec)
     }
     fmt.align = fmt.align || ">"
     var res = preformat(self, fmt)
     if (fmt.comma) {
-        var sign = res[0] == "-" ? "-" : "",
-            rest = res.substr(sign.length),
+        // digits are grouped by 4 in bases 2, 8 and 16, after the sign and
+        // the prefix
+        var size = 'boxX'.includes(fmt.type) ? 4 : 3,
+            lead = res.match(/^[-+ ]?(0[bBoOxX])?/)[0],
+            rest = res.substr(lead.length),
             len = rest.length,
-            nb = Math.ceil(rest.length/3),
+            nb = Math.ceil(rest.length / size),
             chunks = []
         for (var i = 0; i < nb; i++) {
-            chunks.push(rest.substring(len - 3 * i - 3, len - 3 * i))
+            chunks.push(rest.substring(len - size * i - size, len - size * i))
         }
         chunks.reverse()
-        res = sign + chunks.join(",")
+        res = lead + chunks.join(fmt.grouping_option)
     }
     return $B.format_width(res, fmt)
 }
@@ -854,7 +870,7 @@ int_funcs.bit_length = function(self) {
 }
 
 int_funcs.conjugate = function(self) {
-
+    return int_value(self)
 }
 
 int_funcs.denominator_get = function(self) {
@@ -1107,8 +1123,13 @@ _b_.bool.tp_new = function(cls, args, kw) {
 }
 
 _b_.bool.nb_invert = function(self) {
-    $B.warn(_b_.DeprecationWarning, `Bitwise inversion '~' on bool is deprecated.This returns the bitwise inversion of the underlying int object and is usually not what you expect from negating a bool.Use the 'not' operator for boolean negation or ~int(x) if you really want the bitwise inversion of the underlying int.`)
-    return int_funcs.__invert__(self)
+    $B.warn(_b_.DeprecationWarning, "Bitwise inversion '~' on bool is " +
+        "deprecated and will be removed in Python 3.16. This returns the " +
+        "bitwise inversion of the underlying int object and is usually not " +
+        "what you expect from negating a bool. Use the 'not' operator for " +
+        "boolean negation or ~int(x) if you really want the bitwise " +
+        "inversion of the underlying int.")
+    return _b_.int.nb_invert(self)
 }
 
 var bool_funcs = _b_.bool.tp_funcs = {}

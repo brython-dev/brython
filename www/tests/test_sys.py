@@ -1,5 +1,8 @@
 import sys
 
+# the console's write() returns the number of characters written
+assert sys.__stdout__.write("ab\n") == 3
+
 # issue 1218
 x = "Outer stack frame"
 
@@ -224,5 +227,13 @@ assert gc.DEBUG_SAVEALL == 32
 assert gc.DEBUG_LEAK == 38
 assert callable(gc.collect)
 assert callable(gc.is_tracked)
+
+# the console's write() takes any str: one holding an astral character, and
+# an instance of a str subclass
+class Name(str):
+    pass
+
+for text in ("😀\n", Name("x\n")):
+    sys.__stdout__.write(text)
 
 print('all tests ok...')

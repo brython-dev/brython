@@ -36,6 +36,20 @@ assert b == bytearray([3, 2, 5])
 b.insert(1, 4)
 assert b == bytearray([3, 4, 2, 5])
 
+# a bytearray iterator reads the current size of the bytearray
+b = bytearray(b'abcd')
+it = iter(b)
+next(it)
+b.append(101)
+assert list(it) == [98, 99, 100, 101]
+b = bytearray(b'abcd')
+it = iter(b)
+next(it)
+b.clear()
+assert list(it) == []
+b.append(1)
+assert list(it) == []
+
 assert b'-'.join([b'a', b'b']) == b'a-b'
 
 # encoding and decoding
@@ -355,5 +369,16 @@ assert b.__dict__ == {}
 b = bytes.__new__(bytes, [100, 101])
 
 assert_raises(AttributeError, getattr, b, '__dict__')
+
+# PR 2987
+assert b'a b c'.split(None, 1) == [b'a', b'b c']
+
+# PR 2997
+assert b' a '.strip() == b'a'
+
+# a bytes iterator asked for its iterator keeps its position
+it = iter(b'abcd')
+next(it)
+assert list(it) == [98, 99, 100] and list(it) == []
 
 print('passed all tests...')
