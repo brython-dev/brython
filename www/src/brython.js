@@ -748,8 +748,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-11-08 09:54:22.869264"
-__BRYTHON__.timestamp=1794128062849
+__BRYTHON__.compiled_date="2026-11-09 08:46:53.430335"
+__BRYTHON__.timestamp=1794210413430
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -2635,10 +2635,10 @@ for(var base of bases){if(base.tp_flags !==undefined &&
 !(base.tp_flags & TPFLAGS.BASETYPE)){$B.RAISE(_b_.TypeError,`type '${$B.$getattr(base, '__qualname__')}' `+
 `is not an acceptable base type`)}}
 delete extra_kwargs.metaclass
-var classdef_frame=$B.frame_obj.prev.frame
+if($B.str_dict_get(dict,'__module__',$B.NULL)===$B.NULL){var classdef_frame=$B.frame_obj.prev.frame
 var module=classdef_frame[2]
 if(Object.hasOwn(classdef_frame[1],'__name__')){module=classdef_frame[1].__name__}
-$B.str_dict_set(dict,'__module__',module)
+$B.str_dict_set(dict,'__module__',module)}
 if($B.str_dict_get(dict,'__eq__',$B.NULL)!==$B.NULL &&
 $B.str_dict_get(dict,'__hash__',$B.NULL)===$B.NULL){$B.str_dict_set(dict,'__hash__',_b_.None)}
 set_type_new(dict)
@@ -3638,9 +3638,11 @@ if(module !=="builtins"){s=module+'.'+s}
 t.push(s)}else{
 t.push(_b_.repr(item))}}
 return t.join(' | ')}
-$B.UnionType.nb_or=function(self,other){var items=self.args.slice()
-if(other===_b_.None){other=$B.NoneType}
-if(! items.includes(other)){items.push(other)}
+$B.UnionType.nb_or=function(self,other){
+var items=[]
+for(var operand of[self,other]){var operand_items=$B.$isinstance(operand,$B.UnionType)?
+operand.args :[operand]
+for(var item of operand_items){if(! items.includes(item)){items.push(item)}}}
 return $B.UnionType.$factory(items)}
 var UnionType_funcs=$B.UnionType.tp_funcs={}
 UnionType_funcs.__class_getitem__=function(cls,items){if($B.is_tuple(items)){return $B.UnionType.$factory(items)}else{
