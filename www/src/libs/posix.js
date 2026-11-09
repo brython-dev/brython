@@ -176,7 +176,7 @@ for (let funcname of ["_exit", "_getdiskusage", "_getfileinformation", "_getfina
     "close", "closerange", "device_encoding", "dup", "dup2",
     "execv", "execve", "fsat", "fsync", "get_terminal_size", "getcwdb",
     "getlogin", "getppid", "kill", "link", "listdir", "lseek",
-    "mkdir", "pipe", "putenv", "read", "readlink", "rename",
+    "mkdir", "pipe", "read", "readlink", "rename",
     "replace", "rmdir", "spawnv", "spawnve", "startfile", "stat_float_times",
     "statvfs_result", "strerror", "symlink", "system", "terminal_size",
     "times", "times_result", "umask", "uname_result", "unlink", "utime",
@@ -191,6 +191,22 @@ for (let funcname of ["_exit", "_getdiskusage", "_getfileinformation", "_getfina
 
 module.isatty = function() {
     return false
+}
+
+// putenv/unsetenv write to the same dict os.environ reads: numpy's
+// reload guard calls os.putenv('OPENBLAS_MAIN_FREE', '1') then
+// os.unsetenv() on purpose instead of touching os.environ, and each
+// raised NotImplementedError here
+module.putenv = function(name, value) {
+    $B.$setitem(module.environ, name, value)
+    return _b_.None
+}
+
+module.unsetenv = function(name) {
+    try {
+        $B.$delitem(module.environ, name)
+    } catch (err) {}
+    return _b_.None
 }
 
 $B.addToImported('posix', module)
