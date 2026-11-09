@@ -55,10 +55,10 @@ function pos_only_passed_as_keyword(fname, arg) {
 function too_many_pos_args(fname, kwarg, arg_names, nb_kwonly, defaults, args, slots) {
     var nb_pos = args.length,
         last = $B.last(args)
-    if (last !== null && last !== undefined && last.$kw) {
+    if (last !== null && last !== undefined && last[$B.KW]) {
         // Unexpected keyword args take precedence
         if (! kwarg) {
-            var kw = $B.parse_kwargs(last.$kw, fname)
+            var kw = $B.parse_kwargs(last[$B.KW], fname)
             for (var k in kw) {
                 if (! slots.hasOwnProperty(k)) {
                     var suggestion = $B.offer_suggestions_for_unexpected_keyword_error(arg_names, k)
@@ -163,10 +163,10 @@ $B.parse_args = function(args, fname, argcount, slots, arg_names, defaults,
         if (arg && $B.get_class(arg) === $B.generator) {
             slots.$has_generators = true
         }
-        if (arg && arg.$kw) {
+        if (arg && arg[$B.KW]) {
             // function was called with keyword arguments
             nb_passed_pos--
-            kw = $B.parse_kwargs(arg.$kw, fname)
+            kw = $B.parse_kwargs(arg[$B.KW], fname)
         } else {
             var arg_name = arg_names[i]
             if (arg_name !== undefined) {
@@ -316,13 +316,17 @@ $B.parse_kwargs = function(kw_args, fname) {
         if ($B.get_class(kw_arg) === _b_.dict) {
             for (var entry of _b_.dict.$iter_items(kw_arg)) {
                 key = entry.key
-                if (typeof key !== 'string') {
-                    $B.RAISE(_b_.TypeError, fname +
-                        "() keywords must be strings")
-                } else if (kwa[key] !== undefined) {
-                    $B.RAISE(_b_.TypeError, fname +
-                        "() got multiple values for argument '" +
-                        key + "'")
+                if ($B.is_str(key)) {
+                    key = _b_.str.$to_string(key)
+                } else {
+                    $B.RAISE(_b_.TypeError,
+                        `${fname}() keywords must be strings`
+                    )
+                }
+                if (kwa[key] !== undefined) {
+                    $B.RAISE(_b_.TypeError,
+                        `${fname}() got multiple values for keyword argument '${key}'`
+                    )
                 } else {
                     kwa[key] = entry.value
                 }
@@ -357,7 +361,7 @@ $B.parse_kwargs = function(kw_args, fname) {
                             `'${$B.class_name(kw_arg)}' object is not subscriptable`)
                     }
                 }
-                kwa[k] = getitem(kw_arg, k)
+                kwa[k] = $B.$getitem1(kw_arg, k)
             }
         }
     }
@@ -399,8 +403,8 @@ $B.check_nb_args = function(name, expected, args) {
     // Check the number of arguments
     var len = args.length,
         last = args[len - 1]
-    if (last && last.$kw) {
-        var kw = last.$kw
+    if (last && last[$B.KW]) {
+        var kw = last[$B.KW]
         if (kw[1]) {
             if (_b_.len(kw[1]) == 0) {
                 len--
@@ -408,21 +412,28 @@ $B.check_nb_args = function(name, expected, args) {
         }
     }
     if (len != expected) {
-        if (expected == 0) {
-            $B.RAISE(_b_.TypeError, name + "() takes no argument" +
-                " (" + len + " given)")
-        } else {
-            $B.RAISE(_b_.TypeError, name + "() takes exactly " +
-                expected + " argument" + (expected < 2 ? '' : 's') +
-                " (" + len + " given)")
-        }
+        nb_args_error(name, expected, len)
     }
+}
+
+function nb_args_error(name, expected, given) {
+    // A builtin that takes no argument or exactly one is named with its
+    // parentheses, one that takes several by its bare name
+    if (expected == 0) {
+        $B.RAISE(_b_.TypeError, name + "() takes no arguments" +
+            " (" + given + " given)")
+    } else if (expected == 1) {
+        $B.RAISE(_b_.TypeError, name + "() takes exactly one argument" +
+            " (" + given + " given)")
+    }
+    $B.RAISE(_b_.TypeError, name.split('.').pop() + " expected " +
+        expected + " arguments, got " + given)
 }
 
 $B.check_no_kw = function(name, x, y) {
     // Throw error if one of x, y is a keyword argument
-    if((x.$kw && x.$kw[0] && Object.keys(x.$kw[0]).length > 0) ||
-            (y !== undefined && y.$kw)){
+    if((x[$B.KW] && x[$B.KW][0] && Object.keys(x[$B.KW][0]).length > 0) ||
+            (y !== undefined && y[$B.KW])){
         $B.RAISE(_b_.TypeError, name + "() takes no keyword arguments")}
 }
 
@@ -439,25 +450,39 @@ $B.keyword_is_empty = function(kw) {
     return true
 }
 
-$B.check_nb_args_no_kw = function(name, expected, args) {
-    // Check the number of arguments and absence of keyword args
+$B.check_nb_args_no_kw = function(name, expected, args, method) {
+    // Check the number of arguments and absence of keyword args. The
+    // arguments of a method start with the instance, which is not counted
     var len = args.length,
         last = args[len - 1]
-    if (last && last.$kw) {
+    if (last && last[$B.KW]) {
         len--
-        if (! $B.keyword_is_empty(last.$kw)) {
+        if (! $B.keyword_is_empty(last[$B.KW])) {
             $B.RAISE(_b_.TypeError, name + "() takes no keyword arguments")
         }
     }
+    if (method) {
+        len--
+    }
     if (len != expected) {
-        if (expected == 0) {
-            $B.RAISE(_b_.TypeError, name + "() takes no argument" +
-                " (" + len + " given)")
-        } else {
-            $B.RAISE(_b_.TypeError, name + "() takes exactly " +
-                expected + " argument" + (expected < 2 ? '' : 's') +
-                " (" + len + " given)")
+        nb_args_error(name, expected, len)
+    }
+}
+
+$B.meth_noargs = function(qualname, args) {
+    // Check the absence of keyword args and that there is only one
+    // positional argument (self)
+    var len = args.length,
+        last = args[len - 1]
+    if (last && last[$B.KW]) {
+        len--
+        if (! $B.keyword_is_empty(last[$B.KW])) {
+            $B.RAISE(_b_.TypeError, qualname + "() takes no keyword arguments")
         }
+    }
+    if (len != 1) {
+        $B.RAISE(_b_.TypeError, `${qualname}() takes no arguments ` +
+            ` (${len - 1} given)`)
     }
 }
 
@@ -482,8 +507,8 @@ $B.check_kw_empty = function(name, kw) {
 
 $B.parse_args_kw = function(fname, args) {
     var last = args[args.length - 1]
-    if (last?.$kw) {
-        var kw = $B.parse_kwargs(last.$kw, fname)
+    if (last?.[$B.KW]) {
+        var kw = $B.parse_kwargs(last[$B.KW], fname)
         kw[$B.OB_TYPE] = _b_.dict
         args = Array.from(args)
         args.pop()
@@ -502,8 +527,11 @@ $B.get_class = function(obj) {
     if (obj === undefined) {
         return $B.UndefinedType // idem
     }
-    if (obj.ob_type) {
-        return obj.ob_type
+    // A dict keeps its class under a symbol of its own and its string keys as
+    // properties, so its key "ob_type" is a property too, which is data
+    var klass = obj.ob_type
+    if (klass) {
+        return Object.hasOwn(obj, $B.OB_TYPE) ? obj[$B.OB_TYPE] : klass
     }
     if (obj[$B.OB_TYPE]) {
         return obj[$B.OB_TYPE]
@@ -622,7 +650,7 @@ $B.unpack_mapping = function(func, obj) {
         if (! $B.is_str(key)) {
             $B.RAISE(_b_.TypeError, 'keywords must be strings')
         }
-        items.push({key, value: $B.$call(getitem, obj, key)})
+        items.push({key, value: $B.$getitem1(obj, key)})
     }
     return items
 }
@@ -648,7 +676,7 @@ $B.clip_index = function(state, low, high) {
     return index < low ? low : index > high ? high : index
 }
 
-$B.make_js_iterator = function(iterator, frame, lineno) {
+$B.make_js_iterator = function(iterator, frame, lineno, inum) {
     // return a Javascript iterator usable in a loop
     // "for (item of $B.make_js_iterator(...)) {"
     var set_lineno = $B.set_lineno
@@ -700,8 +728,8 @@ $B.make_js_iterator = function(iterator, frame, lineno) {
                     if ($B.is_exc(err, [_b_.StopIteration])) {
                         return {done: true, value: null}
                     }
-                    if (iterator[$B.INUM]) {
-                        $B.set_inum(iterator[$B.INUM])
+                    if (inum) {
+                        $B.set_inum(inum)
                     }
                     throw err
                 }
@@ -732,7 +760,7 @@ $B.unpacker = function(obj, nb_targets, has_starred) {
     }
     var t = Array.from(it),
         right_length = t.length,
-        left_length = nb_targets + (has_starred ? nb_after_starred - 1 : 0)
+        left_length = has_starred ? nb_targets - 1 : nb_targets
 
     if((! has_starred && (right_length < nb_targets)) ||
             (has_starred && (right_length < nb_targets - 1))){
@@ -870,9 +898,6 @@ $B.$getitem1 = function(obj, item) {
         if (meta_gi !== $B.NULL) {
             return $B.$call(meta_gi, obj, item)
         }
-        if (! Array.isArray(item)) {
-            item = $B.fast_tuple([item])
-        }
         if (obj === _b_.type) {
             return $B.$class_getitem(obj, item)
         }
@@ -896,7 +921,7 @@ $B.$getitem1 = function(obj, item) {
 
     var gi = $B.search_in_mro($B.get_class(obj), "__getitem__", $B.NULL)
     if (gi !== $B.NULL) {
-        return $B.$call(gi, obj, item)
+        return $B.call_special(gi, obj, item)
     }
 
     var exc = $B.EXC(_b_.TypeError, "'" + $B.class_name(obj) +
@@ -913,7 +938,7 @@ $B.getitem_slice = function(obj, slice, inum) {
         } else if (typeof obj == "string") {
             res = _b_.str.mp_subscript(obj, slice)
         } else {
-            res = $B.$call($B.$getattr(klass, "__getitem__"), obj, slice)
+            res = $B.$getitem1(obj, slice)
         }
         return res
     } catch (err) {
@@ -945,7 +970,7 @@ $B.$setitem = function(obj, item, value, inum) {
             throw err
         }
     }
-    var setitem = $B.$getattr($B.get_class(obj), "__setitem__", $B.NULL)
+    var setitem = $B.search_in_mro(klass, "__setitem__", $B.NULL)
     if (setitem === $B.NULL) {
         $B.set_inum(inum)
         $B.RAISE(_b_.TypeError, "'" + $B.class_name(obj) +
@@ -1035,7 +1060,7 @@ $B.$delitem = function(obj, item, inum) {
             throw err
         }
     }
-    var delitem = $B.$getattr(klass, "__delitem__", $B.NULL)
+    var delitem = $B.search_in_mro(klass, "__delitem__", $B.NULL)
     if (delitem === $B.NULL) {
         $B.RAISE(_b_.TypeError, "'" + $B.class_name(obj) +
             "' object doesn't support item deletion")
@@ -1114,6 +1139,9 @@ $B.augm_assign = function(left, op, right) {
                 z = res_type.x * res_type.y
                 break
             case '/=':
+                if (res_type.y == 0) {
+                    $B.RAISE(_b_.ZeroDivisionError, "division by zero")
+                }
                 return $B.fast_float(res_type.x / res_type.y)
         }
         if (z) {
@@ -1176,9 +1204,15 @@ $B.$is = function(a, b) {
         case "boolean":
             return a === b
     }
+    if (a === b) {
+        return true
+    }
     if ($B.get_class(a) === _b_.float && $B.get_class(b) === _b_.float) {
-        if (isNaN(a.value) && isNaN(b.value)) {
-            return true
+        // two NaN objects are not identical, but two boxes of the same
+        // value are: floats are not interned here
+        if (isNaN(a.value) || isNaN(b.value)) {
+            // a NaN equals nothing, so only the same object is itself
+            return a === b
         }
         return a.value == b.value
     } else if($B.is_bytes(a) && _b_.bytes.mp_length(a) == 0 &&
@@ -1355,6 +1389,12 @@ $B.$call = function(callable, ...args) {
             "' object is not callable")
     }
     if (typeof call_method !== 'function') {
+        // a descriptor, such as a classmethod, is bound before it is called
+        var call_getter = $B.search_slot($B.get_class(call_method),
+            'tp_descr_get', $B.NULL)
+        if (call_getter !== $B.NULL) {
+            return $B.$call(call_getter(call_method, callable, klass), ...args)
+        }
         if ($B.get_class(call_method).tp_call !== $B.NULL) {
             // for instance __call__ might be set to dict
             return $B.$call(call_method, ...args)
@@ -1362,6 +1402,12 @@ $B.$call = function(callable, ...args) {
             $B.RAISE(_b_.TypeError, "'" + $B.class_name(callable) +
                 "' object is not callable")
         }
+    }
+    if ($B.search_slot($B.get_class(call_method), 'tp_descr_get',
+            $B.NULL) === $B.NULL) {
+        // a builtin, such as len or a bound list.clear, has no __get__: it
+        // is called as it is, without the instance
+        return call_method(...args)
     }
     var res = call_method(callable, ...args)
     if (test) {
@@ -1581,15 +1627,6 @@ $B.leave_frame = function(arg) {
         throw Error('no frame_obj')
     }
     var frame = $B.frame_obj.frame
-    if (frame.$coroutine) {
-        if (! frame.$coroutine.$sent) {
-            var cname = frame.$coroutine.$func.$function_infos[$B.func_attrs.__name__]
-            var message = $B.EXC(_b_.RuntimeWarning,
-                `coroutine '${cname}' was never awaited`)
-            message.lineno = frame.$coroutine.$lineno
-            $B.module_getattr($B.imported._warnings, 'warn')(message)
-        }
-    }
     $B.frame_obj = $B.frame_obj.prev
     // For generators in locals, if their execution frame has context
     // managers, close them. In standard Python this happens when the
@@ -1752,9 +1789,6 @@ $B.rich_comp = function(op, x, y) {
         "' and '" + $B.class_name(y) + "'")
 }
 
-var opname2opsign = {__sub__: "-", __xor__: "^", __mul__: "*",
-    __and__: '&', __or__: '|'}
-
 $B.get_position_from_inum = function(inum) {
     // Get position from pseudo instruction number
     if ($B.frame_obj !== null) {
@@ -1846,7 +1880,7 @@ $B.rich_op1 = function(op, x, y) {
         if (method === $B.NULL) {
             var kl_name = $B.class_name(x)
             $B.RAISE(_b_.TypeError, "unsupported operand type(s) " +
-                "for " + opname2opsign[op] + ": '" + kl_name + "' and '" +
+                "for " + $B.method_to_op[op] + ": '" + kl_name + "' and '" +
                 kl_name + "'")
         }
         var same_res = $B.$call(method, x, y)
@@ -1924,21 +1958,20 @@ $B.is_none = function(o) {
 var repr_stack = new Set()
 
 $B.repr = {
+    depth: 0, // nested calls of repr()
     enter: function(obj) {
         var obj_id = _b_.id(obj)
         if (repr_stack.has(obj_id)) {
             return true
         } else {
             repr_stack.add(obj_id)
-            if (repr_stack.size > $B.recursion_limit) {
-                repr_stack.clear()
-                $B.RAISE(_b_.RecursionError, "maximum recursion depth " +
-                    "exceeded while getting the repr of an object")
-            }
         }
     },
     leave: function(obj) {
         repr_stack.delete(_b_.id(obj))
+    },
+    clear: function() {
+        repr_stack.clear()
     }
 }
 

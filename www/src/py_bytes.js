@@ -76,7 +76,9 @@ $B.bytearray_iterator.tp_iter = function(self) {
 
 $B.bytearray_iterator.tp_iternext = function*(self){
     self.index++
-    if (self.index >= self.len) {
+    if (self.index >= self.obj.source.length) {
+        // exhausted for good, whatever the bytearray grows to
+        self.index = Infinity
         return
     }
     yield self.obj.source[self.index]
@@ -85,7 +87,7 @@ $B.bytearray_iterator.tp_iternext = function*(self){
 var bytearray_iterator_funcs = $B.bytearray_iterator.tp_funcs = {}
 
 bytearray_iterator_funcs.__length_hint__ = function(self) {
-    return self.len
+    return Math.max(0, self.obj.source.length - self.index - 1)
 }
 
 bytearray_iterator_funcs.__reduce__ = function(self) {
@@ -132,7 +134,7 @@ function main_type(obj) {
 }
 
 function dict_or_not(cls, instance) {
-    if (! [_b_.bytes, _b_.bytearray].includes(cls)) {
+    if ($B.instance_has_dict(cls)) {
         $B.init_dict(instance)
     }
     return instance
@@ -211,6 +213,9 @@ function _new(cls, args, kw) {
         var int_list
         if (Array.isArray(source)) {
             int_list = source
+        } else if ($B.$getattr(source, '__bytes__', $B.NULL) === $B.NULL &&
+                is_bytes_like(source)) {
+            int_list = get_list_from_bytes_like(source)
         } else {
             try {
                 int_list = _b_.list.$factory(source)
@@ -1251,15 +1256,7 @@ _b_.bytearray.sq_ass_item = function(self, arg, value) {
             $B.RAISE(_b_.IndexError, 'list index out of range')
         }
     } else if ($B.$isinstance(arg, _b_.slice)) {
-        var start = arg.start === _b_.None ? 0 : arg.start
-        var stop = arg.stop === _b_.None ? self.source.length : arg.stop
-
-        if (start < 0) {
-            start = self.source.length + start
-        }
-        if (stop < 0) {
-            stop = self.source.length + stop
-        }
+        var {start, stop} = _b_.slice.$conv_for_seq(arg, self.source.length)
         if (stop > self.source.length) {
             check_exports(self)
         }
@@ -1455,7 +1452,7 @@ bytearray_funcs.decode = function(self) {
     var self = $.self,
         encoding = $.encoding,
         errors = $.errors
-    return decode(self, encoding, errors)
+    return $B.String(decode(self, encoding, errors))
 }
 
 bytearray_funcs.endswith = function(self) {
@@ -1837,7 +1834,6 @@ var bytes_iterator = $B.bytes_iterator
 
 /* bytes_iterator start */
 $B.bytes_iterator.tp_iter = function(self) {
-    self.index = -1
     return self
 }
 
@@ -1853,7 +1849,7 @@ $B.bytes_iterator.tp_iternext = function*(self){
 var bytes_iterator_funcs = $B.bytes_iterator.tp_funcs = {}
 
 bytes_iterator_funcs.__length_hint__ = function(self) {
-    return self.len
+    return Math.max(0, self.len - self.index - 1)
 }
 
 bytes_iterator_funcs.__reduce__ = function(self) {
@@ -2307,13 +2303,22 @@ var decode = $B.decode = function(obj, encoding, errors) {
           if ([bytes, bytearray].includes($B.get_class(obj))) {
               obj = decode(obj, "latin-1", "strict")
           }
-          return obj.replace(/\\n/g, "\n").
-                   replace(/\\a/g, "\u0007").
-                   replace(/\\b/g, "\b").
-                   replace(/\\f/g, "\f").
-                   replace(/\\t/g, "\t").
-                   replace(/\\'/g, "'").
-                   replace(/\\"/g, '"')
+          var simple_escapes = {'\\': '\\', "'": "'", '"': '"',
+              'a': '\u0007', 'b': '\b', 'f': '\f', 'n': '\n', 'r': '\r',
+              't': '\t', 'v': '\v'}
+          return obj.replace(
+              /\\(x[0-9a-fA-F]{2}|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8}|[0-7]{1,3}|[\s\S])/g,
+              function(seq, esc) {
+                  var car = esc[0]
+                  if ('xuU'.includes(car) && esc.length > 1) {
+                      return String.fromCodePoint(parseInt(esc.substr(1), 16))
+                  } else if (car >= '0' && car <= '7') {
+                      return String.fromCharCode(parseInt(esc, 8))
+                  }
+                  // an unknown escape sequence is left as is
+                  return simple_escapes.hasOwnProperty(car) ?
+                      simple_escapes[car] : seq
+              })
       case "raw_unicode_escape":
           let str = decode(obj, "latin-1", "strict")
           let uni_re = /(\\U)([a-fA-F0-9]{0,8})|(\\u)([a-fA-F0-9]{0,4})/g
@@ -2827,7 +2832,7 @@ bytes_funcs.decode = function(self) {
     var self = $.self,
         encoding = $.encoding,
         errors = $.errors
-    return decode(self, encoding, errors)
+    return $B.String(decode(self, encoding, errors))
 }
 
 bytes_funcs.endswith = function(self) {

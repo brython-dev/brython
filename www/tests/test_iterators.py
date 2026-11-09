@@ -1,5 +1,23 @@
 from tester import assert_raises
 
+# __length_hint__ of a sequence iterator is what remains
+for seq in ([1, 2, 3], (1, 2, 3), "ab😀", b"abc", bytearray(b"abc"),
+        range(3), range(9, 0, -4)):
+    it = iter(seq)
+    next(it)
+    assert it.__length_hint__() == 2, seq
+    list(it)
+    assert it.__length_hint__() == 0, seq
+it = reversed([1, 2, 3])
+next(it)
+assert it.__length_hint__() == 2
+data = [1, 2]
+it = iter(data)
+data.append(3)
+assert it.__length_hint__() == 3 and list(it) == [1, 2, 3]
+data.append(4)
+assert list(it) == []
+
 x = [1, 2]
 z = iter(x)
 assert z.__next__() == 1
@@ -254,5 +272,39 @@ assert_raises(TypeError, iter([1]).__setstate__, Index())
 it = iter(range(3))
 it.__setstate__(Index())
 assert list(it) == [1, 2]
+
+# the start of enumerate is an index, counted as a Python int
+class Seven:
+    def __index__(self):
+        return 7
+assert list(enumerate("ab", Seven())) == [(7, "a"), (8, "b")]
+assert list(enumerate("ab", 2 ** 53 + 1)) == [(2 ** 53 + 1, "a"), (2 ** 53 + 2, "b")]
+assert type(next(enumerate("a", True))[0]) is int
+assert_raises(TypeError, enumerate, "ab", 1.5)
+
+# a __getitem__ iterator keeps its position through iter() and stays exhausted
+class Sequence:
+    def __init__(self):
+        self.data = [1, 2, 3]
+    def __getitem__(self, index):
+        return self.data[index]
+seq = Sequence()
+it = iter(seq)
+next(it)
+assert iter(it) is it and list(it) == [2, 3]
+seq.data.append(4)
+assert next(it, "stop") == "stop"
+
+# a subclass of a builtin iterator makes instances of the subclass
+for base, args in ((enumerate, ("ab",)), (filter, (None, "ab")), (map, (str, "ab")),
+                   (zip, ("ab",)), (reversed, ("ab",))):
+    sub = type("Sub", (base,), {"label": "sub"})(*args)
+    assert type(sub).__name__ == "Sub" and sub.label == "sub"
+    sub.x = 1
+    assert sub.x == 1 and len(list(sub)) == 2
+    
+# zip() with no iterable is empty
+assert list(zip()) == [] and list(zip(strict=True)) == []
+assert list(type("Z", (zip,), {})()) == []
 
 print("passed all tests...")
