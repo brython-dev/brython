@@ -320,8 +320,8 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
 
 var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj, memo) {
     // conversion of a Python object into a Javascript object
-    // Immutable types
 
+    // Immutable types
     switch (pyobj) {
         case true:
         case false:
@@ -339,7 +339,7 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj, memo) {
             return undefined
     }
 
-    if (memo?.has(pyobj)) {
+    if (memo && memo instanceof Map && memo.has(pyobj)) {
         return memo.get(pyobj)
     }
     // An application embedding Brython can convert some values itself; a
@@ -370,7 +370,12 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj, memo) {
     if (has_type(klass, _b_.list) || has_type(klass, _b_.tuple)) {
         // Python list : transform its elements. The result is a copy, which
         // JavaScript may change: it is not mapped back to the list
-        var jsobj = pyobj.map(pyobj2jsobj)
+        var jsobj = []
+        memo = memo ?? new Map()
+        memo.set(pyobj, jsobj)
+        for (var item of pyobj) {
+            jsobj.push(pyobj2jsobj(item, memo))
+        }
         delete jsobj.ob_type // becomes a js_array
         return jsobj
     }
@@ -995,7 +1000,7 @@ JSObj_funcs.bind = function(_self, evt, func) {
         _self.$brython_events[evt] = _self.$brython_events[evt] || []
         _self.$brython_events[evt].push([func, js_func])
     }
-    
+
     _self.addEventListener(evt, js_func)
 
     return _b_.None

@@ -509,5 +509,15 @@ rows.append(rows)
 
 assert window.eval("rows => rows[0] === rows")(rows)
 
+# PR 3224
+js_src = """
+var L = __BRYTHON__.builtins.list.$factory([1, 2]), A = [1, 2];
+__BRYTHON__.PYOBJ_MAP.set(A, L);
+window.A = A;
+window.L = L
+"""
+
+window.eval(js_src)
+assert type(window.A) is list
 
 print("all tests ok...")
