@@ -748,8 +748,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-11-09 21:54:51.753826"
-__BRYTHON__.timestamp=1794257691753
+__BRYTHON__.compiled_date="2026-11-09 22:03:46.341917"
+__BRYTHON__.timestamp=1794258226341
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -16708,8 +16708,8 @@ if(this.value===undefined){}else{value=$B.js_from_ast(this.value,scopes)}}else{
 var elt
 if(this.elt instanceof $B.ast.Starred){elt=$B.js_from_ast(this.elt.value,scopes)}else{elt=$B.js_from_ast(this.elt,scopes)}}
 var has_await=own_scope.has_await
-js=`(${has_await ? 'async ' : ''}function(expr) {\n`+js
-js+=has_await ? 'var save_frame_obj = $B.frame_obj;\n' :''
+js=`(${has_await ? 'async ' : ''}function(expr) {\n`+
+(has_await ? 'var save_frame_obj = $B.frame_obj;\n' :'')+js
 if(this instanceof $B.ast.ListComp){if(this.elt instanceof $B.ast.Starred){js+=prefix+`for(var item of $B.make_js_iterator(${elt})){\n`
 indent()
 js+=prefix+`result_${id}.push(item)\n`
@@ -16738,7 +16738,7 @@ js+=prefix+`return result_${id}\n`
 dedent()
 js+=prefix+`}`+`)(${outmost_expr})\n`
 scopes.pop()
-return js}
+return has_await ? `(await ${js})` :js}
 function init_scopes(type,scopes){
 var filename=scopes?.symtable?.table?.filename,name=$B.url2name[filename]
 if(name){name=name.replace(/-/g,'_')}else if(filename===undefined){name='exec' }else if(filename.startsWith('<')&& filename.endsWith('>')){name='exec'}else{
