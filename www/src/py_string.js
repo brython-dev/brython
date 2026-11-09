@@ -196,6 +196,7 @@ $B.str_iterator.tp_iter = function(self) {
 
 $B.str_iterator.tp_iternext = function*(self){
     for (var char of self.it) {
+        self.index++
         yield char
     }
 }
@@ -203,7 +204,7 @@ $B.str_iterator.tp_iternext = function*(self){
 var str_iterator_funcs = $B.str_iterator.tp_funcs = {}
 
 str_iterator_funcs.__length_hint__ = function(self) {
-    return self.len
+    return self.len - self.index
 }
 
 str_iterator_funcs.__reduce__ = function(self) {
@@ -1779,7 +1780,8 @@ _b_.str.tp_iter = function(self) {
         ob_type: $B.str_iterator,
         obj: self,
         len: _b_.str.mp_length(self),
-        it: to_string(self)[Symbol.iterator]()
+        it: to_string(self)[Symbol.iterator](),
+        index: 0
     }
 }
 

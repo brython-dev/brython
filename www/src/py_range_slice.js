@@ -126,7 +126,10 @@ $B.range_iterator.tp_iternext = function*(self){
 var range_iterator_funcs = $B.range_iterator.tp_funcs = {}
 
 range_iterator_funcs.__length_hint__ = function(self) {
-    return _b_.range.mp_length(self.obj)
+    var len = _b_.range.mp_length(self.obj),
+        done = (self.it - self.start) / self.step
+    return typeof done == 'bigint' ?
+        _b_.int.$int_or_long(BigInt(len) - done) : len - done
 }
 
 range_iterator_funcs.__reduce__ = function(self) {
