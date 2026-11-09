@@ -207,11 +207,6 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
             return $B.String(jsobj)
     }
 
-    if (Array.isArray(jsobj)) {
-        return jsobj
-    }
-
-
     let pyobj
     try {
         pyobj = PYOBJ_MAP.get(jsobj)
@@ -221,6 +216,10 @@ var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
     }
     if (pyobj !== undefined) {
         return pyobj
+    }
+
+    if (Array.isArray(jsobj)) {
+        return jsobj
     }
 
     // check if obj is an instance of Promise
@@ -369,14 +368,10 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj, memo) {
     }
 
     if (has_type(klass, _b_.list) || has_type(klass, _b_.tuple)) {
-        // Python list : transform its elements
-        var jsobj = []
-        memo = memo ?? new Map()
-        memo.set(pyobj, jsobj)
-        for (var item of pyobj) {
-            jsobj.push(pyobj2jsobj(item, memo))
-        }
-        PYOBJ_MAP.set(jsobj, pyobj)
+        // Python list : transform its elements. The result is a copy, which
+        // JavaScript may change: it is not mapped back to the list
+        var jsobj = pyobj.map(pyobj2jsobj)
+        delete jsobj.ob_type // becomes a js_array
         return jsobj
     }
 
