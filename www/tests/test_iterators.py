@@ -250,4 +250,38 @@ assert next(flaky_it_2928) == "later"
 assert next(flaky_it_2928) == "later"
 assert next(flaky_it_2928, None) is None
 
+# the start of enumerate is an index, counted as a Python int
+class Seven:
+    def __index__(self):
+        return 7
+assert list(enumerate("ab", Seven())) == [(7, "a"), (8, "b")]
+assert list(enumerate("ab", 2 ** 53 + 1)) == [(2 ** 53 + 1, "a"), (2 ** 53 + 2, "b")]
+assert type(next(enumerate("a", True))[0]) is int
+assert_raises(TypeError, enumerate, "ab", 1.5)
+
+# a __getitem__ iterator keeps its position through iter() and stays exhausted
+class Sequence:
+    def __init__(self):
+        self.data = [1, 2, 3]
+    def __getitem__(self, index):
+        return self.data[index]
+seq = Sequence()
+it = iter(seq)
+next(it)
+assert iter(it) is it and list(it) == [2, 3]
+seq.data.append(4)
+assert next(it, "stop") == "stop"
+
+# a subclass of a builtin iterator makes instances of the subclass
+for base, args in ((enumerate, ("ab",)), (filter, (None, "ab")), (map, (str, "ab")),
+                   (zip, ("ab",)), (reversed, ("ab",))):
+    sub = type("Sub", (base,), {"label": "sub"})(*args)
+    assert type(sub).__name__ == "Sub" and sub.label == "sub"
+    sub.x = 1
+    assert sub.x == 1 and len(list(sub)) == 2
+    
+# zip() with no iterable is empty
+assert list(zip()) == [] and list(zip(strict=True)) == []
+assert list(type("Z", (zip,), {})()) == []
+
 print("passed all tests...")
