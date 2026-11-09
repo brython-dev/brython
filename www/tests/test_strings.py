@@ -671,5 +671,7 @@ it = iter(Str('abcd'))
 next(it)
 assert it.__length_hint__() == 3
 
+# PR 3221
+assert ("a" + chr(0x1F600) + "b").partition(chr(0x1F600)) == ('a', '😀', 'b')
 
 print("passed all tests...")
