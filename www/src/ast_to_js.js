@@ -3719,17 +3719,7 @@ $B.ast.Name.prototype.to_js = function(scopes) {
             return '_b_.__debug__'
         }
         var scope = name_scope(this.id, scopes)
-        if (this.id == 'xzs') {
-            console.log('Name.to_js, scope', scope)
-        }
-        if (scope.found && scope.found.type == 'module' &&
-                scopes.symtable.table.deleted.has(this.id)) {
-            // a global deleted somewhere in the module may be unbound when
-            // it is read, whatever the order the code is written in
-            $B.last(scopes).needs_frames = true
-            return make_ref(this.id, scopes, {found: false, resolve: 'global'}, this)
-        }
-        if (scope.found === $B.last(scopes)) {
+        if (scope.found === $B.last(scopes) && scope.found.type != 'module') {
             return 'locals.' + mangle(scopes, scope.found, this.id)
         }
         var res = name_reference(this.id, scopes, this)
@@ -3737,6 +3727,10 @@ $B.ast.Name.prototype.to_js = function(scopes) {
             // Special case : name __debugger__ is translated to Javascript
             // "debugger" if not bound in Brython code
             return 'debugger'
+        }
+        if (scope.found && scope.found.type == 'module') {
+            // a module global may have been deleted at run time, from globals()
+            res = `(${res} ?? $B.resolve_in_scopes('${this.id}', [${res.split('.')[0]}, _b_]))`
         }
         return res
     }
