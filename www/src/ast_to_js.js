@@ -1938,7 +1938,7 @@ $B.ast.ClassDef.prototype.to_js = function(scopes) {
     dedent(2)
 
     js += prefix + `locals.__doc__ = ${docstring}\n` +
-          prefix + `locals.__module__ = ${JSON.stringify(glob)}\n` +
+          prefix + `locals.__module__ = $B.frame_obj.frame[3].__name__\n` +
           prefix + `locals.__qualname__ = "${qualname}"\n` +
           prefix + `locals.__firstlineno__ = ${this.lineno}\n`
 
