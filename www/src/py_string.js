@@ -3282,13 +3282,9 @@ Template.$factory = function() {
             if (expect_str) {
                 strings.push('')
             }
-            interpolations.push(Array.isArray(item) ?
-                Interpolation.$factory(...item) : item)
+            interpolations.push(Interpolation.$factory(...item))
             expect_str = true
-        } else if (! $B.is_str(item)) {
-            $B.RAISE(_b_.TypeError, "Template.__new__ *args need to be " +
-                `of type 'str' or 'Interpolation', got ${$B.class_name(item)}`)
-        } else if (expect_str) {
+        } else {
             strings.push(item)
             expect_str = false
         } else {
