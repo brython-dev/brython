@@ -659,4 +659,9 @@ assert str(t"{x:.2f}".interpolations) == "(Interpolation(3.14159, 'x', None, '.2
 name = 'Alan'
 assert t"Hello {name!r}".strings == ('Hello ', '')
 
+# PR 3111
+assert str(t"{1 + 2}".interpolations) == \
+    "(Interpolation(3, '1 + 2', None, ''),)"
+
+
 print("passed all tests...")
