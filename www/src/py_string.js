@@ -2676,13 +2676,12 @@ str_funcs.partition = function(self, sep) {
     }
     check_str(sep);
     [_self, sep] = to_string(self, sep)
-    var chars = to_chars(_self),
-        i = _self.indexOf(sep)
+    var i = _self.indexOf(sep)
     if (i == -1) {
         return _b_.tuple.$factory([_self, "", ""])
     }
-    return _b_.tuple.$factory([$B.String(chars.slice(0, i).join('')), sep,
-        $B.String(chars.slice(i + sep.length).join(''))])
+    return _b_.tuple.$factory([_self.slice(0, i), sep,
+        _self.slice(i + sep.length)])
 }
 
 str_funcs.removeprefix = function(self, prefix) {
