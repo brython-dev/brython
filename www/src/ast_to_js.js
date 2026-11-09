@@ -3299,9 +3299,8 @@ $B.ast.Interactive.prototype.to_js = function(scopes) {
 
 $B.ast.Interpolation.prototype.to_js = function(scopes) {
     var conversion = this.conversion == - 1 ? "_b_.None" : `'${this.conversion}'`
-    return `[${this.value.to_js(scopes)}, '${this.value.id}', ` +
-        `${conversion}, ` +
-        `${this.format_spec ? $B.js_from_ast(this.format_spec, scopes) : "''"}]`
+    return `[${this.value.to_js(scopes)}, ${JSON.stringify(this.str)}, ` +
+        `${conversion}, ${this.format_spec ?? "''"}]`
 }
 
 $B.ast.JoinedStr.prototype.to_js = function(scopes) {
