@@ -748,8 +748,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-11-09 08:46:53.430335"
-__BRYTHON__.timestamp=1794210413430
+__BRYTHON__.compiled_date="2026-11-09 21:54:51.753826"
+__BRYTHON__.timestamp=1794257691753
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -14786,7 +14786,6 @@ var exec_module=$B.$getattr(_loader,"exec_module",_b_.None)
 if($B.is_none(exec_module)){
 module=$B.$getattr(_loader,"load_module")(_spec_name)}else{
 _sys_modules[_spec_name]=module
-$B.namespace[_spec_name]=Object.create(null)
 if(module===undefined){console.log('no module !!!')}
 try{
 exec_module(module)}catch(e){delete _sys_modules[_spec_name]
@@ -17149,7 +17148,7 @@ indent(2)
 js+=prefix+`locals = ${locals_name}\n`
 dedent(2)
 js+=prefix+`locals.__doc__ = ${docstring}\n`+
-prefix+`locals.__module__ = ${JSON.stringify(glob)}\n`+
+prefix+`locals.__module__ = $B.frame_obj.frame[3].__name__\n`+
 prefix+`locals.__qualname__ = "${qualname}"\n`+
 prefix+`locals.__firstlineno__ = ${this.lineno}\n`
 js+=prefix+`var frame = [name, locals, ${JSON.stringify(glob)}, ${globals_name}]\n`+
@@ -17825,7 +17824,7 @@ scopes.pop()
 console.log('Interactive',js)
 return js}
 $B.ast.Interpolation.prototype.to_js=function(scopes){var conversion=this.conversion==-1 ? "_b_.None" :`'${this.conversion}'`
-return `[${this.value.to_js(scopes)}, '${this.value.id}', `+
+return `[${this.value.to_js(scopes)}, ${JSON.stringify(this.str)}, `+
 `${conversion}, `+
 `${this.format_spec ? $B.js_from_ast(this.format_spec, scopes) : "''"}]`}
 $B.ast.JoinedStr.prototype.to_js=function(scopes){var items=this.values.map(s=> $B.js_from_ast(s,scopes))
@@ -18021,11 +18020,12 @@ var scope_name=make_scope_name(scopes,scope)
 return scope_name+'.'+mangle(scopes,scope,this.id)}else if(this.ctx instanceof $B.ast.Load){
 if(this.id=='__debug__'){return '_b_.__debug__'}
 var scope=name_scope(this.id,scopes)
-if(this.id=='xzs'){console.log('Name.to_js, scope',scope)}
-if(scope.found===$B.last(scopes)){return 'locals.'+mangle(scopes,scope.found,this.id)}
+if(scope.found===$B.last(scopes)&& scope.found.type !='module'){return 'locals.'+mangle(scopes,scope.found,this.id)}
 var res=name_reference(this.id,scopes,this)
 if(this.id=='__debugger__' && res.startsWith('$B.resolve_in_scopes')){
 return 'debugger'}
+if(scope.found && scope.found.type=='module'){
+res=`(${res} ?? $B.resolve_in_scopes('${this.id}', [${res.split('.')[0]}, _b_]))`}
 return res}}
 $B.ast.NamedExpr.prototype.to_js=function(scopes){
 var i=scopes.length-1
@@ -18573,7 +18573,8 @@ function Symtable(){this.filename=NULL
 this.stack=[]
 this.blocks=new Map()
 this.cur=NULL
-this.private=NULL}
+this.private=NULL
+this.deleted=new Set()}
 function id(obj){if(obj[$B.ID]!==undefined){return obj[$B.ID]}
 return obj[$B.ID]=$B.UUID()}
 function ste_new(st,name,block,key,lineno,col_offset,end_lineno,end_col_offset){var ste
@@ -19223,6 +19224,7 @@ break
 case $B.ast.Name:
 var flag=e.ctx instanceof $B.ast.Load ? SF.USE :SF.DEF_LOCAL
 if(! symtable_add_def(st,e.id,flag,LOCATION(e))){VISIT_QUIT(st,0)}
+if(e.ctx instanceof $B.ast.Del){st.deleted.add(e.id)}
 if(e.ctx instanceof $B.ast.Load &&
 _PyST_IsFunctionLike(st.cur)&&
 e.id=="super"){if(!GET_IDENTIFIER('__class__')||
@@ -19514,7 +19516,7 @@ return conversion_expr.id}else if(debug && !format){
 return 'r'}
 return-1}
 function _strip_interpolation_expr(exprstr){var len=exprstr.length
-for(var c of exprstr){if(is_whitespace(c)||c=='='){len--}else{
+for(var c of[...exprstr].reverse()){if(is_whitespace(c)||c=='='){len--}else{
 break}}
 return exprstr.substr(0,len)}
 $B._PyPegen.interpolation=function(p,expression,debug,conversion,format,closing_brace,position,arena){var lineno=position.lineno,col_offset=position.col_offset,end_lineno=position.end_lineno,end_col_offset=position.end_col_offset
