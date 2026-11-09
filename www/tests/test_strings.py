@@ -663,5 +663,13 @@ assert t"Hello {name!r}".strings == ('Hello ', '')
 assert str(t"{1 + 2}".interpolations) == \
     "(Interpolation(3, '1 + 2', None, ''),)"
 
+# PR 3220
+class Str(str):
+  pass
+
+it = iter(Str('abcd'))
+next(it)
+assert it.__length_hint__() == 3
+
 
 print("passed all tests...")
