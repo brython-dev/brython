@@ -1499,6 +1499,12 @@ class L(list):
 
 assert L([1, 2]).size() == 2
 
+# PR 3035
+class C:
+  __module__ = 'other'
+
+assert C.__module__ == 'other'
+
 # PR 3170
 class Base:
 
