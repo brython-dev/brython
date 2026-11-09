@@ -139,11 +139,31 @@ assert not "a" in ""
 # issue 285
 assert "ab"[1:0:-1] == 'b'
 
+# maketrans() reads characters, an astral one included
+assert str.maketrans("a😀", "😀a") == {97: 0x1F600, 0x1F600: 97}
+assert str.maketrans({"😀": "x"}) == {0x1F600: "x"}
+assert "a😀b".translate(str.maketrans("a", "x", "😀")) == "xb"
+
 # issue 361
 FULL_ENGLISH_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 FULL_ENTEAN_ALPHABET =  "AZYXEWVTISRLPNOMQKJHUGFDCB"
 tran_tab = str.maketrans(FULL_ENGLISH_ALPHABET, FULL_ENTEAN_ALPHABET, 'sh')
 assert "PETEshelley".translate(tran_tab) == "MEHEelley"
+
+# translate() keeps a character only on a LookupError of its table, and takes
+# a str, None or a code point
+class Failing:
+    def __getitem__(self, key):
+        raise RuntimeError("table failure")
+
+class Name(str):
+    pass
+
+assert_raises(RuntimeError, "ab".translate, Failing())
+assert_raises(ValueError, "ab".translate, {97: -1})
+assert_raises(TypeError, "ab".translate, {97: 1.0})
+assert "abc".translate({97: Name("x"), 98: "😀", 99: 0x1F600}) == "x😀😀"
+assert "ab".translate({97: True, 98: None}) == "\x01"
 
 # issue 423
 assert 'a'.islower()
@@ -599,5 +619,44 @@ assert " a b ".split(None, 3) == ["a", "b"]
 assert "a ".split(None, 1) == ["a"]
 # a run of whitespace is one separator; the unsplit tail keeps its spacing
 assert " a  b  c ".split(None, 1) == ["a", "b  c "]
+
+# a str subclass iterates over its characters, not over its __str__
+class Name(str):
+    def __str__(self):
+        return "wrong"
+
+for s, chars in ((Name("ab"), ["a", "b"]), (Name("😀a"), ["😀", "a"])):
+    assert list(s) == chars
+    assert [c for c in s] == chars
+    it = iter(s)
+    it.__setstate__(1)
+    assert list(it) == chars[1:]
+
+# PR 3063
+class T(str):
+    pass
+
+def g(text):
+    return text
+
+assert g(**{T("text"): "abc"}) == 'abc'
+
+# PR 3100
+x = 3.14159
+assert str(list(t"a{x!r}b")) == "['a', Interpolation(3.14159, 'x', 'r', ''), 'b']"
+
+# PR 3101
+assert (t"Hello " + t"world").strings  == ('Hello world',)
+
+# PR 3102
+assert f"{t'a'.strings}" == "('a',)"
+
+# PR 3104
+x = 3.14159
+assert str(t"{x:.2f}".interpolations) == "(Interpolation(3.14159, 'x', None, '.2f'),)"
+
+# PR 3109
+name = 'Alan'
+assert t"Hello {name!r}".strings == ('Hello ', '')
 
 print("passed all tests...")

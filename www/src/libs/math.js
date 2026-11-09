@@ -325,8 +325,7 @@ var big_int = {
 }
 
 function acos(x) {
-    $B.check_nb_args('acos', 1, arguments)
-    $B.check_no_kw('acos', x)
+    $B.check_nb_args_no_kw('math.acos', 1, arguments)
     if (_mod.isinf(x)) {
         $B.RAISE(_b_.ValueError, "math domain error")
     } else if (_mod.isnan(x)) {
@@ -341,8 +340,7 @@ function acos(x) {
 }
 
 function acosh(x) {
-    $B.check_nb_args('acosh', 1, arguments)
-    $B.check_no_kw('acosh', x)
+    $B.check_nb_args_no_kw('math.acosh', 1, arguments)
 
     if (_b_.float.$funcs.isinf(x)) {
         if (_b_.float.$funcs.isninf(x)) {
@@ -363,8 +361,7 @@ function acosh(x) {
 }
 
 function asin(x) {
-    $B.check_nb_args('asin', 1, arguments)
-    $B.check_no_kw('asin', x)
+    $B.check_nb_args_no_kw('math.asin', 1, arguments)
     if (_mod.isinf(x)) {
         $B.RAISE(_b_.ValueError, "math domain error")
     } else if (_mod.isnan(x)) {
@@ -379,8 +376,7 @@ function asin(x) {
 }
 
 function asinh(x) {
-    $B.check_nb_args('asinh', 1, arguments)
-    $B.check_no_kw('asinh', x)
+    $B.check_nb_args_no_kw('math.asinh', 1, arguments)
 
     var y = float_check(x)
     if (_b_.float.$funcs.isninf(x)) {
@@ -395,8 +391,7 @@ function asinh(x) {
 }
 
 function atan(x) {
-    $B.check_nb_args('atan', 1, arguments)
-    $B.check_no_kw('atan', x)
+    $B.check_nb_args_no_kw('math.atan', 1, arguments)
 
     if (_b_.float.$funcs.isninf(x)) {return _b_.float.$factory(-Math.PI / 2)}
     if (_b_.float.$funcs.isinf(x)) {return _b_.float.$factory(Math.PI / 2)}
@@ -404,15 +399,13 @@ function atan(x) {
 }
 
 function atan2(x, y) {
-    $B.check_nb_args('atan2', 2, arguments)
-    $B.check_no_kw('atan2', x, y)
+    $B.check_nb_args_no_kw('math.atan2', 2, arguments)
 
     return _b_.float.$factory(Math.atan2(float_check(x), float_check(y)))
 }
 
 function atanh(x) {
-    $B.check_nb_args('atanh', 1, arguments)
-    $B.check_no_kw('atanh', x)
+    $B.check_nb_args_no_kw('math.atanh', 1, arguments)
     if (_b_.float.$funcs.isinf(x)) {
         $B.RAISE(_b_.ValueError, "math domain error")
     }
@@ -427,8 +420,7 @@ function atanh(x) {
 
 function cbrt(x) {
     // Cubic root
-    $B.check_nb_args('cbrt ', 1, arguments)
-    $B.check_no_kw('cbrt ', x)
+    $B.check_nb_args_no_kw('math.cbrt', 1, arguments)
 
     var y = float_check(x)
     if (_b_.float.$funcs.isninf(x)) {
@@ -444,8 +436,7 @@ function cbrt(x) {
 }
 
 function ceil(x) {
-    $B.check_nb_args('ceil', 1, arguments)
-    $B.check_no_kw('ceil', x)
+    $B.check_nb_args_no_kw('math.ceil', 1, arguments)
 
     var res
 
@@ -768,7 +759,7 @@ function comb(n, k) {
 
 
 function copysign(x, y) {
-    $B.check_nb_args_no_kw('copysign', 2, arguments)
+    $B.check_nb_args_no_kw('math.copysign', 2, arguments)
 
     var x1 = Math.abs(float_check(x))
     var y1 = float_check(y)
@@ -778,14 +769,12 @@ function copysign(x, y) {
 }
 
 function cos(x) {
-    $B.check_nb_args('cos ', 1, arguments)
-    $B.check_no_kw('cos ', x)
+    $B.check_nb_args_no_kw('math.cos', 1, arguments)
     return _b_.float.$factory(Math.cos(float_check(x)))
 }
 
 function cosh(x) {
-    $B.check_nb_args('cosh', 1, arguments)
-    $B.check_no_kw('cosh', x)
+    $B.check_nb_args_no_kw('math.cosh', 1, arguments)
 
     if (_b_.float.$funcs.isinf(x)) {return INF}
     var y = float_check(x)
@@ -795,13 +784,12 @@ function cosh(x) {
 }
 
 function degrees(x) {
-    $B.check_nb_args('degrees', 1, arguments)
-    $B.check_no_kw('degrees', x)
+    $B.check_nb_args_no_kw('math.degrees', 1, arguments)
     return _b_.float.$factory(float_check(x) * 180 / Math.PI)
 }
 
 function dist(p, q) {
-    $B.check_nb_args_no_kw('dist', 2, arguments)
+    $B.check_nb_args_no_kw('math.dist', 2, arguments)
 
     function test(x) {
         if (typeof x === "number") {
@@ -1013,7 +1001,7 @@ function erfc(x) {
 }
 
 function erfc(x) {
-    $B.check_nb_args_no_kw('erfc', 1, arguments)
+    $B.check_nb_args_no_kw('math.erfc', 1, arguments)
     var absx, cf;
 
     var x1 = float_check(x)
@@ -1030,8 +1018,7 @@ function erfc(x) {
 }
 
 function exp(x) {
-    $B.check_nb_args('exp', 1, arguments)
-    $B.check_no_kw('exp', x)
+    $B.check_nb_args_no_kw('math.exp', 1, arguments)
 
      if (_b_.float.$funcs.isninf(x)) {
          return _b_.float.$factory(0)
@@ -1051,8 +1038,7 @@ function exp2(x) {
 }
 
 function expm1(x) {
-    $B.check_nb_args('expm1', 1, arguments)
-    $B.check_no_kw('expm1', x)
+    $B.check_nb_args_no_kw('math.expm1', 1, arguments)
 
      if (_b_.float.$funcs.isninf(x)) {
          return $B.fast_float(-1)
@@ -1067,7 +1053,7 @@ function expm1(x) {
 }
 
 function fabs(x) {
-    $B.check_nb_args_no_kw('fabs', 1, arguments)
+    $B.check_nb_args_no_kw('math.fabs', 1, arguments)
     return _b_.float.$funcs.fabs(float_check(x)) // located in py_float.js
 }
 
@@ -1217,7 +1203,7 @@ function factorial(arg) {
 }
 
 function floor(x) {
-    $B.check_nb_args_no_kw('floor', 1, arguments)
+    $B.check_nb_args_no_kw('math.floor', 1, arguments)
 
     if (typeof x == "number" || $B.exact_type(x, _b_.float)) {
         return Math.floor(float_check(x))
@@ -1381,7 +1367,7 @@ function fma(x, y, z) {
 }
 
 function fmod(x, y) {
-    $B.check_nb_args_no_kw('fmod', 2, arguments)
+    $B.check_nb_args_no_kw('math.fmod', 2, arguments)
     if ($B.$isinstance(x, _b_.float)) {
         if (_b_.float.$funcs.isinf(x)) {
             $B.RAISE(_b_.ValueError, 'math domain error')
@@ -1395,14 +1381,14 @@ function fmod(x, y) {
 }
 
 function frexp(x) {
-    $B.check_nb_args_no_kw('frexp', 1, arguments)
+    $B.check_nb_args_no_kw('math.frexp', 1, arguments)
 
     var _l = _b_.float.$funcs.frexp(x)
     return _b_.tuple.$factory([_b_.float.$factory(_l[0]), _l[1]])
 }
 
 function fsum(x) {
-    $B.check_nb_args_no_kw('fsum', 1, arguments)
+    $B.check_nb_args_no_kw('math.fsum', 1, arguments)
 
     /* Translation into Javascript of the function msum in an Active
        State Cookbook recipe : https://code.activestate.com/recipes/393090/
@@ -1463,8 +1449,7 @@ function fsum(x) {
 }
 
 function gamma(x) {
-    $B.check_nb_args('gamma', 1, arguments)
-    $B.check_no_kw('gamma', x)
+    $B.check_nb_args_no_kw('math.gamma', 1, arguments)
     var x_as_number = x,
         r,
         y,
@@ -1770,14 +1755,12 @@ function isclose() {
 }
 
 function isfinite(x) {
-    $B.check_nb_args('isfinite', 1, arguments)
-    $B.check_no_kw('isfinite', x)
+    $B.check_nb_args_no_kw('math.isfinite', 1, arguments)
     return isFinite(float_check(x))
 }
 
 function isinf(x) {
-    $B.check_nb_args('isinf', 1, arguments)
-    $B.check_no_kw('isinf', x)
+    $B.check_nb_args_no_kw('math.isinf', 1, arguments)
     if (_b_.float.$funcs.isinf(x)) {
         return true
     }
@@ -1788,13 +1771,12 @@ function isinf(x) {
 }
 
 function isnan(x) {
-    $B.check_nb_args('isnan', 1, arguments)
-    $B.check_no_kw('isnan', x)
+    $B.check_nb_args_no_kw('math.isnan', 1, arguments)
     return isNaN(float_check(x))
 }
 
 function isqrt(x) {
-    $B.check_nb_args_no_kw('isqrt', 1, arguments)
+    $B.check_nb_args_no_kw('math.isqrt', 1, arguments)
 
     x = $B.PyNumber_Index(x)
     if ($B.rich_comp("__lt__", x, 0)) {
@@ -1851,14 +1833,12 @@ function lcm() {
 }
 
 function ldexp(x, i) {
-    $B.check_nb_args('ldexp', 2, arguments)
-    $B.check_no_kw('ldexp', x, i)
+    $B.check_nb_args_no_kw('math.ldexp', 2, arguments)
     return _b_.float.$funcs.ldexp(x, i)   // in py_float.js
 }
 
 function lgamma(x) {
-    $B.check_nb_args('lgamma', 1, arguments)
-    $B.check_no_kw('lgamma', x)
+    $B.check_nb_args_no_kw('math.lgamma', 1, arguments)
 
     return m_lgamma(x)
 }
@@ -1909,8 +1889,7 @@ function log(x, base) {
 }
 
 function log1p(x) {
-    $B.check_nb_args('log1p', 1, arguments)
-    $B.check_no_kw('log1p', x)
+    $B.check_nb_args_no_kw('math.log1p', 1, arguments)
     if ($B.is_int(x)) {
         x = $B.int_value(x)
         if (typeof x == 'bigint') {
@@ -1930,8 +1909,7 @@ function log1p(x) {
 }
 
 function log2(x) {
-    $B.check_nb_args('log2', 1, arguments)
-    $B.check_no_kw('log2', x)
+    $B.check_nb_args_no_kw('math.log2', 1, arguments)
     var log2_func = Math.log2 || (x => Math.log(x) / Math.LN2)
     if ($B.is_int(x)) {
         x = $B.int_value(x)
@@ -1960,8 +1938,7 @@ function log2(x) {
 }
 
 function log10(x) {
-    $B.check_nb_args('log10', 1, arguments)
-    $B.check_no_kw('log10', x)
+    $B.check_nb_args_no_kw('math.log10', 1, arguments)
     x = $B.int_value(x)
     if (typeof x == "bigint") {
         return $B.fast_float(big_int.log10(x).value)
@@ -1974,8 +1951,7 @@ function log10(x) {
 }
 
 function modf(x) {
-    $B.check_nb_args('modf', 1, arguments)
-    $B.check_no_kw('modf', x)
+    $B.check_nb_args_no_kw('math.modf', 1, arguments)
 
     if (_b_.float.$funcs.isninf(x)) {
         return _b_.tuple.$factory([0.0, NINF])
@@ -2315,8 +2291,7 @@ function prod() {
 }
 
 function radians(x) {
-    $B.check_nb_args('radians', 1, arguments)
-    $B.check_no_kw('radians', x)
+    $B.check_nb_args_no_kw('math.radians', 1, arguments)
 
     return _b_.float.$factory(float_check(x) * Math.PI / 180)
 }
@@ -2329,7 +2304,7 @@ function is_finite(x) {
 }
 
 function remainder(x, y) {
-    $B.check_nb_args_no_kw('remainder', 2, arguments)
+    $B.check_nb_args_no_kw('math.remainder', 2, arguments)
     float_check(x) // might raise TypeError
     /* Deal with most common case first. */
     if (is_finite(x) && is_finite(y)) {
@@ -2378,14 +2353,12 @@ function remainder(x, y) {
 }
 
 function sin(x) {
-    $B.check_nb_args('sin ', 1, arguments)
-    $B.check_no_kw('sin ', x)
+    $B.check_nb_args_no_kw('math.sin', 1, arguments)
     return _b_.float.$factory(Math.sin(float_check(x)))
 }
 
 function sinh(x) {
-    $B.check_nb_args('sinh', 1, arguments)
-    $B.check_no_kw('sinh', x)
+    $B.check_nb_args_no_kw('math.sinh', 1, arguments)
 
     var y = float_check(x)
     if (Math.sinh !== undefined) {
@@ -2396,7 +2369,7 @@ function sinh(x) {
 }
 
 function sqrt(x) {
-    $B.check_nb_args_no_kw('sqrt ', 1, arguments)
+    $B.check_nb_args_no_kw('math.sqrt', 1, arguments)
 
     float_check(x)
 
@@ -2668,16 +2641,14 @@ function sumprod(p, q) {
 
 
 function tan(x) {
-    $B.check_nb_args('tan', 1, arguments)
-    $B.check_no_kw('tan', x)
+    $B.check_nb_args_no_kw('math.tan', 1, arguments)
 
     var y = float_check(x)
     return _b_.float.$factory(Math.tan(y))
 }
 
 function tanh(x) {
-    $B.check_nb_args('tanh', 1, arguments)
-    $B.check_no_kw('tanh', x)
+    $B.check_nb_args_no_kw('math.tanh', 1, arguments)
 
     var y = float_check(x)
     if (Math.tanh !== undefined) {return _b_.float.$factory(Math.tanh(y))}
@@ -2688,8 +2659,7 @@ function tanh(x) {
 const tau = $B.fast_float(2 * Math.PI)
 
 function trunc(x) {
-    $B.check_nb_args('trunc', 1, arguments)
-    $B.check_no_kw('trunc', x)
+    $B.check_nb_args_no_kw('math.trunc', 1, arguments)
 
     var trunc_method = $B.$getattr($B.get_class(x), '__trunc__', $B.NULL)
     if (trunc_method !== $B.NULL) {
