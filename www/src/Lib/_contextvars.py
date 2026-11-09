@@ -45,8 +45,9 @@ class ContextVar:
             self.value = token.old_value
 
     def set(self, value):
+        token = Token(self)
         self.value = value
-        return Token(self)
+        return token
 
     __class_getitem__ = classmethod(GenericAlias)
 
@@ -56,10 +57,7 @@ class Token(object):
 
     def __init__(self, contextvar):
         self.var = contextvar
-        try:
-            self.old_value = contextvar.get()
-        except LookupError:
-            self.old_value = Token.MISSING
+        self.old_value = getattr(contextvar, 'value', Token.MISSING)
 
 def copy_context(*args,**kw):
     pass
