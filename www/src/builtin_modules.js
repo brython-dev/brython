@@ -4,6 +4,8 @@
 
     $B.imported[$B.OB_TYPE] = _b_.dict
 
+    $B.lazy_modules = _b_.set.tp_new(_b_.set, [])
+
     var update = $B.update_obj = function(mod, data) {
         for (let attr in data) {
             mod[attr] = data[attr]
@@ -30,8 +32,8 @@
                 // ignore
             } else if ($B.get_class(options) === _b_.dict) {
                 var _options = {}
-                for (var entry of _b_.dict.$iter_items(options)) {
-                    _options[entry.key] = entry.value
+                for (let [k, v] of $B.dict_key_values(options)) {
+                    _options[k] = v
                 }
                 options = _options
             } else {
@@ -112,7 +114,7 @@
             var $ = $B.args('send', 1, {message: null}, arguments, null,
                         'args', null)
             var message = $B.pyobj2structuredclone($.message),
-                args = $.args.map($B.pyobj2jsobj)
+                args = $.args.map(arg => $B.pyobj2jsobj(arg))
             self.postMessage(message, ...args)
         }
         browser.document = {
@@ -244,10 +246,8 @@
                     }
 
                     // attributes
-                    for (var item of _b_.dict.$iter_items($.kw)) {
+                    for (let [arg, value] of $B.dict_key_values($.kw)) {
                         // keyword arguments
-                        var arg = item.key,
-                            value = item.value
                         if (arg.toLowerCase().substr(0,2) == "on") {
                             // Event binding passed as argument "onclick", "onfocus"...
                             $B.DOMNode.tp_setattro(self, arg, value)
@@ -648,7 +648,10 @@
         RegExp: self.RegExp && $B.jsobj2pyobj(self.RegExp),
         String: self.String && $B.jsobj2pyobj(self.String),
         "super": super_class,
-        UNDEFINED: undefined,
+        // Kept as a name so that `x is UNDEFINED` and `return UNDEFINED` in
+        // existing programs keep working: both now mean None, which is what
+        // the bridge hands back for undefined and hands out as undefined.
+        UNDEFINED: _b_.None,
         UndefinedType: $B.UndefinedType
     }
 
@@ -679,6 +682,9 @@
     $B.assign_dict(modules.javascript.JSON,
         {
             parse: function(text, reviver) {
+                if ($B.is_str(text)) {
+                    text = _b_.str.$to_string(text)
+                }
                 return $B.structuredclone2pyobj(
                     JSON.parse(text, function(key, value, context) {
                         value = read_big(value, context)
@@ -748,12 +754,13 @@
         if (self.buf === undefined) {
             self.buf = []
         }
-        if (typeof msg != "string") {
+        if (! $B.is_str(msg)) {
             $B.RAISE(_b_.TypeError, "write() argument must be str, not " +
                 $B.class_name(msg))
         }
-        self.buf.push(msg)
-        return _b_.None
+        let s = _b_.str.$to_string(msg)
+        self.buf.push(s)
+        return _b_.len(s)
     }
 
     $io.tp_methods = ["flush", "write"]
@@ -791,7 +798,7 @@
                 modname = "builtins"
             }
             try {
-                $B.$import(modname)
+                $B.import(modname)
                 hook = $B.$getattr($B.imported[modname], funcname)
             } catch (err) {
                 console.warn("cannot import breakpoint", hookname)
@@ -871,6 +878,7 @@
                 $B.frame_obj.frame.$current_exception = value
             }
         },
+        lazy_modules: $B.lazy_modules,
         modules: $B.obj_dict($B.imported),
         path: {
             __get__: function() {
@@ -1009,13 +1017,19 @@
             } else if ($B.$isinstance(message, _b_.Warning)) {
                 category = $B.get_class(message)
             }
+
             var filters
             if ($B.imported.warnings) {
                 filters = $B.module_getattr($B.imported.warnings, 'filters')
             } else {
                 filters = $B.module_getattr(modules._warnings, 'filters')
             }
-            if (filters[0][0] == 'error') {
+
+            if (filters.length && filters[0][0] == 'ignore') {
+                return
+            }
+
+            if (filters.length && filters[0][0] == 'error') {
                 var syntax_error = $B.EXC(_b_.SyntaxError, message.args[0])
                 syntax_error.args[1] = [message.filename, message.lineno,
                     message.offset, message.line]
@@ -1233,9 +1247,7 @@
                 mode: 'text',
                 headers: {}
             }
-        for (let item of _b_.dict.$iter_items(kw)) {
-            let key = item.key,
-                value = item.value
+        for (let [key, value] of $B.dict_key_values(kw)) {
             if (key == "data") {
                 var params = value
                 if (typeof params == "string"  || params instanceof FormData) {
@@ -1253,9 +1265,9 @@
                             $B.class_name(params))
                     }
                     var items = []
-                    for (let subitem of _b_.dict.$iter_items(params)) {
-                        items.push(encodeURIComponent(subitem.key) + "=" +
-                                   encodeURIComponent($B.pyobj2jsobj(subitem.value)))
+                    for (let [k, v] of $B.dict_key_values(params)) {
+                        items.push(encodeURIComponent(k) + "=" +
+                                   encodeURIComponent($B.pyobj2jsobj(v)))
                     }
                     result.body = items.join("&")
                 }
@@ -1264,8 +1276,8 @@
                     $B.RAISE(_b_.ValueError,
                         "headers must be a dict, not " + $B.class_name(value))
                 }
-                for (let subitem of _b_.dict.$iter_items(value)) {
-                    result.headers[subitem.key.toLowerCase()] = subitem.value
+                for (let [k, v] of $B.dict_key_values(value)) {
+                    result.headers[k.toLowerCase()] = v
                 }
             } else if (["cache", "format", "mode"].includes(key)) {
                 result[key] = value
@@ -1500,7 +1512,7 @@
         Future,
         __getattr__: function(attr) {
             // search in _aio.py
-            $B.$import('_aio')
+            $B.import('_aio')
             return $B.$getattr($B.imported._aio, attr)
         }
     }
@@ -1548,12 +1560,7 @@
         modules['browser'].aio = modules['browser.aio']
     }
 
-    // Set builtin name __builtins__
-    _b_.__builtins__ = $B.module.$factory('__builtins__',
-        'Python builtins')
-
     for (let attr in _b_) {
-        $B.module_setattr(_b_.__builtins__, attr, _b_[attr])
         $B.builtins_scope.binding[attr] = true
     }
 
@@ -1669,8 +1676,11 @@ $B.module.tp_init($B.imported.builtins, 'builtins', builtins_doc)
 
 $B.set_dict($B.imported.builtins, _b_)
 
+// Set builtin name __builtins__
+_b_.__builtins__ = $B.imported.builtins
+
 $B.module_setattr($B.imported.builtins, '__doc__', builtins_doc)
-//$B.module_setattr($B.imported.builtins, '__name__', 'builtins')
+$B.module_setattr($B.imported.builtins, '__name__', 'builtins')
 
 $B.module_setattr($B.imported.builtins, '__package__', _b_.None)
 $B.module_setattr($B.imported.builtins, '__loader__', _b_.None)
@@ -1700,11 +1710,11 @@ All Rights Reserved.
 `
 $B.module_setattr($B.imported.builtins, 'copyright', '')
 $B.module_setattr($B.imported.builtins, 'license', 'BSD 3')
-$B.module_setattr($B.imported.builtins, 'help', 'type help()')
 $B.module_setattr($B.imported.builtins, 'credits',
 `    Thanks to CWI, CNRI, BeOpen, Zope Corporation, the Python Software
     Foundation, and a cast of thousands for supporting Python
     development.  See www.python.org for more information.`
 )
+
 
 })(__BRYTHON__);

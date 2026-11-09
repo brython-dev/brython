@@ -85,7 +85,10 @@ def process(filename, exclude_dirs=['test','site-packages']):
             vfs = f.readlines()[1:-1]
             vfs[0] = vfs[0][vfs[0].find('{'):]
             json_payload = ''.join(vfs)
-            old_vfs = json.loads(json_payload)
+            try:
+                old_vfs = json.loads(json_payload)
+            except json.JSONDecodeError:
+                print('cannot decode old VFS')
 
     nb_unchanged = 0
     for stdlib_dir in ("libs", "Lib"):
