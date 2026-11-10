@@ -369,8 +369,8 @@ Random_funcs.getrandbits = function() {
 
     /* Fill-out bits of long integer, by 32-bit words, from least significant
        to most significant. */
-    for (i = 0; i < words; i++, k -= 32) {
-        r = self._random.int32()
+    for (let i = 0; i < words; i++, k -= 32) {
+        let r = self._random.int32()
         if (k < 32)
             r >>>= (32 - k)  /* Drop least significant bits */
         wordarray_view.setUint32(i * 4, r, true)

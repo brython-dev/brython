@@ -25,6 +25,46 @@ except RecursionError as exc:
     assert re.search(r"[Previous line repeated \d+ more times]", trace)
     assert "RecursionError: maximum recursion depth exceeded" in trace
 
+# the name of "except ... as" is unbound when the handler ends, however it ends
+try:
+    raise ValueError("x")
+except ValueError as handled:
+    pass
+assert "handled" not in globals()
+
+def unbound_after_handler():
+    try:
+        raise ValueError("y")
+    except ValueError as caught:
+        pass
+    try:
+        caught
+    except NameError:
+        return "unbound"
+    return "still bound"
+
+assert unbound_after_handler() == "unbound"
+
+def returned_from_handler():
+    try:
+        raise ValueError("z")
+    except ValueError as caught:
+        return type(caught).__name__
+
+assert returned_from_handler() == "ValueError"
+
+try:
+    raise ValueError("w")
+except ValueError as deleted:
+    del deleted
+assert "deleted" not in globals()
+
+try:
+    raise ExceptionGroup("g", [ValueError(1)])
+except* ValueError as group:
+    pass
+assert "group" not in globals()
+
 src = """x = 0
 
 def f():
@@ -256,5 +296,12 @@ assert not result_2940.wasSuccessful()
 # PR 3092
 assert UnicodeEncodeError('utf-8', 'a', 0, 1, 'r').args == \
   ('utf-8', 'a', 0, 1, 'r')
-  
+
+# issue reported in PR 2958
+import warnings
+with warnings.catch_warnings(record=True) as w:
+    warnings.simplefilter('ignore')
+    warnings.warn('nope')
+assert len(w) == 0
+
 print('all tests passed...')

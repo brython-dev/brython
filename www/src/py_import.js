@@ -1173,7 +1173,6 @@ function import_engine(mod_name, _path, from_stdlib) {
             module = $B.$getattr(_loader, "load_module")(_spec_name)
         } else {
             _sys_modules[_spec_name] = module
-            $B.namespace[_spec_name] = Object.create(null)
             if (module === undefined) {
                 console.log('no module !!!')
             }

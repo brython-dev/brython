@@ -225,6 +225,23 @@ assert test2 == [1, 2, 3, 4]
 test2.pop()
 assert test2 == [1, 2, 3]
 
+# a subclass of list or tuple whose __iter__ yields other items
+class Tens(list):
+    def __iter__(self):
+        return (x * 10 for x in list.__iter__(self))
+
+class TensTuple(tuple):
+    def __iter__(self):
+        return (x * 10 for x in tuple.__iter__(self))
+
+for seq in (Tens([1, 2, 3]), TensTuple((1, 2, 3))):
+    assert list(seq) == [10, 20, 30]
+    assert tuple(seq) == (10, 20, 30)
+    assert sorted(seq) == [10, 20, 30]
+    assert [*seq] == [10, 20, 30]
+    assert (*seq,) == (10, 20, 30)
+    assert (lambda *args: args)(*seq) == (10, 20, 30)
+
 # issue 1139
 assert [*[1, 2, 3][:]] == [1, 2, 3]
 

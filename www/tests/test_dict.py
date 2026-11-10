@@ -168,6 +168,30 @@ assert str(a) == '{1: 3, 2: 2}'
 a.update({4:4})
 assert str(a) == '{1: 3, 2: 2, 4: 4}'
 
+# dict() and update() read a dict subclass that iterates its own way through
+# keys() and subscription, refuse a mapping without __getitem__ and a second
+# argument
+class Selected(dict):
+    def __iter__(self):
+        return iter(["b"])
+    def keys(self):
+        return ["b"]
+
+class Incomplete:
+    def keys(self):
+        return ["a"]
+
+d = {}
+d.update(Selected(a=1, b=2))
+assert d == {"b": 2} and dict(Selected(a=1, b=2)) == {"b": 2}
+for args in ([Incomplete()], [{"a": 1}, {"b": 2}]):
+    try:
+        d.update(*args)
+        raise AssertionError("should have raised TypeError")
+    except TypeError:
+        pass
+assert d == {"b": 2}
+
 b = {'a': 1, 'b': 2}
 b['a'] = 3
 assert str(b) == "{'a': 3, 'b': 2}"
@@ -238,9 +262,34 @@ for (k, v) in d.items():
 
 assert d == {True: 'y'}
 
+# a str key removed from a dict that also has other keys
+d = {"a": 1, 2: "x"}
+del d["a"]
+assert d.get("a", "absent") == "absent"
+assert "a" not in d
+assert len(d) == 1
+
+d = {"a": 1, 2: "x"}
+assert d.pop("a") == 1
+assert d.get("a", "absent") == "absent"
+
+d = {2: "x", "a": 1}
+assert d.popitem() == ("a", 1)
+assert d.get("a", "absent") == "absent"
+
 # issue 2200
 d = {"Corriger les erreurs d'extraction" : 1}
 d[list(d.keys())[0]]
+
+# keys looked up after popitem in a dict with keys other than str, all of the
+# same hash
+m = 2 ** 61 - 1
+keys = [7 + k * m for k in range(5)]
+d = {key: key for key in keys}
+assert d.popitem() == (keys[4], keys[4])
+assert 7 + 5 * m not in d
+assert [key in d for key in keys] == [True, True, True, True, False]
+assert d.get(keys[4], "absent") == "absent"
 
 # issue 2256
 t = [('-1', ' Alle'),
@@ -251,6 +300,21 @@ t = [('-1', ' Alle'),
 d = dict(t)
 
 assert list(d) == ['-1', '6', '7', '0']
+
+# a str key spelled like a method of JavaScript objects
+d = {"hasOwnProperty": 1}
+assert d["hasOwnProperty"] == 1
+assert "hasOwnProperty" in d
+assert d.get("hasOwnProperty") == 1
+assert d.setdefault("hasOwnProperty", 2) == 1
+assert d.pop("hasOwnProperty") == 1
+assert d == {}
+
+class HasOwn:
+    hasOwnProperty = 4
+
+assert HasOwn.hasOwnProperty == 4
+assert "hasOwnProperty" in vars(HasOwn)
 
 # issue 2323
 data = {
@@ -284,6 +348,12 @@ d = {1: 1}
 
 assert d.keys == d.keys
 
+# a dict display with a constant key whose hash is past 2 ** 53
+assert {1.5: 2.5}[1.5] == 2.5
+d = {}
+d[3000000000000000001] = 1
+assert {3000000000000000001: 1} == d
+
 
 # dict from mapping
 class A:
@@ -298,6 +368,24 @@ class A:
       return self.data[i]
 
 assert dict(A()) == {0: 'a', 1: 'b', 2: 'c', 3: 'd'}
+
+# a pair that is a subclass of list or tuple whose __iter__ yields other items
+class TensPair(tuple):
+    def __iter__(self):
+        return (x * 10 for x in tuple.__iter__(self))
+
+class TensList(list):
+    def __iter__(self):
+        return (x * 10 for x in list.__iter__(self))
+
+assert dict([TensPair((1, 2))]) == {10: 20}
+assert dict([TensList([1, 2])]) == {10: 20}
+
+# a pair that is a JavaScript array holds Python values
+from browser import window
+d = dict([window.Array.of(1.5, 2.5)])
+assert type(list(d)[0]) is float
+assert d[1.5] == 2.5
 
 # dict from iterable
 class B:

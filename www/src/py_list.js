@@ -321,23 +321,31 @@ $B.list_iterator.tp_iter = function(self) {
 }
 
 $B.list_iterator.tp_iternext = function*(self){
-    for (var value of self.it) {
-        yield value
+    if (self.index < self.obj.length) {
+        yield self.obj[self.index++]
+    } else {
+        // exhausted for good, whatever the list grows to
+        self.index = Infinity
     }
 }
 
 var list_iterator_funcs = $B.list_iterator.tp_funcs = {}
 
 list_iterator_funcs.__length_hint__ = function(self) {
-    return self.len
+    return Math.max(0, self.obj.length - self.index)
 }
 
 list_iterator_funcs.__reduce__ = function(self) {
     return $B.fast_tuple([_b_.iter, $B.fast_tuple([list.$factory(self)]), 0])
 }
 
-list_iterator_funcs.__setstate__ = function(self) {
-
+list_iterator_funcs.__setstate__ = function(self, state) {
+    // -1 is a position as well: the end
+    var index = $B.clip_index(state, -1, self.obj.length)
+    if (self.index !== Infinity) {
+        self.index = index < 0 ? Infinity : index
+    }
+    return _b_.None
 }
 
 $B.list_iterator.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]
@@ -479,7 +487,8 @@ $B.list_reverseiterator.tp_iternext = function*(self){
 var list_reverseiterator_funcs = $B.list_reverseiterator.tp_funcs = {}
 
 list_reverseiterator_funcs.__length_hint__ = function(self) {
-    return self.items.length
+    var len = self.counter + 1
+    return len <= self.items.length ? Math.max(0, len) : 0
 }
 
 list_reverseiterator_funcs.__reduce__ = function(self) {
@@ -487,8 +496,9 @@ list_reverseiterator_funcs.__reduce__ = function(self) {
         $B.fast_tuple([list.$factory(self).reverse()]), 0])
 }
 
-list_reverseiterator_funcs.__setstate__ = function(self) {
-
+list_reverseiterator_funcs.__setstate__ = function(self, state) {
+    self.counter = $B.clip_index(state, -1, self.items.length - 1)
+    return _b_.None
 }
 
 $B.list_reverseiterator.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]
@@ -624,7 +634,8 @@ var factory = function(obj) {
         )
     }
     var obj = args[0]
-    if (Array.isArray(obj) && obj.ob_type) { // most simple case
+    if (Array.isArray(obj) && (obj.ob_type === list || obj.ob_type === tuple)) {
+        // most simple case, not a subclass, which may define __iter__
         obj = obj.slice() // list(t) is not t
         obj.ob_type = klass
         return obj
@@ -691,8 +702,8 @@ _b_.list.tp_hash = _b_.None
 _b_.list.tp_iter = function(self) {
     var res = {
         ob_type: list_iterator,
-        it: self[Symbol.iterator](),
-        len: self.length
+        obj: self,
+        index: 0
     }
     return res
 }
@@ -799,7 +810,7 @@ list_funcs.__sizeof__ = function(self) {
 }
 
 list_funcs.append = function(self, x) {
-    $B.check_nb_args_no_kw("append", 2, arguments)
+    $B.check_nb_args_no_kw("list.append", 1, arguments, true)
     if (self[$B.JSOBJ]) {
         self[$B.JSOBJ].push($B.pyobj2jsobj(x))
         self.push($B.pyobj2jsobj(x))
@@ -811,10 +822,10 @@ list_funcs.append = function(self, x) {
     return _b_.None
 }
 
-list_funcs.clear = function() {
-    var $ = $B.args("clear", 1, {self: null}, arguments)
-    while ($.self.length) {
-        $.self.pop()
+list_funcs.clear = function(self) {
+    $B.meth_noargs("list.clear", arguments)
+    while (self.length) {
+        self.pop()
     }
     return _b_.None
 }
@@ -901,7 +912,10 @@ list_funcs.reverse = function(self) {
 }
 
 list_funcs.sort = function(self) {
-    var $ = $B.args("sort", 1, {self: null}, arguments, null, null, "kw")
+    var $ = $B.args("sort", 1, {self: null}, arguments, null, "args", "kw")
+    if ($.args.length > 0) {
+        $B.RAISE(_b_.TypeError, "sort() takes no positional arguments")
+    }
 
     check_not_tuple(self, "sort")
     var func = _b_.None,
@@ -978,6 +992,8 @@ list_funcs.sort = function(self) {
     return self.$is_js_array ? self : _b_.None
 }
 
+list_funcs.sort.__text_signature__ = "($self, /, *, key=None, reverse=False)"
+
 _b_.list.tp_methods = [
     "__reversed__", "__sizeof__", "clear", "copy", "append", "insert",
     "extend", "pop", "remove", "index", "count", "reverse", "sort"
@@ -1002,23 +1018,29 @@ $B.tuple_iterator.tp_iter = function(self) {
 }
 
 $B.tuple_iterator.tp_iternext = function*(self){
-    for (var value of self.it) {
-        yield value
+    if (self.index < self.obj.length) {
+        yield self.obj[self.index++]
+    } else {
+        self.index = Infinity
     }
 }
 
 var tuple_iterator_funcs = $B.tuple_iterator.tp_funcs = {}
 
 tuple_iterator_funcs.__length_hint__ = function(self) {
-    return self.obj.length
+    return Math.max(0, self.obj.length - self.index)
 }
 
 tuple_iterator_funcs.__reduce__ = function(self) {
 
 }
 
-tuple_iterator_funcs.__setstate__ = function(self) {
-
+tuple_iterator_funcs.__setstate__ = function(self, state) {
+    var index = $B.clip_index(state, 0, self.obj.length)
+    if (self.index !== Infinity) {
+        self.index = index
+    }
+    return _b_.None
 }
 
 $B.tuple_iterator.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]
@@ -1081,7 +1103,7 @@ _b_.tuple.tp_iter = function(self) {
     return {
         ob_type: $B.tuple_iterator,
         obj: self,
-        it: self[Symbol.iterator]()
+        index: 0
     }
 }
 

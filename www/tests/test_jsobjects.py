@@ -98,7 +98,7 @@ assert obj == {"foo": None}
 # issue 1352
 x = window.eval()
 assert x == javascript.UNDEFINED
-assert type(x) == javascript.UndefinedType
+assert x is None
 
 # issue #1376
 setattr(window, 'foo', [])
@@ -190,6 +190,12 @@ window.jsFunction1696('asdf'.isupper)
 # issue 1918
 assert isinstance(window.test_jsobj, javascript.JSObject)
 
+# random.getrandbits leaves the globals of the page alone
+import random
+window.i = window.r = "page"
+random.getrandbits(40)
+assert window.i == window.r == "page"
+
 # import Javascript modules
 javascript.import_js('js_test.js')
 assert js_test.x == 1
@@ -267,7 +273,11 @@ except Exception as exc:
 
 # issue 2248
 assert type(javascript.NULL) is javascript.NullType
-assert type(javascript.UNDEFINED) is javascript.UndefinedType
+# JavaScript's undefined is Python's None, in both directions, so the name is
+# kept for compatibility and is None. UndefinedType stays for anything a
+# program reaches that the bridge did not convert.
+assert javascript.UNDEFINED is None
+assert type(javascript.UNDEFINED) is type(None)
 
 value = getattr(window, 'opener', None)
 assert value is javascript.NULL
@@ -476,6 +486,25 @@ js_array = window.eval(['a', 'b', 'c', 'd'])
 assert type(js_array[:2]) is javascript.Array
 assert js_array[:2] == ['a', 'b']
 
+# A Javascript array has the list methods that read it or change it in place
+letters = window.eval(['a', 'b', 'c', 'b'])
+assert letters.count('b') == 2
+assert letters.index('b') == 1
+assert letters.index('b', 2) == 3
+assert_raises(ValueError, letters.index, 'z')
+letters.insert(1, 'x')
+assert letters == ['a', 'x', 'b', 'c', 'b']
+letters.remove('b')
+assert letters == ['a', 'x', 'c', 'b']
+assert_raises(ValueError, letters.remove, 'z')
+copied = letters.copy()
+copied.append('y')
+assert type(copied) is javascript.Array
+assert letters == ['a', 'x', 'c', 'b']
+assert copied == ['a', 'x', 'c', 'b', 'y']
+letters.clear()
+assert letters == []
+
 # issue 2732
 d = {}
 javascript.pyobj2jsobj(d)
@@ -483,6 +512,20 @@ assert type(d) is dict
 d.update({'a': 1})
 assert d.get('a') == 1
 assert d['a'] == 1
+
+# A plain Javascript object is a mapping of its own keys
+record = window.eval('({"a": 1, "b": [2, 3]})')
+assert len(record) == 2
+assert record.get('a') == 1
+assert record.get('z') is None
+assert record.get('z', 0) == 0
+assert list(record.keys()) == ['a', 'b']
+assert list(record.items()) == [('a', 1), ('b', [2, 3])]
+assert list(record.values()) == [1, [2, 3]]
+# but a member of that name is its own, and another object keeps its methods
+assert window.eval('({"get": 42})').get == 42
+assert window.eval('new Map([["k", "v"]])').get('k') == 'v'
+assert_raises(TypeError, len, window.eval('(function () {})'))
 
 # A Javascript number above 2 ** 53 is the int it is, not the int its shortest
 # decimal spells, and one from 1e21 up is converted rather than refused
@@ -493,6 +536,11 @@ assert window.eval('1e21') == 10 ** 21
 assert window.eval('Math.pow(2, 70)') == 2 ** 70
 assert window.eval('-Math.pow(2, 70)') == -2 ** 70
 
+# a for loop leaves the iterated JS object untouched
+a = window.Array.of(1, 2)
+for x in a:
+    pass
+assert len(window.Object.getOwnPropertySymbols(a)) == 0
 # PR 3074
 class Text(str):
     pass
@@ -505,5 +553,15 @@ rows.append(rows)
 
 assert window.eval("rows => rows[0] === rows")(rows)
 
+# PR 3224
+js_src = """
+var L = __BRYTHON__.builtins.list.$factory([1, 2]), A = [1, 2];
+__BRYTHON__.PYOBJ_MAP.set(A, L);
+window.A = A;
+window.L = L
+"""
+
+window.eval(js_src)
+assert type(window.A) is list
 
 print("all tests ok...")

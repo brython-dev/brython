@@ -36,6 +36,20 @@ assert b == bytearray([3, 2, 5])
 b.insert(1, 4)
 assert b == bytearray([3, 4, 2, 5])
 
+# a bytearray iterator reads the current size of the bytearray
+b = bytearray(b'abcd')
+it = iter(b)
+next(it)
+b.append(101)
+assert list(it) == [98, 99, 100, 101]
+b = bytearray(b'abcd')
+it = iter(b)
+next(it)
+b.clear()
+assert list(it) == []
+b.append(1)
+assert list(it) == []
+
 assert b'-'.join([b'a', b'b']) == b'a-b'
 
 # encoding and decoding
@@ -171,6 +185,25 @@ b'1 22 333 4444 55555'.count(32) == 4
 # issue 972
 assert b'a' in b'a'
 
+# a subclass of list or tuple whose __iter__ yields other items
+class TensList(list):
+    def __iter__(self):
+        return (x * 10 for x in list.__iter__(self))
+
+class TensPair(tuple):
+    def __iter__(self):
+        return (x * 10 for x in tuple.__iter__(self))
+
+for seq in (TensList([1, 2, 3]), TensPair((1, 2, 3))):
+    assert bytes(seq) == b'\n\x14\x1e'
+    assert bytearray(seq) == bytearray(b'\n\x14\x1e')
+
+# the items of a JavaScript array are read as Python values
+from browser import window
+assert bytes(window.Array.of(1, 2)) == b'\x01\x02'
+assert_raises(TypeError, bytes, window.Array.of(1.5))
+assert_raises(TypeError, bytearray, window.Array.of(1.5))
+
 # issue 1070
 try:
     b"\xff".decode('utf-8')
@@ -184,6 +217,22 @@ assert bytearray.fromhex('2Ef0 F1f2 ') == bytearray(b'.\xf0\xf1\xf2')
 
 # issue 1091
 assert bytearray(b'\x07\xf0\xf1\xf2').hex() == "07f0f1f2"
+
+# a search keeps to its bounds
+class Refused:
+    def __index__(self):
+        raise ValueError("refused")
+
+for kind in (bytes, bytearray):
+    data = kind(b"abcab")
+    assert data.count(b"a", 2) == 1 and data.count(b"ab", 0, 4) == 1
+    assert kind(b"aaa").count(b"aa") == 1 and data.count(b"") == 6
+    assert data.find(b"b", 0, 1) == -1 and data.find(b"", 6) == -1
+    assert data.index(b"b", 2) == 4 and data.rfind(b"ab", 0, 4) == 0
+    assert data.startswith(b"b", 1, 2) and not data.startswith(b"", 6)
+    assert not data.endswith(b"", 6) and data.endswith(b"ca", 0, 4)
+    assert_raises(ValueError, data.find, b"a", Refused())
+    assert_raises(TypeError, data.find, b"a", 1.0)
 
 # % formatting (PEP 461)
 assert b'%x' %10 == b'a'
@@ -361,5 +410,10 @@ assert b'a b c'.split(None, 1) == [b'a', b'b c']
 
 # PR 2997
 assert b' a '.strip() == b'a'
+
+# a bytes iterator asked for its iterator keeps its position
+it = iter(b'abcd')
+next(it)
+assert list(it) == [98, 99, 100] and list(it) == []
 
 print('passed all tests...')
