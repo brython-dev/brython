@@ -39,19 +39,23 @@ def collect(generation=2):
     
     The number of unreachable objects is returned.
     """
-    pass
+    return 0
+
+_enabled = True
 
 def disable():
-    """disable() -> None    
+    """disable() -> None
     Disable automatic garbage collection.
     """
-    pass
+    global _enabled
+    _enabled = False
 
 def enable():
-    """enable() -> None    
+    """enable() -> None
     Enable automatic garbage collection.
     """
-    pass
+    global _enabled
+    _enabled = True
 
 garbage = []
 
@@ -99,7 +103,7 @@ def isenabled():
     """isenabled() -> status    
     Returns true if automatic garbage collection is enabled.
     """
-    pass
+    return _enabled
 
 def set_debug(flags):
     """set_debug(flags) -> None    

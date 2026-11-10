@@ -10,7 +10,7 @@ function conv_num(x) {
         return Number(x)
     } else if ($B.is_int(x)) {
         // int subclass
-        return conv_num(x.value)
+        return conv_num($B.int_value(x))
     } else if (x.ob_type === _b_.float) {
         return x.value
     } else if ($B.$isinstance(x, _b_.float)) {
@@ -65,7 +65,7 @@ function _float_div_mod(vx, wx) {
     // copied from CPython floatobject.c
     var mod = vx % wx
     var div = (vx - mod) / wx
-    if (mod) {
+    if (mod != 0) {
         /* ensure the remainder has the same sign as the denominator */
         if ((wx < 0) != (mod < 0)) {
             mod += wx
@@ -79,7 +79,7 @@ function _float_div_mod(vx, wx) {
     }
     /* snap quotient to nearest integral value */
     var floordiv
-    if (div) {
+    if (div != 0) {
         floordiv = Math.floor(div)
         if (div - floordiv > 0.5) {
             floordiv += 1.0
@@ -164,9 +164,7 @@ function preformat(self, fmt) {
         // The argument of toFixed is the number of digits after "."
         let prec = fmt.precision
         if (prec == 0) {
-            // the alternate form always shows the decimal point
-            res = Math.round(value) + (fmt.alternate ? "." : "")
-            return fmt.type == "%" ? res + "%" : res
+            return $B.roundDownToFixed(value, 0)
         }
         res = $B.roundDownToFixed(value, prec) // in py_string.js
         let pt_pos = res.indexOf(".")
@@ -480,6 +478,9 @@ function float_round(x, ndigits) {
     }
 
     var no_digits = ndigits === _b_.None
+    if (! no_digits) {
+        ndigits = Number($B.PyNumber_Index(ndigits))
+    }
     if (isnan(x)) {
         if (ndigits === _b_.None) {
             $B.RAISE(_b_.ValueError,
@@ -491,72 +492,57 @@ function float_round(x, ndigits) {
     } else if (isinf(x)) {
         return ndigits === _b_.None ? overflow() : INF
     }
-    x = float_value(x)
-    ndigits = ndigits === _b_.None ? 0 : ndigits
-    if (ndigits == 0) {
-        var res = Math.round(x.value)
-        if (Math.abs(x.value - res) == 0.5) {
-           // rounding is done towards the even choice
-           if (res % 2) {
-               return res - 1
-           }
-       }
-       if (no_digits) {
-           // return an int
-           return res
-       }
-       return $B.fast_float(res)
-    }
-    if (typeof ndigits == "bigint") {
-        ndigits = Number(ndigits)
-    }
-    // avoids parsing arguments
-    var pow1,
-        pow2,
-        y,
-        z
-    if (ndigits >= 0) {
-        if (ndigits > 22) {
-            /* pow1 and pow2 are each safe from overflow, but
-               pow1*pow2 ~= pow(10.0, ndigits) might overflow */
-            pow1 = 10 ** (ndigits - 22)
-            pow2 = 1e22
-        } else {
-            pow1 = 10 ** ndigits
-            pow2 = 1.0
+    x = float_value(x).value
+    if (no_digits) {
+        // the nearest int, a tie going to the even one
+        var res = Math.round(x)
+        if (Math.abs(x - res) == 0.5 && res % 2) {
+            res -= 1
         }
-        y = (x.value * pow1) * pow2
-        /* if y overflows, then rounded value is exactly x */
-        if (!isFinite(y)) {
-            return x
-        }
+        return _b_.int.$int_or_long(BigInt(res))
+    }
+    if (ndigits > 323 || x == 0) {
+        // x has fewer digits than that
+        return fast_float(x)
+    }
+    if (ndigits < -308) {
+        return fast_float(0 * x)
+    }
+    // x is exactly mant * 2 ** exp: round mant * 2 ** exp * 10 ** ndigits
+    // to the nearest integer q, a tie going to the even one, and read
+    // q * 10 ** -ndigits as a float
+    var view = new DataView(new ArrayBuffer(8))
+    view.setFloat64(0, Math.abs(x))
+    var high = view.getUint32(0),
+        exp = high >>> 20,
+        mant = (BigInt(high & 0xfffff) << 32n) | BigInt(view.getUint32(4))
+    if (exp == 0) {
+        exp = 1
     } else {
-        pow1 = 10 ** -ndigits
-        pow2 = 1.0 /* unused; silences a gcc compiler warning */
-        if (isFinite(pow1)) {
-            y = x.value / pow1
-        } else {
-            return ZERO
-        }
+        mant |= 1n << 52n
     }
-
-    z = Math.round(y)
-    if (fabs(y - z).value == 0.5) {
-        /* halfway between two integers; use round-half-even */
-        z = 2.0 * Math.round(y / 2)
+    exp -= 1075
+    var num = mant * 10n ** BigInt(Math.max(ndigits, 0)) *
+            2n ** BigInt(Math.max(exp, 0)),
+        den = 10n ** BigInt(Math.max(-ndigits, 0)) *
+            2n ** BigInt(Math.max(-exp, 0)),
+        q = num / den,
+        r = num % den
+    if (2n * r > den || (2n * r == den && q % 2n == 1n)) {
+        q += 1n
     }
-    if (ndigits >= 0) {
-        z = (z / pow2) / pow1
+    var digits = q.toString()
+    if (ndigits > 0) {
+        digits = digits.padStart(ndigits + 1, '0')
+        digits = digits.slice(0, -ndigits) + '.' + digits.slice(-ndigits)
     } else {
-        z *= pow1
+        digits += '0'.repeat(-ndigits)
     }
-    /* if computation resulted in overflow, raise OverflowError */
+    var z = Number(digits)
     if (! isFinite(z)) {
-        $B.RAISE(_b_.OverflowError,
-                        "overflow occurred during round")
+        $B.RAISE(_b_.OverflowError, "rounded value too large to represent")
     }
-
-    return fast_float(z)
+    return fast_float(x < 0 ? -z : z)
 }
 
 function to_digits(s) {
@@ -706,6 +692,9 @@ float.$factory = function(value) {
         var index_method = $B.$getattr(klass, '__index__', null)
 
         if (index_method === null) {
+            if ($B.is_str(value)) {
+                return float.$factory(_b_.str.$to_string(value).valueOf())
+            }
             $B.RAISE(_b_.TypeError, "float() argument must be a string or a " +
                 "real number, not '" + $B.class_name(value) + "'")
         }
@@ -808,36 +797,23 @@ _b_.float.nb_multiply = function(self, other) {
 }
 
 _b_.float.nb_remainder = function(self, other) {
-    // can't use Javascript % because it works differently for negative numbers
-    self = conv_float(self)[0]
-    if (self === $B.NULL) {
+    var [x, y] = conv_float(self, other)
+    if (x === $B.NULL || y === $B.NULL) {
         return _b_.NotImplemented
     }
-    if (other == 0) {
+    if (y.value == 0) {
         $B.RAISE(_b_.ZeroDivisionError, "float modulo")
     }
-    if ($B.is_int(other)) {
-        other = _b_.int.tp_funcs.numerator_get(other)
-        return fast_float((self.value % other + other) % other)
-    }
-
-    if ($B.$isinstance(other, float)) {
-        // use truncated division
-        // cf https://en.wikipedia.org/wiki/Modulo_operation
-        var q = Math.floor(self.value / other.value),
-            r = self.value - other.value * q
-        if (r == 0 && other.value < 0) {
-            return fast_float(-0)
-        }
-        return fast_float(r)
-    }
-    return _b_.NotImplemented
+    return fast_float(_float_div_mod(x.value, y.value).mod)
 }
 
 _b_.float.nb_divmod = function(self, other) {
     var [x, y] = conv_float(self, other) //self = conv_float(self)
     if (x === $B.NULL || y === $B.NULL) {
         return _b_.NotImplemented
+    }
+    if (y.value == 0) {
+        $B.RAISE(_b_.ZeroDivisionError, "division by zero")
     }
     var divmod = _float_div_mod(x.value, y.value)
     return $B.fast_tuple([$B.fast_float(divmod.floordiv),
@@ -1034,7 +1010,7 @@ _b_.float.nb_absolute = function(self) {
 
 _b_.float.nb_bool = function(self) {
     check_self_is_float(self, '__bool__')
-    return _b_.bool.$factory(self.value)
+    return self.value != 0
 }
 
 _b_.float.nb_int = function(self) {
@@ -1046,7 +1022,7 @@ _b_.float.nb_int = function(self) {
                    res_num :
                    BigInt(res)
     }
-    return Math.trunc(self.value)
+    return Math.trunc(self.value) + 0
 }
 
 _b_.float.nb_float = function(self) {
@@ -1057,6 +1033,9 @@ _b_.float.nb_floor_divide = function(self, other) {
     var [x, y] = conv_float(self, other) //self = conv_float(self)
     if (x === $B.NULL || y === $B.NULL) {
         return _b_.NotImplemented
+    }
+    if (y.value == 0) {
+        $B.RAISE(_b_.ZeroDivisionError, "division by zero")
     }
     var divmod = _float_div_mod(x.value, y.value)
     return $B.fast_float(divmod.floordiv)
@@ -1092,7 +1071,7 @@ float_funcs.__ceil__ = function(self) {
     } else if (isinf(self)) {
         $B.RAISE(_b_.OverflowError, 'cannot convert float infinity to integer')
     }
-    return Math.ceil(self.value)
+    return Math.ceil(self.value) + 0
 }
 
 float_funcs.__floor__ = function(self) {
@@ -1102,7 +1081,7 @@ float_funcs.__floor__ = function(self) {
     } else if (isinf(self)) {
         $B.RAISE(_b_.OverflowError, 'cannot convert float infinity to integer')
     }
-    return Math.floor(self.value)
+    return Math.floor(self.value) + 0
 }
 
 float_funcs.__format__ = function(self, format_spec) {
@@ -1187,7 +1166,7 @@ float_funcs.as_integer_ratio = function(self) {
 }
 
 float_funcs.conjugate = function(self) {
-    $B.RAISE(_b_.NotImplementedError, 'conjugate')
+    return float_value(self)
 }
 
 float_funcs.from_number = function(self) {

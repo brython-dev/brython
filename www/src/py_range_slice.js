@@ -126,7 +126,10 @@ $B.range_iterator.tp_iternext = function*(self){
 var range_iterator_funcs = $B.range_iterator.tp_funcs = {}
 
 range_iterator_funcs.__length_hint__ = function(self) {
-    return _b_.range.mp_length(self.obj)
+    var len = _b_.range.mp_length(self.obj),
+        done = (self.it - self.start) / self.step
+    return typeof done == 'bigint' ?
+        _b_.int.$int_or_long(BigInt(len) - done) : len - done
 }
 
 range_iterator_funcs.__reduce__ = function(self) {
@@ -134,7 +137,12 @@ range_iterator_funcs.__reduce__ = function(self) {
 }
 
 range_iterator_funcs.__setstate__ = function(self, value) {
-    self.it = self.start + value * self.step
+    // moves on from where the iterator stands
+    var index = $B.clip_index($B.PyNumber_Index(value), 0,
+        range_iterator_funcs.__length_hint__(self))
+    self.it += typeof self.it == 'bigint' ?
+        BigInt(index) * self.step : index * self.step
+    return _b_.None
 }
 
 $B.range_iterator.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]
@@ -435,7 +443,7 @@ function conv_slice(self) {
             res.push(val)
         } else {
             try {
-                res.push($B.$call(_b_.int, val))
+                res.push($B.PyNumber_Index(val))
             } catch (err) {
                 $B.RAISE(_b_.TypeError, "slice indices must be " +
                     "integers or None or have an __index__ method")
@@ -448,18 +456,16 @@ function conv_slice(self) {
 slice.$conv_for_seq = function(self, len) {
     // Internal method, uses the integer len to set
     // start, stop, step to integers
-    var step = self.step === None ? 1 : $B.PyNumber_Index(self.step),
-        step_is_neg = $B.rich_comp('__gt__', 0, step),
+    var [start, stop, step] = conv_slice(self)
+    step = step === None ? 1 : step
+    var step_is_neg = $B.rich_comp('__gt__', 0, step),
         len_1 = $B.rich_op('__sub__', len, 1)
     if (step == 0) {
         $B.RAISE(_b_.ValueError, 'slice step cannot be zero')
     }
-    var start,
-        stop
-    if (self.start === None) {
+    if (start === None) {
         start = step_is_neg ? len_1 : 0
     } else {
-        start = $B.$call(_b_.int, self.start)
         if ($B.rich_comp('__gt__', 0, start)) {
             start = $B.rich_op('__add__', start, len)
             if ($B.rich_comp('__gt__', 0, start)) {
@@ -470,10 +476,9 @@ slice.$conv_for_seq = function(self, len) {
             start = step < 0 ? len_1 : len
         }
     }
-    if (self.stop === None) {
+    if (stop === None) {
         stop = step_is_neg ? -1 : len
     } else {
-        stop = $B.PyNumber_Index(self.stop)
         if ($B.rich_comp('__gt__', 0, stop)) {
             stop = $B.rich_op('__add__', stop, len)
             if ($B.rich_comp('__gt__', 0, stop)) {
@@ -535,7 +540,6 @@ slice.$fast_slice = function(start, stop, step) {
         stop: stop,
         step: step
     }
-    conv_slice(res) // to check types
     return res
 }
 
@@ -561,8 +565,8 @@ _b_.slice.tp_richcompare = function(self, other, op) {
 
 _b_.slice.tp_repr = function(self) {
     $B.builtins_repr_check(slice, arguments) // in brython_builtins.js
-    return "slice(" + _b_.str.$factory(self.start) + ", " +
-        _b_.str.$factory(self.stop) + ", " + _b_.str.$factory(self.step) + ")"
+    return "slice(" + _b_.repr(self.start) + ", " +
+        _b_.repr(self.stop) + ", " + _b_.repr(self.step) + ")"
 }
 
 _b_.slice.tp_hash = function(self) {
@@ -609,7 +613,8 @@ slice_funcs.indices = function() {
     // step or stride length of the slice. Missing or out-of-bounds indices
     // are handled in a manner consistent with regular slices.
     var $ = $B.args("indices", 2, {self: null, length: null}, arguments)
-    var self = $.self,
+    var [start, stop, step] = conv_slice($.self),
+        self = {start, stop, step}, // the indices, through __index__
         length = $.length
     var len = $B.PyNumber_Index(length)
     if (len < 0) {
