@@ -95,12 +95,9 @@ $B.builtin_object_getattro = function(self, klass, attr) {
 }
 
 $B.object_getattribute = function(obj, klass, attr) {
-    var test = false // attr === 'addEventListener'
+    var test = false // attr === 'B'
     if (test) {
         console.log('klass', klass, 'attr', attr)
-    }
-    if (! klass.$getattribute) {
-        console.log('no $getattribute', klass)
     }
     var getattribute = klass.$getattribute ?? $B.search_slot(klass, 'tp_getattro', $B.NULL)
     if (test) {
@@ -187,8 +184,8 @@ function getNewArguments(self, klass) {
 // constructor of the built-in class 'object'
 object.$factory = function() {
     if(arguments.length > 0 ||
-            (arguments.length == 1 && arguments[0].$kw &&
-                Object.keys(arguments[0].$kw).length > 0)
+            (arguments.length == 1 && arguments[0][$B.KW] &&
+                Object.keys(arguments[0][$B.KW]).length > 0)
             ){
         $B.RAISE(_b_.TypeError, 'object() takes no arguments')
     }
@@ -291,12 +288,6 @@ _b_.object.tp_setattro = function(self, attr, value) {
             return setter(in_mro, self, value)
         }
     }
-    var slots = $B.get_from_dict(klass, '__slots__', $B.NULL)
-    if (slots !== $B.NULL) {
-        if (_b_.tuple.sq_contains(slots, attr)) {
-            self.slot_values[attr] = value
-        }
-    }
     var dict = $B.get_dict(self)
     // a class whose __slots__ contains '__dict__' keeps a per-instance
     // dict: create it lazily on the first out-of-slots setattr
@@ -329,7 +320,29 @@ _b_.object.tp_repr = function(self) {
     }
 }
 
+// A Javascript symbol cannot hold a property: its hash is kept here, in a
+// WeakMap that does not keep the symbol alive when the engine accepts it as a
+// weak key, else in a Map (a symbol of Symbol.for is never a weak key, and
+// never dies)
+var weak_symbol_hashes = new WeakMap(),
+    symbol_hashes = new Map(),
+    symbols_are_weak_keys = true
+
+try {
+    new WeakMap().set(Symbol(), 0)
+} catch (err) {
+    symbols_are_weak_keys = false
+}
+
 _b_.object.tp_hash = function(self) {
+    if (typeof self == 'symbol') {
+        var hashes = symbols_are_weak_keys && Symbol.keyFor(self) === undefined ?
+                     weak_symbol_hashes : symbol_hashes
+        if (! hashes.has(self)) {
+            hashes.set(self, $B.$py_next_hash--)
+        }
+        return hashes.get(self)
+    }
     var hash = self.__hashvalue__
     if (hash !== undefined) {
         return hash
@@ -355,7 +368,7 @@ _b_.object.tp_str = function(self) {
 $B.time_object_tp_getattro = 0
 
 _b_.object.tp_getattro = function(self, attr) {
-    var test = false // attr == '__qualname__' // && $B.class_name(self) == 'TypeVar'
+    var test = false // attr == 'B' // && $B.class_name(self) == 'TypeVar'
     var klass = $B.get_class(self)
     if (test) {
         console.log('getattr', attr, 'of self', self, klass)
@@ -381,7 +394,7 @@ _b_.object.tp_getattro = function(self, attr) {
     var getter = $B.NULL
     if (in_mro !== $B.NULL) {
         var in_mro_class = $B.get_class(in_mro)
-        var getter = in_mro_class.tp_descr_get
+        var getter = in_mro_class.tp_descr_get ?? $B.NULL
         if (test) {
             console.log('getter', getter)
         }
@@ -421,6 +434,10 @@ _b_.object.tp_getattro = function(self, attr) {
             return getter(in_mro, self, klass)
         }
         $B.nb_obj_ga++
+        if (test) {
+            console.log('call getter', getter)
+            console.log('args', in_mro, self, klass)
+        }
         return getter(in_mro, self, klass)
     } else if (in_mro !== $B.NULL) {
         if (test) {
@@ -583,15 +600,24 @@ object_funcs.__format__ = function() {
 object_funcs.__getstate__ = function(self) {
     var dict = $B.get_dict(self)
     // CPython 3.11+: instances with filled __slots__ return a 2-tuple
-    // (dict-or-None, {slot: value}); slot values live as the member
-    // descriptors' slot_value_* properties
-    var sd = null
-    for (var k in self) {
-        if (k.startsWith('slot_value_') && self[k] !== undefined) {
-            if (sd === null) {
-                sd = $B.empty_dict()
+    // (dict-or-None, {slot: value}); a slot is read as getattr reads it,
+    // through the first member descriptor of its name along the MRO
+    var sd = null,
+        seen = new Set()
+    for (var klass of $B.get_mro($B.get_class(self))) {
+        if (! (klass.tp_flags & $B.TPFLAGS.HEAPTYPE)) {
+            continue
+        }
+        for (var entry of _b_.dict.$iter_items($B.get_dict(klass))) {
+            var md = entry.value
+            if (seen.has(entry.key) || $B.get_class(md) !== $B.member_descriptor) {
+                continue
             }
-            _b_.dict.$setitem(sd, k.slice(11), self[k])
+            seen.add(entry.key)
+            if (self[md.d_member.attr] !== undefined) {
+                sd = sd ?? $B.empty_dict()
+                _b_.dict.$setitem(sd, entry.key, self[md.d_member.attr])
+            }
         }
     }
     if (sd !== null) {

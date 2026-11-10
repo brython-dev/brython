@@ -320,7 +320,7 @@ $B.addToImported = function(name, modobj) {
                 }
             }
             modobj[attr].$in_js_module = true
-            modobj[attr].ob_type = $B.function
+            modobj[attr].ob_type = modobj[attr].ob_type ?? $B.function
             $B.init_dict(modobj[attr])
             $B.add_function_infos(modobj, attr, name, attr)
         } else if ($B.$isinstance(modobj[attr], _b_.type)) {
@@ -1173,7 +1173,6 @@ function import_engine(mod_name, _path, from_stdlib) {
             module = $B.$getattr(_loader, "load_module")(_spec_name)
         } else {
             _sys_modules[_spec_name] = module
-            $B.namespace[_spec_name] = Object.create(null)
             if (module === undefined) {
                 console.log('no module !!!')
             }

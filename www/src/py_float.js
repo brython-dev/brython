@@ -10,7 +10,7 @@ function conv_num(x) {
         return Number(x)
     } else if ($B.is_int(x)) {
         // int subclass
-        return conv_num(x.value)
+        return conv_num($B.int_value(x))
     } else if (x.ob_type === _b_.float) {
         return x.value
     } else if ($B.$isinstance(x, _b_.float)) {
@@ -65,7 +65,7 @@ function _float_div_mod(vx, wx) {
     // copied from CPython floatobject.c
     var mod = vx % wx
     var div = (vx - mod) / wx
-    if (mod) {
+    if (mod != 0) {
         /* ensure the remainder has the same sign as the denominator */
         if ((wx < 0) != (mod < 0)) {
             mod += wx
@@ -79,7 +79,7 @@ function _float_div_mod(vx, wx) {
     }
     /* snap quotient to nearest integral value */
     var floordiv
-    if (div) {
+    if (div != 0) {
         floordiv = Math.floor(div)
         if (div - floordiv > 0.5) {
             floordiv += 1.0
@@ -164,9 +164,7 @@ function preformat(self, fmt) {
         // The argument of toFixed is the number of digits after "."
         let prec = fmt.precision
         if (prec == 0) {
-            // the alternate form always shows the decimal point
-            res = Math.round(value) + (fmt.alternate ? "." : "")
-            return fmt.type == "%" ? res + "%" : res
+            return $B.roundDownToFixed(value, 0)
         }
         res = $B.roundDownToFixed(value, prec) // in py_string.js
         let pt_pos = res.indexOf(".")
@@ -694,6 +692,9 @@ float.$factory = function(value) {
         var index_method = $B.$getattr(klass, '__index__', null)
 
         if (index_method === null) {
+            if ($B.is_str(value)) {
+                return float.$factory(_b_.str.$to_string(value).valueOf())
+            }
             $B.RAISE(_b_.TypeError, "float() argument must be a string or a " +
                 "real number, not '" + $B.class_name(value) + "'")
         }
@@ -796,36 +797,23 @@ _b_.float.nb_multiply = function(self, other) {
 }
 
 _b_.float.nb_remainder = function(self, other) {
-    // can't use Javascript % because it works differently for negative numbers
-    self = conv_float(self)[0]
-    if (self === $B.NULL) {
+    var [x, y] = conv_float(self, other)
+    if (x === $B.NULL || y === $B.NULL) {
         return _b_.NotImplemented
     }
-    if (other == 0) {
+    if (y.value == 0) {
         $B.RAISE(_b_.ZeroDivisionError, "float modulo")
     }
-    if ($B.is_int(other)) {
-        other = _b_.int.tp_funcs.numerator_get(other)
-        return fast_float((self.value % other + other) % other)
-    }
-
-    if ($B.$isinstance(other, float)) {
-        // use truncated division
-        // cf https://en.wikipedia.org/wiki/Modulo_operation
-        var q = Math.floor(self.value / other.value),
-            r = self.value - other.value * q
-        if (r == 0 && other.value < 0) {
-            return fast_float(-0)
-        }
-        return fast_float(r)
-    }
-    return _b_.NotImplemented
+    return fast_float(_float_div_mod(x.value, y.value).mod)
 }
 
 _b_.float.nb_divmod = function(self, other) {
     var [x, y] = conv_float(self, other) //self = conv_float(self)
     if (x === $B.NULL || y === $B.NULL) {
         return _b_.NotImplemented
+    }
+    if (y.value == 0) {
+        $B.RAISE(_b_.ZeroDivisionError, "division by zero")
     }
     var divmod = _float_div_mod(x.value, y.value)
     return $B.fast_tuple([$B.fast_float(divmod.floordiv),
@@ -1022,7 +1010,7 @@ _b_.float.nb_absolute = function(self) {
 
 _b_.float.nb_bool = function(self) {
     check_self_is_float(self, '__bool__')
-    return _b_.bool.$factory(self.value)
+    return self.value != 0
 }
 
 _b_.float.nb_int = function(self) {
@@ -1034,7 +1022,7 @@ _b_.float.nb_int = function(self) {
                    res_num :
                    BigInt(res)
     }
-    return Math.trunc(self.value)
+    return Math.trunc(self.value) + 0
 }
 
 _b_.float.nb_float = function(self) {
@@ -1045,6 +1033,9 @@ _b_.float.nb_floor_divide = function(self, other) {
     var [x, y] = conv_float(self, other) //self = conv_float(self)
     if (x === $B.NULL || y === $B.NULL) {
         return _b_.NotImplemented
+    }
+    if (y.value == 0) {
+        $B.RAISE(_b_.ZeroDivisionError, "division by zero")
     }
     var divmod = _float_div_mod(x.value, y.value)
     return $B.fast_float(divmod.floordiv)
@@ -1080,7 +1071,7 @@ float_funcs.__ceil__ = function(self) {
     } else if (isinf(self)) {
         $B.RAISE(_b_.OverflowError, 'cannot convert float infinity to integer')
     }
-    return Math.ceil(self.value)
+    return Math.ceil(self.value) + 0
 }
 
 float_funcs.__floor__ = function(self) {
@@ -1090,7 +1081,7 @@ float_funcs.__floor__ = function(self) {
     } else if (isinf(self)) {
         $B.RAISE(_b_.OverflowError, 'cannot convert float infinity to integer')
     }
-    return Math.floor(self.value)
+    return Math.floor(self.value) + 0
 }
 
 float_funcs.__format__ = function(self, format_spec) {
@@ -1175,7 +1166,7 @@ float_funcs.as_integer_ratio = function(self) {
 }
 
 float_funcs.conjugate = function(self) {
-    $B.RAISE(_b_.NotImplementedError, 'conjugate')
+    return float_value(self)
 }
 
 float_funcs.from_number = function(self) {

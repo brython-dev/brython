@@ -213,6 +213,10 @@ $B.make_mro = function(cls) {
         seqs = [],
         pos1 = 0
     for (var base of bases) {
+        if (bases.indexOf(base) != bases.lastIndexOf(base)) {
+            $B.RAISE(_b_.TypeError,
+                `duplicate base class ${$B.get_name(base)}`)
+        }
         // We can't simply push bases[i].__mro__
         // because it would be modified in the algorithm
         let bmro = [],
@@ -279,8 +283,10 @@ $B.make_mro = function(cls) {
             }
         }
         if (candidate === null) {
-            $B.RAISE(_b_.TypeError,
-                "inconsistent hierarchy, no C3 MRO is possible")
+            var heads = new Set(non_empty.map(seq => seq[0]))
+            $B.RAISE(_b_.TypeError, 'Cannot create a consistent method ' +
+                'resolution order (MRO) for bases ' +
+                Array.from(heads, $B.get_name).join(', '))
         }
         mro[mpos++] = candidate
         for (let i = 0; i < seqs.length;  i++) {
@@ -639,6 +645,7 @@ $B.TYPES = {
     NONE: 20
 }
 
+$B.Py_READONLY = 1
 
 // minimum and maximum safe integers
 $B.max_int = Math.pow(2, 53) - 1
@@ -699,6 +706,10 @@ $B.op2method = {
 
 $B.method_to_op = {}
 for (var category in $B.op2method) {
+    if (category == 'boolean') {
+        // "and" and "or" are not the operators of __and__ and __or__
+        continue
+    }
     for (var op in $B.op2method[category]) {
         var method = `__${$B.op2method[category][op]}__`
         $B.method_to_op[method] = op
@@ -708,8 +719,9 @@ for (var category in $B.op2method) {
 // Symbols
 $B.OB_TYPE = Symbol('OB_TYPE') // object type
 $B.ID = Symbol('ID') // used for built-in id()
-$B.INUM = Symbol('INUM') // for iterators
 $B.FAST_ITER = Symbol('FAST_ITER') // fast iteration
+$B.KW = Symbol('KW') // keyword arguments of a call: {[$B.KW]: [named, ...unpacked]}
+
 
 // special repr() for some codepoints, used in py_string.js and py_bytes.js
 $B.special_string_repr = {

@@ -88,19 +88,23 @@ function preformat(self, fmt) {
             res = value.toString()
             break
         case "b":
-            res = (fmt.alternate ? "0b" : "") + value.toString(2)
+            res = (value < 0 ? "-" : "") + (fmt.alternate ? "0b" : "") +
+                (value < 0 ? -value : value).toString(2)
             break
         case "c":
             res = _b_.chr(value)
             break
         case "o":
-            res = (fmt.alternate ? "0o" : "") + value.toString(8)
+            res = (value < 0 ? "-" : "") + (fmt.alternate ? "0o" : "") +
+                (value < 0 ? -value : value).toString(8)
             break
         case "x":
-            res = (fmt.alternate ? "0x" : "") + value.toString(16)
+            res = (value < 0 ? "-" : "") + (fmt.alternate ? "0x" : "") +
+                (value < 0 ? -value : value).toString(16)
             break
         case "X":
-            res = (fmt.alternate ? "0X" : "") + value.toString(16).toUpperCase()
+            res = (value < 0 ? "-" : "") + (fmt.alternate ? "0X" : "") +
+                (value < 0 ? -value : value).toString(16).toUpperCase()
             break
         case "n":
             return self // fix me
@@ -610,7 +614,9 @@ _b_.int.tp_hash = function(self) {
 }
 
 _b_.int.nb_negative = function(self) {
-    return - int_value(self)
+    var value = int_value(self)
+    // an int has no negative zero
+    return value === 0 ? 0 : - value
 }
 
 _b_.int.nb_positive = function(self) {
@@ -807,16 +813,19 @@ int_funcs.__format__ = function(self, format_spec) {
     fmt.align = fmt.align || ">"
     var res = preformat(self, fmt)
     if (fmt.comma) {
-        var sign = res[0] == "-" ? "-" : "",
-            rest = res.substr(sign.length),
+        // digits are grouped by 4 in bases 2, 8 and 16, after the sign and
+        // the prefix
+        var size = 'boxX'.includes(fmt.type) ? 4 : 3,
+            lead = res.match(/^[-+ ]?(0[bBoOxX])?/)[0],
+            rest = res.substr(lead.length),
             len = rest.length,
-            nb = Math.ceil(rest.length/3),
+            nb = Math.ceil(rest.length / size),
             chunks = []
         for (var i = 0; i < nb; i++) {
-            chunks.push(rest.substring(len - 3 * i - 3, len - 3 * i))
+            chunks.push(rest.substring(len - size * i - size, len - size * i))
         }
         chunks.reverse()
-        res = sign + chunks.join(",")
+        res = lead + chunks.join(fmt.grouping_option)
     }
     return $B.format_width(res, fmt)
 }
@@ -883,7 +892,7 @@ int_funcs.bit_length = function(self) {
 }
 
 int_funcs.conjugate = function(self) {
-
+    return int_value(self)
 }
 
 int_funcs.denominator_get = function(self) {
