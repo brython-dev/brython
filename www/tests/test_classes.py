@@ -354,6 +354,15 @@ class EnumInt(int, metaclass=Enumeration):
 
 assert isinstance('foo', EnumInt)
 
+# isinstance() reads the __class__ an object reports, as a proxy does
+class Proxy:
+    @property
+    def __class__(self):
+        return int
+
+assert isinstance(Proxy(), int) and isinstance(Proxy(), Proxy)
+assert not isinstance(Proxy(), str)
+
 # metaclass with multiple inheritance
 class Meta(type):
     pass
