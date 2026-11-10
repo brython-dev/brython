@@ -370,14 +370,19 @@ $B.str_dict_length = function(d) {
     return Object.keys(d).length
 }
 
-$B.items_iterator = function(d) {
+$B.dict_key_values = function(d) {
     // returns a JS array of [key, value] pairs
     var res = []
-    if (self[KEYS]) {
-        for (var i = 0, len = self[KEYS].length; i < len; i++) {
-            res.push([self[KEYS][i], self[VALUES[i]]])
+    if (d[KEYS]) {
+        for (var i = 0, len = d[KEYS].length; i < len; i++) {
+            res.push([d[KEYS][i], d[VALUES][i]])
+        }
+    } else {
+        for (let key in d) {
+            res.push([key, d[key]])
         }
     }
+    return res
 }
 
 $B.hasOnlyStringKeys = function(d) {
@@ -463,16 +468,32 @@ var $copy_dict = function(left, right) {
     }
 }
 
+function dict_hash(key) {
+    // hash(key) for a dict key: a TypeError says what it was refused as
+    try {
+        return $B.$hash(key)
+    } catch (err) {
+        if ($B.is_exc(err, [_b_.TypeError]) && err.args && err.args[0]) {
+            err.args[0] = `cannot use '${$B.class_name(key)}' as ` +
+                `a dict key (${err.args[0]})`
+        }
+        throw err
+    }
+}
+
 function index_by_key(d, key, hash) {
     // only used for dictionaries with a TABLE
-    hash = hash ?? _b_.hash(key)
+    hash = hash ?? dict_hash(key)
     var indices = d[TABLE][hash],
         index
     if (indices !== undefined) {
-        for (var index of indices) {
+        for (var i = 0; i < indices.length; i++) {
+            index = indices[i]
             var v = d[KEYS][index]
             if (v === undefined) {
-                d[TABLE][hash].splice(i, 1)
+                // an entry dict.popitem left behind: the next one takes its
+                // place
+                d[TABLE][hash].splice(i--, 1)
                 if (d[TABLE][hash].length == 0) {
                     delete d[TABLE][hash]
                     return null
@@ -488,7 +509,7 @@ function index_by_key(d, key, hash) {
 }
 
 dict.$lookup_by_key = function(d, key, hash) {
-    hash = hash === undefined ? _b_.hash(key) : hash
+    hash = hash === undefined ? dict_hash(key) : hash
     var indices = d[TABLE][hash],
         index
     if (indices !== undefined) {
@@ -534,7 +555,7 @@ dict.$contains = function(self, key, hash) {
         if (hash_method === $B.str_dict_get($B.get_dict(_b_.object), '__hash__')) {
             return false
         }
-        var hash = $B.$call(hash_method, key)
+        var hash = dict_hash(key)
         // If the object has a specific __hash__ method and a specific __eq__
         // method, `hash` could be the same as one of the string keys's hash,
         // and the __eq__ method might return true. To cover this case we have
@@ -573,6 +594,11 @@ dict.$delitem  = function(self, key, hash) {
         delete self[VALUES][lookup.index]
         delete self[KEYS][lookup.index]
         delete self[HASHES][lookup.index]
+        // a str key is also set as an attribute (dict.$setitem), which
+        // dict.$getitem reads first
+        if (typeof lookup.key == 'string') {
+            delete self[lookup.key]
+        }
         self[VERSION]++
         return _b_.None
     }
@@ -644,6 +670,51 @@ function dict_eq(self, other) {
     return true
 }
 
+function dict_update_arg(self, arg) {
+    // dict(arg) and dict.update(arg): a dict that keeps the iteration of
+    // dict is read from its storage; another object with keys() is read
+    // through keys() and subscription; anything else is a sequence of pairs
+    if ($B.$isinstance(arg, dict) &&
+            $B.search_in_mro($B.get_class(arg), '__iter__', $B.NULL) ===
+            $B.search_in_dict(dict, '__iter__', $B.NULL)) {
+        $copy_dict(self, arg)
+    } else if ($B.get_class(arg) === $B.JSObj) {
+        for (let key in arg) {
+            $B.str_dict_set(self, key, $B.jsobj2pyobj(arg[key]))
+        }
+    } else if ($B.$getattr(arg, "keys", $B.NULL) !== $B.NULL) {
+        for (let key of $B.make_js_iterator($B.$call($B.$getattr(arg, "keys")))) {
+            dict.$setitem(self, key, $B.$getitem1(arg, key))
+        }
+    } else {
+        let it = _b_.iter(arg),
+            i = 0,
+            key_value
+        while (true) {
+            try {
+                var item = _b_.next(it)
+            } catch (err) {
+                if ($B.is_exc(err, _b_.StopIteration)) {
+                    break
+                }
+                throw err
+            }
+            try {
+                key_value = _b_.list.$factory(item)
+            } catch (err) {
+                $B.RAISE(_b_.TypeError, "object is not iterable")
+            }
+            if (key_value.length !== 2) {
+                $B.RAISE(_b_.ValueError, "dictionary update " +
+                    "sequence element #" + i + " has length " +
+                    key_value.length + "; 2 is required")
+            }
+            dict.$setitem(self, key_value[0], key_value[1])
+            i++
+        }
+    }
+}
+
 function dict_init(self, args, kw) {
     if(args === undefined){
         console.log('args undef')
@@ -653,41 +724,7 @@ function dict_init(self, args, kw) {
         $B.RAISE(_b_.TypeError, "dict expected at most 1 argument" +
             `, got ${args.length}`)
     } else if (args.length == 1) {
-        args = args[0]
-        if ($B.exact_type(args, dict)) {
-            for (let entry of dict.$iter_items(args)) {
-                dict.$setitem(self, entry.key, entry.value, entry.hash)
-            }
-        } else if($B.get_class(args) === $B.JSObj) {
-            for (let key in args) {
-                $B.str_dict_set(self, key, $B.jsobj2pyobj(args[key]))
-            }
-        } else {
-            var keys = $B.$getattr($B.get_class(args), "keys", $B.NULL)
-            if (keys !== $B.NULL) {
-                var gi = $B.$getattr($B.get_class(args), "__getitem__", $B.NULL)
-                if (gi !== $B.NULL) {
-                    // has keys and __getitem__ : it's a mapping, iterate on
-                    // keys and values
-                    for (var key of $B.make_js_iterator($B.$call(keys, args))) {
-                        try {
-                            let value = $B.$call(gi, args, key)
-                            dict.$setitem(self, key, value)
-                        } catch (err) {
-                            if ($B.is_exc(err, _b_.StopIteration)) {
-                                break
-                            }
-                            throw err
-                        }
-                    }
-                }
-            } else {
-                if (! Array.isArray(args)) {
-                    args = _b_.list.$factory(args)
-                }
-                init_from_list(self, args)
-            }
-        }
+        dict_update_arg(self, args[0])
     }
 
     for (let item of _b_.dict.$iter_items(kw)) {
@@ -730,7 +767,7 @@ dict.$getitem = function(self, key, ignore_missing) {
         }
         $B.RAISE(_b_.KeyError, key)
     }
-    if (typeof key == 'string') {
+    if (fast_string_key(key)) {
         if (Object.hasOwn(self, key)) {
             return self[key]
         }
@@ -848,6 +885,22 @@ dict.$iter_items_reversed = function*(d){
     }
 }
 
+// Whether a key can live as an ordinary property of the dictionary object,
+// which is the fast path for string keys.
+//
+// "__proto__" is a string like any other in Python and cannot: `d[key] = value`
+// reaches the accessor on Object.prototype, so the key never becomes an own
+// property and the value becomes the dictionary's own prototype instead. The
+// entry is lost, and `d["__proto__"]` raises KeyError on a key that was written.
+// It goes to the hash table, exactly as a string parsed as a negative integer
+// already does (issue 2256).
+//
+// Asked in one place because four sites ask it: setting, reading, `setdefault`,
+// and the conversion itself.
+function fast_string_key(key) {
+    return typeof key == 'string' && key !== '__proto__'
+}
+
 function convert_all_str(d) {
     // convert dict with only str keys to regular dict
     // add addtional fields
@@ -871,13 +924,13 @@ dict.$setitem = function(self, key, value, $hash, from_setdefault) {
         self[$B.JSOBJ][key] = value
     }
     var new_str_key
-    if (typeof key == 'string') {
+    if (fast_string_key(key)) {
         // Even if dict is not all-string keys, set self[key]
         new_str_key = ! Object.hasOwn(self, key)
         self[key] = value
     }
     if (! self[TABLE]) {
-        if (typeof key == 'string') {
+        if (fast_string_key(key)) {
             var int = parseInt(key)
             if (isNaN(int) || int >= 0) {
                 if (new_str_key) {
@@ -900,7 +953,7 @@ dict.$setitem = function(self, key, value, $hash, from_setdefault) {
         key = key.valueOf()
     }
 
-    var hash = $hash !== undefined ? $hash : $B.$hash(key)
+    var hash = $hash !== undefined ? $hash : dict_hash(key)
 
     var index
 
@@ -1112,10 +1165,7 @@ dict_funcs.copy = function(self) {
     var self = $.self,
         res = $B.empty_dict()
 
-    if ($B.exact_type(self, _b_.dict)) {
-        $copy_dict(res, self)
-        return res
-    }
+    $copy_dict(res, self)
     return res
 }
 
@@ -1217,6 +1267,9 @@ dict_funcs.popitem = function(self) {
     while (index >= 0) {
         if (self[KEYS][index] !== undefined) {
             let res = $B.fast_tuple([self[KEYS][index], self[VALUES][index]])
+            if (typeof self[KEYS][index] == 'string') {
+                delete self[self[KEYS][index]]
+            }
             delete self[KEYS][index]
             delete self[VALUES][index]
             self[VERSION]++
@@ -1235,7 +1288,7 @@ dict_funcs.setdefault = function(self) {
     _default = _default === undefined ? _b_.None : _default
 
     if (! self[TABLE]) {
-        if (typeof key === 'string') {
+        if (fast_string_key(key)) {
             if (! Object.hasOwn(self, key)) {
                 self[key] = _default
             }
@@ -1260,51 +1313,15 @@ dict_funcs.setdefault = function(self) {
 
 dict_funcs.update = function(self) {
     var $ = $B.args("update", 1, {"self": null}, arguments, null, "args",
-                "kw")
+                "kw", 1)
     var self = $.self,
         args = $.args,
         kw = $.kw
-    if (args.length > 0) {
-        var o = args[0]
-        if ($B.$isinstance(o, dict)) {
-            $copy_dict(self, o)
-        } else if (_b_.hasattr(o, "keys")) {
-            var _keys = _b_.list.$factory($B.$call($B.$getattr(o, "keys")))
-            for (let i = 0, len = _keys.length; i < len; i++) {
-                var getitem = $B.$getattr(o, "__getitem__", $B.NULL)
-                if (getitem !== $B.NULL) {
-                    var _value = $B.$call(getitem, _keys[i])
-                    dict.$setitem(self, _keys[i], _value)
-                }
-            }
-        } else {
-            let it = _b_.iter(o),
-                i = 0,
-                key_value
-            while (true) {
-                try {
-                    var item = _b_.next(it)
-                } catch (err) {
-                    if ($B.is_exc(err, _b_.StopIteration)) {
-                        break
-                    }
-                    throw err
-                }
-                try {
-                    key_value = _b_.list.$factory(item)
-                } catch (err) {
-                    $B.RAISE(_b_.TypeError, "cannot convert dictionary" +
-                        " update sequence element #" + i + " to a sequence")
-                }
-                if (key_value.length !== 2) {
-                    $B.RAISE(_b_.ValueError, "dictionary update " +
-                        "sequence element #" + i + " has length " +
-                        key_value.length + "; 2 is required")
-                }
-                dict.$setitem(self, key_value[0], key_value[1])
-                i++
-            }
-        }
+    if (args.length > 1) {
+        $B.RAISE(_b_.TypeError, "update expected at most 1 argument" +
+            `, got ${args.length}`)
+    } else if (args.length == 1) {
+        dict_update_arg(self, args[0])
     }
     $copy_dict(self, kw)
     return _b_.None

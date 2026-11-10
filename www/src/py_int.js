@@ -88,19 +88,23 @@ function preformat(self, fmt) {
             res = value.toString()
             break
         case "b":
-            res = (fmt.alternate ? "0b" : "") + value.toString(2)
+            res = (value < 0 ? "-" : "") + (fmt.alternate ? "0b" : "") +
+                (value < 0 ? -value : value).toString(2)
             break
         case "c":
             res = _b_.chr(value)
             break
         case "o":
-            res = (fmt.alternate ? "0o" : "") + value.toString(8)
+            res = (value < 0 ? "-" : "") + (fmt.alternate ? "0o" : "") +
+                (value < 0 ? -value : value).toString(8)
             break
         case "x":
-            res = (fmt.alternate ? "0x" : "") + value.toString(16)
+            res = (value < 0 ? "-" : "") + (fmt.alternate ? "0x" : "") +
+                (value < 0 ? -value : value).toString(16)
             break
         case "X":
-            res = (fmt.alternate ? "0X" : "") + value.toString(16).toUpperCase()
+            res = (value < 0 ? "-" : "") + (fmt.alternate ? "0X" : "") +
+                (value < 0 ? -value : value).toString(16).toUpperCase()
             break
         case "n":
             return self // fix me
@@ -832,7 +836,29 @@ int_funcs.__getnewargs__ = function(self) {
 }
 
 int_funcs.__round__ = function(self) {
-    return int_value(self) // XXX
+    var $ = $B.args('__round__', 2, {self: null, ndigits: null},
+                arguments, {ndigits: _b_.None}, null, null)
+    var value = int_value($.self)
+    if ($.ndigits === _b_.None) {
+        return value
+    }
+    var ndigits = $B.PyNumber_Index($.ndigits)
+    if (ndigits >= 0) {
+        return value
+    }
+    // the nearest multiple of 10 ** -ndigits, a tie going to the even one
+    var pow = 10n ** BigInt(-ndigits),
+        x = BigInt(value),
+        q = x / pow,
+        r = x - q * pow
+    if (r < 0n) {
+        q -= 1n
+        r += pow
+    }
+    if (2n * r > pow || (2n * r == pow && q % 2n != 0n)) {
+        q += 1n
+    }
+    return int_or_long(q * pow)
 }
 
 int_funcs.__sizeof__ = function(self) {

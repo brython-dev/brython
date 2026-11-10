@@ -76,7 +76,9 @@ $B.bytearray_iterator.tp_iter = function(self) {
 
 $B.bytearray_iterator.tp_iternext = function*(self){
     self.index++
-    if (self.index >= self.len) {
+    if (self.index >= self.obj.source.length) {
+        // exhausted for good, whatever the bytearray grows to
+        self.index = Infinity
         return
     }
     yield self.obj.source[self.index]
@@ -85,7 +87,7 @@ $B.bytearray_iterator.tp_iternext = function*(self){
 var bytearray_iterator_funcs = $B.bytearray_iterator.tp_funcs = {}
 
 bytearray_iterator_funcs.__length_hint__ = function(self) {
-    return self.len
+    return Math.max(0, self.obj.source.length - self.index - 1)
 }
 
 bytearray_iterator_funcs.__reduce__ = function(self) {
@@ -93,7 +95,12 @@ bytearray_iterator_funcs.__reduce__ = function(self) {
 }
 
 bytearray_iterator_funcs.__setstate__ = function(self, value) {
-    self.index = $B.PyNumber_Index(value) - 1
+    // -1 is a position as well: the end
+    var index = $B.clip_index(value, -1, self.obj.source.length)
+    if (self.index !== Infinity) {
+        self.index = index < 0 ? Infinity : index - 1
+    }
+    return _b_.None
 }
 
 $B.bytearray_iterator.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]
@@ -288,24 +295,50 @@ function center() {
     return type.tp_funcs.rjust(ljust, $.width, $.fillbyte)
 }
 
+function search_bounds(self, start, end) {
+    // The bounds of a search in self: indices counted from the end when
+    // negative, the end clipped to the bytes. There is no region to search
+    // when start > end.
+    var len = self.source.length
+    var bounds = [start, end].map(function(bound, rank) {
+        if (bound === _b_.None) {
+            return rank == 0 ? 0 : len
+        }
+        if ($B.search_in_mro($B.get_class(bound), '__index__', $B.NULL) === $B.NULL) {
+            $B.RAISE(_b_.TypeError, "slice indices must be integers " +
+                "or None or have an __index__ method")
+        }
+        bound = Number($B.PyNumber_Index(bound))
+        return bound < 0 ? Math.max(0, bound + len) : bound
+    })
+    return [bounds[0], Math.min(bounds[1], len)]
+}
+
+function matches(self, seq, pos) {
+    for (var j = 0; j < seq.length; j++) {
+        if (self.source[pos + j] != seq[j]) {
+            return false
+        }
+    }
+    return true
+}
+
 function count(self) {
     var $ = $B.args('count', 4,
                 {self: null, sub: null, start: null, end: null},
-                arguments, {start: 0, end: -1}, null, null)
+                arguments, {start: _b_.None, end: _b_.None}, null, null)
     var self = $.self,
         sub = $.sub,
-        start = $.start,
-        end = $.end
+        [start, end] = search_bounds(self, $.start, $.end)
 
-    var nb = 0,
-        len = self.source.length
+    var nb = 0
 
     if (typeof sub == "number") {
         if (sub < 0 || sub > 255) {
             $B.RAISE(_b_.ValueError, "byte must be in range(0, 256)")
         }
-        for (var b of self.source) {
-            if (b == sub) {
+        for (var i = start; i < end; i++) {
+            if (self.source[i] == sub) {
                 nb++
             }
         }
@@ -313,17 +346,17 @@ function count(self) {
     }
     check_buffer(sub)
     var seq = get_list_from_bytes_like(sub)
-    var seq_len = seq.length
-    var le
-    for (var i = 0; i < len; i++) {
-        var found = 1
-        for (var j = 0; j < seq_len; j++) {
-            if (self.source[i + j] != seq[j]) {
-                found = 0
-                break
-            }
+    if (start > end) {
+        return 0
+    }
+    if (seq.length == 0) {
+        return end - start + 1
+    }
+    for (var i = start; i <= end - seq.length; i++) {
+        if (matches(self, seq, i)) {
+            nb++
+            i += seq.length - 1
         }
-        nb += found
     }
     return nb
 }
@@ -331,24 +364,14 @@ function count(self) {
 function endswith() {
     var $ = $B.args('endswith', 4,
                 {self: null, suffix: null, start: null, end: null},
-                arguments, {start: -1, end: -1}, null, null)
+                arguments, {start: _b_.None, end: _b_.None}, null, null)
     var self = $.self,
         suffix = $.suffix,
-        start = $.start,
-        end = $.end
+        [start, end] = search_bounds(self, $.start, $.end)
     if (is_bytes_like(suffix)) {
         var seq = get_list_from_bytes_like(suffix)
-        start = start == -1 ? 0 : start
-        end = end == -1 ? self.source.length : end
-        var res = true
-        var seq_len = seq.length
-        if (seq_len > end - start) {
-            return false
-        }
-        for (let i = 0; i < seq_len && res; i++) {
-            res = self.source[end - seq_len + i] == seq[i]
-        }
-        return res
+        return end - start >= seq.length &&
+            matches(self, seq, end - seq.length)
     } else if ($B.is_tuple(suffix)) {
         for (let sub of suffix) {
             if (endswith(self, sub, start, end)) {
@@ -391,8 +414,7 @@ function find() {
                 {start: _b_.None, end: _b_.None}, null, null)
     var self = $.self,
         sub = $.sub,
-        start = $.start,
-        end = $.end
+        [start, end] = search_bounds(self, $.start, $.end)
     check_buffer_or_int(sub)
     var seq
     if ($B.is_int(sub)) {
@@ -400,34 +422,15 @@ function find() {
     } else {
         seq = get_list_from_bytes_like(sub)
     }
-    var boundaries = _b_.slice.$conv_for_seq({start, stop: end, step: 1},
-            self.source.length)
-    start = boundaries.start
-    end = boundaries.stop
-    var seq_len = seq.length
     if (func == 'find') {
-        for (var i = start; i < end - seq_len + 1; i++) {
-            var found = true
-            for (var j = 0; j < seq_len; j++) {
-                if (self.source[i + j] != seq[j]) {
-                    found = false
-                    break
-                }
-            }
-            if (found) {
+        for (var i = start; i <= end - seq.length; i++) {
+            if (matches(self, seq, i)) {
                 return i
             }
         }
     } else { // rfind
-        for (var i = end - 1; i > start - seq_len; i--) {
-            var found = true
-            for (var j = 0; j < seq_len; j++) {
-                if (self.source[i + j] != seq[j]) {
-                    found = false
-                    break
-                }
-            }
-            if (found) {
+        for (var i = end - seq.length; i >= start; i--) {
+            if (matches(self, seq, i)) {
                 return i
             }
         }
@@ -1002,20 +1005,18 @@ function splitlines() {
 }
 
 function startswith() {
-    var $ = $B.args('startswith', 3, {self: null, prefix: null, start:null},
-                arguments, {start:0})
+    var $ = $B.args('startswith', 4,
+                {self: null, prefix: null, start: null, end: null},
+                arguments, {start: _b_.None, end: _b_.None}, null, null)
     var self = $.self,
         prefix = $.prefix,
-        start = $.start
+        [start, end] = search_bounds(self, $.start, $.end)
 
     var cls = this // bytes or bytearray
 
     if ($B.$isinstance($.prefix, [bytes, bytearray])) {
-        let res = true
-        for (let i = 0; i < prefix.source.length && res; i++) {
-            res = self.source[start + i] == prefix.source[i]
-        }
-        return res
+        return end - start >= prefix.source.length &&
+            matches(self, prefix.source, start)
     } else if ($B.is_tuple(prefix)) {
         // A tuple of prefixes matches if ANY one matches (CPython semantics).
         // The old code concatenated every tuple item into a single bytes and
@@ -1029,7 +1030,7 @@ function startswith() {
                 $B.RAISE(_b_.TypeError, "startswith first arg must be " +
                     "bytes or a tuple of bytes, not " + $B.class_name(prefix))
             }
-            if (startswith.call(cls, self, sub, start)) {
+            if (startswith.call(cls, self, sub, start, end)) {
                 return true
             }
         }
@@ -1249,15 +1250,7 @@ _b_.bytearray.sq_ass_item = function(self, arg, value) {
             $B.RAISE(_b_.IndexError, 'list index out of range')
         }
     } else if ($B.$isinstance(arg, _b_.slice)) {
-        var start = arg.start === _b_.None ? 0 : arg.start
-        var stop = arg.stop === _b_.None ? self.source.length : arg.stop
-
-        if (start < 0) {
-            start = self.source.length + start
-        }
-        if (stop < 0) {
-            stop = self.source.length + stop
-        }
+        var {start, stop} = _b_.slice.$conv_for_seq(arg, self.source.length)
         if (stop > self.source.length) {
             check_exports(self)
         }
@@ -1453,7 +1446,7 @@ bytearray_funcs.decode = function(self) {
     var self = $.self,
         encoding = $.encoding,
         errors = $.errors
-    return decode(self, encoding, errors)
+    return $B.String(decode(self, encoding, errors))
 }
 
 bytearray_funcs.endswith = function(self) {
@@ -1835,13 +1828,13 @@ var bytes_iterator = $B.bytes_iterator
 
 /* bytes_iterator start */
 $B.bytes_iterator.tp_iter = function(self) {
-    self.index = -1
     return self
 }
 
 $B.bytes_iterator.tp_iternext = function*(self){
     self.index++
     if (self.index >= self.len) {
+        self.index = Infinity
         return
     }
     yield self.obj.source[self.index]
@@ -1850,7 +1843,7 @@ $B.bytes_iterator.tp_iternext = function*(self){
 var bytes_iterator_funcs = $B.bytes_iterator.tp_funcs = {}
 
 bytes_iterator_funcs.__length_hint__ = function(self) {
-    return self.len
+    return Math.max(0, self.len - self.index - 1)
 }
 
 bytes_iterator_funcs.__reduce__ = function(self) {
@@ -1858,7 +1851,11 @@ bytes_iterator_funcs.__reduce__ = function(self) {
 }
 
 bytes_iterator_funcs.__setstate__ = function(self, value) {
-    self.index = $B.PyNumber_Index(value) - 1
+    var index = $B.clip_index(value, 0, self.len)
+    if (self.index !== Infinity) {
+        self.index = index - 1
+    }
+    return _b_.None
 }
 
 $B.bytes_iterator.tp_methods = ["__length_hint__", "__reduce__", "__setstate__"]
@@ -2829,7 +2826,7 @@ bytes_funcs.decode = function(self) {
     var self = $.self,
         encoding = $.encoding,
         errors = $.errors
-    return decode(self, encoding, errors)
+    return $B.String(decode(self, encoding, errors))
 }
 
 bytes_funcs.endswith = function(self) {
@@ -2853,10 +2850,7 @@ bytes_funcs.hex = function() {
 }
 
 bytes_funcs.index = function() {
-    var $ = $B.args('index', 4,
-        {self: null, sub: null, start: null, end: null},
-        arguments, {start: 0, end: -1})
-    var index = bytes_funcs.find($.self, $.sub, $.start, $.end)
+    var index = find.apply('find', arguments)
     if (index == -1) {
         $B.RAISE(_b_.ValueError, "subsection not found")
     }
@@ -2940,11 +2934,7 @@ bytes_funcs.rfind = function() {
 }
 
 bytes_funcs.rindex = function() {
-    var $ = $B.args('rfind', 4,
-            {self: null, sub: null, start: null, end: null},
-            arguments, {start: 0, end: -1})
-
-    var index = bytes_funcs.rfind($.self, $.sub, $.start, $.end)
+    var index = find.apply('rfind', arguments)
     if (index == -1) {
         $B.RAISE(_b_.ValueError, "subsection not found")
     }

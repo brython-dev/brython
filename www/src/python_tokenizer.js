@@ -449,6 +449,11 @@ $B.tokenizer = function(src, filename, mode, parser) {
                     throw err
                 }
                 fstring_stack.pop()
+                if (fstring_stack.length &&
+                        $B.last(fstring_stack).expr_start !== undefined) {
+                    // back in the replacement field of the enclosing f-string
+                    ft_expr_start = $B.last(fstring_stack).expr_start
+                }
                 if (fstring_stack.length > 0) {
                     // back in the enclosing f-string or t-string
                     ft_type = $B.last(fstring_stack).ft_type
@@ -475,6 +480,7 @@ $B.tokenizer = function(src, filename, mode, parser) {
                     token_mode = 'regular_within_ft'
                     $B.last(fstring_stack).nb_braces_on_entry = braces.length
                     ft_expr_start = pos - line_start
+                    $B.last(fstring_stack).expr_start = ft_expr_start
                     state = null
                     token_modes.push(token_mode)
                 }
@@ -518,9 +524,28 @@ $B.tokenizer = function(src, filename, mode, parser) {
                         ft_escape = false
                         continue
                     }
-                    // the buffer becomes a Javascript string literal, whose
-                    // escape sequences differ from Python's
-                    if (char == 'U' && /^[0-9a-f]{8}$/i.test(src.substr(pos, 8))) {
+                    if (char == 'N' && src.charAt(pos) == '{') {
+                        // named Unicode character: the braces are part of the
+                        // escape sequence, not a replacement field
+                        var end_name = src.indexOf('}', pos)
+                        var cp = $B.unicode_name_to_cp(src.substring(pos + 1,
+                            end_name))
+                        if (cp === null) {
+                            raise_error(_b_.SyntaxError, filename,
+                                line_num, pos - line_start,
+                                line_num, end_name - line_start + 1, line,
+                                "(unicode error) 'unicodeescape' codec can't " +
+                                "decode bytes in position 0-" +
+                                (end_name - pos + 1) +
+                                ": unknown Unicode character name")
+                        }
+                        ft_buffer += String.fromCodePoint(cp)
+                        pos = end_name + 1
+                        ft_escape = false
+                        continue
+                    } else if (char == 'U' && /^[0-9a-f]{8}$/i.test(src.substr(pos, 8))) {
+                        // the buffer becomes a Javascript string literal, whose
+                        // escape sequences differ from Python's
                         ft_buffer += String.fromCodePoint(parseInt(src.substr(pos, 8), 16))
                         pos += 8
                         ft_escape = false
@@ -966,7 +991,7 @@ $B.tokenizer = function(src, filename, mode, parser) {
                                     line)
                                 // used on fstring debug mode
                                 token.metadata = src.substring(
-                                    line_start + ft_start + 2, pos - 1)
+                                    line_start + ft_expr_start, pos - 1)
                                 t.push(token)
                             }
                         } else if (char == ' ' || char == '\t') {
