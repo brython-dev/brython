@@ -380,6 +380,23 @@ assert round(-3.65, 1) == -3.6
 assert round(3.5) == 4
 assert round(4.5) == 4
 
+# round() calls the __round__ of the type, ints are rounded as ints and
+# floats from their exact binary value
+class Measurement(float):
+    def __round__(self, ndigits=None):
+        return ndigits
+
+class Digits:
+    def __index__(self):
+        return 1
+
+assert round(Measurement(1.25), 3) == 3
+assert round(1234, -2) == 1200 and round(1250, -2) == 1200
+assert round(2 ** 53 + 1) == 2 ** 53 + 1
+assert round(2.675, 2) == 2.67 and round(-2.675, 2) == -2.67
+assert type(round(2.5, 0)) is float and round(2.5, 0) == 2.0
+assert round(1.25, Digits()) == 1.2
+
 # issue 1245
 assert eval("0j") == 0j
 
