@@ -123,6 +123,16 @@ class A:
 
 assert A().y == 2
 
+# hasattr() answers False for an AttributeError only
+class Failing:
+    @property
+    def x(self):
+        raise RuntimeError
+
+assert_raises(RuntimeError, hasattr, Failing(), 'x')
+assert_raises(TypeError, hasattr, Failing(), 1)
+assert not hasattr(Failing(), 'y')
+
 # Setting and deleting attributes in a class are reflected
 # in the classes instances
 class foo():pass
