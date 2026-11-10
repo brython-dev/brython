@@ -85,7 +85,7 @@ def fsdecode(filename):
         raise TypeError("expect bytes or str, not %s" % type(filename).__name__)
 
 def fspath(path):
-    if isinstance(path, [str, bytes]):
+    if isinstance(path, (str, bytes)):
         return path
     return path.__fspath__()
 

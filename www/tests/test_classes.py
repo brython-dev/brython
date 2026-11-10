@@ -123,6 +123,16 @@ class A:
 
 assert A().y == 2
 
+# hasattr() answers False for an AttributeError only
+class Failing:
+    @property
+    def x(self):
+        raise RuntimeError
+
+assert_raises(RuntimeError, hasattr, Failing(), 'x')
+assert_raises(TypeError, hasattr, Failing(), 1)
+assert not hasattr(Failing(), 'y')
+
 # Setting and deleting attributes in a class are reflected
 # in the classes instances
 class foo():pass
@@ -354,6 +364,15 @@ class EnumInt(int, metaclass=Enumeration):
 
 assert isinstance('foo', EnumInt)
 
+# isinstance() reads the __class__ an object reports, as a proxy does
+class Proxy:
+    @property
+    def __class__(self):
+        return int
+
+assert isinstance(Proxy(), int) and isinstance(Proxy(), Proxy)
+assert not isinstance(Proxy(), str)
+
 # metaclass with multiple inheritance
 class Meta(type):
     pass
@@ -579,6 +598,15 @@ class A:
 
 assert A.x == 5
 
+# __set_name__ is called whatever the name
+seen = []
+class Descriptor:
+    def __set_name__(self, owner, name):
+        seen.append(name)
+
+type("Box", (), {"__doc__": Descriptor(), "x": Descriptor()})
+assert seen == ["__doc__", "x"]
+
 # issue 1392
 class A():
     b = "This is b"
@@ -590,6 +618,14 @@ class A():
 assert "b" in A.__dict__
 assert "message" in A.__dict__
 assert "__init__" in A.__dict__
+
+# a __dict__ the class defines is kept
+class Box:
+    @property
+    def __dict__(self):
+        return {"public": 1}
+
+assert Box().__dict__ == {"public": 1}
 
 d = A.__dict__["__dict__"]
 try:
@@ -862,10 +898,29 @@ assert s.slot == 42
 
 assert_raises(AttributeError, setattr, s, 'x', 9)
 
+# __slots__ cannot ask for a __dict__ a base already gives
+class Plain:
+    pass
+
+class NoSlot:
+    __slots__ = ()
+
+assert_raises(TypeError, type, 'B', (Plain,), {'__slots__': ('__dict__',)})
+assert_raises(TypeError, type, 'B', (), {'__slots__': ('__dict__', '__dict__')})
+assert_raises(TypeError, type, 'B', (Plain, NoSlot), {'__slots__': ('__dict__',)})
+assert_raises(TypeError, type, 'B', (Exception,), {'__slots__': ('__dict__',)})
+type('B', (), {'__slots__': ('__dict__', '__weakref__')})
+type('B', (NoSlot, Plain), {'__slots__': ('__dict__',)})
+
 # issue 2039
 assert isinstance(classmethod(print), classmethod)
 assert isinstance(staticmethod(print), staticmethod)
 assert isinstance(property(print), property)
+
+# isinstance() takes a tuple of types, not a list
+for classes in ([str, int], [], (str, [int])):
+    assert_raises(TypeError, isinstance, 1, classes)
+assert isinstance(1, (str, (bytes, int)))
 
 # issue 2043
 class HasClassMethod:
@@ -1086,11 +1141,42 @@ class A:
 A().f(1, x=2)
 assert A.f.__code__.co_varnames == ('self', '_A__v', '_A__kw')
 
+# a method keeps the __qualname__ the compiler gave it
+def outer():
+    class Box:
+        def f(self):
+            pass
+    return Box
+
+def free(self):
+    pass
+
+assert outer().f.__qualname__ == 'outer.<locals>.Box.f'
+assert type("Made", (), {"free": free}).free.__qualname__ == 'free'
+
 # issue 2435
 class A:
     a = "-".join
 
 assert A().a(['a', 'b']) == 'a-b'
+
+# '__dict__' and '__weakref__' in __slots__ do not fix the instance layout
+class WithX:
+    __slots__ = ('x',)
+
+class WithY:
+    __slots__ = ('y',)
+
+class Markers:
+    __slots__ = ('__dict__', '__weakref__')
+
+class C(Markers, WithX):
+    pass
+
+class C(WithX, Markers):
+    pass
+
+assert_raises(TypeError, type, 'C', (WithX, WithY), {})
 
 # setting a classmethod
 class A:
@@ -1135,6 +1221,43 @@ class MyClass(object):
 
 assert MyClass.__call__(42) == 42
 
+# a builtin as __call__ has no __get__: it is called without the instance
+rows = [1, 2]
+
+class Clearer:
+    __call__ = rows.clear
+
+assert Clearer()() is None
+assert rows == []
+
+class Appender:
+    __call__ = rows.append
+
+Appender()(5)
+assert rows == [5]
+
+class Upper:
+    __call__ = "abc".upper
+
+assert Upper()() == "ABC"
+
+class Length:
+    __call__ = len
+
+assert Length()([1, 2]) == 2
+assert_raises(TypeError, Length())
+
+class FromKeys:
+    __call__ = dict.fromkeys
+
+assert FromKeys()(["a"]) == {"a": None}
+
+class Function:
+    def __call__(self, x):
+        return (type(self).__name__, x)
+
+assert Function()(1) == ("Function", 1)
+
 # __static_attributes__, new in Python 3.13
 class C:
     def f(self):
@@ -1168,6 +1291,35 @@ class A:
   if True:
     x = 9
   assert x == 9
+
+# a class statement that raises leaves its frame
+class Checked:
+    def __init_subclass__(cls, **kw):
+        raise TypeError("refused")
+
+def make_checked():
+    try:
+        class C(Checked):
+            pass
+    except TypeError as error:
+        return str(error)
+
+def make_raising():
+    try:
+        class C:
+            raise ValueError("from the body")
+    except ValueError as error:
+        return str(error)
+
+def run(f):
+    try:
+        value = f()
+    except Exception:
+        value = "escaped"
+    return value
+
+assert run(make_checked) == "refused"
+assert run(make_raising) == "from the body"
 
 # issue 2555
 class MyClass:
@@ -1295,6 +1447,10 @@ assert t.__getstate__() is None  # after
 t.a = 1
 assert t.__getstate__() == (None, {'a': 1})  # after
 
+# a slot whose descriptor was deleted can no longer be written
+del T.a
+assert_raises(AttributeError, setattr, t, 'a', 2)
+
 # PR 2746
 class Meta(type):
 
@@ -1357,6 +1513,15 @@ class G(metaclass=Meta):
 
 assert G['x'] == 'x'
 
+# __class_getitem__ receives the key as written, and a builtin generic keeps
+# its arguments in a tuple
+class Box:
+    def __class_getitem__(cls, key):
+        return key
+
+assert Box[3] == 3 and Box[3, 4] == (3, 4) and Box[(3,)] == (3,)
+assert list[int].__args__ == (int,) and dict[str, int].__args__ == (str, int)
+
 # PR 3004
 class A:
 
@@ -1366,6 +1531,51 @@ class A:
 a = A()
 assert a == a
 
+# a str subclass in __slots__ is one name, and the declaration is kept
+class Name(str):
+    def __iter__(self):
+        return iter(['other'])
+
+for declaration in (Name('field'), (Name('field'),)):
+    class Box:
+        __slots__ = declaration
+    for Box in (Box, type('Box', (), {'__slots__': declaration})):
+        assert hasattr(Box, 'field') and not hasattr(Box, 'other')
+        assert Box.__slots__ is declaration
+        box = Box()
+        box.field = 1
+        assert box.field == 1
+
+# a metaclass __getattribute__ is called with the class and the name
+class Meta(type):
+    def __getattribute__(cls, name):
+        if name == "hidden":
+            raise AttributeError("custom message")
+        return super().__getattribute__(name)
+
+class WithFallback(Meta):
+    def __getattr__(cls, name):
+        return "fallback"
+
+class A(metaclass=Meta):
+    x = 1
+
+class B(metaclass=WithFallback):
+    x = 1
+
+assert A.x == 1
+assert A.__name__ == "A"
+assert getattr(A, "nothing", 0) == 0
+assert not hasattr(A, "hidden")
+assert getattr(A, "hidden", 0) == 0
+try:
+    A.hidden
+    raise AssertionError("A.hidden did not raise")
+except AttributeError as exc:
+    assert str(exc) == "custom message", str(exc)
+assert B.x == 1
+assert B.hidden == "fallback"
+
 # PR 3030
 class L(list):
 
@@ -1373,5 +1583,89 @@ class L(list):
         return super(L, self).__len__()
 
 assert L([1, 2]).size() == 2
+
+# PR 3035
+class C:
+  __module__ = 'other'
+
+assert C.__module__ == 'other'
+
+# PR 3170
+class Base:
+
+    @property
+    def prop(self):
+        return "value"
+
+class Derived(Base):
+
+    pass
+
+assert type(super(Derived, Derived).prop) is property
+
+# PR 3172
+class A:
+
+    value = 0
+
+class B:
+
+    value = 1
+
+class C(A):
+    pass
+
+class D(C):
+    pass
+
+C.__bases__ = (B,)
+assert D.value == 1
+
+# PR 3173
+class A: pass
+class B: pass
+class X(B): pass
+
+assert B.__subclasses__() == [X]
+
+X.__bases__ = (A,)
+assert B.__subclasses__() == []
+
+# PR 3179
+assert_raises(TypeError, type, "P", (), {"__slots__": ("x,y",)},
+    msg="__slots__ must be identifiers")
+
+
+assert_raises(TypeError, type, "P", (), {"__slots__": (1,)},
+    msg="__slots__ items must be strings, not 'int'")
+
+assert_raises(TypeError, type, "P", (), {"__slots__": ("__dict__", "__dict__")},
+    msg="__dict__ slot disallowed: we already got one")
+
+# PR 3181
+A = type("A", (), {"__call__": lambda self: "A"})
+B = type("B", (), {"__call__": lambda self: "B"})
+
+class C(A):
+    pass
+
+C.__bases__ = (B,)
+assert C()() == 'B'
+
+# PR 3186
+A = type("A", (), {"__slots__": ("x",)})
+B = type("B", (A,), {"__slots__": ("x",)})
+b = B()
+b.x = 2
+_ = A.x.__set__(b, 1)
+assert b.x == 2
+
+# PR 3196
+Box = type("Box", (), {"__class_getitem__": staticmethod(lambda key: key)})
+assert Box.__class_getitem__(3) == 3
+
+# PR 3199
+Box = type("Box", (), {"__dict__": property(lambda self: {"public": 1})})
+assert Box().__dict__ == {'public': 1}
 
 print('passed all tests..')

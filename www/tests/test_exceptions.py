@@ -256,5 +256,12 @@ assert not result_2940.wasSuccessful()
 # PR 3092
 assert UnicodeEncodeError('utf-8', 'a', 0, 1, 'r').args == \
   ('utf-8', 'a', 0, 1, 'r')
-  
+
+# issue reported in PR 2958
+import warnings
+with warnings.catch_warnings(record=True) as w:
+    warnings.simplefilter('ignore')
+    warnings.warn('nope')
+assert len(w) == 0
+
 print('all tests passed...')

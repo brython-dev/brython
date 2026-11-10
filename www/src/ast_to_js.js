@@ -902,75 +902,25 @@ function init_genexpr(comp, scopes) {
     var varnames = Object.keys(comp.varnames || {}).map(x => `'${x}'`).join(', ')
     return prefix + `var ${comp.locals_name} = {},\n` +
            prefix + tab + tab + `locals = ${comp.locals_name}\n` +
-           prefix + `locals['.0'] = expr\n` +
+           prefix + `locals['.0'] = _b_.iter(expr)\n` +
            prefix + `var frame = ["<${comp.type.toLowerCase()}>", ${comp.locals_name}, ` +
-               `"${comp.module_name}", ${comp.globals_name}]\n` +
+               `${JSON.stringify(comp.module_name)}, ${comp.globals_name}]\n` +
            prefix + `frame.$has_generators = true\n` +
-           prefix + `frame.__file__ = '${scopes.filename}'\n` +
+           prefix + `frame.__file__ = ${JSON.stringify(scopes.filename)}\n` +
            prefix + `frame.$lineno = ${comp.ast.lineno}\n` +
            prefix + `$B.make_f_code(frame, [${varnames}])\n` +
-           prefix + `var next_func_${comp.id} = $B.make_js_iterator(expr, frame, ${comp.ast.lineno})\n` +
            prefix + `frame.$f_trace = _b_.None\n` +
            prefix + `var _frame_obj = $B.frame_obj\n`
 }
 
-function comp_bindings(comp, bindings) {
-    if (comp.target instanceof $B.ast.Name) {
-        bindings.add(comp.target.id)
-    } else if (comp.target.elts) {
-        for (var elt of comp.target.elts) {
-            comp_bindings({target: elt}, bindings)
-        }
-    }
-    return bindings
-}
-
 function make_comp(scopes) {
     // Code common to list / set / dict comprehensions
-    // List all names bound inside the comprehension generators
-    var bindings = new Set()
-    for (var gen of this.generators) {
-        comp_bindings(gen, bindings)
-    }
-    var save_locals = new Set()
     var plen = prefix.length
-    var comp_prefix = prefix
     var id = make_id(),
         type = this.constructor.$name,
         symtable_block = scopes.symtable.table.blocks.get(fast_id(this)),
-        varnames = Object.keys($B.dict_as_jsobj(symtable_block.symbols)).map(x => `"${x}"`),
-        comp_iter,
-        comp_scope = $B.last(scopes),
-        upper_comp_scope = comp_scope
+        varnames = Object.keys($B.dict_as_jsobj(symtable_block.symbols)).map(x => `"${x}"`)
 
-    // Check the names bound in the comprehension that would shadow names
-    // in the comprehension scope
-    for (var name of comp_scope.locals) {
-        if (bindings.has(name)) {
-            save_locals.add(name)
-        }
-    }
-    while (upper_comp_scope.parent) {
-        upper_comp_scope = upper_comp_scope.parent
-        for (var name of upper_comp_scope.locals) {
-            if (bindings.has(name)) {
-                save_locals.add(name)
-            }
-        }
-    }
-    var comp_scope_block = scopes.symtable.table.blocks.get(
-                                 fast_id(upper_comp_scope.ast)),
-        comp_scope_symbols = comp_scope_block.symbols
-
-    var initial_nb_await_in_scope = upper_comp_scope.nb_await === undefined ? 0 :
-                            upper_comp_scope.nb_await
-
-    for (let [key, value] of Object.entries(symtable_block.symbols)) {
-        if (value & SF.DEF_COMP_ITER) {
-            comp_iter = key
-        }
-    }
-    var comp_iter_scope = name_scope(comp_iter, scopes)
     var first_for = this.generators[0],
         // outmost expression is evaluated in enclosing scope
         outmost_expr = $B.js_from_ast(first_for.iter, scopes),
@@ -987,12 +937,6 @@ function make_comp(scopes) {
     }
     var js = init_comprehension(comp, scopes)
 
-    if (comp_iter_scope.found) {
-        js += prefix + `var save_comp_iter = ${name_reference(comp_iter, scopes)}\n`
-    }
-    for (var name of save_locals) {
-        js += prefix + `var save_${name} = ${name_reference(name, scopes)}\n`
-    }
     if (this instanceof $B.ast.ListComp) {
         js += prefix + `var result_${id} = $B.$list([])\n`
     } else if (this instanceof $B.ast.SetComp) {
@@ -1001,22 +945,19 @@ function make_comp(scopes) {
         js += prefix + `var result_${id} = $B.empty_dict()\n`
     }
 
+    // The comprehension has its own scope: the names bound by its generators
+    // are set in a namespace of its own, never in the enclosing scope
+    var own_scope = new Scope(`${type.toLowerCase()}_${id}`, 'comprehension', this)
+    scopes.push(own_scope)
+    js += prefix + `var ${make_scope_name(scopes)} = {},\n` +
+          prefix + tab + tab + `locals = ${make_scope_name(scopes)}\n`
+
     // special case for first generator
     var first = this.generators[0]
     js += prefix + `try {\n`
     indent()
     js += prefix + `for (var next_${id} of next_func_${id}) {\n`
     indent()
-    var save_target_flags
-    if (first.target instanceof $B.ast.Name) {
-        var target_name = first.target.id
-        if ($B.str_dict_get(comp_scope_symbols, target_name) !== $B.NULL) {
-            save_target_flags = $B.str_dict_get(comp_scope_symbols,
-                target_name)
-            $B.str_dict_set(comp_scope_symbols, target_name,
-                SF.LOCAL << SF.SCOPE_OFF)
-        }
-    }
     // assign result of iteration to target
     var name = new $B.ast.Name(`next_${id}`, new $B.ast.Load())
     copy_position(name, first_for.iter)
@@ -1059,19 +1000,12 @@ function make_comp(scopes) {
         }
     }
 
-    if (save_target_flags) {
-        $B.str_dict_set(comp_scope_symbols, target_name, save_target_flags)
-    }
-    // count if nb_await was incremented
-    var final_nb_await_in_scope = upper_comp_scope.nb_await === undefined ? 0 :
-                                  upper_comp_scope.nb_await
-    var has_await = final_nb_await_in_scope > initial_nb_await_in_scope
+    var has_await = own_scope.has_await
 
     // If the element has an "await", attribute has_await is set to the scope
     // Use it to make the function aync or not
-    js = `(${has_await ? 'async ' : ''}function(expr) {\n` + js
-
-    js += has_await ? 'var save_frame_obj = $B.frame_obj;\n' : ''
+    js = `(${has_await ? 'async ' : ''}function(expr) {\n` +
+         (has_await ? 'var save_frame_obj = $B.frame_obj;\n' : '') + js
 
     if (this instanceof $B.ast.ListComp) {
         if(this.elt instanceof $B.ast.Starred){
@@ -1119,30 +1053,13 @@ function make_comp(scopes) {
     js += prefix + `}\n` +
           (has_await ? prefix + `\n$B.restore_frame_obj(save_frame_obj, ${comp.locals_name});` : '')
 
-    for (var name of save_locals) {
-        js += prefix + `${name_reference(name, scopes)} = save_${name}\n`
-    }
-    // A comprehension has its own scope, so the names its generators bind must
-    // not survive it. Drop them in both senses: the binding at run time, and
-    // the scope entry that decides how a later read of the name compiles.
-    for (var comp_name of bindings) {
-        if (! save_locals.has(comp_name)) {
-            js += prefix + `delete ${comp.locals_name}.${comp_name}\n`
-            var comp_s = comp_scope
-            while (comp_s) {
-                comp_s.locals.delete(comp_name)
-                comp_s = comp_s.parent
-            }
-        }
-    }
-    if (comp_iter_scope.found) {
-        js += prefix + `${name_reference(comp_iter, scopes)} = save_comp_iter\n`
-    }
     js += prefix + `return result_${id}\n`
     dedent()
     js += prefix + `}` + `)(${outmost_expr})\n`
-    return js
-}
+    scopes.pop()
+    // With an "await", the comprehension is an async function: its result is
+    // awaited where the comprehension is written
+    return has_await ? `(await ${js})` : js}
 
 function init_scopes(type, scopes) {
     // Common to Expression and Module
@@ -1320,7 +1237,7 @@ function annotation_code(scopes, scope, ref) {
             prefix + `var int_format = $B.int_value(format)\n` +
             prefix + `var current_frame = $B.frame_obj.frame\n` +
             prefix + `var frame = ['__annotate__', {}, current_frame[2], current_frame[3]]\n` +
-            prefix + `$B.enter_frame(frame, "${scopes.filename}", ${scope.ast.lineno})\n` +
+            prefix + `$B.enter_frame(frame, ${JSON.stringify(scopes.filename)}, ${scope.ast.lineno})\n` +
             prefix + `frame.positions = [${scope.positions}]\n` +
             prefix + `var res = $B.empty_dict()\n` +
             prefix + `var anns = {\n`
@@ -1750,6 +1667,10 @@ $B.ast.Await.prototype.to_js = function(scopes) {
             scopes[ix].ast instanceof $B.ast.GeneratorExp){
         scopes[ix].has_await = true
         ix--
+        // skip the blocks (if, for, try...) the comprehension is written in
+        while (scopes[ix].parent) {
+            ix--
+        }
     }
     if (scopes[ix].ast instanceof $B.ast.AsyncFunctionDef) {
         scopes[ix].has_await = true
@@ -2017,13 +1938,16 @@ $B.ast.ClassDef.prototype.to_js = function(scopes) {
     dedent(2)
 
     js += prefix + `locals.__doc__ = ${docstring}\n` +
-          prefix + `locals.__module__ = '${glob}'\n` +
+          prefix + `locals.__module__ = $B.frame_obj.frame[3].__name__\n` +
+          prefix + `locals.__qualname__ = "${qualname}"\n` +
           prefix + `locals.__firstlineno__ = ${this.lineno}\n`
 
-    js += prefix + `var frame = [name, locals, '${glob}', ${globals_name}]\n` +
+    js += prefix + `var frame = [name, locals, ${JSON.stringify(glob)}, ${globals_name}]\n` +
           prefix + `$B.enter_frame(frame, __file__, ${this.lineno})\n` +
           prefix + `var _frame_obj = $B.frame_obj\n` +
-          prefix + `if (frame.$f_trace !== _b_.None) {\n` +
+          prefix + 'try {\n'
+    indent()
+    js += prefix + `if (frame.$f_trace !== _b_.None) {\n` +
           prefix + tab + `$B.trace_line()\n` +
           prefix + `}\n`
 
@@ -2064,6 +1988,12 @@ $B.ast.ClassDef.prototype.to_js = function(scopes) {
               `keywords)\n` +
           prefix + '$B.trace_return_and_leave(frame, _b_.None)\n' +
           prefix + 'return kls\n'
+    dedent()
+    js += prefix + `} catch (err) {\n`
+    indent()
+    js += prefix + `$B.set_exc_and_leave(frame, err)\n`
+    dedent()
+    js += prefix + '}\n'
 
     dedent()
     js += prefix + `})('${this.name}', ` +
@@ -2175,7 +2105,7 @@ $B.ast.Constant.prototype.to_js = function(scopes) {
         return this.value + ''
     } else if (this.value === _b_.None) {
         return '_b_.None'
-    } else if (typeof this.value == "string") {
+    } else if (typeof this.value == "string" || this.value instanceof String) {
         var s = this.value,
             srg = $B.surrogates(s) // in py_string.js
         if (srg.length == 0) {
@@ -2373,12 +2303,8 @@ $B.ast.For.prototype.to_js = function(scopes) {
     } else {
         js += prefix + `var no_break_${id} = true,\n` +
               prefix + tab + tab + `iterator_${id} = ${iter}\n`
-
-        if (this.iter.inum) {
-            js += prefix + tab + tab + `iterator_${id}[$B.INUM] = ${this.iter.inum}\n`
-        }
         js += prefix + `for(var next_${id} of $B.make_js_iterator(` +
-                  `iterator_${id}, frame, ${this.lineno})){\n`
+                  `iterator_${id}, frame, ${this.lineno}, ${this.iter.inum})){\n`
     }
     // assign result of iteration to target
     var name = new $B.ast.Name(`next_${id}`, new $B.ast.Load())
@@ -2494,7 +2420,7 @@ function type_param_in_def(tp, ref, scopes) {
         scopes.push(typevarscope)
         js += `function BOUND_OF_${name}() {\n` +
               `var current_frame = $B.frame_obj.frame,\n` +
-              `frame = ['BOUND_OF_${name}', {}, '${gname}', ${globals_name}]\n` +
+              `frame = ['BOUND_OF_${name}', {}, ${JSON.stringify(gname)}, ${globals_name}]\n` +
               `$B.enter_frame(frame, __file__, ${tp.bound.lineno})\n` +
               `try {\n` +
               `var res = ${tp.bound.to_js(scopes)}\n` +
@@ -2606,9 +2532,9 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
               prefix + `var _typing = $B.imported._typing\n` +
               prefix + `var locals_${type_params_ref} = $B.empty_dict(),\n` +
               prefix + tab + tab + `locals = locals_${type_params_ref},\n` +
-              prefix + tab + tab + `frame = ['${type_params_ref}', locals, '${gname}', ${globals_name}],\n` +
+              prefix + tab + tab + `frame = ['${type_params_ref}', locals, ${JSON.stringify(gname)}, ${globals_name}],\n` +
               prefix + tab + tab + `type_params = []\n` +
-              prefix + `$B.enter_frame(frame, '${scopes.filename}', ${this.lineno})\n`
+              prefix + `$B.enter_frame(frame, ${JSON.stringify(scopes.filename)}, ${this.lineno})\n`
         for (var item of this.type_params) {
             type_params += type_param_in_def(item, type_params_ref, scopes)
         }
@@ -2617,6 +2543,17 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
 
     var func_scope = new Scope(this.name, 'def', this)
     scopes.push(func_scope)
+
+    // __class__ is a free variable of a function that names super or
+    // __class__, itself or in a function nested in it. A method binds it
+    // before its body is compiled, so that a nested function finds it there
+    var class_cell = in_class &&
+            $B.str_dict_contains(symtable_block.symbols, '__class__') &&
+            (($B.str_dict_get(symtable_block.symbols, '__class__') >>
+                SF.SCOPE_OFF) & SF.SCOPE_MASK) == SF.FREE
+    if (class_cell) {
+        bind("__class__", scopes)
+    }
 
     var args = positional.concat(this.args.kwonlyargs),
         slots = [],
@@ -2675,8 +2612,8 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
     indent()
 
     if (is_generator) {
-        // mark calling frame as having a genrator
-        js += prefix + '$B.frame_obj.frame.$has_generators = true\n'
+        // mark the calling frame, if there is one, as having a generator
+        js += prefix + 'if ($B.frame_obj) { $B.frame_obj.frame.$has_generators = true }\n'
     }
     var locals_name = make_scope_name(scopes, func_scope)
     js += prefix + `var locals\n`
@@ -2719,7 +2656,8 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
     // bare eval()/exec() see them
     var free_idents = []
     for (var [ident, flag] of Object.entries(symtable_block.symbols)) {
-        if (((flag >> SF.SCOPE_OFF) & SF.SCOPE_MASK) == SF.FREE) {
+        if (((flag >> SF.SCOPE_OFF) & SF.SCOPE_MASK) == SF.FREE &&
+                ! (class_cell && ident == '__class__')) {
             free_idents.push(ident)
         }
     }
@@ -2737,7 +2675,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
     }
 
     js += prefix + `var frame = ["${this.$is_lambda ? '<lambda>': this.name}", ` +
-          `locals, "${gname}", ${globals_name}, ${name2}]\n` +
+          `locals, ${JSON.stringify(gname)}, ${globals_name}, ${name2}]\n` +
           prefix + `$B.enter_frame(frame, __file__, ${this.lineno})\n`
 
     if (func_scope.positions) {
@@ -2768,7 +2706,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
     js += prefix + `try {\n`
     indent()
     js += prefix + `$B.js_this = this\n`
-    if (in_class) {
+    if (class_cell) {
         // Set local name "__class__"
         var ix = scopes.indexOf(class_scope),
             parent = scopes[ix - 1]
@@ -2776,7 +2714,6 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
         var scope_ref = make_scope_name(scopes, parent),
             class_ref = class_scope.name, // XXX qualname
             refs = class_ref.split('.').map(x => `'${x}'`)
-        bind("__class__", scopes)
         js += prefix + `locals.ob_type =  locals.__class__ = ` +
                   `$B.get_method_class(${name2}, ${scope_ref}, "${class_ref}", [${refs}])\n`
     }
@@ -2910,7 +2847,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
 
     // Set admin infos
     js += prefix + `${name2}.$function_infos = [` +
-        `'${gname}', ` +
+        `${JSON.stringify(gname)}, ` +
         `'${this.$is_lambda ? '<lambda>': this.name}', ` +
         `'${qualname}', ` +
         `__file__, ` +
@@ -2930,7 +2867,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
         `[${varnames}], ` +
         `${annotations}, ` +
         `${has_type_params ? 'type_params' : '[]'}, frame]\n`
-    js += prefix + `$B.set_func_attrs(${name2}, frame, '${gname}')\n`
+    js += prefix + `$B.set_func_attrs(${name2}, frame, ${JSON.stringify(gname)})\n`
     js += prefix + `${name2}.ob_type = $B.function\n`
 
     if (anns && ! postponed) {
@@ -2940,7 +2877,7 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
         js += prefix + `${name2}.__annotate__ = function(format) {\n`
         indent()
         js += prefix + `var locals = {format}\n` +
-              prefix + `var frame = ['__annotate__', locals, '${gname}', ${globals_name}]\n` +
+              prefix + `var frame = ['__annotate__', locals, ${JSON.stringify(gname)}, ${globals_name}]\n` +
               prefix + `$B.enter_frame(frame, __file__, ${this.lineno})\n` +
               prefix + `frame.positions = $B.frame_obj.prev.frame.positions\n` +
               prefix + `frame.positions.push([${this.lineno}, ${this.end_lineno}, ${this.col_offset}, ${this.end_col_offset}])\n` +
@@ -3063,6 +3000,20 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes) {
     indent()
     var head = init_comprehension(comp, scopes)
 
+    // the free variables of the expression are keys of its locals, as in a
+    // function
+    for (var [ident, flag] of Object.entries(symtable_block.symbols)) {
+        if (((flag >> SF.SCOPE_OFF) & SF.SCOPE_MASK) == SF.FREE) {
+            var free_scope = name_scope(ident, scopes)
+            if (free_scope.found) {
+                head += prefix + `Object.defineProperty(locals, '${ident}', ` +
+                    `{get: function(){return ` +
+                    `${make_scope_name(scopes, free_scope.found)}.${ident}}, ` +
+                    `set: function(){}, enumerable: true, configurable: true})\n`
+            }
+        }
+    }
+
     var js = prefix + `var gen${id} = $B.generator.$factory(${has_await ? 'async ' : ''}function*(expr){\n`
 
     // special case for first generator
@@ -3142,7 +3093,7 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes) {
     dedent()
     js += prefix + '}\n'
     js += prefix + '$B.leave_frame()\n'
-    js += prefix + '}, "<genexpr>")(expr)\n'
+    js += prefix + '}, "<genexpr>")(locals[".0"])\n'
 
     scopes.pop()
     var func = `${head}\n${js}\n` + prefix + `return gen${id}`
@@ -3360,7 +3311,7 @@ $B.ast.Interactive.prototype.to_js = function(scopes) {
 
 $B.ast.Interpolation.prototype.to_js = function(scopes) {
     var conversion = this.conversion == - 1 ? "_b_.None" : `'${this.conversion}'`
-    return `[${this.value.to_js(scopes)}, '${this.value.id}', ` +
+    return `[${this.value.to_js(scopes)}, ${JSON.stringify(this.str)}, ` +
         `${conversion}, ` +
         `${this.format_spec ? $B.js_from_ast(this.format_spec, scopes) : "''"}]`
 }
@@ -3710,9 +3661,10 @@ $B.ast.Module.prototype.to_js = function(scopes) {
         }
     }
 
+    // exec() adds no __name__ to the globals it is given
     js += `\nvar __file__ = locals.__file__ = ` +
           `${JSON.stringify(scopes.filename ?? "<string>")}\n` +
-          `locals.__name__ = ${JSON.stringify(name)}\n` +
+          (namespaces ? '' : `locals.__name__ = ${JSON.stringify(name)}\n`) +
           `locals.__doc__ = ${extract_docstring(this, scopes)}\n`
 
     var insert_positions = js.length
@@ -3778,10 +3730,7 @@ $B.ast.Name.prototype.to_js = function(scopes) {
             return '_b_.__debug__'
         }
         var scope = name_scope(this.id, scopes)
-        if (this.id == 'xzs') {
-            console.log('Name.to_js, scope', scope)
-        }
-        if (scope.found === $B.last(scopes)) {
+        if (scope.found === $B.last(scopes) && scope.found.type != 'module') {
             return 'locals.' + mangle(scopes, scope.found, this.id)
         }
         var res = name_reference(this.id, scopes, this)
@@ -3789,6 +3738,10 @@ $B.ast.Name.prototype.to_js = function(scopes) {
             // Special case : name __debugger__ is translated to Javascript
             // "debugger" if not bound in Brython code
             return 'debugger'
+        }
+        if (scope.found && scope.found.type == 'module') {
+            // a module global may have been deleted at run time, from globals()
+            res = `(${res} ?? $B.resolve_in_scopes('${this.id}', [${res.split('.')[0]}, _b_]))`
         }
         return res
     }

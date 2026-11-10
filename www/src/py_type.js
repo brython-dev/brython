@@ -4,6 +4,7 @@
 var _b_ = $B.builtins
 
 const TPFLAGS = $B.TPFLAGS // defined ib brython_builtins.js
+const MARKERS = ['__dict__', '__weakref__']
 
 // generic code for class constructor
 $B.$class_constructor = function(qualname, dict, metaclass, resolved_bases,
@@ -31,38 +32,22 @@ $B.$class_constructor = function(qualname, dict, metaclass, resolved_bases,
 
     delete extra_kwargs.metaclass
 
-    // set __module__ before calling metaclass.__new__
-    var classdef_frame = $B.frame_obj.prev.frame
-    var module = classdef_frame[2]
-    if (Object.hasOwn(classdef_frame[1], '__name__')) {
-        module = classdef_frame[1].__name__
+    // set __module__ before calling metaclass.__new__, unless the class
+    // body assigned it
+    if ($B.str_dict_get(dict, '__module__', $B.NULL) === $B.NULL) {
+        var classdef_frame = $B.frame_obj.prev.frame
+        var module = classdef_frame[2]
+        if (Object.hasOwn(classdef_frame[1], '__name__')) {
+            module = classdef_frame[1].__name__
+        }
+        $B.str_dict_set(dict, '__module__', module)
     }
-
-    $B.str_dict_set(dict, '__module__', module)
-
-    $B.str_dict_set(dict, '__qualname__', class_name)
 
     // A class that overrides __eq__() and does not define __hash__()
     // will have its __hash__() implicitly set to None
     if($B.str_dict_get(dict, '__eq__', $B.NULL) !== $B.NULL &&
             $B.str_dict_get(dict, '__hash__', $B.NULL) === $B.NULL){
         $B.str_dict_set(dict, '__hash__', _b_.None)
-    }
-
-    // Check if class has __slots__
-    var slots = $B.str_dict_get(dict, '__slots__', $B.NULL)
-    if (slots !== $B.NULL) {
-        if (typeof slots == "string") {
-            slots = [slots]
-        } else {
-            for (let item of $B.make_js_iterator(slots)) {
-                if (typeof item != 'string') {
-                    $B.RAISE(_b_.TypeError, '__slots__ items must be ' +
-                        `strings, not '${$B.class_name(item)}'`)
-                }
-            }
-        }
-        $B.str_dict_set(dict, '__slots__', slots)
     }
 
     set_type_new(dict)
@@ -229,7 +214,6 @@ function calculate_metaclass(metatype, bases) {
 }
 
 function shape_differs(t1, t2) {
-    console.log('shape differs', t1, t2)
     return (
         t1.tp_basicsize != t2.tp_basicsize ||
         t1.tp_itemsize != t2.tp_itemsize
@@ -257,6 +241,9 @@ function solid_base(type) {
     } else {
         base = _b_.object
     }
+    if (! (type.tp_flags & TPFLAGS.HEAPTYPE)) {
+        return shape_differs(type, base) ? type : base
+    }
     try {
         var slots = $B.search_in_dict(type, '__slots__', $B.NULL)
     } catch (err) {
@@ -264,7 +251,11 @@ function solid_base(type) {
         throw err
     }
     if (slots !== $B.NULL && slots.length > 0) {
-        return type
+        // '__dict__' and '__weakref__' are markers, they add no slot
+        var names = typeof slots == 'string' ? [slots] : Array.from(slots)
+        if (names.some(name => name != '__dict__' && name != '__weakref__')) {
+            return type
+        }
     }
     return base
 }
@@ -286,7 +277,7 @@ function best_base(bases, ctx) {
         if(base_i.tp_flags !== undefined &&
                  ! (base_i.tp_flags & TPFLAGS.BASETYPE)){
             $B.RAISE(_b_.TypeError,
-                `type '${base.__name__}' is not an acceptable base type`)
+                `type '${$B.get_name(base_i)}' is not an acceptable base type`)
         }
         candidate = solid_base(base_i)
         if (test) {
@@ -687,7 +678,7 @@ $B.search_own_slot = function(cls, slot, _default) {
 }
 
 $B.search_slot = function(cls, slot, _default) {
-    var test = false // cls.tp_name == 'MagicMock' && slot == 'tp_call'
+    var test = false // cls.tp_name == 'builtin_function_or_method' //&& slot == 'tp_call'
     if (test) {
         console.log('search slot', cls, slot)
     }
@@ -696,6 +687,9 @@ $B.search_slot = function(cls, slot, _default) {
         console.log('no mro', cls)
     }
     for (var klass of cls.tp_mro) {
+        if (test) {
+            console.log('in klass', klass, 'slot', slot, klass[slot])
+        }
         if (klass.hasOwnProperty(slot) && klass[slot] !== $B.NULL) {
             return klass[slot]
         }
@@ -703,9 +697,11 @@ $B.search_slot = function(cls, slot, _default) {
             try {
                 var v = $B.get_from_dict(klass, dunder, $B.NULL)
             } catch(err) {
-                console.log('error for klass', klass, 'slot', slot,
+                if (test) {
+                    console.log('error for klass', klass, 'slot', slot,
                     'dunder', dunder)
-                throw err
+                }
+                v = $B.NULL
             }
             if (v !== $B.NULL) {
                 if (test) {
@@ -747,12 +743,19 @@ $B.type_getattribute = function(klass, attr) {
         var res = meta.tp_getattro(klass, attr)
         return res
     }
-    var getattro = $B.search_slot(meta, 'tp_getattro', $B.NULL)
+    var getattro = $B.search_slot(meta, 'tp_getattro', $B.NULL),
+        missing = null
     if (getattro !== $B.NULL) {
         if (test) {
             console.log('getattro', getattro)
         }
-        var res = getattro(klass, attr, $B.NULL)
+        try {
+            var res = getattro(klass, attr)
+        } catch (err) {
+            $B.RAISE_IF_NOT(err, _b_.AttributeError)
+            missing = err
+            res = $B.NULL
+        }
         if (test) {
             console.log('result of getattro', res)
         }
@@ -762,6 +765,10 @@ $B.type_getattribute = function(klass, attr) {
     }
     var getattr = $B.search_in_mro(meta, '__getattr__', $B.NULL)
     if (getattr === $B.NULL) {
+        if (missing !== null) {
+            // without __getattr__, the AttributeError raised stands
+            throw missing
+        }
         return $B.NULL
     }
     try {
@@ -771,6 +778,16 @@ $B.type_getattribute = function(klass, attr) {
             return $B.NULL
         }
         throw err
+    }
+}
+
+// The subclasses of a class, held weakly: iterating yields the live ones
+$B.subclasses = function() {
+    var refs = []
+    return {
+        push: cls => refs = refs.filter(ref => ref.deref()).concat(new WeakRef(cls)),
+        remove: cls => refs = refs.filter(ref => ! [cls, undefined].includes(ref.deref())),
+        [Symbol.iterator]: () => refs.map(ref => ref.deref()).filter(cls => cls).values()
     }
 }
 
@@ -1092,27 +1109,64 @@ function reset_setattr(cls) {
     }
 }
 
+function gives_dict(cls) {
+    // whether the instances of cls have a __dict__: a builtin type with a
+    // '__dict__' descriptor, a class without __slots__, with '__dict__' in
+    // them, or one of whose bases gives a __dict__
+    if (! (cls.tp_flags & TPFLAGS.HEAPTYPE)) {
+        return $B.search_in_mro(cls, '__dict__', $B.NULL) !== $B.NULL
+    }
+    return $B.get_from_dict(cls, '__slots__', $B.NULL) === $B.NULL ||
+        cls.$slots_has_dict === true ||
+        cls.tp_bases.some(gives_dict)
+}
+
 function set_slots(cl_dict, class_obj) {
     let slots = $B.str_dict_get(cl_dict, '__slots__', $B.NULL)
     if (slots !== $B.NULL) {
+        class_obj.$slots = []
+        if ($B.is_str(slots)) {
+            slots = [slots]
+        }
         for (let key of $B.make_js_iterator(slots)) {
+            if (! $B.is_str(key)) {
+                $B.RAISE(_b_.TypeError, '__slots__ items must be ' +
+                    `strings, not '${$B.class_name(key)}'`)
+            }
+            key = _b_.str.$to_string(key)
+            if (! _b_.str.tp_funcs.isidentifier(key)) {
+                $B.RAISE(_b_.TypeError, '__slots__ must be identifiers')
+            }
+            if (MARKERS.includes(key) && class_obj.$slots.includes(key)) {
+                $B.RAISE(_b_.TypeError,
+                    `${key} slot disallowed: we already got one`)
+            }
             // CPython mangles private slot names at class-creation time,
             // matching the compiler's mangling of self.__private accesses
             if (key.startsWith('__') && ! key.endsWith('__')) {
                 key = '_' + $B.get_name(class_obj).replace(/^_+/, '') + key
             }
+            class_obj.$slots.push(key)
             // CPython: '__dict__' / '__weakref__' inside __slots__ are
             // markers, not slots — '__dict__' keeps the per-instance dict
             if (key == '__dict__' || key == '__weakref__') {
                 if (key == '__dict__') {
+                    if (class_obj.$slots_has_dict || gives_dict(class_obj.tp_base)) {
+                        $B.RAISE(_b_.TypeError,
+                            "__dict__ slot disallowed: we already got one")
+                    }
                     class_obj.$slots_has_dict = true
                 }
                 continue
             }
+            // a slot that redeclares a base's has a storage of its own
+            var shadowed = $B.search_in_mro(class_obj.tp_base, key, $B.NULL)
             var member = {
                 name: key,
                 type: $B.TYPES.OBJECT,
-                attr: 'slot_value_' + key,
+                attr: shadowed !== $B.NULL &&
+                    $B.get_class(shadowed) === $B.member_descriptor ?
+                    Symbol(key) : 'slot_value_' + key,
                 flags: 0
             }
             var md = {
@@ -1123,6 +1177,7 @@ function set_slots(cl_dict, class_obj) {
             }
             $B.str_dict_set(cl_dict, key, md)
         }
+        class_obj.$slots.sort()
     }
 }
 
@@ -1224,7 +1279,7 @@ _b_.type.tp_repr = function(kls) {
 }
 
 _b_.type.tp_call = function(cls) {
-    var $ = $B.args(cls?.tp_name ?? '__call__', 1, {cls: null}, arguments, null, 'args', 'kw'),
+    var $ = $B.args(cls?.tp_name ?? '__call__', 1, {cls: null}, arguments, null, 'args', 'kw', 1),
         cls = $.cls,
         args = $.args,
         kw = $.kw,
@@ -1430,9 +1485,13 @@ _b_.type.tp_new = function(cls, args, kw) {
         console.log($B.frame_obj.frame.__file__, 'line', $B.frame_obj.frame.$lineno)
     }
 
-    // Create the class dictionary
-    var module = $B.str_dict_get(cl_dict, '__module__', $B.frame_obj.frame[2])
-    $B.str_dict_set(cl_dict, '__module__', module)
+    // Create the class dictionary: __module__ is the __name__ of the current
+    // globals, and is not set if they have none
+    var module = $B.str_dict_get(cl_dict, '__module__',
+        $B.frame_obj.frame[3].__name__)
+    if (module !== undefined) {
+        $B.str_dict_set(cl_dict, '__module__', module)
+    }
 
     var qualname = $B.str_dict_get(cl_dict, '__qualname__', name)
     // __qualname__ is removed from class dict
@@ -1451,6 +1510,7 @@ _b_.type.tp_new = function(cls, args, kw) {
         ob_type: metatype,
         tp_bases: bases,
         tp_name: name,
+        ht_qualname: qualname,
         tp_flags: $B.TPFLAGS.DEFAULT | $B.TPFLAGS.HEAPTYPE |
                    $B.TPFLAGS.BASETYPE | $B.TPFLAGS.HAVE_GC
     }
@@ -1467,7 +1527,7 @@ _b_.type.tp_new = function(cls, args, kw) {
 
     $B.set_dict(class_obj, cl_dict)
     class_obj.tp_mro = $B.make_mro(class_obj)
-    class_obj.tp_subclasses = []
+    class_obj.tp_subclasses = $B.subclasses()
 
     $B.make_getattr(class_obj)
 
@@ -1502,13 +1562,15 @@ _b_.type.tp_new = function(cls, args, kw) {
     } else {
         set_slots(cl_dict, class_obj)
 
-        $B.set_to_dict(class_obj, '__dict__',
-            $B.getset_descriptor.$factory(
-                class_obj,
-                '__dict__',
-                [object_get_dict, $B.set_dict]
+        if ($B.get_from_dict(class_obj, '__dict__', $B.NULL) === $B.NULL) {
+            $B.set_to_dict(class_obj, '__dict__',
+                $B.getset_descriptor.$factory(
+                    class_obj,
+                    '__dict__',
+                    [object_get_dict, $B.set_dict]
+                )
             )
-        )
+        }
         $B.make_init(class_obj)
         $B.make_setattr(class_obj)
         if (test) {
@@ -1521,14 +1583,9 @@ _b_.type.tp_new = function(cls, args, kw) {
             if (test) {
                 // console.log('check __set_name__ for', key, v)
             }
-            if(['__module__', '__doc__', '__dict__', '__qualname__',
-                    '__firstlineno__', '__static_attributes__',
-                    '__annotate_func__'].includes(key)){
-                continue
-            }
-            if (key == '__class_getitem__') {
-                // always a classmethod
-                if ($B.get_class(v) !== _b_.classmethod) {
+            if (key == '__class_getitem__' || key == '__init_subclass__') {
+                // a plain function is made a classmethod
+                if ($B.get_class(v) === $B.function) {
                     var v1 = $B.$call(_b_.classmethod, v)
                     $B.str_dict_set(cl_dict, key, v1)
                 }
@@ -1550,8 +1607,6 @@ _b_.type.tp_new = function(cls, args, kw) {
                     }
                 } else {
                     v.$function_infos[$B.func_attrs.method_class] = class_obj
-                    v.$function_infos[$B.func_attrs.__qualname__] = qualname + '.' +
-                        v.$function_infos[$B.func_attrs.__name__]
                 }
             }
         }
@@ -1590,7 +1645,7 @@ _b_.type.tp_new = function(cls, args, kw) {
     make_factory(class_obj)
     // Set new class as subclass of its parents
     for (var base of class_obj.tp_bases) {
-        base.tp_subclasses = base.tp_subclasses || []
+        base.tp_subclasses = base.tp_subclasses || $B.subclasses()
         base.tp_subclasses.push(class_obj)
     }
     return class_obj
@@ -1687,14 +1742,64 @@ type_funcs.__bases___set = function() {
     var $ = $B.args('__bases__', 2, {cls: null, bases: null}, arguments)
     var cls = $.cls,
         bases = $.bases
+
     if (! $B.exact_type(bases, _b_.tuple)) {
         $B.RAISE(_b_.TypeError,
             `can only assign tuple to ${$B.get_name(cls)}.__bases__, ` +
             `not ${$B.class_name(bases)}`
         )
     }
+    if (bases.length == 0) {
+        $B.RAISE(_b_.TypeError, 'can only assign non-empty tuple to ' +
+            `${$B.get_name(cls)}.__bases__, not ()`)
+    }
+    for (var base of bases) {
+        if (! $B.is_type(base)) {
+            $B.RAISE(_b_.TypeError, `${$B.get_name(cls)}.__bases__ must ` +
+                `be tuple of classes, not '${$B.class_name(base)}'`)
+        }
+        if ($B.get_mro(base).includes(cls)) {
+            $B.RAISE(_b_.TypeError,
+                'a __bases__ item causes an inheritance cycle')
+        }
+    }
+
+    cls.tp_base = best_base(bases)
+
+    // Remove cls from subclasses of previous bases
+    var old_bases = cls.tp_bases
+    for (var base of old_bases) {
+        base.tp_subclasses.remove(cls)
+    }
+    // Reset bases and mro
     cls.tp_bases = bases
     cls.tp_mro = $B.make_mro(cls)
+    cls.tp_base = best_base(bases)
+    for (var reset of [reset_call, reset_getattribute, reset_descr_get,
+            reset_descr_set, reset_setattr, reset_init, reset_new,
+            reset_factory, reset_iter]) {
+        reset(cls)
+    }
+    for (var base of bases) {
+        base.tp_subclasses.push(cls)
+    }
+    var old_mros = new Map(),
+        classes = [cls]
+    try {
+        for (var klass of classes) {
+            if (! old_mros.has(klass)) {
+                old_mros.set(klass, klass.tp_mro)
+            }
+            klass.tp_mro = $B.make_mro(klass)
+            classes.push(...klass.tp_subclasses)
+        }
+    } catch (err) {
+        cls.tp_bases = old_bases
+        for (var [klass, mro] of old_mros) {
+            klass.tp_mro = mro
+        }
+        throw err
+    }
 }
 
 type_funcs.__dict___get = function(cls) {
@@ -1823,7 +1928,7 @@ type_funcs.__subclasscheck__ = function(self, subclass) {
 }
 
 type_funcs.__subclasses__ = function(cls) {
-    return $B.$list(cls.tp_subclasses)
+    return $B.$list([...cls.tp_subclasses])
 }
 
 type_funcs.__text_signature___get = function(self) {
@@ -2377,7 +2482,7 @@ $B.GenericAlias.$factory = function(origin, args) {
     var res = {
         ob_type: $B.GenericAlias,
         origin,
-        args,
+        args: $B.is_tuple(args) ? args : $B.fast_tuple([args]),
         starred: false
     }
     return res
@@ -2618,12 +2723,18 @@ $B.UnionType.tp_repr = function(self) {
 }
 
 $B.UnionType.nb_or = function(self, other) {
-    var items = self.args.slice()
-    if (other === _b_.None) {
-        other = $B.NoneType
-    }
-    if (! items.includes(other)) {
-        items.push(other)
+    // self is not always the union: for "x | union", nb_or of the left
+    // operand returns NotImplemented and this is called with the operands
+    // in their original order
+    var items = []
+    for (var operand of [self, other]) {
+        var operand_items = $B.$isinstance(operand, $B.UnionType) ?
+            operand.args : [operand]
+        for (var item of operand_items) {
+            if (! items.includes(item)) {
+                items.push(item)
+            }
+        }
     }
     return $B.UnionType.$factory(items)
 }
