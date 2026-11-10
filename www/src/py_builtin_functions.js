@@ -1498,7 +1498,7 @@ _b_.locals = function() {
     var d = $B.empty_dict(),
         free = []
     for (var key in locals_obj) {
-        if (key.startsWith('$') || key == '__class__' || key == 'ob_type') {
+        if (key.startsWith('$') || key == 'ob_type') {
             continue
         }
         if (key == '__class__' ||
