@@ -113,6 +113,11 @@ for missing in (javascript.NULL, javascript.UNDEFINED):
     except TypeError:
         pass
 
+# the items of a Javascript iterable are converted, as an array's are
+values = window.eval('new Set([0.25, 0.5])')
+assert [f'{x:.2f}' for x in values] == ['0.25', '0.50']
+assert [type(x) for x in values] == [float, float]
+
 # issue #1376
 setattr(window, 'foo', [])
 
