@@ -105,6 +105,14 @@ assert hash(javascript.NULL) == hash(javascript.UNDEFINED)
 assert javascript.NULL in {javascript.NULL: 1}
 assert len({None, javascript.NULL}) == 2
 
+# null and undefined as a subscript are refused as any other object is
+for missing in (javascript.NULL, javascript.UNDEFINED):
+    try:
+        [1, 2][missing]
+        raise Exception("should have raised TypeError")
+    except TypeError:
+        pass
+
 # issue #1376
 setattr(window, 'foo', [])
 
