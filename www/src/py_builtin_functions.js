@@ -978,10 +978,13 @@ _b_.globals = function() {
 _b_.hasattr = function(obj,attr) {
     check_nb_args_no_kw('hasattr', 2, arguments)
     try {
-        $B.$getattr(obj, attr)
+        _b_.getattr(obj, attr)
         return true
     } catch (err) {
-        return false
+        if ($B.is_exc(err, [_b_.AttributeError])) {
+            return false
+        }
+        throw err
     }
 }
 
@@ -1172,6 +1175,12 @@ _b_.isinstance = function(obj, cls) {
 $B.$isinstance = function(obj, cls) {
     var kls
     if (Array.isArray(cls)) {
+        // a tuple, or a Javascript array of classes passed by Brython itself;
+        // not a list
+        if (cls.ob_type !== undefined && ! $B.is_tuple(cls)) {
+            $B.RAISE(_b_.TypeError, "isinstance() arg 2 must be a type, " +
+                "a tuple of types, or a union")
+        }
         for (kls of cls) {
             if ($B.$isinstance(obj, kls)) {
                 return true
@@ -1223,6 +1232,15 @@ $B.$isinstance = function(obj, cls) {
                 return $B.$call(instancecheck, obj)
             }
             return $B.$call(instancecheck, cls, obj)
+        }
+    }
+    // an object may report another class than its type, as a proxy does
+    if ($B.search_in_mro(obj_class, '__class__', $B.NULL) !==
+            $B.search_in_dict(_b_.object, '__class__', $B.NULL)) {
+        var reported = $B.$getattr(obj, '__class__', $B.NULL)
+        if (reported !== $B.NULL && reported !== obj_class &&
+                $B.is_type(reported)) {
+            return $B.get_mro(reported).includes(cls)
         }
     }
     return false
@@ -1480,8 +1498,7 @@ _b_.locals = function() {
     var d = $B.empty_dict(),
         free = []
     for (var key in locals_obj) {
-        if (key.startsWith('$') || key == 'ob_type' ||
-                key.startsWith('lambda_' + $B.lambda_magic + '_')) {
+        if (key.startsWith('$') || key == '__class__' || key == 'ob_type') {
             continue
         }
         if (key == '__class__' ||

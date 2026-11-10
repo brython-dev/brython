@@ -1945,7 +1945,9 @@ $B.ast.ClassDef.prototype.to_js = function(scopes) {
     js += prefix + `var frame = [name, locals, ${JSON.stringify(glob)}, ${globals_name}]\n` +
           prefix + `$B.enter_frame(frame, __file__, ${this.lineno})\n` +
           prefix + `var _frame_obj = $B.frame_obj\n` +
-          prefix + `if (frame.$f_trace !== _b_.None) {\n` +
+          prefix + 'try {\n'
+    indent()
+    js += prefix + `if (frame.$f_trace !== _b_.None) {\n` +
           prefix + tab + `$B.trace_line()\n` +
           prefix + `}\n`
 
@@ -1986,6 +1988,12 @@ $B.ast.ClassDef.prototype.to_js = function(scopes) {
               `keywords)\n` +
           prefix + '$B.trace_return_and_leave(frame, _b_.None)\n' +
           prefix + 'return kls\n'
+    dedent()
+    js += prefix + `} catch (err) {\n`
+    indent()
+    js += prefix + `$B.set_exc_and_leave(frame, err)\n`
+    dedent()
+    js += prefix + '}\n'
 
     dedent()
     js += prefix + `})('${this.name}', ` +
@@ -2902,7 +2910,11 @@ $B.ast.FunctionDef.prototype.to_js = function(scopes) {
         scope_name = make_scope_name(scopes, func_name_scope),
         func_ref
 
-    if (decorated) {
+    if (this.$is_lambda) {
+        // A lambda binds no name: the expression is the function itself, so
+        // nothing is added to the namespace that globals() or locals() read
+        this.$js_name = name2
+    } else if (decorated) {
         func_ref = `decorated${make_id()}`
         js += prefix + `var ${func_ref} = ${name2}\n`
     } else {
@@ -3324,10 +3336,9 @@ $B.ast.Lambda.prototype.to_js = function(scopes) {
     f[$B.ID] = fast_id(this) // FunctionDef accesses symtable through id
     f.$is_lambda = true
     indent()
-    var js = f.to_js(scopes),
-        lambda_ref = reference(scopes, last_scope(scopes), name)
+    var js = f.to_js(scopes)
     js = `(function() {\n${js}\n` +
-        prefix + `return ${lambda_ref}\n`
+        prefix + `return ${f.$js_name}\n`
     dedent()
     return js + prefix + `})()`
 }

@@ -123,6 +123,16 @@ class A:
 
 assert A().y == 2
 
+# hasattr() answers False for an AttributeError only
+class Failing:
+    @property
+    def x(self):
+        raise RuntimeError
+
+assert_raises(RuntimeError, hasattr, Failing(), 'x')
+assert_raises(TypeError, hasattr, Failing(), 1)
+assert not hasattr(Failing(), 'y')
+
 # Setting and deleting attributes in a class are reflected
 # in the classes instances
 class foo():pass
@@ -353,6 +363,15 @@ class EnumInt(int, metaclass=Enumeration):
 
 
 assert isinstance('foo', EnumInt)
+
+# isinstance() reads the __class__ an object reports, as a proxy does
+class Proxy:
+    @property
+    def __class__(self):
+        return int
+
+assert isinstance(Proxy(), int) and isinstance(Proxy(), Proxy)
+assert not isinstance(Proxy(), str)
 
 # metaclass with multiple inheritance
 class Meta(type):
@@ -879,10 +898,29 @@ assert s.slot == 42
 
 assert_raises(AttributeError, setattr, s, 'x', 9)
 
+# __slots__ cannot ask for a __dict__ a base already gives
+class Plain:
+    pass
+
+class NoSlot:
+    __slots__ = ()
+
+assert_raises(TypeError, type, 'B', (Plain,), {'__slots__': ('__dict__',)})
+assert_raises(TypeError, type, 'B', (), {'__slots__': ('__dict__', '__dict__')})
+assert_raises(TypeError, type, 'B', (Plain, NoSlot), {'__slots__': ('__dict__',)})
+assert_raises(TypeError, type, 'B', (Exception,), {'__slots__': ('__dict__',)})
+type('B', (), {'__slots__': ('__dict__', '__weakref__')})
+type('B', (NoSlot, Plain), {'__slots__': ('__dict__',)})
+
 # issue 2039
 assert isinstance(classmethod(print), classmethod)
 assert isinstance(staticmethod(print), staticmethod)
 assert isinstance(property(print), property)
+
+# isinstance() takes a tuple of types, not a list
+for classes in ([str, int], [], (str, [int])):
+    assert_raises(TypeError, isinstance, 1, classes)
+assert isinstance(1, (str, (bytes, int)))
 
 # issue 2043
 class HasClassMethod:
@@ -1122,6 +1160,24 @@ class A:
 
 assert A().a(['a', 'b']) == 'a-b'
 
+# '__dict__' and '__weakref__' in __slots__ do not fix the instance layout
+class WithX:
+    __slots__ = ('x',)
+
+class WithY:
+    __slots__ = ('y',)
+
+class Markers:
+    __slots__ = ('__dict__', '__weakref__')
+
+class C(Markers, WithX):
+    pass
+
+class C(WithX, Markers):
+    pass
+
+assert_raises(TypeError, type, 'C', (WithX, WithY), {})
+
 # setting a classmethod
 class A:
 
@@ -1235,6 +1291,35 @@ class A:
   if True:
     x = 9
   assert x == 9
+
+# a class statement that raises leaves its frame
+class Checked:
+    def __init_subclass__(cls, **kw):
+        raise TypeError("refused")
+
+def make_checked():
+    try:
+        class C(Checked):
+            pass
+    except TypeError as error:
+        return str(error)
+
+def make_raising():
+    try:
+        class C:
+            raise ValueError("from the body")
+    except ValueError as error:
+        return str(error)
+
+def run(f):
+    try:
+        value = f()
+    except Exception:
+        value = "escaped"
+    return value
+
+assert run(make_checked) == "refused"
+assert run(make_raising) == "from the body"
 
 # issue 2555
 class MyClass:
