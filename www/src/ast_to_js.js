@@ -1945,7 +1945,9 @@ $B.ast.ClassDef.prototype.to_js = function(scopes) {
     js += prefix + `var frame = [name, locals, ${JSON.stringify(glob)}, ${globals_name}]\n` +
           prefix + `$B.enter_frame(frame, __file__, ${this.lineno})\n` +
           prefix + `var _frame_obj = $B.frame_obj\n` +
-          prefix + `if (frame.$f_trace !== _b_.None) {\n` +
+          prefix + 'try {\n'
+    indent()
+    js += prefix + `if (frame.$f_trace !== _b_.None) {\n` +
           prefix + tab + `$B.trace_line()\n` +
           prefix + `}\n`
 
@@ -1986,6 +1988,12 @@ $B.ast.ClassDef.prototype.to_js = function(scopes) {
               `keywords)\n` +
           prefix + '$B.trace_return_and_leave(frame, _b_.None)\n' +
           prefix + 'return kls\n'
+    dedent()
+    js += prefix + `} catch (err) {\n`
+    indent()
+    js += prefix + `$B.set_exc_and_leave(frame, err)\n`
+    dedent()
+    js += prefix + '}\n'
 
     dedent()
     js += prefix + `})('${this.name}', ` +
