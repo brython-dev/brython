@@ -337,11 +337,11 @@ var dict = _b_.dict
 dict.$match_mapping_pattern = true // for pattern matching (PEP 634)
 
 $B.str_dict_contains = function(d, key) {
-    return d.hasOwnProperty(key)
+    return Object.hasOwn(d, key)
 }
 
 $B.str_dict_get = function(d, key, _default) {
-    if (d.hasOwnProperty(key)) {
+    if (Object.hasOwn(d, key)) {
         return d[key]
     }
     return _default === undefined ? $B.NULL : _default
@@ -356,7 +356,7 @@ $B.str_dict_del = function(d, attr) {
 }
 
 $B.str_dict_pop = function(d, attr) {
-    if (! d.hasOwnProperty(attr)) {
+    if (! Object.hasOwn(d, attr)) {
         return $B.NULL
     }
     delete d[attr]
@@ -487,10 +487,13 @@ function index_by_key(d, key, hash) {
     var indices = d[TABLE][hash],
         index
     if (indices !== undefined) {
-        for (var index of indices) {
+        for (var i = 0; i < indices.length; i++) {
+            index = indices[i]
             var v = d[KEYS][index]
             if (v === undefined) {
-                d[TABLE][hash].splice(i, 1)
+                // an entry dict.popitem left behind: the next one takes its
+                // place
+                d[TABLE][hash].splice(i--, 1)
                 if (d[TABLE][hash].length == 0) {
                     delete d[TABLE][hash]
                     return null
@@ -546,7 +549,7 @@ dict.$lookup_by_key = function(d, key, hash) {
 dict.$contains = function(self, key, hash) {
     if (! self[KEYS]) {
         if (typeof key == 'string') {
-            return self.hasOwnProperty(key)
+            return Object.hasOwn(self, key)
         }
         var hash_method = $B.$getattr($B.get_class(key), '__hash__')
         if (hash_method === $B.str_dict_get($B.get_dict(_b_.object), '__hash__')) {
@@ -570,7 +573,7 @@ dict.$delitem  = function(self, key, hash) {
     }
     if (! self[KEYS]) {
         if (typeof key == 'string') {
-            if (self.hasOwnProperty(key)) {
+            if (Object.hasOwn(self, key)) {
                 delete self[key]
                 return _b_.None
             } else {
@@ -591,6 +594,11 @@ dict.$delitem  = function(self, key, hash) {
         delete self[VALUES][lookup.index]
         delete self[KEYS][lookup.index]
         delete self[HASHES][lookup.index]
+        // a str key is also set as an attribute (dict.$setitem), which
+        // dict.$getitem reads first
+        if (typeof lookup.key == 'string') {
+            delete self[lookup.key]
+        }
         self[VERSION]++
         return _b_.None
     }
@@ -605,7 +613,7 @@ function dict_eq(self, other) {
             return false
         }
         for (let k in self) {
-            if (! other.hasOwnProperty(k)) {
+            if (! Object.hasOwn(other, k)) {
                 return false
             }
             if (! $B.is_or_equals(self[k], other[k])) {
@@ -760,7 +768,7 @@ dict.$getitem = function(self, key, ignore_missing) {
         $B.RAISE(_b_.KeyError, key)
     }
     if (fast_string_key(key)) {
-        if (self.hasOwnProperty(key)) {
+        if (Object.hasOwn(self, key)) {
             return self[key]
         }
     } else {
@@ -1259,6 +1267,9 @@ dict_funcs.popitem = function(self) {
     while (index >= 0) {
         if (self[KEYS][index] !== undefined) {
             let res = $B.fast_tuple([self[KEYS][index], self[VALUES][index]])
+            if (typeof self[KEYS][index] == 'string') {
+                delete self[self[KEYS][index]]
+            }
             delete self[KEYS][index]
             delete self[VALUES][index]
             self[VERSION]++
@@ -1278,7 +1289,7 @@ dict_funcs.setdefault = function(self) {
 
     if (! self[TABLE]) {
         if (fast_string_key(key)) {
-            if (! self.hasOwnProperty(key)) {
+            if (! Object.hasOwn(self, key)) {
                 self[key] = _default
             }
             return self[key]

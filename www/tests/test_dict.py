@@ -262,9 +262,34 @@ for (k, v) in d.items():
 
 assert d == {True: 'y'}
 
+# a str key removed from a dict that also has other keys
+d = {"a": 1, 2: "x"}
+del d["a"]
+assert d.get("a", "absent") == "absent"
+assert "a" not in d
+assert len(d) == 1
+
+d = {"a": 1, 2: "x"}
+assert d.pop("a") == 1
+assert d.get("a", "absent") == "absent"
+
+d = {2: "x", "a": 1}
+assert d.popitem() == ("a", 1)
+assert d.get("a", "absent") == "absent"
+
 # issue 2200
 d = {"Corriger les erreurs d'extraction" : 1}
 d[list(d.keys())[0]]
+
+# keys looked up after popitem in a dict with keys other than str, all of the
+# same hash
+m = 2 ** 61 - 1
+keys = [7 + k * m for k in range(5)]
+d = {key: key for key in keys}
+assert d.popitem() == (keys[4], keys[4])
+assert 7 + 5 * m not in d
+assert [key in d for key in keys] == [True, True, True, True, False]
+assert d.get(keys[4], "absent") == "absent"
 
 # issue 2256
 t = [('-1', ' Alle'),
@@ -275,6 +300,21 @@ t = [('-1', ' Alle'),
 d = dict(t)
 
 assert list(d) == ['-1', '6', '7', '0']
+
+# a str key spelled like a method of JavaScript objects
+d = {"hasOwnProperty": 1}
+assert d["hasOwnProperty"] == 1
+assert "hasOwnProperty" in d
+assert d.get("hasOwnProperty") == 1
+assert d.setdefault("hasOwnProperty", 2) == 1
+assert d.pop("hasOwnProperty") == 1
+assert d == {}
+
+class HasOwn:
+    hasOwnProperty = 4
+
+assert HasOwn.hasOwnProperty == 4
+assert "hasOwnProperty" in vars(HasOwn)
 
 # issue 2323
 data = {
