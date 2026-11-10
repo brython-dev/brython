@@ -527,11 +527,8 @@ $B.get_class = function(obj) {
     if (obj === undefined) {
         return $B.UndefinedType // idem
     }
-    // A dict keeps its class under a symbol of its own and its string keys as
-    // properties, so its key "ob_type" is a property too, which is data
-    var klass = obj.ob_type
-    if (klass) {
-        return Object.hasOwn(obj, $B.OB_TYPE) ? obj[$B.OB_TYPE] : klass
+    if (klass?.tp_name !== undefined) {
+        return obj.ob_type
     }
     if (obj[$B.OB_TYPE]) {
         return obj[$B.OB_TYPE]
