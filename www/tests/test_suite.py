@@ -172,6 +172,21 @@ x = [lambda x: x * 2,lambda y: y * 3]
 assert x[0](5) == 10
 assert x[1](10) == 30
 
+# a lambda binds no name in the namespace where it is written
+assert not [name for name in globals() if name.startswith('lambda')]
+
+class WithLambda:
+    double = lambda self, x: x * 2
+
+assert not [name for name in vars(WithLambda) if name.startswith('lambda')]
+assert WithLambda().double(4) == 8
+
+def lambda_in_function():
+    triple = lambda x: x * 3
+    return [name for name in locals() if name.startswith('lambda')], triple(2)
+
+assert lambda_in_function() == ([], 6)
+
 # inline functions and classes
 def foo(x):return 2 * x
 assert foo(3) == 6
