@@ -527,6 +527,7 @@ $B.get_class = function(obj) {
     if (obj === undefined) {
         return $B.UndefinedType // idem
     }
+    let klass = obj.ob_type
     if (klass?.tp_name !== undefined) {
         return obj.ob_type
     }
@@ -534,7 +535,6 @@ $B.get_class = function(obj) {
         return obj[$B.OB_TYPE]
     }
 
-    var klass
     switch (typeof obj) {
         case "number":
             if (Number.isInteger(obj)) {
