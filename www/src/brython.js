@@ -748,8 +748,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-11-10 21:53:59.489191"
-__BRYTHON__.timestamp=1794344039488
+__BRYTHON__.compiled_date="2026-11-10 22:04:17.599873"
+__BRYTHON__.timestamp=1794344657599
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -1853,7 +1853,7 @@ throw err}}
 $B.$getitem1=function(obj,item){var is_list=Array.isArray(obj)&& $B.get_class(obj)===_b_.list,is_dict=$B.get_class(obj)===_b_.dict && ! obj[$B.JSOBJ]
 if(typeof item=="number"){if(is_list ||typeof obj=="string"){item=item >=0 ? item :obj.length+item
 if(obj[item]!==undefined){return obj[item]}else{
-throw index_error(obj)}}}else if(item.valueOf && typeof item.valueOf()=="string" && is_dict){return _b_.dict.$getitem(obj,item)}
+throw index_error(obj)}}}else if(item?.valueOf && typeof item.valueOf()=="string" && is_dict){return _b_.dict.$getitem(obj,item)}
 if($B.is_type(obj)){
 var meta_gi=$B.search_in_mro($B.get_class(obj),"__getitem__",$B.NULL)
 if(meta_gi !==$B.NULL){return $B.$call(meta_gi,obj,item)}
@@ -3372,16 +3372,17 @@ doc=old.prop_doc ?? _b_.None}
 let _new=$B.$call(type,get,set,del,doc)
 if($B.exact_type(_new,_b_.property)){_new.prop_name=old.prop_name}
 return _new}
-_b_.property.tp_descr_set=function(self,obj,value){if(self.prop_set===_b_.None){var fi=self.prop_get.$function_infos
+_b_.property.tp_descr_set=function(self,obj,value){if(value===$B.NULL){if(self.prop_del===_b_.None){$B.RAISE(_b_.AttributeError,`property '${self.prop_name}' of '${$B.class_name(obj)}' `+
+`object has no deleter`
+)}
+$B.$call(self.prop_del,obj)
+return}
+if(self.prop_set===_b_.None){var fi=self.prop_get.$function_infos
 var name=fi ? fi[$B.func_attrs.__name__]:(self.prop_name ?? self.__name__)
 var msg=`property '${name}' of '${$B.class_name(obj)}' object `+
 'has no setter'
 $B.RAISE_ATTRIBUTE_ERROR(msg,self,'__set__')}
-if(value===$B.NULL){if(self.prop_del===_b_.None){$B.RAISE(_b_.AttributeError,`property '${self.prop_name}' of '${$B.class_name(obj)}' `+
-`object has no deleter`
-)}
-$B.$call(self.prop_del,obj)}else{
-$B.$call(self.prop_set,obj,value)}}
+$B.$call(self.prop_set,obj,value)}
 _b_.property.tp_descr_get=function(self,obj,type){if(obj===$B.NULL){return self}
 if(self.prop_get===_b_.None){$B.RAISE_ATTRIBUTE_ERROR("unreadable attribute",self,'__get__')}
 return $B.$call(self.prop_get,obj)}
@@ -5137,7 +5138,7 @@ return true}catch(err){if($B.is_exc(err,[_b_.AttributeError])){return false}
 throw err}}
 _b_.hash=function(obj){check_nb_args_no_kw('hash',1,arguments)
 return $B.$hash(obj)}
-$B.$hash=function(obj){if(obj.__hashvalue__ !==undefined){return obj.__hashvalue__}
+$B.$hash=function(obj){if(obj?.__hashvalue__ !==undefined){return obj.__hashvalue__}
 var res
 if(typeof obj==="boolean"){return obj ? 1 :0}else if(typeof obj==="number"){res=obj}else{
 var klass=$B.get_class(obj)
@@ -6339,7 +6340,6 @@ if(this_exc_class===undefined){console.log("exc class undefined",exc)}
 if(_b_.issubclass(this_exc_class,exc_class)){return true}}
 return false}
 $B.is_recursion_error=function(js_exc){
-console.log('js exc',js_exc)
 var msg=js_exc+"",parts=msg.split(":")
 if(parts.length==1){return false}
 var err_type=parts[0].trim(),err_msg=parts[1].trim()
@@ -12400,8 +12400,7 @@ return _b_.None}
 $B.list_iterator.tp_methods=["__length_hint__","__reduce__","__setstate__"]
 var eq=$B.list_eq=function(self,other){if($B.PYOBJ_MAP.has(other)){other=$B.PYOBJ_MAP.get(other)}
 var cls=$B.$isinstance(self,list)? list :tuple
-if(isinstance(other,cls)){if(other.length==self.length){var i=self.length
-while(i--){if(! $B.is_or_equals(self[i],other[i])){return false}}
+if(isinstance(other,cls)){if(other.length==self.length){for(var i=0;i < self.length;i++){if(! $B.is_or_equals(self[i],other[i])){return false}}
 return true}
 return false}
 return _b_.NotImplemented}
@@ -12623,7 +12622,7 @@ if(self.length==0){return _b_.None}
 self.$cl=$elts_class(self)
 var cmp=null
 function basic_cmp(a,b){return $B.rich_comp("__lt__",a,b)?-1:
-$B.rich_comp('__eq__',a,b)? 0 :1}
+$B.rich_comp("__lt__",b,a)? 1 :0}
 function reverse_cmp(a,b){return basic_cmp(b,a)}
 if(func===_b_.None && self.$cl===_b_.str){if(reverse){cmp=function(b,a){return $B.$AlphabeticalCompare(a,b)}}else{
 cmp=function(a,b){return $B.$AlphabeticalCompare(a,b)}}}else if(func===_b_.None && self.$cl===_b_.int){if(reverse){cmp=function(b,a){return a-b}}else{
@@ -13059,7 +13058,7 @@ return $B.NULL}
 if(js_attr !==null &&
 js_attr.toString &&
 typeof js_attr=='function' &&
-js_attr.toString().startsWith('class ')){
+Function.prototype.toString.call(js_attr).startsWith('class ')){
 return jsclass2pyclass(js_attr)}else if(typeof js_attr==='function'){
 if(! js_attr.$infos && ! js_attr.$function_infos){js_attr.$js_func=js_attr}
 return jsobj2pyobj(js_attr,_self.$js_func ||_self)}else{
@@ -13108,7 +13107,7 @@ if(res !==undefined){return jsobj2pyobj(res)}}}
 if(js_attr !==null && js_attr !==undefined &&
 js_attr.toString &&
 typeof js_attr=='function' &&
-js_attr.toString().startsWith('class ')){
+Function.prototype.toString.call(js_attr).startsWith('class ')){
 return jsclass2pyclass(js_attr)}else if(typeof js_attr==='function'){
 if(! js_attr.$infos && ! js_attr.$function_infos){js_attr.$js_func=js_attr}
 return jsobj2pyobj(js_attr,self.$js_func ||self)}else{
@@ -13159,7 +13158,7 @@ return self}
 $B.IterableJSObj.sq_length=function(self){return self.length}
 $B.IterableJSObj.tp_iternext=function*(self){if(self.it===undefined){
 self.it=self[Symbol.iterator]()}
-for(var value of self.it){yield value}}
+for(var value of self.it){yield jsobj2pyobj(value)}}
 $B.set_func_names($B.IterableJSObj,'builtins')
 var js_array_iterator=$B.make_builtin_class('JSArray_iterator')
 js_array_iterator.$factory=function(obj){return{
@@ -15260,6 +15259,7 @@ case '__ne__':
 return other !==null && other !==undefined
 default:
 return _b_.NotImplemented}}
+NullType.tp_hash=$B.UndefinedType.tp_hash=$B.NoneType.tp_hash
 NullType.tp_repr=function(_self){
 return '<Javascript null>'}
 $B.set_func_names(NullType,'javascript')
