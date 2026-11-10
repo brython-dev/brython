@@ -962,4 +962,8 @@ assert nan is nan
 # PR 3011
 assert format(2.5, '.0f') == '2'
 
+# PR 3225
+assert round(1234, -2) == 1200
+assert round(2.675, 2) == 2.67
+
 print('passed all tests...')
