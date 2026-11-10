@@ -6,6 +6,10 @@ assert "center".center(30) == '            center            '
 y="center"
 assert y.center(30) == '            center            '
 assert str.center(y,30) == '            center            '
+# the odd fill char goes left when the width is odd too; an astral character
+# counts once
+assert "ab".center(5, "*") == "**ab*" and "abc".center(6, "*") == "*abc**"
+assert "😀".center(3, "*") == "*😀*"
 
 
 x = "azert$t y t"
@@ -68,6 +72,13 @@ assert "bghggbazertyhbg".strip("bhg") == "azerty"
 
 assert "zer".upper() == "ZER"
 
+# what a str method returns counts an astral character once, folded at
+# compile time or not
+e = '😀a'
+assert len(e.upper()) == len(''.join([e])) == len(e.strip()) == 2
+assert len(e * 2) == len('😀a' * 2) == 4
+assert len(e.ljust(3)) == len(e.zfill(3)) == 3
+
 # issue 286
 assert "a1".islower()
 assert "B?".isupper()
@@ -91,5 +102,28 @@ assert s.rfind('🐑') == 4
 
 s = '£ف🐑'
 assert s.encode('ASCII', 'backslashreplace') == b'\\xa3\\u0641\\U0001f411'
+
+# a slice with a step counts characters, not UTF-16 code units
+s = '😀a😀b'
+assert s[::-1] == 'b😀a😀'
+assert s[::2] == '😀😀'
+assert s[3:0:-2] == 'ba'
+assert len(s[1::2]) == 2
+
+# PR 3219
+# a str method reads a str subclass, as receiver or argument, by its value
+class Name(str):
+    def __str__(self):
+        return "wrong"
+
+s, b = Name(" ab b "), Name("b")
+assert Name("ab").encode() == b"ab"
+assert s.endswith(Name("b ")) and s.endswith("b ")
+assert s.startswith(Name(" a")) and s.startswith(" a")
+assert " ab".find(b) == 2 and " ab".index(b) == 2
+assert "-".join([Name("a"), Name("b")]) == Name("-").join(["a", "b"]) == "a-b"
+assert s.lstrip() == "ab b "
+assert s.replace("b", "c") == " ac c " and "abc".replace(b, Name("x")) == "axc"
+assert "abc".split(b) == ["a", "c"]
 
 print("passed all tests...")

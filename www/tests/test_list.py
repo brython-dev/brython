@@ -178,6 +178,22 @@ assert not [3] < [1, 2]
 assert not ['a'] < ['a']
 assert ['a'] < ['a', 2]
 
+# items are compared from the first, up to the first that differs
+class Logged:
+    def __init__(self, log):
+        self.log = log
+
+    def __eq__(self, other):
+        self.log.append(self)
+        return True
+
+log = []
+assert (1, Logged(log)) != (2, Logged(log))
+assert log == []
+first, second = Logged(log), Logged(log)
+assert [first, second] == [1, 2]
+assert len(log) == 2 and log[0] is first and log[1] is second
+
 # issue 993
 assert sorted(['b3', 'a2', 'c1']) == ['a2', 'b3', 'c1']
 assert sorted(['a2', 'b3', 'c1'], key=lambda a: a[1]) == ['c1', 'a2', 'b3']
@@ -189,6 +205,23 @@ ls = ['a2', 'b3', 'c1']; ls.sort(key=lambda a:a[1])
 assert ls == ['c1', 'a2', 'b3']
 ls = ['a2', 'b3', 'c1']; ls.sort(key=None)
 assert ls == ['a2', 'b3', 'c1']
+
+# sorting compares with < alone, and keeps equal items in their order
+class OnlyLess:
+    def __init__(self, n, name):
+        self.n = n
+        self.name = name
+
+    def __lt__(self, other):
+        return self.n < other.n
+
+    def __eq__(self, other):
+        raise AssertionError("sorting asked ==")
+
+items = [OnlyLess(2, "a"), OnlyLess(1, "b"), OnlyLess(2, "c")]
+assert [x.name for x in sorted(items)] == ["b", "a", "c"]
+assert [x.name for x in sorted(items, reverse=True)] == ["a", "c", "b"]
+assert [x.name for x in sorted(items, key=lambda x: x)] == ["b", "a", "c"]
 
 # issue 1027
 t = (4, 5, 6)
@@ -224,6 +257,23 @@ test2.append(4)
 assert test2 == [1, 2, 3, 4]
 test2.pop()
 assert test2 == [1, 2, 3]
+
+# a subclass of list or tuple whose __iter__ yields other items
+class Tens(list):
+    def __iter__(self):
+        return (x * 10 for x in list.__iter__(self))
+
+class TensTuple(tuple):
+    def __iter__(self):
+        return (x * 10 for x in tuple.__iter__(self))
+
+for seq in (Tens([1, 2, 3]), TensTuple((1, 2, 3))):
+    assert list(seq) == [10, 20, 30]
+    assert tuple(seq) == (10, 20, 30)
+    assert sorted(seq) == [10, 20, 30]
+    assert [*seq] == [10, 20, 30]
+    assert (*seq,) == (10, 20, 30)
+    assert (lambda *args: args)(*seq) == (10, 20, 30)
 
 # issue 1139
 assert [*[1, 2, 3][:]] == [1, 2, 3]

@@ -172,6 +172,21 @@ x = [lambda x: x * 2,lambda y: y * 3]
 assert x[0](5) == 10
 assert x[1](10) == 30
 
+# a lambda binds no name in the namespace where it is written
+assert not [name for name in globals() if name.startswith('lambda')]
+
+class WithLambda:
+    double = lambda self, x: x * 2
+
+assert not [name for name in vars(WithLambda) if name.startswith('lambda')]
+assert WithLambda().double(4) == 8
+
+def lambda_in_function():
+    triple = lambda x: x * 3
+    return [name for name in locals() if name.startswith('lambda')], triple(2)
+
+assert lambda_in_function() == ([], 6)
+
 # inline functions and classes
 def foo(x):return 2 * x
 assert foo(3) == 6
@@ -648,6 +663,16 @@ assert str(list[int, ...]) == 'list[int, ...]'
 assert str(tuple[str]) == 'tuple[str]'
 assert isinstance(list[str], types.GenericAlias)
 
+# __class_getitem__ receives the subscript as written, a lone one unpacked
+class G:
+    def __class_getitem__(cls, item):
+        return item
+
+assert G[int] is int
+assert G[int, str] == (int, str)
+assert list[int].__args__ == (int,)
+assert type[int].__args__ == (int,)
+
 try:
     isinstance([1, 2, 3], list[str])
     raise Exception("should have raised TypeError")
@@ -914,6 +939,30 @@ class A:
     """Docstring of class A."""
 
 assert A.__doc__ == "Docstring of class A."
+
+# identifiers are normalized to NFKC, strings are not
+class Box:
+    def __init__(self):
+        self.field = "field"
+        self.café = "composed"
+
+box = Box()
+assert box.ﬁeld == "field"
+namespace = {"box": box}
+exec("decomposed = box.café", namespace)
+assert namespace["decomposed"] == "composed"
+assert getattr(box, "ﬁeld", "missing") == "missing"
+
+ﬂag = 1
+assert flag == 1
+
+Ⅷ = 8
+assert VIII == 8
+
+def ｆｕｌｌ():
+    return "full"
+
+assert full() == "full"
 
 # chained assignments and unpacking
 x, y = info = (1, 2)
@@ -1248,5 +1297,8 @@ assert list(gen) == [1, 2, 3, 4]
 
 # PR 2800
 assert type(str.count).__name__ == 'method_descriptor'
+
+# reported in PR #3031
+assert object.__new__.__module__ is None
 
 print('passed all tests...')

@@ -128,12 +128,15 @@ _b_.memoryview.tp_richcompare = function(self, other, op) {
         return _b_.NotImplemented
     }
     var res
+    // A released view is equal to itself alone
+    var eq = () => self.$released || other.$released ? self === other :
+        memoryview_eq(self, other)
     switch (op) {
         case '__eq__':
-            res = memoryview_eq(self, other)
+            res = eq()
             break
         case '__ne__':
-            res = ! memoryview_eq(self, other)
+            res = ! eq()
             break
         default:
             res = _b_.NotImplemented
@@ -151,7 +154,7 @@ _b_.memoryview.sq_ass_item = function(self, key, value) {
 }
 
 _b_.memoryview.tp_repr = function(self) {
-    if (self.flags & MEMORYVIEW.RELEASED) {
+    if (self.$released) {
         return "<released memory>"
     } else {
         return "<memory>"
