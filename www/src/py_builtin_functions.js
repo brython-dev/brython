@@ -994,7 +994,7 @@ _b_.hash = function(obj) {
 }
 
 $B.$hash = function(obj) {
-    if (obj.__hashvalue__ !== undefined) {
+    if (obj?.__hashvalue__ !== undefined) {
         return obj.__hashvalue__
     }
     var res
