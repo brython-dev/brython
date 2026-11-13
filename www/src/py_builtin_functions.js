@@ -571,7 +571,9 @@ var enumerate_funcs = _b_.enumerate.tp_funcs = {}
 enumerate_funcs.__class_getitem__ = $B.$class_getitem
 
 enumerate_funcs.__reduce__ = function(self) {
-
+    $B.meth_noargs("enumerate.__reduce__", arguments)
+    return $B.fast_tuple([_b_.enumerate,
+        $B.fast_tuple([_b_.list.tp_iter(self), self.counter])])
 }
 
 _b_.enumerate.tp_methods = ["__reduce__"]
@@ -605,13 +607,14 @@ filter.$factory = function(func, iterable) {
     return {
         ob_type: filter,
         func: func,
-        it: $B.make_js_iterator(iterable)
+        iterable
     }
 }
 
 
 /* filter start */
 filter.tp_iter = function(self) {
+    self.it = $B.make_js_iterator(self.iterable)
     return self
 }
 
@@ -631,7 +634,7 @@ filter.tp_new = function(cls, args, kw) {
     var res = {
         ob_type: cls,
         func,
-        it: $B.make_js_iterator(iterable)
+        iterable
     }
     if (cls !== _b_.filter) {
         $B.init_dict(res)
@@ -642,7 +645,9 @@ filter.tp_new = function(cls, args, kw) {
 var filter_funcs = _b_.filter.tp_funcs = {}
 
 filter_funcs.__reduce__ = function(self) {
-
+    $B.meth_noargs("filter.__reduce__", arguments)
+    return $B.fast_tuple([_b_.filter,
+        $B.fast_tuple([self.func, $B.$iter(self.iterable)])])
 }
 
 filter.tp_methods = ["__reduce__"]
@@ -1326,10 +1331,22 @@ $B.iterator.tp_iternext = function*(self){
 var iterator_funcs = $B.iterator.tp_funcs = {}
 
 iterator_funcs.__length_hint__ = function(self) {
-
+    $B.meth_noargs("iterator.__length_hint__", arguments)
+    if (self.it_seq === null) {
+        return 0
+    }
+    let seqsize
+    try {
+        seqsize = _b_.len(self.it_seq)
+    } catch(err) {
+        $B.RAISE_IF_NOT(err, _b_.AttributeError)
+        return _b_.NotImplemented
+    }
+    return seqsize - self.it_index
 }
 
 iterator_funcs.__reduce__ = function(self) {
+    $B.meth_noargs("iterator.__reduce__", arguments)
     if (self.it_seq === null) {
         return $B.fast_tuple([_b_.iter, $B.fast_tuple([$B.fast_tuple([])])])
     }
@@ -1575,6 +1592,7 @@ _b_.map.tp_new = function(cls, args, kw) {
 var map_funcs = _b_.map.tp_funcs = {}
 
 map_funcs.__reduce__ = function(self) {
+    $B.meth_noargs("map.__reduce__", arguments)
     return $B.fast_tuple([$B.get_class(self),
         $B.fast_tuple([self.func, ...(self.iterables || [])])])
 }
@@ -1735,6 +1753,7 @@ NotImplementedType.nb_bool = function() {
 // pickled as a global reference, like CPython (notimplemented_reduce)
 NotImplementedType.tp_funcs = {
     __reduce__: function() {
+        $B.meth_noargs("NotImplemented.__reduce__", arguments)
         return 'NotImplemented'
     }
 }
@@ -2006,11 +2025,13 @@ _b_.reversed.tp_new = function(cls, args, kw) {
 var reversed_funcs = _b_.reversed.tp_funcs = {}
 
 reversed_funcs.__length_hint__ = function(self) {
+    $B.meth_noargs("reversed.__length_hint__", arguments)
     var n = self.counter
     return n < 0 ? 0 : n
 }
 
 reversed_funcs.__reduce__ = function(self) {
+    $B.meth_noargs("reversed.__reduce__", arguments)
     check_nb_args_no_kw('__reduce__', 1, arguments)
     var cls = self.ob_type
     if (self.seq === undefined) {
@@ -2374,13 +2395,11 @@ var zip = _b_.zip
 zip.$factory = function() {
     var [args, kw] = $B.parse_args_kw('zip', arguments)
     var strict = $B.$bool($B.str_dict_get(kw, 'strict', false))
-    var iters = []
-    for (var arg of args) {
-        iters.push($B.make_js_iterator(arg))
-    }
+    args = Array.from(args)
     return {
         ob_type: zip,
-        iters,
+        args,
+        iters: args.map(x => $B.make_js_iterator(x)),
         strict
     }
 }
@@ -2422,15 +2441,12 @@ _b_.zip.tp_iternext = function*(self){
 
 _b_.zip.tp_new = function(cls, args, kw) {
     var strict = $B.$bool($B.str_dict_get(kw, 'strict', false))
-    var iters = []
-    for (var arg of args) {
-        iters.push($B.make_js_iterator(arg))
-    }
     var res = {
         ob_type: cls,
-        iters,
+        args: Array.from(args),
         strict
     }
+    res.iters = res.args.map(x => $B.make_js_iterator(x))
     if (cls !== _b_.zip) {
         $B.init_dict(res)
     }
@@ -2440,7 +2456,9 @@ _b_.zip.tp_new = function(cls, args, kw) {
 var zip_funcs = _b_.zip.tp_funcs = {}
 
 zip_funcs.__reduce__ = function(self) {
-
+    $B.meth_noargs("zip.__reduce__", arguments)
+    return $B.fast_tuple([_b_.zip,
+        $B.fast_tuple(self.args.map(x => _b_.iter(x)))])
 }
 
 zip_funcs.__setstate__ = function(self) {
