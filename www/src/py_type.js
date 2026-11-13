@@ -831,6 +831,11 @@ function set_tp_slots(cls) {
 
 $B.make_getattr = function(cls) {
     if (cls.tp_mro) {
+        // a class of Python's in the MRO defines __getattribute__, which a
+        // method call goes through too (cf. $B.call_attr)
+        cls.$own_getattribute = cls.tp_mro.some(klass =>
+            (klass.tp_flags & $B.TPFLAGS.HEAPTYPE) &&
+            $B.get_from_dict(klass, '__getattribute__', $B.NULL) !== $B.NULL)
         var getattribute = $B.search_slot(cls, 'tp_getattro', $B.NULL)
         var getattr = $B.search_in_mro(cls, '__getattr__', $B.NULL)
         if (getattr === $B.NULL) {

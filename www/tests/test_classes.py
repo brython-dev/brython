@@ -1709,4 +1709,29 @@ assert Box.__class_getitem__(3) == 3
 Box = type("Box", (), {"__dict__": property(lambda self: {"public": 1})})
 assert Box().__dict__ == {'public': 1}
 
+# __getattribute__ sees a method read for a call too, and may replace it
+reads = []
+class Watched:
+    def method(self):
+        return 'the method'
+
+    def __getattribute__(self, name):
+        reads.append(name)
+        if name == 'known':
+            return lambda: 'known called'
+        return object.__getattribute__(self, name)
+
+    def known(self):
+        return 'the method'
+
+watched = Watched()
+assert watched.method() == 'the method' and reads == ['method']
+assert watched.known() == 'known called'
+class Derived(Watched):
+    pass
+
+reads.clear()
+Derived().method()
+assert reads == ['method']
+
 print('passed all tests..')
