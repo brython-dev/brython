@@ -172,6 +172,7 @@ $B.traceback.tp_new = function(cls, args, kw) {
 var traceback_funcs = $B.traceback.tp_funcs = {}
 
 traceback_funcs.__dir__ = function(self) {
+    $B.meth_noargs('traceback.__dir__', arguments)
     return $B.$list(['tb_frame', 'tb_next', 'tb_lasti', 'tb_lineno'])
 }
 
@@ -237,11 +238,11 @@ $B.frame.tp_repr = function(self) {
 var frame_funcs = $B.frame.tp_funcs = {}
 
 frame_funcs.__sizeof__ = function(self) {
-
+    $B.meth_noargs('frame.__sizeof__', arguments)
 }
 
 frame_funcs.clear = function(self) {
-
+    $B.meth_noargs('frame.clear', arguments)
 }
 
 frame_funcs.f_back_get = function(self) {
@@ -631,6 +632,7 @@ BaseException_funcs.__dict___set = function(self, value) {
 }
 
 BaseException_funcs.__reduce__ = function(self) {
+    $B.meth_noargs('BaseException.__reduce__', arguments)
     var dict = $B.get_dict(self)
     if (self.args && dict && ! $B.str_dict_empty(dict)) {
         return $B.fast_tuple([$B.get_class(self), $B.fast_tuple(self.args),

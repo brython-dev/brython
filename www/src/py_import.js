@@ -136,6 +136,7 @@ module_funcs.__dict___get = function(self) {
 module_funcs.__dict___set = _b_.None
 
 module_funcs.__dir__ = function(self) {
+    $B.meth_noargs('module.__dir__', arguments)
     var dir_func = $B.module_getattr(self, '__dir__')
     if (dir_func !== $B.NULL) {
         return $B.$call(dir_func)

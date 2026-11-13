@@ -126,6 +126,7 @@ $B.range_iterator.tp_iternext = function*(self){
 var range_iterator_funcs = $B.range_iterator.tp_funcs = {}
 
 range_iterator_funcs.__length_hint__ = function(self) {
+    $B.meth_noargs('range_iterator.__length_hint__', arguments)
     var len = _b_.range.mp_length(self.obj),
         done = (self.it - self.start) / self.step
     return typeof done == 'bigint' ?
@@ -133,6 +134,7 @@ range_iterator_funcs.__length_hint__ = function(self) {
 }
 
 range_iterator_funcs.__reduce__ = function(self) {
+    $B.meth_noargs('range_iterator.__reduce__', arguments)
     return $B.fast_tuple([_b_.iter, $B.fast_tuple([self.obj]), _b_.None])
 }
 
@@ -346,10 +348,12 @@ _b_.range.sq_contains = function(self, other) {
 var range_funcs = _b_.range.tp_funcs = {}
 
 range_funcs.__reduce__ = function(self) {
+    $B.meth_noargs('range.__reduce__', arguments)
     return $B.fast_tuple([_b_.range, $B.fast_tuple([self.start, self.stop, self.step])])
 }
 
 range_funcs.__reversed__ = function(self) {
+    $B.meth_noargs('range.__reversed__', arguments)
     var n = $B.rich_op('__sub__', range.mp_length(self), 1)
     var start = $B.rich_op('__add__', self.start, $B.rich_op('__mul__', n,
         self.step))
@@ -601,6 +605,7 @@ _b_.slice.tp_new = function(cls, args, kw) {
 var slice_funcs = _b_.slice.tp_funcs = {}
 
 slice_funcs.__reduce__ = function(self) {
+    $B.meth_noargs('slice.__reduce__', arguments)
     return $B.fast_tuple([$B.get_class(self),
         $B.fast_tuple([self.start, self.stop, self.step])])
 }

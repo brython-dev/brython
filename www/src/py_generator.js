@@ -82,10 +82,12 @@ generator_funcs.__qualname___set = function(self, value) {
 }
 
 generator_funcs.__sizeof__ = function(self) {
-
+    $B.meth_noargs('generator.__sizeof__', arguments)
+    return _b_.NotImplemented
 }
 
 generator_funcs.close = function(self) {
+    $B.meth_noargs('generator.close', arguments)
     var save_frame_obj = $B.frame_obj
     if (self.$frame) {
         $B.frame_obj = $B.push_frame(self.$frame)
@@ -298,10 +300,12 @@ async_generator_funcs.__qualname___set = function(self, value) {
 }
 
 async_generator_funcs.__sizeof__ = function(self) {
+    $B.meth_noargs('async_generator.__sizeof__', arguments)
     $B.RAISE(_b_.NotImplementedError)
 }
 
 async_generator_funcs.aclose = async function(self) {
+    $B.meth_noargs('async_generator.aclose', arguments)
     var gen = self.js_gen
     if (gen.$closing) {
         $B.RAISE(_b_.RuntimeError,

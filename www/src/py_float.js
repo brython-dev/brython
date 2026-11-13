@@ -1065,6 +1065,7 @@ _b_.float.nb_true_divide = function(self, other) {
 var float_funcs = _b_.float.tp_funcs = {}
 
 float_funcs.__ceil__ = function(self) {
+    $B.meth_noargs('float.__ceil__', arguments)
     check_self_is_float(self, '__ceil__')
     if (isnan(self)) {
         $B.RAISE(_b_.ValueError, 'cannot convert float NaN to integer')
@@ -1075,6 +1076,7 @@ float_funcs.__ceil__ = function(self) {
 }
 
 float_funcs.__floor__ = function(self) {
+    $B.meth_noargs('float.__floor__', arguments)
     check_self_is_float(self, '__floor__')
     if (isnan(self)) {
         $B.RAISE(_b_.ValueError, 'cannot convert float NaN to integer')
@@ -1104,7 +1106,8 @@ float_funcs.__getformat__ = function(cls, arg) {
 }
 
 float_funcs.__getnewargs__ = function(self) {
-    return float.$getnewargs($B.single_arg('__getnewargs__', 'self', arguments))
+    $B.meth_noargs('float.__getnewargs__', arguments)
+    return float.$getnewargs(self)
 }
 
 float_funcs.__round__ = function(self) {
@@ -1114,6 +1117,7 @@ float_funcs.__round__ = function(self) {
 }
 
 float_funcs.__trunc__ = function(self) {
+    $B.meth_noargs('float.__trunc__', arguments)
     var res
     if (self.value >= 0) {
         res = float_funcs.__floor__(self)
@@ -1124,6 +1128,7 @@ float_funcs.__trunc__ = function(self) {
 }
 
 float_funcs.as_integer_ratio = function(self) {
+    $B.meth_noargs('float.as_integer_ratio', arguments)
     if (isinf(self)) {
         $B.RAISE(_b_.OverflowError, "Cannot pass infinity to " +
             "float.as_integer_ratio.")
@@ -1166,6 +1171,7 @@ float_funcs.as_integer_ratio = function(self) {
 }
 
 float_funcs.conjugate = function(self) {
+    $B.meth_noargs('float.conjugate', arguments)
     return float_value(self)
 }
 
@@ -1394,6 +1400,7 @@ float_funcs.fromhex = function(klass, s) {
 
 float_funcs.hex = function(self) {
     // http://hg.python.org/cpython/file/d422062d7d36/Objects/floatobject.c
+    $B.meth_noargs('float.hex', arguments)
     self = float_value(self)
     var TOHEX_NBITS = DBL_MANT_DIG + 3 - (DBL_MANT_DIG + 2) % 4
     if (isNaN(self.value) || ! isFinite(self.value)) {
@@ -1441,6 +1448,7 @@ float_funcs.imag_get = function(self) {
 float_funcs.imag_set = _b_.None
 
 float_funcs.is_integer = function(self) {
+    $B.meth_noargs('float.is_integer', arguments)
     return Number.isInteger(self.value)
 }
 

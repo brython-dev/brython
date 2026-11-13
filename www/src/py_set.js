@@ -31,6 +31,10 @@ function make_new_set_base_type(so) {
                frozenset.$factory()
 }
 
+function tp(obj) {
+    return $B.$isinstance(obj, _b_.set) ? 'set.' : 'frozenset.'
+}
+
 function set_hash(key) {
     // hash(key) for a set element: a TypeError says what it was refused as
     try {
@@ -641,6 +645,7 @@ set_funcs.__class_getitem__ = function(cls, items) {
 
 set_funcs.__reduce__ = function(self) {
     // carry the instance __dict__ as state (like CPython's set_reduce), not None
+    $B.meth_noargs(tp(self) + '__reduce__', arguments)
     var d = $B.get_dict(self)
     return $B.fast_tuple([$B.get_class(self),
                          $B.fast_tuple([set_make_items(self)]),
@@ -648,7 +653,8 @@ set_funcs.__reduce__ = function(self) {
 }
 
 set_funcs.__sizeof__ = function(self) {
-
+    $B.meth_noargs(tp(self) + '__sizeof__', arguments)
+    return _b_.NotImplemented
 }
 
 set_funcs.add = function(self, item) {
@@ -658,7 +664,7 @@ set_funcs.add = function(self, item) {
 }
 
 set_funcs.clear = function(self) {
-    $B.check_nb_args_no_kw('set.clear', 1, arguments)
+    $B.meth_noargs(tp(self) + 'clear', arguments)
     self.$used = 0
     self.$store = Object.create(null)
     self.$version++
@@ -666,7 +672,7 @@ set_funcs.clear = function(self) {
 }
 
 set_funcs.copy = function(self) {
-    $B.check_nb_args_no_kw('copy', 1, arguments)
+    $B.meth_noargs('set.clear', arguments)
     return set_copy(self)
 }
 
@@ -767,6 +773,7 @@ set_funcs.issuperset = function(self, other) {
 }
 
 set_funcs.pop = function(self) {
+    $B.meth_noargs('set.pop', arguments)
     if (arguments.length > 1) {
         $B.RAISE(_b_.TypeError, `set.pop() takes no arguments` +
             ` (${arguments.length - 1} given)`)

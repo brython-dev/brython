@@ -792,10 +792,12 @@ _b_.int.tp_new = function(cls, args, kw) {
 var int_funcs = _b_.int.tp_funcs = {}
 
 int_funcs.__ceil__ = function(self) {
+    $B.meth_noargs('int.__ceil__', arguments)
     return int_value(self)
 }
 
 int_funcs.__floor__ = function(self) {
+    $B.meth_noargs('int.__floor__', arguments)
     return int_value(self)
 }
 
@@ -831,7 +833,7 @@ int_funcs.__format__ = function(self, format_spec) {
 }
 
 int_funcs.__getnewargs__ = function(self) {
-    var self = $B.single_arg('__getnewargs__', 'self', arguments)
+    $B.meth_noargs('int.__getnewargs__', arguments)
     return $B.fast_tuple([int_value(self)])
 }
 
@@ -862,19 +864,22 @@ int_funcs.__round__ = function(self) {
 }
 
 int_funcs.__sizeof__ = function(self) {
-
+    $B.meth_noargs('int.__sizeof__', arguments)
+    return _b_.NotImplemented
 }
 
 int_funcs.__trunc__ = function(self) {
+    $B.meth_noargs('int.__trunc__', arguments)
     return int_value(self)
 }
 
 int_funcs.as_integer_ratio = function(self) {
-    var self = $B.single_arg('as_integer_ratio', 'self', arguments)
+    $B.meth_noargs('int.as_integer_ratio', arguments)
     return $B.fast_tuple([self, 1])
 }
 
 int_funcs.bit_count = function(self) {
+    $B.meth_noargs('int.bit_count', arguments)
     var s = _b_.bin(_b_.abs(self)),
         nb = 0
     for (var x of s) {
@@ -886,12 +891,14 @@ int_funcs.bit_count = function(self) {
 }
 
 int_funcs.bit_length = function(self) {
+    $B.meth_noargs('int.bit_length', arguments)
     var s = _b_.bin(self)
     s = $B.$getattr(s, "lstrip")("-0b") // remove leading zeros and minus sign
     return s.length       // len('100101') --> 6
 }
 
 int_funcs.conjugate = function(self) {
+    $B.meth_noargs('int.conjugate', arguments)
     return int_value(self)
 }
 
@@ -956,6 +963,7 @@ int_funcs.imag_get = function(self) {
 int_funcs.imag_set = _b_.None
 
 int_funcs.is_integer = function(self) {
+    $B.meth_noargs('int.is_integer', arguments)
     return true
 }
 

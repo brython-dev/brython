@@ -598,6 +598,7 @@ object_funcs.__format__ = function() {
 }
 
 object_funcs.__getstate__ = function(self) {
+    $B.meth_noargs('object.__getstate__', arguments)
     var dict = $B.get_dict(self)
     // CPython 3.11+: instances with filled __slots__ return a 2-tuple
     // (dict-or-None, {slot: value}); a slot is read as getattr reads it,
@@ -649,6 +650,7 @@ object_funcs.__init_subclass__ = function(self) {
 }
 
 object_funcs.__reduce__ = function(cls) {
+    $B.meth_noargs('object.__reduce__', arguments)
     if (! $B.get_dict(cls)) {
         $B.RAISE(_b_.TypeError, `cannot pickle '${$B.class_name(cls)}' object`)
     }
@@ -759,6 +761,7 @@ object_funcs.__sizeof__ = function(self) {
     // CPython: _PyObject_SIZE(Py_TYPE(self)). 16 is the 64-bit build
     // value (Brython emulates a 64-bit CPython; a 32-bit build, e.g.
     // Pyodide, says 8)
+    $B.meth_noargs('object.__sizeof__', arguments)
     return 16
 }
 
