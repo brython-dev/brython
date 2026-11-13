@@ -1307,8 +1307,8 @@ $B.call_attr = function(obj, attr, inum, ...args) {
     // avoids having to explicitely get obj.attr in usual cases when it is a
     // descriptor
     var is_class = obj?.tp_name !== undefined
-    if (! is_class) {
-        var klass = $B.get_class(obj)
+    var klass = is_class ? undefined : $B.get_class(obj)
+    if (! is_class && ! klass.$own_getattribute) {
         if(klass.tp_funcs &&
                 Object.hasOwn(klass.tp_funcs, attr)){
             var func = klass.tp_funcs[attr]
