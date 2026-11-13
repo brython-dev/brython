@@ -672,7 +672,7 @@ set_funcs.clear = function(self) {
 }
 
 set_funcs.copy = function(self) {
-    $B.meth_noargs('set.clear', arguments)
+    $B.meth_noargs(tp(self) + 'copy', arguments)
     return set_copy(self)
 }
 

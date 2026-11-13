@@ -748,8 +748,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-11-13 22:11:03.492606"
-__BRYTHON__.timestamp=1794604263492
+__BRYTHON__.compiled_date="2026-11-13 22:17:00.010864"
+__BRYTHON__.timestamp=1794604620010
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -1698,7 +1698,7 @@ $B.meth_noargs=function(qualname,args){
 var len=args.length,last=args[len-1]
 if(last && last[$B.KW]){len--
 if(! $B.keyword_is_empty(last[$B.KW])){$B.RAISE(_b_.TypeError,qualname+"() takes no keyword arguments")}}
-if(len !=1){$B.RAISE(_b_.TypeError,`${qualname}() takes no arguments `+
+if(len !=1){$B.RAISE(_b_.TypeError,`${qualname}() takes no arguments`+
 ` (${len - 1} given)`)}}
 $B.unpack_args=function(name,args,vars,defaults){var args_length=args.length
 for(var i=0,len=vars.length;i < len;i++){if(i >=args.length){if(! defaults ||! defaults.hasOwnProperty(vars[i])){$B.RAISE(_b_.TypeError,`${name}() missing argument '${vars[i]}'`)}
@@ -8745,7 +8745,7 @@ self.$used=0
 self.$store=Object.create(null)
 self.$version++
 return $N}
-set_funcs.copy=function(self){$B.meth_noargs('set.clear',arguments)
+set_funcs.copy=function(self){$B.meth_noargs(tp(self)+'copy',arguments)
 return set_copy(self)}
 set_funcs.difference=function(self){var $=$B.args("difference",1,{self:null},arguments,null,"args")
 if($.args.length==0){return set_copy($.self)}

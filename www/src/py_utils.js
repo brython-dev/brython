@@ -481,7 +481,7 @@ $B.meth_noargs = function(qualname, args) {
         }
     }
     if (len != 1) {
-        $B.RAISE(_b_.TypeError, `${qualname}() takes no arguments ` +
+        $B.RAISE(_b_.TypeError, `${qualname}() takes no arguments` +
             ` (${len - 1} given)`)
     }
 }
