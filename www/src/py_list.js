@@ -837,9 +837,8 @@ list_funcs.clear = function(self) {
 
 list_funcs.copy = function(self) {
     $B.meth_noargs("list.copy", arguments)
-    var res = self.slice()
-    res.ob_type = $B.get_class(self)
-    return res
+    // a list, whatever the class of self, as slicing gives
+    return $B.$list(self.slice())
 }
 
 list_funcs.count = function() {
