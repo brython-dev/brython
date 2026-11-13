@@ -311,12 +311,14 @@ _b_.object.tp_repr = function(self) {
     if (klass === _b_.type) {
         return "<class '" + $B.get_name(self) + "'>"
     }
-    var module = klass.__module__
+    var module = klass.__module__,
+        // its identity, written as an address
+        at = ` at 0x${Number(_b_.id(self)).toString(16)}`
     if(module !== undefined && !module.startsWith("$") &&
             module !== "builtins"){
-        return `<${module}.${$B.class_name(self)} object>`
+        return `<${module}.${$B.class_name(self)} object${at}>`
     } else {
-        return "<" + $B.class_name(self) + " object>"
+        return "<" + $B.class_name(self) + ` object${at}>`
     }
 }
 
