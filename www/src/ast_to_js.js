@@ -3893,12 +3893,17 @@ function handler_to_js(handler, scopes, try_scope, err) {
     if ($B.is_none(handler.name)) {
         return add_body(handler.body, scopes) + '\n'
     }
-    bind(handler.name, scopes)
+    var scope = bind(handler.name, scopes)
     var mangled = mangle(scopes, try_scope, handler.name)
     var js = prefix + `locals.${mangled} = ${err}\n` + prefix + 'try {\n'
     indent()
     js += add_body(handler.body, scopes) + '\n'
     dedent()
+    // unbound after the handler, where a read must check it, even of a name
+    // bound before the try statement, in the scopes it is a subscope of
+    for (var s = scope; s; s = s.parent) {
+        s.locals.delete(mangled)
+    }
     return js + prefix + '} finally {\n' +
         prefix + tab + `delete locals.${mangled}\n` + prefix + '}\n'
 }
