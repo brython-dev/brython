@@ -131,5 +131,9 @@ assert str(None | (int | str)) == 'None | int | str'
 # PR 3037
 assert (int | str) == (str | int)
 
+# issubclass reads a union as isinstance does
+assert issubclass(bool, int | str) and issubclass(str, int | str)
+assert not issubclass(float, int | str) and issubclass(type(None), int | None)
+
 
 print("Passed all tests...")
