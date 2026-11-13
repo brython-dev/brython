@@ -748,8 +748,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-11-13 09:04:39.639634"
-__BRYTHON__.timestamp=1794557079639
+__BRYTHON__.compiled_date="2026-11-13 21:25:43.248341"
+__BRYTHON__.timestamp=1794601543248
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -5728,22 +5728,26 @@ $B.init_dict(res)
 return res}
 var code_funcs=$B.code.tp_funcs={}
 code_funcs.__replace__=function(self){$B.RAISE(_b_.NotImplementedError)}
-code_funcs.__sizeof__=function(self){return 216}
+code_funcs.__sizeof__=function(self){$B.meth_noargs('code.__sizeof__',arguments)
+return 216}
 code_funcs._co_code_adaptive_get=function(self){return _b_.None}
 code_funcs._co_code_adaptive_set=_b_.None
 code_funcs._varname_from_oparg=function(self){$B.RAISE(_b_.NotImplementedError)}
 code_funcs.co_argcount=function(self){return self.co_argcount}
-code_funcs.co_branches=function(self){console.log('get co branches',self)}
+code_funcs.co_branches=function(self){$B.meth_noargs('code.co_branches',arguments)
+return _b_.NotImplemented}
 code_funcs.co_cellvars_get=function(self){return self.co_cellvars}
 code_funcs.co_cellvars_set=_b_.None
 code_funcs.co_code_get=function(self){return self.co_code}
 code_funcs.co_code_set=_b_.None
 code_funcs.co_freevars_get=function(self){return self.co_freevars}
 code_funcs.co_freevars_set=_b_.None
-code_funcs.co_lines=function(self){return _b_.NotImplemented}
+code_funcs.co_lines=function(self){$B.meth_noargs('code.co_lines',arguments)
+return _b_.NotImplemented}
 code_funcs.co_lnotab_get=function(self){return _b_.None}
 code_funcs.co_lnotab_set=_b_.None
-code_funcs.co_positions=function(self){return self.co_positions()}
+code_funcs.co_positions=function(self){$B.meth_noargs('code.co_positions',arguments)
+return self.co_positions()}
 code_funcs.co_varnames_get=function(self){return self.co_varnames}
 code_funcs.co_varnames_set=_b_.None
 code_funcs.replace=function(self){var $=$B.args('replace',1,{self:null},arguments,null,null,'kw')
@@ -7279,6 +7283,7 @@ function self_other_args(func_name,args){var $=$B.args(func_name,2,{self:null,ot
 return[$.self,$.other]}
 function main_type(obj){
 return $B.$isinstance(obj,_b_.bytearray)? _b_.bytearray :_b_.bytes}
+function tp(obj){return main_type(obj).tp_name+'.'}
 function dict_or_not(cls,instance){if($B.instance_has_dict(cls)){$B.init_dict(instance)}
 return instance}
 function _new(cls,args,kw){let[source,encoding,errors]=$B.unpack_args($B.get_name(cls),args,['source','encoding','errors'],{source:$B.NULL,encoding:$B.NULL,errors:$B.NULL}
@@ -7329,7 +7334,7 @@ function bytearray_delitem(self,arg){if(self.exports){if($B.$isinstance(arg,_b_.
 if(slice.stop-slice.start > 0){no_resizing()}}else{
 no_resizing()}}
 return $B.list_delitem(self.source,arg)}
-function capitalize(){var self=self_arg('capitalize',arguments)
+function capitalize(self){$B.meth_noargs(tp(self)+'capitalize',arguments)
 var src=self.source,len=src.length,buffer=src.slice()
 if(buffer[0]> 96 && buffer[0]< 123){buffer[0]-=32}
 for(var i=1;i < len;++i){if(buffer[i]> 64 && buffer[i]< 91){buffer[i]+=32}}
@@ -7413,30 +7418,30 @@ j--
 res+=digits[c >> 4]
 res+=digits[c & 0x0f]}
 return res}
-function isalnum(){var self=self_arg('isalnum',arguments)
+function isalnum(self){$B.meth_noargs(tp(self)+'isalnum',arguments)
 var src=self.source,len=src.length,res=len > 0
 for(var i=0;i < len && res;++i){res=(src[i]> 96 && src[i]< 123)||
 (src[i]> 64 && src[i]< 91)||
 (src[i]> 47 && src[i]< 58)}
 return res}
-function isalpha(){var self=self_arg('isalpha',arguments)
+function isalpha(self){$B.meth_noargs(tp(self)+'isalpha',arguments)
 var src=self.source,len=src.length,res=len > 0
 for(var i=0;i < len && res;++i){res=(src[i]> 96 && src[i]< 123)||(src[i]> 64 && src[i]< 91)}
 return res}
-function isascii(){var self=self_arg('isascii',arguments)
+function isascii(self){$B.meth_noargs(tp(self)+'isascii',arguments)
 for(var byte of self.source){if(byte > 0x7F){return false}}
 return true}
-function isdigit(){var self=self_arg('isdigit',arguments)
+function isdigit(self){$B.meth_noargs(tp(self)+'isdigit',arguments)
 var src=self.source,len=src.length,res=len > 0
 for(let i=0;i < len && res;++i){res=src[i]> 47 && src[i]< 58}
 return res}
-function islower(){var self=self_arg('islower',arguments)
+function islower(self){$B.meth_noargs(tp(self)+'islower',arguments)
 var src=self.source,len=src.length,res=false
 for(let i=0;i < len;++i){
 res=res ||(src[i]> 96 && src[i]< 123)
 if(src[i]> 64 && src[i]< 91){return false}}
 return res}
-function isspace(){var self=self_arg('isspace',arguments)
+function isspace(self){$B.meth_noargs(tp(self)+'isspace',arguments)
 var src=self.source,len=src.length
 for(let i=0;i < len;++i){switch(src[i]){case 9:
 case 10:
@@ -7448,7 +7453,7 @@ break
 default:
 return false}}
 return true}
-function istitle(){var self=self_arg('istitle',arguments)
+function istitle(self){$B.meth_noargs(tp(self)+'istitle',arguments)
 var src=self.source,len=src.length,current_char_is_letter=false,prev_char_was_letter=false,is_uppercase=false,is_lowercase=false
 for(var i=0;i < len;++i){is_lowercase=src[i]> 96 && src[i]< 123
 is_uppercase=src[i]> 64 && src[i]< 91
@@ -7458,7 +7463,7 @@ if(current_char_is_letter &&
 (! prev_char_was_letter && is_lowercase)){return false}
 prev_char_was_letter=current_char_is_letter}
 return true}
-function isupper(){var self=self_arg('isupper',arguments)
+function isupper(self){$B.meth_noargs(tp(self)+'isupper',arguments)
 var src=self.source,len=src.length,res=false
 for(let i=0;i < len;++i){
 res=res ||(src[i]> 64 && src[i]< 91)
@@ -7478,7 +7483,8 @@ check_buffer(fillbyte)
 var padding=[],count=width-self.source.length
 for(var i=0;i < count;++i){padding.push(fillbyte.source[0])}
 return this.$factory(self.source.concat(padding))}
-function lower(self){var _res=[],pos=0
+function lower(self){$B.meth_noargs(tp(self)+'lower',arguments)
+var _res=[],pos=0
 for(var i=0,len=self.source.length;i < len;i++){if(self.source[i]){_res[pos++]=_lower(self.source[i])}}
 return this.$factory(_res)}
 function maketrans(){var $=$B.args('maketrans',2,{from:null,to:null},arguments)
@@ -7625,16 +7631,12 @@ if(startswith.call(cls,self,sub,start,end)){return true}}
 return false}else{
 $B.RAISE(_b_.TypeError,"startswith first arg must be bytes "+
 "or a tuple of bytes, not "+$B.class_name(prefix))}}
-function upper(){var self=self_arg('upper',arguments)
-var _res=[],pos=0
-for(var i=0,len=self.source.length;i < len;i++){if(self.source[i]){_res[pos++]=_upper(self.source[i])}}
-return main_type(self).$factory(_res)}
-function swapcase(){var self=$B.single_arg('swapcase','self',arguments)
+function swapcase(self){$B.meth_noargs(tp(self)+'swapcase',arguments)
 var src=self.source,len=src.length,buffer=src.slice()
 var cls=this
 for(var i=0;i < len;++i){if(buffer[i]> 96 && buffer[i]< 123){buffer[i]-=32}else if(buffer[i]> 64 && buffer[i]< 91){buffer[i]+=32}}
 return cls.$factory(buffer)}
-function title(){var self=$B.single_arg('title','self',arguments)
+function title(self){$B.meth_noargs(tp(self)+'title',arguments)
 var cls=this 
 var src=self.source,len=src.length,buffer=src.slice(),current_char_is_letter=false,prev_char_was_letter=false,is_uppercase=false,is_lowercase=false
 for(var i=0;i < len;++i){is_lowercase=buffer[i]> 96 && buffer[i]< 123
@@ -7653,6 +7655,10 @@ var res=[],pos=0
 if($B.$isinstance(table,[bytes,bytearray])&& table.source.length==256){for(var i=0,len=self.source.length;i < len;i++){if(_delete.indexOf(self.source[i])>-1){continue}
 res[pos++]=table.source[self.source[i]]}}
 return cls.$factory(res)}
+function upper(self){$B.meth_noargs(tp(self)+'upper',arguments)
+var _res=[],pos=0
+for(var i=0,len=self.source.length;i < len;i++){if(self.source[i]){_res[pos++]=_upper(self.source[i])}}
+return main_type(self).$factory(_res)}
 function zfill(){var $=$B.args('zfill',2,{self:null,width:null},arguments)
 var self=$.self,width=$.width
 var cls=this 
@@ -7747,9 +7753,11 @@ if(b > 255){$B.RAISE(_b_.ValueError,"byte must be in range(0, 256)")}
 self.source[self.source.length]=b}
 bytearray_funcs.capitalize=function(){return capitalize.apply(null,arguments)}
 bytearray_funcs.center=function(self){return center.apply(null,arguments)}
-bytearray_funcs.clear=function(self){check_exports(self)
+bytearray_funcs.clear=function(self){$B.meth_noargs('bytearray.clear',arguments)
+check_exports(self)
 self.source=[]}
-bytearray_funcs.copy=function(self){return{
+bytearray_funcs.copy=function(self){$B.meth_noargs('bytearray.copy',arguments)
+return{
 ob_type:_b_.bytearray,source:self.source.slice()}}
 bytearray_funcs.count=function(self){return count.apply(null,arguments)}
 bytearray_funcs.decode=function(self){var $=$B.args('decode',3,{self:null,encoding:null,errors:null},arguments,{encoding:'utf-8',errors:'strict'})
@@ -7811,7 +7819,8 @@ if(size < 0){$B.RAISE(_b_.ValueError,`Can only resize to positive sizes, got -${
 if(size > self.source.length){for(var i=0,len=size-self.source.length;i < len;i++){self.source.push(0)}}else{
 self.source=self.source.slice(0,size)}
 return _b_.None}
-bytearray_funcs.reverse=function(self){self.source.reverse()}
+bytearray_funcs.reverse=function(self){$B.meth_noargs('bytearray.reverse',arguments)
+self.source.reverse()}
 bytearray_funcs.rfind=function(){return find.apply('rfind',arguments)}
 bytearray_funcs.rindex=function(self){var res=find.apply('rfind',arguments)
 if(res==-1){$B.RAISE(_b_.ValueError,'subsection not found')}
@@ -7894,8 +7903,10 @@ if(self.index >=self.len){self.index=Infinity
 return}
 yield self.obj.source[self.index]}
 var bytes_iterator_funcs=$B.bytes_iterator.tp_funcs={}
-bytes_iterator_funcs.__length_hint__=function(self){return Math.max(0,self.len-self.index-1)}
-bytes_iterator_funcs.__reduce__=function(self){return $B.fast_tuple([_b_.iter,$B.fast_tuple([self.obj]),0])}
+bytes_iterator_funcs.__length_hint__=function(self){$B.meth_noargs('bytes_iterator.__length_hint__',arguments)
+return Math.max(0,self.len-self.index-1)}
+bytes_iterator_funcs.__reduce__=function(self){$B.meth_noargs('bytes_iterator.__reduce__',arguments)
+return $B.fast_tuple([_b_.iter,$B.fast_tuple([self.obj]),0])}
 bytes_iterator_funcs.__setstate__=function(self,value){var index=$B.clip_index(value,0,self.len)
 if(self.index !==Infinity){self.index=index-1}
 return _b_.None}
@@ -8235,7 +8246,8 @@ return 33+(self.source ? self.source.length :0)}
 bytes_funcs.__bytes__=function(self){if($B.exact_type(self,_b_.bytes)){return self}
 return{
 ob_type:_b_.bytes,source:self.source.slice()}}
-bytes_funcs.__getnewargs__=function(self){return bytes.$getnewargs($B.single_arg('__getnewargs__','self',arguments))}
+bytes_funcs.__getnewargs__=function(self){$B.meth_noargs('bytes.__getnewargs__',arguments)
+return bytes.$getnewargs(self)}
 bytes_funcs.capitalize=function(self){return capitalize.apply(null,arguments)}
 bytes_funcs.center=function(self){return center.apply(null,arguments)}
 bytes_funcs.count=function(self){return count.apply(null,arguments)}
@@ -11483,6 +11495,7 @@ default:
 return _b_.NotImplemented}}
 var complex_funcs=_b_.complex.tp_funcs={}
 complex_funcs.__complex__=function(self){
+$B.meth_noargs('complex.__complex__',arguments)
 if($B.exact_type(self,complex)){return self}
 return $B.make_complex(self.real,self.imag)}
 complex_funcs.__format__=function(self,format_spec){if(format_spec.length==0){return _b_.str.$factory(self)}
@@ -11513,8 +11526,10 @@ res+=formatted_im
 if(add_parens){res='('+res+')'}
 return res}
 $B.RAISE(_b_.ValueError,`invalid type for complex: ${type}`)}
-complex_funcs.__getnewargs__=function(){return complex.$getnewargs($B.single_arg('__getnewargs__','self',arguments))}
-complex_funcs.conjugate=function(self){return make_complex(self.real.value,-self.imag.value)}
+complex_funcs.__getnewargs__=function(self){$B.meth_noargs('complex.__getnewargs__',arguments)
+return complex.$getnewargs(self)}
+complex_funcs.conjugate=function(self){$B.meth_noargs('complex.conjugate',arguments)
+return make_complex(self.real.value,-self.imag.value)}
 complex_funcs.from_number=function(cls,obj){var complex_func=$B.$getattr(obj,'__complex__',$B.NULL)
 if(complex_func !==_b_.NULL){return $B.$call(complex_func)}
 var float_func=$B.$getattr(obj,'__float__',$B.NULL)
@@ -11662,11 +11677,14 @@ $B.str_dict_pop=function(d,attr){if(! Object.hasOwn(d,attr)){return $B.NULL}
 delete d[attr]}
 $B.str_dict_empty=function(d){return Object.keys(d).length==0}
 $B.str_dict_length=function(d){return Object.keys(d).length}
-$B.dict_key_values=function(d){
-var res=[]
-if(d[KEYS]){for(var i=0,len=d[KEYS].length;i < len;i++){res.push([d[KEYS][i],d[VALUES][i]])}}else{
-for(let key in d){res.push([key,d[key]])}}
-return res}
+$B.dict_key_values=function*(d){
+let version=d[VERSION]
+let res=[]
+if(d[KEYS]){for(let i=0,len=d[KEYS].length;i < len;i++){if(d[KEYS][i]===undefined){continue}
+yield[d[KEYS][i],d[VALUES][i]]
+if(d[VERSION]!==version){$B.RAISE(_b_.RuntimeError,'dictionary changed size during iteration')}}}else{
+for(let key in d){yield[key,d[key]]
+if(d[VERSION]!==version){$B.RAISE(_b_.RuntimeError,'dictionary changed size during iteration')}}}}
 $B.hasOnlyStringKeys=function(d){return ! d[KEYS]}
 $B.dict2kwarg=function(d){
 var kw=dict.$to_obj(d)
@@ -11921,7 +11939,7 @@ _b_.dict.tp_repr=function(self){$B.builtins_repr_check(dict,arguments)
 return dict_repr(self)}
 _b_.dict.tp_hash=_b_.None
 _b_.dict.tp_iter=function(self){return{
-ob_type:$B.dict_keyiterator,it:_b_.dict.$iter_items(self),dict_obj:self}}
+ob_type:$B.dict_keyiterator,it:$B.dict_key_values(self),counter:0,dict_obj:self}}
 _b_.dict.tp_init=function(self){let[args,kw]=$B.parse_args_kw('dict',arguments)
 args=Array.from(args).slice(1)
 return dict_init(self,args,kw)}
@@ -11947,12 +11965,13 @@ if($B.instance_has_dict(cls)){$B.init_dict(instance)}
 return instance}
 var dict_funcs=_b_.dict.tp_funcs={}
 dict_funcs.__class_getitem__=$B.$class_getitem
-dict_funcs.__reversed__=function(self){return{
+dict_funcs.__reversed__=function(self){$B.meth_noargs("dict.__reversed__",arguments)
+return{
 ob_type:$B.dict_reversekeyiterator,it:_b_.dict.$iter_items_reversed(self),dict_obj:self}}
-dict_funcs.__sizeof__=function(self){return 48}
+dict_funcs.__sizeof__=function(self){$B.meth_noargs("dict.__sizeof__",arguments)
+return 48}
 dict_funcs.clear=function(self){
-var $=$B.args("clear",1,{self:null},arguments)
-var self=$.self
+$B.meth_noargs("dict.clear",arguments)
 if(self[TABLE]){delete self[TABLE]
 delete self[HASHES]
 delete self[KEYS]
@@ -11961,8 +11980,8 @@ for(var key in self){delete self[key]}
 self[VERSION]++
 return _b_.None}
 dict_funcs.copy=function(self){
-var $=$B.args("copy",1,{self:null},arguments)
-var self=$.self,res=$B.empty_dict()
+$B.meth_noargs("dict.copy",arguments)
+var res=$B.empty_dict()
 $copy_dict(res,self)
 return res}
 dict_funcs.fromkeys=function(){var $=$B.args("fromkeys",3,{cls:null,keys:null,value:null},arguments,{value:_b_.None})
@@ -11978,10 +11997,10 @@ dict_funcs.get=function(self){var $=$B.args("get",3,{self:null,key:null,_default
 try{
 return dict.$getitem($.self,$.key,true)}catch(err){if($B.$isinstance(err,_b_.KeyError)){return $._default}else{
 throw err}}}
-dict_funcs.items=function(self){$B.args('items',1,{self:null},arguments)
+dict_funcs.items=function(self){$B.meth_noargs("dict.items",arguments)
 return{
 ob_type:$B.dict_items,dict_obj:self}}
-dict_funcs.keys=function(self){$B.args('keys',1,{self:null},arguments)
+dict_funcs.keys=function(self){$B.meth_noargs("dict.keys",arguments)
 return{
 ob_type:$B.dict_keys,dict_obj:self}}
 dict_funcs.pop=function(self){var $=$B.args("pop",3,{self:null,key:null,_default:null},arguments,{_default:$B.NULL})
@@ -11992,7 +12011,7 @@ dict.mp_ass_subscript(self,key,$B.NULL)
 return res}catch(err){if($B.is_exc(err,_b_.KeyError)){if(_default !==$B.NULL){return _default}
 throw err}
 throw err}}
-dict_funcs.popitem=function(self){$B.check_nb_args_no_kw('popitem',1,arguments)
+dict_funcs.popitem=function(self){$B.meth_noargs("dict.popitem",arguments)
 if(dict.mp_length(self)==0){$B.RAISE(_b_.KeyError,"'popitem(): dictionary is empty'")}
 if(! self[TABLE]){for(var key in self){}
 let res=$B.fast_tuple([key,self[key]])
@@ -12025,7 +12044,7 @@ if(args.length > 1){$B.RAISE(_b_.TypeError,"update expected at most 1 argument"+
 `, got ${args.length}`)}else if(args.length==1){dict_update_arg(self,args[0])}
 $copy_dict(self,kw)
 return _b_.None}
-dict_funcs.values=function(self){$B.args('values',1,{self:null},arguments)
+dict_funcs.values=function(self){$B.meth_noargs("dict.values",arguments)
 return{
 ob_type:$B.dict_values,dict_obj:self}}
 _b_.dict.tp_methods=["__sizeof__","get","setdefault","pop","popitem","keys","items","values","update","clear","copy","__reversed__"
@@ -12045,7 +12064,7 @@ items=$B.$list(items)
 return 'dict_items('+_b_.repr(items)+')'}
 $B.dict_items.tp_hash=_b_.None
 $B.dict_items.tp_iter=function(self){return{
-ob_type:$B.dict_itemiterator,it:_b_.dict.$iter_items(self.dict_obj),dict_obj:self.dict_obj}}
+ob_type:$B.dict_itemiterator,counter:0,it:$B.dict_key_values(self.dict_obj),dict_obj:self.dict_obj}}
 $B.dict_items.mp_length=function(self){return _b_.dict.mp_length(self.dict_obj)}
 $B.dict_items.sq_contains=function(self,obj){if(! $B.is_tuple(obj)||obj.length !=2){return false}
 var key=obj[0]
@@ -12055,8 +12074,9 @@ var result=_b_.dict.$getitem(self.dict_obj,key)}catch(err){$B.RAISE_IF_NOT(err,_
 return false}
 return $B.is_or_equals(result,value)}
 var dict_items_funcs=$B.dict_items.tp_funcs={}
-dict_items_funcs.__reversed__=function(self){return{
-ob_type:$B.dict_reverseitemiterator,it:dict.$iter_items_reversed(self.dict_obj),dict_obj:self.dict_obj}}
+dict_items_funcs.__reversed__=function(self){$B.meth_noargs("dict_items.__reversed__",arguments)
+return{
+ob_type:$B.dict_reverseitemiterator,counter:0,it:dict.$iter_items_reversed(self.dict_obj),dict_obj:self.dict_obj}}
 dict_items_funcs.isdisjoint=function(self,other){var items=Array.from(dict.$iter_items(self.dict_obj))
 .map(x=> $B.fast_tuple([x.key,x.value]))
 var self_as_set=$B.$call(_b_.set,items)
@@ -12074,12 +12094,13 @@ $B.dict_keys.tp_repr=function(self){var keys=Array.from(dict.$iter_items(self.di
 return `dict_keys([${keys}])`}
 $B.dict_keys.tp_hash=_b_.None
 $B.dict_keys.tp_iter=function(self){return{
-ob_type:$B.dict_keyiterator,it:dict.$iter_items(self.dict_obj),dict_obj:self.dict_obj}}
+ob_type:$B.dict_keyiterator,counter:0,it:$B.dict_key_values(self.dict_obj),dict_obj:self.dict_obj}}
 $B.dict_keys.mp_length=function(self){return dict.mp_length(self.dict_obj)}
 $B.dict_keys.sq_contains=function(self,value){for(var item of dict.$iter_items(self.dict_obj)){if($B.is_or_equals(item.key,value)){return true}}
 return false}
 var dict_keys_funcs=$B.dict_keys.tp_funcs={}
-dict_keys_funcs.__reversed__=function(self){return{
+dict_keys_funcs.__reversed__=function(self){$B.meth_noargs("dict_keys.__reversed__",arguments)
+return{
 ob_type:$B.dict_reversekeyiterator,it:_b_.dict.$iter_items_reversed(self.dict_obj),dict_obj:self.dict_obj}}
 dict_keys_funcs.isdisjoint=function(self,other){var keys=Array.from(dict.$iter_items(self.dict_obj)).map(x=> x.key)
 var self_as_set=$B.$call(_b_.set,keys)
@@ -12091,21 +12112,26 @@ $B.dict_keys.tp_getset=["mapping"]
 $B.dict_values.tp_repr=function(self){var values=Array.from(dict.$iter_items(self.dict_obj)).map(x=> x.value)
 return `dict_values([${values}])`}
 $B.dict_values.tp_iter=function(self){return{
-ob_type:$B.dict_valueiterator,it:_b_.dict.$iter_items(self.dict_obj),dict_obj:self.dict_obj}}
+ob_type:$B.dict_valueiterator,counter:0,it:$B.dict_key_values(self.dict_obj),dict_obj:self.dict_obj}}
 $B.dict_values.mp_length=function(self){return _b_.dict.mp_length(self.dict_obj)}
 var dict_values_funcs=$B.dict_values.tp_funcs={}
-dict_values_funcs.__reversed__=function(self){return{
-ob_type:$B.dict_reversevalueiterator,it:dict.$iter_items_reversed(self.dict_obj),dict_obj:self.dict_obj}}
+dict_values_funcs.__reversed__=function(self){$B.meth_noargs("dict_values.__reversed__",arguments)
+return{
+ob_type:$B.dict_reversevalueiterator,counter:0,it:dict.$iter_items_reversed(self.dict_obj),dict_obj:self.dict_obj}}
 dict_values_funcs.mapping_get=function(self){return $B.mappingproxy.tp_new($B.mappingproxy,[self.dict_obj],$B.empty_dict())}
 dict_values_funcs.mapping_set=_b_.None
 $B.dict_values.tp_methods=["__reversed__"]
 $B.dict_values.tp_getset=["mapping"]
 $B.set_func_names($B.dict_values,'builtins')
 $B.dict_keyiterator.tp_iter=function(self){return self}
-$B.dict_keyiterator.tp_iternext=function*(self){for(var item of self.it){yield item.key}}
+$B.dict_keyiterator.tp_iternext=function*(self){for(let kv of self.it){self.counter++
+yield kv[0]}}
 var dict_keyiterator_funcs=$B.dict_keyiterator.tp_funcs={}
-dict_keyiterator_funcs.__length_hint__=function(self){return _b_.dict.mp_length(self.dict_obj)}
-dict_keyiterator_funcs.__reduce__=function(self){var keys=$B.$list(Array.from($B.dict_keyiterator.tp_iternext(self)))
+dict_keyiterator_funcs.__length_hint__=function(self){$B.meth_noargs("dict_keyiterator.__length_hint__",arguments)
+console.log(_b_.dict.mp_length(self.dict_obj),self.counter)
+return _b_.dict.mp_length(self.dict_obj)-self.counter}
+dict_keyiterator_funcs.__reduce__=function(self){$B.meth_noargs("dict_keyiterator.__reduce__",arguments)
+var keys=$B.$list(Array.from($B.dict_keyiterator.tp_iternext(self)))
 return $B.fast_tuple([_b_.iter,$B.fast_tuple([keys])])}
 $B.dict_keyiterator.tp_methods=["__length_hint__","__reduce__"]
 $B.dict_reversekeyiterator.tp_iter=function(self){return self}
@@ -12116,33 +12142,45 @@ dict_reversekeyiterator_funcs.__reduce__=function(self){let keys=Array.from(self
 return $B.fast_tuple([_b_.iter,$B.fast_tuple([$B.$list(keys)])])}
 $B.dict_reversekeyiterator.tp_methods=["__length_hint__","__reduce__"]
 $B.dict_valueiterator.tp_iter=function(self){return self}
-$B.dict_valueiterator.tp_iternext=function*(self){for(var item of self.it){yield item.value}}
+$B.dict_valueiterator.tp_iternext=function*(self){for(var kv of self.it){self.counter++
+yield kv[1]}}
 var dict_valueiterator_funcs=$B.dict_valueiterator.tp_funcs={}
-dict_valueiterator_funcs.__length_hint__=function(self){return _b_.dict.mp_length(self.dict_obj)}
-dict_valueiterator_funcs.__reduce__=function(self){let values_list=$B.$list(
+dict_valueiterator_funcs.__length_hint__=function(self){$B.meth_noargs('dict_valueiterator.__length_hint__',arguments)
+return _b_.dict.mp_length(self.dict_obj)-self.counter}
+dict_valueiterator_funcs.__reduce__=function(self){$B.meth_noargs('dict_valueiterator.__reduce__',arguments)
+let values_list=$B.$list(
 Array.from($B.dict_valueiterator.tp_iternext(self))
 )
 return $B.fast_tuple([_b_.iter,$B.fast_tuple([values_list])])}
 $B.dict_valueiterator.tp_methods=["__length_hint__","__reduce__"]
 $B.dict_reversevalueiterator.tp_iter=function(self){return self}
-$B.dict_reversevalueiterator.tp_iternext=function*(self){for(var item of self.it){yield item[1]}}
+$B.dict_reversevalueiterator.tp_iternext=function*(self){for(var item of self.it){self.counter++
+yield item[1]}}
 var dict_reversevalueiterator_funcs=$B.dict_reversevalueiterator.tp_funcs={}
-dict_reversevalueiterator_funcs.__length_hint__=function(self){return _b_.dict.mp_length(self.dict_obj)}
-dict_reversevalueiterator_funcs.__reduce__=function(self){let values=Array.from(self.it).map(x=> x[1])
+dict_reversevalueiterator_funcs.__length_hint__=function(self){$B.meth_noargs('dict_reversevalueiterator.__length_hint__',arguments)
+return _b_.dict.mp_length(self.dict_obj)-self.counter}
+dict_reversevalueiterator_funcs.__reduce__=function(self){$B.meth_noargs('dict_reversevalueiterator.__reduce__',arguments)
+let values=Array.from(self.it).map(x=> x[1])
 return $B.fast_tuple([_b_.iter,$B.fast_tuple([$B.$list(values)])])}
 $B.dict_reversevalueiterator.tp_methods=["__length_hint__","__reduce__"]
 $B.dict_itemiterator.tp_iter=function(self){return self}
-$B.dict_itemiterator.tp_iternext=function*(self){for(var item of self.it){yield $B.fast_tuple([item.key,item.value])}}
+$B.dict_itemiterator.tp_iternext=function*(self){for(var item of self.it){self.counter++
+yield $B.fast_tuple(item)}}
 var dict_itemiterator_funcs=$B.dict_itemiterator.tp_funcs={}
-dict_itemiterator_funcs.__length_hint__=function(self){return_b_.dict.mp_length(self.obj)}
-dict_itemiterator_funcs.__reduce__=function(self){let items_list=$B.$list(Array.from($B.dict_itemiterator.tp_iternext(self)))
+dict_itemiterator_funcs.__length_hint__=function(self){$B.meth_noargs('dict_itemiterator.__length_hint__',arguments)
+return_b_.dict.mp_length(self.obj)-self.counter}
+dict_itemiterator_funcs.__reduce__=function(self){$B.meth_noargs('dict_itemiterator.__reduce__',arguments)
+let items_list=$B.$list(Array.from($B.dict_itemiterator.tp_iternext(self)))
 return $B.fast_tuple([_b_.iter,$B.fast_tuple([items_list])])}
 $B.dict_itemiterator.tp_methods=["__length_hint__","__reduce__"]
 $B.dict_reverseitemiterator.tp_iter=function(self){return self}
-$B.dict_reverseitemiterator.tp_iternext=function*(self){for(var item of self.it){yield item}}
+$B.dict_reverseitemiterator.tp_iternext=function*(self){for(var item of self.it){self.counter++
+yield item}}
 var dict_reverseitemiterator_funcs=$B.dict_reverseitemiterator.tp_funcs={}
-dict_reverseitemiterator_funcs.__length_hint__=function(self){return _b_.dict.mp_length(self.dict_obj)}
-dict_reverseitemiterator_funcs.__reduce__=function(self){return $B.fast_tuple([_b_.iter,$B.fast_tuple([$B.$list(Array.from(self.it))])])}
+dict_reverseitemiterator_funcs.__length_hint__=function(self){$B.meth_noargs('dict_reverseitemiterator.__length_hint__',arguments)
+return _b_.dict.mp_length(self.dict_obj)-self.counter}
+dict_reverseitemiterator_funcs.__reduce__=function(self){$B.meth_noargs('dict_reverseitemiterator.__reduce__',arguments)
+return $B.fast_tuple([_b_.iter,$B.fast_tuple([$B.$list(Array.from(self.it))])])}
 $B.dict_reverseitemiterator.tp_methods=["__length_hint__","__reduce__"]
 $B.empty_dict=function(){var res={}
 res[$B.OB_TYPE]=dict
@@ -12211,6 +12249,7 @@ return $B.fast_tuple([d])}
 frozendict_funcs.__reversed__=dict_funcs.__reversed__
 frozendict_funcs.__sizeof__=dict_funcs.__sizeof__
 frozendict_funcs.copy=function(self){
+$B.meth_noargs('frozendict.copy',arguments)
 var $=$B.args("copy",1,{self:null},arguments)
 var self=$.self,res=$B.empty_dict()
 res[$B.OB_TYPE]=_b_.frozendict
@@ -12239,7 +12278,7 @@ $B.mappingproxy.tp_repr=function(self){return dict.tp_repr(self.mapping)}
 $B.mappingproxy.tp_hash=_b_.None
 $B.mappingproxy.tp_str=function(self){return $B.mappingproxy.tp_repr(self)}
 $B.mappingproxy.tp_iter=function(self){return{
-ob_type:$B.dict_keyiterator,it:mappingproxy_iter_items(self),dict_obj:self.mapping}}
+ob_type:$B.dict_keyiterator,it:$B.dict_key_values(self.mapping),counter:0,dict_obj:self.mapping}}
 $B.mappingproxy.tp_new=function(cls,args,kw){kw=kw ?? $B.empty_dict()
 var nb_kwargs=$B.str_dict_length(kw)
 var nb_args=args.length+nb_kwargs
@@ -12262,18 +12301,18 @@ var mappingproxy_funcs=$B.mappingproxy.tp_funcs={}
 mappingproxy_funcs.__class_getitem__=function(self){}
 mappingproxy_funcs.__reversed__=function(self){}
 mappingproxy_funcs.copy=function(self){
+$B.meth_noargs('mappingproxy.copy',arguments)
 return $B.$call($B.$getattr(self.mapping,'copy'))}
 mappingproxy_funcs.get=function(self,key,_default){if(dict.$contains(self.mapping,key)){return dict.$getitem(self.mapping,key)}
 return _default ?? _b_.None}
 mappingproxy_funcs.items=function(self){return _b_.dict.tp_funcs.items(self.mapping)}
 mappingproxy_funcs.keys=function(self){return{
-ob_type:$B.dict_keyiterator,it:mappingproxy_iter_items(self),dict_obj:self.mapping}}
+ob_type:$B.dict_keyiterator,counter:0,it:$B.dict_key_values(self.mapping),dict_obj:self.mapping}}
 mappingproxy_funcs.values=function(self){return _b_.dict.tp_funcs.values(self.mapping)}
 $B.mappingproxy.functions_or_methods=["__new__"]
 $B.mappingproxy.tp_methods=["get","keys","values","items","copy","__reversed__"]
 $B.mappingproxy.classmethods=["__class_getitem__"]
 $B.set_func_names(mappingproxy,"builtins")
-function*mappingproxy_iter_items(self){for(var item of dict.$iter_items(self.mapping)){yield{key:item.key,value:item.value}}}
 function jsobj2dict(x,exclude){exclude=exclude ||function(){return false}
 var d=$B.empty_dict()
 for(var attr in x){if(attr.charAt(0)!="$" && ! exclude(attr)){if(x[attr]===null){dict.$setitem(d,attr,_b_.None)}else if(x[attr]===undefined){continue}else{
