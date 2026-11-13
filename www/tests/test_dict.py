@@ -410,4 +410,13 @@ assert dict(B()) == {0: 'e', 1: 'f', 2: 'g', 3: 'h'}
 dicts = [{'a': 1}, {'b': 2}, {'a': 3}]
 assert {**d for d in dicts} == {'a': 3, 'b': 2}
 
+# a str key finds the equal key of a str subclass
+class St(str):
+    pass
+
+keyed = {St('k'): 1}
+assert keyed['k'] == 1 and keyed.get('k') == 1 and 'k' in keyed
+keyed['k'] = 2
+assert keyed[St('k')] == 2 and len(keyed) == 1
+
 print("passed all tests..")

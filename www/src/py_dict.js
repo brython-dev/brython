@@ -781,6 +781,14 @@ dict.$getitem = function(self, key, ignore_missing) {
         if (Object.hasOwn(self, key)) {
             return self[key]
         }
+        // a key equal to it but no str, an instance of a str subclass, is in
+        // the table only
+        if (self[TABLE]) {
+            let index = index_by_key(self, key)
+            if (index !== null) {
+                return self[VALUES][index]
+            }
+        }
     } else {
         if (! self[TABLE]) {
             var hash_method = $B.$getattr($B.get_class(key), '__hash__')
