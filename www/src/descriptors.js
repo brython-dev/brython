@@ -55,6 +55,7 @@ method_wrapper_funcs.__qualname___set = function(self) {
 }
 
 method_wrapper_funcs.__reduce__ = function(self) {
+    $B.meth_noargs("method_wrapper.__reduce__", arguments)
     return $B.fast_tuple([_b_.getattr,
         $B.fast_tuple([self.self, self.d_name])])
 }
@@ -118,6 +119,7 @@ member_descriptor_funcs.__qualname___get = function(self) {
 member_descriptor_funcs.__qualname___set = _b_.None
 
 member_descriptor_funcs.__reduce__ = function(self) {
+    $B.meth_noargs("member_descriptor.__reduce__", arguments)
     return $B.fast_tuple([_b_.getattr,
         $B.fast_tuple([self.d_type, self.d_name])])
 }
@@ -228,6 +230,7 @@ $B.method.tp_new = function(cls, args, kw) {
 var method_funcs = $B.method.tp_funcs = {}
 
 method_funcs.__reduce__ = function(self) {
+    $B.meth_noargs("method.__reduce__", arguments)
     return $B.fast_tuple([_b_.getattr,
         $B.fast_tuple([self.im_self, $B.$getattr(self.im_func, '__name__')])])
 }
@@ -550,6 +553,7 @@ wrapper_descriptor_funcs.__qualname___set = function(self, value) {
 }
 
 wrapper_descriptor_funcs.__reduce__ = function(self) {
+    $B.meth_noargs("wrapper_descriptor.__reduce__", arguments)
     return $B.fast_tuple([_b_.getattr,
         $B.fast_tuple([self.d_type, self.d_name])])
 }

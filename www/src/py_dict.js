@@ -726,7 +726,6 @@ function dict_init(self, args, kw) {
     } else if (args.length == 1) {
         dict_update_arg(self, args[0])
     }
-
     for (let item of _b_.dict.$iter_items(kw)) {
         dict.$setitem(self, item.key, item.value)
     }

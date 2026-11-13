@@ -47,10 +47,12 @@ coroutine_funcs.__qualname___set = function(self) {
 }
 
 coroutine_funcs.__sizeof__ = function(self) {
-
+    $B.meth_noargs("coroutine.__sizeof__", arguments)
+    return _b_.NotImplemented
 }
 
 coroutine_funcs.close = function(self) {
+    $B.meth_noargs("coroutine.close", arguments)
     self.$sent = true // avoids RuntimeWarning
     unawaited.unregister(self)
 }

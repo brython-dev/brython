@@ -235,6 +235,7 @@ memoryview_funcs.__class_getitem__ = function() {
 }
 
 memoryview_funcs.__enter__ = function(self) {
+    $B.meth_noargs("memoryview.__enter__", arguments)
     return self
 }
 
@@ -405,6 +406,7 @@ memoryview_funcs.readonly_get = function(self) {
 memoryview_funcs.readonly_set = _b_.None
 
 memoryview_funcs.release = function(self) {
+    $B.meth_noargs("memoryview.release", arguments)
     if (self.$released) {
         return
     }
@@ -449,6 +451,7 @@ memoryview_funcs.tobytes = function(self) {
 }
 
 memoryview_funcs.tolist = function(self) {
+    $B.meth_noargs("memoryview.tolist", arguments)
     var res = []
     for (var i = 0, len = _b_.memoryview.mp_length(self); i < len; i++) {
         res.push(_b_.memoryview.mp_subscript(self, i))
@@ -459,6 +462,7 @@ memoryview_funcs.tolist = function(self) {
 memoryview_funcs.toreadonly = function(self) {
     // return a new read-only view; the original stays writable (it mutated
     // self and returned None, so memoryview(b).toreadonly() was unusable)
+    $B.meth_noargs("memoryview.toreadonly", arguments)
     var res = memoryview.$factory(self.obj)
     res.readonly = 1
     return res

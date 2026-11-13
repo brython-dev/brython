@@ -332,10 +332,12 @@ $B.list_iterator.tp_iternext = function*(self){
 var list_iterator_funcs = $B.list_iterator.tp_funcs = {}
 
 list_iterator_funcs.__length_hint__ = function(self) {
+    $B.meth_noargs("list_iterator.__length_hint__", arguments)
     return Math.max(0, self.obj.length - self.index)
 }
 
 list_iterator_funcs.__reduce__ = function(self) {
+    $B.meth_noargs("list_iterator.__reduce__", arguments)
     return $B.fast_tuple([_b_.iter, $B.fast_tuple([list.$factory(self)]), 0])
 }
 
@@ -486,11 +488,13 @@ $B.list_reverseiterator.tp_iternext = function*(self){
 var list_reverseiterator_funcs = $B.list_reverseiterator.tp_funcs = {}
 
 list_reverseiterator_funcs.__length_hint__ = function(self) {
+    $B.meth_noargs("list_reverseiterator.__length_hint__", arguments)
     var len = self.counter + 1
     return len <= self.items.length ? Math.max(0, len) : 0
 }
 
 list_reverseiterator_funcs.__reduce__ = function(self) {
+    $B.meth_noargs("list_reverseiterator.__length_hint__", arguments)
     return $B.fast_tuple([_b_.iter,
         $B.fast_tuple([list.$factory(self).reverse()]), 0])
 }
@@ -797,6 +801,7 @@ list_funcs.__class_getitem__ = function(cls, items) {
 }
 
 list_funcs.__reversed__ = function(self) {
+    $B.meth_noargs("list.__reversed__", arguments)
     return {
         ob_type: $B.list_reverseiterator,
         counter: self.length - 1,
@@ -805,7 +810,8 @@ list_funcs.__reversed__ = function(self) {
 }
 
 list_funcs.__sizeof__ = function(self) {
-
+    $B.meth_noargs("list.__sizeof__", arguments)
+    return 40
 }
 
 list_funcs.append = function(self, x) {
@@ -830,9 +836,9 @@ list_funcs.clear = function(self) {
 }
 
 list_funcs.copy = function(self) {
-    var $ = $B.args("copy", 1, {self: null}, arguments)
-    var res = $.self.slice()
-    res.ob_type = $B.get_class($.self)
+    $B.meth_noargs("list.copy", arguments)
+    var res = self.slice()
+    res.ob_type = $B.get_class(self)
     return res
 }
 
@@ -867,7 +873,7 @@ list_funcs.insert = function(self) {
 
 list_funcs.pop = function(self) {
     var missing = {}
-    var $ = $B.args("pop", 2, {self: null, pos: null}, arguments, 
+    var $ = $B.args("pop", 2, {self: null, pos: null}, arguments,
                 {pos: missing})
     var self = $.self,
         pos = $.pos
@@ -899,13 +905,13 @@ list_funcs.remove = function(self) {
 }
 
 list_funcs.reverse = function(self) {
-    var $ = $B.args("reverse", 1, {self: null}, arguments)
-    var _len = $.self.length - 1,
-        i = parseInt($.self.length / 2)
+    $B.meth_noargs("list.reverse", arguments)
+    var _len = self.length - 1,
+        i = parseInt(self.length / 2)
     while (i--) {
-        var buf = $.self[i]
-        $.self[i] = $.self[_len - i]
-        $.self[_len - i] = buf
+        var buf = self[i]
+        self[i] = self[_len - i]
+        self[_len - i] = buf
     }
     return _b_.None
 }
@@ -1027,11 +1033,13 @@ $B.tuple_iterator.tp_iternext = function*(self){
 var tuple_iterator_funcs = $B.tuple_iterator.tp_funcs = {}
 
 tuple_iterator_funcs.__length_hint__ = function(self) {
+    $B.meth_noargs("tuple_iterator.__length_hint__", arguments)
     return Math.max(0, self.obj.length - self.index)
 }
 
 tuple_iterator_funcs.__reduce__ = function(self) {
-
+    $B.meth_noargs("tuple_iterator.__reduce__", arguments)
+    return $B.fast_tuple([_b_.iter, $B.fast_tuple([list.$factory(self)]), 0])
 }
 
 tuple_iterator_funcs.__setstate__ = function(self, state) {
@@ -1152,7 +1160,8 @@ tuple_funcs.__class_getitem__ = function(self) {
 }
 
 tuple_funcs.__getnewargs__ = function(self) {
-    return tuple.$getnewargs($B.single_arg('__getnewargs__', 'self', arguments))
+    $B.meth_noargs("tuple.__getnewargs__", arguments)
+    return tuple.$getnewargs(self)
 }
 
 tuple_funcs.count = function() {
