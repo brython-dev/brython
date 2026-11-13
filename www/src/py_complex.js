@@ -541,6 +541,7 @@ var complex_funcs = _b_.complex.tp_funcs = {}
 
 complex_funcs.__complex__ = function(self) {
     // returns an instance of complex (not a subclass)
+    $B.meth_noargs('complex.__complex__', arguments)
     if ($B.exact_type(self, complex)) {
         return self
     }
@@ -621,11 +622,13 @@ complex_funcs.__format__ = function(self, format_spec) {
     $B.RAISE(_b_.ValueError, `invalid type for complex: ${type}`)
 }
 
-complex_funcs.__getnewargs__ = function() {
-    return complex.$getnewargs($B.single_arg('__getnewargs__', 'self', arguments))
+complex_funcs.__getnewargs__ = function(self) {
+    $B.meth_noargs('complex.__getnewargs__', arguments)
+    return complex.$getnewargs(self)
 }
 
 complex_funcs.conjugate = function(self) {
+    $B.meth_noargs('complex.conjugate', arguments)
     return make_complex(self.real.value, -self.imag.value)
 }
 

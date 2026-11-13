@@ -69,6 +69,7 @@ code_funcs.__replace__ = function(self) {
 }
 
 code_funcs.__sizeof__ = function(self) {
+    $B.meth_noargs('code.__sizeof__', arguments)
     return 216
 }
 
@@ -87,7 +88,8 @@ code_funcs.co_argcount = function(self) {
 }
 
 code_funcs.co_branches = function(self) {
-    console.log('get co branches', self)
+    $B.meth_noargs('code.co_branches', arguments)
+    return _b_.NotImplemented
 }
 
 code_funcs.co_cellvars_get = function(self) {
@@ -109,6 +111,7 @@ code_funcs.co_freevars_get = function(self) {
 code_funcs.co_freevars_set = _b_.None
 
 code_funcs.co_lines = function(self) {
+    $B.meth_noargs('code.co_lines', arguments)
     return _b_.NotImplemented
 }
 
@@ -119,6 +122,7 @@ code_funcs.co_lnotab_get = function(self) {
 code_funcs.co_lnotab_set = _b_.None
 
 code_funcs.co_positions = function(self) {
+    $B.meth_noargs('code.co_positions', arguments)
     return self.co_positions()
 }
 
