@@ -1301,4 +1301,19 @@ assert type(str.count).__name__ == 'method_descriptor'
 # reported in PR #3031
 assert object.__new__.__module__ is None
 
+# an assignment evaluates its value before the target's object and subscript
+order = []
+def note(what, value):
+    order.append(what)
+    return value
+
+holder = {}
+note('object', holder)[note('key', 'k')] = note('value', 1)
+class Bag:
+    pass
+
+note('object', Bag()).attr = note('value', 2)
+assert order == ['value', 'object', 'key', 'value', 'object'], order
+assert holder == {'k': 1}
+
 print('passed all tests...')
