@@ -1444,6 +1444,14 @@ $B.ast.Assign.prototype.to_js = function(scopes) {
     // evaluate value once
     if (this.targets.length == 1) {
         let target = this.targets[0]
+        if (target instanceof $B.ast.Subscript ||
+                target instanceof $B.ast.Attribute) {
+            // the value first, then the target's object and subscript
+            let value_id = 'v' + make_id()
+            js += prefix + `var ${value_id} = ${value}\n`
+            js += assign_one(target, value_id)
+            return js
+        }
         if(! (target instanceof $B.ast.Tuple) &&
                ! (target instanceof $B.ast.List)){
             js += assign_one(this.targets[0], value)
