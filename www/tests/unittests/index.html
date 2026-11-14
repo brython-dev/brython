@@ -135,14 +135,6 @@ from browser import self as target, bind, console
 
 target.send('ready')
 
-v = sys.version_info
-version = f'{v[0]}.{v[1]}'
-
-root_dir = os.path.dirname(os.environ['PYTHONPATH'].rstrip('/'))
-test_dir = os.path.join(root_dir, 'tests', 'unittests', version)
-
-sys.path.insert(0, test_dir)
-
 TestResult = unittest.TestResult
 
 class _TestResult(TestResult):
@@ -283,7 +275,8 @@ class HTMLTestRunner:
 @bind(target, 'message')
 def message(evt):
     module = evt.data
-    mod = __import__(module)
+    test = __import__('test', fromlist=[module])
+    mod = getattr(test, module)
     _suite = unittest.TestLoader().loadTestsFromModule(mod)
     runner = HTMLTestRunner(sys.stdout, verbosity=2)
     runner.run(_suite)
@@ -413,6 +406,7 @@ def show_test(event):
 
     mod = __import__(module)
     tab = window.open('show.html?file=%s' %mod.__file__)
+
 
 worker = worker.create_worker('test_runner', onready=ready,
     onmessage=message)
