@@ -149,7 +149,7 @@ Documentation
 You can start by reading the official [Brython tutorial](https://brython.info/static_tutorial/en/index.html).
 
 Full documentation is available on the [official site](http://www.brython.info "Brython Homepage").
-You can read the docs in [English](http://brython.info/static_doc/en/intro.html) and
+You can read the docs in English and
 [French](http://brython.info/static_doc/fr/intro.html).
 
 Curious about [how Brython works](https://github.com/brython-dev/brython/wiki/How%20Brython%20works) ?
