@@ -1201,7 +1201,7 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist) {
     if(typeof mod_name !== 'string' && ! $B.is_str(mod_name)){
         $B.RAISE(_b_.TypeError, 'module name must be a string')
     }
-    var $test = false // mod_name == "test_ast"
+    var $test = false // fromlist && fromlist.includes("ForwardRef")
     if ($test) {
         console.log("__import__", mod_name, 'fromlist', fromlist)
     }
@@ -1347,6 +1347,26 @@ $B.$__import__ = function(mod_name, globals, locals, fromlist) {
     }
     if (fromlist.length > 0) {
         // Return module object matching requested module name
+        if ($test) {
+            console.log('fromlist', fromlist)
+        }
+        if (fromlist.length == 1 && fromlist[0] == '*') {
+            // ignore
+        } else {
+            for (let attr of fromlist) {
+                let v = $B.module.tp_getattro($B.imported[mod_name], attr)
+                if (v !== $B.NULL) {
+                    continue
+                }
+                let submod = `${mod_name}.${attr}`
+                if (! Object.hasOwn($B.imported, submod)) {
+                    let module_attr = $B.module_getattr($B.imported[mod_name], attr, $B.NULL)
+                    if (module_attr === $B.NULL) {
+                        $B.import(submod, [], locals)
+                    }
+                }
+            }
+        }
         return $B.imported[mod_name]
     } else {
         // Return module object for top-level package
