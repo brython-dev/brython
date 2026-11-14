@@ -134,7 +134,14 @@ import unittest
 from browser import self as target, bind, console
 
 target.send('ready')
-sys.path.append(os.path.join(os.environ['PYTHONPATH'], "Lib", "test"))
+
+v = sys.version_info
+version = f'{v[0]}.{v[1]}'
+
+root_dir = os.path.dirname(os.environ['PYTHONPATH'].rstrip('/'))
+test_dir = os.path.join(root_dir, 'tests', 'unittests', version)
+
+sys.path.insert(0, test_dir)
 
 TestResult = unittest.TestResult
 
@@ -310,7 +317,6 @@ import javascript
 table = document["result_table"]
 limit = document["duration"]
 
-test_dir = os.path.join(os.environ['PYTHONPATH'], "Lib", "test")
 
 def ready(w):
     global worker
