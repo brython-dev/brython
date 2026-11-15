@@ -748,8 +748,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-11-15 08:22:12.289550"
-__BRYTHON__.timestamp=1794727332289
+__BRYTHON__.compiled_date="2026-11-15 08:26:45.268197"
+__BRYTHON__.timestamp=1794727605268
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -2008,8 +2008,8 @@ return $B.$call(contains,_set,item)}
 $B.nb_call_attr=0
 $B.call_attr=function(obj,attr,inum,...args){
 var is_class=obj?.tp_name !==undefined
-if(! is_class){var klass=$B.get_class(obj)
-if(klass.tp_funcs &&
+var klass=is_class ? undefined :$B.get_class(obj)
+if(! is_class && ! klass.$own_getattribute){if(klass.tp_funcs &&
 Object.hasOwn(klass.tp_funcs,attr)){var func=klass.tp_funcs[attr]
 if($B.get_class(func)===$B.builtin_method){try{
 return func(obj,...args)}catch(err){$B.set_inum(inum)
@@ -2424,10 +2424,11 @@ throw exc}
 return _b_.None}
 _b_.object.tp_repr=function(self){var klass=$B.get_class(self)
 if(klass===_b_.type){return "<class '"+$B.get_name(self)+"'>"}
-var module=klass.__module__
+var module=klass.__module__,
+at=` at 0x${Number(_b_.id(self)).toString(16)}`
 if(module !==undefined && !module.startsWith("$")&&
-module !=="builtins"){return `<${module}.${$B.class_name(self)} object>`}else{
-return "<"+$B.class_name(self)+" object>"}}
+module !=="builtins"){return `<${module}.${$B.class_name(self)} object${at}>`}else{
+return "<"+$B.class_name(self)+` object${at}>`}}
 var weak_symbol_hashes=new WeakMap(),symbol_hashes=new Map(),symbols_are_weak_keys=true
 try{
 new WeakMap().set(Symbol(),0)}catch(err){symbols_are_weak_keys=false}
@@ -2912,7 +2913,11 @@ function set_tp_slots(cls){for(var[slot,dunder]of Object.entries($B.slot2dunder)
 if(method !==$B.NULL){cls[slot]=method}else{
 for(var kls of $B.get_mro(cls).slice(1)){if(kls[slot]){cls[slot]=kls[slot]
 break}}}}}
-$B.make_getattr=function(cls){if(cls.tp_mro){var getattribute=$B.search_slot(cls,'tp_getattro',$B.NULL)
+$B.make_getattr=function(cls){if(cls.tp_mro){
+cls.$own_getattribute=cls.tp_mro.some(klass=>
+(klass.tp_flags & $B.TPFLAGS.HEAPTYPE)&&
+$B.get_from_dict(klass,'__getattribute__',$B.NULL)!==$B.NULL)
+var getattribute=$B.search_slot(cls,'tp_getattro',$B.NULL)
 var getattr=$B.search_in_mro(cls,'__getattr__',$B.NULL)
 if(getattr===$B.NULL){cls.$getattribute=getattribute}else{
 cls.$getattribute=function(obj,attr){var res=$B.NULL
@@ -5252,6 +5257,8 @@ return false}
 _class=class_or_tuple 
 if(! $B.is_type(cls)){$B.RAISE(_b_.TypeError,"issubclass() arg 1 must be a class")}
 let class_type=$B.get_class(_class)
+if(class_type===$B.UnionType){
+return _class.args.some(kls=> issubclass(cls,kls))}
 if(class_type===$B.GenericAlias){$B.RAISE(_b_.TypeError,'issubclass() arg 2 cannot be a parameterized generic')}
 if(class_type===_b_.type){if(cls===_class){return true}
 return $B.get_mro(cls).indexOf(_class)>-1}
@@ -9322,8 +9329,7 @@ var res
 encoding=encoding ?? $B.NULL
 errors=errors ?? $B.NULL
 if(encoding===$B.NULL && errors===$B.NULL){res=$B.make_str(arg)}else{
-if(! $B.is_bytes_like(arg)){console.log(Error().stack)
-$B.RAISE(_b_.TypeError,`decoding to str: need a bytes-like object, `+
+if(! $B.is_bytes_like(arg)){$B.RAISE(_b_.TypeError,`decoding to str: need a bytes-like object, `+
 `${$B.class_name(arg)} found`
 )}
 encoding=encoding===$B.NULL ? 'utf-8' :encoding
@@ -9888,8 +9894,7 @@ iterable=_b_.iter(iterable)
 var res=[],count=0
 while(1){try{
 var obj2=_b_.next(iterable)
-if(! $B.is_str(obj2)){console.log('str join',arguments)
-$B.RAISE(_b_.TypeError,"sequence item "+count+
+if(! $B.is_str(obj2)){$B.RAISE(_b_.TypeError,"sequence item "+count+
 ": expected str instance, "+$B.class_name(obj2)+
 " found")}
 res.push(to_string(obj2))
@@ -10494,11 +10499,14 @@ return int_or_long(result)}else{
 if(y < 0n){if(x==0n){$B.RAISE(_b_.ZeroDivisionError,"zero to a negative power")}
 return $B.fast_float(Number(x)**Number(y))}
 return int_or_long(x**y)}}}
+var check_shift_count=function(count){if(count < 0n){$B.RAISE(_b_.ValueError,"negative shift count")}}
 _b_.int.nb_lshift=function(self,other){var[x,y]=[self,other].map(toBigInt)
 if(x===$B.NULL ||y===$B.NULL){return _b_.NotImplemented}
+check_shift_count(y)
 return int_or_long(x << y)}
 _b_.int.nb_rshift=function(self,other){var[x,y]=[self,other].map(toBigInt)
 if(x===$B.NULL ||y===$B.NULL){return _b_.NotImplemented}
+check_shift_count(y)
 return int_or_long(x >> y)}
 _b_.int.nb_and=function(self,other){var[x,y]=[self,other].map(toBigInt)
 if(x===$B.NULL ||y===$B.NULL){return _b_.NotImplemented}
@@ -11859,7 +11867,9 @@ if(self[TABLE]){delete self[TABLE][_b_.hash(key)]}}
 dict.$getitem=function(self,key,ignore_missing){
 if(Object.hasOwn(self,$B.JSOBJ)){if(Object.hasOwn(self[$B.JSOBJ],key)){return $B.jsobj2pyobj(self[$B.JSOBJ][key])}
 $B.RAISE(_b_.KeyError,key)}
-if(fast_string_key(key)){if(Object.hasOwn(self,key)){return self[key]}}else{
+if(fast_string_key(key)){if(Object.hasOwn(self,key)){return self[key]}
+if(self[TABLE]){let index=index_by_key(self,key)
+if(index !==null){return self[VALUES][index]}}}else{
 if(! self[TABLE]){var hash_method=$B.$getattr($B.get_class(key),'__hash__')
 if(hash_method !==$B.str_dict_get($B.get_dict(_b_.object),'__hash__')){convert_all_str(self)
 let index=index_by_key(self,key)
@@ -12404,7 +12414,8 @@ var factory=function(list_res){list_res.ob_type=klass
 return list_res}
 if($B.$isinstance(key,_b_.slice)){return _b_.list.$getitem_slice(self,key)}
 try{
-var int_key=$B.PyNumber_Index(key)}catch(err){$B.RAISE(_b_.TypeError,$B.class_name(self)+
+var int_key=$B.PyNumber_Index(key)}catch(err){
+$B.RAISE(_b_.TypeError,($B.$isinstance(self,_b_.tuple)? 'tuple' :'list')+
 " indices must be integers or slices, not "+$B.class_name(key))}
 let items=self.valueOf(),pos=int_key
 if(int_key < 0){pos=items.length+pos}
@@ -12684,9 +12695,7 @@ list_funcs.clear=function(self){$B.meth_noargs("list.clear",arguments)
 while(self.length){self.pop()}
 return _b_.None}
 list_funcs.copy=function(self){$B.meth_noargs("list.copy",arguments)
-var res=self.slice()
-res.ob_type=$B.get_class(self)
-return res}
+return $B.$list(self.slice())}
 list_funcs.count=function(){return count.apply(null,arguments)}
 list_funcs.extend=function(self){var $=$B.args("extend",2,{self:null,t:null},arguments)
 var self=$.self,t=$.t
@@ -17088,6 +17097,12 @@ assigns.push(assign_one(elt,`${iter_id}.read_one()`))}}
 js+=assigns.join('\n')
 return js}
 if(this.targets.length==1){let target=this.targets[0]
+if(target instanceof $B.ast.Subscript ||
+target instanceof $B.ast.Attribute){
+let value_id='v'+make_id()
+js+=prefix+`var ${value_id} = ${value}\n`
+js+=assign_one(target,value_id)
+return js}
 if(!(target instanceof $B.ast.Tuple)&&
 !(target instanceof $B.ast.List)){js+=assign_one(this.targets[0],value)
 return js}}
@@ -18267,12 +18282,13 @@ for(var value of this.values){if(value instanceof $B.ast.Constant){items.push(va
 throw Error('unexpected type inf temmplate')}}
 return js+`${items.join(', ')})\n`}
 function handler_to_js(handler,scopes,try_scope,err){if($B.is_none(handler.name)){return add_body(handler.body,scopes)+'\n'}
-bind(handler.name,scopes)
+var scope=bind(handler.name,scopes)
 var mangled=mangle(scopes,try_scope,handler.name)
 var js=prefix+`locals.${mangled} = ${err}\n`+prefix+'try {\n'
 indent()
 js+=add_body(handler.body,scopes)+'\n'
 dedent()
+for(var s=scope;s;s=s.parent){s.locals.delete(mangled)}
 return js+prefix+'} finally {\n'+
 prefix+tab+`delete locals.${mangled}\n`+prefix+'}\n'}
 $B.ast.Try.prototype.to_js=function(scopes){compiler_check(this)
