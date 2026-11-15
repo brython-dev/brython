@@ -1220,7 +1220,6 @@ str.$factory = function() {
         res = $B.make_str(arg)
     } else {
         if (! $B.is_bytes_like(arg)) {
-            console.log(Error().stack)
             $B.RAISE(_b_.TypeError,
                 `decoding to str: need a bytes-like object, ` +
                 `${$B.class_name(arg)} found`
@@ -2544,8 +2543,6 @@ str_funcs.join = function(self, iterable) {
         try {
             var obj2 = _b_.next(iterable)
             if (! $B.is_str(obj2)) {
-                console.log('str join', arguments)
-
                 $B.RAISE(_b_.TypeError, "sequence item " + count +
                     ": expected str instance, " + $B.class_name(obj2) +
                     " found")
