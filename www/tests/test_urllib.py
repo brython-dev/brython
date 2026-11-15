@@ -9,6 +9,8 @@ with urllib.request.urlopen('https://brython.info') as f:
     f.read()
 """
 
+urllib.request.urlopen('test_urllib.py')
+
 # issue 1424
 text = """Hello
 World"""

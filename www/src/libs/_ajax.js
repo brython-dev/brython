@@ -464,7 +464,9 @@ ajax_funcs.send = function(self, params) {
         self.charset_user_defined = true
     }
     var res = ''
-    if (! params) {
+    // None sends no body, as no argument does: urlopen() of a GET hands its
+    // data, None
+    if (! params || params === _b_.None) {
         self.js.send()
         return _b_.None
     }
