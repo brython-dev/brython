@@ -1273,6 +1273,11 @@ var issubclass = _b_.issubclass = function(cls, class_or_tuple) {
 
     let class_type = $B.get_class(_class)
 
+    if (class_type === $B.UnionType) {
+        // a subclass of one of its members, as isinstance reads a union
+        return _class.args.some(kls => issubclass(cls, kls))
+    }
+
     if (class_type === $B.GenericAlias) {
         $B.RAISE(_b_.TypeError,
             'issubclass() arg 2 cannot be a parameterized generic')
