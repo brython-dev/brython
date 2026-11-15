@@ -1819,6 +1819,7 @@ type_funcs.__dict___set = function(self) {
 }
 
 type_funcs.__dir__ = function(klass) {
+    $B.meth_noargs('type.__dir__', arguments)
     var dict = $B.empty_dict()
     $B.merge_class_dict(dict, klass)
     return _b_.list.$factory(dict)
@@ -1911,7 +1912,8 @@ type_funcs.__qualname___set = function(cls, value) {
 }
 
 type_funcs.__sizeof__ = function(self) {
-
+    $B.meth_noargs('type.__sizeof__', arguments)
+    return _b_.NotImplemented
 }
 
 type_funcs.__subclasscheck__ = function(self, subclass) {
@@ -1933,6 +1935,7 @@ type_funcs.__subclasscheck__ = function(self, subclass) {
 }
 
 type_funcs.__subclasses__ = function(cls) {
+    $B.meth_noargs('type.__subclasses__', arguments)
     return $B.$list([...cls.tp_subclasses])
 }
 
@@ -1953,6 +1956,7 @@ type_funcs.__type_params___set = function(self) {
 }
 
 type_funcs.mro = function(cls) {
+    $B.meth_noargs('type.mro', arguments)
     return $B.$list($B.get_mro(cls))
 }
 
@@ -2626,6 +2630,7 @@ $B.GenericAlias.mp_subscript = function(self, item) {
 var GenericAlias_funcs = $B.GenericAlias.tp_funcs = {}
 
 GenericAlias_funcs.__dir__ = function(self) {
+    $B.meth_noargs('GenericAlias.__dir__', arguments)
     let dir = _b_.dir(self.origin)
     return dir
 }
@@ -2645,7 +2650,7 @@ GenericAlias_funcs.__parameters___get = function(self) {
 GenericAlias_funcs.__parameters___set = _b_.None
 
 GenericAlias_funcs.__reduce__ = function(self) {
-
+    $B.meth_noargs('GenericAlias.__dir__', arguments)
 }
 
 GenericAlias_funcs.__subclasscheck__ = function(self) {

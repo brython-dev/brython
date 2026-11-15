@@ -205,10 +205,12 @@ $B.str_iterator.tp_iternext = function*(self){
 var str_iterator_funcs = $B.str_iterator.tp_funcs = {}
 
 str_iterator_funcs.__length_hint__ = function(self) {
+    $B.meth_noargs('str_iterator.__length_hint__', arguments)
     return self.len - self.index
 }
 
 str_iterator_funcs.__reduce__ = function(self) {
+    $B.meth_noargs('str_iterator.__reduce__', arguments)
     return $B.fast_tuple([_b_.iter, $B.fast_tuple([self.obj]), 0])
 }
 
@@ -1923,13 +1925,15 @@ str_funcs.__format__ = function(self, format_spec) {
 }
 
 str_funcs.__getnewargs__ = function(self) {
-    return str.$getnewargs($B.single_arg('__getnewargs__', 'self', arguments))
+    $B.meth_noargs('str.__getnewargs__', arguments)
+    return str.$getnewargs(self)
 }
 
 str_funcs.__sizeof__ = function(self) {
     // CPython's 64-bit sizes (the platform Brython emulates — its hash
     // width is 64): ASCII is a PyASCIIObject (40 bytes) + len + 1,
     // otherwise PyCompactUnicodeObject (56 bytes) + (len + 1) * kind
+    $B.meth_noargs('str.__sizeof__', arguments)
     var len = 0,
         maxchar = 0
     for (var c of to_string(self)) {
@@ -1947,8 +1951,7 @@ str_funcs.__sizeof__ = function(self) {
 }
 
 str_funcs.capitalize = function(self) {
-    $B.check_nb_args_no_kw('str.capitalize', 1, arguments)
-
+    $B.meth_noargs('str.capitalize', arguments)
     var _self = to_string(self)
     if (_self.length == 0) {
         return ""
@@ -1957,7 +1960,7 @@ str_funcs.capitalize = function(self) {
 }
 
 str_funcs.casefold = function(self) {
-    $B.check_nb_args_no_kw('set.remove', 1, arguments)
+    $B.meth_noargs('str.casefold', arguments)
     var res = "",
         char,
         cf,
@@ -2297,7 +2300,7 @@ str_funcs.isalnum = function(self) {
     is at least one character, false otherwise. A character c is alphanumeric
     if one of the following returns True: c.isalpha(), c.isdecimal(),
     c.isdigit(), or c.isnumeric(). */
-    $B.check_nb_args_no_kw('str.isalnum', 1, arguments)
+    $B.meth_noargs('str.isalnum', arguments)
     var _self = to_string(self)
     if (_self.length == 0) {
         return false
@@ -2317,7 +2320,7 @@ str_funcs.isalpha = function(self) {
     characters defined in the Unicode character database as "Letter", i.e.,
     those with general category property being one of "Lm", "Lt", "Lu", "Ll",
     or "Lo". */
-    $B.check_nb_args_no_kw('str.isalpha', 1, arguments)
+    $B.meth_noargs('str.isalpha', arguments)
     var _self = to_string(self)
     if (_self.length == 0) {
         return false
@@ -2334,7 +2337,7 @@ str_funcs.isascii = function(self) {
     /* Return true if the string is empty or all characters in the string are
     ASCII, false otherwise. ASCII characters have code points in the range
     U+0000-U+007F. */
-    $B.check_nb_args_no_kw('str.isascii', 1, arguments)
+    $B.meth_noargs('str.isascii', arguments)
     var _self = to_string(self)
     for (var i = 0, len = _self.length; i < len; i++) {
         if (_self.charCodeAt(i) > 127) {
@@ -2350,7 +2353,7 @@ str_funcs.isdecimal = function(self) {
     those that can be used to form numbers in base 10, e.g. U+0660,
     ARABIC-INDIC DIGIT ZERO. Formally a decimal character is a character in
     the Unicode General Category "Nd". */
-    $B.check_nb_args_no_kw('str.isdecimal', 1, arguments)
+    $B.meth_noargs('str.isdecimal', arguments)
     var cp,
         _self = to_string(self)
     for (var char of _self) {
@@ -2365,7 +2368,7 @@ str_funcs.isdecimal = function(self) {
 str_funcs.isdigit = function(self) {
     /* Return true if all characters in the string are digits and there is at
     least one character, false otherwise. */
-    $B.check_nb_args_no_kw('str.isdigit', 1, arguments)
+    $B.meth_noargs('str.isdigit', arguments)
     var cp,
         _self = to_string(self)
     for (var char of _self) {
@@ -2384,7 +2387,7 @@ str_funcs.isdigit = function(self) {
 str_funcs.isidentifier = function(self) {
     /* Return true if the string is a valid identifier according to the
     language definition. */
-    $B.check_nb_args_no_kw('str.isidentifier', 1, arguments)
+    $B.meth_noargs('str.isidentifier', arguments)
     var _self = to_string(self)
     if (_self.length == 0) {
         return false
@@ -2406,7 +2409,7 @@ str_funcs.isidentifier = function(self) {
 str_funcs.islower = function(self) {
     /* Return true if all cased characters 4 in the string are lowercase and
     there is at least one cased character, false otherwise. */
-    $B.check_nb_args_no_kw('str.islower', 1, arguments)
+    $B.meth_noargs('str.islower', arguments)
     var has_cased = false,
         cp,
         _self = to_string(self)
@@ -2431,7 +2434,7 @@ str_funcs.isnumeric = function(self) {
     value property, e.g. U+2155, VULGAR FRACTION ONE FIFTH. Formally, numeric
     characters are those with the property value Numeric_Type=Digit,
     Numeric_Type=Decimal or Numeric_Type=Numeric.*/
-    $B.check_nb_args_no_kw('str.isnumeric', 1, arguments)
+    $B.meth_noargs('str.isnumeric', arguments)
     var _self = to_string(self)
     for (var char of _self) {
         if((! numeric_re.test(char)) &&
@@ -2447,7 +2450,7 @@ str_funcs.isprintable = function(self) {
     is empty, false otherwise. Nonprintable characters are those characters
     defined in the Unicode character database as "Other" or "Separator",
     excepting the ASCII space (0x20) which is considered printable. */
-    $B.check_nb_args_no_kw('str.isprintable', 1, arguments)
+    $B.meth_noargs('str.isprintable', arguments)
     var _self = to_string(self)
     for (var char of _self) {
         if (char == ' ') {
@@ -2467,7 +2470,7 @@ str_funcs.isspace = function(self) {
     A character is whitespace if in the Unicode character database, either its
     general category is Zs ("Separator, space"), or its bidirectional class is
     one of WS, B, or S.*/
-    $B.check_nb_args_no_kw('str.isspace', 1, arguments)
+    $B.meth_noargs('str.isspace', arguments)
     var cp,
         _self = to_string(self)
     for (var char of _self) {
@@ -2485,7 +2488,7 @@ str_funcs.istitle = function(self) {
     one character, for example uppercase characters may only follow uncased
     characters and lowercase characters only cased ones. Return false
     otherwise. */
-    $B.check_nb_args_no_kw('str.istitle', 1, arguments)
+    $B.meth_noargs('str.istitle', arguments)
     var _self = to_string(self),
         cased = false,
         prev_cased = false
@@ -2513,7 +2516,7 @@ str_funcs.istitle = function(self) {
 str_funcs.isupper = function(self) {
     /* Return true if all cased characters 4 in the string are lowercase and
     there is at least one cased character, false otherwise. */
-    $B.check_nb_args_no_kw('str.isupper', 1, arguments)
+    $B.meth_noargs('str.isupper', arguments)
     var is_upper = false,
         cp,
         _self = to_string(self)
@@ -2573,7 +2576,7 @@ str_funcs.ljust = function(self) {
 }
 
 str_funcs.lower = function(self) {
-    $B.check_nb_args_no_kw('str.lower', 1, arguments)
+    $B.meth_noargs('str.lower', arguments)
     var _self = to_string(self)
     return $B.String(_self.toLowerCase())
 }
@@ -3131,7 +3134,7 @@ str_funcs.swapcase = function(self) {
 }
 
 str_funcs.title = function(self) {
-    $B.check_nb_args_no_kw('str.title', 1, arguments)
+    $B.meth_noargs('str.title', arguments)
     var state,
         cp,
         res = "",
@@ -3194,7 +3197,7 @@ str_funcs.translate = function(self, table) {
 }
 
 str_funcs.upper = function(self) {
-    $B.check_nb_args_no_kw('str.upper', 1, arguments)
+    $B.meth_noargs('str.upper', arguments)
     var _self = to_string(self)
     return $B.String(_self.toUpperCase())
 }
@@ -3393,6 +3396,7 @@ Template_funcs.__class_getitem__ = function() {
 }
 
 Template_funcs.__reduce__ = function(self) {
+    $B.meth_noargs('Template.__reduce__', arguments)
     $B.import('string.templatelib')
     var module = $B.imported['string.templatelib']
     var _template_unpickle = $B.module_getattr(module, '_template_unpickle')

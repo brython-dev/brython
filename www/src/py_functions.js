@@ -240,6 +240,7 @@ builtin_function_or_method_funcs.__qualname___get = function(self) {
 builtin_function_or_method_funcs.__qualname___set = _b_.None
 
 builtin_function_or_method_funcs.__reduce__ = function(self) {
+    $B.meth_noargs('builtin_function_or_method.__reduce__', arguments)
     var name = self.ml ? self.ml.ml_name :
         self.$function_infos[$B.func_attrs.__name__]
     if(self.m_self !== undefined && self.m_self !== null &&

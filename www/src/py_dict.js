@@ -370,19 +370,30 @@ $B.str_dict_length = function(d) {
     return Object.keys(d).length
 }
 
-$B.dict_key_values = function(d) {
+$B.dict_key_values = function*(d) {
     // returns a JS array of [key, value] pairs
-    var res = []
+    let version = d[VERSION]
+    let res = []
     if (d[KEYS]) {
-        for (var i = 0, len = d[KEYS].length; i < len; i++) {
-            res.push([d[KEYS][i], d[VALUES][i]])
+        for (let i = 0, len = d[KEYS].length; i < len; i++) {
+            if (d[KEYS][i] === undefined) {
+                continue
+            }
+            yield [d[KEYS][i], d[VALUES][i]]
+            if (d[VERSION] !== version) {
+                $B.RAISE(_b_.RuntimeError,
+                    'dictionary changed size during iteration')
+            }
         }
     } else {
         for (let key in d) {
-            res.push([key, d[key]])
+            yield [key, d[key]]
+            if (d[VERSION] !== version) {
+                $B.RAISE(_b_.RuntimeError,
+                    'dictionary changed size during iteration')
+            }
         }
     }
-    return res
 }
 
 $B.hasOnlyStringKeys = function(d) {
@@ -1061,7 +1072,8 @@ _b_.dict.tp_hash = _b_.None
 _b_.dict.tp_iter = function(self) {
     return {
         ob_type: $B.dict_keyiterator,
-        it: _b_.dict.$iter_items(self),
+        it: $B.dict_key_values(self),
+        counter: 0,
         dict_obj: self
     }
 }
@@ -1131,6 +1143,7 @@ var dict_funcs = _b_.dict.tp_funcs = {}
 dict_funcs.__class_getitem__ = $B.$class_getitem
 
 dict_funcs.__reversed__ = function(self) {
+    $B.meth_noargs("dict.__reversed__", arguments)
     return {
         ob_type: $B.dict_reversekeyiterator,
         it: _b_.dict.$iter_items_reversed(self),
@@ -1139,13 +1152,13 @@ dict_funcs.__reversed__ = function(self) {
 }
 
 dict_funcs.__sizeof__ = function(self) {
+    $B.meth_noargs("dict.__sizeof__", arguments)
     return 48
 }
 
 dict_funcs.clear = function(self) {
     // Remove all items from the dictionary.
-    var $ = $B.args("clear", 1, {self: null}, arguments)
-    var self = $.self
+    $B.meth_noargs("dict.clear", arguments)
 
     if (self[TABLE]) {
         delete self[TABLE]
@@ -1162,10 +1175,8 @@ dict_funcs.clear = function(self) {
 
 dict_funcs.copy = function(self) {
     // Return a shallow copy of the dictionary
-    var $ = $B.args("copy", 1, {self: null}, arguments)
-    var self = $.self,
-        res = $B.empty_dict()
-
+    $B.meth_noargs("dict.copy", arguments)
+    var res = $B.empty_dict()
     $copy_dict(res, self)
     return res
 }
@@ -1213,7 +1224,7 @@ dict_funcs.get = function(self) {
 }
 
 dict_funcs.items = function(self) {
-    $B.args('items', 1, {self: null}, arguments)
+    $B.meth_noargs("dict.items", arguments)
     return {
         ob_type: $B.dict_items,
         dict_obj: self
@@ -1221,7 +1232,7 @@ dict_funcs.items = function(self) {
 }
 
 dict_funcs.keys = function(self) {
-    $B.args('keys', 1, {self: null}, arguments)
+    $B.meth_noargs("dict.keys", arguments)
     return {
         ob_type: $B.dict_keys,
         dict_obj: self
@@ -1251,7 +1262,7 @@ dict_funcs.pop = function(self) {
 }
 
 dict_funcs.popitem = function(self) {
-    $B.check_nb_args_no_kw('popitem', 1, arguments)
+    $B.meth_noargs("dict.popitem", arguments)
     if (dict.mp_length(self) == 0) {
         $B.RAISE(_b_.KeyError, "'popitem(): dictionary is empty'")
     }
@@ -1329,7 +1340,7 @@ dict_funcs.update = function(self) {
 }
 
 dict_funcs.values = function(self) {
-    $B.args('values', 1, {self: null}, arguments)
+    $B.meth_noargs("dict.values", arguments)
     return {
         ob_type: $B.dict_values,
         dict_obj: self
@@ -1385,7 +1396,8 @@ $B.dict_items.tp_hash = _b_.None
 $B.dict_items.tp_iter = function(self) {
     return {
         ob_type: $B.dict_itemiterator,
-        it: _b_.dict.$iter_items(self.dict_obj),
+        counter: 0,
+        it: $B.dict_key_values(self.dict_obj),
         dict_obj: self.dict_obj
     }
 }
@@ -1412,8 +1424,10 @@ $B.dict_items.sq_contains = function(self, obj) {
 var dict_items_funcs = $B.dict_items.tp_funcs = {}
 
 dict_items_funcs.__reversed__ = function(self) {
+    $B.meth_noargs("dict_items.__reversed__", arguments)
     return {
         ob_type: $B.dict_reverseitemiterator,
+        counter: 0,
         it: dict.$iter_items_reversed(self.dict_obj),
         dict_obj: self.dict_obj
     }
@@ -1470,7 +1484,8 @@ $B.dict_keys.tp_hash = _b_.None
 $B.dict_keys.tp_iter = function(self) {
     return {
         ob_type: $B.dict_keyiterator,
-        it: dict.$iter_items(self.dict_obj),
+        counter: 0,
+        it: $B.dict_key_values(self.dict_obj),
         dict_obj: self.dict_obj
     }
 }
@@ -1491,6 +1506,7 @@ $B.dict_keys.sq_contains = function(self, value) {
 var dict_keys_funcs = $B.dict_keys.tp_funcs = {}
 
 dict_keys_funcs.__reversed__ = function(self) {
+    $B.meth_noargs("dict_keys.__reversed__", arguments)
     return {
         ob_type: $B.dict_reversekeyiterator,
         it: _b_.dict.$iter_items_reversed(self.dict_obj),
@@ -1505,7 +1521,8 @@ dict_keys_funcs.isdisjoint = function(self, other) {
 }
 
 dict_keys_funcs.mapping_get = function(self) {
-    return $B.mappingproxy.tp_new($B.mappingproxy, [self.dict_obj], $B.empty_dict())
+    return $B.mappingproxy.tp_new($B.mappingproxy, [self.dict_obj],
+        $B.empty_dict())
 }
 
 dict_keys_funcs.mapping_set = _b_.None
@@ -1525,7 +1542,8 @@ $B.dict_values.tp_repr = function(self) {
 $B.dict_values.tp_iter = function(self) {
     return {
         ob_type: $B.dict_valueiterator,
-        it: _b_.dict.$iter_items(self.dict_obj),
+        counter: 0,
+        it: $B.dict_key_values(self.dict_obj),
         dict_obj: self.dict_obj
     }
 }
@@ -1537,8 +1555,10 @@ $B.dict_values.mp_length = function(self) {
 var dict_values_funcs = $B.dict_values.tp_funcs = {}
 
 dict_values_funcs.__reversed__ = function(self) {
+    $B.meth_noargs("dict_values.__reversed__", arguments)
     return {
         ob_type: $B.dict_reversevalueiterator,
+        counter: 0,
         it: dict.$iter_items_reversed(self.dict_obj),
         dict_obj: self.dict_obj
     }
@@ -1564,19 +1584,23 @@ $B.dict_keyiterator.tp_iter = function(self) {
     return self
 }
 
-$B.dict_keyiterator.tp_iternext = function*(self){
-    for (var item of self.it) {
-        yield item.key
+$B.dict_keyiterator.tp_iternext = function*(self) {
+    for (let kv of self.it) {
+        self.counter++
+        yield kv[0]
     }
 }
 
 var dict_keyiterator_funcs = $B.dict_keyiterator.tp_funcs = {}
 
 dict_keyiterator_funcs.__length_hint__ = function(self) {
-    return _b_.dict.mp_length(self.dict_obj)
+    $B.meth_noargs("dict_keyiterator.__length_hint__", arguments)
+    console.log(_b_.dict.mp_length(self.dict_obj), self.counter)
+    return _b_.dict.mp_length(self.dict_obj) - self.counter
 }
 
 dict_keyiterator_funcs.__reduce__ = function(self) {
+    $B.meth_noargs("dict_keyiterator.__reduce__", arguments)
     var keys = $B.$list(Array.from($B.dict_keyiterator.tp_iternext(self)))
     return $B.fast_tuple([_b_.iter, $B.fast_tuple([keys])])
 }
@@ -1590,7 +1614,7 @@ $B.dict_reversekeyiterator.tp_iter = function(self) {
     return self
 }
 
-$B.dict_reversekeyiterator.tp_iternext = function*(self){
+$B.dict_reversekeyiterator.tp_iternext = function*(self) {
     for (var entry of self.it) {
         yield entry[0]
     }
@@ -1616,19 +1640,22 @@ $B.dict_valueiterator.tp_iter = function(self) {
     return self
 }
 
-$B.dict_valueiterator.tp_iternext = function*(self){
-    for (var item of self.it) {
-        yield item.value
+$B.dict_valueiterator.tp_iternext = function*(self) {
+    for (var kv of self.it) {
+        self.counter++
+        yield kv[1]
     }
 }
 
 var dict_valueiterator_funcs = $B.dict_valueiterator.tp_funcs = {}
 
 dict_valueiterator_funcs.__length_hint__ = function(self) {
-    return _b_.dict.mp_length(self.dict_obj)
+    $B.meth_noargs('dict_valueiterator.__length_hint__', arguments)
+    return _b_.dict.mp_length(self.dict_obj) - self.counter
 }
 
 dict_valueiterator_funcs.__reduce__ = function(self) {
+    $B.meth_noargs('dict_valueiterator.__reduce__', arguments)
     let values_list = $B.$list(
         Array.from($B.dict_valueiterator.tp_iternext(self))
     )
@@ -1643,8 +1670,9 @@ $B.dict_reversevalueiterator.tp_iter = function(self) {
     return self
 }
 
-$B.dict_reversevalueiterator.tp_iternext = function*(self){
+$B.dict_reversevalueiterator.tp_iternext = function*(self) {
     for (var item of self.it) {
+        self.counter++
         yield item[1]
     }
 }
@@ -1652,10 +1680,12 @@ $B.dict_reversevalueiterator.tp_iternext = function*(self){
 var dict_reversevalueiterator_funcs = $B.dict_reversevalueiterator.tp_funcs = {}
 
 dict_reversevalueiterator_funcs.__length_hint__ = function(self) {
-    return _b_.dict.mp_length(self.dict_obj)
+    $B.meth_noargs('dict_reversevalueiterator.__length_hint__', arguments)
+    return _b_.dict.mp_length(self.dict_obj) - self.counter
 }
 
 dict_reversevalueiterator_funcs.__reduce__ = function(self) {
+    $B.meth_noargs('dict_reversevalueiterator.__reduce__', arguments)
     let values = Array.from(self.it).map(x => x[1])
     return $B.fast_tuple([_b_.iter, $B.fast_tuple([$B.$list(values)])])
 }
@@ -1670,19 +1700,22 @@ $B.dict_itemiterator.tp_iter = function(self) {
     return self
 }
 
-$B.dict_itemiterator.tp_iternext = function*(self){
+$B.dict_itemiterator.tp_iternext = function*(self) {
     for (var item of self.it) {
-        yield $B.fast_tuple([item.key, item.value])
+        self.counter++
+        yield $B.fast_tuple(item)
     }
 }
 
 var dict_itemiterator_funcs = $B.dict_itemiterator.tp_funcs = {}
 
 dict_itemiterator_funcs.__length_hint__ = function(self) {
-    return_b_.dict.mp_length(self.obj)
+    $B.meth_noargs('dict_itemiterator.__length_hint__', arguments)
+    return_b_.dict.mp_length(self.obj) - self.counter
 }
 
 dict_itemiterator_funcs.__reduce__ = function(self) {
+    $B.meth_noargs('dict_itemiterator.__reduce__', arguments)
     let items_list = $B.$list(Array.from($B.dict_itemiterator.tp_iternext(self)))
     return $B.fast_tuple([_b_.iter, $B.fast_tuple([items_list])])
 }
@@ -1697,6 +1730,7 @@ $B.dict_reverseitemiterator.tp_iter = function(self) {
 
 $B.dict_reverseitemiterator.tp_iternext = function*(self){
     for (var item of self.it) {
+        self.counter++
         yield item
     }
 }
@@ -1704,10 +1738,12 @@ $B.dict_reverseitemiterator.tp_iternext = function*(self){
 var dict_reverseitemiterator_funcs = $B.dict_reverseitemiterator.tp_funcs = {}
 
 dict_reverseitemiterator_funcs.__length_hint__ = function(self) {
-    return _b_.dict.mp_length(self.dict_obj)
+    $B.meth_noargs('dict_reverseitemiterator.__length_hint__', arguments)
+    return _b_.dict.mp_length(self.dict_obj) - self.counter
 }
 
 dict_reverseitemiterator_funcs.__reduce__ = function(self) {
+    $B.meth_noargs('dict_reverseitemiterator.__reduce__', arguments)
     return $B.fast_tuple([_b_.iter,
         $B.fast_tuple([$B.$list(Array.from(self.it))])])
 }
@@ -1869,6 +1905,7 @@ frozendict_funcs.__sizeof__ = dict_funcs.__sizeof__
 
 frozendict_funcs.copy = function(self) {
     // Return a shallow copy of the dictionary
+    $B.meth_noargs('frozendict.copy', arguments)
     var $ = $B.args("copy", 1, {self: null}, arguments)
     var self = $.self,
         res = $B.empty_dict()
@@ -1941,7 +1978,8 @@ $B.mappingproxy.tp_str = function(self) {
 $B.mappingproxy.tp_iter = function(self) {
     return {
         ob_type: $B.dict_keyiterator,
-        it: mappingproxy_iter_items(self),
+        it: $B.dict_key_values(self.mapping),
+        counter: 0,
         dict_obj: self.mapping
     }
 }
@@ -2005,6 +2043,7 @@ mappingproxy_funcs.__reversed__ = function(self) {
 
 mappingproxy_funcs.copy = function(self) {
     // a copy of the underlying mapping, not a new proxy
+    $B.meth_noargs('mappingproxy.copy', arguments)
     return $B.$call($B.$getattr(self.mapping, 'copy'))
 }
 
@@ -2022,7 +2061,8 @@ mappingproxy_funcs.items = function(self) {
 mappingproxy_funcs.keys = function(self) {
     return {
         ob_type: $B.dict_keyiterator,
-        it: mappingproxy_iter_items(self),
+        counter: 0,
+        it: $B.dict_key_values(self.mapping),
         dict_obj: self.mapping
     }
 }
@@ -2041,11 +2081,6 @@ $B.mappingproxy.classmethods = ["__class_getitem__"]
 
 $B.set_func_names(mappingproxy, "builtins")
 
-function* mappingproxy_iter_items(self){
-    for (var item of dict.$iter_items(self.mapping)) {
-        yield {key: item.key, value: item.value}
-    }
-}
 
 function jsobj2dict(x, exclude) {
     exclude = exclude || function() {return false}

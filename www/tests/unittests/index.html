@@ -134,7 +134,6 @@ import unittest
 from browser import self as target, bind, console
 
 target.send('ready')
-sys.path.append(os.path.join(os.environ['PYTHONPATH'], "Lib", "test"))
 
 TestResult = unittest.TestResult
 
@@ -276,7 +275,8 @@ class HTMLTestRunner:
 @bind(target, 'message')
 def message(evt):
     module = evt.data
-    mod = __import__(module)
+    test = __import__('test', fromlist=[module])
+    mod = getattr(test, module)
     _suite = unittest.TestLoader().loadTestsFromModule(mod)
     runner = HTMLTestRunner(sys.stdout, verbosity=2)
     runner.run(_suite)
@@ -310,7 +310,6 @@ import javascript
 table = document["result_table"]
 limit = document["duration"]
 
-test_dir = os.path.join(os.environ['PYTHONPATH'], "Lib", "test")
 
 def ready(w):
     global worker
@@ -407,6 +406,7 @@ def show_test(event):
 
     mod = __import__(module)
     tab = window.open('show.html?file=%s' %mod.__file__)
+
 
 worker = worker.create_worker('test_runner', onready=ready,
     onmessage=message)

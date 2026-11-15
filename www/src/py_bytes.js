@@ -133,6 +133,10 @@ function main_type(obj) {
     return $B.$isinstance(obj, _b_.bytearray) ? _b_.bytearray : _b_.bytes
 }
 
+function tp(obj) {
+    return main_type(obj).tp_name + '.'
+}
+
 function dict_or_not(cls, instance) {
     if ($B.instance_has_dict(cls)) {
         $B.init_dict(instance)
@@ -266,8 +270,8 @@ function bytearray_delitem(self, arg) {
     return $B.list_delitem(self.source, arg)
 }
 
-function capitalize() {
-    var self = self_arg('capitalize', arguments)
+function capitalize(self) {
+    $B.meth_noargs(tp(self)+'capitalize', arguments)
     var src = self.source,
         len = src.length,
         buffer = src.slice()
@@ -493,8 +497,8 @@ function hex() {
     return res
 }
 
-function isalnum() {
-    var self = self_arg('isalnum', arguments)
+function isalnum(self) {
+    $B.meth_noargs(tp(self) + 'isalnum', arguments)
     var src = self.source,
         len = src.length,
         res = len > 0
@@ -507,8 +511,8 @@ function isalnum() {
     return res
 }
 
-function isalpha() {
-    var self = self_arg('isalpha', arguments)
+function isalpha(self) {
+    $B.meth_noargs(tp(self) + 'isalpha', arguments)
     var src = self.source,
         len = src.length,
         res = len > 0
@@ -519,8 +523,8 @@ function isalpha() {
     return res
 }
 
-function isascii() {
-    var self = self_arg('isascii', arguments)
+function isascii(self) {
+    $B.meth_noargs(tp(self) + 'isascii', arguments)
     for (var byte of self.source) {
         if (byte > 0x7F) {
             return false
@@ -529,8 +533,8 @@ function isascii() {
     return true
 }
 
-function isdigit() {
-    var self = self_arg('isdigit', arguments)
+function isdigit(self) {
+    $B.meth_noargs(tp(self) + 'isdigit', arguments)
     var src = self.source,
         len = src.length,
         res = len > 0
@@ -541,8 +545,8 @@ function isdigit() {
     return res
 }
 
-function islower() {
-    var self = self_arg('islower', arguments)
+function islower(self) {
+    $B.meth_noargs(tp(self) + 'islower', arguments)
     var src = self.source,
         len = src.length,
         res = false
@@ -558,8 +562,8 @@ function islower() {
     return res
 }
 
-function isspace() {
-    var self = self_arg('isspace', arguments)
+function isspace(self) {
+    $B.meth_noargs(tp(self) + 'isspace', arguments)
 
     var src = self.source,
         len = src.length
@@ -582,8 +586,8 @@ function isspace() {
     return true
 }
 
-function istitle() {
-    var self = self_arg('istitle', arguments)
+function istitle(self) {
+    $B.meth_noargs(tp(self) + 'istitle', arguments)
     var src = self.source,
         len = src.length,
         current_char_is_letter = false,
@@ -607,8 +611,8 @@ function istitle() {
     return true
 }
 
-function isupper() {
-    var self = self_arg('isupper', arguments)
+function isupper(self) {
+    $B.meth_noargs(tp(self) + 'isupper', arguments)
     var src = self.source,
         len = src.length,
         res = false
@@ -663,6 +667,7 @@ function ljust() {
 }
 
 function lower(self) {
+    $B.meth_noargs(tp(self) + 'lower', arguments)
     var _res = [],
         pos = 0
     for (var i = 0, len = self.source.length; i < len; i++) {
@@ -1042,18 +1047,8 @@ function startswith() {
     }
 }
 
-function upper() {
-    var self = self_arg('upper', arguments)
-    var _res = [],
-        pos = 0
-    for (var i = 0, len = self.source.length; i < len; i++) {
-        if (self.source[i]) {_res[pos++] = _upper(self.source[i])}
-    }
-    return main_type(self).$factory(_res)
-}
-
-function swapcase() {
-    var self = $B.single_arg('swapcase', 'self', arguments)
+function swapcase(self) {
+    $B.meth_noargs(tp(self) + 'swapcase', arguments)
     var src = self.source,
         len = src.length,
         buffer = src.slice()
@@ -1069,8 +1064,8 @@ function swapcase() {
     return cls.$factory(buffer)
 }
 
-function title() {
-    var self = $B.single_arg('title', 'self', arguments)
+function title(self) {
+    $B.meth_noargs(tp(self) + 'title', arguments)
     var cls = this // bytes or bytearray
     var src = self.source,
         len = src.length,
@@ -1124,6 +1119,16 @@ function translate() {
        }
     }
     return cls.$factory(res)
+}
+
+function upper(self) {
+    $B.meth_noargs(tp(self) + 'upper', arguments)
+    var _res = [],
+        pos = 0
+    for (var i = 0, len = self.source.length; i < len; i++) {
+        if (self.source[i]) {_res[pos++] = _upper(self.source[i])}
+    }
+    return main_type(self).$factory(_res)
 }
 
 function zfill() {
@@ -1426,11 +1431,13 @@ bytearray_funcs.center = function(self) {
 }
 
 bytearray_funcs.clear = function(self) {
+    $B.meth_noargs('bytearray.clear', arguments)
     check_exports(self)
     self.source = []
 }
 
 bytearray_funcs.copy = function(self) {
+    $B.meth_noargs('bytearray.copy', arguments)
     return {
         ob_type: _b_.bytearray,
         source: self.source.slice()
@@ -1623,6 +1630,7 @@ bytearray_funcs.resize = function(self, size) {
 }
 
 bytearray_funcs.reverse = function(self) {
+    $B.meth_noargs('bytearray.reverse', arguments)
     self.source.reverse()
 }
 
@@ -1844,10 +1852,12 @@ $B.bytes_iterator.tp_iternext = function*(self){
 var bytes_iterator_funcs = $B.bytes_iterator.tp_funcs = {}
 
 bytes_iterator_funcs.__length_hint__ = function(self) {
+    $B.meth_noargs('bytes_iterator.__length_hint__', arguments)
     return Math.max(0, self.len - self.index - 1)
 }
 
 bytes_iterator_funcs.__reduce__ = function(self) {
+    $B.meth_noargs('bytes_iterator.__reduce__', arguments)
     return $B.fast_tuple([_b_.iter, $B.fast_tuple([self.obj]), 0])
 }
 
@@ -2807,7 +2817,8 @@ bytes_funcs.__bytes__ = function(self) {
 }
 
 bytes_funcs.__getnewargs__ = function(self) {
-    return bytes.$getnewargs($B.single_arg('__getnewargs__', 'self', arguments))
+    $B.meth_noargs('bytes.__getnewargs__', arguments)
+    return bytes.$getnewargs(self)
 }
 
 bytes_funcs.capitalize = function(self) {
