@@ -141,6 +141,81 @@ function base64_decode(bytes, alphabet, padded) {
     return $B.fast_bytes(res)
 }
 
+function get5(bytes, byte_num, start) {
+    let res
+    let b = bytes[byte_num]
+    if (start < 3) {
+        // stay inside the same byte
+        // eg start = 1
+
+        // 01234567
+        // abcdefgh
+
+        // mask bits 0 to start
+        // 127 for 0, 63 for 1, 31 for 2
+        let mask = Math.pow(2, 8 - start) - 1
+        res = b & mask
+
+        // shift right by 3 - start
+        res >>= 3 - start
+        start += 5
+        if (start == 8) {
+            byte_num++
+            start = 0
+        }
+        return [res, byte_num, start]
+    } else {
+        // get first bits from current byte
+        // and remaining (5 - (8 - start)) in next byte
+        // mask bits before start
+        let mask = Math.pow(2, 8 - start) - 1
+        res = b & mask
+        // shift right by number of missing bits
+        let missing = start - 3
+        res <<= missing
+        // get next byte
+        byte_num++
+        b = bytes[byte_num]
+        // shift right by 8 - missing
+        res += b >> (8 - missing)
+        // next start
+        start = missing
+        return [res, byte_num, start]
+    }
+}
+
+function base32_encode(bytes, padded, alphabet, wrapcol) {
+    let alph_str = $B.decode(alphabet, 'ascii')
+    let byte_num = 0
+    let start = 0
+    let res
+
+    let remaining = bytes.length % 5
+    let paddings = {1: 6, 2: 4, 3: 3, 4: 1}
+
+    let last_byte = bytes.length - remaining
+
+    let encoded = ''
+    let wrap = 0
+
+    while(byte_num < bytes.length) {
+        [res, byte_num, start] = get5(bytes, byte_num, start)
+        encoded += alph_str[res]
+        if (wrapcol) {
+            wrap++
+            if (wrap > wrapcol) {
+                encoded += '\n'
+                wrap = 0
+            }
+        }
+    }
+    if (padded) {
+        encoded += '='.repeat(paddings[remaining])
+    }
+
+    return encoded
+}
+
 function base64_encode(bytes, alphabet, padded) {
     let s = bytes
     let padding = BASE64_PAD
@@ -267,6 +342,39 @@ var module = {
             res.push((hex2int[s.charAt(i)] << 4) + hex2int[s.charAt(i + 1)])
         }
         return _b_.bytes.$factory(res)
+    },
+    b2a_base32: function() {
+        let $ = $B.args("b2a_base32", 1, {data: null}, arguments, null, null,
+                    "kw")
+        let data = $.data
+        let wrapcol = $B.str_dict_get($.kw, 'wrapcol', 0)
+        let alphabet = $B.str_dict_get($.kw, 'alphabet', $B.NULL)
+        if (alphabet === $B.NULL) {
+            alphabet = ALPH.BASE32_ALPHABET
+        } else {
+            if (! $B.exact_type(alphabet, _b_.bytes)) {
+                $B.RAISE(_b_.TypeError,
+                    `a bytes-like object is required, not ` +
+                    `'${$B.class_name(alphabet)}'`
+                )
+            }
+            if (_b_.bytes.mp_length(alphabet) !== 32) {
+                $B.RAISE(_b_.ValueError, 'alphabet must have length 32')
+            }
+        }
+        let padded = $B.str_dict_get($.kw, 'padded', true)
+
+        if (! $B.is_bytes_like(data)) {
+            $B.RAISE(_b_.TypeError,
+                `a bytes-like object is required, not ` +
+                `'${$B.class_name(data)}'`
+            )
+        }
+        var bytes_list = $B.to_bytes(data)
+
+        var res = base32_encode(bytes_list, padded, alphabet, wrapcol)
+
+        return _b_.bytes.$factory(res, "ascii")
     },
     b2a_base64: function() {
         let $ = $B.args("b2a_base64", 1, {data: null}, arguments, null, null,

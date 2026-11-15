@@ -126,7 +126,9 @@ function mp_subscript(self, key) {
     try {
         var int_key = $B.PyNumber_Index(key)
     } catch (err) {
-        $B.RAISE(_b_.TypeError, $B.class_name(self) +
+        // named by the type that defines the method, not by a subclass or a
+        // class that borrowed it
+        $B.RAISE(_b_.TypeError, ($B.$isinstance(self, _b_.tuple) ? 'tuple' : 'list') +
             " indices must be integers or slices, not " + $B.class_name(key))
     }
 

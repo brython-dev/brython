@@ -746,9 +746,6 @@
                 chr0 = String.fromCodePoint(0)
             s = s.replace(new RegExp(chr0, 'g'), ' ')
             console[self.out](s)
-            if (s.includes('__spec__')) {
-                console.log(Error('trace').stack)
-            }
             self.buf = []
         }
     }

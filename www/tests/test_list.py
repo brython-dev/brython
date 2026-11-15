@@ -595,4 +595,18 @@ class MyList(list):
 copied = MyList([1, 2]).copy()
 assert type(copied) is list and copied == [1, 2]
 
+# a subscript that is no index is named by the type that defines it
+class MyList(list):
+    pass
+
+class MyTuple(tuple):
+    pass
+
+for seq, name in [([], 'list'), (MyList(), 'list'), ((), 'tuple'), (MyTuple(), 'tuple')]:
+    try:
+        seq['a']
+        raise AssertionError("no error")
+    except TypeError as exc:
+        assert str(exc) == f"{name} indices must be integers or slices, not str", exc
+
 print("passed all tests..")
