@@ -1709,4 +1709,14 @@ assert Box.__class_getitem__(3) == 3
 Box = type("Box", (), {"__dict__": property(lambda self: {"public": 1})})
 assert Box().__dict__ == {'public': 1}
 
+# the default repr of an instance names its identity, as an address
+class Plain:
+    pass
+
+plain = Plain()
+shown = repr(plain)
+assert shown.startswith('<') and shown.endswith('>'), shown
+assert f' object at {hex(id(plain))}' in shown, shown
+assert str(plain) == shown and repr(Plain()) != shown
+
 print('passed all tests..')
