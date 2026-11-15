@@ -26,29 +26,8 @@ import get_info_from_cpython
 get_info_from_cpython.generate_scripts()
 
 from make_dist import run, vname, vname1, vname2
+
 from directories import root_dir, src_dir
-
-# make minified version with terser
-import make_minified
-
-# make builtins_docstrings.js (docstring for all builtins)
-import make_builtins_docstrings
-
-run()
-
-release_dir = os.path.join(root_dir, "releases")
-
-# update package.json
-print("Update package.json...")
-package_file = os.path.join(root_dir, 'npm', 'package.json')
-with open(package_file, encoding="utf-8") as fobj:
-    package_info = fobj.read()
-    package_info = re.sub('"version": "(.*)"',
-        '"version": "{}"'.format(vname),
-        package_info)
-
-with open(package_file, "w", encoding="utf-8") as fobj:
-    fobj.write(package_info)
 
 # update implementation in README.md
 print("Update readme and install doc pages...", vname)
@@ -66,9 +45,35 @@ with open(README_page, encoding="utf-8") as f:
     content = re.sub(r"npm/brython@\d\.x\.y", "npm/brython@" + vname1 + '.x.y',
         content)
     content = re.sub(r"3\.\d+\.x", f'3.{version.version[1]}.x', content)
+    content = re.sub(r"static_doc/(.*?)/(.*?)/intro.html",
+        rf"static_doc/{vname2}/\2/intro.html", content)
 
 with open(README_page, "w", encoding="utf-8") as out:
     out.write(content)
+
+# make minified version with terser
+import make_minified
+
+# make builtins_docstrings.js (docstring for all builtins)
+import make_builtins_docstrings
+
+# run make_dist
+run()
+
+release_dir = os.path.join(root_dir, "releases")
+
+# update package.json
+print("Update package.json...")
+package_file = os.path.join(root_dir, 'npm', 'package.json')
+with open(package_file, encoding="utf-8") as fobj:
+    package_info = fobj.read()
+    package_info = re.sub('"version": "(.*)"',
+        '"version": "{}"'.format(vname),
+        package_info)
+
+with open(package_file, "w", encoding="utf-8") as fobj:
+    fobj.write(package_info)
+
 
 for lang in ["en", "fr"]:
     install_page = os.path.join(root_dir, "www", "doc", lang, "install.md")
