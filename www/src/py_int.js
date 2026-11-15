@@ -554,11 +554,18 @@ _b_.int.nb_power = function(self, other, z) {
     }
 }
 
+var check_shift_count = function(count) {
+    if (count < 0n) {
+        $B.RAISE(_b_.ValueError, "negative shift count")
+    }
+}
+
 _b_.int.nb_lshift = function(self, other) {
     var [x, y] = [self, other].map(toBigInt)
     if (x === $B.NULL || y === $B.NULL) {
         return _b_.NotImplemented
     }
+    check_shift_count(y)
     return int_or_long(x << y)
 }
 
@@ -567,6 +574,7 @@ _b_.int.nb_rshift = function(self, other) {
     if (x === $B.NULL || y === $B.NULL) {
         return _b_.NotImplemented
     }
+    check_shift_count(y)
     return int_or_long(x >> y)
 }
 
