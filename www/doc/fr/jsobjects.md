@@ -52,8 +52,8 @@ tableau suivant :
 <tr><td>Collection d’éléments DOM</td><td>liste d'instances de `DOMNode`</td>
 </tr>
 <tr><td>`true, false`</td><td>`True, False`</td></tr>
+<tr><td>`undefined`</td><td>`None`</td></tr>
 <tr><td>`null`</td><td>inchangé (1)</td></tr>
-<tr><td>`undefined`</td><td>inchangé (1)</td></tr>
 <tr><td>nombre (Number)</td><td>instance de `int` ou `float`</td></tr>
 <tr><td>big integer (BigInt)</td><td>instance de `int`</td></tr>
 <tr><td>chaîne (String)</td><td>instance de `str`</td></tr>
@@ -61,8 +61,8 @@ tableau suivant :
 <tr><td>fonction (Function)</td><td>fonction (3)</td></tr>
 </table>
 
-_(1) On peut tester la valeur en la comparant avec `is` aux constantes `NULL`_
-_et `UNDEFINED` du module [javascript](javascript.html)_
+_(1) On peut tester la valeur en la comparant avec `is` à la constante `NULL` _
+_du module [javascript](javascript.html)_
 
 _(2) Les éléments du tableau Javascript sont convertis en objets Python selon_
 _ce tableau de correspondance_

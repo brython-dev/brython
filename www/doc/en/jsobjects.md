@@ -49,8 +49,8 @@ Javascript objects are converted into their Python equivalent in this way :
 <tr><td>Collection of DOM elements</td><td>list of `DOMNode` instances</td>
 </tr>
 <tr><td>`true, false`</td><td>`True, False`</td></tr>
+<tr><td>`undefined`</td><td>`None`</td></tr>
 <tr><td>`null`</td><td>unchanged (1)</td></tr>
-<tr><td>`undefined`</td><td>unchanged (1)</td></tr>
 <tr><td>number (Number)</td><td>instance of `int` or `float`</td></tr>
 <tr><td>big integer (BigInt)</td><td>instance of `int`</td></tr>
 <tr><td>string (String)</td><td>instance of `str`</td></tr>
@@ -58,8 +58,8 @@ Javascript objects are converted into their Python equivalent in this way :
 <tr><td>function (Function)</td><td>unchanged (3)</td></tr>
 </table>
 
-_(1) The value can be tested by comparing it with `is` to constants `NULL`_
-_and `UNDEFINED` in module [javascript](javascript.html)_
+_(1) The value can be tested by comparing it with `is` to constant `NULL`_
+_ in module [javascript](javascript.html)_
 
 _(2) The items in the Javascript array are converted to Python objects_
 _with this conversion table_
