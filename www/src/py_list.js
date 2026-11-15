@@ -126,7 +126,9 @@ function mp_subscript(self, key) {
     try {
         var int_key = $B.PyNumber_Index(key)
     } catch (err) {
-        $B.RAISE(_b_.TypeError, $B.class_name(self) +
+        // named by the type that defines the method, not by a subclass or a
+        // class that borrowed it
+        $B.RAISE(_b_.TypeError, ($B.$isinstance(self, _b_.tuple) ? 'tuple' : 'list') +
             " indices must be integers or slices, not " + $B.class_name(key))
     }
 
@@ -837,9 +839,8 @@ list_funcs.clear = function(self) {
 
 list_funcs.copy = function(self) {
     $B.meth_noargs("list.copy", arguments)
-    var res = self.slice()
-    res.ob_type = $B.get_class(self)
-    return res
+    // a list, whatever the class of self, as slicing gives
+    return $B.$list(self.slice())
 }
 
 list_funcs.count = function() {

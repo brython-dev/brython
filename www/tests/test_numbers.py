@@ -966,4 +966,16 @@ assert format(2.5, '.0f') == '2'
 assert round(1234, -2) == 1200
 assert round(2.675, 2) == 2.67
 
+# a negative shift count is refused, whichever way and whatever the size
+for shift in [lambda: 1 << -1, lambda: 1 >> -1, lambda: 2 ** 70 << -3,
+        lambda: 5 >> -(2 ** 70)]:
+    try:
+        shift()
+        raise AssertionError("no error")
+    except ValueError as exc:
+        assert str(exc) == "negative shift count"
+x = 1
+x <<= 3
+assert x == 8 and 8 >> 3 == 1 and 1 << 0 == 1
+
 print('passed all tests...')

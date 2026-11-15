@@ -321,4 +321,30 @@ with warnings.catch_warnings(record=True) as w:
     warnings.warn('nope')
 assert len(w) == 0
 
+# the name of an "except ... as" clause is unbound after the handler, even
+# when a local of that name was bound before the try statement
+def shadowed():
+    err = "before"
+    try:
+        raise ValueError("gone")
+    except ValueError as err:
+        pass
+    try:
+        return err
+    except UnboundLocalError:
+        return "unbound"
+
+assert shadowed() == "unbound"
+
+def rebound():
+    err = None
+    try:
+        raise ValueError("gone")
+    except ValueError as err:
+        pass
+    err = "again"
+    return err
+
+assert rebound() == "again"
+
 print('all tests passed...')

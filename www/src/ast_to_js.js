@@ -1444,6 +1444,14 @@ $B.ast.Assign.prototype.to_js = function(scopes) {
     // evaluate value once
     if (this.targets.length == 1) {
         let target = this.targets[0]
+        if (target instanceof $B.ast.Subscript ||
+                target instanceof $B.ast.Attribute) {
+            // the value first, then the target's object and subscript
+            let value_id = 'v' + make_id()
+            js += prefix + `var ${value_id} = ${value}\n`
+            js += assign_one(target, value_id)
+            return js
+        }
         if(! (target instanceof $B.ast.Tuple) &&
                ! (target instanceof $B.ast.List)){
             js += assign_one(this.targets[0], value)
@@ -3893,12 +3901,17 @@ function handler_to_js(handler, scopes, try_scope, err) {
     if ($B.is_none(handler.name)) {
         return add_body(handler.body, scopes) + '\n'
     }
-    bind(handler.name, scopes)
+    var scope = bind(handler.name, scopes)
     var mangled = mangle(scopes, try_scope, handler.name)
     var js = prefix + `locals.${mangled} = ${err}\n` + prefix + 'try {\n'
     indent()
     js += add_body(handler.body, scopes) + '\n'
     dedent()
+    // unbound after the handler, where a read must check it, even of a name
+    // bound before the try statement, in the scopes it is a subscope of
+    for (var s = scope; s; s = s.parent) {
+        s.locals.delete(mangled)
+    }
     return js + prefix + '} finally {\n' +
         prefix + tab + `delete locals.${mangled}\n` + prefix + '}\n'
 }
