@@ -748,8 +748,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-11-16 10:29:54.769420"
-__BRYTHON__.timestamp=1794821394769
+__BRYTHON__.compiled_date="2026-11-16 18:20:55.335852"
+__BRYTHON__.timestamp=1794849655335
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -11994,9 +11994,11 @@ res=_b_.NotImplemented
 break}
 return res}
 _b_.dict.nb_or=function(self,other){
-if(! $B.$isinstance(self,dict)||! $B.$isinstance(other,dict)){return _b_.NotImplemented}
+if(! $B.$isinstance(self,[dict,_b_.frozendict])||
+! $B.$isinstance(other,[dict,_b_.frozendict])){return _b_.NotImplemented}
 var res=dict.tp_funcs.copy(self)
 dict.tp_funcs.update(res,other)
+if($B.$isinstance(self,_b_.frozendict)){res[$B.OB_TYPE]=_b_.frozendict}
 return res}
 _b_.dict.tp_repr=function(self){$B.builtins_repr_check(dict,arguments)
 return dict_repr(self)}
@@ -12316,6 +12318,7 @@ _b_.frozendict.tp_new=function(cls,args,kw){if(args.length==1 && _b_.dict.mp_len
 $B.exact_type(args[0],cls)){return args[0]}
 var instance=$B.empty_dict()
 instance[$B.OB_TYPE]=cls
+if(cls !==_b_.frozendict){$B.init_dict(instance)}
 dict_init(instance,args,kw)
 return instance}
 _b_.frozendict.mp_length=function(self){return _b_.dict.mp_length(self)}

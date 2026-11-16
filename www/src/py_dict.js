@@ -1084,11 +1084,15 @@ _b_.dict.tp_richcompare = function(self, other, op) {
 
 _b_.dict.nb_or = function(self, other) {
     // PEP 584
-    if (! $B.$isinstance(self, dict) || ! $B.$isinstance(other, dict)) {
+    if (! $B.$isinstance(self, [dict, _b_.frozendict]) ||
+            ! $B.$isinstance(other, [dict, _b_.frozendict])) {
         return _b_.NotImplemented
     }
     var res = dict.tp_funcs.copy(self)
     dict.tp_funcs.update(res, other)
+    if ($B.$isinstance(self, _b_.frozendict)) {
+        res[$B.OB_TYPE] = _b_.frozendict
+    }
     return res
 }
 
@@ -1945,6 +1949,9 @@ _b_.frozendict.tp_new = function(cls, args, kw) {
     }
     var instance = $B.empty_dict()
     instance[$B.OB_TYPE] = cls
+    if (cls !== _b_.frozendict) {
+        $B.init_dict(instance)
+    }
     dict_init(instance, args, kw)
     return instance
 }
