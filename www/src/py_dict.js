@@ -1895,6 +1895,7 @@ function frozendict_pair_hash(key_hash, value){
     if (acc == -1) {
         acc = 1546275796
     }
+
     return acc
 }
 
@@ -1935,8 +1936,8 @@ _b_.frozendict.tp_hash = function(self) {
     let pos
     let key_hash
 
-    for (var entry of _b_.dict.$iter_items(self)) {
-        let pair_hash = frozendict_pair_hash(entry.key, entry.value)
+    for (let [k, v] of $B.dict_key_values(self)) {
+        let pair_hash = frozendict_pair_hash(_b_.hash(k), v)
         if (pair_hash == -1) {
             return -1
         }
