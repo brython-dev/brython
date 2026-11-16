@@ -748,8 +748,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-11-16 10:16:18.830527"
-__BRYTHON__.timestamp=1794820578830
+__BRYTHON__.compiled_date="2026-11-16 10:29:54.769420"
+__BRYTHON__.timestamp=1794821394769
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -11758,13 +11758,13 @@ if(left[$B.JSOBJ]){left[$B.JSOBJ][key]=right[key]}}}else{
 for(let key in right){dict.$setitem(left,key,right[key])}}}else{
 for(var entry of dict.$iter_items(right)){dict.$setitem(left,entry.key,entry.value,entry.hash)
 if(right[VERSION]!=right_version){$B.RAISE(_b_.RuntimeError,"dict mutated during update")}}}}
-function dict_hash(key){
+function dict_hash(key,obj){
 try{
 return $B.$hash(key)}catch(err){if($B.is_exc(err,[_b_.TypeError])&& err.args && err.args[0]){err.args[0]=`cannot use '${$B.class_name(key)}' as `+
-`a dict key (${err.args[0]})`}
+`a ${$B.class_name(obj)} key (${err.args[0]})`}
 throw err}}
 function index_by_key(d,key,hash){
-hash=hash ?? dict_hash(key)
+hash=hash ?? dict_hash(key,d)
 var indices=d[TABLE][hash],index
 if(indices !==undefined){for(var i=0;i < indices.length;i++){index=indices[i]
 var v=d[KEYS][index]
@@ -11775,7 +11775,7 @@ return null}
 continue}
 if(v===key ||$B.is_or_equals(v,key)){return index}}}
 return null}
-dict.$lookup_by_key=function(d,key,hash){hash=hash===undefined ? dict_hash(key):hash
+dict.$lookup_by_key=function(d,key,hash){hash=hash===undefined ? dict_hash(key,d):hash
 var indices=d[TABLE][hash],index
 if(indices !==undefined){for(var i=0,len=indices.length;i < len;i++){index=indices[i]
 if(d[KEYS][index]===undefined){d[TABLE][hash].splice(i,1)
@@ -11792,7 +11792,7 @@ found:false,hash}}
 dict.$contains=function(self,key,hash){if(! self[KEYS]){if(typeof key=='string'){return Object.hasOwn(self,key)}
 var hash_method=$B.$getattr($B.get_class(key),'__hash__')
 if(hash_method===$B.str_dict_get($B.get_dict(_b_.object),'__hash__')){return false}
-var hash=dict_hash(key)
+var hash=dict_hash(key,self)
 convert_all_str(self)}
 return index_by_key(self,key,hash)!==null}
 dict.$delitem=function(self,key,hash){if(self[$B.JSOBJ]){delete self[$B.JSOBJ][key]}
@@ -11811,12 +11811,6 @@ self[VERSION]++
 return _b_.None}
 $B.RAISE(_b_.KeyError,_b_.str.$factory(key))}
 $B.dict_delitem=dict.$delitem
-function check_key_hashable(key){try{
-_b_.hash(key)}catch(err){if($B.is_exc(err,_b_.TypeError)){let msg=err.args[0]
-$B.RAISE(_b_.TypeError,`cannot use '${$B.class_name(key)}' as a dict key`+
-` (${msg})`
-)}
-throw err}}
 function dict_eq(self,other){if(! self[KEYS]&& ! other[KEYS]){if(dict.mp_length(self)!==dict.mp_length(other)){return false}
 for(let k in self){if(! Object.hasOwn(other,k)){return false}
 if(! $B.is_or_equals(self[k],other[k])){return false}}
@@ -11838,9 +11832,6 @@ $B.is_or_equals(value,other_pair[1])){flag=true
 break}}
 if(! flag){return false}}}
 return true}
-function dict_unhashable_type(key,exc){$B.RAISE_IF_NOT(exc,_b_.TypeError)
-$B.RAISE(_b_.TypeError,`cannot use '${key}' as a dict key (${_b_.repr(exc)})`
-)}
 function dict_update_arg(self,arg){
 if($B.$isinstance(arg,dict)&&
 $B.search_in_mro($B.get_class(arg),'__iter__',$B.NULL)===
@@ -11957,7 +11948,7 @@ return _b_.None}else{
 convert_all_str(self)}}else{
 convert_all_str(self)}}
 if(key instanceof String){key=key.valueOf()}
-var hash=$hash !==undefined ? $hash :dict_hash(key)
+var hash=$hash !==undefined ? $hash :dict_hash(key,self)
 var index
 if(self[TABLE][hash]===undefined){index=self[KEYS].length
 self[TABLE][hash]=[index]}else{
@@ -12073,7 +12064,7 @@ throw err}}
 if(is_fd_subclass){res[$B.OB_TYPE]=cls}
 return res}
 dict_funcs.get=function(self){var $=$B.args("get",3,{self:null,key:null,_default:null},arguments,{_default:_b_.None})
-check_key_hashable($.key)
+dict_hash($.key,self)
 try{
 return dict.$getitem($.self,$.key,true)}catch(err){if($B.$isinstance(err,_b_.KeyError)){return $._default}else{
 throw err}}}
@@ -12085,7 +12076,7 @@ return{
 ob_type:$B.dict_keys,dict_obj:self}}
 dict_funcs.pop=function(self){var $=$B.args("pop",3,{self:null,key:null,_default:null},arguments,{_default:$B.NULL})
 var self=$.self,key=$.key,_default=$._default
-check_key_hashable(key)
+dict_hash(key,self)
 try{
 var res=dict.mp_subscript(self,key)
 dict.mp_ass_subscript(self,key,$B.NULL)

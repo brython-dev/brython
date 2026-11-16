@@ -478,14 +478,14 @@ var $copy_dict = function(left, right) {
     }
 }
 
-function dict_hash(key) {
+function dict_hash(key, obj) {
     // hash(key) for a dict key: a TypeError says what it was refused as
     try {
         return $B.$hash(key)
     } catch (err) {
         if ($B.is_exc(err, [_b_.TypeError]) && err.args && err.args[0]) {
             err.args[0] = `cannot use '${$B.class_name(key)}' as ` +
-                `a dict key (${err.args[0]})`
+                `a ${$B.class_name(obj)} key (${err.args[0]})`
         }
         throw err
     }
@@ -493,7 +493,7 @@ function dict_hash(key) {
 
 function index_by_key(d, key, hash) {
     // only used for dictionaries with a TABLE
-    hash = hash ?? dict_hash(key)
+    hash = hash ?? dict_hash(key, d)
     var indices = d[TABLE][hash],
         index
     if (indices !== undefined) {
@@ -519,7 +519,7 @@ function index_by_key(d, key, hash) {
 }
 
 dict.$lookup_by_key = function(d, key, hash) {
-    hash = hash === undefined ? dict_hash(key) : hash
+    hash = hash === undefined ? dict_hash(key, d) : hash
     var indices = d[TABLE][hash],
         index
     if (indices !== undefined) {
@@ -565,7 +565,7 @@ dict.$contains = function(self, key, hash) {
         if (hash_method === $B.str_dict_get($B.get_dict(_b_.object), '__hash__')) {
             return false
         }
-        var hash = dict_hash(key)
+        var hash = dict_hash(key, self)
         // If the object has a specific __hash__ method and a specific __eq__
         // method, `hash` could be the same as one of the string keys's hash,
         // and the __eq__ method might return true. To cover this case we have
@@ -616,21 +616,6 @@ dict.$delitem  = function(self, key, hash) {
 }
 
 $B.dict_delitem = dict.$delitem
-
-function check_key_hashable(key) {
-    try {
-        _b_.hash(key)
-    } catch(err) {
-        if ($B.is_exc(err, _b_.TypeError)) {
-            let msg = err.args[0]
-            $B.RAISE(_b_.TypeError,
-                `cannot use '${$B.class_name(key)}' as a dict key` +
-                ` (${msg})`
-            )
-        }
-        throw err
-    }
-}
 
 function dict_eq(self, other) {
     if (! self[KEYS] && ! other[KEYS]) {
@@ -693,13 +678,6 @@ function dict_eq(self, other) {
         }
     }
     return true
-}
-
-function dict_unhashable_type(key, exc) {
-    $B.RAISE_IF_NOT(exc, _b_.TypeError)
-    $B.RAISE(_b_.TypeError,
-        `cannot use '${key}' as a dict key (${_b_.repr(exc)})`
-    )
 }
 
 function dict_update_arg(self, arg) {
@@ -1017,7 +995,7 @@ dict.$setitem = function(self, key, value, $hash, from_setdefault) {
         key = key.valueOf()
     }
 
-    var hash = $hash !== undefined ? $hash : dict_hash(key)
+    var hash = $hash !== undefined ? $hash : dict_hash(key, self)
 
     var index
 
@@ -1280,7 +1258,7 @@ dict_funcs.get = function(self) {
     var $ = $B.args("get", 3, {self: null, key: null, _default: null},
                 arguments, {_default: _b_.None})
 
-    check_key_hashable($.key)
+    dict_hash($.key, self)
 
     try {
         // call $getitem with ignore_missign set to true
@@ -1317,7 +1295,7 @@ dict_funcs.pop = function(self) {
         key = $.key,
         _default = $._default
 
-    check_key_hashable(key)
+    dict_hash(key, self)
 
     try {
         var res = dict.mp_subscript(self, key) // __getitem__
