@@ -748,8 +748,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-11-16 18:26:26.507924"
-__BRYTHON__.timestamp=1794849986507
+__BRYTHON__.compiled_date="2026-11-16 21:37:14.434158"
+__BRYTHON__.timestamp=1794861434432
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -9380,18 +9380,23 @@ this.width=spec.substring(pos,end_param_pos)
 pos+=end_param_pos+1}
 if(car=="," ||car=="_"){this.comma=true
 this.grouping_option=car
+console.log('grouping',car)
 pos++
 car=spec.charAt(pos)
 if(car=="," ||car=="_"){if(car==this.grouping_option){$B.RAISE(_b_.ValueError,`Cannot specify '${car}' with '${car}'.`)}else{
 $B.RAISE(_b_.ValueError,"Cannot specify both ',' and '_'.")}}}
-if(car=="."){if(digits.indexOf(spec.charAt(pos+1))==-1){$B.RAISE(_b_.ValueError,"Missing precision in format spec")}
+if(car=="."){if(',_'.includes(spec.charAt(pos+1))){this.decimal_grouping=spec.charAt(pos+1)
+pos++}
+if(digits.indexOf(spec.charAt(pos+1))==-1){if(! this.decimal_grouping){$B.RAISE(_b_.ValueError,"Format specifier missing precision")}
+pos++
+car=spec.charAt(pos)}else{
 this.precision=spec.charAt(pos+1)
 pos+=2
 car=spec.charAt(pos)
 while(car && digits.indexOf(car)>-1){this.precision+=car
 pos++
 car=spec.charAt(pos)}
-this.precision=parseInt(this.precision)}
+this.precision=parseInt(this.precision)}}
 if(car && types.indexOf(car)>-1){this.type=car
 pos++
 car=spec.charAt(pos)}
@@ -10848,10 +10853,14 @@ pf='-'+pf}
 if(fmt.z && Object.is(parseFloat(pf),-0)){
 pf=pf.substr(1)}
 var raw=pf.split('.'),_int=raw[0]
-if(fmt.comma){var len=_int.length,nb=Math.ceil(_int.length/3),chunks=[]
+if(fmt.comma){let len=_int.length,nb=Math.ceil(_int.length/3),chunks=[]
 for(var i=0;i < nb;i++){chunks.push(_int.substring(len-3*i-3,len-3*i))}
 chunks.reverse()
-raw[0]=chunks.join(",")}
+raw[0]=chunks.join(fmt.grouping_option)}
+if(raw.length > 1 && fmt.decimal_grouping){_int=raw[1]
+let chunks=[]
+for(let i=0,len=_int.length;i < len;i+=3){chunks.push(_int.substring(i,i+3))}
+raw[1]=chunks.join(fmt.decimal_grouping)}
 return $B.format_width(raw.join("."),fmt)}
 float.$getnewargs=function(self){return $B.fast_tuple([float_value(self)])}
 var nan_hash=$B.$py_next_hash--

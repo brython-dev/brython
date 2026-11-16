@@ -285,12 +285,22 @@ float.$format = function(self, fmt) {
     var raw = pf.split('.'),
         _int = raw[0]
     if (fmt.comma) {
-        var len = _int.length, nb = Math.ceil(_int.length / 3), chunks = []
+        let len = _int.length,
+            nb = Math.ceil(_int.length / 3),
+            chunks = []
         for (var i = 0; i < nb; i++) {
             chunks.push(_int.substring(len - 3 * i - 3, len - 3 * i))
         }
         chunks.reverse()
-        raw[0] = chunks.join(",")
+        raw[0] = chunks.join(fmt.grouping_option)
+    }
+    if (raw.length > 1 && fmt.decimal_grouping) {
+        _int = raw[1]
+        let chunks = []
+        for (let i = 0, len = _int.length; i < len; i += 3) {
+            chunks.push(_int.substring(i, i + 3))
+        }
+        raw[1] = chunks.join(fmt.decimal_grouping)
     }
     return $B.format_width(raw.join("."), fmt) // in py_string.js
 }

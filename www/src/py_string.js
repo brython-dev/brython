@@ -1323,6 +1323,7 @@ $B.parse_format_spec = function(spec, obj) {
         if (car == "," || car == "_") {
             this.comma = true
             this.grouping_option = car
+            console.log('grouping', car)
             pos++
             car = spec.charAt(pos)
             if (car == "," || car == "_") {
@@ -1336,19 +1337,28 @@ $B.parse_format_spec = function(spec, obj) {
             }
         }
         if (car == ".") {
-            if (digits.indexOf(spec.charAt(pos + 1)) == -1) {
-                $B.RAISE(_b_.ValueError,
-                    "Missing precision in format spec")
+            if (',_'.includes(spec.charAt(pos + 1))) {
+                this.decimal_grouping = spec.charAt(pos + 1)
+                pos++
             }
-            this.precision = spec.charAt(pos + 1)
-            pos += 2
-            car = spec.charAt(pos)
-            while (car && digits.indexOf(car) > -1) {
-                this.precision += car
+            if (digits.indexOf(spec.charAt(pos + 1)) == -1) {
+                if (! this.decimal_grouping) {
+                    $B.RAISE(_b_.ValueError,
+                        "Format specifier missing precision")
+                }
                 pos++
                 car = spec.charAt(pos)
+            } else {
+                this.precision = spec.charAt(pos + 1)
+                pos += 2
+                car = spec.charAt(pos)
+                while (car && digits.indexOf(car) > -1) {
+                    this.precision += car
+                    pos++
+                    car = spec.charAt(pos)
+                }
+                this.precision = parseInt(this.precision)
             }
-            this.precision = parseInt(this.precision)
         }
         if (car && types.indexOf(car) > -1) {
             this.type = car
