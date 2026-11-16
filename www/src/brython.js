@@ -748,8 +748,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-11-15 08:26:45.268197"
-__BRYTHON__.timestamp=1794727605268
+__BRYTHON__.compiled_date="2026-11-16 08:52:14.052636"
+__BRYTHON__.timestamp=1794815534052
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -11813,6 +11813,12 @@ self[VERSION]++
 return _b_.None}
 $B.RAISE(_b_.KeyError,_b_.str.$factory(key))}
 $B.dict_delitem=dict.$delitem
+function check_key_hashable(key){try{
+_b_.hash(key)}catch(err){if($B.is_exc(err,_b_.TypeError)){let msg=err.args[0]
+$B.RAISE(_b_.TypeError,`cannot use '${$B.class_name(key)}' as a dict key`+
+` (${msg})`
+)}
+throw err}}
 function dict_eq(self,other){if(! self[KEYS]&& ! other[KEYS]){if(dict.mp_length(self)!==dict.mp_length(other)){return false}
 for(let k in self){if(! Object.hasOwn(other,k)){return false}
 if(! $B.is_or_equals(self[k],other[k])){return false}}
@@ -11834,6 +11840,9 @@ $B.is_or_equals(value,other_pair[1])){flag=true
 break}}
 if(! flag){return false}}}
 return true}
+function dict_unhashable_type(key,exc){$B.RAISE_IF_NOT(exc,_b_.TypeError)
+$B.RAISE(_b_.TypeError,`cannot use '${key}' as a dict key (${_b_.repr(exc)})`
+)}
 function dict_update_arg(self,arg){
 if($B.$isinstance(arg,dict)&&
 $B.search_in_mro($B.get_class(arg),'__iter__',$B.NULL)===
@@ -11843,7 +11852,17 @@ while(true){try{
 var item=_b_.next(it)}catch(err){if($B.is_exc(err,_b_.StopIteration)){break}
 throw err}
 try{
-key_value=_b_.list.$factory(item)}catch(err){$B.RAISE(_b_.TypeError,"object is not iterable")}
+let item_it=$B.$iter(item)}catch(err){$B.RAISE_IF_NOT(err,_b_.TypeError)
+err.args[0]='object is not iterable'
+_b_.BaseException.tp_funcs.add_note(err,"Cannot convert dictionary update "+
+`sequence element #${i} to a sequence`
+)
+throw err}
+try{
+key_value=_b_.list.$factory(item)}catch(err){_b_.BaseException.tp_funcs.add_note(err,"Cannot convert dictionary update "+
+`sequence element #${i} to a sequence`
+)
+throw err}
 if(key_value.length !==2){$B.RAISE(_b_.ValueError,"dictionary update "+
 "sequence element #"+i+" has length "+
 key_value.length+"; 2 is required")}
@@ -11927,7 +11946,11 @@ self[$B.JSOBJ][key]=value}
 var new_str_key
 if(fast_string_key(key)){
 new_str_key=! Object.hasOwn(self,key)
-self[key]=value}
+self[key]=value}else if($B.is_str(key)){
+let key_str=_b_.str.$to_string(key)
+if(Object.hasOwn(self,key_str)){
+key=key_str
+self[key]=value}}
 if(! self[TABLE]){if(fast_string_key(key)){var int=parseInt(key)
 if(isNaN(int)||int >=0){if(new_str_key){self[VERSION]=self[VERSION]?? 0
 self[VERSION]++}
@@ -12039,12 +12062,20 @@ dict_funcs.fromkeys=function(){var $=$B.args("fromkeys",3,{cls:null,keys:null,va
 var keys=$.keys,value=$.value
 var cls=$.cls
 var res=$B.$call(cls),klass=$B.get_class(res),
-keys_iter=$B.$iter(keys),setitem=klass===dict ? dict.$setitem :$B.$getattr(klass,'__setitem__')
+is_fd_subclass=_b_.issubclass(klass,_b_.frozendict),keys_iter=$B.$iter(keys)
+if(is_fd_subclass){
+let x=$B.empty_dict()
+for(let[k,v]of $B.dict_key_values(res)){_b_.dict.$setitem(x,k,v)}
+res=x}
+let setitem=$B.$getattr($B.get_class(res),'__setitem__')
 while(1){try{
 var key=_b_.next(keys_iter)
-$B.$call(setitem,res,key,value)}catch(err){if($B.is_exc(err,[_b_.StopIteration])){return res}
-throw err}}}
+$B.$call(setitem,res,key,value)}catch(err){if($B.is_exc(err,[_b_.StopIteration])){break}
+throw err}}
+if(is_fd_subclass){res[$B.OB_TYPE]=cls}
+return res}
 dict_funcs.get=function(self){var $=$B.args("get",3,{self:null,key:null,_default:null},arguments,{_default:_b_.None})
+check_key_hashable($.key)
 try{
 return dict.$getitem($.self,$.key,true)}catch(err){if($B.$isinstance(err,_b_.KeyError)){return $._default}else{
 throw err}}}
@@ -12056,10 +12087,12 @@ return{
 ob_type:$B.dict_keys,dict_obj:self}}
 dict_funcs.pop=function(self){var $=$B.args("pop",3,{self:null,key:null,_default:null},arguments,{_default:$B.NULL})
 var self=$.self,key=$.key,_default=$._default
+check_key_hashable(key)
 try{
 var res=dict.mp_subscript(self,key)
 dict.mp_ass_subscript(self,key,$B.NULL)
 return res}catch(err){if($B.is_exc(err,_b_.KeyError)){if(_default !==$B.NULL){return _default}
+console.log('key error',err,'\nfor key',key)
 throw err}
 throw err}}
 dict_funcs.popitem=function(self){$B.meth_noargs("dict.popitem",arguments)
@@ -12267,7 +12300,11 @@ return acc}
 function _shuffle_bits(h){return((h ^ 89869747)^(h << 16))*3644798167}
 const HASHVALUE=Symbol('HASHVALUE')
 _b_.frozendict.tp_richcompare=_b_.dict.tp_richcompare
-_b_.frozendict.nb_or=function(self){}
+_b_.frozendict.nb_or=function(self,other){if($B.exact_type(self,_b_.frozendict)){if(_b_.frozendict.mp_length(self)==0 &&
+$B.exact_type(other,_b_.frozendict)){return other}
+if($B.$isinstance(other,[_b_.dict,_b_.frozendict])&&
+_b_.dict.mp_length(other)==0){return self}}
+return _b_.dict.nb_or(self,other)}
 _b_.frozendict.tp_repr=function(self){$B.builtins_repr_check(_b_.frozendict,arguments)
 return `frozendict(${dict_repr(self)})`}
 _b_.frozendict.tp_hash=function(self){if(Object.hasOwn(self,HASHVALUE)){return self[HASHVALUE]}
@@ -12286,11 +12323,13 @@ if(hash==-1){hash=590923713}
 self[HASHVALUE]=hash
 return hash}
 _b_.frozendict.tp_iter=_b_.dict.tp_iter
-_b_.frozendict.tp_new=function(cls,args,kw){var instance=$B.empty_dict()
+_b_.frozendict.tp_new=function(cls,args,kw){if(args.length==1 && _b_.dict.mp_length(kw)==0 &&
+$B.exact_type(args[0],cls)){return args[0]}
+var instance=$B.empty_dict()
 instance[$B.OB_TYPE]=cls
 dict_init(instance,args,kw)
 return instance}
-_b_.frozendict.mp_length=function(self){}
+_b_.frozendict.mp_length=function(self){return _b_.dict.mp_length(self)}
 _b_.frozendict.mp_subscript=_b_.dict.mp_subscript
 _b_.frozendict.sq_contains=_b_.dict.sq_contains
 var frozendict_funcs=_b_.frozendict.tp_funcs={}
@@ -12302,11 +12341,13 @@ frozendict_funcs.__sizeof__=dict_funcs.__sizeof__
 frozendict_funcs.copy=function(self){
 $B.meth_noargs('frozendict.copy',arguments)
 var $=$B.args("copy",1,{self:null},arguments)
-var self=$.self,res=$B.empty_dict()
+var self=$.self
+if($B.exact_type(self,_b_.frozendict)){return self}
+let res=$B.empty_dict()
 res[$B.OB_TYPE]=_b_.frozendict
-if($B.exact_type(self,_b_.frozendict)){$copy_dict(res,self)}
+$copy_dict(res,self)
 return res}
-frozendict_funcs.fromkeys=dict_funcs.values
+frozendict_funcs.fromkeys=dict_funcs.fromkeys
 frozendict_funcs.get=dict_funcs.get
 frozendict_funcs.items=dict_funcs.items
 frozendict_funcs.keys=dict_funcs.keys

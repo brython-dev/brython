@@ -419,4 +419,21 @@ assert keyed['k'] == 1 and keyed.get('k') == 1 and 'k' in keyed
 keyed['k'] = 2
 assert keyed[St('k')] == 2 and len(keyed) == 1
 
+# gh-142218: inserting into a split table dictionary with a non str
+# key that matches an existing key.
+class MyStr(str): pass
+
+d = {}
+d['attr'] = 1
+d[MyStr('attr')] = 2
+assert d['attr'] == 2
+
+assert MyStr('attr') in d
+assert type(list(d)[0]) is str
+
+d = {}
+d[MyStr('attr')] = 1
+assert d['attr'] == 1
+assert type(list(d)[0]) is MyStr
+
 print("passed all tests..")
