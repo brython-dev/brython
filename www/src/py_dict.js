@@ -161,22 +161,21 @@ function dictitems_xor(self, other) {
 
     let temp_dict = _b_.dict.tp_funcs.copy(d1)
     let result_set = _b_.set.$factory()
-    let it = _b_.dict.$iter_items(d2)
+    let it = $B.dict_key_values(d2)
 
-    for (let entry of it) {
-        let key = entry.key
-        let val2 = entry.value
-        let val1 = dict.$lookup_by_key(temp_dict, key)
-
-        let to_delete = val1.found
-            ? $B.is_or_equals(val1.value, val2)
-            : false
-
-        if (to_delete) {
-            dict.$delitem(temp_dict, key, val1.hash)
-        } else {
+    for (let [key, val2] of it) {
+        let val1
+        try {
+            val1 = dict.$getitem(temp_dict, key)
+        } catch(err) {
+            $B.RAISE_IF_NOT(err, _b_.KeyError)
             let pair = $B.fast_tuple([key, val2])
             _b_.set.tp_funcs.add(result_set, pair)
+            continue
+        }
+
+        if ($B.is_or_equals(val1, val2)) {
+            dict.$delitem(temp_dict, key, val1.hash)
         }
     }
 
@@ -851,7 +850,6 @@ dict.$getitem = function(self, key, ignore_missing) {
                     "__missing__", _b_.None)
             } catch (err) {
                 console.log(err)
-
             }
             if (missing_method !== _b_.None) {
                 return missing_method(self, key)

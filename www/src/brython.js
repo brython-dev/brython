@@ -748,8 +748,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-11-16 09:56:59.008667"
-__BRYTHON__.timestamp=1794819419008
+__BRYTHON__.compiled_date="2026-11-16 10:16:18.830527"
+__BRYTHON__.timestamp=1794820578830
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -11647,16 +11647,14 @@ function dictitems_xor(self,other){let d1=self.dict_obj
 let d2=other.dict_obj
 let temp_dict=_b_.dict.tp_funcs.copy(d1)
 let result_set=_b_.set.$factory()
-let it=_b_.dict.$iter_items(d2)
-for(let entry of it){let key=entry.key
-let val2=entry.value
-let val1=dict.$lookup_by_key(temp_dict,key)
-let to_delete=val1.found
-? $B.is_or_equals(val1.value,val2)
-:false
-if(to_delete){dict.$delitem(temp_dict,key,val1.hash)}else{
+let it=$B.dict_key_values(d2)
+for(let[key,val2]of it){let val1
+try{
+val1=dict.$getitem(temp_dict,key)}catch(err){$B.RAISE_IF_NOT(err,_b_.KeyError)
 let pair=$B.fast_tuple([key,val2])
-_b_.set.tp_funcs.add(result_set,pair)}}
+_b_.set.tp_funcs.add(result_set,pair)
+continue}
+if($B.is_or_equals(val1,val2)){dict.$delitem(temp_dict,key,val1.hash)}}
 let remaining_pairs=_b_.dict.tp_funcs.items(temp_dict)
 _b_.set.tp_funcs.update(result_set,remaining_pairs)
 return result_set}
