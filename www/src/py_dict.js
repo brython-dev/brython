@@ -1904,7 +1904,10 @@ _b_.frozendict.nb_or = function(self, other) {
 
 _b_.frozendict.tp_repr = function(self) {
     $B.builtins_repr_check(_b_.frozendict, arguments) // in brython_builtins.js
-    return `frozendict(${dict_repr(self)})`
+    if (_b_.frozendict.mp_length(self) == 0) {
+        return "frozendict()"
+    }
+    return `${$B.class_name(self)}(${dict_repr(self)})`
 }
 
 _b_.frozendict.tp_hash = function(self) {

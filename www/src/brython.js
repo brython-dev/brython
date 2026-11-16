@@ -748,8 +748,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-11-16 18:20:55.335852"
-__BRYTHON__.timestamp=1794849655335
+__BRYTHON__.compiled_date="2026-11-16 18:26:26.507924"
+__BRYTHON__.timestamp=1794849986507
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -12297,7 +12297,8 @@ if($B.$isinstance(other,[_b_.dict,_b_.frozendict])&&
 _b_.dict.mp_length(other)==0){return self}}
 return _b_.dict.nb_or(self,other)}
 _b_.frozendict.tp_repr=function(self){$B.builtins_repr_check(_b_.frozendict,arguments)
-return `frozendict(${dict_repr(self)})`}
+if(_b_.frozendict.mp_length(self)==0){return "frozendict()"}
+return `${$B.class_name(self)}(${dict_repr(self)})`}
 _b_.frozendict.tp_hash=function(self){if(Object.hasOwn(self,HASHVALUE)){return self[HASHVALUE]}
 let hash=0
 let value
