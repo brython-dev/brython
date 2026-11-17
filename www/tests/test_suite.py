@@ -1316,4 +1316,29 @@ note('object', Bag()).attr = note('value', 2)
 assert order == ['value', 'object', 'key', 'value', 'object'], order
 assert holder == {'k': 1}
 
+# PR 3096
+vars = 66
+del globals()['vars']
+vars # still in builtins
+
+x = 1
+del globals()['x']
+try:
+    print(x)
+    raise Exception('should have raised NameError')
+except NameError:
+  pass
+
+x = 2 # reassign
+assert x == 2
+del globals()['x']
+try:
+    print(x)
+    raise Exception('should have raised NameError')
+except NameError:
+  pass
+
+x = 3
+assert x == 3
+
 print('passed all tests...')
