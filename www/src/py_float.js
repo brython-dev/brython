@@ -3,6 +3,8 @@
 
 var _b_ = $B.builtins
 
+$B.DBL_MAX_EXP = 1024
+
 function conv_num(x) {
     if (typeof x == 'number') {
         return x
@@ -619,7 +621,7 @@ float.$factory = function(value) {
     if (typeof value == "number") {
         return fast_float(value)
     }
-    if ($B.$isinstance(value, float)) {
+    if ($B.exact_type(value, float)) {
         return $B.float_value(value)
     }
 
@@ -712,6 +714,11 @@ float.$factory = function(value) {
             index_klass = $B.get_class(index)
 
         if (index_klass === _b_.int) {
+            if(index.toString(2).length > $B.DBL_MAX_EXP) {
+                $B.RAISE(_b_.OverflowError,
+                    'int too large to convert to float'
+                )
+            }
             return fast_float(Number(index))
         } else if ($B.get_mro(index_klass).indexOf(_b_.int) > -1) {
             let msg =  `${$B.class_name(value)}.__index__ returned ` +
@@ -729,7 +736,7 @@ float.$factory = function(value) {
     klass = $B.get_class(res)
 
     if (klass !== _b_.float) {
-        if (klass.__mro__.indexOf(_b_.float) > -1) {
+        if (klass.tp_mro.indexOf(_b_.float) > -1) {
             let msg =  `${$B.class_name(value)}.__float__ returned ` +
                 `non-float (type ${$B.class_name(res)}).  The ` +
                 'ability to return an instance of a strict subclass' +

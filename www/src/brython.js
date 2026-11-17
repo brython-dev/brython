@@ -747,8 +747,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-11-17 14:22:40.732646"
-__BRYTHON__.timestamp=1794921760732
+__BRYTHON__.compiled_date="2026-11-17 14:57:14.000368"
+__BRYTHON__.timestamp=1794923833999
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -10747,6 +10747,7 @@ $B.set_func_names(bool,"builtins")})(__BRYTHON__);
 ;
 "use strict";
 (function($B){var _b_=$B.builtins
+$B.DBL_MAX_EXP=1024
 function conv_num(x){if(typeof x=='number'){return x}else if(typeof x=='bigint'){return Number(x)}else if($B.is_int(x)){
 return conv_num($B.int_value(x))}else if(x.ob_type===_b_.float){return x.value}else if($B.$isinstance(x,_b_.float)){return x.value}
 return $B.NULL}
@@ -10978,7 +10979,7 @@ case false:
 return fast_float(0)}
 var original_value=value
 if(typeof value=="number"){return fast_float(value)}
-if($B.$isinstance(value,float)){return $B.float_value(value)}
+if($B.exact_type(value,float)){return $B.float_value(value)}
 if($B.$isinstance(value,_b_.memoryview)){value=_b_.memoryview.tp_funcs.tobytes(value)}
 if($B.is_bytes(value)){try{
 value=$B.$getattr(value,"decode")("utf-8")}catch(err){$B.RAISE(_b_.ValueError,"could not convert string to float: "+
@@ -11019,7 +11020,9 @@ if(index_method===null){if($B.is_str(value)){return float.$factory(_b_.str.$to_s
 $B.RAISE(_b_.TypeError,"float() argument must be a string or a "+
 "real number, not '"+$B.class_name(value)+"'")}
 let index=$B.$call(index_method,value),index_klass=$B.get_class(index)
-if(index_klass===_b_.int){return fast_float(Number(index))}else if($B.get_mro(index_klass).indexOf(_b_.int)>-1){let msg=`${$B.class_name(value)}.__index__ returned `+
+if(index_klass===_b_.int){if(index.toString(2).length > $B.DBL_MAX_EXP){$B.RAISE(_b_.OverflowError,'int too large to convert to float'
+)}
+return fast_float(Number(index))}else if($B.get_mro(index_klass).indexOf(_b_.int)>-1){let msg=`${$B.class_name(value)}.__index__ returned `+
 `non-int (type ${$B.class_name(index)}).  The `+
 'ability to return an instance of a strict subclass'+
 ' of int is deprecated, and may be removed in a '+
@@ -11030,7 +11033,7 @@ $B.RAISE(_b_.TypeError,'__index__ returned non-int'+
 ` (type ${$B.class_name(index)})`)}
 let res=$B.$call(float_method,value)
 klass=$B.get_class(res)
-if(klass !==_b_.float){if(klass.__mro__.indexOf(_b_.float)>-1){let msg=`${$B.class_name(value)}.__float__ returned `+
+if(klass !==_b_.float){if(klass.tp_mro.indexOf(_b_.float)>-1){let msg=`${$B.class_name(value)}.__float__ returned `+
 `non-float (type ${$B.class_name(res)}).  The `+
 'ability to return an instance of a strict subclass'+
 ' of float is deprecated, and may be removed in a '+
