@@ -648,23 +648,6 @@ function resolve_in_namespace(name, ns) {
         }
     } else if (ns.hasOwnProperty(name)) {
         return {found: true, value: ns[name]}
-    } else if (ns.$dict) {
-        try {
-            return {found: true, value: ns.$getitem(ns.$dict, name)}
-        } catch (err) {
-            if (ns.$missing) {
-                try {
-                    return {
-                        found: true,
-                        value: $B.$call(ns.$missing, ns.$dict, name)
-                    }
-                } catch (err) {
-                    if (! $B.is_exc(err, [_b_.KeyError])) {
-                        throw err
-                    }
-                }
-            }
-        }
     }
     return {found: false}
 }
@@ -729,7 +712,7 @@ $B.resolve_local = function(name, inum) {
     throw exc
 }
 
-$B.resolve_in_scopes = function(name, namespaces, inum) {
+$B.resolve_in_scopes = $B.RS = function(name, namespaces, inum) {
     var test = false // name == 'a'
     if (test) {
         console.log('resolve in scopes', name, 'namespaces', namespaces)
@@ -3749,8 +3732,10 @@ $B.ast.Name.prototype.to_js = function(scopes) {
             return 'debugger'
         }
         if (scope.found && scope.found.type == 'module') {
-            // a module global may have been deleted at run time, from globals()
-            res = `(${res} ?? $B.resolve_in_scopes('${this.id}', [${res.split('.')[0]}, _b_]))`
+            // A module global may have been deleted at run time, from globals()
+            // It can also be Javascript null or undefined, in this case name
+            // resolution will use Object.hasOwn(namespace, name)
+            res = `(${res} ?? $B.RS('${this.id}', [${res.split('.')[0]}, _b_]))`
         }
         return res
     }
