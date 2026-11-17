@@ -989,6 +989,11 @@ _b_.float.tp_hash = function(self) {
 }
 
 _b_.float.tp_new = function(cls, args, kw) {
+    if (cls === _b_.float || (cls.tp_init === float.tp_init)) {
+        if(_b_.dict.mp_length(kw) != 0) {
+            $B.RAISE(_b_.TypeError, 'float() takes no keyword arguments')
+        }
+    }
     var [value] = $B.unpack_args('float', args, ['value'], {value: 0})
     if (cls === undefined) {
         $B.RAISE(_b_.TypeError, "float.__new__(): not enough arguments")
@@ -1185,26 +1190,37 @@ float_funcs.conjugate = function(self) {
     return float_value(self)
 }
 
-float_funcs.from_number = function(self) {
-    var $ = $B.args('from_number', 1, {number: null}, arguments)
-    var number = $.number
+float_funcs.from_number = function(cls, self) {
+    let $ = $B.args('from_number', 2, {cls: null, number: null}, arguments)
+    let number = $.number
+    let res = null
     if ($B.$isinstance(number, _b_.float)) {
-        return float_value(number) // ensure class is float
-    }
-    var klass = $B.get_class(number)
-    var __float__ = $B.search_in_mro(klass, '__float__')
-    if (__float__) {
-        return __float__(number)
-    }
-    var __index__ = $B.search_in_mro(klass, '__index__')
-    if (__index__) {
-        var res = __index__(number)
-        if ($B.is_int(res)) {
-            return fast_float(res)
+        res = float_value(number) // ensure class is float
+        res.ob_type = cls
+    } else {
+        let klass = $B.get_class(number)
+        let __float__ = $B.search_in_mro(klass, '__float__')
+        if (__float__) {
+            res = $B.$call(__float__, number)
+        } else {
+            let __index__ = $B.search_in_mro(klass, '__index__')
+            if (__index__) {
+                res = __index__(number)
+                if ($B.is_int(res)) {
+                    res = fast_float(res)
+                } else {
+                    $B.RAISE(_b_.TypeError, '__index__ returned non-int of type ' +
+                        $B.class_name(res))
+                }
+            }
         }
-        $B.RAISE(_b_.TypeError, '__index__ returned non-int of type ' +
-            $B.class_name(res))
     }
+
+    if (res !== null) {
+        res.ob_type = cls
+        return res
+    }
+
     $B.RAISE(_b_.TypeError, 'TypeError: must be real number, not ' +
         $B.class_name(number))
 }

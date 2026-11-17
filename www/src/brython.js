@@ -747,8 +747,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-11-17 13:40:26.668422"
-__BRYTHON__.timestamp=1794919226668
+__BRYTHON__.compiled_date="2026-11-17 14:22:40.732646"
+__BRYTHON__.timestamp=1794921760732
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -11140,7 +11140,8 @@ return sign+mant+'e-'+exp}}
 return _b_.str.$factory(res)}
 _b_.float.tp_hash=function(self){check_self_is_float(self,'__hash__')
 return float.$hash_func(self)}
-_b_.float.tp_new=function(cls,args,kw){var[value]=$B.unpack_args('float',args,['value'],{value:0})
+_b_.float.tp_new=function(cls,args,kw){if(cls===_b_.float ||(cls.tp_init===float.tp_init)){if(_b_.dict.mp_length(kw)!=0){$B.RAISE(_b_.TypeError,'float() takes no keyword arguments')}}
+var[value]=$B.unpack_args('float',args,['value'],{value:0})
 if(cls===undefined){$B.RAISE(_b_.TypeError,"float.__new__(): not enough arguments")}else if(! $B.$isinstance(cls,_b_.type)){$B.RAISE(_b_.TypeError,"float.__new__(X): X is not a type object")}
 var res={ob_type:cls,value:float.$factory(value).value}
 if($B.instance_has_dict(cls)){$B.init_dict(res)}
@@ -11214,17 +11215,21 @@ denominator=py_exponent}
 return $B.fast_tuple([numerator,denominator])}
 float_funcs.conjugate=function(self){$B.meth_noargs('float.conjugate',arguments)
 return float_value(self)}
-float_funcs.from_number=function(self){var $=$B.args('from_number',1,{number:null},arguments)
-var number=$.number
-if($B.$isinstance(number,_b_.float)){return float_value(number)}
-var klass=$B.get_class(number)
-var __float__=$B.search_in_mro(klass,'__float__')
-if(__float__){return __float__(number)}
-var __index__=$B.search_in_mro(klass,'__index__')
-if(__index__){var res=__index__(number)
-if($B.is_int(res)){return fast_float(res)}
+float_funcs.from_number=function(cls,self){let $=$B.args('from_number',2,{cls:null,number:null},arguments)
+let number=$.number
+let res=null
+if($B.$isinstance(number,_b_.float)){res=float_value(number)
+res.ob_type=cls}else{
+let klass=$B.get_class(number)
+let __float__=$B.search_in_mro(klass,'__float__')
+if(__float__){res=$B.$call(__float__,number)}else{
+let __index__=$B.search_in_mro(klass,'__index__')
+if(__index__){res=__index__(number)
+if($B.is_int(res)){res=fast_float(res)}else{
 $B.RAISE(_b_.TypeError,'__index__ returned non-int of type '+
-$B.class_name(res))}
+$B.class_name(res))}}}}
+if(res !==null){res.ob_type=cls
+return res}
 $B.RAISE(_b_.TypeError,'TypeError: must be real number, not '+
 $B.class_name(number))}
 float_funcs.fromhex=function(klass,s){function hex_from_char(char){return parseInt(char,16)}
