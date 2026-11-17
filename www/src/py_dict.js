@@ -1310,7 +1310,6 @@ dict_funcs.pop = function(self) {
             if (_default !== $B.NULL) {
                 return _default
             }
-            console.log('key error', err, '\nfor key', key)
             throw err
         }
         throw err
