@@ -747,8 +747,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-11-17 09:51:26.106798"
-__BRYTHON__.timestamp=1794905486105
+__BRYTHON__.compiled_date="2026-11-17 12:04:08.977078"
+__BRYTHON__.timestamp=1794913448976
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -1298,18 +1298,17 @@ string+=char
 break}
 break
 case 'NUMBER':
-if(test_num(num_type,char)){number+=char}else if(char=='_' && ! number.endsWith('.')){if(number.endsWith('_')){throw SyntaxError('consecutive _ in number')}else if(src[pos]===undefined ||
+if(test_num(num_type,char)){number+=char}else if(char=='_'){if(number.endsWith('.')){raise_error(_b_.SyntaxError,filename,line_num,pos-line_start,line_num,pos-line_start,line,"invalid decimal literal")}
+if(number.endsWith('_')){throw SyntaxError('consecutive _ in number')}else if(src[pos]===undefined ||
 ! test_num(num_type,src[pos])){
-t.push(Token('NUMBER',number,line_num,pos-line_start-number.length,line_num,pos-line_start,line))
-state=null
-pos--}else{
+raise_error(_b_.SyntaxError,filename,line_num,pos-line_start+1,line_num,pos-line_start+1,line,"invalid decimal literal")}else{
 number+=char}}else if(char=='.' && ! number.includes(char)){if(num_type){
 t.push(Token('NUMBER',number,line_num,pos-line_start-number.length,line_num,pos-line_start,line))
 state=null
 pos--}else{
 number+=char}}else if(char.toLowerCase()=='e' &&
 ! number.toLowerCase().includes('e')){if('+-'.includes(src[pos])||
-$B.in_unicode_category('Nd',ord(src[pos]))){number+=char}else{
+$B.in_unicode_category('Nd',ord(src[pos]))){number+=char}else if(src[pos]=='_'){raise_error(_b_.SyntaxError,filename,line_num,pos-line_start,line_num,pos-line_start,line,"invalid decimal literal")}else{
 t.push(Token('NUMBER',number,line_num,pos-line_start-number.length,line_num,pos-line_start,line))
 state=null
 pos--}}else if((char=='+' ||char=='-')&&
@@ -19979,9 +19978,7 @@ var ast_obj=$B._PyAST.arg(a.arg,a.annotation,tco,a.lineno,a.col_offset,a.end_lin
 return ast_obj}
 $B._PyPegen.check_barry_as_flufl=function(p,t){return false}
 $B._PyPegen.check_legacy_stmt=function(p,name){return["print","exec"].includes(name)}
-$B._PyPegen.raise_error_for_missing_comma=function(p,a,b){console.log('missing comma ?')
-console.log(Error('trace').stack)
-if($B._PyPegen.check_legacy_stmt(p,a)){return NULL}
+$B._PyPegen.raise_error_for_missing_comma=function(p,a,b){if($B._PyPegen.check_legacy_stmt(p,a)){return NULL}
 if(p.tokens[p.mark-1].level==0){return NULL}
 if(a.end_lineno > a.lineno){$B._PyPegen.raise_error_known_location(
 p,_b_.SyntaxError,a.end_lineno,a.col_offset,a.end_lineno,a.end_col_offset,"invalid syntax. Perhaps you forgot a comma?"

@@ -800,8 +800,6 @@ $B._PyPegen.check_legacy_stmt = function(p, name) {
 }
 
 $B._PyPegen.raise_error_for_missing_comma = function(p, a, b) {
-    console.log('missing comma ?')
-    console.log(Error('trace').stack)
     if ($B._PyPegen.check_legacy_stmt(p, a)) {
         return NULL
     }

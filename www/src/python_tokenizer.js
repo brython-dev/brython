@@ -1200,18 +1200,22 @@ $B.tokenizer = function(src, filename, mode, parser) {
             case 'NUMBER':
                 if (test_num(num_type, char)) {
                     number += char
-                } else if (char == '_' && ! number.endsWith('.')) {
+                } else if (char == '_') {
+                    if (number.endsWith('.')) {
+                        raise_error(_b_.SyntaxError, filename,
+                                line_num, pos - line_start,
+                                line_num, pos - line_start, line,
+                                "invalid decimal literal")
+                    }
                     if (number.endsWith('_')) {
                         throw SyntaxError('consecutive _ in number')
                     }else if(src[pos] === undefined ||
                             ! test_num(num_type, src[pos])){
                         // eg 12_
-                        t.push(Token('NUMBER', number,
-                            line_num, pos - line_start - number.length,
-                            line_num, pos - line_start,
-                            line))
-                        state = null
-                        pos--
+                        raise_error(_b_.SyntaxError, filename,
+                                line_num, pos - line_start + 1,
+                                line_num, pos - line_start + 1, line,
+                                "invalid decimal literal")
                     } else {
                         number += char
                     }
@@ -1233,6 +1237,11 @@ $B.tokenizer = function(src, filename, mode, parser) {
                     if('+-'.includes(src[pos]) ||
                             $B.in_unicode_category('Nd', ord(src[pos]))){
                         number += char
+                    } else if (src[pos] == '_') {
+                        raise_error(_b_.SyntaxError, filename,
+                                line_num, pos - line_start,
+                                line_num, pos - line_start, line,
+                                "invalid decimal literal")
                     } else {
                         t.push(Token('NUMBER', number,
                             line_num, pos - line_start - number.length,
