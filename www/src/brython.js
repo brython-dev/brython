@@ -747,8 +747,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-11-17 14:57:14.000368"
-__BRYTHON__.timestamp=1794923833999
+__BRYTHON__.compiled_date="2026-11-17 15:32:46.973003"
+__BRYTHON__.timestamp=1794925966972
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -10748,6 +10748,7 @@ $B.set_func_names(bool,"builtins")})(__BRYTHON__);
 "use strict";
 (function($B){var _b_=$B.builtins
 $B.DBL_MAX_EXP=1024
+$B.SIGN=Symbol('SIGN')
 function conv_num(x){if(typeof x=='number'){return x}else if(typeof x=='bigint'){return Number(x)}else if($B.is_int(x)){
 return conv_num($B.int_value(x))}else if(x.ob_type===_b_.float){return x.value}else if($B.$isinstance(x,_b_.float)){return x.value}
 return $B.NULL}
@@ -10998,7 +10999,9 @@ case "+nan":
 case "nan":
 return fast_float(Number.NaN)
 case "-nan":
-return fast_float(-Number.NaN)
+let res=fast_float(-Number.NaN)
+res[$B.SIGN]=-1
+return res
 default:
 var parts=value.split('e')
 if(parts[1]){if(parts[1].startsWith('+')||parts[1].startsWith('-')){parts[1]=parts[1].substr(1)}}

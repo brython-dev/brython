@@ -4,6 +4,7 @@
 var _b_ = $B.builtins
 
 $B.DBL_MAX_EXP = 1024
+$B.SIGN = Symbol('SIGN') // used for negative NaN, used in math.copysign
 
 function conv_num(x) {
     if (typeof x == 'number') {
@@ -658,7 +659,9 @@ float.$factory = function(value) {
            case "nan":
                return fast_float(Number.NaN)
            case "-nan":
-               return fast_float(-Number.NaN)
+               let res = fast_float(-Number.NaN)
+               res[$B.SIGN] = -1
+               return res
            default:
                var parts = value.split('e')
                if (parts[1]) {

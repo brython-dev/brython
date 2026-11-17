@@ -760,10 +760,15 @@ function comb(n, k) {
 
 function copysign(x, y) {
     $B.check_nb_args_no_kw('math.copysign', 2, arguments)
-
     var x1 = Math.abs(float_check(x))
     var y1 = float_check(y)
-    var sign = Math.sign(y1)
+    let sign
+    if (Number.isNaN(y1)) {
+        // float('-nan') has an attribute $B.SIGN
+        sign = y[$B.SIGN] ?? 1
+    } else {
+        sign = Math.sign(y1)
+    }
     sign = (sign == 1 || Object.is(sign, +0)) ? 1 : - 1
     return _b_.float.$factory(x1 * sign)
 }
@@ -2493,7 +2498,7 @@ function sumprod(p, q) {
         q_i = NULL,
         term_i = NULL,
         new_total = NULL
-    let p_stopped = false, 
+    let p_stopped = false,
         q_stopped = false
     let int_path_enabled = true,
         int_total_in_use = false
