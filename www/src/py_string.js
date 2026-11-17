@@ -1323,7 +1323,6 @@ $B.parse_format_spec = function(spec, obj) {
         if (car == "," || car == "_") {
             this.comma = true
             this.grouping_option = car
-            console.log('grouping', car)
             pos++
             car = spec.charAt(pos)
             if (car == "," || car == "_") {

@@ -76,7 +76,6 @@ $B.url2name={}
 $B.scripts={}
 $B.import_info={}
 $B.imported={}
-$B.namespace=Object.create(null)
 $B.precompiled={}
 $B.frame_obj=null
 var _b_=$B.builtins={}
@@ -748,8 +747,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-11-16 21:37:14.434158"
-__BRYTHON__.timestamp=1794861434432
+__BRYTHON__.compiled_date="2026-11-17 09:51:26.106798"
+__BRYTHON__.timestamp=1794905486105
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -1922,7 +1921,7 @@ if(delitem===$B.NULL){$B.RAISE(_b_.TypeError,"'"+$B.class_name(obj)+
 return $B.$call(delitem,obj,item)}
 $B.delete_for_reassign=function(name,namespace){
 if(namespace.$is_namespace){return $B.$delitem(namespace,name)}
-if(namespace.hasOwnProperty && namespace.hasOwnProperty(name)){try{
+if(Object.hasOwn(namespace,name)){try{
 var value=namespace[name]}catch(err){
 return}
 var klass=$B.get_class(value)
@@ -5054,8 +5053,7 @@ $B.$getattr=function(obj,attr,_default){
 var test=false 
 if(test){console.log('$getattr',obj,attr)}
 var res
-if(obj===undefined ||obj===null){console.log(Error().stack)
-$B.RAISE_ATTRIBUTE_ERROR("Javascript object '"+obj+
+if(obj===undefined ||obj===null){$B.RAISE_ATTRIBUTE_ERROR("Javascript object '"+obj+
 "' has no attribute",obj,attr)}
 var rawname=attr
 if(obj===undefined){console.log("get attr",attr,"of undefined")}
@@ -9380,7 +9378,6 @@ this.width=spec.substring(pos,end_param_pos)
 pos+=end_param_pos+1}
 if(car=="," ||car=="_"){this.comma=true
 this.grouping_option=car
-console.log('grouping',car)
 pos++
 car=spec.charAt(pos)
 if(car=="," ||car=="_"){if(car==this.grouping_option){$B.RAISE(_b_.ValueError,`Cannot specify '${car}' with '${car}'.`)}else{
@@ -15196,8 +15193,7 @@ if(relative){
 current_module=$B.imported[parts.join('.')]
 if(current_module===undefined){$B.set_inum(inum)
 $B.RAISE(_b_.ImportError,'attempted relative import with no known parent package')}
-if(! current_module.$is_package){if(parts.length==1){console.log('current module',current_module,'parts',parts)
-$B.set_inum(inum)
+if(! current_module.$is_package){if(parts.length==1){$B.set_inum(inum)
 $B.RAISE(_b_.ImportError,'attempted relative import with no known parent package')}else{
 parts.pop()
 current_module=$B.imported[parts.join('.')]}}
@@ -16792,10 +16788,7 @@ return ns[name]===undefined ?{found:false}:
 if($B.exact_type(ns,$B.module)){var res=$B.module.tp_getattro(ns,name)
 if(res !==$B.NULL){return{found:true,value:res}}else{
 return{found:false}}}
-if(! ns.hasOwnProperty){if(ns[name]!==undefined){return{found:true,value:ns[name]}}}else if(ns.hasOwnProperty(name)){return{found:true,value:ns[name]}}else if(ns.$dict){try{
-return{found:true,value:ns.$getitem(ns.$dict,name)}}catch(err){if(ns.$missing){try{
-return{
-found:true,value:$B.$call(ns.$missing,ns.$dict,name)}}catch(err){if(! $B.is_exc(err,[_b_.KeyError])){throw err}}}}}
+if(! ns.hasOwnProperty){if(ns[name]!==undefined){return{found:true,value:ns[name]}}}else if(ns.hasOwnProperty(name)){return{found:true,value:ns[name]}}
 return{found:false}}
 $B.resolve=function(name){var checked=new Set(),current_globals,frame_obj=$B.frame_obj,frame
 while(frame_obj !==null){frame=frame_obj.frame
@@ -16820,7 +16813,7 @@ var exc=$B.EXC(_b_.UnboundLocalError,`cannot access local variable `+
 exc.name=name
 $B.set_inum(inum)
 throw exc}
-$B.resolve_in_scopes=function(name,namespaces,inum){var test=false 
+$B.resolve_in_scopes=$B.RS=function(name,namespaces,inum){var test=false 
 if(test){console.log('resolve in scopes',name,'namespaces',namespaces)}
 for(var ns of namespaces){if(ns===$B.exec_scope){var exec_top,frame_obj=$B.frame_obj,frame
 while(frame_obj !==null){frame=frame_obj.frame
@@ -18266,7 +18259,7 @@ var res=name_reference(this.id,scopes,this)
 if(this.id=='__debugger__' && res.startsWith('$B.resolve_in_scopes')){
 return 'debugger'}
 if(scope.found && scope.found.type=='module'){
-res=`(${res} ?? $B.resolve_in_scopes('${this.id}', [${res.split('.')[0]}, _b_]))`}
+res=`(${res} ?? $B.RS('${this.id}', [${res.split('.')[0]}, _b_]))`}
 return res}}
 $B.ast.NamedExpr.prototype.to_js=function(scopes){
 var i=scopes.length-1

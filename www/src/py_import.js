@@ -15,7 +15,6 @@ $B.namespace = function(module_name) {
         // the console for debugging, $B.imported[module_name] is not set;
         // return an empty dict
         : $B.empty_dict()
-
     return res
 }
 
@@ -1683,7 +1682,6 @@ $B.$import_from = function(module, name, aliases, level, locals, inum) {
         }
         if (! current_module.$is_package) {
             if (parts.length == 1) {
-                console.log('current module', current_module, 'parts', parts)
                 $B.set_inum(inum)
                 $B.RAISE(_b_.ImportError,
                     'attempted relative import with no known parent package')

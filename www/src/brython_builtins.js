@@ -182,9 +182,6 @@ $B.import_info = {}
 // Maps the name of imported modules to the module object
 $B.imported = {}
 
-// Maps the name of module to their namespace
-$B.namespace = Object.create(null)
-
 // Maps the name of modules to the matching Javascript code
 $B.precompiled = {}
 

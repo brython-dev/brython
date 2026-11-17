@@ -785,7 +785,6 @@ $B.$getattr = function(obj, attr, _default) {
     }
     var res
     if (obj === undefined || obj === null) {
-        console.log(Error().stack)
         $B.RAISE_ATTRIBUTE_ERROR("Javascript object '" + obj +
             "' has no attribute", obj, attr)
     }

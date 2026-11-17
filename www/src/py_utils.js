@@ -1073,11 +1073,11 @@ $B.delete_for_reassign = function(name, namespace) {
     if (namespace.$is_namespace) {
         return $B.$delitem(namespace, name)
     }
-    if (namespace.hasOwnProperty && namespace.hasOwnProperty(name)) {
+    if (Object.hasOwn(namespace, name)) {
         try {
             var value = namespace[name]
         } catch (err) {
-            // name might have already been remove from the namespace by an
+            // name might have already been removed from the namespace by an
             // explicit del (eg del globals()[name]) and name has become an
             // accessor whose 'get' method raises a NameError
             return
