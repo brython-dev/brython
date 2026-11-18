@@ -747,8 +747,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-11-17 15:32:46.973003"
-__BRYTHON__.timestamp=1794925966972
+__BRYTHON__.compiled_date="2026-11-18 11:49:28.491916"
+__BRYTHON__.timestamp=1794998968491
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -10806,7 +10806,7 @@ var res
 if(fmt.precision !==undefined){
 let prec=fmt.precision
 if(prec==0){return $B.roundDownToFixed(value,0)}
-res=$B.roundDownToFixed(value,prec)
+res=float_round(self,prec).value+''
 let pt_pos=res.indexOf(".")
 if(fmt.type !==undefined &&
 (fmt.type=="%" ||fmt.type.toLowerCase()=="f")){if(pt_pos==-1){res+="."+"0".repeat(fmt.precision)}else{

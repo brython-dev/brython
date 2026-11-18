@@ -169,7 +169,8 @@ function preformat(self, fmt) {
         if (prec == 0) {
             return $B.roundDownToFixed(value, 0)
         }
-        res = $B.roundDownToFixed(value, prec) // in py_string.js
+        res = float_round(self, prec).value + ''
+
         let pt_pos = res.indexOf(".")
         if(fmt.type !== undefined &&
                 (fmt.type == "%" || fmt.type.toLowerCase() == "f")){
