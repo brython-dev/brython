@@ -756,6 +756,53 @@ $B.resolve_in_scopes = $B.RS = function(name, namespaces, inum) {
     throw exc
 }
 
+$B.RS = function(name, ns, inum) {
+    // version used to resolve a Name object at module level. Search in
+    // namespace and in _b_
+    var test = false // name == 'a'
+    if (test) {
+        console.log('resolve', name, 'in namespace', ns, 'or _b_')
+    }
+    if (ns === $B.exec_scope) {
+        var exec_top,
+            frame_obj = $B.frame_obj,
+            frame
+        while (frame_obj !== null) {
+            frame = frame_obj.frame
+            if (frame.is_exec_top) {
+                exec_top = frame
+                break
+            }
+            frame_obj = frame_obj.prev
+        }
+        if (exec_top) {
+            for (var ns1 of [exec_top[1], exec_top[3]]) {
+                let v = resolve_in_namespace(name, ns1)
+                if (v.found) {
+                    if (test) {
+                        console.log(v.value)
+                    }
+                    return v.value
+                }
+            }
+        }
+    } else {
+        let v = resolve_in_namespace(name, ns)
+        if (v.found) {
+            if (test) {
+                console.log('in namespace', ns, v.value)
+            }
+            return v.value
+        }
+    }
+    if (Object.hasOwn(_b_, name)) {
+        return _b_[name]
+    }
+    var exc = $B.name_error(name)
+    $B.set_inum(inum)
+    throw exc
+}
+
 $B.resolve_global = function(name, frame_obj, inum) {
     // Resolve in globals or builtins
     while (frame_obj !== null) {
@@ -3735,7 +3782,7 @@ $B.ast.Name.prototype.to_js = function(scopes) {
             // A module global may have been deleted at run time, from globals()
             // It can also be Javascript null or undefined, in this case name
             // resolution will use Object.hasOwn(namespace, name)
-            res = `(${res} ?? $B.RS('${this.id}', [${res.split('.')[0]}, _b_]))`
+            res = `(${res} ?? $B.RS('${this.id}', ${res.split('.')[0]}))`
         }
         return res
     }
