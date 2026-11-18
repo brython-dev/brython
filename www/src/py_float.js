@@ -169,7 +169,8 @@ function preformat(self, fmt) {
         if (prec == 0) {
             return $B.roundDownToFixed(value, 0)
         }
-        res = float_round(self, prec).value + ''
+        // apply float_round to a fake float with correct value
+        res = float_round({value}, prec).value + ''
 
         let pt_pos = res.indexOf(".")
         if(fmt.type !== undefined &&
