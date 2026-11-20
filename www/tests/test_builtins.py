@@ -200,6 +200,15 @@ for func in [divmod, hasattr, isinstance]:
     assert_raises(TypeError, func, 1, 2, 3,
         msg=f'{name} expected 2 arguments, got 3')
 
+# all() lets what its iterable raises go on
+def raises(x):
+    raise ValueError(x)
+
+assert_raises(ValueError, all, (raises(x) for x in [1]))
+assert all([]) is True
+assert all(x > 0 for x in [1, 2]) is True
+assert all(x > 1 for x in [1, 2]) is False
+
 # a method does not count its instance
 for obj, name in [(set(), 'add'), ([], 'append'), ('a', 'join')]:
     qualname = f'{type(obj).__name__}.{name}'
