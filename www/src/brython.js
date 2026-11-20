@@ -747,8 +747,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-11-20 21:12:41.423368"
-__BRYTHON__.timestamp=1795205561421
+__BRYTHON__.compiled_date="2026-11-20 21:58:35.733843"
+__BRYTHON__.timestamp=1795208315733
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -10364,9 +10364,7 @@ $B.RAISE(_b_.TypeError,`int expected at most 2 arguments, got ${args.length}`
 var initial_value=value
 if($B.$isinstance(value,[_b_.bytes,_b_.bytearray])){
 value=$B.$getattr(value,'decode')('latin-1')}else if($B.$isinstance(value,_b_.memoryview)){value=$B.$getattr(_b_.memoryview.tp_funcs.tobytes(value),'decode')('latin-1')}
-if(! $B.is_str(value)){if(base !==_b_.None){console.log('value',value,'base',base)
-console.log(Error('trace').stack)
-$B.RAISE(_b_.TypeError,"int() can't convert non-string with explicit base")}else{
+if(! $B.is_str(value)){if(base !==_b_.None){$B.RAISE(_b_.TypeError,"int() can't convert non-string with explicit base")}else{
 if($B.$isinstance(value,_b_.float)){
 var _fv=typeof value=='number' ? value :value.value
 if(isNaN(_fv)){$B.RAISE(_b_.ValueError,'cannot convert float NaN to integer')}
@@ -14685,7 +14683,8 @@ if(res !==$B.NULL){if(test){console.log('res',res,$B.get_class(res).tp_name)}
 if(res?.__get__){return res.__get__()}
 return res}
 var getattr=$B.get_from_dict(self,'__getattr__',$B.NULL)
-if(getattr !==$B.NULL){return $B.$call(getattr,attr)}
+if(getattr !==$B.NULL){try{
+return $B.$call(getattr,attr)}catch(err){}}
 return $B.NULL}
 $B.module.tp_init=function(self){var $=$B.args('__init__',3,{self:null,name:null,doc:null},arguments,{doc:_b_.None},'args','kw')
 var self=$.self
@@ -14951,8 +14950,8 @@ if($B.get_page_option('indexeddb')&& $B.indexedDB &&
 $B.idb_name){
 var idb_cx=indexedDB.open($B.idb_name)
 idb_cx.onsuccess=function(evt){var db=evt.target.result,tx=db.transaction("modules","readwrite"),store=tx.objectStore("modules"),request=store.put(record)
-request.onsuccess=function(){if($B.get_option('debug')> 1){console.info(modobj.__name__,"stored in db")}}
-request.onerror=function(){console.info("could not store "+modobj.__name__)}}}}}
+request.onsuccess=function(){if($B.get_option('debug')> 1){console.info(mod_name,"stored in db")}}
+request.onerror=function(){console.info("could not store "+mod_name)}}}}}
 VFSLoader.tp_methods=["create_module","exec_module"]
 $B.set_func_names(VFSLoader,"builtins")
 var StdlibStaticFinder=$B.make_builtin_class("StdlibStaticFinder")
@@ -15295,7 +15294,7 @@ $B.RAISE(_b_.ImportError,"cannot import name '"+name+"'")}}}}
 if(test){console.log('$B.import returns locals',locals)}
 return locals}}
 $B.$import_from=function(module,name,aliases,level,locals,inum){
-var test=false 
+var test=module=='unittest' 
 if(test){console.log('import from',module,name)}
 var current_module_name=$B.frame_obj.frame[2],parts=current_module_name.split('.'),relative=level > 0,current_module
 if(relative){
@@ -15322,7 +15321,7 @@ locals[item.key]=item.value}}else{
 var ns,alias
 if(aliases[name]){[ns,alias]=aliases[name]}else{
 [ns,alias]=[locals,name]}
-var value=$B.module_getattr(current_module,name)
+var value=$B.module_getattr(current_module,name,$B.NULL)
 if(value !==$B.NULL){
 ns[alias]=value}else{
 var sub_module=$B.module_getattr(current_module,'__name__')+

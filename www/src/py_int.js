@@ -197,8 +197,6 @@ int.$factory = function(value, base) {
 
     if (! $B.is_str(value)) {
         if (base !== _b_.None) {
-            console.log('value', value, 'base', base)
-            console.log(Error('trace').stack)
             $B.RAISE(_b_.TypeError,
                 "int() can't convert non-string with explicit base")
         } else {

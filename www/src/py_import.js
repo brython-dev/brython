@@ -57,7 +57,7 @@ $B.module.tp_repr = function(self) {
 }
 
 $B.module.tp_getattro = function(self, attr) {
-    var test = false // attr == 'path'
+    var test = false // attr == 'mock'
     var res = _b_.object.tp_getattro(self, attr)
     if (res !== $B.NULL) {
         if (test) {
@@ -71,7 +71,11 @@ $B.module.tp_getattro = function(self, attr) {
     // search with __getattr__ if defined in the module
     var getattr = $B.get_from_dict(self, '__getattr__', $B.NULL)
     if (getattr !== $B.NULL) {
-        return $B.$call(getattr, attr)
+        try {
+            return $B.$call(getattr, attr)
+        } catch(err) {
+            // ignore, returns $B.NULL
+        }
     }
     return $B.NULL
 }
@@ -710,11 +714,11 @@ VFSLoader_funcs.exec_module = function(self, modobj) {
                     request = store.put(record)
                 request.onsuccess = function() {
                     if ($B.get_option('debug') > 1) {
-                        console.info(modobj.__name__, "stored in db")
+                        console.info(mod_name, "stored in db")
                     }
                 }
                 request.onerror = function() {
-                    console.info("could not store " + modobj.__name__)
+                    console.info("could not store " + mod_name)
                 }
             }
         }
@@ -1662,7 +1666,7 @@ $B.import = function(mod_name, fromlist, aliases, locals, inum) {
 $B.$import_from = function(module, name, aliases, level, locals, inum) {
     // Import names from modules; level is 0 for absolute import, > 0
     // for relative import (number of dots before module name)
-    var test = false // module == '_bootstrap' //&& names[0] == '_path_normpath'
+    var test = module == 'unittest' //&& names[0] == '_path_normpath'
     if (test) {
         console.log('import from', module, name)
     }
@@ -1723,7 +1727,7 @@ $B.$import_from = function(module, name, aliases, level, locals, inum) {
             } else {
                 [ns, alias] = [locals, name]
             }
-            var value = $B.module_getattr(current_module, name)
+            var value = $B.module_getattr(current_module, name, $B.NULL)
             if (value !== $B.NULL) {
                 // name is defined in the package module (__init__.py)
                 ns[alias] = value
