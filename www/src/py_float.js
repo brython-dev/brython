@@ -124,6 +124,24 @@ var format_sign = function(val, flags) {
     return ''
 }
 
+function round_half(value) {
+    let floor = Math.floor(value)
+    let ceil = Math.ceil(value)
+    if (floor == ceil) {
+        return value
+    }
+    let decimal = value - floor
+    if (decimal != 0 && decimal == ceil - value) {
+        // exact halves
+        let s = floor.toFixed(0)
+        if ('02468'.includes(s[s.length - 1])) {
+            return floor
+        } else {
+            return ceil
+        }
+    }
+    return value
+}
 
 function preformat(self, fmt) {
     var value = self.value
@@ -152,24 +170,28 @@ function preformat(self, fmt) {
     if (fmt.type == "%") {
         value *= 100
     }
-    console.log('preformat', value, fmt)
+
     if (fmt.type == "e" || fmt.type == "E") {
         let res
         if (fmt.precision == 0 && Math.abs(value) >= 1) {
-            res = $B.roundDownToFixed(value, 0)
-            console.log(value, 'precision 0', res)
-            value = parseFloat(res)
+            value = round_half(value)
         }
+
         res = value.toExponential(fmt.precision)
+
         if (res.includes('e')) {
             let exp = parseInt(res.substr(res.search("e") + 1))
-            console.log('value', value, 'res', res, 'exp', exp)
             if (Math.abs(exp) < 10) {
                 res = res.substr(0, res.length - 1) + "0" +
                     res.charAt(res.length - 1)
             }
         } else {
             res += 'e+00'
+        }
+        let [i, f] = res.split('e')
+        if (fmt.alternate && ! i.includes('.')) {
+            i += '.'
+            res = [i, f].join('e')
         }
         res = fmt.type == "E" ? res.toUpperCase() : res
         res = fmt.sign == '+' && value !== 0 ? '+' + res : res
@@ -182,14 +204,16 @@ function preformat(self, fmt) {
         // The argument of toFixed is the number of digits after "."
         let prec = fmt.precision
         if (prec == 0) {
-            let res = $B.roundDownToFixed(value, 0)
-            console.log('precision 0, res', res)
-            if ('fFgG'.includes(fmt.type) &&
-                    ! res.includes('.') &&
-                    fmt.alternate) {
-                res += '.'
+            if (Math.abs(value) > 1) {
+                value = round_half(value)
             }
-            return res
+            if ('fF'.includes(fmt.type)) {
+                let res = $B.roundDownToFixed(value, 0)
+                if (fmt.alternate && ! res.endsWith('.')) {
+                    res += '.'
+                }
+                return res
+            }
         }
         // apply float_round to a fake float with correct value
         res = float_round({value}, prec).value + ''
@@ -202,9 +226,11 @@ function preformat(self, fmt) {
         let pt_pos = res.indexOf(".")
         if(fmt.type !== undefined &&
                 (fmt.type == "%" || fmt.type.toLowerCase() == "f")){
-            console.log('type f, point position', pt_pos)
             if (pt_pos == -1) {
-                res += "." + "0".repeat(fmt.precision)
+                if (fmt.alternate || fmt.precision > 0) {
+                    res += '.'
+                }
+                res += "0".repeat(fmt.precision)
             } else {
                 var missing = fmt.precision - res.length + pt_pos + 1
                 if (missing > 0) {
@@ -214,12 +240,16 @@ function preformat(self, fmt) {
         } else if (fmt.type && fmt.type.toLowerCase() == "g") {
             let exp_fmt = preformat(self, {type: "e"}).split("e"),
                 exp = parseInt(exp_fmt[1])
-            if (-4 <= exp && exp < fmt.precision) {
+            let precision = fmt.precision
+            if (precision == 0) {
+                precision = 1
+            }
+            if (-4 <= exp && exp < precision) {
                 res = preformat(self,
-                        {type: "f", precision: fmt.precision - 1 - exp})
+                        {type: "f", precision: precision - 1 - exp})
             } else {
                 res = preformat(self,
-                    {type: "e", precision: fmt.precision - 1})
+                    {type: "e", precision: precision - 1})
             }
             let parts = res.split("e")
             if (fmt.alternate) {
@@ -305,10 +335,8 @@ function preformat(self, fmt) {
 
 float.$format = function(self, fmt) {
     // fmt is the object parsed from a format_spec
-    console.log('float', self, 'fmt', fmt)
     fmt.align = fmt.align || ">"
     var pf = preformat(self, fmt)
-    console.log('preformat', pf)
     if (Object.is(self.value, -0) && ! pf.startsWith('-')) {
         // Javascript toFixed and toExponential drop the sign of -0
         pf = '-' + pf
@@ -1462,7 +1490,6 @@ float_funcs.fromhex = function(klass, s) {
         return finished()
     }
     if (exp > LONG_MAX/2) {
-        console.log('overflow, exp', exp)
         throw overflow_error()
     }
     /* Adjust exponent for fractional part. */

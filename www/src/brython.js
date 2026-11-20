@@ -747,8 +747,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-11-20 17:04:20.082376"
-__BRYTHON__.timestamp=1795190660082
+__BRYTHON__.compiled_date="2026-11-20 21:12:41.423368"
+__BRYTHON__.timestamp=1795205561421
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -9080,9 +9080,7 @@ if(is_neg){v=-v}
 var res_floor=(Math.floor(v*mul)/mul).toFixed(d),res_ceil=(Math.ceil(v*mul)/mul).toFixed(d),res
 if(v-res_floor==res_ceil-v){
 var last=res_floor[res_floor.length-1]
-console.log('last',last,'floor',res_floor,'ceil',res_ceil)
 res=last.match(/[02468]/)? res_floor :res_ceil}else{
-console.log('v * mul',v*mul,'floor',res_floor,'ceil',res_ceil)
 res=v-res_floor < res_ceil-v ? res_floor :res_ceil}
 return is_neg ? '-'+res :res}
 var floating_point_decimal_format=function(val,upper,flags){val=_float_helper(val,flags)
@@ -10806,6 +10804,15 @@ case ' ':
 return(val >=0 ||isNaN(val))? ' ' :''}
 if(flags.space){if(val >=0){return " "}}
 return ''}
+function round_half(value){let floor=Math.floor(value)
+let ceil=Math.ceil(value)
+if(floor==ceil){return value}
+let decimal=value-floor
+if(decimal !=0 && decimal==ceil-value){
+let s=floor.toFixed(0)
+if('02468'.includes(s[s.length-1])){return floor}else{
+return ceil}}
+return value}
 function preformat(self,fmt){var value=self.value
 if(fmt.empty){return _b_.str.$factory(self)}
 if(fmt.type && 'eEfFgGn%'.indexOf(fmt.type)==-1){$B.RAISE(_b_.ValueError,"Unknown format code '"+fmt.type+
@@ -10815,40 +10822,39 @@ if(isNaN(value)){special="efg".indexOf(fmt.type)>-1 ? "nan" :"NAN"}else if(value
 if(special){return format_sign(value,fmt)+special}
 if(fmt.precision===undefined && fmt.type !==undefined){fmt.precision=6}
 if(fmt.type=="%"){value*=100}
-console.log('preformat',value,fmt)
 if(fmt.type=="e" ||fmt.type=="E"){let res
-if(fmt.precision==0 && Math.abs(value)>=1){res=$B.roundDownToFixed(value,0)
-console.log(value,'precision 0',res)
-value=parseFloat(res)}
+if(fmt.precision==0 && Math.abs(value)>=1){value=round_half(value)}
 res=value.toExponential(fmt.precision)
 if(res.includes('e')){let exp=parseInt(res.substr(res.search("e")+1))
-console.log('value',value,'res',res,'exp',exp)
 if(Math.abs(exp)< 10){res=res.substr(0,res.length-1)+"0"+
 res.charAt(res.length-1)}}else{
 res+='e+00'}
+let[i,f]=res.split('e')
+if(fmt.alternate && ! i.includes('.')){i+='.'
+res=[i,f].join('e')}
 res=fmt.type=="E" ? res.toUpperCase():res
 res=fmt.sign=='+' && value !==0 ? '+'+res :res
 return res}
 var res
 if(fmt.precision !==undefined){
 let prec=fmt.precision
-if(prec==0){let res=$B.roundDownToFixed(value,0)
-console.log('precision 0, res',res)
-if('fFgG'.includes(fmt.type)&&
-! res.includes('.')&&
-fmt.alternate){res+='.'}
-return res}
+if(prec==0){if(Math.abs(value)> 1){value=round_half(value)}
+if('fF'.includes(fmt.type)){let res=$B.roundDownToFixed(value,0)
+if(fmt.alternate && ! res.endsWith('.')){res+='.'}
+return res}}
 res=float_round({value},prec).value+''
 if(value < 0 && ! res.startsWith('-')){
 res='-'+res}
 let pt_pos=res.indexOf(".")
 if(fmt.type !==undefined &&
-(fmt.type=="%" ||fmt.type.toLowerCase()=="f")){console.log('type f, point position',pt_pos)
-if(pt_pos==-1){res+="."+"0".repeat(fmt.precision)}else{
+(fmt.type=="%" ||fmt.type.toLowerCase()=="f")){if(pt_pos==-1){if(fmt.alternate ||fmt.precision > 0){res+='.'}
+res+="0".repeat(fmt.precision)}else{
 var missing=fmt.precision-res.length+pt_pos+1
 if(missing > 0){res+="0".repeat(missing)}}}else if(fmt.type && fmt.type.toLowerCase()=="g"){let exp_fmt=preformat(self,{type:"e"}).split("e"),exp=parseInt(exp_fmt[1])
-if(-4 <=exp && exp < fmt.precision){res=preformat(self,{type:"f",precision:fmt.precision-1-exp})}else{
-res=preformat(self,{type:"e",precision:fmt.precision-1})}
+let precision=fmt.precision
+if(precision==0){precision=1}
+if(-4 <=exp && exp < precision){res=preformat(self,{type:"f",precision:precision-1-exp})}else{
+res=preformat(self,{type:"e",precision:precision-1})}
 let parts=res.split("e")
 if(fmt.alternate){if(parts[0].search(/\./)==-1){parts[0]+='.'}}else{
 let signif=parts[0]
@@ -10879,10 +10885,8 @@ if(fmt.sign !==undefined){if((fmt.sign==" " ||fmt.sign=="+" )&& value > 0){res=f
 if(fmt.type=="%"){res+="%"}
 return res}
 float.$format=function(self,fmt){
-console.log('float',self,'fmt',fmt)
 fmt.align=fmt.align ||">"
 var pf=preformat(self,fmt)
-console.log('preformat',pf)
 if(Object.is(self.value,-0)&& ! pf.startsWith('-')){
 pf='-'+pf}
 if(fmt.z && Object.is(parseFloat(pf),-0)){
@@ -11348,8 +11352,7 @@ coeff_end-1-j])}
 while(ndigits > 0 && HEX_DIGIT(ndigits-1)==0){ndigits--}
 if(ndigits==0 ||exp < LONG_MIN/2){x=ZERO
 return finished()}
-if(exp > LONG_MAX/2){console.log('overflow, exp',exp)
-throw overflow_error()}
+if(exp > LONG_MAX/2){throw overflow_error()}
 exp=exp-4*fdigits
 var top_exp=exp+4*(ndigits-1)
 for(let digit=BigInt(HEX_DIGIT(ndigits-1));digit !=0;digit/=2n){top_exp++}
