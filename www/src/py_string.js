@@ -202,6 +202,26 @@ $B.str_iterator.tp_iternext = function*(self){
     self.done = true
 }
 
+// Used by $B.make_js_iterator: the same steps as tp_iternext, without a
+// call to __next__ and a StopIteration for each of them
+$B.str_iterator[$B.FAST_ITER] = function(self, set_lineno, frame, lineno) {
+    return {
+        [Symbol.iterator]() {
+            return this
+        },
+        next() {
+            set_lineno(frame, lineno)
+            var res = self.it.next()
+            if (res.done) {
+                self.done = true
+                return {done: true, value: null}
+            }
+            self.index++
+            return res
+        }
+    }
+}
+
 var str_iterator_funcs = $B.str_iterator.tp_funcs = {}
 
 str_iterator_funcs.__length_hint__ = function(self) {

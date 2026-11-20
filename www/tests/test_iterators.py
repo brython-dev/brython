@@ -250,6 +250,30 @@ assert next(flaky_it_2928) == "later"
 assert next(flaky_it_2928) == "later"
 assert next(flaky_it_2928, None) is None
 
+# a list, tuple, range or str iterator in a for loop: next() called in the
+# loop, a list growing while it is iterated, an iterator exhausted for good,
+# a negative step, integers past 2**53, characters past U+FFFF
+for seq in ([1, 2, 3, 4], (1, 2, 3, 4), range(1, 5), "1234"):
+    it = iter(seq)
+    assert [(x, next(it)) for x in it] == list(zip(seq[::2], seq[1::2])), seq
+
+growing = [1, 2]
+it = iter(growing)
+seen = []
+for x in it:
+    seen.append(x)
+    if x == 1:
+        growing.append(3)
+assert seen == [1, 2, 3]
+growing.append(4)
+assert list(it) == []
+
+assert list(iter(range(10, 0, -3))) == [10, 7, 4, 1]
+big = 2 ** 64
+assert list(iter(range(big, big + 3))) == [big, big + 1, big + 2]
+assert list(iter(range(big, big - 3, -1))) == [big, big - 1, big - 2]
+assert list(iter("a😀b")) == ["a", "😀", "b"]
+
 # __setstate__ moves a builtin iterator, the position brought within bounds
 for seq in ([1, 2, 3, 4], (1, 2, 3, 4), "ab😀d", b"abcd"):
     it = iter(seq)
