@@ -1245,144 +1245,176 @@ str.$factory = function() {
         `(type ${$B.class_name(res)})`)
 }
 
-// Function to parse the 2nd argument of format()
-$B.parse_format_spec = function(spec, obj) {
-    if (spec == "") {
-        this.empty = true
-    } else {
-        var pos = 0,
-            aligns = "<>=^",
-            digits = "0123456789",
-            types = "bcdeEfFgGnosxX%",
-            align_pos = aligns.indexOf(spec.charAt(0))
-        if (align_pos != -1) {
-            if (spec.charAt(1) && aligns.indexOf(spec.charAt(1)) != -1) {
-                // If the second char is also an alignment specifier, the
-                // first char is the fill value
-                this.fill = spec.charAt(0)
-                this.align = spec.charAt(1)
-                pos = 2
-            } else {
-                // The first character defines alignment : fill defaults to ' '
-                this.align = aligns[align_pos]
-                this.fill = " "
-                pos++
+
+/*
+format_spec:             [options][width_and_precision][type]
+options:                 [[fill]align][sign]["z"]["#"]["0"]
+fill:                    <any character>
+align:                   "<" | ">" | "=" | "^"
+sign:                    "+" | "-" | " "
+width_and_precision:     [width_with_grouping][precision_with_grouping]
+width_with_grouping:     [width][grouping]
+precision_with_grouping: "." [precision][grouping] | "." grouping
+width:                   digit+
+precision:               digit+
+grouping:                "," | "_"
+type:                    "b" | "c" | "d" | "e" | "E" | "f" | "F" | "g"
+                         | "G" | "n" | "o" | "s" | "x" | "X" | "%"
+*/
+
+const digits = '0123456789'
+const aligns = '<>=^'
+const types = "bcdeEfFgGnosxX%"
+
+function FormatSpec(str) {
+    this.str = str
+    this.pos = 0
+}
+
+FormatSpec.prototype.parse = function() {
+    this.parse_options()
+    this.parse_width_and_precision()
+    this.parse_type()
+    if (this.type == 'n' && this.decimal_grouping) {
+        throw Error("Cannot specify '_' with 'n'.")
+    }
+    if (this.pos !== this.str.length) {
+        throw Error(`Invalid format spec ${this.str}`)
+    }
+}
+
+FormatSpec.prototype.parse_options = function() {
+    this.parse_fill_align()
+    this.parse_sign()
+    this.parse_z()
+    this.parse_alternate()
+    this.parse_zero()
+}
+
+FormatSpec.prototype.parse_fill_align = function() {
+    let fill = this.str[this.pos]
+    let align = this.str[this.pos + 1]
+    if (aligns.includes(align)) {
+        this.fill = fill
+        this.align = align
+        this.pos += 2
+    } else if (aligns.includes(this.str[this.pos])) {
+        this.fill = ' '
+        this.align = this.str[this.pos]
+        this.pos++
+    }
+}
+
+FormatSpec.prototype.parse_sign = function() {
+    let char = this.str[this.pos]
+    if ('-+ '.includes(char)) {
+        this.sign = char
+        this.pos++
+    }
+}
+
+FormatSpec.prototype.parse_z = function() {
+    let char = this.str[this.pos]
+    if (char == 'z') {
+        this.z = true
+        this.pos++
+    }
+}
+
+FormatSpec.prototype.parse_alternate = function() {
+    let char = this.str[this.pos]
+    if (char == '#') {
+        this.alternate = true
+        this.pos++
+    }
+}
+
+FormatSpec.prototype.parse_zero = function() {
+    let char = this.str[this.pos]
+    if (char == '0') {
+        this.fill = '0'
+        this.align = this.align ?? '='
+        this.pos++
+    }
+}
+
+FormatSpec.prototype.parse_width_and_precision = function() {
+    this.parse_width_with_grouping()
+    this.parse_precision_with_grouping()
+}
+
+FormatSpec.prototype.parse_width_with_grouping = function() {
+    let pos = this.pos
+    while (this.pos < this.str.length &&
+            digits.includes(this.str[this.pos])) {
+        this.pos++
+    }
+    if (this.pos > pos) {
+        this.width = this.str.substring(pos, this.pos)
+    }
+    pos = this.pos
+    let grouping = this.str[this.pos]
+    if (',_'.includes(grouping)) {
+        this.grouping = grouping
+        this.pos++
+    }
+    if (this.grouping) {
+        let next_grouping = this.str[this.pos]
+        if (',_'.includes(next_grouping)) {
+            if (next_grouping != this.grouping) {
+                throw Error(`cannot specify both ',' and '_'`)
             }
-        } else {
-            align_pos = aligns.indexOf(spec.charAt(1))
-            if (spec.charAt(1) && align_pos != -1) {
-                // The second character defines alignment : fill is the first one
-                this.align = aligns[align_pos]
-                this.fill = spec.charAt(0)
-                pos = 2
-            }
-        }
-        var car = spec.charAt(pos)
-        if (car == "+" || car == "-" || car == " ") {
-            this.sign = car
-            pos++
-            car = spec.charAt(pos)
-        }
-        if (car == "z") {
-            this.z = true
-            pos++
-            car = spec.charAt(pos)
-        }
-        if (car == "#") {
-            this.alternate = true
-            pos++
-            car = spec.charAt(pos)
-        }
-        if (car == "0") {
-            // sign-aware : equivalent to fill = 0 and align == "="
-            this.fill = "0"
-            if (align_pos == -1) {
-                this.align = "="
-            }
-            pos++
-            car = spec.charAt(pos)
-        }
-        while (car && digits.indexOf(car) > -1) {
-            if (this.width === undefined) {
-                this.width = car
-            } else {
-                this.width += car
-            }
-            pos++
-            car = spec.charAt(pos)
-        }
-        if (this.width !== undefined) {
-            this.width = parseInt(this.width)
-        }
-        if (this.width === undefined && car == "{") {
-            // Width is determined by a parameter
-            var end_param_pos = spec.substr(pos).search("}")
-            this.width = spec.substring(pos, end_param_pos)
-            pos += end_param_pos + 1
-        }
-        if (car == "," || car == "_") {
-            this.comma = true
-            this.grouping_option = car
-            pos++
-            car = spec.charAt(pos)
-            if (car == "," || car == "_") {
-                if (car == this.grouping_option) {
-                    $B.RAISE(_b_.ValueError,
-                        `Cannot specify '${car}' with '${car}'.`)
-                } else {
-                    $B.RAISE(_b_.ValueError,
-                        "Cannot specify both ',' and '_'.")
-                }
-            }
-        }
-        if (car == ".") {
-            if (',_'.includes(spec.charAt(pos + 1))) {
-                this.decimal_grouping = spec.charAt(pos + 1)
-                pos++
-            }
-            if (digits.indexOf(spec.charAt(pos + 1)) == -1) {
-                if (! this.decimal_grouping) {
-                    $B.RAISE(_b_.ValueError,
-                        "Format specifier missing precision")
-                }
-                pos++
-                car = spec.charAt(pos)
-            } else {
-                this.precision = spec.charAt(pos + 1)
-                pos += 2
-                car = spec.charAt(pos)
-                while (car && digits.indexOf(car) > -1) {
-                    this.precision += car
-                    pos++
-                    car = spec.charAt(pos)
-                }
-                this.precision = parseInt(this.precision)
-            }
-        }
-        if (car && types.indexOf(car) > -1) {
-            this.type = car
-            pos++
-            car = spec.charAt(pos)
-        }
-        if (pos !== spec.length) {
-            var err_msg = `Invalid format specifier '${spec}'`
-            if (obj) {
-                err_msg += ` for object of type '${$B.class_name(obj)}'`
-            }
-            $B.RAISE(_b_.ValueError, err_msg)
         }
     }
+}
 
-    this.toString = function() {
-        return (this.fill === undefined ? "" : _b_.str.$factory(this.fill)) +
-            (this.align || "") +
-            (this.sign || "") +
-            (this.alternate ? "#" : "") +
-            (this.sign_aware ? "0" : "") +
-            (this.width || "") +
-            (this.comma ? "," : "") +
-            (this.precision ? "." + this.precision : "") +
-            (this.type || "")
+FormatSpec.prototype.parse_precision_with_grouping = function() {
+    if (this.str[this.pos] != '.') {
+        return
+    }
+    this.pos++
+    let pos = this.pos
+    while (this.pos < this.str.length &&
+            digits.includes(this.str[this.pos])) {
+        this.pos++
+    }
+    if (this.pos > pos) {
+        this.precision = parseInt(this.str.substring(pos, this.pos))
+    }
+    let grouping = this.str[this.pos]
+    if (',_'.includes(grouping)) {
+        this.decimal_grouping = grouping
+        this.pos++
+    }
+    if (this.decimal_grouping) {
+        let next_grouping = this.str[this.pos]
+        if (',_'.includes(next_grouping)) {
+            if (next_grouping != this.decimal_grouping) {
+                throw Error(`cannot specify both ',' and '_'`)
+            }
+        }
+    }
+}
+
+FormatSpec.prototype.parse_type = function() {
+    let type = this.str[this.pos]
+    if (types.includes(type)) {
+        this.type = type
+        this.pos++
+    }
+}
+
+$B.parse_format_spec = function(spec, obj) {
+    let format_spec = new FormatSpec(spec)
+    try {
+        format_spec.parse()
+        return format_spec
+    } catch(err) {
+        var err_msg = err.message
+        if (obj && ! err_msg.endsWith('.')) {
+            err_msg += ` for object of type '${$B.class_name(obj)}'`
+        }
+        $B.RAISE(_b_.ValueError, err_msg)
     }
 }
 

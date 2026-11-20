@@ -145,6 +145,7 @@ function preformat(self, fmt) {
     if (special) {
         return format_sign(value, fmt) + special
     }
+
     if (fmt.precision === undefined && fmt.type !== undefined) {
         fmt.precision = 6
     }
@@ -154,11 +155,13 @@ function preformat(self, fmt) {
     if (fmt.type == "e" || fmt.type == "E") {
         let res = value.toExponential(fmt.precision),
             exp = parseInt(res.substr(res.search("e") + 1))
-            if (Math.abs(exp) < 10) {
-                res = res.substr(0, res.length - 1) + "0" +
-                    res.charAt(res.length - 1)
-            }
-        return fmt.type == "E" ? res.toUpperCase() : res
+        if (Math.abs(exp) < 10) {
+            res = res.substr(0, res.length - 1) + "0" +
+                res.charAt(res.length - 1)
+        }
+        res = fmt.type == "E" ? res.toUpperCase() : res
+        res = fmt.sign == '+' && value !== 0 ? '+' + res : res
+        return res
     }
 
     var res
@@ -287,27 +290,91 @@ float.$format = function(self, fmt) {
         // if 'z' option is set, remove minus sign for negative zero
         pf = pf.substr(1)
     }
-    var raw = pf.split('.'),
-        _int = raw[0]
-    if (fmt.comma) {
-        let len = _int.length,
-            nb = Math.ceil(_int.length / 3),
+
+    let sign = ''
+    if ('+-'.includes(pf[0])) {
+        sign = pf[0]
+        pf = pf.substr(1)
+    }
+
+    let raw = pf.split('.'),
+        _int = raw[0],
+        fract = raw[1],
+        nb_seps = 0,
+        exp_pos,
+        fract_end,
+        fract_width
+
+    let int_digits = _int
+
+    if (fract && fmt.decimal_grouping) {
+        // position of exponential mark 'e' or 'E'
+        exp_pos = Math.max(fract.indexOf('e'), fract.indexOf('E'))
+        if (exp_pos > -1) {
+            // position of last char in fractional before e or E
+            fract_end = exp_pos - 1
+        } else {
+            fract_end = fract.length - 1
+        }
+        // number of thousands separators in fractional part
+        nb_seps += Math.floor(fract_end / 3)
+        // length of fractional part including separators
+        fract_width = fract.length + nb_seps
+    }
+
+    if (fmt.width && fmt.fill == '0' && fmt.align == '=' && fmt.grouping) {
+        // the zeros for padding are taken into acount in grouping
+        let N = fmt.width - fract_width - sign.length - 1 // target width
+        while (Math.floor((_int.length - 1) / 3) + _int.length < N) {
+            _int = '0' + _int
+        }
+        raw[0] = _int
+        int_digits = _int
+        pf = raw.join('.')
+    }
+
+    // add number of thousands separators in integer part
+    if (fmt.grouping) {
+        nb_seps += Math.floor((int_digits.length - 1) / 3)
+    }
+
+    let save_width = fmt.width
+    // exclude separators and sign from width count
+    fmt.width -= nb_seps + sign.length
+    pf = $B.format_width(pf, fmt) // in py_string.js
+    fmt.width = save_width
+
+    raw = pf.split('.')
+    _int = raw[0]
+    fract = raw[1]
+
+    if (fmt.grouping) {
+        // ignore leading padding chars for thousands separators
+        let padding_left = _int.length - int_digits.length
+        let len = int_digits.length,
+            nb = Math.ceil(int_digits.length / 3),
             chunks = []
         for (var i = 0; i < nb; i++) {
-            chunks.push(_int.substring(len - 3 * i - 3, len - 3 * i))
+            chunks.push(int_digits.substring(len - 3 * i - 3, len - 3 * i))
         }
         chunks.reverse()
-        raw[0] = chunks.join(fmt.grouping_option)
+        _int = _int.substr(0, padding_left) + chunks.join(fmt.grouping)
     }
-    if (raw.length > 1 && fmt.decimal_grouping) {
-        _int = raw[1]
+    if (fract && fmt.decimal_grouping) {
+        // add thousands separators to fractional part
         let chunks = []
-        for (let i = 0, len = _int.length; i < len; i += 3) {
-            chunks.push(_int.substring(i, i + 3))
+        let grouped = fract.substr(0, fract_end + 1)
+        for (let i = 0, len = fract_end; i <= len; i += 3) {
+            chunks.push(grouped.substring(i, i + 3))
         }
-        raw[1] = chunks.join(fmt.decimal_grouping)
+        fract = chunks.join(fmt.decimal_grouping) + fract.substr(fract_end + 1)
     }
-    return $B.format_width(raw.join("."), fmt) // in py_string.js
+    // take separators into
+    _int = sign + _int
+    if (fract !== undefined) {
+        return [_int, fract].join(".")
+    }
+    return _int
 }
 
 float.$getnewargs = function(self) {

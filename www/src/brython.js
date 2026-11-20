@@ -747,8 +747,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-11-18 12:06:43.824759"
-__BRYTHON__.timestamp=1795000003824
+__BRYTHON__.compiled_date="2026-11-20 09:03:32.369899"
+__BRYTHON__.timestamp=1795161812369
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -9337,77 +9337,73 @@ res=$B.bytes_decode(arg,encoding,errors)}
 if($B.is_str(res)){return res}
 $B.RAISE(_b_.TypeError,"__str__ returned non-string "+
 `(type ${$B.class_name(res)})`)}
-$B.parse_format_spec=function(spec,obj){if(spec==""){this.empty=true}else{
-var pos=0,aligns="<>=^",digits="0123456789",types="bcdeEfFgGnosxX%",align_pos=aligns.indexOf(spec.charAt(0))
-if(align_pos !=-1){if(spec.charAt(1)&& aligns.indexOf(spec.charAt(1))!=-1){
-this.fill=spec.charAt(0)
-this.align=spec.charAt(1)
-pos=2}else{
-this.align=aligns[align_pos]
-this.fill=" "
-pos++}}else{
-align_pos=aligns.indexOf(spec.charAt(1))
-if(spec.charAt(1)&& align_pos !=-1){
-this.align=aligns[align_pos]
-this.fill=spec.charAt(0)
-pos=2}}
-var car=spec.charAt(pos)
-if(car=="+" ||car=="-" ||car==" "){this.sign=car
-pos++
-car=spec.charAt(pos)}
-if(car=="z"){this.z=true
-pos++
-car=spec.charAt(pos)}
-if(car=="#"){this.alternate=true
-pos++
-car=spec.charAt(pos)}
-if(car=="0"){
-this.fill="0"
-if(align_pos==-1){this.align="="}
-pos++
-car=spec.charAt(pos)}
-while(car && digits.indexOf(car)>-1){if(this.width===undefined){this.width=car}else{
-this.width+=car}
-pos++
-car=spec.charAt(pos)}
-if(this.width !==undefined){this.width=parseInt(this.width)}
-if(this.width===undefined && car=="{"){
-var end_param_pos=spec.substr(pos).search("}")
-this.width=spec.substring(pos,end_param_pos)
-pos+=end_param_pos+1}
-if(car=="," ||car=="_"){this.comma=true
-this.grouping_option=car
-pos++
-car=spec.charAt(pos)
-if(car=="," ||car=="_"){if(car==this.grouping_option){$B.RAISE(_b_.ValueError,`Cannot specify '${car}' with '${car}'.`)}else{
-$B.RAISE(_b_.ValueError,"Cannot specify both ',' and '_'.")}}}
-if(car=="."){if(',_'.includes(spec.charAt(pos+1))){this.decimal_grouping=spec.charAt(pos+1)
-pos++}
-if(digits.indexOf(spec.charAt(pos+1))==-1){if(! this.decimal_grouping){$B.RAISE(_b_.ValueError,"Format specifier missing precision")}
-pos++
-car=spec.charAt(pos)}else{
-this.precision=spec.charAt(pos+1)
-pos+=2
-car=spec.charAt(pos)
-while(car && digits.indexOf(car)>-1){this.precision+=car
-pos++
-car=spec.charAt(pos)}
-this.precision=parseInt(this.precision)}}
-if(car && types.indexOf(car)>-1){this.type=car
-pos++
-car=spec.charAt(pos)}
-if(pos !==spec.length){var err_msg=`Invalid format specifier '${spec}'`
-if(obj){err_msg+=` for object of type '${$B.class_name(obj)}'`}
+const digits='0123456789'
+const aligns='<>=^'
+const types="bcdeEfFgGnosxX%"
+function FormatSpec(str){this.str=str
+this.pos=0}
+FormatSpec.prototype.parse=function(){this.parse_options()
+this.parse_width_and_precision()
+this.parse_type()
+if(this.type=='n' && this.decimal_grouping){throw Error("Cannot specify '_' with 'n'.")}
+if(this.pos !==this.str.length){throw Error(`Invalid format spec ${this.str}`)}}
+FormatSpec.prototype.parse_options=function(){this.parse_fill_align()
+this.parse_sign()
+this.parse_z()
+this.parse_alternate()
+this.parse_zero()}
+FormatSpec.prototype.parse_fill_align=function(){let fill=this.str[this.pos]
+let align=this.str[this.pos+1]
+if(aligns.includes(align)){this.fill=fill
+this.align=align
+this.pos+=2}else if(aligns.includes(this.str[this.pos])){this.fill=' '
+this.align=this.str[this.pos]
+this.pos++}}
+FormatSpec.prototype.parse_sign=function(){let char=this.str[this.pos]
+if('-+ '.includes(char)){this.sign=char
+this.pos++}}
+FormatSpec.prototype.parse_z=function(){let char=this.str[this.pos]
+if(char=='z'){this.z=true
+this.pos++}}
+FormatSpec.prototype.parse_alternate=function(){let char=this.str[this.pos]
+if(char=='#'){this.alternate=true
+this.pos++}}
+FormatSpec.prototype.parse_zero=function(){let char=this.str[this.pos]
+if(char=='0'){this.fill='0'
+this.align=this.align ?? '='
+this.pos++}}
+FormatSpec.prototype.parse_width_and_precision=function(){this.parse_width_with_grouping()
+this.parse_precision_with_grouping()}
+FormatSpec.prototype.parse_width_with_grouping=function(){let pos=this.pos
+while(this.pos < this.str.length &&
+digits.includes(this.str[this.pos])){this.pos++}
+if(this.pos > pos){this.width=this.str.substring(pos,this.pos)}
+pos=this.pos
+let grouping=this.str[this.pos]
+if(',_'.includes(grouping)){this.grouping=grouping
+this.pos++}
+if(this.grouping){let next_grouping=this.str[this.pos]
+if(',_'.includes(next_grouping)){if(next_grouping !=this.grouping){throw Error(`cannot specify both ',' and '_'`)}}}}
+FormatSpec.prototype.parse_precision_with_grouping=function(){if(this.str[this.pos]!='.'){return}
+this.pos++
+let pos=this.pos
+while(this.pos < this.str.length &&
+digits.includes(this.str[this.pos])){this.pos++}
+if(this.pos > pos){this.precision=parseInt(this.str.substring(pos,this.pos))}
+let grouping=this.str[this.pos]
+if(',_'.includes(grouping)){this.decimal_grouping=grouping
+this.pos++}
+if(this.decimal_grouping){let next_grouping=this.str[this.pos]
+if(',_'.includes(next_grouping)){if(next_grouping !=this.decimal_grouping){throw Error(`cannot specify both ',' and '_'`)}}}}
+FormatSpec.prototype.parse_type=function(){let type=this.str[this.pos]
+if(types.includes(type)){this.type=type
+this.pos++}}
+$B.parse_format_spec=function(spec,obj){let format_spec=new FormatSpec(spec)
+try{
+format_spec.parse()
+return format_spec}catch(err){var err_msg=err.message
+if(obj && ! err_msg.endsWith('.')){err_msg+=` for object of type '${$B.class_name(obj)}'`}
 $B.RAISE(_b_.ValueError,err_msg)}}
-this.toString=function(){return(this.fill===undefined ? "" :_b_.str.$factory(this.fill))+
-(this.align ||"")+
-(this.sign ||"")+
-(this.alternate ? "#" :"")+
-(this.sign_aware ? "0" :"")+
-(this.width ||"")+
-(this.comma ? "," :"")+
-(this.precision ? "."+this.precision :"")+
-(this.type ||"")}}
 $B.format_width=function(s,fmt){if(fmt.width && s.length < fmt.width){var fill=fmt.fill ||" ",align=fmt.align ||"<",missing=fmt.width-s.length
 switch(align){case "<":
 return s+fill.repeat(missing)
@@ -10613,11 +10609,11 @@ if(fmt.type && 'eEfFgG%'.indexOf(fmt.type)!=-1){
 return _b_.float.tp_funcs.__format__(_b_.int.nb_float(self),format_spec)}
 fmt.align=fmt.align ||">"
 var res=preformat(self,fmt)
-if(fmt.comma){
+if(fmt.grouping){
 var size='boxX'.includes(fmt.type)? 4 :3,lead=res.match(/^[-+ ]?(0[bBoOxX])?/)[0],rest=res.substr(lead.length),len=rest.length,nb=Math.ceil(rest.length/size),chunks=[]
 for(var i=0;i < nb;i++){chunks.push(rest.substring(len-size*i-size,len-size*i))}
 chunks.reverse()
-res=lead+chunks.join(fmt.grouping_option)}
+res=lead+chunks.join(fmt.grouping)}
 return $B.format_width(res,fmt)}
 int_funcs.__getnewargs__=function(self){$B.meth_noargs('int.__getnewargs__',arguments)
 return $B.fast_tuple([int_value(self)])}
@@ -10801,7 +10797,9 @@ if(fmt.type=="%"){value*=100}
 if(fmt.type=="e" ||fmt.type=="E"){let res=value.toExponential(fmt.precision),exp=parseInt(res.substr(res.search("e")+1))
 if(Math.abs(exp)< 10){res=res.substr(0,res.length-1)+"0"+
 res.charAt(res.length-1)}
-return fmt.type=="E" ? res.toUpperCase():res}
+res=fmt.type=="E" ? res.toUpperCase():res
+res=fmt.sign=='+' && value !==0 ? '+'+res :res
+return res}
 var res
 if(fmt.precision !==undefined){
 let prec=fmt.precision
@@ -10850,16 +10848,46 @@ if(Object.is(self.value,-0)&& ! pf.startsWith('-')){
 pf='-'+pf}
 if(fmt.z && Object.is(parseFloat(pf),-0)){
 pf=pf.substr(1)}
-var raw=pf.split('.'),_int=raw[0]
-if(fmt.comma){let len=_int.length,nb=Math.ceil(_int.length/3),chunks=[]
-for(var i=0;i < nb;i++){chunks.push(_int.substring(len-3*i-3,len-3*i))}
+let sign=''
+if('+-'.includes(pf[0])){sign=pf[0]
+pf=pf.substr(1)}
+let raw=pf.split('.'),_int=raw[0],fract=raw[1],nb_seps=0,exp_pos,fract_end,fract_width
+let int_digits=_int
+if(fract && fmt.decimal_grouping){
+exp_pos=Math.max(fract.indexOf('e'),fract.indexOf('E'))
+if(exp_pos >-1){
+fract_end=exp_pos-1}else{
+fract_end=fract.length-1}
+nb_seps+=Math.floor(fract_end/3)
+fract_width=fract.length+nb_seps}
+if(fmt.width && fmt.fill=='0' && fmt.align=='=' && fmt.grouping){
+let N=fmt.width-fract_width-sign.length-1 
+while(Math.floor((_int.length-1)/3)+_int.length < N){_int='0'+_int}
+raw[0]=_int
+int_digits=_int
+pf=raw.join('.')}
+if(fmt.grouping){nb_seps+=Math.floor((int_digits.length-1)/3)}
+let save_width=fmt.width
+fmt.width-=nb_seps+sign.length
+pf=$B.format_width(pf,fmt)
+fmt.width=save_width
+raw=pf.split('.')
+_int=raw[0]
+fract=raw[1]
+if(fmt.grouping){
+let padding_left=_int.length-int_digits.length
+let len=int_digits.length,nb=Math.ceil(int_digits.length/3),chunks=[]
+for(var i=0;i < nb;i++){chunks.push(int_digits.substring(len-3*i-3,len-3*i))}
 chunks.reverse()
-raw[0]=chunks.join(fmt.grouping_option)}
-if(raw.length > 1 && fmt.decimal_grouping){_int=raw[1]
+_int=_int.substr(0,padding_left)+chunks.join(fmt.grouping)}
+if(fract && fmt.decimal_grouping){
 let chunks=[]
-for(let i=0,len=_int.length;i < len;i+=3){chunks.push(_int.substring(i,i+3))}
-raw[1]=chunks.join(fmt.decimal_grouping)}
-return $B.format_width(raw.join("."),fmt)}
+let grouped=fract.substr(0,fract_end+1)
+for(let i=0,len=fract_end;i <=len;i+=3){chunks.push(grouped.substring(i,i+3))}
+fract=chunks.join(fmt.decimal_grouping)+fract.substr(fract_end+1)}
+_int=sign+_int
+if(fract !==undefined){return[_int,fract].join(".")}
+return _int}
 float.$getnewargs=function(self){return $B.fast_tuple([float_value(self)])}
 var nan_hash=$B.$py_next_hash--
 $B.float_hash_cache=new Map()

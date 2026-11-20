@@ -822,7 +822,7 @@ int_funcs.__format__ = function(self, format_spec) {
     }
     fmt.align = fmt.align || ">"
     var res = preformat(self, fmt)
-    if (fmt.comma) {
+    if (fmt.grouping) {
         // digits are grouped by 4 in bases 2, 8 and 16, after the sign and
         // the prefix
         var size = 'boxX'.includes(fmt.type) ? 4 : 3,
@@ -835,7 +835,7 @@ int_funcs.__format__ = function(self, format_spec) {
             chunks.push(rest.substring(len - size * i - size, len - size * i))
         }
         chunks.reverse()
-        res = lead + chunks.join(fmt.grouping_option)
+        res = lead + chunks.join(fmt.grouping)
     }
     return $B.format_width(res, fmt)
 }
