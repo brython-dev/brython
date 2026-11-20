@@ -1713,6 +1713,16 @@ $B.rich_comp = function(op, x, y) {
                 "' and '" + $B.class_name(y) + "'")
         }
     }
+    // two objects of one builtin type: the type's slot, which no class
+    // can override
+    var klass = $B.get_class(x)
+    if (klass === $B.get_class(y) && $B.is_builtin_type(klass) &&
+            typeof klass.tp_richcompare == 'function') {
+        res = klass.tp_richcompare(x, y, op)
+        if (res !== _b_.NotImplemented) {
+            return res
+        }
+    }
     var rev_op = reversed_op[op] || op,
         y_rev_func
     if (x?.ob_type && y?.ob_type) {
