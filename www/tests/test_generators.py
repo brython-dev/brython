@@ -477,6 +477,34 @@ except StopIteration as exc:
 # issue 470
 assert eval('bytes(0 for x in [])') == b''
 
+# a comprehension reading a generator expression first runs the loops of both
+# value by value, each in its own scope, a StopIteration raised in the
+# generator expression a RuntimeError
+def fused():
+    log = []
+    assert [(log.append(("c", v)), v)[1]
+            for v in ((log.append(("g", x)), x)[1] for x in range(2))] == [0, 1]
+    assert log == [("g", 0), ("c", 0), ("g", 1), ("c", 1)]
+    assert [f() for f in [f for f in (lambda: x for x in range(3))]] == [2, 2, 2]
+    x = "outer"
+    assert [x for x in (x * 2 for x in "ab")] == ["aa", "bb"] and x == "outer"
+    assert sorted({v for v in (c for c in "abca")}) == ["a", "b", "c"]
+    assert {v: 1 for v in (c for c in "ab")} == {"a": 1, "b": 1}
+    it = iter([])
+    try:
+        [v for v in (next(it) for _ in [1])]
+        raise AssertionError("should have raised RuntimeError")
+    except RuntimeError:
+        pass
+    it = iter([])
+    try:
+        [next(it) for v in (x for x in [1])]
+        raise AssertionError("should have raised StopIteration")
+    except StopIteration:
+        pass
+
+fused()
+
 # issue 502
 def test_gen():
     for i in range(1):
