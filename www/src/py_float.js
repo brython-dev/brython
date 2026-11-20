@@ -152,12 +152,24 @@ function preformat(self, fmt) {
     if (fmt.type == "%") {
         value *= 100
     }
+    console.log('preformat', value, fmt)
     if (fmt.type == "e" || fmt.type == "E") {
-        let res = value.toExponential(fmt.precision),
-            exp = parseInt(res.substr(res.search("e") + 1))
-        if (Math.abs(exp) < 10) {
-            res = res.substr(0, res.length - 1) + "0" +
-                res.charAt(res.length - 1)
+        let res
+        if (fmt.precision == 0 && Math.abs(value) >= 1) {
+            res = $B.roundDownToFixed(value, 0)
+            console.log(value, 'precision 0', res)
+            value = parseFloat(res)
+        }
+        res = value.toExponential(fmt.precision)
+        if (res.includes('e')) {
+            let exp = parseInt(res.substr(res.search("e") + 1))
+            console.log('value', value, 'res', res, 'exp', exp)
+            if (Math.abs(exp) < 10) {
+                res = res.substr(0, res.length - 1) + "0" +
+                    res.charAt(res.length - 1)
+            }
+        } else {
+            res += 'e+00'
         }
         res = fmt.type == "E" ? res.toUpperCase() : res
         res = fmt.sign == '+' && value !== 0 ? '+' + res : res
@@ -170,14 +182,27 @@ function preformat(self, fmt) {
         // The argument of toFixed is the number of digits after "."
         let prec = fmt.precision
         if (prec == 0) {
-            return $B.roundDownToFixed(value, 0)
+            let res = $B.roundDownToFixed(value, 0)
+            console.log('precision 0, res', res)
+            if ('fFgG'.includes(fmt.type) &&
+                    ! res.includes('.') &&
+                    fmt.alternate) {
+                res += '.'
+            }
+            return res
         }
         // apply float_round to a fake float with correct value
         res = float_round({value}, prec).value + ''
 
+        if (value < 0 && ! res.startsWith('-')) {
+            // might happen eg if -0.001 is rounded to 0
+            res = '-' + res
+        }
+
         let pt_pos = res.indexOf(".")
         if(fmt.type !== undefined &&
                 (fmt.type == "%" || fmt.type.toLowerCase() == "f")){
+            console.log('type f, point position', pt_pos)
             if (pt_pos == -1) {
                 res += "." + "0".repeat(fmt.precision)
             } else {
@@ -280,8 +305,10 @@ function preformat(self, fmt) {
 
 float.$format = function(self, fmt) {
     // fmt is the object parsed from a format_spec
+    console.log('float', self, 'fmt', fmt)
     fmt.align = fmt.align || ">"
     var pf = preformat(self, fmt)
+    console.log('preformat', pf)
     if (Object.is(self.value, -0) && ! pf.startsWith('-')) {
         // Javascript toFixed and toExponential drop the sign of -0
         pf = '-' + pf
@@ -369,7 +396,6 @@ float.$format = function(self, fmt) {
         }
         fract = chunks.join(fmt.decimal_grouping) + fract.substr(fract_end + 1)
     }
-    // take separators into
     _int = sign + _int
     if (fract !== undefined) {
         return [_int, fract].join(".")
@@ -623,6 +649,10 @@ function float_round(x, ndigits) {
     var z = Number(digits)
     if (! isFinite(z)) {
         $B.RAISE(_b_.OverflowError, "rounded value too large to represent")
+    }
+    if (z == 0 && x < 0) {
+        // negative zero
+        return fast_float(-0.0)
     }
     return fast_float(x < 0 ? -z : z)
 }

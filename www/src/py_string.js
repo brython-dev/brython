@@ -480,8 +480,10 @@ var roundDownToFixed = $B.roundDownToFixed = function(v, d) {
         // if two multiples are equally close, rounding is done toward
         // the even choice
         var last = res_floor[res_floor.length - 1]
+        console.log('last', last, 'floor', res_floor, 'ceil', res_ceil)
         res = last.match(/[02468]/) ? res_floor : res_ceil
     } else {
+        console.log('v * mul', v * mul, 'floor', res_floor, 'ceil', res_ceil)
         res = v - res_floor < res_ceil - v ? res_floor : res_ceil
     }
     return is_neg ? '-' + res : res

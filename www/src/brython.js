@@ -747,8 +747,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-11-20 09:03:32.369899"
-__BRYTHON__.timestamp=1795161812369
+__BRYTHON__.compiled_date="2026-11-20 16:49:57.715274"
+__BRYTHON__.timestamp=1795189797714
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -9057,7 +9057,9 @@ if(is_neg){v=-v}
 var res_floor=(Math.floor(v*mul)/mul).toFixed(d),res_ceil=(Math.ceil(v*mul)/mul).toFixed(d),res
 if(v-res_floor==res_ceil-v){
 var last=res_floor[res_floor.length-1]
+console.log('last',last,'floor',res_floor,'ceil',res_ceil)
 res=last.match(/[02468]/)? res_floor :res_ceil}else{
+console.log('v * mul',v*mul,'floor',res_floor,'ceil',res_ceil)
 res=v-res_floor < res_ceil-v ? res_floor :res_ceil}
 return is_neg ? '-'+res :res}
 var floating_point_decimal_format=function(val,upper,flags){val=_float_helper(val,flags)
@@ -10794,20 +10796,36 @@ if(isNaN(value)){special="efg".indexOf(fmt.type)>-1 ? "nan" :"NAN"}else if(value
 if(special){return format_sign(value,fmt)+special}
 if(fmt.precision===undefined && fmt.type !==undefined){fmt.precision=6}
 if(fmt.type=="%"){value*=100}
-if(fmt.type=="e" ||fmt.type=="E"){let res=value.toExponential(fmt.precision),exp=parseInt(res.substr(res.search("e")+1))
+console.log('preformat',value,fmt)
+if(fmt.type=="e" ||fmt.type=="E"){let res
+if(fmt.precision==0 && Math.abs(value)>=1){res=$B.roundDownToFixed(value,0)
+console.log(value,'precision 0',res)
+value=parseFloat(res)}
+res=value.toExponential(fmt.precision)
+if(res.includes('e')){let exp=parseInt(res.substr(res.search("e")+1))
+console.log('value',value,'res',res,'exp',exp)
 if(Math.abs(exp)< 10){res=res.substr(0,res.length-1)+"0"+
-res.charAt(res.length-1)}
+res.charAt(res.length-1)}}else{
+res+='e+00'}
 res=fmt.type=="E" ? res.toUpperCase():res
 res=fmt.sign=='+' && value !==0 ? '+'+res :res
 return res}
 var res
 if(fmt.precision !==undefined){
 let prec=fmt.precision
-if(prec==0){return $B.roundDownToFixed(value,0)}
+if(prec==0){let res=$B.roundDownToFixed(value,0)
+console.log('precision 0, res',res)
+if('fFgG'.includes(fmt.type)&&
+! res.includes('.')&&
+fmt.alternate){res+='.'}
+return res}
 res=float_round({value},prec).value+''
+if(value < 0 && ! res.startsWith('-')){
+res='-'+res}
 let pt_pos=res.indexOf(".")
 if(fmt.type !==undefined &&
-(fmt.type=="%" ||fmt.type.toLowerCase()=="f")){if(pt_pos==-1){res+="."+"0".repeat(fmt.precision)}else{
+(fmt.type=="%" ||fmt.type.toLowerCase()=="f")){console.log('type f, point position',pt_pos)
+if(pt_pos==-1){res+="."+"0".repeat(fmt.precision)}else{
 var missing=fmt.precision-res.length+pt_pos+1
 if(missing > 0){res+="0".repeat(missing)}}}else if(fmt.type && fmt.type.toLowerCase()=="g"){let exp_fmt=preformat(self,{type:"e"}).split("e"),exp=parseInt(exp_fmt[1])
 if(-4 <=exp && exp < fmt.precision){res=preformat(self,{type:"f",precision:fmt.precision-1-exp})}else{
@@ -10842,8 +10860,10 @@ if(fmt.sign !==undefined){if((fmt.sign==" " ||fmt.sign=="+" )&& value > 0){res=f
 if(fmt.type=="%"){res+="%"}
 return res}
 float.$format=function(self,fmt){
+console.log('float',self,'fmt',fmt)
 fmt.align=fmt.align ||">"
 var pf=preformat(self,fmt)
+console.log('preformat',pf)
 if(Object.is(self.value,-0)&& ! pf.startsWith('-')){
 pf='-'+pf}
 if(fmt.z && Object.is(parseFloat(pf),-0)){
@@ -10984,6 +11004,8 @@ digits=digits.slice(0,-ndigits)+'.'+digits.slice(-ndigits)}else{
 digits+='0'.repeat(-ndigits)}
 var z=Number(digits)
 if(! isFinite(z)){$B.RAISE(_b_.OverflowError,"rounded value too large to represent")}
+if(z==0 && x < 0){
+return fast_float(-0.0)}
 return fast_float(x < 0 ?-z :z)}
 function to_digits(s){
 var arabic_digits="\u0660\u0661\u0662\u0663\u0664\u0665\u0666\u0667\u0668\u0669",res=""
