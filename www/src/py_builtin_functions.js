@@ -1226,16 +1226,19 @@ $B.$isinstance = function(obj, cls) {
            }
         }
     }
-    // Search __instancecheck__ on cls's class (ie its metaclass)
-    var instancecheck = $B.type_getattribute($B.get_class(cls),
-        '__instancecheck__', $B.NULL)
-    if (instancecheck !== $B.NULL) {
-        if (instancecheck.method !== _b_.type.tp_funcs.__instancecheck__) {
-            if (instancecheck.im_self !== undefined) {
-                // a classmethod of the metaclass is already bound
-                return $B.$call(instancecheck, obj)
+    // Search __instancecheck__ on cls's class (ie its metaclass); type's own
+    // is the check above
+    if (klass !== _b_.type) {
+        var instancecheck = $B.type_getattribute(klass, '__instancecheck__',
+            $B.NULL)
+        if (instancecheck !== $B.NULL) {
+            if (instancecheck.method !== _b_.type.tp_funcs.__instancecheck__) {
+                if (instancecheck.im_self !== undefined) {
+                    // a classmethod of the metaclass is already bound
+                    return $B.$call(instancecheck, obj)
+                }
+                return $B.$call(instancecheck, cls, obj)
             }
-            return $B.$call(instancecheck, cls, obj)
         }
     }
     // an object may report another class than its type, as a proxy does

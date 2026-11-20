@@ -364,6 +364,17 @@ class EnumInt(int, metaclass=Enumeration):
 
 assert isinstance('foo', EnumInt)
 
+# isinstance() of a class whose metaclass is type itself, true and false, and
+# of a subclass whose metaclass still checks for itself
+class Plain:
+    pass
+
+class EnumStr(EnumInt):
+    pass
+
+assert isinstance(Plain(), Plain) and not isinstance('foo', Plain)
+assert isinstance(Plain(), EnumStr)
+
 # isinstance() reads the __class__ an object reports, as a proxy does
 class Proxy:
     @property
