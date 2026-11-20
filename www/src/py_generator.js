@@ -36,6 +36,43 @@ $B.generator.$factory = function(func, name) {
 }
 
 
+// A generator expression compiled to a function that returns its next
+// result, {done, value}, instead of a Javascript generator (ast_to_js.js)
+$B.generator.$iterator = function(next, name) {
+    var finished = false
+    var js_gen = {
+        next() {
+            if (finished) {
+                return {done: true, value: undefined}
+            }
+            try {
+                var res = next()
+            } catch (err) {
+                finished = true
+                throw err
+            }
+            if (res.done) {
+                finished = true
+            }
+            return res
+        },
+        throw(err) {
+            finished = true
+            throw err
+        },
+        return(value) {
+            finished = true
+            return {done: true, value}
+        }
+    }
+    js_gen.$name = name
+    js_gen.$has_run = false
+    return {
+        ob_type: $B.generator,
+        js_gen
+    }
+}
+
 /* generator start */
 $B.generator.tp_repr = function(self) {
     var name = self.js_gen.$name || 'generator'

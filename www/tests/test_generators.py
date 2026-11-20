@@ -1109,6 +1109,65 @@ def f1319():
     val = yield lambda: 10
 assert next(f1319())() == 10
 
+# a generator expression: several "for" and "if" clauses, its values computed
+# one at a time, the iterables after the first read only when reached, the
+# generator protocol, an exception, its own frame
+assert list((a, b) for a in range(3) for b in range(a)) == [(1, 0), (2, 0), (2, 1)]
+assert list(x for x in range(20) if x % 2 if x % 3) == [1, 5, 7, 11, 13, 17, 19]
+assert list(a + b + c for a in "ab" for b in "cd" if b != "c" or a == "a"
+            for c in "ef") == ["ace", "acf", "ade", "adf", "bde", "bdf"]
+assert list(rest for first, *rest in [(1, 2, 3), (4,)]) == [[2, 3], []]
+
+computed = []
+def compute(x):
+    computed.append(x)
+    return x
+
+lazy = (compute(x) for x in range(3))
+assert computed == []
+assert next(lazy) == 0
+assert computed == [0]
+assert list(lazy) == [1, 2]
+assert list(lazy) == []
+
+reached = []
+def reach(n):
+    reached.append(n)
+    return range(n)
+
+lazy = (y for x in [1, 2] for y in reach(x))
+assert reached == []
+assert list(lazy) == [0, 0, 1]
+assert reached == [1, 2]
+
+assert_raises(TypeError, lambda: (x for x in 5))
+
+lazy = (x for x in range(3))
+assert_raises(ValueError, lazy.throw, ValueError("thrown"))
+assert list(lazy) == []
+
+lazy = (x for x in range(3))
+assert lazy.send(None) == 0
+assert lazy.send(5) == 1
+lazy.close()
+assert list(lazy) == []
+
+def raise_at_two(x):
+    if x == 2:
+        raise KeyError(x)
+    return x
+
+lazy = (raise_at_two(x) for x in range(4))
+assert_raises(KeyError, list, lazy)
+assert list(lazy) == []
+
+itself = (next(itself) for _ in range(2))
+assert_raises(ValueError, next, itself, msg="generator already executing")
+
+import sys
+assert next(sys._getframe().f_code.co_name for _ in [0]) == "<genexpr>"
+assert next(list(locals()) for _ in [0])[0] == ".0"
+
 # issue 1325
 def g1_1325(ll):
     try:
