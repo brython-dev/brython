@@ -273,6 +273,22 @@ it = iter(range(3))
 it.__setstate__(Index())
 assert list(it) == [1, 2]
 
+# sum() iterates as a for loop does: any iterable, what the iteration raises
+class Numbers:
+    def __iter__(self):
+        return iter([1, 2])
+
+assert sum(Numbers()) == 3
+assert sum(x for x in range(5)) == 10
+assert sum([[1], [2]], []) == [1, 2]
+assert_raises(TypeError, sum, 5)
+
+def raises_after_one():
+    yield 1
+    raise KeyError("in the body")
+
+assert_raises(KeyError, sum, raises_after_one())
+
 # the start of enumerate is an index, counted as a Python int
 class Seven:
     def __index__(self):
