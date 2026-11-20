@@ -63,17 +63,12 @@ _b_.aiter = function(async_iterable) {
 
 _b_.all = function(obj) {
     check_nb_args_no_kw('all', 1, arguments)
-    var iterable = iter(obj)
-    while (1) {
-        try {
-            var elt = next(iterable)
-            if (!$B.$bool(elt)) {
-                return false
-            }
-        } catch (err) {
-            return true
+    for (var elt of $B.make_js_iterator(obj)) {
+        if (! $B.$bool(elt)) {
+            return false
         }
     }
+    return true
 }
 
 _b_.anext = function() {
