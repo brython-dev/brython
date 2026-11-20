@@ -106,8 +106,32 @@ var empty = {empty: true}
 $B.args = function(fname, argcount, slots, args, $dobj, vararg, kwarg,
         nb_posonly){
     // Called by built-in functions / methods
+    var var_names = Object.keys(slots)
+    // every argument given by position and none in excess, no keyword-only
+    // parameter: each in its slot, its default for a missing one
+    if (! vararg && ! kwarg && var_names.length == argcount &&
+            args.length <= argcount) {
+        for (var i = 0; i < argcount; i++) {
+            if (i < args.length) {
+                var arg = args[i]
+                if (arg && arg[$B.KW]) {
+                    break
+                }
+                if (arg && $B.get_class(arg) === $B.generator) {
+                    slots.$has_generators = true
+                }
+                slots[var_names[i]] = arg
+            } else if ($dobj && Object.hasOwn($dobj, var_names[i])) {
+                slots[var_names[i]] = $dobj[var_names[i]]
+            } else {
+                break
+            }
+        }
+        if (i == argcount) {
+            return slots
+        }
+    }
     var nb_posonly = nb_posonly || 0,
-        var_names = Object.keys(slots),
         nb_kwonly = var_names.length - argcount,
         defaults  = [],
         kwdefaults = $B.empty_dict()
