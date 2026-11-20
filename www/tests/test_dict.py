@@ -240,6 +240,14 @@ assert str(d) == "{'a': 1, True: 4, 'b': 3}"
 # issue 1859
 assert 'constructor' not in {}
 
+# `in` on builtin containers, and on a subclass with its own __contains__
+class AllKeys(dict):
+    def __contains__(self, key):
+        return True
+
+assert 'x' in AllKeys() and 'x' not in dict()
+assert 1 in frozenset([1]) and 2 in range(3) and 'b' in 'abc' and 'a' in {'a': 1}.keys()
+
 # issue 2037
 assert {} | {} == {}
 assert {} | {}.keys() == set()

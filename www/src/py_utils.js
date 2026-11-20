@@ -1303,7 +1303,12 @@ $B.member_func = function(obj) {
 }
 
 $B.$is_member = function(item, _set) {
-    var contains = $B.$getattr($B.get_class(_set), '__contains__', $B.NULL)
+    var klass = $B.get_class(_set)
+    // a builtin container: its slot, which no class can override
+    if ($B.is_builtin_type(klass) && typeof klass.sq_contains == 'function') {
+        return klass.sq_contains(_set, item)
+    }
+    var contains = $B.$getattr(klass, '__contains__', $B.NULL)
     if (contains === $B.NULL) {
         let it
         try {
