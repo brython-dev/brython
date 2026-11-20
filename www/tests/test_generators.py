@@ -753,6 +753,51 @@ gen = unpack()
 next(gen)
 gen.send((5, 4))
 
+# a generator iterated by a for loop, tuple() or list(): its values without
+# its return value, what its body raises, a generator already running, the
+# values left after next(), and its context managers
+def returns_after_two():
+    yield 1
+    yield 2
+    return 3
+
+assert tuple(returns_after_two()) == (1, 2)
+assert list(returns_after_two()) == [1, 2]
+assert [x for x in returns_after_two()] == [1, 2]
+
+def raises_after_one():
+    yield 1
+    raise KeyError("in the body")
+
+assert_raises(KeyError, list, raises_after_one())
+
+def lists_itself():
+    yield from list(itself)
+
+itself = lists_itself()
+assert_raises(ValueError, list, itself, msg="generator already executing")
+
+partly = returns_after_two()
+assert next(partly) == 1
+assert list(partly) == [2]
+assert list(partly) == []
+
+managed_log = []
+
+class Managed:
+    def __enter__(self):
+        managed_log.append("enter")
+    def __exit__(self, *args):
+        managed_log.append("exit")
+
+def managed():
+    with Managed():
+        yield 1
+        yield 2
+
+assert list(managed()) == [1, 2]
+assert managed_log == ["enter", "exit"]
+
 # issue 1143 (yield inside with)
 trace = []
 
