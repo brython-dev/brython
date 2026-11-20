@@ -123,6 +123,26 @@ $B.range_iterator.tp_iternext = function*(self){
     }
 }
 
+// Used by $B.make_js_iterator: the same steps as tp_iternext, without a
+// call to __next__ and a StopIteration for each of them
+$B.range_iterator[$B.FAST_ITER] = function(self, set_lineno, frame, lineno) {
+    var up = self.stop > self.start
+    return {
+        [Symbol.iterator]() {
+            return this
+        },
+        next() {
+            set_lineno(frame, lineno)
+            if (up ? self.it < self.stop : self.it > self.stop) {
+                var res = self.safe ? self.it : _b_.int.$int_or_long(self.it)
+                self.it += self.step
+                return {done: false, value: res}
+            }
+            return {done: true, value: null}
+        }
+    }
+}
+
 var range_iterator_funcs = $B.range_iterator.tp_funcs = {}
 
 range_iterator_funcs.__length_hint__ = function(self) {

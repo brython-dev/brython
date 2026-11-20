@@ -331,6 +331,24 @@ $B.list_iterator.tp_iternext = function*(self){
     }
 }
 
+// Used by $B.make_js_iterator: the same steps as tp_iternext, without a
+// call to __next__ and a StopIteration for each of them
+$B.list_iterator[$B.FAST_ITER] = function(self, set_lineno, frame, lineno) {
+    return {
+        [Symbol.iterator]() {
+            return this
+        },
+        next() {
+            set_lineno(frame, lineno)
+            if (self.index < self.obj.length) {
+                return {done: false, value: self.obj[self.index++]}
+            }
+            self.index = Infinity
+            return {done: true, value: null}
+        }
+    }
+}
+
 var list_iterator_funcs = $B.list_iterator.tp_funcs = {}
 
 list_iterator_funcs.__length_hint__ = function(self) {
@@ -1030,6 +1048,8 @@ $B.tuple_iterator.tp_iternext = function*(self){
         self.index = Infinity
     }
 }
+
+$B.tuple_iterator[$B.FAST_ITER] = $B.list_iterator[$B.FAST_ITER]
 
 var tuple_iterator_funcs = $B.tuple_iterator.tp_funcs = {}
 
