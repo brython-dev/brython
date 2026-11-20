@@ -14,6 +14,15 @@ assert x['a'] == 1
 assert x.get('a') == 1
 assert x.get('uiop', 99) == 99
 
+# a builtin's arguments by position, with a default, by keyword, and missing
+assert {}.get('a') is None and {'a': 1}.get('a', 2) == 1
+assert int('11', base=2) == 3 and 'a,b'.split(',', 1) == ['a', 'b']
+try:
+    {}.get()
+    raise AssertionError('get() without a key should raise')
+except TypeError:
+    pass
+
 y = x.copy()
 assert x == y
 y.clear()
