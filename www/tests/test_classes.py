@@ -240,6 +240,17 @@ assert ReflectedSuccess.count == 2
 assert (a == c)
 assert (c == a)
 
+# two values of one builtin type compare by the type's own comparison, a
+# subclass by its own __eq__
+class Always(str):
+    def __eq__(self, other):
+        return True
+    __hash__ = str.__hash__
+
+assert "a" != "b" and (1, "a") == (1, "a") and [1] < [2] and "é" > "e"
+assert Always("a") == "b" and Always("a") == Always("b")
+assert (EqualityTester(),) != (EqualityTester(),)
+
 class Tester:
 
     def __init__(self, name):
