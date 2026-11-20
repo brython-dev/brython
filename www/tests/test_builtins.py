@@ -161,6 +161,30 @@ for name in builtins_names.split('\n'):
 
 from tester import assert_raises
 
+# str.join() iterates as a for loop does: any iterable, all its items taken
+# before they are checked, what the iteration raises
+class Letters:
+    def __iter__(self):
+        return iter(["x", "y"])
+
+assert "-".join(Letters()) == "x-y"
+assert "".join(c.upper() for c in "abc") == "ABC"
+assert_raises(TypeError, "".join, ["a", 1],
+    msg="sequence item 1: expected str instance, int found")
+assert_raises(TypeError, "".join, 5)
+
+def raises_after_one():
+    yield "a"
+    raise KeyError("in the body")
+
+assert_raises(KeyError, "".join, raises_after_one())
+
+def raises_after_an_int():
+    yield 1
+    raise KeyError("in the body")
+
+assert_raises(KeyError, "".join, raises_after_an_int())
+
 # a builtin that takes exactly one argument or a fixed number of them says so
 for func in [abs, len, ord, repr]:
     name = func.__name__

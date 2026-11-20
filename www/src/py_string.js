@@ -2545,26 +2545,18 @@ str_funcs.isupper = function(self) {
 str_funcs.join = function(self, iterable) {
     $B.check_nb_args_no_kw('str.join', 1, arguments, true)
     var _self = to_string(self)
-    iterable = _b_.iter(iterable)
-    var res = [],
-        count = 0
-    while (1) {
-        try {
-            var obj2 = _b_.next(iterable)
-            if (! $B.is_str(obj2)) {
-                $B.RAISE(_b_.TypeError, "sequence item " + count +
-                    ": expected str instance, " + $B.class_name(obj2) +
-                    " found")
-            }
-            res.push(to_string(obj2))
-            count++
-        } catch (err) {
-            if ($B.$isinstance(err, _b_.StopIteration)) {
-                break
-            } else {
-                throw err
-            }
+    // all the items first, then their check: what the iteration raises
+    // comes before a wrong item
+    var items = Array.from($B.make_js_iterator(iterable)),
+        res = []
+    for (var count = 0; count < items.length; count++) {
+        var obj2 = items[count]
+        if (! $B.is_str(obj2)) {
+            $B.RAISE(_b_.TypeError, "sequence item " + count +
+                ": expected str instance, " + $B.class_name(obj2) +
+                " found")
         }
+        res.push(to_string(obj2))
     }
     return $B.String(res.join(_self))
 }
