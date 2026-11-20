@@ -935,7 +935,8 @@ function init_genexpr(comp, scopes) {
            prefix + `locals['.0'] = _b_.iter(expr)\n` +
            prefix + `var frame = ["<${comp.type.toLowerCase()}>", ${comp.locals_name}, ` +
                `${JSON.stringify(comp.module_name)}, ${comp.globals_name}]\n` +
-           prefix + `frame.$has_generators = true\n` +
+           (comp.as_iterator ? prefix + `frame.ob_type = $B.frame\n` :
+                               prefix + `frame.$has_generators = true\n`) +
            prefix + `frame.__file__ = ${JSON.stringify(scopes.filename)}\n` +
            prefix + `frame.$lineno = ${comp.ast.lineno}\n` +
            prefix + `$B.make_f_code(frame, [${varnames}])\n` +
@@ -3018,6 +3019,79 @@ $B.ast.FunctionDef.prototype._check = function() {
     }
 }
 
+function genexpr_iterator(genexpr, scopes, comp, head, outmost_expr) {
+    // A generator expression without "await" is a Javascript iterator, not a
+    // Javascript generator: its "for" clauses are levels, each with the
+    // iterator it is on. send() puts its frame on the stack while it runs
+    var id = comp.id,
+        clauses = genexpr.generators,
+        last = clauses.length - 1
+    var js = prefix + `var iterators_${id} = [],\n` +
+             prefix + tab + tab + `level_${id} = 0\n` +
+             prefix + `var gen${id} = $B.generator.$iterator(function() {\n`
+    indent()
+    // a trace function sees a "call" each time the generator resumes
+    js += prefix + `if ($B.tracefunc !== _b_.None) {\n` +
+          prefix + tab + `$B.enter_frame(frame, __file__, ${genexpr.lineno})\n` +
+          prefix + `}\n` +
+          prefix + `if (iterators_${id}.length == 0) {\n` +
+          prefix + tab + `iterators_${id}.push($B.make_js_iterator(locals['.0'], frame, ${genexpr.lineno}))\n` +
+          prefix + `}\n` +
+          prefix + `while (true) {\n`
+    indent()
+    js += prefix + `var next_${id} = iterators_${id}[level_${id}].next()\n` +
+          prefix + `if (next_${id}.done) {\n` +
+          prefix + tab + `if (level_${id} == 0) {\n` +
+          prefix + tab + tab + `return next_${id}\n` +
+          prefix + tab + `}\n` +
+          prefix + tab + `level_${id}--\n` +
+          prefix + tab + `continue\n` +
+          prefix + `}\n` +
+          prefix + `switch (level_${id}) {\n`
+    for (var [level, clause] of clauses.entries()) {
+        js += prefix + tab + `case ${level}:\n`
+        indent(2)
+        // assign result of iteration to target
+        js += prefix + `var item_${id} = next_${id}.value\n`
+        var name = new $B.ast.Name(`item_${id}`, new $B.ast.Load())
+        copy_position(name, level == 0 ? clause.iter : clause.target)
+        name.to_js = function() {return `item_${id}`}
+        var assign = new $B.ast.Assign([clause.target], name)
+        if (level == 0) {
+            assign.lineno = genexpr.lineno
+        } else {
+            copy_position(assign, clause.target)
+        }
+        js += assign.to_js(scopes) + '\n'
+        for (let _if of clause.ifs) {
+            js += prefix + `if (! $B.$bool(${$B.js_from_ast(_if, scopes)})) {\n` +
+                  prefix + tab + `continue\n` +
+                  prefix + `}\n`
+        }
+        if (level < last) {
+            var next_clause = clauses[level + 1]
+            js += prefix + `iterators_${id}[++level_${id}] = $B.make_js_iterator(` +
+                      `${$B.js_from_ast(next_clause.iter, scopes)}, frame, ${next_clause.lineno})\n` +
+                  prefix + `continue\n`
+        } else {
+            js += prefix + `return {done: false, value: ${$B.js_from_ast(genexpr.elt, scopes)}}\n`
+        }
+        dedent(2)
+    }
+    js += prefix + `}\n`
+    dedent()
+    js += prefix + `}\n`
+    dedent()
+    js += prefix + `}, "<genexpr>")\n` +
+          prefix + `gen${id}.$frame = frame\n`
+
+    scopes.pop()
+    var func = `${head}\n${js}\n` + prefix + `return gen${id}`
+    dedent()
+    return prefix + `(function(expr) {\n${func}\n` +
+           prefix + `})(${outmost_expr})\n`
+}
+
 $B.ast.GeneratorExp.prototype.to_js = function(scopes) {
     var id = make_id(),
         symtable_block = scopes.symtable.table.blocks.get(fast_id(this)),
@@ -3034,7 +3108,9 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes) {
     var comp = {ast:this, id, type: 'genexpr', varnames,
                 module_name: scopes[0].name,
                 locals_name: make_scope_name(scopes),
-                globals_name: make_globals_name(scopes)}
+                globals_name: make_globals_name(scopes),
+                as_iterator: ! symtable_block.coroutine &&
+                             ! (this.elt instanceof $B.ast.Starred)}
 
     indent()
     var head = init_comprehension(comp, scopes)
@@ -3051,6 +3127,10 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes) {
                     `set: function(){}, enumerable: true, configurable: true})\n`
             }
         }
+    }
+
+    if (comp.as_iterator) {
+        return genexpr_iterator(this, scopes, comp, head, outmost_expr)
     }
 
     var js = prefix + `var gen${id} = $B.generator.$factory(${has_await ? 'async ' : ''}function*(expr){\n`
