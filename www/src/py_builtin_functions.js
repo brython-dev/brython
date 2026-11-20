@@ -2139,18 +2139,8 @@ _b_.sum = function() {
     }
 
     var res = start
-    iterable = iter(iterable)
-    while (true) {
-        try {
-            var _item = next(iterable)
-            res = $B.rich_op('__add__', res, _item)
-        } catch (err) {
-           if ($B.is_exc(err, [_b_.StopIteration])) {
-               break
-           } else {
-               throw err
-           }
-        }
+    for (var _item of $B.make_js_iterator(iterable)) {
+        res = $B.rich_op('__add__', res, _item)
     }
     return res
 }
