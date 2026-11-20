@@ -695,7 +695,7 @@ $B.make_js_iterator = function(iterator, frame, lineno, inum) {
 
     var cls = $B.get_class(iterator)
     if (Object.hasOwn(cls, $B.FAST_ITER)) {
-        return cls[$B.FAST_ITER](iterator, set_lineno, frame, lineno)
+        return cls[$B.FAST_ITER](iterator, set_lineno, frame, lineno, inum)
     }
 
     var it = $B.$iter(iterator)

@@ -55,6 +55,31 @@ $B.generator.tp_iternext = function*(self){
     }
 }
 
+// Used by $B.make_js_iterator, for "for" loops, tuple(), list() etc.: the
+// generator is resumed directly, and its end is not a StopIteration
+$B.generator[$B.FAST_ITER] = function(self, set_lineno, frame, lineno, inum) {
+    return {
+        [Symbol.iterator]() {
+            return this
+        },
+        next() {
+            set_lineno(frame, lineno)
+            try {
+                var res = resume(self, _b_.None)
+            } catch (err) {
+                if ($B.is_exc(err, [_b_.StopIteration])) {
+                    return {done: true, value: null}
+                }
+                if (inum) {
+                    $B.set_inum(inum)
+                }
+                throw err
+            }
+            return res.done ? {done: true, value: null} : res
+        }
+    }
+}
+
 $B.generator.tp_finalize = function(self) {
 
 }
@@ -143,14 +168,16 @@ generator_funcs.gi_yieldfrom_set = function(self) {
 
 }
 
-generator_funcs.send = function(self, value) {
+// Resumes the generator: the result of the Javascript generator, done with
+// the value of StopIteration once the generator has returned
+function resume(self, value) {
     // Set attribute $has_run. It is used in py_utils.js/$B.leave_frame()
     // to decide if a generator with "yield" inside context managers must
     // be applied method .return()
     var gen = self.js_gen
     gen.$has_run = true
     if (gen.$finished) {
-        $B.RAISE(_b_.StopIteration, value)
+        return {done: true, value}
     }
     if (gen.gi_running === true) {
         $B.RAISE(_b_.ValueError, "generator already executing")
@@ -176,11 +203,16 @@ generator_funcs.send = function(self, value) {
     }
     // restore stack
     $B.frame_obj = save_frame_obj
-    if (res.value && $B.exact_type(res.value, $GeneratorReturn)) {
+    if (res.value && res.value.ob_type === $GeneratorReturn) {
         gen.$finished = true
-        $B.RAISE(_b_.StopIteration, res.value.value)
+        return {done: true, value: res.value.value}
     }
     gen.gi_running = false
+    return res
+}
+
+generator_funcs.send = function(self, value) {
+    var res = resume(self, value)
     if (res.done) {
         $B.RAISE(_b_.StopIteration, res.value)
     }

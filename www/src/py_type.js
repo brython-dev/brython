@@ -1021,7 +1021,8 @@ function reset_iter(cls) {
 $B.make_fast_iter = function(cls) {
     if(cls.tp_base &&
             cls.tp_base[$B.FAST_ITER] &&
-            $B.get_from_dict(cls, '__iter__', $B.NULL) === $B.NULL){
+            $B.get_from_dict(cls, '__iter__', $B.NULL) === $B.NULL &&
+            $B.get_from_dict(cls, '__next__', $B.NULL) === $B.NULL){
         cls[$B.FAST_ITER] = cls.tp_base[$B.FAST_ITER]
     }
 }
