@@ -550,6 +550,26 @@ assert window.eval('({"get": 42})').get == 42
 assert window.eval('new Map([["k", "v"]])').get('k') == 'v'
 assert_raises(TypeError, len, window.eval('(function () {})'))
 
+# A write Javascript refuses is an AttributeError: a property with no setter,
+# a read-only one, a new one on a frozen object. An error the setter raises
+# stays its own
+refused = window.eval("""[new DOMException('gone'),
+    Object.freeze(new Error('ice')),
+    Object.defineProperty({}, 'k', {value: 1, writable: false})]""")
+assert_raises(AttributeError, setattr, refused[0], 'name', 'Mine',
+    msg="property 'name' of 'Javascript DOMException' object has no setter")
+assert_raises(AttributeError, setattr, refused[1], 'handled', True)
+assert_raises(AttributeError, setattr, refused[2], 'k', 2,
+    msg="attribute 'k' of 'Javascript Object' objects is not writable")
+setter = window.eval("({set v(x) { throw new TypeError('mine') }})")
+try:
+    setter.v = 1
+    raise AssertionError('the setter did not raise')
+except AttributeError:
+    raise AssertionError('the setter raised an AttributeError')
+except Exception as exc:
+    assert 'mine' in str(exc)
+
 # A Javascript number above 2 ** 53 is the int it is, not the int its shortest
 # decimal spells, and one from 1e21 up is converted rather than refused
 assert window.eval('Math.pow(2, 53)') == 2 ** 53

@@ -895,12 +895,52 @@ $B.JSObj.tp_getattro = function(_self, attr) {
     }
 }
 
+// A write Javascript refuses is an AttributeError, as Python says of an
+// attribute it cannot set: a property with no setter, a read-only one, or a
+// new one on an object that takes none, a frozen one. It was a
+// JavascriptError. A TypeError the setter raises itself stays what it is. A
+// TypeError is told by its name, which another context's has too
+function refused_write(self, attr, err) {
+    if (err?.name !== 'TypeError') {
+        throw err
+    }
+    var klass = $B.class_name(self)
+    for (var obj = self; obj !== null; obj = Object.getPrototypeOf(obj)) {
+        var desc = Object.getOwnPropertyDescriptor(obj, attr)
+        if (desc === undefined) {
+            continue
+        }
+        if (desc.set) {
+            throw err
+        }
+        if (desc.get) {
+            $B.RAISE_ATTRIBUTE_ERROR(`property '${attr}' of '${klass}' ` +
+                'object has no setter', self, attr)
+        }
+        if (! desc.writable) {
+            $B.RAISE_ATTRIBUTE_ERROR(`attribute '${attr}' of '${klass}' ` +
+                'objects is not writable', self, attr)
+        }
+        break
+    }
+    if (! Object.isExtensible(self)) {
+        $B.RAISE_ATTRIBUTE_ERROR(`'${klass}' object has no attribute ` +
+            `'${attr}' and no __dict__ for setting new attributes`, self, attr)
+    }
+    throw err
+}
+
 $B.JSObj.tp_setattro = function(self, attr, value) {
     if (value === $B.NULL) {
         delete self[attr]
         return
     }
-    self[attr] = $B.pyobj2jsobj(value)
+    var js_value = $B.pyobj2jsobj(value)
+    try {
+        self[attr] = js_value
+    } catch (err) {
+        refused_write(self, attr, err)
+    }
     return _b_.None
 }
 
