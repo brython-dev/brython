@@ -462,6 +462,39 @@ def permutations(pool):
 z = permutations(range(5))
 assert next(z) == (0, 1, 2, 3, 4)
 
+# a generator expression handed alone to a builtin that reads it through
+# answers as the generator does: its own scope, the StopIteration raised in
+# it a RuntimeError, a set checking each value as it comes
+def consumed():
+    assert tuple(x * 2 for x in range(3)) == (0, 2, 4)
+    assert list(x for x in "ab") == ["a", "b"]
+    assert sorted(-x for x in range(3)) == [-2, -1, 0]
+    assert sorted(frozenset(x % 2 for x in range(4))) == [0, 1]
+    assert "-".join(str(x) for x in range(3)) == "0-1-2"
+    x = "outer"
+    assert tuple(x for x in "ab") == ("a", "b") and x == "outer"
+    assert [f() for f in tuple(lambda: x for x in range(3))] == [2, 2, 2]
+    assert tuple((y := x) for x in range(3)) == (0, 1, 2) and y == 2
+
+    class C:
+        n = 3
+        t = tuple(i for i in range(n))
+
+    assert C.t == (0, 1, 2)
+    it = iter([])
+    try:
+        tuple(next(it) for _ in [1])
+        raise AssertionError("should have raised RuntimeError")
+    except RuntimeError as exc:
+        assert type(exc.__cause__) is StopIteration
+    try:
+        set([] if x == 0 else 1 / 0 for x in range(2))
+        raise AssertionError("should have raised TypeError")
+    except TypeError:
+        pass
+
+consumed()
+
 # return with a value (Python 3.3+)
 def f():
     yield 1
