@@ -958,6 +958,36 @@ $B.JSObj.tp_repr = function(self) {
     return `<Javascript object: ${js_repr}>`
 }
 
+// str() of a Javascript object is the text it makes of itself, String()'s,
+// when its toString is its own: a URL is its address, a Date its date, an
+// Error its message. One whose toString is Object's, which says only its
+// class, is told as repr() tells it, as Python's str() falls back on repr(),
+// and so is an array, which Python reads as a list. The toString is looked up
+// on the prototypes, not read: a proxy that answers any name would be asked
+// for it. Object's is the one its root prototype holds, the prototype with
+// none that has isPrototypeOf, in whichever context made the object
+function own_text(obj) {
+    if (Array.isArray(obj) || ArrayBuffer.isView(obj)) {
+        return false
+    }
+    for (var o = obj; o !== null; o = Object.getPrototypeOf(o)) {
+        var desc = Object.getOwnPropertyDescriptor(o, 'toString')
+        if (desc !== undefined) {
+            var objects = Object.getPrototypeOf(o) === null &&
+                Object.hasOwn(o, 'isPrototypeOf')
+            return typeof desc.value == 'function' && ! objects
+        }
+    }
+    return false
+}
+
+$B.JSObj.tp_str = function(self) {
+    if (typeof self == 'object' && self !== null && own_text(self)) {
+        return String(self)
+    }
+    return _b_.repr(self)
+}
+
 var JSObj_funcs = $B.JSObj.tp_funcs = {}
 
 

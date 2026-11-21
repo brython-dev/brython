@@ -364,6 +364,15 @@ window.init_array()
 a = window.array
 assert str(a) == '[[...], 1, 5.6]'
 
+# str() of a Javascript object is the text its own toString makes, as String()
+# gives it, and repr() for one that says only its class
+assert str(window.URL.new('http://x/y')) == 'http://x/y'
+assert str(window.Error.new('boom')) == 'Error: boom'
+assert str(window.eval('new Date(0)')) == window.eval('String(new Date(0))')
+plain = window.eval('({})')
+assert str(plain) == repr(plain)
+assert str(window.eval('new Map()')) == repr(window.eval('new Map()'))
+
 # using Javascript non-integers numbers
 window.py_module_name = __name__
 
