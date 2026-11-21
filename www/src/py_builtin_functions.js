@@ -481,16 +481,7 @@ _b_.dir = function(obj) {
 //divmod() (built in function)
 _b_.divmod = function(x,y) {
     check_nb_args_no_kw('divmod', 2, arguments)
-
-    try {
-        return $B.rich_op('__divmod__', x, y)
-    } catch (err) {
-        if ($B.is_exc(err, [_b_.TypeError])) {
-            return _b_.tuple.$factory([$B.rich_op('__floordiv__', x, y),
-                                       $B.rich_op('__mod__', x, y)])
-        }
-        throw err
-    }
+    return $B.rich_op('__divmod__', x, y)
 }
 
 var enumerate = _b_.enumerate
