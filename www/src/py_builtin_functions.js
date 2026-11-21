@@ -435,7 +435,7 @@ $B.$delete = function(name, locals_id, inum) {
     }
     if (! found) {
         $B.set_inum(inum)
-        if (locals_id == 'local') {
+        if (locals_id === 'local') {
             $B.RAISE(_b_.UnboundLocalError,
                 `cannot access local variable '${name}' ` +
                 'where it is not associated with a value')
