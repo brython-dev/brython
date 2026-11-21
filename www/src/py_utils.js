@@ -828,6 +828,45 @@ $B.set_lineno = function(frame, lineno, type) {
     return true
 }
 
+// A loop compiled while browser.timer.set_loop_timeout() is set calls this
+// every 100 turns: past the timeout, in seconds, it raises LoopInterrupt. The
+// time counted is the time the page has been frozen: from the first check,
+// until the event loop runs again, so that a loop which awaits or yields
+// gives the page back and is never interrupted
+var loop_frozen_since
+
+$B.loop_timeout_check = function(timeout) {
+    var now = performance.now()
+    if (loop_frozen_since === undefined) {
+        loop_frozen_since = now
+        setTimeout($B.loop_timeout_reset, 0)
+    } else if (now - loop_frozen_since > timeout * 1000) {
+        loop_frozen_since = undefined
+        $B.RAISE($B.loop_interrupt(), 'loop running for more than ' +
+            `${timeout} second${timeout == 1 ? '' : 's'}`)
+    }
+}
+
+// Once the event loop runs again; and after input(), whose wait for the user
+// is not the loop's
+$B.loop_timeout_reset = function() {
+    loop_frozen_since = undefined
+}
+
+// LoopInterrupt of module browser.timer, a BaseException as KeyboardInterrupt
+// is, so that "except Exception" lets it through; made once, by type()
+var loop_interrupt
+
+$B.loop_interrupt = function() {
+    if (loop_interrupt === undefined) {
+        var ns = $B.empty_dict()
+        _b_.dict.$setitem(ns, '__module__', 'browser.timer')
+        loop_interrupt = $B.$call(_b_.type, 'LoopInterrupt',
+            $B.fast_tuple([_b_.BaseException]), ns)
+    }
+    return loop_interrupt
+}
+
 $B.get_method_class = function(method, ns, qualname, refs) {
     // Used to set the cell __class__ in a method. ns is the namespace
     // and qualname is the qualified name of the class
