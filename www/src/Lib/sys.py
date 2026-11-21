@@ -124,7 +124,7 @@ def set_int_max_str_digits(value):
     __BRYTHON__.max_printable = 10 ** value
 
 # maximum array size
-maxsize = __BRYTHON__.max_array_size
+maxsize = 2 ** 63 - 1
 
 maxunicode = 1114111
 
