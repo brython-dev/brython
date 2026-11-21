@@ -164,6 +164,16 @@ JSGenerator.tp_iternext = function*(self){
     }
 }
 
+// The methods of the Javascript generator, next(), return() and throw(), are
+// read on it, as on any Javascript object: for and list() reached it, and
+// gen.next() raised AttributeError
+JSGenerator.tp_getattro = function(self, attr) {
+    if (! attr.startsWith('__') && attr in self.js_gen) {
+        return jsobj2pyobj(self.js_gen[attr], self.js_gen)
+    }
+    return _b_.object.tp_getattro(self, attr)
+}
+
 var jsobj2pyobj = $B.jsobj2pyobj = function(jsobj, _this) {
     // If _this is passed and jsobj is a function, the function is called
     // with built-in value `this` set to _this
