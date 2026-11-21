@@ -887,6 +887,20 @@ function dedent(n) {
     prefix = prefix.substr(n * tab.length)
 }
 
+// A loop compiled while browser.timer.set_loop_timeout() is set counts its
+// turns, and every 100 asks $B.loop_timeout_check() whether it has run too
+// long, with the timeout it was compiled with
+function loop_turns(id) {
+    return $B.loop_timeout ? prefix + `var turns_${id} = 0\n` : ''
+}
+
+function loop_check(id) {
+    return $B.loop_timeout ?
+        prefix + `if (++turns_${id} % 100 == 0) {` +
+            `$B.loop_timeout_check(${$B.loop_timeout})}\n` :
+        ''
+}
+
 function add_body(body, scopes) {
     let res = ''
     let js
@@ -991,8 +1005,10 @@ function make_comp(scopes, consumed) {
     var first = this.generators[0]
     js += prefix + `try {\n`
     indent()
-    js += prefix + `for (var next_${id} of next_func_${id}) {\n`
+    js += loop_turns(id) +
+          prefix + `for (var next_${id} of next_func_${id}) {\n`
     indent()
+    js += loop_check(id)
     // assign result of iteration to target
     var name = new $B.ast.Name(`next_${id}`, new $B.ast.Load())
     copy_position(name, first_for.iter)
@@ -2181,8 +2197,10 @@ $B.ast.comprehension.prototype.to_js = function(scopes) {
         iter = $B.js_from_ast(this.iter, scopes)
 
     var js = prefix + `var next_func_${id} = $B.make_js_iterator(${iter}, frame, ${this.lineno})\n` +
+             loop_turns(id) +
              prefix + `for (var next_${id} of next_func_${id}) {\n`
     indent()
+    js += loop_check(id)
     // assign result of iteration to target
     var name = new $B.ast.Name(`next_${id}`, new $B.ast.Load())
     copy_position(name, this.target)
@@ -2391,9 +2409,11 @@ $B.ast.For.prototype.to_js = function(scopes) {
               prefix + tab + tab + `iter_${id} = ${iter},\n` +
               prefix + tab + tab + `type_${id} = _b_.type.$factory(iter_${id})\n` +
               prefix + `iter_${id} = $B.$call($B.$getattr(type_${id}, "__aiter__"), iter_${id})\n` +
+              loop_turns(id) +
               prefix + `while (true) {\n`
         indent()
-        js += prefix + `try {\n`+
+        js += loop_check(id) +
+              prefix + `try {\n`+
               prefix + tab + `var next_${id} = await $B.promise($B.$call(_b_.anext, iter_${id}))\n` +
               prefix + `} catch (err) {\n`+
               prefix + tab + `if ($B.is_exc(err, [_b_.StopAsyncIteration])) {\n` +
@@ -2406,7 +2426,8 @@ $B.ast.For.prototype.to_js = function(scopes) {
     } else {
         js += prefix + `var no_break_${id} = true,\n` +
               prefix + tab + tab + `iterator_${id} = ${iter}\n`
-        js += prefix + `for(var next_${id} of $B.make_js_iterator(` +
+        js += loop_turns(id) +
+              prefix + `for(var next_${id} of $B.make_js_iterator(` +
                   `iterator_${id}, frame, ${this.lineno}, ${this.iter.inum})){\n`
     }
     // assign result of iteration to target
@@ -2419,6 +2440,9 @@ $B.ast.For.prototype.to_js = function(scopes) {
 
     indent()
 
+    if (! (this instanceof $B.ast.AsyncFor)) {
+        js += loop_check(id)
+    }
     js += assign.to_js(scopes) + '\n'
 
     js += add_body(this.body, scopes)
@@ -3091,6 +3115,7 @@ function genexpr_iterator(genexpr, scopes, comp, head, outmost_expr) {
         last = clauses.length - 1
     var js = prefix + `var iterators_${id} = [],\n` +
              prefix + tab + tab + `level_${id} = 0\n` +
+             loop_turns(id) +
              prefix + `var gen${id} = $B.generator.$iterator(function() {\n`
     indent()
     // a trace function sees a "call" each time the generator resumes
@@ -3102,7 +3127,8 @@ function genexpr_iterator(genexpr, scopes, comp, head, outmost_expr) {
           prefix + `}\n` +
           prefix + `while (true) {\n`
     indent()
-    js += prefix + `var next_${id} = iterators_${id}[level_${id}].next()\n` +
+    js += loop_check(id) +
+          prefix + `var next_${id} = iterators_${id}[level_${id}].next()\n` +
           prefix + `if (next_${id}.done) {\n` +
           prefix + tab + `if (level_${id} == 0) {\n` +
           prefix + tab + tab + `return next_${id}\n` +
@@ -3203,9 +3229,11 @@ $B.ast.GeneratorExp.prototype.to_js = function(scopes) {
     indent()
     js += prefix + `$B.enter_frame(frame, __file__, ${this.lineno})\n` +
           prefix + `var next_func_${id} = $B.make_js_iterator(expr, frame, ${this.lineno})\n` +
+          loop_turns(id) +
           prefix + `for (var next_${id} of next_func_${id}) {\n`
     indent()
-    js += prefix + `$B.enter_frame(frame, __file__, ${this.lineno})\n`
+    js += loop_check(id) +
+          prefix + `$B.enter_frame(frame, __file__, ${this.lineno})\n`
     // assign result of iteration to target
     var name = new $B.ast.Name(`next_${id}`, new $B.ast.Load())
     copy_position(name, first_for.iter)
@@ -4459,7 +4487,7 @@ $B.ast.While.prototype.to_js = function(scopes) {
     scopes.push(new_scope)
 
     // Set a variable to detect a "break"
-    var js = prefix + `var no_break_${id} = true\n`
+    var js = prefix + `var no_break_${id} = true\n` + loop_turns(id)
 
     js += prefix + `while($B.set_lineno(frame, ${this.lineno}) && `
     if (this.test instanceof $B.ast.BoolOp) {
@@ -4469,7 +4497,7 @@ $B.ast.While.prototype.to_js = function(scopes) {
         js += `$B.$bool(${$B.js_from_ast(this.test, scopes)})){\n`
     }
     indent()
-    js += add_body(this.body, scopes)
+    js += loop_check(id) + add_body(this.body, scopes)
     dedent()
     js += '\n' + prefix + '}\n'
 

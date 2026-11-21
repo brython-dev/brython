@@ -21,6 +21,11 @@ def cancel_animation_frame(int_id):
     window.cancelAnimationFrame(int_id)
 
 def set_loop_timeout(x):
-    # set a variable used to stop loops that last more than x seconds
-    assert isinstance(x, int)
-    __BRYTHON__.loop_timeout = x
+    """The loops compiled from now on raise LoopInterrupt once they have kept
+    the page frozen for more than x seconds; 0 or None, they never do."""
+    if x is not None and not isinstance(x, (int, float)):
+        raise TypeError(f"set_loop_timeout() expects a number of seconds, "
+            f"not '{type(x).__name__}'")
+    __BRYTHON__.loop_timeout = x or 0
+
+LoopInterrupt = __BRYTHON__.loop_interrupt()
