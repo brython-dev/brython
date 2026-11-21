@@ -749,8 +749,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-11-21 11:29:06.302741"
-__BRYTHON__.timestamp=1795256946302
+__BRYTHON__.compiled_date="2026-11-21 11:32:57.811668"
+__BRYTHON__.timestamp=1795257177811
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -1836,6 +1836,18 @@ if(type){$B.nb_set_lineno_type++
 frame[type]=frame[type]||{}
 frame[type][lineno]=true}
 return true}
+var loop_frozen_since
+$B.loop_timeout_check=function(timeout){var now=performance.now()
+if(loop_frozen_since===undefined){loop_frozen_since=now
+setTimeout($B.loop_timeout_reset,0)}else if(now-loop_frozen_since > timeout*1000){loop_frozen_since=undefined
+$B.RAISE($B.loop_interrupt(),'loop running for more than '+
+`${timeout} second${timeout == 1 ? '' : 's'}`)}}
+$B.loop_timeout_reset=function(){loop_frozen_since=undefined}
+var loop_interrupt
+$B.loop_interrupt=function(){if(loop_interrupt===undefined){var ns=$B.empty_dict()
+_b_.dict.$setitem(ns,'__module__','browser.timer')
+loop_interrupt=$B.$call(_b_.type,'LoopInterrupt',$B.fast_tuple([_b_.BaseException]),ns)}
+return loop_interrupt}
 $B.get_method_class=function(method,ns,qualname,refs){
 var klass=ns
 if(method.$function_infos && method.$function_infos[$B.func_attrs.method_class]){return method.$function_infos[$B.func_attrs.method_class]}
@@ -5228,6 +5240,7 @@ _b_.__lazy_import__=function(){var $=$B.args('__lazy_import__',5,{name:null,glob
 if($.name==='' && $.level===0){$B.RAISE(_b_.ValueError,"Empty module name")}
 return $B.$__lazy_import__($.name,$.globals,$.locals,$.fromlist)}
 _b_.input=function(msg){var res=prompt(msg ||'')||''
+$B.loop_timeout_reset()
 if($B.imported["sys"]&&
 $B.module_getattr($B.imported["sys"],'ps1')!==$B.NULL){
 var ps1=$B.module_getattr($B.imported["sys"],'ps1'),ps2=$B.module_getattr($B.imported["sys"],'ps2')
@@ -16124,6 +16137,7 @@ options=options_lowered
 $B.debug=options.debug===undefined ? 1 :options.debug
 _b_.__debug__=$B.debug > 0
 options.python_extension=options.python_extension ||'.py'
+if(options.loop_timeout !==undefined){$B.loop_timeout=options.loop_timeout}
 if($B.$options.args){$B.__ARGV=$B.$options.args}else{
 $B.__ARGV=_b_.list.$factory([])}
 $B.options_parsed=true
@@ -16993,6 +17007,11 @@ function indent(n){n=n ?? 1
 prefix+=tab.repeat(n)}
 function dedent(n){n=n ?? 1
 prefix=prefix.substr(n*tab.length)}
+function loop_turns(id){return $B.loop_timeout ? prefix+`var turns_${id} = 0\n` :''}
+function loop_check(id){return $B.loop_timeout ?
+prefix+`if (++turns_${id} % 100 == 0) {`+
+`$B.loop_timeout_check(${$B.loop_timeout})}\n` :
+''}
 function add_body(body,scopes){let res=''
 let js
 for(var item of body){js=$B.js_from_ast(item,scopes)
@@ -17022,8 +17041,10 @@ prefix+`frame.$lineno = ${comp.ast.lineno}\n`+
 prefix+`$B.make_f_code(frame, [${varnames}])\n`+
 prefix+`frame.$f_trace = _b_.None\n`+
 prefix+`var _frame_obj = $B.frame_obj\n`}
-function make_comp(scopes){
+function make_comp(scopes,consumed){
 var plen=prefix.length
+var kind=consumed ??(this instanceof $B.ast.ListComp ? 'list' :
+this instanceof $B.ast.SetComp ? 'set' :'dict')
 var id=make_id(),type=this.constructor.$name,symtable_block=scopes.symtable.table.blocks.get(fast_id(this)),varnames=Object.keys($B.dict_as_jsobj(symtable_block.symbols)).map(x=> `"${x}"`)
 var first_for=this.generators[0],
 outmost_expr=$B.js_from_ast(first_for.iter,scopes),nb_paren=1
@@ -17031,7 +17052,8 @@ var comp={ast:this,id,type,varnames,module_name:scopes[0].name,locals_name:make_
 indent()
 if(prefix.length > plen+tab.length){console.warn('JS indentation issue')}
 var js=init_comprehension(comp,scopes)
-if(this instanceof $B.ast.ListComp){js+=prefix+`var result_${id} = $B.$list([])\n`}else if(this instanceof $B.ast.SetComp){js+=prefix+`var result_${id} = _b_.set.$factory()\n`}else if(this instanceof $B.ast.DictComp){js+=prefix+`var result_${id} = $B.empty_dict()\n`}
+if(kind=='list'){js+=prefix+`var result_${id} = $B.$list([])\n`}else if(kind=='set'){js+=prefix+`var result_${id} = _b_.set.$factory()\n`}else{
+js+=prefix+`var result_${id} = $B.empty_dict()\n`}
 var own_scope=new Scope(`${type.toLowerCase()}_${id}`,'comprehension',this)
 scopes.push(own_scope)
 js+=prefix+`var ${make_scope_name(scopes)} = {},\n`+
@@ -17039,8 +17061,10 @@ prefix+tab+tab+`locals = ${make_scope_name(scopes)}\n`
 var first=this.generators[0]
 js+=prefix+`try {\n`
 indent()
-js+=prefix+`for (var next_${id} of next_func_${id}) {\n`
+js+=loop_turns(id)+
+prefix+`for (var next_${id} of next_func_${id}) {\n`
 indent()
+js+=loop_check(id)
 var name=new $B.ast.Name(`next_${id}`,new $B.ast.Load())
 copy_position(name,first_for.iter)
 name.to_js=function(){return `next_${id}`}
@@ -17053,7 +17077,7 @@ indent()}
 for(var comprehension of this.generators.slice(1)){js+=comprehension.to_js(scopes)
 nb_paren++
 for(let _if of comprehension.ifs){nb_paren++}}
-if(this instanceof $B.ast.DictComp){var key=$B.js_from_ast(this.key,scopes)
+if(kind=='dict'){var key=$B.js_from_ast(this.key,scopes)
 var value
 if(this.value===undefined){}else{value=$B.js_from_ast(this.value,scopes)}}else{
 var elt
@@ -17061,15 +17085,16 @@ if(this.elt instanceof $B.ast.Starred){elt=$B.js_from_ast(this.elt.value,scopes)
 var has_await=own_scope.has_await
 js=`(${has_await ? 'async ' : ''}function(expr) {\n`+
 (has_await ? 'var save_frame_obj = $B.frame_obj;\n' :'')+js
-if(this instanceof $B.ast.ListComp){if(this.elt instanceof $B.ast.Starred){js+=prefix+`for(var item of $B.make_js_iterator(${elt})){\n`
+if(kind=='list'){if(this.elt instanceof $B.ast.Starred){js+=prefix+`for(var item of $B.make_js_iterator(${elt})){\n`
 indent()
 js+=prefix+`result_${id}.push(item)\n`
 dedent()
-js+=prefix+'}\n'}else{js+=prefix+`result_${id}.push(${elt})\n`}}else if(this instanceof $B.ast.SetComp){if(this.elt instanceof $B.ast.Starred){js+=prefix+`for(var item of $B.make_js_iterator(${elt})){\n`
+js+=prefix+'}\n'}else{js+=prefix+`result_${id}.push(${elt})\n`}}else if(kind=='set'){if(this.elt instanceof $B.ast.Starred){js+=prefix+`for(var item of $B.make_js_iterator(${elt})){\n`
 indent()
 js+=prefix+`$B.set_add(result_${id}, item)\n`
 dedent()
-js+=prefix+'}\n'}else{js+=prefix+`$B.set_add(result_${id}, ${elt})\n`}}else if(this instanceof $B.ast.DictComp){if(value===undefined){js+=prefix+`for(var item of _b_.dict.$iter_items(${key})){\n`
+js+=prefix+'}\n'}else{js+=prefix+`$B.set_add(result_${id}, ${elt})\n`}}else{
+if(value===undefined){js+=prefix+`for(var item of _b_.dict.$iter_items(${key})){\n`
 indent()
 js+=prefix+`_b_.dict.$setitem(result_${id}, item.key, item.value)\n`
 dedent()
@@ -17079,6 +17104,13 @@ for(var i=0;i < nb_paren;i++){js+=prefix+'}\n'
 dedent()}
 js+=prefix+`} catch (err) {\n`
 indent()
+if(consumed){
+js+=prefix+`if ($B.is_exc(err, _b_.StopIteration)) {\n`+
+prefix+tab+`var exc_${id} = $B.EXC(_b_.RuntimeError, `+
+`"generator raised StopIteration")\n`+
+prefix+tab+`exc_${id}.__cause__ = $B.exception(err)\n`+
+prefix+tab+`err = exc_${id}\n`+
+prefix+`}\n`}
 js+=(has_await ? prefix+`$B.restore_frame_obj(save_frame_obj, ${comp.locals_name})\n` :'')+
 prefix+`$B.set_exc(err, frame)\n`+
 prefix+`throw err\n`
@@ -17421,12 +17453,28 @@ scope.ast instanceof $B.ast.While){js+=prefix+`no_break_${scope.id} = false\n`
 break}}
 js+=prefix+`break`
 return js}
+var CONSUMERS={'_b_.tuple':'list','_b_.list':'list','_b_.sorted':'list','_b_.set':'set','_b_.frozenset':'set'}
+var FRAME_READERS=new Set(['locals','vars','dir','eval','exec','super'])
+function reads_frame(node){if(node instanceof $B.ast.Name){return FRAME_READERS.has(node.id)}
+for(var field of node.constructor._fields ??[]){var value=node[field]
+for(var item of Array.isArray(value)? value :[value]){if(item?.constructor?._fields !==undefined && reads_frame(item)){return true}}}
+return false}
+function consumed_genexpr(call,scopes){if(call.args.length !=1 ||call.keywords.length > 0 ||
+!(call.args[0]instanceof $B.ast.GeneratorExp)){return false}
+var block=scopes.symtable.table.blocks.get(fast_id(call.args[0]))
+return ! block.coroutine && ! reads_frame(call.args[0])}
 $B.ast.Call.prototype.to_js=function(scopes){var inum=add_to_positions(scopes,this)
 var js
 if(this.func instanceof $B.ast.Attribute){var attr=mangle(scopes,last_scope(scopes),this.func.attr)
-js=`$B.call_attr(${$B.js_from_ast(this.func.value, scopes)}, `+
-`'${attr}', ${inum}, `}else{
+var obj=$B.js_from_ast(this.func.value,scopes)
+if(attr=='join' && this.func.value instanceof $B.ast.Constant &&
+typeof this.func.value.value=='string' &&
+consumed_genexpr(this,scopes)){return `$B.call_attr(${obj}, 'join', ${inum}, `+
+`${make_comp.bind(this.args[0])(scopes, 'list')})`}
+js=`$B.call_attr(${obj}, '${attr}', ${inum}, `}else{
 var func=$B.js_from_ast(this.func,scopes)
+if(Object.hasOwn(CONSUMERS,func)&& consumed_genexpr(this,scopes)){return `$B.$call_with_position(${func}, ${inum}, `+
+`${make_comp.bind(this.args[0])(scopes, CONSUMERS[func])})`}
 js=`$B.$call_with_position(${func}, ${inum}, `}
 var args=make_args.bind(this)(scopes)
 return js+`${args})`}
@@ -17581,8 +17629,10 @@ if(len > 1){left='locals.$op'}}
 return comps.join(' && ')}
 $B.ast.comprehension.prototype.to_js=function(scopes){var id=make_id(),iter=$B.js_from_ast(this.iter,scopes)
 var js=prefix+`var next_func_${id} = $B.make_js_iterator(${iter}, frame, ${this.lineno})\n`+
+loop_turns(id)+
 prefix+`for (var next_${id} of next_func_${id}) {\n`
 indent()
+js+=loop_check(id)
 var name=new $B.ast.Name(`next_${id}`,new $B.ast.Load())
 copy_position(name,this.target)
 name.to_js=function(){return `next_${id}`}
@@ -17665,9 +17715,11 @@ if(this instanceof $B.ast.AsyncFor){js+=prefix+`var no_break_${id} = true,\n`+
 prefix+tab+tab+`iter_${id} = ${iter},\n`+
 prefix+tab+tab+`type_${id} = _b_.type.$factory(iter_${id})\n`+
 prefix+`iter_${id} = $B.$call($B.$getattr(type_${id}, "__aiter__"), iter_${id})\n`+
+loop_turns(id)+
 prefix+`while (true) {\n`
 indent()
-js+=prefix+`try {\n`+
+js+=loop_check(id)+
+prefix+`try {\n`+
 prefix+tab+`var next_${id} = await $B.promise($B.$call(_b_.anext, iter_${id}))\n`+
 prefix+`} catch (err) {\n`+
 prefix+tab+`if ($B.is_exc(err, [_b_.StopAsyncIteration])) {\n`+
@@ -17679,7 +17731,8 @@ prefix+`}\n`
 dedent()}else{
 js+=prefix+`var no_break_${id} = true,\n`+
 prefix+tab+tab+`iterator_${id} = ${iter}\n`
-js+=prefix+`for(var next_${id} of $B.make_js_iterator(`+
+js+=loop_turns(id)+
+prefix+`for(var next_${id} of $B.make_js_iterator(`+
 `iterator_${id}, frame, ${this.lineno}, ${this.iter.inum})){\n`}
 var name=new $B.ast.Name(`next_${id}`,new $B.ast.Load())
 copy_position(name,this.iter)
@@ -17688,6 +17741,7 @@ var assign=new $B.ast.Assign([this.target],name)
 assign.$loopvar=true
 copy_position(assign,this.target)
 indent()
+if(!(this instanceof $B.ast.AsyncFor)){js+=loop_check(id)}
 js+=assign.to_js(scopes)+'\n'
 js+=add_body(this.body,scopes)
 dedent()
@@ -18029,6 +18083,7 @@ function genexpr_iterator(genexpr,scopes,comp,head,outmost_expr){
 var id=comp.id,clauses=genexpr.generators,last=clauses.length-1
 var js=prefix+`var iterators_${id} = [],\n`+
 prefix+tab+tab+`level_${id} = 0\n`+
+loop_turns(id)+
 prefix+`var gen${id} = $B.generator.$iterator(function() {\n`
 indent()
 js+=prefix+`if ($B.tracefunc !== _b_.None) {\n`+
@@ -18039,7 +18094,8 @@ prefix+tab+`iterators_${id}.push($B.make_js_iterator(locals['.0'], frame, ${gene
 prefix+`}\n`+
 prefix+`while (true) {\n`
 indent()
-js+=prefix+`var next_${id} = iterators_${id}[level_${id}].next()\n`+
+js+=loop_check(id)+
+prefix+`var next_${id} = iterators_${id}[level_${id}].next()\n`+
 prefix+`if (next_${id}.done) {\n`+
 prefix+tab+`if (level_${id} == 0) {\n`+
 prefix+tab+tab+`return next_${id}\n`+
@@ -18098,9 +18154,11 @@ var first=this.generators[0]
 indent()
 js+=prefix+`$B.enter_frame(frame, __file__, ${this.lineno})\n`+
 prefix+`var next_func_${id} = $B.make_js_iterator(expr, frame, ${this.lineno})\n`+
+loop_turns(id)+
 prefix+`for (var next_${id} of next_func_${id}) {\n`
 indent()
-js+=prefix+`$B.enter_frame(frame, __file__, ${this.lineno})\n`
+js+=loop_check(id)+
+prefix+`$B.enter_frame(frame, __file__, ${this.lineno})\n`
 var name=new $B.ast.Name(`next_${id}`,new $B.ast.Load())
 copy_position(name,first_for.iter)
 name.to_js=function(){return `next_${id}`}
@@ -18723,13 +18781,13 @@ return `$B.call_special_unary(${operand}, '${method}', 'unary ${op_repr}')`}
 $B.ast.While.prototype.to_js=function(scopes){var id=make_id()
 var scope=$B.last(scopes),new_scope=copy_scope(scope,this,id)
 scopes.push(new_scope)
-var js=prefix+`var no_break_${id} = true\n`
+var js=prefix+`var no_break_${id} = true\n`+loop_turns(id)
 js+=prefix+`while($B.set_lineno(frame, ${this.lineno}) && `
 if(this.test instanceof $B.ast.BoolOp){this.test.$dont_evaluate=true
 js+=`${$B.js_from_ast(this.test, scopes)}){\n`}else{
 js+=`$B.$bool(${$B.js_from_ast(this.test, scopes)})){\n`}
 indent()
-js+=add_body(this.body,scopes)
+js+=loop_check(id)+add_body(this.body,scopes)
 dedent()
 js+='\n'+prefix+'}\n'
 scopes.pop()
