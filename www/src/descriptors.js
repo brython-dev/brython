@@ -254,6 +254,19 @@ $B.method_descriptor.tp_repr = function(self) {
     return `<method '${name}' of '${class_name}' objects>`
 }
 
+// A method of a builtin type applies to an instance of that type only, called
+// or bound: `__getitem__ = list.__getitem__` in a class of another kind ran the
+// method of the list on the instance, X()[0] said "X index out of range" and
+// X().append(1) gave None
+function check_receiver(self, obj) {
+    var klass = $B.get_class(obj)
+    if (klass !== self.d_type && ! $B.get_mro(klass).includes(self.d_type)) {
+        $B.RAISE(_b_.TypeError, `descriptor '${self.d_name}' for ` +
+            `'${$B.get_name(self.d_type)}' objects doesn't apply to a ` +
+            `'${$B.class_name(obj)}' object`)
+    }
+}
+
 $B.method_descriptor.tp_call = function(self, ...args) {
     if (args.length == 0) {
         var name = self.d_name
@@ -262,11 +275,7 @@ $B.method_descriptor.tp_call = function(self, ...args) {
             `unbound method ${class_name}.${name}() needs an argument`
         )
     }
-    if (! $B.get_mro($B.get_class(args[0])).includes(self.d_type)) {
-        $B.RAISE(_b_.TypeError, `descriptor '${self.d_name}' for ` +
-            `'${$B.get_name(self.d_type)}' objects doesn't apply to a ` +
-            `'${$B.class_name(args[0])}' object`)
-    }
+    check_receiver(self, args[0])
     try {
         var res = self.method(...args)
         return res
@@ -279,6 +288,7 @@ $B.method_descriptor.tp_descr_get = function(self, obj, klass) {
     if (obj === $B.NULL) {
         return self
     }
+    check_receiver(self, obj)
     var f = self.method.bind(null, obj)
     f.ob_type = $B.builtin_method
     f.$infos = self.$infos
@@ -532,6 +542,7 @@ $B.wrapper_descriptor.tp_descr_get = function(self, obj, type) {
     if (obj === $B.NULL) {
         return self
     }
+    check_receiver(self, obj)
     var res = {
         ob_type: $B.method_wrapper,
         d_name: self.d_name,
