@@ -361,6 +361,53 @@ async def test_anext_with_default():
 
 aio.run(test_anext_with_default())
 
+# set_loop_timeout(): a loop compiled while it is set raises LoopInterrupt once
+# it has kept the page frozen past the timeout, a BaseException that "except
+# Exception" lets through; a loop that ends runs as before
+assert issubclass(timer.LoopInterrupt, BaseException)
+assert not issubclass(timer.LoopInterrupt, Exception)
+timer.set_loop_timeout(0.1)
+try:
+    loop_timeout_ns = {}
+    exec("total = sum(i for i in range(1000))\n"
+         "squares = [i * i for i in range(1000)]\n"
+         "while total > 0:\n"
+         "    total -= 1", loop_timeout_ns)
+    assert loop_timeout_ns["total"] == 0
+    assert loop_timeout_ns["squares"][-1] == 998001
+    for src in ["while True:\n    pass",
+                "for i in range(10 ** 12):\n    pass",
+                "[0 for i in range(10 ** 12) if False]",
+                "any(False for i in range(10 ** 12))",
+                "try:\n    while True:\n        pass\nexcept Exception:\n    pass"]:
+        try:
+            exec(src, {})
+            raise AssertionError(f"not interrupted: {src!r}")
+        except timer.LoopInterrupt as exc:
+            assert exc.args == ("loop running for more than 0.1 seconds",)
+    # a loop that awaits gives the page back, however long it runs
+    exec("async def loop_timeout_awaits():\n"
+         "    turns = 0\n"
+         "    while turns < 300:\n"
+         "        await aio.sleep(0.002)\n"
+         "        turns += 1\n"
+         "    return turns\n"
+         "async def loop_timeout_spins():\n"
+         "    while True:\n"
+         "        pass", globals())
+finally:
+    timer.set_loop_timeout(0)
+
+async def test_loop_timeout():
+    async_tester.assertEqual(await loop_timeout_awaits(), 300)
+    try:
+        await loop_timeout_spins()
+        raise AssertionError("not interrupted: loop_timeout_spins()")
+    except timer.LoopInterrupt:
+        pass
+
+aio.run(test_loop_timeout())
+
 async def test_future():
     fut = aio.Future()
     timer.set_timeout(lambda: fut.set_result("timeout!"), 2000)

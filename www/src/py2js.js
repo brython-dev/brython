@@ -387,6 +387,11 @@ $B.parse_options = function(options) {
     // Default extension used in imports (cf. issue #1748)
     options.python_extension = options.python_extension || '.py'
 
+    // as browser.timer.set_loop_timeout() sets it
+    if (options.loop_timeout !== undefined) {
+        $B.loop_timeout = options.loop_timeout
+    }
+
     if ($B.$options.args) {
         $B.__ARGV = $B.$options.args
     } else {

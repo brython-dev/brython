@@ -1153,6 +1153,7 @@ _b_.__lazy_import__ = function() {
 // not a direct alias of prompt: input has no default value
 _b_.input = function(msg) {
     var res = prompt(msg || '') || ''
+    $B.loop_timeout_reset()
     if($B.imported["sys"] &&
             $B.module_getattr($B.imported["sys"], 'ps1') !== $B.NULL){
         // Interactive mode : echo the prompt + input
