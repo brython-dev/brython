@@ -346,7 +346,11 @@ _b_.complex.nb_true_divide = function(self, other) {
 _b_.complex.tp_hash = function(self) {
     // this is a quick fix for something like 'hash(complex)', where
     // complex is not an instance but a type
-    return $B.$hash(self.real) + $B.$hash(self.imag) * 1000003
+    // Use int methods in case the hashes are BigInt
+    return _b_.int.nb_add(
+        $B.$hash(self.real),
+        _b_.int.nb_multiply($B.$hash(self.imag), 1000003)
+    )
 }
 
 _b_.complex.tp_new = function(cls, args, kw) {
