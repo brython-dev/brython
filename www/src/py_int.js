@@ -489,11 +489,14 @@ _b_.int.nb_remainder = function(self, other) {
             "integer division or modulo by zero")
     }
     var x = toBigInt(self)
+    if (x === $B.NULL) {
+        return _b_.NotImplemented
+    }
     return int_or_long((x % y + y) % y)
 }
 
 _b_.int.nb_divmod = function(self, other) {
-    if (toBigInt(other) === $B.NULL) {
+    if (toBigInt(other) === $B.NULL || toBigInt(self) === $B.NULL) {
         return _b_.NotImplemented
     }
     return $B.fast_tuple([int.nb_floor_divide(self, other),

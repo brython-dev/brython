@@ -231,6 +231,7 @@ $B.min_int=-$B.max_int
 $B.int_max_str_digits=4300
 $B.str_digits_check_threshold=640
 $B.max_array_size=2**32-1
+$B.maxsize=2n**63n-1n
 $B.recursion_limit=900
 $B.op2method={operations:{"**":"pow","//":"floordiv","<<":"lshift",">>":"rshift","+":"add","-":"sub","*":"mul","/":"truediv","%":"mod","@":"matmul" },augmented_assigns:{"//=":"ifloordiv",">>=":"irshift","<<=":"ilshift","**=":"ipow","+=":"iadd","-=":"isub","*=":"imul","/=":"itruediv","%=":"imod","&=":"iand","|=":"ior","^=":"ixor","@=":"imatmul"},binary:{"&":"and","|":"or","~":"invert","^":"xor"},comparisons:{"<":"lt",">":"gt","<=":"le",">=":"ge","==":"eq","!=":"ne"},boolean:{"or":"or","and":"and","in":"in","not":"not","is":"is"},subset:function(){var res={},keys=[]
 if(arguments[0]=="all"){keys=Object.keys($B.op2method)
@@ -245,6 +246,7 @@ for(var category in $B.op2method){if(category=='boolean'){
 continue}
 for(var op in $B.op2method[category]){var method=`__${$B.op2method[category][op]}__`
 $B.method_to_op[method]=op}}
+$B.method_to_op.__divmod__='divmod()'
 $B.OB_TYPE=Symbol('OB_TYPE')
 $B.ID=Symbol('ID')
 $B.FAST_ITER=Symbol('FAST_ITER')
@@ -747,8 +749,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-11-20 21:58:35.733843"
-__BRYTHON__.timestamp=1795208315733
+__BRYTHON__.compiled_date="2026-11-21 11:29:06.302741"
+__BRYTHON__.timestamp=1795256946302
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -2251,9 +2253,12 @@ if(y_num==0){$B.RAISE(_b_.ZeroDivisionError,"division by zero")}
 z=x_num/y_num
 return{ob_type:_b_.float,value:z}}
 if(z){if(res_is_int && Number.isSafeInteger(z)){return z}else if(res_is_float){return{ob_type:_b_.float,value:z}}}}else if(typeof x=="string" && typeof y=="string" && op=="__add__"){return x+y}
+var test=false 
+if(test){console.log(op,x,y)}
 var x_type=$B.get_class(x),y_type=$B.get_class(y)
 var rop='__r'+op.substr(2),method
 if(x_type===y_type){
+if(test){console.log(op,'same type',x_type.tp_name)}
 method=$B.$getattr(x_type,op,$B.NULL)
 if(method===$B.NULL){var kl_name=$B.class_name(x)
 $B.RAISE(_b_.TypeError,"unsupported operand type(s) "+
@@ -2277,7 +2282,6 @@ if(y_type.$is_sequence && $B.$isinstance(x,[_b_.float,_b_.complex])){$B.RAISE(_b
 var res
 var fail
 var op_method=$B.search_in_mro(x_type,op,$B.NULL)
-var test=false 
 if(test){console.log('x',x,'op',op,'op_method',op_method)}
 if(op_method !==$B.NULL){if(test){console.log('type(op_method) has __get__ ?',_b_.hasattr(op_method,'__get__'))}
 var getter=$B.$getattr($B.get_class(op_method),'__get__',$B.NULL)
@@ -4948,9 +4952,7 @@ return res}}catch(err){
 if($B.get_option('debug')> 2){console.log('error in dir, obj',obj,'klass',klass,$B.$getattr(klass,'__dir__'),err.message)}
 throw err}}
 _b_.divmod=function(x,y){check_nb_args_no_kw('divmod',2,arguments)
-try{
-return $B.rich_op('__divmod__',x,y)}catch(err){if($B.is_exc(err,[_b_.TypeError])){return _b_.tuple.$factory([$B.rich_op('__floordiv__',x,y),$B.rich_op('__mod__',x,y)])}
-throw err}}
+return $B.rich_op('__divmod__',x,y)}
 var enumerate=_b_.enumerate
 enumerate.__mro__=[_b_.object]
 enumerate.$factory=function(){var $ns=$B.args("enumerate",2,{iterable:null,start:null},arguments,{start:0},null,null)
@@ -10491,8 +10493,9 @@ var y=toBigInt(other)
 if(y===$B.NULL){return _b_.NotImplemented}
 if(y==0n){$B.RAISE(_b_.ZeroDivisionError,"integer division or modulo by zero")}
 var x=toBigInt(self)
+if(x===$B.NULL){return _b_.NotImplemented}
 return int_or_long((x % y+y)% y)}
-_b_.int.nb_divmod=function(self,other){if(toBigInt(other)===$B.NULL){return _b_.NotImplemented}
+_b_.int.nb_divmod=function(self,other){if(toBigInt(other)===$B.NULL ||toBigInt(self)===$B.NULL){return _b_.NotImplemented}
 return $B.fast_tuple([int.nb_floor_divide(self,other),int.nb_remainder(self,other)])}
 _b_.int.nb_power=function(self,other,z){var[x,y]=[self,other].map(toBigInt)
 if(x===$B.NULL ||y===$B.NULL){return _b_.NotImplemented}
@@ -11545,7 +11548,9 @@ var _num2=x.imag.value*y.real.value-
 x.real.value*y.imag.value
 return make_complex($B.fast_float(_num/_div),$B.fast_float(_num2/_div))}
 _b_.complex.tp_hash=function(self){
-return $B.$hash(self.real)+$B.$hash(self.imag)*1000003}
+return _b_.int.nb_add(
+$B.$hash(self.real),_b_.int.nb_multiply($B.$hash(self.imag),1000003)
+)}
 _b_.complex.tp_new=function(cls,args,kw){var nb_args=args.length+$B.str_dict_length(kw)
 if(nb_args > 2){$B.RAISE(_b_.TypeError,`complex() takes at most 2 arguments (${nb_args} given)`
 )}else if(nb_args==0){var res=make_complex(0,0)

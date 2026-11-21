@@ -654,6 +654,9 @@ $B.str_digits_check_threshold = 640
 // maximum array size (Javascript constraint)
 $B.max_array_size = 2 ** 32 - 1
 
+// maxsize
+$B.maxsize = 2n ** 63n - 1n
+
 $B.recursion_limit = 900
 
 // Mapping between operators and special Python method names
@@ -712,6 +715,8 @@ for (var category in $B.op2method) {
         $B.method_to_op[method] = op
     }
 }
+
+$B.method_to_op.__divmod__ = 'divmod()'
 
 // Symbols
 $B.OB_TYPE = Symbol('OB_TYPE') // object type

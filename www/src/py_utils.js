@@ -1906,6 +1906,12 @@ $B.rich_op1 = function(op, x, y) {
         return x + y
     }
 
+    var test = false // op == '__floordiv__'
+    
+    if (test) {
+        console.log(op, x, y)
+    }
+
     var x_type = $B.get_class(x),
         y_type = $B.get_class(y)
 
@@ -1913,6 +1919,9 @@ $B.rich_op1 = function(op, x, y) {
         method
     if (x_type === y_type) {
         // For objects of the same type, don't try the reversed operator
+        if (test) {
+            console.log(op, 'same type', x_type.tp_name)
+        }
         method = $B.$getattr(x_type, op, $B.NULL)
         if (method === $B.NULL) {
             var kl_name = $B.class_name(x)
@@ -1955,7 +1964,7 @@ $B.rich_op1 = function(op, x, y) {
     var res
     var fail
     var op_method = $B.search_in_mro(x_type, op, $B.NULL)
-    var test = false // $B.get_name(x_type) == 'MagicMock'
+
     if (test) {
         console.log('x', x, 'op', op, 'op_method', op_method)
     }
@@ -1982,6 +1991,7 @@ $B.rich_op1 = function(op, x, y) {
             return res
         }
     }
+
     $B.RAISE(_b_.TypeError,
         `unsupported operand type(s) for ${$B.method_to_op[op]}:` +
         ` '${$B.class_name(x)}' and '${$B.class_name(y)}'`)

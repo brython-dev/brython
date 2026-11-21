@@ -955,7 +955,7 @@ _b_.float.nb_remainder = function(self, other) {
 }
 
 _b_.float.nb_divmod = function(self, other) {
-    var [x, y] = conv_float(self, other) //self = conv_float(self)
+    var [x, y] = conv_float(self, other)
     if (x === $B.NULL || y === $B.NULL) {
         return _b_.NotImplemented
     }
