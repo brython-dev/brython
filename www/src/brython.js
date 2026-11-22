@@ -749,8 +749,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-11-22 11:16:28.715711"
-__BRYTHON__.timestamp=1795342588715
+__BRYTHON__.compiled_date="2026-11-22 11:40:44.177915"
+__BRYTHON__.timestamp=1795344044177
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -1793,9 +1793,13 @@ var test=false
 if(test){console.log('make js iterator',it)}
 var next_func=$B.$getattr($B.get_class(it),'__next__',null)
 if(test){console.log('next_func',next_func)}
-if(next_func !==null){return{
+if(next_func !==null){
+var native=next_func.$iternext_of
+return{
 [Symbol.iterator](){return this},next(){set_lineno(frame,lineno)
 try{
+if(native !==undefined){var res=native.tp_iternext(it).next()
+return res.done ?{done:true,value:null}:res}
 var value=$B.$call(next_func,it)
 return{done:false,value}}catch(err){if($B.is_exc(err,[_b_.StopIteration])){return{done:true,value:null}}
 if(inum){$B.set_inum(inum)}
@@ -2210,7 +2214,7 @@ if($B.get_mro(y.ob_type).indexOf(x.ob_type)>-1){y_rev_func=$B.$getattr($B.get_cl
 res=$B.$call(y_rev_func,y,x)
 if(res !==_b_.NotImplemented){return res}}}
 var in_mro=$B.search_in_mro($B.get_class(x),op)
-if(in_mro===undefined){$B.RAISE(_b_TypeError,`no attribute ${op}`)}
+if(in_mro===undefined){$B.RAISE(_b_.TypeError,`no attribute ${op}`)}
 var getter=$B.get_class(in_mro).tp_descr_get
 if(getter){var comp_func=getter(in_mro,x)
 res=$B.$call(comp_func,y)}else{
@@ -3806,17 +3810,20 @@ $B.set_func_names(method,"builtins")
 $B.method_descriptor.tp_repr=function(self){var name=self.d_name
 var class_name=self.d_type.tp_name
 return `<method '${name}' of '${class_name}' objects>`}
+function check_receiver(self,obj){var klass=$B.get_class(obj)
+if(klass !==self.d_type && ! $B.get_mro(klass).includes(self.d_type)){$B.RAISE(_b_.TypeError,`descriptor '${self.d_name}' for `+
+`'${$B.get_name(self.d_type)}' objects doesn't apply to a `+
+`'${$B.class_name(obj)}' object`)}}
 $B.method_descriptor.tp_call=function(self,...args){if(args.length==0){var name=self.d_name
 var class_name=self.d_type.tp_name
 $B.RAISE(_b_.TypeError,`unbound method ${class_name}.${name}() needs an argument`
 )}
-if(! $B.get_mro($B.get_class(args[0])).includes(self.d_type)){$B.RAISE(_b_.TypeError,`descriptor '${self.d_name}' for `+
-`'${$B.get_name(self.d_type)}' objects doesn't apply to a `+
-`'${$B.class_name(args[0])}' object`)}
+check_receiver(self,args[0])
 try{
 var res=self.method(...args)
 return res}catch(err){throw err}}
 $B.method_descriptor.tp_descr_get=function(self,obj,klass){if(obj===$B.NULL){return self}
+check_receiver(self,obj)
 var f=self.method.bind(null,obj)
 f.ob_type=$B.builtin_method
 f.$infos=self.$infos
@@ -3898,6 +3905,7 @@ if(! _b_.issubclass($B.get_class(self),descr.d_type)){$B.RAISE(_b_.TypeError,`de
 )}
 return descr.wrapped(...args)}
 $B.wrapper_descriptor.tp_descr_get=function(self,obj,type){if(obj===$B.NULL){return self}
+check_receiver(self,obj)
 var res={ob_type:$B.method_wrapper,d_name:self.d_name,d_type:self.d_type,self:obj,wrapped:self.wrapped}
 return res}
 var wrapper_descriptor_funcs=$B.wrapper_descriptor.tp_funcs={}
@@ -4945,7 +4953,7 @@ delete frame[3][name]}}else if(locals_id !==null && locals_id[name]!==undefined)
 del(locals_id[name])
 delete locals_id[name]}
 if(! found){$B.set_inum(inum)
-if(locals_id=='local'){$B.RAISE(_b_.UnboundLocalError,`cannot access local variable '${name}' `+
+if(locals_id==='local'){$B.RAISE(_b_.UnboundLocalError,`cannot access local variable '${name}' `+
 'where it is not associated with a value')}else{
 throw $B.name_error(name)}}}
 _b_.dir=function(obj){if(obj===undefined){
@@ -11646,7 +11654,7 @@ let arg=args[0]
 let arg_class=$B.get_class(arg)
 let res
 if($B.exact_type(arg,complex)&& cls===complex){return arg}
-if(typeof arg=="string"){let first=args
+if(typeof arg=="string"){let first=arg
 let second
 first=first.trim()
 if(first.startsWith("(")&& first.endsWith(")")){first=first.substr(1)
@@ -12217,16 +12225,13 @@ dict_funcs.fromkeys=function(){var $=$B.args("fromkeys",3,{cls:null,keys:null,va
 var keys=$.keys,value=$.value
 var cls=$.cls
 var res=$B.$call(cls),klass=$B.get_class(res),
-is_fd_subclass=_b_.issubclass(klass,_b_.frozendict),keys_iter=$B.$iter(keys)
+is_fd_subclass=_b_.issubclass(klass,_b_.frozendict),keys_iter=$B.make_js_iterator(keys,$B.NULL)
 if(is_fd_subclass){
 let x=$B.empty_dict()
 for(let[k,v]of $B.dict_key_values(res)){_b_.dict.$setitem(x,k,v)}
 res=x}
 let setitem=$B.$getattr($B.get_class(res),'__setitem__')
-while(1){try{
-var key=_b_.next(keys_iter)
-$B.$call(setitem,res,key,value)}catch(err){if($B.is_exc(err,[_b_.StopIteration])){break}
-throw err}}
+for(let key of keys_iter){$B.$call(setitem,res,key,value)}
 if(is_fd_subclass){res[$B.OB_TYPE]=cls}
 return res}
 dict_funcs.get=function(self){var $=$B.args("get",3,{self:null,key:null,_default:null},arguments,{_default:_b_.None})
@@ -13070,10 +13075,10 @@ typeof obj=="string" ||obj instanceof String){return obj}else if($B.exact_type(o
 $B.exact_type(obj,_b_.tuple)||
 $B.exact_type(obj,js_array)){let res=new Array(obj.length)
 for(var i=0,len=obj.length;i < len;++i){res[i]=$B.pyobj2structuredclone(obj[i],strict)}
-return res}else if($B.is_dict(obj)){if(strict){for(var entry of _b_.dict.$iter_items(obj)){if(typeof entry.key !=='string'){$B.RAISE(_b_.TypeError,"a dictionary with non-string "+
+return res}else if($B.is_dict(obj)){if(strict){for(let[k,v]of $B.dict_key_values(obj)){if(typeof k !=='string'){$B.RAISE(_b_.TypeError,"a dictionary with non-string "+
 "keys does not support structured clone")}}}
 let res={}
-for(var entry of _b_.dict.$iter_items(obj)){res[to_simple(entry.key)]=$B.pyobj2structuredclone(entry.value,strict)}
+for(let[k,v]of $B.dict_key_values(obj)){res[to_simple(k)]=$B.pyobj2structuredclone(v,strict)}
 return res}else if($B.is_big_int(obj)){return $B.int_value(obj)}else if(Object.getPrototypeOf(obj).constructor===Object){var res={}
 for(var key in obj){res[key]=$B.pyobj2structuredclone(obj[key],strict)}
 return res}else{
@@ -13107,6 +13112,8 @@ $B.init_dict(res)
 return res}
 JSGenerator.tp_iter=function(self){return self}
 JSGenerator.tp_iternext=function*(self){for(var item of self.js_gen){yield jsobj2pyobj(item)}}
+JSGenerator.tp_getattro=function(self,attr){if(! attr.startsWith('__')&& attr in self.js_gen){return jsobj2pyobj(self.js_gen[attr],self.js_gen)}
+return _b_.object.tp_getattro(self,attr)}
 var jsobj2pyobj=$B.jsobj2pyobj=function(jsobj,_this){
 if(jsobj===null){return null}else if(jsobj===undefined){return _b_.None}
 switch(typeof jsobj){case 'boolean':
@@ -13191,11 +13198,10 @@ if(has_type(klass,_b_.dict)){
 let jsobj={}
 memo=memo ?? new Map()
 memo.set(pyobj,jsobj)
-for(var entry of _b_.dict.$iter_items(pyobj)){var key=entry.key
-if(typeof key !=="string"){key=_b_.str.$factory(key)}
-if(typeof entry.value==='function'){
-entry.value.bind(jsobj)}
-jsobj[key]=pyobj2jsobj(entry.value,memo)}
+for(let[k,v]of $B.dict_key_values(pyobj)){if(typeof k !=="string"){k=_b_.str.$factory(k)}
+if(typeof v==='function'){
+v.bind(jsobj)}
+jsobj[k]=pyobj2jsobj(v,memo)}
 pyobj[JSOBJ]=jsobj
 PYOBJ_MAP.set(jsobj,pyobj)
 return jsobj}
@@ -13299,8 +13305,8 @@ var js_iterator=$B.make_builtin_class('js_iterator')
 js_iterator.tp_iternext=function*(self){for(var key of self.it){yield key}}
 $B.set_func_names(js_iterator,'builtins')
 function dict_to_js(d){var res={}
-for(var entry of _b_.dict.$iter_items(d)){if(typeof entry.key !=='string'){return $B.NULL}
-res[entry.key]=pyobj2jsobj(entry.value)}
+for(let[k,v]of $B.dict_key_values(d)){if(typeof k !=='string'){return $B.NULL}
+res[k]=pyobj2jsobj(v)}
 return res}
 function JSObj_eq(self,other){if(typeof self !=='object'){return false}
 if($B.is_dict(self)){self=dict_to_js(self)
@@ -13388,9 +13394,24 @@ if(test){console.log('jsobj2pyobj on',js_attr)}
 var res=jsobj2pyobj(js_attr)
 if(test){console.log('    res',res)}
 return res}}
+function refused_write(self,attr,err){if(err?.name !=='TypeError'){throw err}
+var klass=$B.class_name(self)
+for(var obj=self;obj !==null;obj=Object.getPrototypeOf(obj)){var desc=Object.getOwnPropertyDescriptor(obj,attr)
+if(desc===undefined){continue}
+if(desc.set){throw err}
+if(desc.get){$B.RAISE_ATTRIBUTE_ERROR(`property '${attr}' of '${klass}' `+
+'object has no setter',self,attr)}
+if(! desc.writable){$B.RAISE_ATTRIBUTE_ERROR(`attribute '${attr}' of '${klass}' `+
+'objects is not writable',self,attr)}
+break}
+if(! Object.isExtensible(self)){$B.RAISE_ATTRIBUTE_ERROR(`'${klass}' object has no attribute `+
+`'${attr}' and no __dict__ for setting new attributes`,self,attr)}
+throw err}
 $B.JSObj.tp_setattro=function(self,attr,value){if(value===$B.NULL){delete self[attr]
 return}
-self[attr]=$B.pyobj2jsobj(value)
+var js_value=$B.pyobj2jsobj(value)
+try{
+self[attr]=js_value}catch(err){refused_write(self,attr,err)}
 return _b_.None}
 $B.JSObj.mp_subscript=function(_self,key){if(typeof key=="string"){var res=$B.JSObj.tp_getattro(_self,key)
 if(res===$B.NULL){$B.RAISE(_b_.KeyError,key)}
@@ -13413,6 +13434,14 @@ if(typeof self=='function' && self.$js_func.name &&
 globalThis[self.$js_func.name]===self.$js_func){return `<function window.${self.$js_func.name}>`}
 var js_repr=Object.prototype.toString.call(self)
 return `<Javascript object: ${js_repr}>`}
+function own_text(obj){if(Array.isArray(obj)||ArrayBuffer.isView(obj)){return false}
+for(var o=obj;o !==null;o=Object.getPrototypeOf(o)){var desc=Object.getOwnPropertyDescriptor(o,'toString')
+if(desc !==undefined){var objects=Object.getPrototypeOf(o)===null &&
+Object.hasOwn(o,'isPrototypeOf')
+return typeof desc.value=='function' && ! objects}}
+return false}
+$B.JSObj.tp_str=function(self){if(typeof self=='object' && self !==null && own_text(self)){return String(self)}
+return _b_.repr(self)}
 var JSObj_funcs=$B.JSObj.tp_funcs={}
 JSObj_funcs.__dir__=function(self){var attrs=Object.keys(self)
 attrs=attrs.sort()
@@ -13645,7 +13674,7 @@ new_js_class.tp_bases=[bases[0]]
 new_js_class.__mro__=[bases[0],_b_.object]
 new_js_class.__qualname__=new_js_class.__name__=class_name
 new_js_class.$is_js_class=true
-for(var item of _b_.dict.$iter_items(cl_dict)){new_js_class[item.key]=item.value}
+for(let[k,v]of $B.dict_key_values(cl_dict)){new_js_class[k]=v}
 return new_js_class}
 $B.set_func_names($B.JSMeta,"builtins")
 $B.JSConstructor=$B.make_builtin_class('JavascriptConstructor',[_b_.type])
@@ -14645,7 +14674,8 @@ var coroutine=$B.coroutine
 coroutine.tp_repr=function(self){if(self.$func.$function_infos){return "<coroutine "+self.$func.$function_infos[$B.func_attrs.name]+">"}else{
 return "<coroutine object>"}}
 $B.coroutine.tp_finalize=function(self){}
-$B.coroutine.am_await=function(self){}
+$B.coroutine.am_await=function(self){return{
+ob_type:$B.coroutine_wrapper,coroutine:self,state:'created'}}
 var coroutine_funcs=$B.coroutine.tp_funcs={}
 coroutine_funcs.__class_getitem__=function(self){}
 coroutine_funcs.__name___get=function(self){}
@@ -14685,6 +14715,26 @@ $B.coroutine.tp_members=[["cr_origin",$B.TYPES.OBJECT,"cr_origin_or_finalizer",1
 $B.coroutine.tp_getset=["__name__","__qualname__","cr_await","cr_running","cr_frame","cr_code","cr_suspended"
 ]
 $B.set_func_names(coroutine,"builtins")
+var coroutine_wrapper=$B.coroutine_wrapper
+coroutine_wrapper.tp_iter=function(self){return self}
+coroutine_wrapper.tp_iternext=function*(self){yield coroutine_wrapper.tp_funcs.send(self,_b_.None)}
+var coroutine_wrapper_funcs=coroutine_wrapper.tp_funcs={}
+coroutine_wrapper_funcs.send=function(self,value){switch(self.state){case 'created':
+if(value !==_b_.None){$B.RAISE(_b_.TypeError,"can't send non-None value to a just-started coroutine")}
+self.state='yielded'
+return self.coroutine
+case 'yielded':
+self.state='done'
+$B.RAISE(_b_.StopIteration,value)}
+$B.RAISE(_b_.RuntimeError,'cannot reuse already awaited coroutine')}
+coroutine_wrapper_funcs.throw=function(self,exc){if(self.state=='created'){coroutine_funcs.close(self.coroutine)}
+self.state='done'
+throw $B.is_type(exc)? $B.$call(exc):exc}
+coroutine_wrapper_funcs.close=function(self){if(self.state=='created'){coroutine_funcs.close(self.coroutine)}
+self.state='done'
+return _b_.None}
+coroutine_wrapper.tp_methods=["send","throw","close"]
+$B.set_func_names(coroutine_wrapper,"builtins")
 var unawaited=new FinalizationRegistry(function(created){var current=$B.frame_obj
 $B.frame_obj={frame:created.frame,prev:null,count:1}
 try{
@@ -14727,11 +14777,26 @@ throw $B.exception(err)})}
 var awaitable=$B.$getattr(obj,'__await__',null)
 if(awaitable !==null){
 awaitable=$B.$call(awaitable)
-if($B.$getattr(awaitable,'__next__',null)===null){$B.RAISE(_b_.TypeError,'__await__() returned non-iterator'+
+var next_method=$B.$getattr(awaitable,'__next__',null)
+if(next_method===null){$B.RAISE(_b_.TypeError,'__await__() returned non-iterator'+
 ` of type '${$B.class_name(awaitable)}'`)}
-return awaitable}
+return run_await(awaitable,next_method)}
 $B.RAISE(_b_.TypeError,`object ${$B.class_name(obj)} `+
-`can't be used in 'await' expression`)}})(__BRYTHON__);
+`can't be used in 'await' expression`)}
+async function run_await(iterator,next_method){var frame_obj=$B.frame_obj,step=()=> $B.$call(next_method)
+while(true){try{
+var yielded=step()}catch(err){$B.frame_obj=frame_obj
+if($B.is_exc(err,[_b_.StopIteration])){return err.value}
+throw err}
+try{
+var sent=yielded===_b_.None ? await _b_.None :
+await $B.promise(yielded)
+step=sent===_b_.None ?()=> $B.$call(next_method):
+()=> $B.$call($B.$getattr(iterator,'send'),sent)}catch(err){var thrown=$B.exception(err),throw_method=$B.$getattr(iterator,'throw',null)
+if(throw_method===null){$B.frame_obj=frame_obj
+throw thrown}
+step=()=> $B.$call(throw_method,thrown)}
+$B.frame_obj=frame_obj}}})(__BRYTHON__);
 ;
 
 "use strict";
@@ -16623,7 +16688,7 @@ $B.set_to_dict(cls,rdunder,$B.wrapper_descriptor.$factory(
 cls,rdunder,func
 ))}}
 $B.wrapper_methods=Object.create(null)
-Object.assign($B.wrapper_methods,{am_aiter:wrap('__aiter__'),am_anext:wrap('__anext__'),bf_getbuffer:wrap('__buffer__'),bf_releasebuffer:wrap('__release_buffer__'),mp_length:wrap('__len__'),mp_subscript:wrap('__getitem__'),mp_ass_subscript:make_setitem_delitem,nb_absolute:wrap('__abs__'),nb_add:wrap_with_reflected('__add__','__radd__'),nb_and:wrap_with_reflected('__and__','__rand__'),nb_bool:wrap('__bool__'),nb_divmod:wrap_with_reflected('__divmod__','__rdivmod__'),nb_floor_divide:wrap_with_reflected('__floordiv__','__rfloordiv__'),nb_float:wrap('__float__'),nb_index:wrap('__index__'),nb_lshift:wrap_with_reflected('__lshift__','__rlshift__'),nb_inplace_add :wrap('__iadd__'),nb_inplace_and :wrap('__iand__'),nb_inplace_floor_divide :wrap('__ifloordiv__'),nb_inplace_lshift :wrap('__ilshift__'),nb_inplace_matrix_multiply :wrap('__imatmul__'),nb_inplace_multiply :wrap('__imul__'),nb_inplace_or :wrap('__ior__'),nb_inplace_remainder :wrap('__imod__'),nb_inplace_power :wrap('__ipow__'),nb_inplace_subtract :wrap('__isub__'),nb_inplace_true_divide :wrap('__itruediv__'),nb_inplace_rshift :wrap('__irshift__'),nb_inplace_xor :wrap('__ixor__'),nb_int :wrap('__int__'),nb_invert:wrap('__invert__'),nb_matrix_multiply:wrap_with_reflected('__matmul__','__rmatmul__'),nb_multiply:wrap_with_reflected('__mul__','__rmul__'),nb_negative:wrap('__neg__'),nb_or:wrap_with_reflected('__or__','__ror__'),nb_positive:wrap('__pos__'),nb_power:wrap_with_reflected('__pow__','__rpow__'),nb_remainder:wrap_with_reflected('__mod__','__rmod__'),nb_subtract:wrap_with_reflected('__sub__','__rsub__'),nb_rshift:wrap_with_reflected('__rshift__','__rrshift__'),nb_true_divide:wrap_with_reflected('__truediv__','__rtruediv__'),nb_xor:wrap_with_reflected('__xor__','__rxor__'),sq_ass_item:make_setitem_delitem,sq_concat:wrap('__add__'),sq_contains:wrap('__contains__'),sq_length:wrap('__len__'),sq_repeat:wrap_with_same_reflected('__mul__','__rmul__'),tp_call:wrap('__call__'),tp_descr_get:wrap('__get__'),tp_descr_set:make_set_del,tp_doc:make_doc,tp_getattro:make_getattribute,tp_finalize:wrap('__del__'),tp_hash:wrap('__hash__'),tp_init:wrap('__init__'),tp_iter:wrap('__iter__'),tp_iternext:make_next,tp_match_args:make_match_args,tp_new:make_new,tp_repr:wrap('__repr__',1),tp_str :wrap('__str__',1),tp_setattro:make_setattr_delattr,tp_richcompare:make_richcompare}
+Object.assign($B.wrapper_methods,{am_aiter:wrap('__aiter__'),am_anext:wrap('__anext__'),am_await:wrap('__await__'),bf_getbuffer:wrap('__buffer__'),bf_releasebuffer:wrap('__release_buffer__'),mp_length:wrap('__len__'),mp_subscript:wrap('__getitem__'),mp_ass_subscript:make_setitem_delitem,nb_absolute:wrap('__abs__'),nb_add:wrap_with_reflected('__add__','__radd__'),nb_and:wrap_with_reflected('__and__','__rand__'),nb_bool:wrap('__bool__'),nb_divmod:wrap_with_reflected('__divmod__','__rdivmod__'),nb_floor_divide:wrap_with_reflected('__floordiv__','__rfloordiv__'),nb_float:wrap('__float__'),nb_index:wrap('__index__'),nb_lshift:wrap_with_reflected('__lshift__','__rlshift__'),nb_inplace_add :wrap('__iadd__'),nb_inplace_and :wrap('__iand__'),nb_inplace_floor_divide :wrap('__ifloordiv__'),nb_inplace_lshift :wrap('__ilshift__'),nb_inplace_matrix_multiply :wrap('__imatmul__'),nb_inplace_multiply :wrap('__imul__'),nb_inplace_or :wrap('__ior__'),nb_inplace_remainder :wrap('__imod__'),nb_inplace_power :wrap('__ipow__'),nb_inplace_subtract :wrap('__isub__'),nb_inplace_true_divide :wrap('__itruediv__'),nb_inplace_rshift :wrap('__irshift__'),nb_inplace_xor :wrap('__ixor__'),nb_int :wrap('__int__'),nb_invert:wrap('__invert__'),nb_matrix_multiply:wrap_with_reflected('__matmul__','__rmatmul__'),nb_multiply:wrap_with_reflected('__mul__','__rmul__'),nb_negative:wrap('__neg__'),nb_or:wrap_with_reflected('__or__','__ror__'),nb_positive:wrap('__pos__'),nb_power:wrap_with_reflected('__pow__','__rpow__'),nb_remainder:wrap_with_reflected('__mod__','__rmod__'),nb_subtract:wrap_with_reflected('__sub__','__rsub__'),nb_rshift:wrap_with_reflected('__rshift__','__rrshift__'),nb_true_divide:wrap_with_reflected('__truediv__','__rtruediv__'),nb_xor:wrap_with_reflected('__xor__','__rxor__'),sq_ass_item:make_setitem_delitem,sq_concat:wrap('__add__'),sq_contains:wrap('__contains__'),sq_length:wrap('__len__'),sq_repeat:wrap_with_same_reflected('__mul__','__rmul__'),tp_call:wrap('__call__'),tp_descr_get:wrap('__get__'),tp_descr_set:make_set_del,tp_doc:make_doc,tp_getattro:make_getattribute,tp_finalize:wrap('__del__'),tp_hash:wrap('__hash__'),tp_init:wrap('__init__'),tp_iter:wrap('__iter__'),tp_iternext:make_next,tp_match_args:make_match_args,tp_new:make_new,tp_repr:wrap('__repr__',1),tp_str :wrap('__str__',1),tp_setattro:make_setattr_delattr,tp_richcompare:make_richcompare}
 )
 function make_doc(cls){var in_dict=$B.get_from_dict(cls,'__doc__',$B.NULL)
 if(in_dict===$B.NULL){$B.set_to_dict(cls,'__doc__',cls.tp_doc)}}
@@ -16651,6 +16716,7 @@ var res=itn.next()
 if(res.done){$B.RAISE(_b_.StopIteration,res.value)}
 return res.value}
 next_func.ob_type=$B.function
+next_func.$iternext_of=cls
 var descr=$B.wrapper_descriptor.$factory(
 cls,'__next__',next_func
 )
