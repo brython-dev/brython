@@ -1811,7 +1811,7 @@ $B.rich_comp = function(op, x, y) {
 
     var in_mro = $B.search_in_mro($B.get_class(x), op)
     if (in_mro === undefined) {
-        $B.RAISE(_b_TypeError, `no attribute ${op}`)
+        $B.RAISE(_b_.TypeError, `no attribute ${op}`)
     }
     var getter = $B.get_class(in_mro).tp_descr_get
     if (getter) {
