@@ -523,15 +523,15 @@ _b_.enumerate.tp_new = function(cls, args, kw) {
     }
     var [iterable, start] = args
     $B.check_expected_keywords('enumerate', kw, ['iterable', 'start'])
-    for (var entry of _b_.dict.$iter_items(kw)) {
-        switch (entry.key) {
+    for (let [k, v] of $B.dict_key_values(kw)) {
+        switch (k) {
             case 'iterable':
                 if (iterable !== undefined) {
                     $B.RAISE(_b_.TypeError,
                         "enumerate() receives argument 'iterable' twice"
                     )
                 }
-                iterable = entry.value
+                iterable = v
                 break
             case 'start':
                 if (start !== undefined) {
@@ -539,7 +539,7 @@ _b_.enumerate.tp_new = function(cls, args, kw) {
                         "enumerate() receives argument 'start' twice"
                     )
                 }
-                start = entry.value
+                start = v
                 break
         }
     }

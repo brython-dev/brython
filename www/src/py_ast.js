@@ -202,14 +202,13 @@ function AST_init() {
         _b_.set.tp_funcs.discard(remaining_fields, name)
     }
     if (kw) {
-        for (let entry of _b_.dict.$iter_items(kw)) {
-            let key = entry.key
-            if (fields.includes(key)) {
-                let p = _b_.set.tp_funcs.discard(remaining_fields, key)
+        for (let [k, v] of $B.dict_key_values(kw)) {
+            if (fields.includes(k)) {
+                let p = _b_.set.tp_funcs.discard(remaining_fields, k)
                 if (p == 0) {
                     $B.RAISE(_b_.TypeError,
                         `${_b_.repr(self)} got multiple values ` +
-                        `for argument ${key}`
+                        `for argument ${k}`
                     )
                 }
             } else {
@@ -217,24 +216,24 @@ function AST_init() {
                 if (attributes === null) {
                     attributes = $B.$getattr(cls, '_attributes')
                 }
-                if (! attributes.includes(key)) {
+                if (! attributes.includes(k)) {
                     let minor = $B.implementation[1]
                     if (minor < 15) {
                         $B.warn(_b_.DeprecationWarning,
                             `${cls.tp_name}.__init__ got an unexpected ` +
-                            `keyword argument '${key}'. Support for ` +
+                            `keyword argument '${k}'. Support for ` +
                             `arbitrary keyword arguments is deprecated ` +
                             `and will be removed in Python 3.15.`
                         )
                     } else {
                         $B.RAISE(_b_.TypeError,
                             `${$B.class_name(self)}.__init__ ` +
-                            `got an unexpected keyword argument ${key}`
+                            `got an unexpected keyword argument ${k}`
                         )
                     }
                 }
             }
-            $B.$setattr(self, key, entry.value)
+            $B.$setattr(self, k, v)
         }
     }
     let size = _b_.set.mp_length(remaining_fields)
@@ -492,8 +491,8 @@ $B.create_python_ast_classes = function() {
             return res
             for (let key in $) {
                 if (key == 'kw') {
-                    for (let item of _b_.dict.$iter_items($.kw)) {
-                        $B.set_to_dict(res, item.key, item.value)
+                    for (let [k, v] of $B.dict_key_values($.kw)) {
+                        $B.set_to_dict(res, k, v)
                     }
                 } else {
                     $B.set_to_dict(res, key, $[key])

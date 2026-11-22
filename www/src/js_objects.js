@@ -48,16 +48,16 @@ $B.pyobj2structuredclone = function(obj, strict) {
         return res
     } else if ($B.is_dict(obj)) {
         if (strict) {
-            for (var entry of _b_.dict.$iter_items(obj)) {
-                if (typeof entry.key !== 'string') {
+            for (let [k, v] of $B.dict_key_values(obj)) {
+                if (typeof k !== 'string') {
                     $B.RAISE(_b_.TypeError, "a dictionary with non-string " +
                         "keys does not support structured clone")
                 }
             }
         }
         let res = {}
-        for (var entry of _b_.dict.$iter_items(obj)) {
-            res[to_simple(entry.key)] = $B.pyobj2structuredclone(entry.value, strict)
+        for (let [k, v] of $B.dict_key_values(obj)) {
+            res[to_simple(k)] = $B.pyobj2structuredclone(v, strict)
         }
         return res
     } else if ($B.is_big_int(obj)) {
@@ -399,16 +399,15 @@ var pyobj2jsobj = $B.pyobj2jsobj = function(pyobj, memo) {
         let jsobj = {}
         memo = memo ?? new Map()
         memo.set(pyobj, jsobj)
-        for (var entry of _b_.dict.$iter_items(pyobj)) {
-            var key = entry.key
-            if (typeof key !== "string") {
-                key = _b_.str.$factory(key)
+        for (let [k, v] of $B.dict_key_values(pyobj)) {
+            if (typeof k !== "string") {
+                k = _b_.str.$factory(k)
             }
-            if (typeof entry.value === 'function') {
+            if (typeof v === 'function') {
                 // set "this" to jsobj
-                entry.value.bind(jsobj)
+                v.bind(jsobj)
             }
-            jsobj[key] = pyobj2jsobj(entry.value, memo)
+            jsobj[k] = pyobj2jsobj(v, memo)
         }
         pyobj[JSOBJ] = jsobj
         PYOBJ_MAP.set(jsobj, pyobj)
@@ -659,11 +658,11 @@ $B.set_func_names(js_iterator, 'builtins')
 
 function dict_to_js(d) {
     var res = {}
-    for (var entry of _b_.dict.$iter_items(d)) {
-        if (typeof entry.key !== 'string') {
+    for (let [k, v] of $B.dict_key_values(d)) {
+        if (typeof k !== 'string') {
             return $B.NULL
         }
-        res[entry.key] = pyobj2jsobj(entry.value)
+        res[k] = pyobj2jsobj(v)
     }
     return res
 }
@@ -1632,8 +1631,8 @@ $B.JSMeta.tp_new = function(cls, args, kw) {
     new_js_class.__mro__ = [bases[0], _b_.object]
     new_js_class.__qualname__ = new_js_class.__name__ = class_name
     new_js_class.$is_js_class = true
-    for (var item of _b_.dict.$iter_items(cl_dict)) {
-        new_js_class[item.key] = item.value
+    for (let [k, v] of $B.dict_key_values(cl_dict)) {
+        new_js_class[k] = v
     }
     return new_js_class
 }
