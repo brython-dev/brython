@@ -737,6 +737,9 @@ $B.make_js_iterator = function(iterator, frame, lineno, inum) {
     }
 
     if (next_func !== null) {
+        // the __next__ of a builtin iterator: its tp_iternext walked
+        // without a StopIteration at the end of the loop
+        var native = next_func.$iternext_of
         return {
             [Symbol.iterator](){
                 return this
@@ -744,6 +747,10 @@ $B.make_js_iterator = function(iterator, frame, lineno, inum) {
             next(){
                 set_lineno(frame, lineno)
                 try {
+                    if (native !== undefined) {
+                        var res = native.tp_iternext(it).next()
+                        return res.done ? {done: true, value: null} : res
+                    }
                     var value = $B.$call(next_func, it)
                     return {done: false, value}
                 } catch (err) {

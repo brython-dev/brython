@@ -201,6 +201,8 @@ function make_next(cls) {
         return res.value
     }
     next_func.ob_type = $B.function
+    // read by $B.make_js_iterator, which walks tp_iternext itself
+    next_func.$iternext_of = cls
     var descr = $B.wrapper_descriptor.$factory(
         cls,
         '__next__',
