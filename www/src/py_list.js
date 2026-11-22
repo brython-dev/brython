@@ -945,14 +945,15 @@ list_funcs.sort = function(self) {
     var func = _b_.None,
         reverse = false
 
-    for (var item of _b_.dict.$iter_items($.kw)) {
-        if (item.key == "key") {
-            func = item.value
-        } else if (item.key == "reverse") {
-            reverse = item.value
+    for (let [k, v] of $B.dict_key_values($.kw)) {
+        if (k == "key") {
+            func = v
+        } else if (k == "reverse") {
+            reverse = v
         } else {
-            $B.RAISE(_b_.TypeError, "'" + item.key +
-                "' is an invalid keyword argument for this function")
+            $B.RAISE(_b_.TypeError,
+                `'${k}' is an invalid keyword argument for this function`
+            )
         }
     }
     if (self.length == 0) {

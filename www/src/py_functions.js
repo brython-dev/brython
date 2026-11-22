@@ -549,8 +549,8 @@ function_funcs.__kwdefaults___set = function(self, value) {
     }
     self.$infos.__kwdefaults__ = value
     var kwd = {}
-    for (var item of _b_.dict.$iter_items(value)) {
-        kwd[item.key] = item.value
+    for (let [k, v] of $B.dict_key_values(value)) {
+        kwd[k] = v
     }
     self.$function_infos[$B.func_attrs.__kwdefaults__] = kwd
     // Make a new version of arguments parser

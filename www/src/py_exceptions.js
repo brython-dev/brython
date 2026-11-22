@@ -846,13 +846,13 @@ _b_.KeyError.tp_str = function(self) {
 $B.set_func_names(_b_.KeyError, 'builtins')
 
 $B.set_expected_kwargs = function(obj, expected, kwargs) {
-    for (var item of _b_.dict.$iter_items(kwargs)) {
-        if (expected.includes(item.key)) {
-            obj[item.key] = item.value
+    for (let [k, v] of $B.dict_key_values(kwargs)) {
+        if (expected.includes(k)) {
+            obj[k] = v
         } else {
             var msg = `${$B.class_name(obj)}()  got an unexpected ` +
-                      `keyword argument '${item.key}'`
-            var suggestions = calculate_suggestions(expected, item.key)
+                      `keyword argument '${k}'`
+            var suggestions = calculate_suggestions(expected, k)
             if (suggestions) {
                 msg += `. Did you mean '${suggestions}'?`
             }

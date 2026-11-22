@@ -160,12 +160,12 @@ function int_hash(x) {
 int.$factory = function(value, base) {
     var [args, kw] = $B.parse_args_kw('int', arguments)
     var base = _b_.None
-    for (var item of _b_.dict.$iter_items(kw)) {
-        if (item.key == 'base') {
-            base = item.value
+    for (let [k, v] of $B.dict_key_values(kw)) {
+        if (k == 'base') {
+            base = v
         } else {
             $B.RAISE(_b_.TypeError,
-                `int() got an unexpected keyword argument: '${item.key}'`
+                `int() got an unexpected keyword argument: '${k}'`
             )
         }
     }

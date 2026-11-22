@@ -36,10 +36,6 @@ $B.module_setattr = function(module, attr, value) {
     _b_.dict.$setitem($B.get_dict(module), attr, value)
 }
 
-$B.module_items = function(module) {
-    return _b_.dict.$iter_items($B.get_dict(module))
-}
-
 $B.module.tp_methods = ["__dir__"]
 
 $B.module.tp_getset = ["__annotations__", "__annotate__"]
@@ -145,11 +141,11 @@ module_funcs.__dir__ = function(self) {
         return $B.$call(dir_func)
     }
     var names = []
-    for (var item of _b_.dict.$iter_items($B.get_dict(self))) {
+    for (let [k, v] of $B.dict_key_values($B.get_dict(self))) {
         // Skip internal names such as $annotations, which the compiler adds
         // to a module that has annotations; no Python identifier starts with $.
-        if (item.key[0] !== '$') {
-            names.push(item.key)
+        if (k[0] !== '$') {
+            names.push(k)
         }
     }
     return $B.$list(names.sort())
@@ -359,20 +355,20 @@ function run_js(module_contents, path, _module) {
         modobj[new_key] = globalThis[new_key]
         delete globalThis[new_key]
     }
-    for (var entry of _b_.dict.$iter_items($B.get_dict(modobj))) {
-        if (typeof entry.value == "function") {
-            if (! entry.value.$infos) {
-                entry.value.$infos = {
+    for (let [k, v] of $B.dict_key_values($B.get_dict(modobj))) {
+        if (typeof v == "function") {
+            if (! v.$infos) {
+                v.$infos = {
                     __module__: _module.__name__,
                     __name__: attr,
                     __qualname__: attr
                 }
             }
-            entry.value.$in_js_module = true
-            entry.value.func_module = mod_name
-        }else if($B.$isinstance(entry.value, _b_.type) &&
-                entry.value.func_module === undefined){
-            entry.value.func_module = mod_name
+            v.$in_js_module = true
+            v.func_module = mod_name
+        }else if($B.$isinstance(v, _b_.type) &&
+                v.func_module === undefined){
+            v.func_module = mod_name
         }
     }
     return true
@@ -1569,10 +1565,10 @@ $B.import = function(mod_name, fromlist, aliases, locals, inum) {
         }
         if (__all__ === thunk) {
             // from mod_name import * ... when __all__ is not defined
-            for (var item of _b_.dict.$iter_items($B.get_dict(modobj))) {
-                var attr = item.key
+            for (let [k, v] of $B.dict_key_values($B.get_dict(modobj))) {
+                let attr = k
                 if (attr[0] !== "_") {
-                    locals[attr] = item.value
+                    locals[attr] = v
                 }
             }
         } else {
@@ -1714,11 +1710,11 @@ $B.$import_from = function(module, name, aliases, level, locals, inum) {
         // get names from a package
         if (name == '*') {
             // eg "from .common import *"
-            for (var item of $B.module_items(current_module)) {
-                if (item.key.startsWith('$') || item.key.startsWith('_')) {
+            for (let [k, v] of $B.dict_key_values($B.get_dict(current_module))) {
+                if (k.startsWith('$') || k.startsWith('_')) {
                     continue
                 }
-                locals[item.key] = item.value
+                locals[k] = v
             }
         } else {
             var ns, alias
