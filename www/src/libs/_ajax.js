@@ -71,9 +71,9 @@ function _read(req) {
 
 function stringify(d) {
     var items = []
-    for (var entry of _b_.dict.$iter_items(d)) {
-        items.push(encodeURIComponent(entry.key) + "=" +
-                   encodeURIComponent(entry.value))
+    for (let [k, v] of $B.dict_key_values(d)) {
+        items.push(encodeURIComponent(k) + "=" +
+                   encodeURIComponent(v))
     }
     return items.join("&")
 }
@@ -87,10 +87,9 @@ function handle_kwargs(self, kw, method) {
         timeout = {},
         rawdata
 
-    for (var item of _b_.dict.$iter_items(kw)) {
-        var key = item.key
+    for (let [key, value] of $B.dict_key_values(kw)) {
         if (key == "data") {
-            var rawdata = item.value
+            var rawdata = value
             if (typeof rawdata == "string" || rawdata instanceof FormData) {
                 data = rawdata
             } else if ($B.exact_type(rawdata, _b_.dict)) {
@@ -102,28 +101,27 @@ function handle_kwargs(self, kw, method) {
                     $B.class_name(rawdata))
             }
         } else if (key == "encoding") {
-            encoding = item.value
+            encoding = value
         } else if (key == "headers") {
-            var value = item.value
             if (! $B.is_dict(value)) {
                 $B.RAISE(_b_.ValueError,
                     "headers must be a dict, not " + $B.class_name(value))
             }
-            for (var subitem of _b_.dict.$iter_items(value)) {
-                headers[subitem.key.toLowerCase()] = subitem.value
+            for (let [k, v] of $B.dict_key_values(value)) {
+                headers[k.toLowerCase()] = v
             }
         } else if (key.startsWith("on")) {
             var event = key.substr(2)
             if (event == "timeout") {
-                timeout.func = item.value
+                timeout.func = value
             } else {
-                var f = item.value
+                var f = value
                 ajax.tp_funcs.bind(self, event, f)
             }
         } else if (key == "mode") {
-            var mode = item.value
+            var mode = value
         } else if (key == "timeout") {
-            timeout.seconds = item.value
+            timeout.seconds = value
         } else if (key == "cache") {
             cache = item.value
         }
@@ -316,8 +314,8 @@ function file_upload() {
                 formdata.append(d[0], d[1])
             }
         } else if ($B.is_dict(rawdata)) {
-            for (var item of _b_.dict.$iter_items(rawdata)) {
-                formdata.append(item.key, item.value)
+            for (let [k, v] of $B.dict_key_values(rawdata)) {
+                formdata.append(k, v)
             }
         } else {
             $B.RAISE(_b_.ValueError,
@@ -478,8 +476,8 @@ ajax_funcs.send = function(self, params) {
             // content-type so we may as well override that header if it was set
             // by the user.
             res = new FormData()
-            for (var item of _b_.dict.$iter_items(params)) {
-                add_to_res(res, _b_.str.$factory(item.key), item.value)
+            for (let [k, v] of $B.dict_key_values(params)) {
+                add_to_res(res, _b_.str.$factory(k), v)
             }
         } else {
             if(self.$method && self.$method.toUpperCase() == "POST" &&
@@ -488,16 +486,16 @@ ajax_funcs.send = function(self, params) {
                 self.js.setRequestHeader("Content-Type",
                     "application/x-www-form-urlencoded")
             }
-            for (var item of _b_.dict.$iter_items(params)) { //i = 0, len = items.length; i < len; i++){
-                var key = encodeURIComponent(_b_.str.$factory(item.key));
-                if ($B.is_list(item.value)) {
-                    for (var elt of item.value) {
+            for (let [k, v] of $B.dict_key_values(params)) { //i = 0, len = items.length; i < len; i++){
+                var key = encodeURIComponent(_b_.str.$factory(k));
+                if ($B.is_list(v)) {
+                    for (var elt of v) {
                         res += key +'=' +
                             encodeURIComponent(_b_.str.$factory(elt)) + '&'
                     }
                 } else {
                     res += key + '=' +
-                        encodeURIComponent(_b_.str.$factory(item.value)) + '&'
+                        encodeURIComponent(_b_.str.$factory(v)) + '&'
                 }
             }
             res = res.substr(0, res.length - 1)

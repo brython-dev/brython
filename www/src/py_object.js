@@ -611,15 +611,15 @@ object_funcs.__getstate__ = function(self) {
         if (! (klass.tp_flags & $B.TPFLAGS.HEAPTYPE)) {
             continue
         }
-        for (var entry of _b_.dict.$iter_items($B.get_dict(klass))) {
-            var md = entry.value
-            if (seen.has(entry.key) || $B.get_class(md) !== $B.member_descriptor) {
+        for (let [k, v] of $B.dict_key_values($B.get_dict(klass))) {
+            var md = v
+            if (seen.has(k) || $B.get_class(md) !== $B.member_descriptor) {
                 continue
             }
-            seen.add(entry.key)
+            seen.add(k)
             if (self[md.d_member.attr] !== undefined) {
                 sd = sd ?? $B.empty_dict()
-                _b_.dict.$setitem(sd, entry.key, self[md.d_member.attr])
+                _b_.dict.$setitem(sd, k, self[md.d_member.attr])
             }
         }
     }
@@ -677,8 +677,8 @@ object_funcs.__reduce__ = function(cls) {
 
     res.push($B.fast_tuple(args))
     var d = $B.empty_dict()
-    for (var entry of _b_.dict.$iter_items($B.get_dict(cls))) {
-        $B.str_dict_set(d, entry.key, entry.value)
+    for (let [k, v] of $B.dict_key_values($B.get_dict(cls))) {
+        $B.str_dict_set(d, k, v)
     }
     res.push(d)
     return _b_.tuple.$factory(res)
@@ -729,11 +729,11 @@ object_funcs.__reduce_ex__ = function(self, protocol) {
         var d = $B.empty_dict(),
             nb = 0
         if ($B.get_dict(self)) {
-            for (var item of _b_.dict.$iter_items($B.get_dict(self))) {
-                if (item.key == "__class__" || item.key.startsWith("$")) {
+            for (let [k, v] of $B.dict_key_values($B.get_dict(self))) {
+                if (k == "__class__" || k.startsWith("$")) {
                     continue
                 }
-                _b_.dict.$setitem(d, item.key, item.value)
+                _b_.dict.$setitem(d, k, v)
                 nb++
             }
         }

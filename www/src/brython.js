@@ -749,8 +749,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-11-22 11:40:44.177915"
-__BRYTHON__.timestamp=1795344044177
+__BRYTHON__.compiled_date="2026-11-22 19:57:59.073340"
+__BRYTHON__.timestamp=1795373879073
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -1560,10 +1560,9 @@ plural='s'}
 var verb=nb_pos==1 ? 'was' :'were'
 return $B.EXC(_b_.TypeError,fname+'() takes '+
 `${expected} positional argument${plural} but ${nb_pos} ${verb} given`)}
-$B.check_expected_keywords=function(name,kw,expected){for(var entry of _b_.dict.$iter_items(kw)){var key=entry.key
-if(! expected.includes(key)){var suggestion=
-$B.offer_suggestions_for_unexpected_keyword_error(expected,key)
-throw unexpected_keyword(name,key,suggestion)}}}
+$B.check_expected_keywords=function(name,kw,expected){for(let[k,v]of $B.dict_key_values(kw)){if(! expected.includes(k)){var suggestion=
+$B.offer_suggestions_for_unexpected_keyword_error(expected,k)
+throw unexpected_keyword(name,k,suggestion)}}}
 function unexpected_keyword(fname,k,suggestion){var msg=`${fname}() got an unexpected keyword argument '${k}'`
 if(suggestion !==_b_.None){msg+=`. Did you mean: '${suggestion}'?`}
 return $B.EXC(_b_.TypeError,msg)}
@@ -1641,13 +1640,12 @@ if(vararg){slots[vararg]=$B.fast_tuple(varargs)}
 return slots}
 $B.parse_kwargs=function(kw_args,fname){var kwa=kw_args[0]
 for(var i=1,len=kw_args.length;i < len;i++){var kw_arg=kw_args[i],key,value
-if($B.get_class(kw_arg)===_b_.dict){for(var entry of _b_.dict.$iter_items(kw_arg)){key=entry.key
-if($B.is_str(key)){key=_b_.str.$to_string(key)}else{
+if($B.get_class(kw_arg)===_b_.dict){for(let[k,v]of $B.dict_key_values(kw_arg)){if($B.is_str(k)){k=_b_.str.$to_string(k)}else{
 $B.RAISE(_b_.TypeError,`${fname}() keywords must be strings`
 )}
-if(kwa[key]!==undefined){$B.RAISE(_b_.TypeError,`${fname}() got multiple values for keyword argument '${key}'`
+if(kwa[k]!==undefined){$B.RAISE(_b_.TypeError,`${fname}() got multiple values for keyword argument '${k}'`
 )}else{
-kwa[key]=entry.value}}}else{
+kwa[k]=v}}}else{
 var cls=$B.get_class(kw_arg)
 try{
 var keys_method=$B.$getattr(cls,'keys')}catch(err){$B.RAISE(_b_.TypeError,`${fname}() argument `+
@@ -1758,22 +1756,6 @@ if(klass===$B.JSObj){return 'Javascript '+obj.constructor.name}else{
 return klass.tp_name ?? klass.__name__}}
 $B.get_mro=function(klass){return klass.tp_mro ?? klass.__mro__}
 $B.get_name=function(klass){return klass.tp_name ?? klass.__name__}
-$B.unpack_mapping=function(func,obj){var items=[]
-if($B.is_dict(obj)){for(var item of _b_.dict.$iter_items(obj)){if(! $B.is_str(item.key)){$B.RAISE(_b_.TypeError,'keywords must be strings')}
-items.push(item)}
-return items}
-var klass=$B.get_class(obj)
-var getitem=$B.$getattr(klass,'__getitem__',null)
-if(getitem===null){$B.RAISE(_b_.TypeError,`'${$B.class_name(obj)}' object `+
-'is not subscriptable')}
-var key_func=$B.$getattr(klass,'keys',null)
-if(key_func===null){var f=`${func.$infos.__module__}.${func.$infos.__name__}`
-$B.RAISE(_b_.TypeError,`${f}() argument after **`+
-` must be a mapping, not ${$B.class_name(obj)}`)}
-var keys=$B.$call($B.$getattr(klass,'keys'),obj)
-for(var key of $B.make_js_iterator(keys)){if(! $B.is_str(key)){$B.RAISE(_b_.TypeError,'keywords must be strings')}
-items.push({key,value:$B.$getitem1(obj,key)})}
-return items}
 $B.make_js_iterator_no_trace=function(iterator){if(Array.isArray(iterator)){if(iterator.ob_type===_b_.list ||iterator.ob_type===_b_.tuple){return iterator[Symbol.iterator]()}else if(! iterator.ob_type){return iterator.map($B.jsobj2pyobj)[Symbol.iterator]()}}
 return $B.make_js_iterator(iterator,$B.NULL)}
 $B.clip_index=function(state,low,high){
@@ -2581,11 +2563,11 @@ object_funcs.__getstate__=function(self){$B.meth_noargs('object.__getstate__',ar
 var dict=$B.get_dict(self)
 var sd=null,seen=new Set()
 for(var klass of $B.get_mro($B.get_class(self))){if(!(klass.tp_flags & $B.TPFLAGS.HEAPTYPE)){continue}
-for(var entry of _b_.dict.$iter_items($B.get_dict(klass))){var md=entry.value
-if(seen.has(entry.key)||$B.get_class(md)!==$B.member_descriptor){continue}
-seen.add(entry.key)
+for(let[k,v]of $B.dict_key_values($B.get_dict(klass))){var md=v
+if(seen.has(k)||$B.get_class(md)!==$B.member_descriptor){continue}
+seen.add(k)
 if(self[md.d_member.attr]!==undefined){sd=sd ?? $B.empty_dict()
-_b_.dict.$setitem(sd,entry.key,self[md.d_member.attr])}}}
+_b_.dict.$setitem(sd,k,self[md.d_member.attr])}}}
 if(sd !==null){var d1=(dict !==undefined && dict !==null &&
 _b_.dict.mp_length(dict)> 0)? dict :_b_.None
 return $B.fast_tuple([d1,sd])}
@@ -2611,7 +2593,7 @@ if(B===object){args.push(_b_.None)}else{
 args.push($B.$call(B,cls))}
 res.push($B.fast_tuple(args))
 var d=$B.empty_dict()
-for(var entry of _b_.dict.$iter_items($B.get_dict(cls))){$B.str_dict_set(d,entry.key,entry.value)}
+for(let[k,v]of $B.dict_key_values($B.get_dict(cls))){$B.str_dict_set(d,k,v)}
 res.push(d)
 return _b_.tuple.$factory(res)}
 object_funcs.__reduce_ex__=function(self,protocol){var klass=$B.get_class(self)
@@ -2635,8 +2617,8 @@ res.push($B.fast_tuple(arg2))
 var getstate=$B.search_in_mro(klass,'__getstate__')
 if(getstate){var d=$B.$call(getstate,self)}else{
 var d=$B.empty_dict(),nb=0
-if($B.get_dict(self)){for(var item of _b_.dict.$iter_items($B.get_dict(self))){if(item.key=="__class__" ||item.key.startsWith("$")){continue}
-_b_.dict.$setitem(d,item.key,item.value)
+if($B.get_dict(self)){for(let[k,v]of $B.dict_key_values($B.get_dict(self))){if(k=="__class__" ||k.startsWith("$")){continue}
+_b_.dict.$setitem(d,k,v)
 nb++}}
 if(nb==0){d=_b_.None}}
 res.push(d)
@@ -4124,7 +4106,7 @@ function_funcs.__kwdefaults___set=function(self,value){$B.check_infos(self)
 if(value==_b_.None){value=$B.empty_dict()}else if(! $B.is_dict(value)){$B.RAISE(_b_.TypeError,'__kwdefaults__ must be set to a dict object')}
 self.$infos.__kwdefaults__=value
 var kwd={}
-for(var item of _b_.dict.$iter_items(value)){kwd[item.key]=item.value}
+for(let[k,v]of $B.dict_key_values(value)){kwd[k]=v}
 self.$function_infos[$B.func_attrs.__kwdefaults__]=kwd
 reset_args_parser(self)}
 function_funcs.__name___get=function(self){return self.$function_infos[$B.func_attrs.__name__]}
@@ -4989,15 +4971,15 @@ if(nb_args > 2){$B.RAISE(_b_.TypeError,`enumerate() takes at most 2 arguments ($
 )}
 var[iterable,start]=args
 $B.check_expected_keywords('enumerate',kw,['iterable','start'])
-for(var entry of _b_.dict.$iter_items(kw)){switch(entry.key){case 'iterable':
+for(let[k,v]of $B.dict_key_values(kw)){switch(k){case 'iterable':
 if(iterable !==undefined){$B.RAISE(_b_.TypeError,"enumerate() receives argument 'iterable' twice"
 )}
-iterable=entry.value
+iterable=v
 break
 case 'start':
 if(start !==undefined){$B.RAISE(_b_.TypeError,"enumerate() receives argument 'start' twice"
 )}
-start=entry.value
+start=v
 break}}
 var res={ob_type:cls,it:$B.make_js_iterator(iterable),counter:$B.PyNumber_Index(start ?? 0)}
 $B.init_dict(res)
@@ -6456,7 +6438,7 @@ var dict=$B.get_dict(self)
 if(self.args && dict && ! $B.str_dict_empty(dict)){return $B.fast_tuple([$B.get_class(self),$B.fast_tuple(self.args),dict])}else{
 return $B.fast_tuple([$B.get_class(self),$B.fast_tuple(self.args)])}}
 BaseException_funcs.__setstate__=function(self,state){if(state !=_b_.None){if(! $B.is_dict(state)){$B.RAISE(_b_.TypeError,"state is not a dictionary")}
-for(var entry of _b_.dict.$iter_items(state)){_b_.object.tp_setattro(self,entry.key,entry.value)}}
+for(let[k,v]of $B.dict_key_values(state)){_b_.object.tp_setattro(self,k,v)}}
 return _b_.None}
 BaseException_funcs.__traceback___get=function(self){return self.__traceback__ ?? _b_.None}
 BaseException_funcs.__traceback___set=function(self,value){if(value===$B.NULL){$B.RAISE(_b_.TypeError,"__traceback__ may not be deleted")}
@@ -6528,10 +6510,10 @@ _b_.IOError=_b_.OSError
 _b_.KeyError.tp_str=function(self){if(self.args.length==1){return _b_.repr(self.args[0])}
 return _b_.BaseException.tp_str(self)}
 $B.set_func_names(_b_.KeyError,'builtins')
-$B.set_expected_kwargs=function(obj,expected,kwargs){for(var item of _b_.dict.$iter_items(kwargs)){if(expected.includes(item.key)){obj[item.key]=item.value}else{
+$B.set_expected_kwargs=function(obj,expected,kwargs){for(let[k,v]of $B.dict_key_values(kwargs)){if(expected.includes(k)){obj[k]=v}else{
 var msg=`${$B.class_name(obj)}()  got an unexpected `+
-`keyword argument '${item.key}'`
-var suggestions=calculate_suggestions(expected,item.key)
+`keyword argument '${k}'`
+var suggestions=calculate_suggestions(expected,k)
 if(suggestions){msg+=`. Did you mean '${suggestions}'?`}
 $B.RAISE(_b_.TypeError,msg)}}}
 function set_exception_members(obj,expected,kwargs){for(var name of expected){obj[name]=_b_.None}
@@ -9352,20 +9334,20 @@ if(typeof res=="string" ||$B.$isinstance(res,str)){return res}
 $B.RAISE(_b_.TypeError,`${$B.class_name(args[0])}.__str__() must `+
 `return a str, not ${$B.class_name(res)}`
 )}
-for(var entry of _b_.dict.$iter_items(kw)){switch(entry.key){case 'encoding':
+for(let[k,v]of $B.dict_key_values(kw)){switch(k){case 'encoding':
 if(encoding !==undefined){$B.RAISE(_b_.TypeError,`argument for str() given by name ('encoding') `+
 'and position (2)'
 )}
-encoding=entry.value
+encoding=v
 break
 case 'errors':
 if(errors !==undefined){$B.RAISE(_b_.TypeError,`argument for str() given by name ('errors') `+
 'and position (3)'
 )}
-errors=entry.value
+errors=v
 break
 default:
-$B.RAISE(_b_.TypeError,`str() got an unexpected keyword: '${entry.key}'`
+$B.RAISE(_b_.TypeError,`str() got an unexpected keyword: '${k}'`
 )}}
 if(arg===''){return arg}
 var res
@@ -10367,8 +10349,8 @@ var _hash=sign*(self_pos % modulus)
 return int_or_long(_hash)}
 int.$factory=function(value,base){var[args,kw]=$B.parse_args_kw('int',arguments)
 var base=_b_.None
-for(var item of _b_.dict.$iter_items(kw)){if(item.key=='base'){base=item.value}else{
-$B.RAISE(_b_.TypeError,`int() got an unexpected keyword argument: '${item.key}'`
+for(let[k,v]of $B.dict_key_values(kw)){if(k=='base'){base=v}else{
+$B.RAISE(_b_.TypeError,`int() got an unexpected keyword argument: '${k}'`
 )}}
 var value
 switch(args.length){case 0:
@@ -12033,7 +12015,7 @@ function dict_init(self,args,kw){if(args===undefined){console.log('args undef')
 console.log(Error('trace').stack)}
 if(args.length > 1){$B.RAISE(_b_.TypeError,"dict expected at most 1 argument"+
 `, got ${args.length}`)}else if(args.length==1){dict_update_arg(self,args[0])}
-for(let item of _b_.dict.$iter_items(kw)){dict.$setitem(self,item.key,item.value)}
+for(let[k,v]of $B.dict_key_values(kw)){dict.$setitem(self,k,v)}
 return _b_.None}
 function dict_repr(self){if($B.repr.enter(self)){return "{...}"}
 let res=[]
@@ -12938,9 +12920,9 @@ list_funcs.sort=function(self){var $=$B.args("sort",1,{self:null},arguments,null
 if($.args.length > 0){$B.RAISE(_b_.TypeError,"sort() takes no positional arguments")}
 check_not_tuple(self,"sort")
 var func=_b_.None,reverse=false
-for(var item of _b_.dict.$iter_items($.kw)){if(item.key=="key"){func=item.value}else if(item.key=="reverse"){reverse=item.value}else{
-$B.RAISE(_b_.TypeError,"'"+item.key+
-"' is an invalid keyword argument for this function")}}
+for(let[k,v]of $B.dict_key_values($.kw)){if(k=="key"){func=v}else if(k=="reverse"){reverse=v}else{
+$B.RAISE(_b_.TypeError,`'${k}' is an invalid keyword argument for this function`
+)}}
 if(self.length==0){return _b_.None}
 self.$cl=$elts_class(self)
 var cmp=null
@@ -13041,8 +13023,8 @@ _b_.sentinel.tp_new=function(cls,args,kw){if(args.length !=1){$B.RAISE(_b_.TypeE
 )}
 let __name__=args[0]
 let repr=__name__
-for(var entry of _b_.dict.$iter_items(kw)){if(entry.key=='repr'){repr=entry.value}else{
-$B.RAISE(_b_.TypeError,`sentinel() got an unexpected keyword argument '${entry.key}'`
+for(let[k,v]of $B.dict_key_values(kw)){if(k=='repr'){repr=v}else{
+$B.RAISE(_b_.TypeError,`sentinel() got an unexpected keyword argument '${k}'`
 )}}
 let frame=$B.frame_obj.frame
 let module=frame[2]
@@ -14438,7 +14420,7 @@ DOMNode_funcs.style_set=function(self,style){
 if(typeof style==='string'){self.style=style
 return}else if(!$B.is_dict(style)){$B.RAISE(_b_.TypeError,"style must be str or dict, not "+
 $B.class_name(style))}
-for(var item of _b_.dict.$iter_items(style)){var key=item.key,value=item.value
+for(let[k,v]of $B.dict_key_values(style)){var key=k,value=v
 if(key.toLowerCase()=="float"){self.style.cssFloat=value
 self.style.styleFloat=value}else{
 switch(key){case "top":
@@ -14812,7 +14794,6 @@ Module.tp_init(self,name,doc,$package)
 return self}
 $B.module_getattr=function(module,attr){return $B.get_from_dict(module,attr,$B.NULL)}
 $B.module_setattr=function(module,attr,value){_b_.dict.$setitem($B.get_dict(module),attr,value)}
-$B.module_items=function(module){return _b_.dict.$iter_items($B.get_dict(module))}
 $B.module.tp_methods=["__dir__"]
 $B.module.tp_getset=["__annotations__","__annotate__"]
 $B.module.tp_repr=function(self){var name=$B.module_getattr(self,'__name__')
@@ -14856,8 +14837,8 @@ module_funcs.__dir__=function(self){$B.meth_noargs('module.__dir__',arguments)
 var dir_func=$B.module_getattr(self,'__dir__')
 if(dir_func !==$B.NULL){return $B.$call(dir_func)}
 var names=[]
-for(var item of _b_.dict.$iter_items($B.get_dict(self))){
-if(item.key[0]!=='$'){names.push(item.key)}}
+for(let[k,v]of $B.dict_key_values($B.get_dict(self))){
+if(k[0]!=='$'){names.push(k)}}
 return $B.$list(names.sort())}
 $B.module.tp_methods=["__dir__"]
 $B.module.tp_getset=["__annotations__","__annotate__","__dict__" 
@@ -14933,10 +14914,10 @@ modobj.ob_type=Module
 $B.module_setattr(modobj,'__name__',mod_name)
 for(var new_key of new_keys){modobj[new_key]=globalThis[new_key]
 delete globalThis[new_key]}
-for(var entry of _b_.dict.$iter_items($B.get_dict(modobj))){if(typeof entry.value=="function"){if(! entry.value.$infos){entry.value.$infos={__module__:_module.__name__,__name__:attr,__qualname__:attr}}
-entry.value.$in_js_module=true
-entry.value.func_module=mod_name}else if($B.$isinstance(entry.value,_b_.type)&&
-entry.value.func_module===undefined){entry.value.func_module=mod_name}}
+for(let[k,v]of $B.dict_key_values($B.get_dict(modobj))){if(typeof v=="function"){if(! v.$infos){v.$infos={__module__:_module.__name__,__name__:attr,__qualname__:attr}}
+v.$in_js_module=true
+v.func_module=mod_name}else if($B.$isinstance(v,_b_.type)&&
+v.func_module===undefined){v.func_module=mod_name}}
 return true}
 function run_py(module_contents,path,module,compiled){
 var filename=$B.module_getattr(module,'__file__')
@@ -15399,8 +15380,8 @@ throw err}
 if(__all__ !==thunk){
 aliases={}}}
 if(__all__===thunk){
-for(var item of _b_.dict.$iter_items($B.get_dict(modobj))){var attr=item.key
-if(attr[0]!=="_"){locals[attr]=item.value}}}else{
+for(let[k,v]of $B.dict_key_values($B.get_dict(modobj))){let attr=k
+if(attr[0]!=="_"){locals[attr]=v}}}else{
 if(test){console.log('modobj',modobj)}
 for(let name of __all__){var[ns,alias]=[locals,name]
 if(aliases[name]){[ns,alias]=aliases[name]}
@@ -15459,8 +15440,8 @@ var submodule=$B.module_getattr(current_module,'__name__')+
 $B.import(submodule,[],{},{},inum)
 current_module=$B.imported[submodule]}
 if(name=='*'){
-for(var item of $B.module_items(current_module)){if(item.key.startsWith('$')||item.key.startsWith('_')){continue}
-locals[item.key]=item.value}}else{
+for(let[k,v]of $B.dict_key_values($B.get_dict(current_module))){if(k.startsWith('$')||k.startsWith('_')){continue}
+locals[k]=v}}else{
 var ns,alias
 if(aliases[name]){[ns,alias]=aliases[name]}else{
 [ns,alias]=[locals,name]}
@@ -16515,22 +16496,21 @@ if(numfields < args.length){$B.RAISE(_b_.TypeError,`${$B.class_name(self)} const
 for(let i=0,len=args.length;i < len;i++){let name=fields[i]
 $B.$setattr(self,name,args[i])
 _b_.set.tp_funcs.discard(remaining_fields,name)}
-if(kw){for(let entry of _b_.dict.$iter_items(kw)){let key=entry.key
-if(fields.includes(key)){let p=_b_.set.tp_funcs.discard(remaining_fields,key)
+if(kw){for(let[k,v]of $B.dict_key_values(kw)){if(fields.includes(k)){let p=_b_.set.tp_funcs.discard(remaining_fields,k)
 if(p==0){$B.RAISE(_b_.TypeError,`${_b_.repr(self)} got multiple values `+
-`for argument ${key}`
+`for argument ${k}`
 )}}else{
 if(attributes===null){attributes=$B.$getattr(cls,'_attributes')}
-if(! attributes.includes(key)){let minor=$B.implementation[1]
+if(! attributes.includes(k)){let minor=$B.implementation[1]
 if(minor < 15){$B.warn(_b_.DeprecationWarning,`${cls.tp_name}.__init__ got an unexpected `+
-`keyword argument '${key}'. Support for `+
+`keyword argument '${k}'. Support for `+
 `arbitrary keyword arguments is deprecated `+
 `and will be removed in Python 3.15.`
 )}else{
 $B.RAISE(_b_.TypeError,`${$B.class_name(self)}.__init__ `+
-`got an unexpected keyword argument ${key}`
+`got an unexpected keyword argument ${k}`
 )}}}
-$B.$setattr(self,key,entry.value)}}
+$B.$setattr(self,k,v)}}
 let size=_b_.set.mp_length(remaining_fields)
 if(size > 0){let field_types=$B.$getattr(cls,'_field_types',$B.NULL)
 if(field_types===$B.NULL){
@@ -16639,7 +16619,7 @@ cls.$factory=function(){var res={ob_type:cls}
 $B.init_dict(res)
 AST_init(res,...arguments)
 return res
-for(let key in $){if(key=='kw'){for(let item of _b_.dict.$iter_items($.kw)){$B.set_to_dict(res,item.key,item.value)}}else{
+for(let key in $){if(key=='kw'){for(let[k,v]of $B.dict_key_values($.kw)){$B.set_to_dict(res,k,v)}}else{
 $B.set_to_dict(res,key,$[key])}}
 return res}
 if(_fields){$B.set_to_dict(cls,'_fields',$B.fast_tuple(_fields))
@@ -17224,9 +17204,9 @@ indent()
 js+=prefix+`$B.set_add(result_${id}, item)\n`
 dedent()
 js+=prefix+'}\n'}else{js+=prefix+`$B.set_add(result_${id}, ${elt})\n`}}else{
-if(value===undefined){js+=prefix+`for(var item of _b_.dict.$iter_items(${key})){\n`
+if(value===undefined){js+=prefix+`for(let [k, v] of $B.dict_key_values(${key})){\n`
 indent()
-js+=prefix+`_b_.dict.$setitem(result_${id}, item.key, item.value)\n`
+js+=prefix+`_b_.dict.$setitem(result_${id}, k, v)\n`
 dedent()
 js+=prefix+'}\n'}else{js+=prefix+`_b_.dict.$setitem(result_${id}, ${key}, ${value})\n`}}
 dedent()
@@ -19257,8 +19237,8 @@ function SET_SCOPE(DICT,NAME,I){DICT[NAME]=I}
 function is_free_in_any_child(entry,key){for(var child_ste of entry.ste_children){var scope=_PyST_GetScope(child_ste,key)
 if(scope==SF.FREE){return 1}}
 return 0}
-function inline_comprehension(ste,comp,scopes,comp_free,inlined_cells){for(var item of _b_.dict.$iter_items(comp.symbols)){
-var k=item.key,comp_flags=item.value
+function inline_comprehension(ste,comp,scopes,comp_free,inlined_cells){for(let[k,v]of $B.dict_key_values(comp.symbols)){
+var comp_flags=v
 if(comp_flags & SF.DEF_PARAM){continue}
 var scope=(comp_flags >> SF.SCOPE_OFFSET)& SF.SCOPE_MASK
 var only_flags=comp_flags &((1 << SF.SCOPE_OFFSET)-1)
@@ -19328,9 +19308,9 @@ res=free.delete('__classdict__')
 if(res){ste.needs_class_classdict=1}
 return 1}
 function update_symbols(symbols,scopes,bound,free,inlined_cells,classflag){var v,v_scope,v_new,v_free
-for(let entry of _b_.dict.$iter_items(symbols)){let name=entry.key
+for(let[k,v]of $B.dict_key_values(symbols)){let name=k
 var test=false 
-let flags=entry.value
+let flags=v
 if(test){console.log('in update symbols, name',name,'flags',flags,flags & SF.DEF_COMP_CELL)}
 if(inlined_cells.has(name)){flags |=SF.DEF_COMP_CELL}
 v_scope=scopes[name]
@@ -19363,8 +19343,8 @@ let inlined_cells=new Set()
 if(ste.type===ClassBlock){
 Set_Union(newglobal,global)
 if(bound){Set_Union(newbound,bound)}}
-for(let entry of _b_.dict.$iter_items(ste.symbols)){var name=entry.key
-var flags=entry.value
+for(let[k,v]of $B.dict_key_values(ste.symbols)){var name=k
+var flags=v
 if(!analyze_name(ste,scopes,name,flags,bound,local,free,global,typeparams,class_entry)){return 0}}
 if(ste.type !=ClassBlock){
 if(_PyST_IsFunctionLike(ste)){Set_Union(newbound,local)}

@@ -280,13 +280,13 @@ var module = {
             alphabet = ALPH.BASE64_ALPHABET,
             strict_mode = true,
             canonical = false
-        for (let entry of _b_.dict.$iter_items(kw)) {
-            switch (entry.key) {
+        for (let [k, v] of $B.dict_key_values(kw)) {
+            switch (k) {
                 case 'strict_mode':
-                    strict_mode = entry.value
+                    strict_mode = v
                     break
                 case 'alphabet':
-                    alphabet = entry.value
+                    alphabet = v
                     if (! $B.exact_type(alphabet, _b_.bytes)) {
                         $B.RAISE(_b_.TypeError,
                             `a2b_base64() argument 'alphabet' must be ` +
@@ -295,18 +295,18 @@ var module = {
                     }
                     break
                 case 'padded':
-                    padded = $B.$bool(entry.value)
+                    padded = $B.$bool(v)
                     break
                 case 'canonical':
-                    canonical = entry.value
+                    canonical = v
                     break
                 case 'ignorechars':
-                    ignorechars = entry.value
+                    ignorechars = v
                     break
                 default:
                     $B.RAISE(_b_.TypeError,
                         `a2b_base64() got an unexpected keyword argument ` +
-                        `'${entry.key}'`
+                        `'${k}'`
                     )
             }
         }

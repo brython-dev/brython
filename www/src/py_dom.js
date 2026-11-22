@@ -1347,9 +1347,9 @@ DOMNode_funcs.style_set = function(self, style) { // style is a dict
         $B.RAISE(_b_.TypeError, "style must be str or dict, not " +
             $B.class_name(style))
     }
-    for (var item of _b_.dict.$iter_items(style)) {
-        var key = item.key,
-            value = item.value
+    for (let [k, v] of $B.dict_key_values(style)) {
+        var key = k,
+            value = v
         if (key.toLowerCase() == "float") {
             self.style.cssFloat = value
             self.style.styleFloat = value

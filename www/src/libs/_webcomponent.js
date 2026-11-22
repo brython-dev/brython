@@ -144,20 +144,18 @@ function define(tag_name, cls, options) {
     var mro = cls.tp_mro
     for (var i = mro.length - 1; i >= 0; i--) {
         var pcls = mro[i]
-        for (var entry of _b_.dict.$iter_items($B.get_dict(pcls))) {
-            var key = entry.key,
-                value = entry.value
-            if((! webcomp.hasOwnProperty(key)) &&
-                    typeof value == "function"){
-                webcomp.prototype[key] = (function(attr, v) {
+        for (let [k, v] of $B.dict_key_values($B.get_dict(pcls))) {
+            if((! webcomp.hasOwnProperty(k)) &&
+                    typeof v == "function"){
+                webcomp.prototype[k] = (function(attr, f) {
                     return function() {
                         try {
-                            return $B.$call(v, $B.DOMNode.$factory(this), ...arguments)
+                            return $B.$call(f, $B.DOMNode.$factory(this), ...arguments)
                         } catch (err) {
                             $B.show_error(err)
                         }
                     }
-                })(key, value)
+                })(k, v)
             }
         }
     }

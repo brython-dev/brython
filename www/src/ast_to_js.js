@@ -1080,9 +1080,9 @@ function make_comp(scopes, consumed) {
         }
     } else {
         if(value === undefined){
-            js += prefix + `for(var item of _b_.dict.$iter_items(${key})){\n`
+            js += prefix + `for(let [k, v] of $B.dict_key_values(${key})){\n`
             indent()
-            js += prefix + `_b_.dict.$setitem(result_${id}, item.key, item.value)\n`
+            js += prefix + `_b_.dict.$setitem(result_${id}, k, v)\n`
             dedent()
             js += prefix + '}\n'
         }else{

@@ -647,8 +647,8 @@ BaseException_funcs.__setstate__ = function(self, state) {
         if (! $B.is_dict(state)) {
             $B.RAISE(_b_.TypeError, "state is not a dictionary")
         }
-        for (var entry of _b_.dict.$iter_items(state)) {
-            _b_.object.tp_setattro(self, entry.key, entry.value)
+        for (let [k, v] of $B.dict_key_values(state)) {
+            _b_.object.tp_setattro(self, k, v)
         }
     }
     return _b_.None

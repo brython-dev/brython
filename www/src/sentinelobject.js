@@ -26,12 +26,12 @@ _b_.sentinel.tp_new = function(cls, args, kw) {
     }
     let __name__ = args[0]
     let repr = __name__
-    for (var entry of _b_.dict.$iter_items(kw)) {
-        if (entry.key == 'repr') {
-            repr = entry.value
+    for (let [k, v] of $B.dict_key_values(kw)) {
+        if (k == 'repr') {
+            repr = v
         } else {
             $B.RAISE(_b_.TypeError,
-                `sentinel() got an unexpected keyword argument '${entry.key}'`
+                `sentinel() got an unexpected keyword argument '${k}'`
             )
         }
     }

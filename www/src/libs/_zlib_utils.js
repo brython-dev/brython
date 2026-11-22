@@ -418,11 +418,11 @@ function pprint(x) {
 function _decompresser(codelengths) {
     let lengths = []
     if ($B.is_dict(codelengths)) {
-        for (var entry of _b_.dict.$iter_items(codelengths)) {
-            lengths.push([entry.key, entry.value])
+        for (let [k, v] of $B.dict_key_values(codelengths)) {
+            lengths.push([k, v])
         }
     } else {
-        for (var [key, value] of Object.entries(codelengths)) {
+        for (let [key, value] of Object.entries(codelengths)) {
             lengths.push([parseInt(key), value])
         }
     }
@@ -561,12 +561,12 @@ function _dynamic_trees(reader) {
 
 function _write_items(writer, store, lit_len_dict, distance_dict) {
     var lit_len_codes = {}
-    for (var entry of _b_.dict.$iter_items(lit_len_dict)) {
-        lit_len_codes[entry.key] = entry.value
+    for (let [k, v] of $B.dict_key_values(lit_len_dict)) {
+        lit_len_codes[k] = v
     }
     var distance_codes = {}
-    for (var entry of _b_.dict.$iter_items(distance_dict)) {
-        distance_codes[entry.key] = entry.value
+    for (let [k, v] of $B.dict_key_values(distance_dict)) {
+        distance_codes[k] = v
     }
     var value,
         nb,

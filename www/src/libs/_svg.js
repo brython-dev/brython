@@ -34,10 +34,10 @@ function makeTagDict(tagName) {
         }
 
         // attributes
-        for (var item of _b_.dict.$iter_items($.kw)) {
+        for (let [k, v] of $B.dict_key_values($.kw)) {
             // keyword arguments
-            var arg = item.key,
-                value = $B.pyobj2jsobj(item.value)
+            let arg = k,
+                value = $B.pyobj2jsobj(v)
             if (arg.toLowerCase().substr(0,2) == "on") {
                 // Event binding passed as argument "onclick", "onfocus"...
                 // Better use method bind of DOMNode objects
@@ -45,7 +45,7 @@ function makeTagDict(tagName) {
                                 arg.toLowerCase().substr(2),
                                 value)
             } else if (arg.toLowerCase() == "style") {
-                $B.$setattr(self, 'style', item.value)
+                $B.$setattr(self, 'style', value)
             } else if (arg.toLowerCase().indexOf("href") !== -1) { // xlink:href
                 self.setAttributeNS( "http://www.w3.org/1999/xlink",
                     "href", value)
