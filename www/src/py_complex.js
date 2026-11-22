@@ -546,7 +546,7 @@ _b_.complex.tp_new = function(cls, args, kw) {
     }
 
     if (typeof arg == "string") {
-        let first = args
+        let first = arg
         let second
         first = first.trim()
         if (first.startsWith("(") && first.endsWith(")")) {
