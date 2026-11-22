@@ -78,6 +78,7 @@ Object.assign($B.wrapper_methods,
     {
         am_aiter: wrap('__aiter__'),
         am_anext: wrap('__anext__'),
+        am_await: wrap('__await__'),
         bf_getbuffer: wrap('__buffer__'),
         bf_releasebuffer: wrap('__release_buffer__'),
         mp_length: wrap('__len__'),
