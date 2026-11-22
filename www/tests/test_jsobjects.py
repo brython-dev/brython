@@ -123,6 +123,11 @@ values = window.eval('new Set([0.25, 0.5])')
 assert [f'{x:.2f}' for x in values] == ['0.25', '0.50']
 assert [type(x) for x in values] == [float, float]
 
+# and a Javascript generator keeps its methods
+gen = window.eval('(function* () { yield 1; yield 2 })()')
+assert gen.next().value == 1
+assert list(gen) == [2]
+
 # issue #1376
 setattr(window, 'foo', [])
 
