@@ -233,6 +233,17 @@ js = __BRYTHON__.python_to_js("x = 1 + 2")
 ns = window.eval(js)
 assert ns['x'] == 3
 
+# del of a name missing from a namespace without prototype, as an embedder's
+# may be, raises NameError
+said = window.eval("""(() => {
+    try {
+        __BRYTHON__.$delete('x', Object.create(null), 0)
+    } catch (err) {
+        return __BRYTHON__.class_name(err)
+    }
+})()""")
+assert said == 'NameError', said
+
 # method .sort of JS lists return the sorted list
 assert window.js_list.sort() == ['a', 'b', 'c']
 
