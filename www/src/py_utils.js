@@ -1527,7 +1527,7 @@ $B.to_num = function(obj, methods) {
         var missing = {},
             method = $B.$getattr(klass, methods[i], missing)
         if (method !== missing) {
-            var res = method(obj)
+            var res = $B.$call(method, obj)
             if (!$B.$isinstance(res, expected_class[methods[i]])) {
                 $B.RAISE(_b_.TypeError, methods[i] + "returned non-" +
                     expected_class[methods[i]].__name__ +
