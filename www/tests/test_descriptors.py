@@ -68,4 +68,23 @@ list.append(rows, 5)
 assert rows == [5]
 assert str.upper("ab") == "AB"
 
+# and so does one a class of another kind borrows, bound to its instance
+class Borrowing:
+    __getitem__ = list.__getitem__
+    append = list.append
+
+for run, name in [(lambda: Borrowing()[0], '__getitem__'),
+                  (lambda: Borrowing().append(1), 'append')]:
+    try:
+        run()
+        raise AssertionError(f"{name} applied to a Borrowing")
+    except TypeError as exc:
+        assert str(exc) == (f"descriptor '{name}' for 'list' objects "
+            "doesn't apply to a 'Borrowing' object"), str(exc)
+
+class Rows(list):
+    first = list.__getitem__
+
+assert Rows([4, 5]).first(1) == 5
+
 print('passed all tests...')
