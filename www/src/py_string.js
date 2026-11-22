@@ -1203,8 +1203,8 @@ str.$factory = function() {
             `return a str, not ${$B.class_name(res)}`
         )
     }
-    for (var entry of _b_.dict.$iter_items(kw)) {
-        switch (entry.key) {
+    for (let [k, v] of $B.dict_key_values(kw)) {
+        switch (k) {
             case 'encoding':
                 if (encoding !== undefined) {
                     $B.RAISE(_b_.TypeError,
@@ -1212,7 +1212,7 @@ str.$factory = function() {
                          'and position (2)'
                     )
                 }
-                encoding = entry.value
+                encoding = v
                 break
             case 'errors':
                 if (errors !== undefined) {
@@ -1221,11 +1221,11 @@ str.$factory = function() {
                          'and position (3)'
                     )
                 }
-                errors = entry.value
+                errors = v
                 break
             default:
                 $B.RAISE(_b_.TypeError,
-                    `str() got an unexpected keyword: '${entry.key}'`
+                    `str() got an unexpected keyword: '${k}'`
                 )
         }
     }

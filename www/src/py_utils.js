@@ -81,12 +81,11 @@ function too_many_pos_args(fname, kwarg, arg_names, nb_kwonly, defaults, args, s
 }
 
 $B.check_expected_keywords = function(name, kw, expected) {
-    for (var entry of _b_.dict.$iter_items(kw)) {
-        var key = entry.key
-        if (! expected.includes(key)) {
+    for (let [k, v] of $B.dict_key_values(kw)) {
+        if (! expected.includes(k)) {
             var suggestion =
-                $B.offer_suggestions_for_unexpected_keyword_error(expected, key)
-            throw unexpected_keyword(name, key, suggestion)
+                $B.offer_suggestions_for_unexpected_keyword_error(expected, k)
+            throw unexpected_keyword(name, k, suggestion)
         }
     }
 }
@@ -338,21 +337,20 @@ $B.parse_kwargs = function(kw_args, fname) {
             key,
             value
         if ($B.get_class(kw_arg) === _b_.dict) {
-            for (var entry of _b_.dict.$iter_items(kw_arg)) {
-                key = entry.key
-                if ($B.is_str(key)) {
-                    key = _b_.str.$to_string(key)
+            for (let [k, v] of $B.dict_key_values(kw_arg)) {
+                if ($B.is_str(k)) {
+                    k = _b_.str.$to_string(k)
                 } else {
                     $B.RAISE(_b_.TypeError,
                         `${fname}() keywords must be strings`
                     )
                 }
-                if (kwa[key] !== undefined) {
+                if (kwa[k] !== undefined) {
                     $B.RAISE(_b_.TypeError,
-                        `${fname}() got multiple values for keyword argument '${key}'`
+                        `${fname}() got multiple values for keyword argument '${k}'`
                     )
                 } else {
-                    kwa[key] = entry.value
+                    kwa[k] = v
                 }
             }
         } else {
@@ -641,39 +639,6 @@ $B.get_mro = function(klass) {
 }
 $B.get_name = function(klass) {
     return klass.tp_name ?? klass.__name__
-}
-
-$B.unpack_mapping = function(func, obj) {
-    var items = []
-    if ($B.is_dict(obj)) {
-        for (var item of _b_.dict.$iter_items(obj)) {
-            if (! $B.is_str(item.key)) {
-                $B.RAISE(_b_.TypeError, 'keywords must be strings')
-            }
-            items.push(item)
-        }
-        return items
-    }
-    var klass = $B.get_class(obj)
-    var getitem = $B.$getattr(klass, '__getitem__', null)
-    if (getitem === null) {
-        $B.RAISE(_b_.TypeError, `'${$B.class_name(obj)}' object ` +
-            'is not subscriptable')
-    }
-    var key_func = $B.$getattr(klass, 'keys', null)
-    if (key_func === null) {
-        var f = `${func.$infos.__module__}.${func.$infos.__name__}`
-        $B.RAISE(_b_.TypeError, `${f}() argument after **` +
-            ` must be a mapping, not ${$B.class_name(obj)}`)
-    }
-    var keys = $B.$call($B.$getattr(klass, 'keys'), obj)
-    for (var key of $B.make_js_iterator(keys)) {
-        if (! $B.is_str(key)) {
-            $B.RAISE(_b_.TypeError, 'keywords must be strings')
-        }
-        items.push({key, value: $B.$getitem1(obj, key)})
-    }
-    return items
 }
 
 $B.make_js_iterator_no_trace = function(iterator) {

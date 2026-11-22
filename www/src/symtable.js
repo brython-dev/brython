@@ -335,10 +335,9 @@ function is_free_in_any_child(entry, key) {
 }
 
 function inline_comprehension(ste, comp, scopes, comp_free, inlined_cells) {
-    for (var item of _b_.dict.$iter_items(comp.symbols)) {
+    for (let [k, v] of $B.dict_key_values(comp.symbols)) {
         // skip comprehension parameter
-        var k = item.key,
-            comp_flags = item.value
+        var comp_flags = v
         if (comp_flags & SF.DEF_PARAM) {
             continue
         }
@@ -529,10 +528,10 @@ function update_symbols(symbols, scopes, bound, free, inlined_cells, classflag) 
         v_free
 
     /* Update scope information for all symbols in this scope */
-    for (let entry of _b_.dict.$iter_items(symbols)) {
-        let name = entry.key
+    for (let [k, v] of $B.dict_key_values(symbols)) {
+        let name = k
         var test = false // name == 'Callable'
-        let flags = entry.value
+        let flags = v
         if (test) {
             console.log('in update symbols, name', name, 'flags', flags,
             flags & SF.DEF_COMP_CELL)
@@ -654,9 +653,9 @@ function analyze_block(ste, bound, free, global, typeparams, class_entry) {
         }
     }
 
-    for (let entry of _b_.dict.$iter_items(ste.symbols)) {
-        var name = entry.key
-        var flags = entry.value
+    for (let [k, v] of $B.dict_key_values(ste.symbols)) {
+        var name = k
+        var flags = v
         if (!analyze_name(ste, scopes, name, flags,
                           bound, local, free, global,
                           typeparams, class_entry)){
