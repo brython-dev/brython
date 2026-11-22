@@ -1065,6 +1065,7 @@
                         lineno,
                         file: _b_.None,
                         line,
+                        module: filename, // XXX
                         source: _b_.None,
                         _category_name: category.__name__
                     }
@@ -1089,6 +1090,7 @@
                         lineno,
                         file: _b_.None,
                         line: line || _b_.None,
+                        module: message.filename || co_filename, // XXX
                         source: _b_.None,
                         _category_name: category.__name__
                     }
@@ -1118,7 +1120,15 @@
         },
         warn_explicit: function() {
             // Low-level interface to warnings functionality.
-            console.log("warn_explicit", arguments)
+            let $ = $B.args('warn_explicit', 8,
+                {message: null, category: null, filename: null,
+                 lineno: null, module: null, registry: null,
+                 module_globals: null, source: null},
+                 arguments,
+                 {module: _b_.None, registry: _b_.None,
+                 module_globals: _b_.None, source: _b_.None})
+            let warn = $B.module_getattr($B.imported._warnings, 'warn')
+            return $B.$call(warn, $.message, $.category)
         }
     }
 
