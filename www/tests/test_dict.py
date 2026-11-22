@@ -177,6 +177,24 @@ assert str(a) == '{1: 3, 2: 2}'
 a.update({4:4})
 assert str(a) == '{1: 3, 2: 2, 4: 4}'
 
+# dict.fromkeys() sets each key through the class's __setitem__, and lets
+# what it raises through, StopIteration included
+class Doubled(dict):
+    def __setitem__(self, key, value):
+        super().__setitem__(key, value * 2)
+
+class Stopping(dict):
+    def __setitem__(self, key, value):
+        raise StopIteration
+
+assert dict.fromkeys(key for key in "aba") == {'a': None, 'b': None}
+assert Doubled.fromkeys("ab", 1) == {'a': 2, 'b': 2}
+try:
+    Stopping.fromkeys("ab")
+    raise AssertionError("should have raised StopIteration")
+except StopIteration:
+    pass
+
 # dict() and update() read a dict subclass that iterates its own way through
 # keys() and subscription, refuse a mapping without __getitem__ and a second
 # argument

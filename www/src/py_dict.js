@@ -1226,7 +1226,7 @@ dict_funcs.fromkeys = function() {
     var res = $B.$call(cls),
         klass = $B.get_class(res), // might not be cls
         is_fd_subclass = _b_.issubclass(klass, _b_.frozendict),
-        keys_iter = $B.$iter(keys)
+        keys_iter = $B.make_js_iterator(keys, $B.NULL)
 
     if (is_fd_subclass) {
         // the result is a frozendict; make a copy to avoid modifying it
@@ -1239,16 +1239,8 @@ dict_funcs.fromkeys = function() {
 
     let setitem = $B.$getattr($B.get_class(res), '__setitem__')
 
-    while (1) {
-        try {
-            var key = _b_.next(keys_iter)
-            $B.$call(setitem, res, key, value)
-        } catch (err) {
-            if ($B.is_exc(err, [_b_.StopIteration])) {
-                break
-            }
-            throw err
-        }
+    for (let key of keys_iter) {
+        $B.$call(setitem, res, key, value)
     }
 
     if (is_fd_subclass) {
