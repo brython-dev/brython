@@ -13,9 +13,67 @@ try:
 except ImportError:
     import traceback as tb
 
-import re
 import sys
 import time
+
+lazy import re
+lazy import warnings
+
+class WarningManager:
+
+  def __init__(self, expected, expected_regex=None):
+      self.expected = expected
+      if isinstance(expected_regex, str):
+          expected_regex = re.compile(expected_regex)
+      self.expected_regex = expected_regex
+      self.obj_name = None
+
+  def __enter__(self):
+      self.warnings_manager = warnings.catch_warnings(record=True)
+      self.warnings = self.warnings_manager.__enter__()
+      warnings.simplefilter("always", self.expected)
+      return self
+
+  def __exit__(self, exc_type, exc_value, tb):
+      if not self.warnings:
+          print('tester 39, no warnings, expected', self.expected)
+      self.warnings_manager.__exit__(exc_type, exc_value, tb)
+      if exc_type is not None:
+          # let unexpected exceptions pass through
+          return
+      try:
+          exc_name = self.expected.__name__
+      except AttributeError:
+          exc_name = str(self.expected)
+      first_matching = None
+      print('tester 47, warnings', self.warnings)
+      for m in self.warnings:
+          w = m.message
+          if not isinstance(w, self.expected):
+              continue
+          if first_matching is None:
+              first_matching = w
+              print('tester 53, first matching', w)
+          if (self.expected_regex is not None and
+              not self.expected_regex.search(str(w))):
+              continue
+          # store warning for later retrieval
+          self.warning = w
+          self.filename = m.filename
+          self.lineno = m.lineno
+          print('tester 62, __exit__ returns')
+          return
+      # Now we simply try to choose a helpful failure message
+      print('tester 64, first matching', first_matching)
+      if first_matching is not None:
+          raise Exception('"{}" does not match "{}"'.format(
+                   self.expected_regex.pattern, str(first_matching)))
+      if self.obj_name:
+          raise Exception("{} not triggered by {}".format(exc_name,
+                                                             self.obj_name))
+      else:
+          raise Exception("{} not triggered".format(exc_name))
+
 
 class _AssertRaisesBaseContext(object):
 
@@ -179,56 +237,11 @@ class Tester:
         if item:
             raise AssertionError(msg or '%s is not False' %item)
 
-    def assertWarns(self, exc):
-      import warnings
-      class Manager:
+    def assertWarns(self, excClass):
+        return WarningManager(excClass)
 
-          def __init__(self, expected, expected_regex=None):
-              self.expected = expected
-              self.expected_regex = expected_regex
-              self.obj_name = None
-
-          def __enter__(self):
-              self.warnings_manager = warnings.catch_warnings(record=True)
-              self.warnings = self.warnings_manager.__enter__()
-              warnings.simplefilter("always", self.expected)
-              return self
-
-          def __exit__(self, exc_type, exc_value, tb):
-              self.warnings_manager.__exit__(exc_type, exc_value, tb)
-              if exc_type is not None:
-                  # let unexpected exceptions pass through
-                  return
-              try:
-                  exc_name = self.expected.__name__
-              except AttributeError:
-                  exc_name = str(self.expected)
-              first_matching = None
-              for m in self.warnings:
-                  w = m.message
-                  if not isinstance(w, self.expected):
-                      continue
-                  if first_matching is None:
-                      first_matching = w
-                  if (self.expected_regex is not None and
-                      not self.expected_regex.search(str(w))):
-                      continue
-                  # store warning for later retrieval
-                  self.warning = w
-                  self.filename = m.filename
-                  self.lineno = m.lineno
-                  return
-              # Now we simply try to choose a helpful failure message
-              if first_matching is not None:
-                  self._raiseFailure('"{}" does not match "{}"'.format(
-                           self.expected_regex.pattern, str(first_matching)))
-              if self.obj_name:
-                  self._raiseFailure("{} not triggered by {}".format(exc_name,
-                                                                     self.obj_name))
-              else:
-                  self._raiseFailure("{} not triggered".format(exc_name))
-
-      return Manager(exc)
+    def assertWarnsRegex(self, excClass, expected_regex):
+        return WarningManager(excClass, expected_regex)
 
     def fail(self, *args):
         raise Exception(str(args))

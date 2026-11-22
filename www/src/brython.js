@@ -749,8 +749,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-11-21 11:32:57.811668"
-__BRYTHON__.timestamp=1795257177811
+__BRYTHON__.compiled_date="2026-11-22 11:16:28.715711"
+__BRYTHON__.timestamp=1795342588715
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -2085,7 +2085,7 @@ $B.to_num=function(obj,methods){
 var expected_class={"__complex__":_b_.complex,"__float__":_b_.float,"__index__":_b_.int,"__int__":_b_.int}
 var klass=$B.get_class(obj)
 for(var i=0;i < methods.length;i++){var missing={},method=$B.$getattr(klass,methods[i],missing)
-if(method !==missing){var res=method(obj)
+if(method !==missing){var res=$B.$call(method,obj)
 if(!$B.$isinstance(res,expected_class[methods[i]])){$B.RAISE(_b_.TypeError,methods[i]+"returned non-"+
 expected_class[methods[i]].__name__+
 "(type "+$B.get_class(res)+")")}
@@ -11447,6 +11447,58 @@ return self.real.value==other.valueOf()}
 if($B.$isinstance(other,_b_.float)){if(! $B.rich_comp('__eq__',0,self.imag)){return false}
 return self.real.value==other.value}
 return _b_.NotImplemented}
+function complex_new(cls,args,kw){var nb_args=args.length+$B.str_dict_length(kw)
+if(nb_args > 2){$B.RAISE(_b_.TypeError,`complex() takes at most 2 arguments (${nb_args} given)`
+)}
+var[r,i]=$B.unpack_args('complex',args,['first','second'],{first:$B.NULL,second:$B.NULL})
+$B.check_expected_keywords('complex',kw,['real','imag'])
+for(var[k,v]of $B.dict_key_values(kw)){if(k=='real'){if(r !==$B.NULL){$B.RAISE(_b_.TypeError,`argument for complex() given by name ('real') `+
+`and position (1)`
+)}else{
+r=v}}else if(k=='imag'){i=v}}
+if(r===$B.NULL){r=$B.fast_float(0)}
+let orig_r=r
+let own_r=0
+let cr_is_complex=0
+let ci_is_complex=0
+let cr=make_complex(0,0)
+let ci=make_complex(0,0)
+let tmp=try_complex_special_method(r)
+if(tmp !==$B.NULL){r=tmp
+own_r=1}
+let r_type=$B.get_class(r)
+if($B.$getattr(r_type,'__float__',$B.NULL)===$B.NULL &&
+$B.$getattr(r_type,'__index__',$B.NULL)===$B.NULL &&
+! $B.$isinstance(r,complex)){$B.RAISE(_b_.TypeError,"complex() argument 'real' must be a real number, not "+
+$B.class_name(r)
+)}
+if(i !=$B.NULL){let i_type=$B.get_class(i)
+if($B.$getattr(i_type,'__float__',$B.NULL)===$B.NULL &&
+$B.$getattr(i_type,'__index__',$B.NULL)===$B.NULL &&
+! $B.$isinstance(i,complex)){$B.RAISE(_b_.TypeError,"complex() argument 'imag' must be a real number, not "+
+$B.class_name(i)
+)}}
+if($B.$isinstance(r,complex)){
+cr=r
+cr_is_complex=1
+let orig_r_type=$B.get_class(orig_r)
+if($B.$getattr(orig_r_type,'__float__',$B.NULL)===$B.NULL &&
+$B.$getattr(orig_r_type,'__index__',$B.NULL)===$B.NULL){$B.warn(_b_.DeprecationWarning,"complex() argument 'real' must be a real number, not "+
+$B.class_name(orig_r)
+)}}else{
+cr.real=_b_.float.$factory(r)
+cr.imag=$B.fast_float(0)}
+if(i==$B.NULL){ci.real=cr.imag}else if($B.$isinstance(i,complex)){$B.warn(_b_.DeprecationWarning,"complex() argument 'imag' must be a real number, not "+
+$B.class_name(i)
+)
+ci=i
+ci_is_complex=1}else{
+ci.real=_b_.float.$factory(i)}
+if(ci_is_complex){cr.real=_b_.float.nb_subtract(cr.real,ci.imag)}
+if(cr_is_complex && i !=$B.NULL){ci.real=_b_.float.nb_add(ci.real,cr.imag)}
+let res={ob_type:cls,real:cr.real,imag:ci.real}
+if(cls !==complex){$B.init_dict(res)}
+return res}
 const max_precision=2**31-4
 complex.$getnewargs=function(self){return $B.fast_tuple([self.real,self.imag])}
 function complex2expo(cx){return{
@@ -11489,6 +11541,22 @@ if(method_name=='__complex__' && ! $B.exact_type(res,complex)){$B.warn(_b_.Depre
 "version of Python.")}
 return{result:res,method:method_name}}}
 return null}
+function try_complex_special_method(op){let klass=$B.get_class(op)
+let f=$B.$getattr(klass,'__complex__',$B.NULL)
+let class_name=klass.tp_name
+if(f !==$B.NULL){let res=$B.$call(f,op)
+if(! res ||$B.exact_type(res,complex)){return res}
+if(! $B.$isinstance(res,complex)){$B.RAISE(_b_.TypeError,`${class_name}.__complex__() must return a complex, not `+
+$B.class_name(res)
+)}
+$B.warn(_b_.DeprecationWarning,`${class_name}.__complex__() must return a complex, not `+
+`${_b_.repr(res)}.  `+
+"The ability to return an instance of a strict subclass of "+
+" complex is deprecated, and may be removed in a future "+
+"version of Python."
+)
+return res}
+return $B.NULL}
 var make_complex=$B.make_complex=function(real,imag){return{
 ob_type:complex,real:_b_.float.$factory(real),imag:_b_.float.$factory(imag)}}
 var c_1=make_complex(1,0)
@@ -11564,21 +11632,22 @@ _b_.complex.tp_hash=function(self){
 return _b_.int.nb_add(
 $B.$hash(self.real),_b_.int.nb_multiply($B.$hash(self.imag),1000003)
 )}
-_b_.complex.tp_new=function(cls,args,kw){var nb_args=args.length+$B.str_dict_length(kw)
+_b_.complex.tp_new=function(cls,args,kw){if(args.length > 1 ||_b_.dict.mp_length(kw)> 0){return complex_new(cls,args,kw)}
+if(args.length==0){let res=make_complex(0,0)
+res.ob_type=cls
+return res}
+var nb_args=args.length+$B.str_dict_length(kw)
 if(nb_args > 2){$B.RAISE(_b_.TypeError,`complex() takes at most 2 arguments (${nb_args} given)`
-)}else if(nb_args==0){var res=make_complex(0,0)
+)}else if(nb_args==0){res=make_complex(0,0)
 res.ob_type=cls
 $B.init_dict(res)
 return res}
-var[first,second]=$B.unpack_args('complex',args,['first','second'],{first:$B.NULL,second:$B.NULL})
-$B.check_expected_keywords('complex',kw,['real','imag'])
-for(var entry of _b_.dict.$iter_items(kw)){if(entry.key=='real'){if(first !==$B.NULL){$B.RAISE(_b_.TypeError,`argument for complex() given by name ('real') `+
-`and position (1)`
-)}else{
-first=entry.value}}}
-if(typeof first=="string"){if(second !==$B.NULL){$B.RAISE(_b_.TypeError,"complex() can't take second arg "+
-"if first is a string")}else{
-var arg=first
+let arg=args[0]
+let arg_class=$B.get_class(arg)
+let res
+if($B.exact_type(arg,complex)&& cls===complex){return arg}
+if(typeof arg=="string"){let first=args
+let second
 first=first.trim()
 if(first.startsWith("(")&& first.endsWith(")")){first=first.substr(1)
 first=first.substr(0,first.length-1)}
@@ -11601,29 +11670,20 @@ second=parts[_sign]=="-" ?-second :second}}else{
 if(parts[_sign]||parts[_imag]){$B.RAISE(_b_.ValueError,'complex() arg is a malformed string')}
 first=to_num(parts[_real])
 second=0}
-var res=make_complex(first,second)
+res=make_complex(first,second)
 res.ob_type=cls
-$B.init_dict(res)
-return res}}
-if($B.exact_type(first,complex)&& cls===complex && second===$B.NULL){return first}
-var arg1=_convert(first),r,i
-if(arg1===null){$B.RAISE(_b_.TypeError,"complex() first argument must be a "+
-`string or a number, not '${$B.class_name(first)}'`)}
-if(typeof second=="string"){$B.RAISE(_b_.TypeError,"complex() second arg can't be a string")}
-var arg2=_convert(second===$B.NULL ? 0 :second)
-if(arg2===null){$B.RAISE(_b_.TypeError,"complex() second argument must be a "+
-`number, not '${$B.class_name(second)}'`)}
-if(arg1.method=='__complex__'){if(arg2.method=='__complex__'){r=$B.rich_op('__sub__',arg1.result.real,arg2.result.imag)
-i=$B.rich_op('__add__',arg1.result.imag,arg2.result.real)}else{
-r=arg1.result.real
-i=$B.rich_op('__add__',arg1.result.imag,arg2.result)}}else{
-if(arg2.method=='__complex__'){r=$B.rich_op('__sub__',arg1.result,arg2.result.imag)
-i=arg2.result.real}else{
-r=arg1.result
-i=arg2.result}}
-res=make_complex(r,i)
-res.ob_type=cls
-$B.init_dict(res)
+if(cls !==complex){$B.init_dict(res)}
+return res}
+let tmp=try_complex_special_method(arg)
+if(tmp !==$B.NULL){res={ob_type:cls,real:tmp.real,imag:tmp.imag}
+if(cls !==complex){$B.init_dict(res)}}else if($B.$isinstance(arg,complex)){res={ob_type:complex,real:arg.real,imag:arg.imag}}else if($B.$getattr(arg_class,'__float__',$B.NULL)!==$B.NULL ||
+$B.$getattr(arg_class,'__index__',$B.NULL)!==$B.NULL){let num=$B.to_num(arg,['__float__','__index__'])
+let real=_b_.float.$factory(num.result)
+res={ob_type:cls,real,imag:$B.fast_float(0)}
+$B.init_dict(res)}else{
+$B.RAISE(_b_.TypeError,"complex() argument must be a string or a number, "+
+`not ${$B.get_name(arg_class)}"`
+)}
 return res}
 _b_.complex.tp_repr=function(self){$B.builtins_repr_check(complex,arguments)
 var real=_b_.str.$factory(self.real),imag=_b_.str.$factory(self.imag)
@@ -15738,7 +15798,8 @@ if(category===_b_.SyntaxWarning){filename=$B.get_from_dict(message,'filename'),l
 var src=$B.file_cache[file]
 if(src){var lines=src.split('\n'),line=lines[lineno-1]}
 warning_message={ob_type:WarningMessage}
-$B.assign_dict(warning_message,{message:message,category,filename,lineno,file:_b_.None,line,source:_b_.None,_category_name:category.__name__}
+$B.assign_dict(warning_message,{message:message,category,filename,lineno,file:_b_.None,line,module:filename,
+source:_b_.None,_category_name:category.__name__}
 )}else{
 let frame_rank=Math.max(0,$B.count_frames()-stacklevel)
 var frame=$B.get_frame_at(frame_rank)
@@ -15748,7 +15809,8 @@ var co_filename=$B.$getattr(f_code,'co_filename')
 lineno=message.lineno ||frame.$lineno
 line=src ? src.split('\n')[lineno-1]:null
 warning_message={ob_type:WarningMessage}
-$B.assign_dict(warning_message,{message:message,category,filename:message.filename ||co_filename,lineno,file:_b_.None,line:line ||_b_.None,source:_b_.None,_category_name:category.__name__}
+$B.assign_dict(warning_message,{message:message,category,filename:message.filename ||co_filename,lineno,file:_b_.None,line:line ||_b_.None,module:message.filename ||co_filename,
+source:_b_.None,_category_name:category.__name__}
 )}
 if($B.imported.warnings){var showwarn=$B.module_getattr($B.imported.warnings,'_showwarnmsg_impl')
 $B.$call(showwarn,warning_message)}else{
@@ -15761,7 +15823,9 @@ $B.$call($B.$getattr(stderr,'write'),trace+'\n')
 var flush=$B.$getattr(stderr,'flush',_b_.None)
 if(flush !==_b_.None){$B.$call(flush)}}
 return _b_.None},warn_explicit:function(){
-console.log("warn_explicit",arguments)}}
+let $=$B.args('warn_explicit',8,{message:null,category:null,filename:null,lineno:null,module:null,registry:null,module_globals:null,source:null},arguments,{module:_b_.None,registry:_b_.None,module_globals:_b_.None,source:_b_.None})
+let warn=$B.module_getattr($B.imported._warnings,'warn')
+return $B.$call(warn,$.message,$.category)}}
 var MAX_CANDIDATE_ITEMS=750,MOVE_COST=2,CASE_COST=1,SIZE_MAX=65535
 function LEAST_FIVE_BITS(n){return((n)& 31)}
 function levenshtein_distance(a,b,max_cost){

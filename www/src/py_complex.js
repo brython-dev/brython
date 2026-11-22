@@ -47,6 +47,139 @@ function complex_eq(self, other) {
     return _b_.NotImplemented
 }
 
+function complex_new(cls, args, kw) {
+    var nb_args = args.length + $B.str_dict_length(kw)
+    if (nb_args > 2) {
+        $B.RAISE(_b_.TypeError,
+            `complex() takes at most 2 arguments (${nb_args} given)`
+        )
+    }
+
+    var [r, i] = $B.unpack_args('complex', args, ['first', 'second'],
+                              {first: $B.NULL, second: $B.NULL})
+    $B.check_expected_keywords('complex', kw, ['real', 'imag'])
+    for (var [k, v] of $B.dict_key_values(kw)) {
+        if (k == 'real') {
+            if (r !== $B.NULL) {
+                $B.RAISE(_b_.TypeError,
+                    `argument for complex() given by name ('real') ` +
+                    `and position (1)`
+                )
+            } else {
+                r = v
+            }
+        } else if (k == 'imag') {
+            i = v
+        }
+    }
+
+    if (r === $B.NULL) {
+        r = $B.fast_float(0)
+    }
+
+    let orig_r = r
+
+    let own_r = 0
+    let cr_is_complex = 0
+    let ci_is_complex = 0
+
+    let cr = make_complex(0, 0)
+    let ci = make_complex(0, 0)
+
+    /* DEPRECATED: The call of try_complex_special_method() for the "real"
+     * part will be dropped after the end of the deprecation period. */
+    let tmp = try_complex_special_method(r)
+    if (tmp !== $B.NULL) {
+        r = tmp
+        own_r = 1
+    }
+
+    let r_type = $B.get_class(r)
+    if ($B.$getattr(r_type, '__float__', $B.NULL) === $B.NULL &&
+            $B.$getattr(r_type, '__index__', $B.NULL) === $B.NULL &&
+            ! $B.$isinstance(r, complex)) {
+        $B.RAISE(_b_.TypeError,
+            "complex() argument 'real' must be a real number, not " +
+            $B.class_name(r)
+        )
+    }
+    if (i != $B.NULL) {
+        let i_type = $B.get_class(i)
+        if ($B.$getattr(i_type, '__float__', $B.NULL) === $B.NULL &&
+                $B.$getattr(i_type, '__index__', $B.NULL) === $B.NULL &&
+                ! $B.$isinstance(i, complex)) {
+            $B.RAISE(_b_.TypeError,
+                "complex() argument 'imag' must be a real number, not " +
+                $B.class_name(i)
+            )
+        }
+    }
+
+    /* If we get this far, then the "real" and "imag" parts should
+       both be treated as numbers, and the constructor should return a
+       complex number equal to (real + imag*1j).
+
+       The following is DEPRECATED:
+       Note that we do NOT assume the input to already be in canonical
+       form; the "real" and "imag" parts might themselves be complex
+       numbers, which slightly complicates the code below. */
+    if ($B.$isinstance(r, complex)) {
+        /* Note that if r is of a complex subtype, we're only
+           retaining its real & imag parts here, and the return
+           value is (properly) of the builtin complex type. */
+        cr = r
+        cr_is_complex = 1
+        let orig_r_type = $B.get_class(orig_r)
+        if ($B.$getattr(orig_r_type, '__float__', $B.NULL) === $B.NULL &&
+                $B.$getattr(orig_r_type, '__index__', $B.NULL) === $B.NULL) {
+            $B.warn(_b_.DeprecationWarning,
+                "complex() argument 'real' must be a real number, not " +
+                $B.class_name(orig_r)
+            )
+        }
+    } else {
+        /* The "real" part really is entirely real, and contributes
+           nothing in the imaginary direction.
+           Just treat it as a double. */
+        cr.real = _b_.float.$factory(r)
+        cr.imag = $B.fast_float(0)
+    }
+    if (i == $B.NULL) {
+        ci.real = cr.imag
+    } else if ($B.$isinstance(i, complex)) {
+        $B.warn(_b_.DeprecationWarning,
+            "complex() argument 'imag' must be a real number, not " +
+            $B.class_name(i)
+        )
+        ci = i
+        ci_is_complex = 1
+    } else {
+        /* The "imag" part really is entirely imaginary, and
+           contributes nothing in the real direction.
+           Just treat it as a double. */
+        ci.real = _b_.float.$factory(i)
+    }
+    /*  If the input was in canonical form, then the "real" and "imag"
+        parts are real numbers, so that ci.imag and cr.imag are zero.
+        We need this correction in case they were not real numbers. */
+    if (ci_is_complex) {
+        cr.real = _b_.float.nb_subtract(cr.real, ci.imag)
+    }
+
+    if (cr_is_complex && i != $B.NULL) {
+        ci.real = _b_.float.nb_add(ci.real, cr.imag)
+    }
+    let res = {
+        ob_type: cls,
+        real: cr.real,
+        imag: ci.real
+    }
+    if (cls !== complex) {
+        $B.init_dict(res)
+    }
+    return res
+}
+
 const max_precision = 2 ** 31 - 4
 
 complex.$getnewargs = function(self) {
@@ -163,6 +296,34 @@ function _convert(obj) {
         }
     }
     return null
+}
+
+function try_complex_special_method(op) {
+    let klass = $B.get_class(op)
+    let f = $B.$getattr(klass, '__complex__', $B.NULL)
+    let class_name = klass.tp_name
+    if (f !== $B.NULL) {
+        let res = $B.$call(f, op)
+        if (! res || $B.exact_type(res, complex)) {
+            return res
+        }
+        if (! $B.$isinstance(res, complex)) {
+            $B.RAISE(_b_.TypeError,
+                `${class_name}.__complex__() must return a complex, not ` +
+                $B.class_name(res)
+            )
+        }
+        /* Issue #29894: warn if 'res' not of exact type complex. */
+        $B.warn(_b_.DeprecationWarning,
+            `${class_name}.__complex__() must return a complex, not ` +
+            `${_b_.repr(res)}.  ` +
+            "The ability to return an instance of a strict subclass of " +
+            " complex is deprecated, and may be removed in a future " +
+            "version of Python."
+        )
+        return res
+    }
+    return $B.NULL
 }
 
 var make_complex = $B.make_complex = function(real, imag) {
@@ -354,139 +515,131 @@ _b_.complex.tp_hash = function(self) {
 }
 
 _b_.complex.tp_new = function(cls, args, kw) {
+    if (args.length > 1 || _b_.dict.mp_length(kw) > 0) {
+        return complex_new(cls, args, kw)
+    }
+
+    if (args.length == 0) {
+        let res = make_complex(0, 0)
+        res.ob_type = cls
+        return res
+    }
+
     var nb_args = args.length + $B.str_dict_length(kw)
     if (nb_args > 2) {
         $B.RAISE(_b_.TypeError,
             `complex() takes at most 2 arguments (${nb_args} given)`
         )
     } else if (nb_args == 0) {
-        var res = make_complex(0, 0)
+        res = make_complex(0, 0)
         res.ob_type = cls
         $B.init_dict(res)
         return res
     }
-    var [first, second] = $B.unpack_args('complex', args, ['first', 'second'],
-                              {first: $B.NULL, second: $B.NULL})
-    $B.check_expected_keywords('complex', kw, ['real', 'imag'])
-    for (var entry of _b_.dict.$iter_items(kw)) {
-        if (entry.key == 'real') {
-            if (first !== $B.NULL) {
-                $B.RAISE(_b_.TypeError,
-                    `argument for complex() given by name ('real') ` +
-                    `and position (1)`
-                )
-            } else {
-                first = entry.value
+
+    let arg = args[0]
+    let arg_class = $B.get_class(arg)
+    let res
+
+    if ($B.exact_type(arg, complex) && cls === complex) {
+        return arg
+    }
+
+    if (typeof arg == "string") {
+        let first = args
+        let second
+        first = first.trim()
+        if (first.startsWith("(") && first.endsWith(")")) {
+            first = first.substr(1)
+            first = first.substr(0, first.length - 1)
+        }
+        // Regular expression for literal complex string. Includes underscores
+        // for PEP 515
+        var complex_re = /^\s*([+-]*(?:nan|inf(?:inity)?|[0-9_]*\.?[0-9_]*(e[+-]*[0-9_]*)?))([+-]?)((?:nan|inf(?:inity)?|[0-9_]*\.?[0-9_]*(e[+-]*[0-9_]*)?))(j?)\s*$/i
+
+        var parts = complex_re.exec(first)
+
+        function to_num(s) {
+            // float() parses the same syntax, including nan and inf
+            try {
+                return _b_.float.$factory(s.charAt(0) +
+                    s.substr(1).replace(/_/g, "")).value
+            } catch (err) {
+                $B.RAISE(_b_.ValueError, "could not convert string " +
+                    "to complex: '" + arg +"'")
             }
         }
-    }
-    if (typeof first == "string") {
-        if (second !== $B.NULL) {
-            $B.RAISE(_b_.TypeError, "complex() can't take second arg " +
-                "if first is a string")
-        } else {
-            var arg = first
-            first = first.trim()
-            if (first.startsWith("(") && first.endsWith(")")) {
-                first = first.substr(1)
-                first = first.substr(0, first.length - 1)
-            }
-            // Regular expression for literal complex string. Includes underscores
-            // for PEP 515
-            var complex_re = /^\s*([+-]*(?:nan|inf(?:inity)?|[0-9_]*\.?[0-9_]*(e[+-]*[0-9_]*)?))([+-]?)((?:nan|inf(?:inity)?|[0-9_]*\.?[0-9_]*(e[+-]*[0-9_]*)?))(j?)\s*$/i
-
-            var parts = complex_re.exec(first)
-
-            function to_num(s) {
-                // float() parses the same syntax, including nan and inf
-                try {
-                    return _b_.float.$factory(s.charAt(0) +
-                        s.substr(1).replace(/_/g, "")).value
-                } catch (err) {
-                    $B.RAISE(_b_.ValueError, "could not convert string " +
-                        "to complex: '" + arg +"'")
-                }
-            }
-            if (parts === null) {
-                $B.RAISE(_b_.ValueError, "complex() arg is a malformed string")
-            }
-            if(parts[_real] && parts[_imag].startsWith('.') &&
-                    parts[_sign] == ''){
-                $B.RAISE(_b_.ValueError, 'complex() arg is a malformed string')
-            }else if(parts[_real] == "." || parts[_imag] == "." ||
-                    parts[_real] == ".e" || parts[_imag] == ".e" ||
-                    parts[_real] == "e" || parts[_imag] == "e"){
-                $B.RAISE(_b_.ValueError, "complex() arg is a malformed string")
-            } else if (parts[_j] != "") {
-                if (parts[_sign] == "") {
-                    first = 0
-                    if (parts[_real] == "+" || parts[_real] == "") {
-                        second = 1
-                    } else if (parts[_real] == '-') {
-                        second = -1
-                    } else {second = to_num(parts[_real])}
-                } else {
-                    first = to_num(parts[_real])
-                    second = parts[_imag] == "" ? 1 : to_num(parts[_imag])
-                    second = parts[_sign] == "-" ? -second : second
-                }
+        if (parts === null) {
+            $B.RAISE(_b_.ValueError, "complex() arg is a malformed string")
+        }
+        if(parts[_real] && parts[_imag].startsWith('.') &&
+                parts[_sign] == ''){
+            $B.RAISE(_b_.ValueError, 'complex() arg is a malformed string')
+        }else if(parts[_real] == "." || parts[_imag] == "." ||
+                parts[_real] == ".e" || parts[_imag] == ".e" ||
+                parts[_real] == "e" || parts[_imag] == "e"){
+            $B.RAISE(_b_.ValueError, "complex() arg is a malformed string")
+        } else if (parts[_j] != "") {
+            if (parts[_sign] == "") {
+                first = 0
+                if (parts[_real] == "+" || parts[_real] == "") {
+                    second = 1
+                } else if (parts[_real] == '-') {
+                    second = -1
+                } else {second = to_num(parts[_real])}
             } else {
-                if (parts[_sign] || parts[_imag]) {
-                    $B.RAISE(_b_.ValueError, 'complex() arg is a malformed string')
-                }
                 first = to_num(parts[_real])
-                second = 0
+                second = parts[_imag] == "" ? 1 : to_num(parts[_imag])
+                second = parts[_sign] == "-" ? -second : second
             }
-            var res = make_complex(first, second)
-            res.ob_type = cls
+        } else {
+            if (parts[_sign] || parts[_imag]) {
+                $B.RAISE(_b_.ValueError, 'complex() arg is a malformed string')
+            }
+            first = to_num(parts[_real])
+            second = 0
+        }
+        res = make_complex(first, second)
+        res.ob_type = cls
+        if (cls !== complex) {
             $B.init_dict(res)
-            return res
         }
+        return res
     }
 
-    if ($B.exact_type(first, complex) && cls === complex && second === $B.NULL) {
-        return first
-    }
-    var arg1 = _convert(first),
-        r,
-        i
-    if (arg1 === null) {
-        $B.RAISE(_b_.TypeError, "complex() first argument must be a " +
-            `string or a number, not '${$B.class_name(first)}'`)
-    }
+    let tmp = try_complex_special_method(arg)
 
-    if (typeof second == "string") {
-        $B.RAISE(_b_.TypeError, "complex() second arg can't be a string")
-    }
-
-    var arg2 = _convert(second === $B.NULL ? 0 : second)
-
-    if (arg2 === null) {
-        $B.RAISE(_b_.TypeError, "complex() second argument must be a " +
-            `number, not '${$B.class_name(second)}'`)
-    }
-
-    if (arg1.method == '__complex__') {
-        if (arg2.method == '__complex__') {
-            r = $B.rich_op('__sub__', arg1.result.real, arg2.result.imag)
-            i = $B.rich_op('__add__', arg1.result.imag, arg2.result.real)
-        } else {
-            r = arg1.result.real
-            i = $B.rich_op('__add__', arg1.result.imag, arg2.result)
+    if (tmp !== $B.NULL) {
+        res = {
+            ob_type: cls,
+            real: tmp.real,
+            imag: tmp.imag
         }
+        if (cls !== complex) {
+            $B.init_dict(res)
+        }
+    } else if ($B.$isinstance(arg, complex)) {
+        res = {
+            ob_type: complex,
+            real: arg.real,
+            imag: arg.imag
+        }
+    } else if ($B.$getattr(arg_class, '__float__', $B.NULL) !== $B.NULL ||
+            $B.$getattr(arg_class, '__index__', $B.NULL) !== $B.NULL) {
+        let num = $B.to_num(arg, ['__float__', '__index__'])
+        let real = _b_.float.$factory(num.result)
+        res = {
+            ob_type: cls,
+            real,
+            imag: $B.fast_float(0)
+        }
+        $B.init_dict(res)
     } else {
-        if (arg2.method == '__complex__') {
-            r = $B.rich_op('__sub__', arg1.result, arg2.result.imag)
-            i = arg2.result.real
-        } else {
-            r = arg1.result
-            i = arg2.result
-        }
+        $B.RAISE(_b_.TypeError,
+            "complex() argument must be a string or a number, " +
+            `not ${$B.get_name(arg_class)}"`
+        )
     }
-
-    res = make_complex(r, i)
-    res.ob_type = cls
-    $B.init_dict(res)
     return res
 }
 
