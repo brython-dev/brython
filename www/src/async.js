@@ -235,14 +235,50 @@ $B.promise = function(obj) {
     if (awaitable !== null) {
         // must be an iterator
         awaitable = $B.$call(awaitable)
-        if ($B.$getattr(awaitable, '__next__', null) === null) {
+        var next_method = $B.$getattr(awaitable, '__next__', null)
+        if (next_method === null) {
             $B.RAISE(_b_.TypeError, '__await__() returned non-iterator' +
                 ` of type '${$B.class_name(awaitable)}'`)
         }
-        return awaitable
+        return run_await(awaitable, next_method)
     }
     $B.RAISE(_b_.TypeError, `object ${$B.class_name(obj)} ` +
         `can't be used in 'await' expression`)
+}
+
+// The iterator __await__ returns, run as the event loop runs it: each value
+// it yields awaited and its result sent back, None a turn of the loop, what
+// awaiting a value raised thrown in where it was yielded; the value of the
+// StopIteration that ends it is the result of the await
+async function run_await(iterator, next_method) {
+    var frame_obj = $B.frame_obj,
+        step = () => $B.$call(next_method)
+    while (true) {
+        try {
+            var yielded = step()
+        } catch (err) {
+            $B.frame_obj = frame_obj
+            if ($B.is_exc(err, [_b_.StopIteration])) {
+                return err.value
+            }
+            throw err
+        }
+        try {
+            var sent = yielded === _b_.None ? await _b_.None :
+                    await $B.promise(yielded)
+            step = sent === _b_.None ? () => $B.$call(next_method) :
+                () => $B.$call($B.$getattr(iterator, 'send'), sent)
+        } catch (err) {
+            var thrown = $B.exception(err),
+                throw_method = $B.$getattr(iterator, 'throw', null)
+            if (throw_method === null) {
+                $B.frame_obj = frame_obj
+                throw thrown
+            }
+            step = () => $B.$call(throw_method, thrown)
+        }
+        $B.frame_obj = frame_obj
+    }
 }
 
 })(__BRYTHON__);

@@ -361,6 +361,69 @@ async def test_anext_with_default():
 
 aio.run(test_anext_with_default())
 
+# await runs the iterator __await__ returns: a bare yield is a turn of the
+# loop, a value yielded is awaited and its result sent back, what awaiting it
+# raised is thrown in, and the value it returns is the result of the await
+async def awaited_double(x):
+    return 2 * x
+
+async def awaited_failing():
+    raise KeyError("awaited")
+
+class AwaitReady:
+    def __await__(self):
+        return 5
+        yield
+
+class AwaitTurn:
+    def __await__(self):
+        yield
+        return "after a turn"
+
+class AwaitDelegates:
+    def __await__(self):
+        return (yield from AwaitTurn().__await__()) + " delegated"
+
+class AwaitSends:
+    def __await__(self):
+        return (yield awaited_double(21))
+
+class AwaitCatches:
+    def __await__(self):
+        try:
+            yield awaited_failing()
+        except KeyError as exc:
+            return "caught " + exc.args[0]
+
+class AwaitRaises:
+    closed = False
+    def __await__(self):
+        try:
+            yield
+            raise ValueError("in __await__")
+        finally:
+            AwaitRaises.closed = True
+
+class AwaitIterator:
+    def __await__(self):
+        return iter([None, None])
+
+async def test_await_iterator():
+    async_tester.assertEqual(await AwaitReady(), 5)
+    async_tester.assertEqual(await AwaitTurn(), "after a turn")
+    async_tester.assertEqual(await AwaitDelegates(), "after a turn delegated")
+    async_tester.assertEqual(await AwaitSends(), 42)
+    async_tester.assertEqual(await AwaitCatches(), "caught awaited")
+    async_tester.assertIs(await AwaitIterator(), None)
+    try:
+        await AwaitRaises()
+        raise AssertionError("should have raised ValueError")
+    except ValueError as exc:
+        async_tester.assertEqual(exc.args, ("in __await__",))
+    async_tester.assertIs(AwaitRaises.closed, True)
+
+aio.run(test_await_iterator())
+
 # set_loop_timeout(): a loop compiled while it is set raises LoopInterrupt once
 # it has kept the page frozen past the timeout, a BaseException that "except
 # Exception" lets through; a loop that ends runs as before
