@@ -274,6 +274,38 @@ assert list(iter(range(big, big + 3))) == [big, big + 1, big + 2]
 assert list(iter(range(big, big - 3, -1))) == [big, big - 1, big - 2]
 assert list(iter("a😀b")) == ["a", "😀", "b"]
 
+# a dict, a set, a view or another builtin iterator in a for loop: next()
+# called in the loop, an iterator exhausted for good, a dict changing size
+# while it is iterated, a StopIteration raised by the function of map(), a
+# subclass with its own __next__
+d = {"a": 1, "b": 2, "c": 3, "d": 4}
+for make in (lambda: d, d.keys, d.values, d.items, lambda: {1, 2, 3, 4},
+             lambda: enumerate("abcd")):
+    it = iter(make())
+    assert [(x, next(it)) for x in it] == list(zip(*[iter(list(make()))] * 2))
+    assert list(it) == []
+
+grown = {1: 1}
+try:
+    for key in grown:
+        grown[key + 1] = 0
+    raise AssertionError("should have raised RuntimeError")
+except RuntimeError:
+    pass
+
+def stop_at_2(x):
+    if x == 2:
+        raise StopIteration
+    return x
+
+assert [x for x in map(stop_at_2, [1, 2, 3])] == [1]
+
+class Twice(enumerate):
+    def __next__(self):
+        return super().__next__()[1] * 2
+
+assert [x for x in Twice("ab")] == ["aa", "bb"]
+
 # __setstate__ moves a builtin iterator, the position brought within bounds
 for seq in ([1, 2, 3, 4], (1, 2, 3, 4), "ab😀d", b"abcd"):
     it = iter(seq)
