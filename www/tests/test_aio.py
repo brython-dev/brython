@@ -350,6 +350,30 @@ async def wait_error():
 
 aio.run(wait_error())
 
+# a coroutine's __await__ is an iterator that yields the coroutine once, for
+# the code running it to await, and returns the result it is sent back
+async def awaited_value():
+    return 5
+
+coro = awaited_value()
+wrapper = coro.__await__()
+assert type(wrapper).__name__ == "coroutine_wrapper"
+assert iter(wrapper) is wrapper
+assert next(wrapper) is coro
+try:
+    wrapper.send(5)
+    raise AssertionError("should have raised StopIteration")
+except StopIteration as exc:
+    assert exc.value == 5
+assert_raises(RuntimeError, wrapper.send, None,
+              msg="cannot reuse already awaited coroutine")
+coro.close()
+fresh = awaited_value().__await__()
+assert_raises(TypeError, fresh.send, 1,
+              msg="can't send non-None value to a just-started coroutine")
+assert_raises(KeyError, fresh.throw, KeyError)
+assert_raises(RuntimeError, next, fresh)
+
 # anext(async_iterator, default)
 async def async_it_yield_one():
   yield 1

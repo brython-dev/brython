@@ -21,7 +21,11 @@ $B.coroutine.tp_finalize = function(self) {
 }
 
 $B.coroutine.am_await = function(self) {
-
+    return {
+        ob_type: $B.coroutine_wrapper,
+        coroutine: self,
+        state: 'created'
+    }
 }
 
 var coroutine_funcs = $B.coroutine.tp_funcs = {}
@@ -141,6 +145,57 @@ $B.coroutine.tp_getset = [
 ]
 
 $B.set_func_names(coroutine, "builtins")
+
+// What a coroutine's __await__ returns: an iterator that yields the coroutine
+// once, for the code running it to await, and returns the result it is sent
+// back
+var coroutine_wrapper = $B.coroutine_wrapper
+
+coroutine_wrapper.tp_iter = function(self) {
+    return self
+}
+
+coroutine_wrapper.tp_iternext = function*(self) {
+    yield coroutine_wrapper.tp_funcs.send(self, _b_.None)
+}
+
+var coroutine_wrapper_funcs = coroutine_wrapper.tp_funcs = {}
+
+coroutine_wrapper_funcs.send = function(self, value) {
+    switch (self.state) {
+        case 'created':
+            if (value !== _b_.None) {
+                $B.RAISE(_b_.TypeError,
+                    "can't send non-None value to a just-started coroutine")
+            }
+            self.state = 'yielded'
+            return self.coroutine
+        case 'yielded':
+            self.state = 'done'
+            $B.RAISE(_b_.StopIteration, value)
+    }
+    $B.RAISE(_b_.RuntimeError, 'cannot reuse already awaited coroutine')
+}
+
+coroutine_wrapper_funcs.throw = function(self, exc) {
+    if (self.state == 'created') {
+        coroutine_funcs.close(self.coroutine)
+    }
+    self.state = 'done'
+    throw $B.is_type(exc) ? $B.$call(exc) : exc
+}
+
+coroutine_wrapper_funcs.close = function(self) {
+    if (self.state == 'created') {
+        coroutine_funcs.close(self.coroutine)
+    }
+    self.state = 'done'
+    return _b_.None
+}
+
+coroutine_wrapper.tp_methods = ["send", "throw", "close"]
+
+$B.set_func_names(coroutine_wrapper, "builtins")
 
 // A coroutine reclaimed before it started was never awaited. The warning keeps
 // its name and its frame without the locals, which may hold the coroutine.
