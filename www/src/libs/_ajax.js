@@ -123,7 +123,7 @@ function handle_kwargs(self, kw, method) {
         } else if (key == "timeout") {
             timeout.seconds = value
         } else if (key == "cache") {
-            cache = item.value
+            cache = value
         }
     }
     if (encoding && mode != "text") {
