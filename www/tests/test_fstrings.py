@@ -147,6 +147,13 @@ def func(*args):
 
 x = f'{func({})}'
 
+# a name before the brace that closes a dict or a set in a replacement field
+x = 1
+assert f"{ {'a': x} }" == "{'a': 1}"
+assert f"{ {x} }" == "{1}"
+assert f"{len({'a': x})}{x}" == "11"
+assert t"{ {'a': x} }".interpolations[0].value == {'a': 1}
+
 # issue 2693
 typecode = 'u'
 s = f"array('{typecode}', '\\x00=\"\\'a\\\\b\\x80\xff\\x00\\x01\u1234')"
