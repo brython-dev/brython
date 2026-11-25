@@ -413,6 +413,10 @@ $B.tokenizer = function(src, filename, mode, parser) {
             } else if (token_mode == 'format_specifier') {
                 format_specifier = ''
                 ft_chunk_start = pos - line_start - char.length + 1
+                if ($B.last(fstring_stack)?.inside_format_specifier) {
+                    // back from a field of the specifier, f"{x:{width}}"
+                    fstring_stack.pop()
+                }
             }
         }
         save_mode = token_mode
