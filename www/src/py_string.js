@@ -1979,7 +1979,10 @@ str_funcs.__format__ = function(self, format_spec) {
     if (fmt.precision) {
         self = self.substr(0, fmt.precision)
     }
-    // For strings, alignment default to left
+    // For strings, alignment default to left, a 0 before the width included
+    if (fmt.fill == '0' && fmt.align == '=' && ! /^.?[<>=^]/.test(format_spec)) {
+        fmt.align = "<"
+    }
     fmt.align = fmt.align || "<"
     return $B.String($B.format_width(preformat(self, fmt), fmt))
 }
