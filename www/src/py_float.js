@@ -275,22 +275,23 @@ function preformat(self, fmt) {
             return res
         } else if (fmt.type === undefined) {
             /*
-            For float this is the same as 'g', except that when fixed-point
-            notation is used to format the result, it always includes at least
-            one digit past the decimal point.
+            For float this is like 'g', except that when fixed-point notation
+            is used to format the result, it always includes at least one
+            digit past the decimal point, and that scientific notation is used
+            from an exponent of the precision minus one.
             */
-            fmt.type = "g"
-            res = preformat(self, fmt)
-            if (res.indexOf('.') == -1) {
-                let exp = res.length - 1
-                exp = exp < 10 ? '0' + exp : exp
-                let is_neg = res.startsWith('-'),
-                    point_pos = is_neg ? 2 : 1,
-                    mant = res.substr(0, point_pos) + '.' +
-                        res.substr(point_pos)
-                return `${mant}e+${exp}`
+            let precision = Math.max(prec, 1),
+                exp = parseInt(value.toExponential(precision - 1).split('e')[1])
+            if (exp < -4 || exp >= precision - 1) {
+                let [mantissa, exponent] = preformat(self,
+                    {type: 'e', precision: precision - 1}).split('e')
+                if (! fmt.alternate && mantissa.includes('.')) {
+                    mantissa = mantissa.replace(/\.?0+$/, '')
+                }
+                res = mantissa + 'e' + exponent
+            } else {
+                res = preformat(self, {type: 'f', precision: precision - 1 - exp})
             }
-            fmt.type = undefined
         } else {
             let res1 = value.toExponential(fmt.precision - 1),
                 exp = parseInt(res1.substr(res1.search("e") + 1))
@@ -307,7 +308,8 @@ function preformat(self, fmt) {
         res = _b_.str.$factory(self)
     }
 
-    if (fmt.type === undefined || "gGn".indexOf(fmt.type) != -1) {
+    if ((fmt.type === undefined && ! fmt.alternate) ||
+            "gGn".indexOf(fmt.type) != -1) {
         // remove trailing 0 for non-exponential formats
         if (res.search("e") == -1) {
             while (res.charAt(res.length - 1) == "0") {

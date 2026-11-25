@@ -528,6 +528,15 @@ assert -100000000000000 % 14000000000000000 == 13900000000000000
 # issue 1396
 assert "|{0:.4}|".format(1.2345678) == "|1.235|"
 
+# a float with a precision and no type: a digit past the point, and the
+# scientific notation from an exponent of the precision minus one
+assert format(1.0, '.3') == '1.0'
+assert format(0.1 + 0.2, '.3') == '0.3'
+assert format(1e16, '.3') == '1e+16'
+assert format(100.0, '.3') == '1e+02'
+assert format(123456.789, '.3') == '1.23e+05'
+assert format(1.5, '#.3') == '1.50'
+
 # issue 1412
 i = 4
 i += 100000000000000000
