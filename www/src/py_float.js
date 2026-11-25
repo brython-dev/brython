@@ -154,14 +154,17 @@ function preformat(self, fmt) {
     }
     var special
     if (isNaN(value)) {
-        special = "efg".indexOf(fmt.type) > -1 ? "nan" : "NAN"
+        special = "nan"
     } else if (value == Number.POSITIVE_INFINITY) {
-        special = "efg".indexOf(fmt.type) > -1 ? "inf" : "INF"
+        special = "inf"
     } else if (value == Number.NEGATIVE_INFINITY) {
-        special = "efg".indexOf(fmt.type) > -1 ? "-inf" : "-INF"
+        special = "-inf"
     }
     if (special) {
-        return format_sign(value, fmt) + special
+        // in capitals for the capital types only, and followed by % for %
+        return format_sign(value, fmt) +
+            ("EFG".includes(fmt.type ?? "-") ? special.toUpperCase() : special) +
+            (fmt.type == "%" ? "%" : "")
     }
 
     if (fmt.precision === undefined && fmt.type !== undefined) {

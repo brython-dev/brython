@@ -962,6 +962,15 @@ assert nan is nan
 # PR 3011
 assert format(2.5, '.0f') == '2'
 
+# an infinity or a NaN in capitals for the capital types only, and with % for %
+inf, nan = float("inf"), float("nan")
+assert format(inf, "%") == "inf%"
+assert format(nan, ".1%") == "nan%"
+assert format(-inf, "F") == "-INF"
+assert format(inf, "6") == "   inf"
+assert format(nan, "n") == "nan"
+assert format(inf, "E") == "INF"
+
 # PR 3225
 assert round(1234, -2) == 1200
 assert round(2.675, 2) == 2.67
