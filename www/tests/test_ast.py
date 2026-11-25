@@ -11,6 +11,12 @@ assert ast.unparse(module) == """def f():
 assert module.__class__.__module__ == 'ast'
 compile(module, filename="<ast>", mode="exec")
 
+# a name on a line after the first of an f-string or a t-string has the column
+# of that line, after a line break or a backslash at the end of the line
+for source in 'f"""a\n  {x}"""', 't"""a\n  {x}"""', 'f"a\\\n  {x}"', 't"a\\\n  {x}"':
+    name = ast.parse(source).body[0].value.values[-1].value
+    assert [name.lineno, name.col_offset, name.end_lineno, name.end_col_offset] == [2, 3, 2, 4], source
+
 node = ast.UnaryOp(ast.USub(), ast.Constant(5, lineno=0, col_offset=0),
                    lineno=0, col_offset=0)
 

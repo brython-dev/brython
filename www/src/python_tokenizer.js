@@ -521,6 +521,8 @@ $B.tokenizer = function(src, filename, mode, parser) {
                         // backslash-newline is a line continuation: it does
                         // not reach the string value (f"a\<newline>b" is 'ab')
                         line_num++
+                        line_start = pos + 1
+                        line = get_line_at(pos)
                         ft_escape = false
                         continue
                     }
@@ -564,6 +566,8 @@ $B.tokenizer = function(src, filename, mode, parser) {
                 ft_escape = false
                 if (char == '\n') {
                     line_num++
+                    line_start = pos + 1
+                    line = get_line_at(pos)
                 }
                 continue
             }
