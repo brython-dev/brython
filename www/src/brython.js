@@ -749,8 +749,8 @@ $B.unicode_titles={"\u01c5":"\u01c5","\u01c6":"\u01c5","\u01c4":"\u01c5","\u01c8
 "use strict";
 __BRYTHON__.implementation=[3,15,0,'dev',0]
 __BRYTHON__.version_info=[3,15,0,'final',0]
-__BRYTHON__.compiled_date="2026-11-24 21:07:35.208858"
-__BRYTHON__.timestamp=1795550855208
+__BRYTHON__.compiled_date="2026-11-25 08:16:56.922857"
+__BRYTHON__.timestamp=1795591016922
 __BRYTHON__.builtin_module_names=["_ajax","_ast","_base64","_binascii","_io_classes","_json","_jsre","_locale","_multiprocessing","_posixsubprocess","_profile","_random","_sre","_sre_utils","_string","_svg","_symtable","_tokenize","_webcomponent","_webworker","_zlib_utils","array","builtins","dis","encoding_cp932","encoding_cp932_v2","hashlib","html_parser","marshal","math","modulefinder","posix","pyexpat","python_re","unicodedata","xml_helpers","xml_parser"];
 ;
 
@@ -11050,7 +11050,6 @@ if($B.$isinstance(obj,_b_.float)){x=obj}else if($B.is_int(obj)){x=_b_.int.nb_flo
 res.push(x)}
 return res}
 float.$factory=function(value){if(value===undefined){return fast_float(0)}
-$B.check_nb_args_no_kw('float',1,arguments)
 switch(value){case true:
 return fast_float(1)
 case false:
@@ -11080,6 +11079,9 @@ let res=fast_float(-Number.NaN)
 res[$B.SIGN]=-1
 return res
 default:
+let sign=''
+if('+-'.includes(value[0])){sign=value[0]
+value=value.substr(1)}
 var parts=value.split('e')
 if(parts[1]){if(parts[1].startsWith('+')||parts[1].startsWith('-')){parts[1]=parts[1].substr(1)}}
 parts=parts[0].split('.').concat(parts.splice(1))
@@ -11089,7 +11091,8 @@ if(value.indexOf('__')>-1){$B.RAISE(_b_.ValueError,'invalid float literal '+
 value)}
 value=value.charAt(0)+value.substr(1).replace(/_/g,"")
 value=to_digits(value)
-if(isFinite(value)){return fast_float(parseFloat(value))}else{
+if(isFinite(value)){value=sign+value
+return fast_float(parseFloat(value))}else{
 var num=Number(value)
 if(num===Infinity ||num===-Infinity){return fast_float(num)}
 $B.RAISE(_b_.ValueError,"could not convert string to float: "+
@@ -11645,23 +11648,23 @@ var complex_re=/^\s*([+-]*(?:nan|inf(?:inity)?|[0-9_]*\.?[0-9_]*(e[+-]*[0-9_]*)?
 var parts=complex_re.exec(first)
 function to_num(s){
 try{
-return _b_.float.$factory(s.charAt(0)+
-s.substr(1).replace(/_/g,"")).value}catch(err){$B.RAISE(_b_.ValueError,"could not convert string "+
+return _b_.float.$factory(s)}catch(err){$B.RAISE(_b_.ValueError,"could not convert string "+
 "to complex: '"+arg+"'")}}
 if(parts===null){$B.RAISE(_b_.ValueError,"complex() arg is a malformed string")}
 if(parts[_real]&& parts[_imag].startsWith('.')&&
 parts[_sign]==''){$B.RAISE(_b_.ValueError,'complex() arg is a malformed string')}else if(parts[_real]=="." ||parts[_imag]=="." ||
 parts[_real]==".e" ||parts[_imag]==".e" ||
-parts[_real]=="e" ||parts[_imag]=="e"){$B.RAISE(_b_.ValueError,"complex() arg is a malformed string")}else if(parts[_j]!=""){if(parts[_sign]==""){first=0
-if(parts[_real]=="+" ||parts[_real]==""){second=1}else if(parts[_real]=='-'){second=-1}else{second=to_num(parts[_real])}}else{
+parts[_real]=="e" ||parts[_imag]=="e"){$B.RAISE(_b_.ValueError,"complex() arg is a malformed string")}else if(parts[_j]!=""){if(parts[_sign]==""){first=$B.fast_float(0)
+if(parts[_real]=="+" ||parts[_real]==""){second=$B.fast_float(1)}else if(parts[_real]=='-'){second=$B.fast_float(-1)}else{
+second=to_num(parts[_real])}}else{
 first=to_num(parts[_real])
-second=parts[_imag]=="" ? 1 :to_num(parts[_imag])
-second=parts[_sign]=="-" ?-second :second}}else{
+second=parts[_imag]==""
+? $B.fast_float(parts[_sign]=='-' ?-1 :1)
+:to_num(parts[_sign]+parts[_imag])}}else{
 if(parts[_sign]||parts[_imag]){$B.RAISE(_b_.ValueError,'complex() arg is a malformed string')}
 first=to_num(parts[_real])
-second=0}
-res=make_complex(first,second)
-res.ob_type=cls
+second=$B.fast_float(0)}
+res={ob_type:cls,real:first,imag:second}
 if(cls !==complex){$B.init_dict(res)}
 return res}
 let tmp=try_complex_special_method(arg)

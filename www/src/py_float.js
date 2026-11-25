@@ -736,7 +736,6 @@ float.$factory = function(value) {
     if (value === undefined) {
         return fast_float(0)
     }
-    $B.check_nb_args_no_kw('float', 1, arguments)
     switch (value) {
         case true:
             return fast_float(1)
@@ -790,6 +789,11 @@ float.$factory = function(value) {
                res[$B.SIGN] = -1
                return res
            default:
+               let sign = ''
+               if ('+-'.includes(value[0])) {
+                   sign = value[0]
+                   value = value.substr(1)
+               }
                var parts = value.split('e')
                if (parts[1]) {
                    if (parts[1].startsWith('+') || parts[1].startsWith('-')) {
@@ -810,6 +814,7 @@ float.$factory = function(value) {
                value = value.charAt(0) + value.substr(1).replace(/_/g, "") // PEP 515
                value = to_digits(value) // convert arabic-indic digits to latin
                if (isFinite(value)) {
+                   value = sign + value
                    return fast_float(parseFloat(value))
                } else {
                    // Number(value) is NaN (not a valid float literal) or

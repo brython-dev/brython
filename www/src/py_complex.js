@@ -562,8 +562,7 @@ _b_.complex.tp_new = function(cls, args, kw) {
         function to_num(s) {
             // float() parses the same syntax, including nan and inf
             try {
-                return _b_.float.$factory(s.charAt(0) +
-                    s.substr(1).replace(/_/g, "")).value
+                return _b_.float.$factory(s)
             } catch (err) {
                 $B.RAISE(_b_.ValueError, "could not convert string " +
                     "to complex: '" + arg +"'")
@@ -581,26 +580,32 @@ _b_.complex.tp_new = function(cls, args, kw) {
             $B.RAISE(_b_.ValueError, "complex() arg is a malformed string")
         } else if (parts[_j] != "") {
             if (parts[_sign] == "") {
-                first = 0
+                first = $B.fast_float(0)
                 if (parts[_real] == "+" || parts[_real] == "") {
-                    second = 1
+                    second = $B.fast_float(1)
                 } else if (parts[_real] == '-') {
-                    second = -1
-                } else {second = to_num(parts[_real])}
+                    second = $B.fast_float(-1)
+                } else {
+                    second = to_num(parts[_real])
+                }
             } else {
                 first = to_num(parts[_real])
-                second = parts[_imag] == "" ? 1 : to_num(parts[_imag])
-                second = parts[_sign] == "-" ? -second : second
+                second = parts[_imag] == ""
+                    ? $B.fast_float(parts[_sign] == '-' ? -1 : 1)
+                    : to_num(parts[_sign] + parts[_imag])
             }
         } else {
             if (parts[_sign] || parts[_imag]) {
                 $B.RAISE(_b_.ValueError, 'complex() arg is a malformed string')
             }
             first = to_num(parts[_real])
-            second = 0
+            second = $B.fast_float(0)
         }
-        res = make_complex(first, second)
-        res.ob_type = cls
+        res = {
+            ob_type: cls,
+            real: first,
+            imag: second
+        }
         if (cls !== complex) {
             $B.init_dict(res)
         }
