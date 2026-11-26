@@ -190,6 +190,13 @@ assert 'real part is {0.real}, imaginary part is {0.imag}.'.format(c) == \
     "real part is 3.0, imaginary part is -5.0."
 assert '{0:{fill}{align}16}'.format("hello", fill=0, align=">") == \
     "00000000000hello"
+
+# a 0 before the width of a string fills with zeros on the right of it, as a
+# string aligns to the left, unless an alignment is given
+assert format("abc", "08") == "abc00000"
+assert "{:06}".format("é") == "é00000"
+assert format("ab", "0>5") == "000ab"
+assert format("ab", "0^6") == "00ab00"
 assert "I have {{}} bananas.".format() == "I have {} bananas."
 assert "I have {{}} bananas.".format(2) == "I have {} bananas."
 assert "I have {{}} and {} bananas.".format(2) == "I have {} and 2 bananas."
