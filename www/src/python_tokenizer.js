@@ -1052,7 +1052,8 @@ $B.tokenizer = function(src, filename, mode, parser) {
                         }
                         if (is_ft) {
                             token_mode = new String('ft')
-                            ft_start = pos - line_start - name.length
+                            ft_start = pos - line_start - name.length -
+                                (triple_quote ? 2 : 0)
                             token_mode.nesting = braces.length
                             token_mode.quote = quote
                             token_mode.triple_quote = triple_quote

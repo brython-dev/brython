@@ -17,6 +17,11 @@ node = ast.UnaryOp(ast.USub(), ast.Constant(5, lineno=0, col_offset=0),
 assert node.operand.value == 5
 assert node.operand.lineno == 0
 
+# the f-string or the t-string between triple quotes starts at its prefix
+for source in 'f"""{x}"""', 't"""{x}"""':
+    v = ast.parse(source).body[0].value
+    assert [v.lineno, v.col_offset, v.end_lineno, v.end_col_offset] == [1, 0, 1, 10], source
+
 # issue 2479
 fss = 'f"{2}"', 'f"y"', 'f"{2}y"'
 positions = [1, 0, 1, 6], [1, 0, 1, 4], [1, 0, 1, 7]
