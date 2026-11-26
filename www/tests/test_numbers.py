@@ -105,6 +105,15 @@ assert abs(3 + 4j) == 5
 assert abs(4 + 3j) == 5.0
 assert abs(4 + 3j) == abs(3 + 4j)
 
+# the format of a complex number: in parentheses with no type, the width the
+# whole's, and the sign of the imaginary part always shown
+assert format(1 + 2j, ">8") == "  (1+2j)"
+assert format(1 + 2j, ".2f") == "1.00+2.00j"
+assert format(1 + 0j, "+") == "(+1+0j)"
+assert format(-1.5 - 2.25j, "g") == "-1.5-2.25j"
+assert format(2j, ">5") == "   2j"
+assert format(1234567.5 + 1j, ",") == "(1,234,567.5+1j)"
+
 # issue 498
 assert (1 + 2j) * 2.4 == 2.4 + 4.8j
 

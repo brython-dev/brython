@@ -715,73 +715,55 @@ complex_funcs.__format__ = function(self, format_spec) {
         return _b_.str.$factory(self)
     }
     var fmt = new $B.parse_format_spec(format_spec, self),
-        type = fmt.conversion_type
+        type = fmt.type
 
-    var skip_re,
-        add_parens
-
-    if (type === undefined || 'eEfFgGn'.indexOf(type) > -1) {
-        if (fmt.precision > max_precision) {
-            $B.RAISE(_b_.ValueError, 'precision too big')
-        }
-        if (fmt.fill_char == '0') {
-            $B.RAISE(_b_.ValueError,
-                "Zero padding is not allowed in complex format specifier")
-        }
-        if (fmt.align == '=') {
-            $B.RAISE(_b_.ValueError,
-                 "'=' alignment flag is not allowed in complex format " +
-                 "specifier")
-        }
-        var re = self.real.value,
-            precision = parseInt(fmt.precision, 10)
-
-        if (type === undefined) {
-            type = 'r'
-            if (re == 0 && Object.is(re, 0)) {
-                skip_re = 1
-            } else {
-                add_parens = 1
-            }
-        } else if (type == 'n') {
-            type = 'g'
-        }
-        if (precision < 0) {
-            precision = 6
-        } else if (type == 'r') {
-            type = 'g'
-        }
-        var format = $B.clone(fmt)
-        format.conversion_type = type
-        format.precision = precision
-
-        var res = ''
-        if (! skip_re) {
-            res += _b_.float.$format(self.real, format)
-            if (self.imag.value >= 0) {
-                res += '+'
-            }
-        }
-        var formatted_im = _b_.float.$format(self.imag, format)
-        var pos = -1,
-            last_num
-        for (var char of formatted_im) {
-            pos++
-            if (char.match(/\d/)) {
-                last_num = pos
-            }
-        }
-        formatted_im = formatted_im.substr(0, last_num + 1) + 'j' +
-            formatted_im.substr(last_num + 1)
-        res += formatted_im
-
-        if (add_parens) {
-            res = '(' + res + ')'
-        }
-
-        return res
+    if (type !== undefined && ! 'eEfFgGn'.includes(type)) {
+        $B.RAISE(_b_.ValueError,
+            `Unknown format code '${type}' for object of type 'complex'`)
     }
-    $B.RAISE(_b_.ValueError, `invalid type for complex: ${type}`)
+    if (fmt.precision > max_precision) {
+        $B.RAISE(_b_.ValueError, 'precision too big')
+    }
+    if (fmt.fill == '0') {
+        $B.RAISE(_b_.ValueError,
+            "Zero padding is not allowed in complex format specifier")
+    }
+    if (fmt.align == '=') {
+        $B.RAISE(_b_.ValueError,
+             "'=' alignment flag is not allowed in complex format specifier")
+    }
+    // With no type, as repr writes it: no real part when it is +0, the whole
+    // in parentheses otherwise
+    var re = self.real.value,
+        skip_re = type === undefined && re == 0 && Object.is(re, 0),
+        add_parens = type === undefined && ! skip_re
+
+    // Each part formatted as a float alone, its sign shown as asked, the
+    // imaginary part's always; the width is the whole's
+    function part(value, sign) {
+        var res = _b_.float.$format(value, {
+            type: type == 'n' || (type === undefined &&
+                fmt.precision !== undefined) ? 'g' : type,
+            precision: fmt.precision,
+            alternate: fmt.alternate,
+            grouping: fmt.grouping,
+            decimal_grouping: fmt.decimal_grouping,
+            z: fmt.z
+        })
+        if (type === undefined && fmt.precision === undefined &&
+                res.endsWith('.0')) {
+            res = res.substr(0, res.length - 2)
+        }
+        return (sign == '+' || sign == ' ') && ! res.startsWith('-') ? sign + res : res
+    }
+
+    var res = (skip_re ? '' : part(self.real, fmt.sign)) +
+        part(self.imag, skip_re ? fmt.sign : '+') + 'j'
+    if (add_parens) {
+        res = '(' + res + ')'
+    }
+    fmt.align = fmt.align || '>'
+    return $B.format_width(res, fmt)
 }
 
 complex_funcs.__getnewargs__ = function(self) {
