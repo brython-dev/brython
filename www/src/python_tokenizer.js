@@ -1110,8 +1110,12 @@ $B.tokenizer = function(src, filename, mode, parser) {
                         t.push(closing_brace)
                         show_braces()
                         if ($B.last(braces).char == '{') {
-                            token_modes.pop()
-                            token_mode = $B.last(token_modes)
+                            // the replacement field ends at its own brace, not
+                            // at the one of a dict or a set inside it
+                            if (braces.length == 1 + $B.last(fstring_stack).nb_braces_on_entry) {
+                                token_modes.pop()
+                                token_mode = $B.last(token_modes)
+                            }
                             state = null
                             pop_braces()
                         }
