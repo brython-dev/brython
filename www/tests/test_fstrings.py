@@ -127,6 +127,13 @@ assert f"{'\n'.join(a)}" == "hello\nworld"
 
 assert f"{f"{f"{f"{f"{f"{1+1}"}"}"}"}"}" == '2'
 
+# an f-string whose format specifier holds a field, in a field of another
+x, spec, width = 3.14159, ".2f", 8
+assert f'{f"{x:{spec}}"}' == '3.14'
+assert f'{[f"{v:{spec}}" for v in (x, 1.0)]}' == "['3.14', '1.00']"
+assert f'a{f"b{x:{width}}c"}d' == 'ab 3.14159cd'
+assert f'{x:{spec}} and {f"{x:{width}}"} and {x}' == '3.14 and  3.14159 and 3.14159'
+
 x = 8
 assert rf'raw\n{x}' == 'raw\\n8'
 
